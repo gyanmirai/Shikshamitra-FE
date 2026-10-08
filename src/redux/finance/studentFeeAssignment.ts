@@ -74,6 +74,9 @@ export const assignmentPolicyFamilies = [
   'collection',
   'proration',
 ] as const;
+// Concession and legacy proration remain in read/write contracts for existing assignments.
+// The assignment drawer offers only the policy families schools can choose here.
+export const selectableAssignmentPolicyFamilies = ['refund', 'collection'] as const;
 export type AssignmentPolicyFamily = (typeof assignmentPolicyFamilies)[number];
 export interface AssignmentPolicy {
   family: AssignmentPolicyFamily;

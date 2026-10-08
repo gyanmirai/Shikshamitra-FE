@@ -1,28 +1,49 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Button, Divider, LinearProgress } from '@mui/material';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { Box, Alert, Stack, Button, Drawer, Typography, CircularProgress } from '@mui/material';
+import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import { FormFooter } from './FormFooter';
-import { SummaryPanel } from './panels/SummaryPanel';
 import { usePaymentTermForm } from '../hooks/usePaymentTermForm';
 import { GeneralInfoSection } from './sections/GeneralInfoSection';
 import { InstallmentSection } from './sections/InstallmentSection';
-import { BillingScheduleSection } from './sections/BillingScheduleSection';
+import { PaymentTermUsageSummary, PaymentTermDefaultSummary } from './PaymentTermUsage';
 
 import type { IPaymentTermFormProps } from '../type';
 
-export default function PaymentTermForm({ open: _open, onClose, editData }: IPaymentTermFormProps) {
+export default function PaymentTermForm(props: IPaymentTermFormProps) {
+  const { open } = props;
+  return open ? <PaymentTermFormSession {...props} /> : null;
+}
+
+function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormProps) {
+  const dispatch = useDispatch();
   const discardDialog = useBoolean();
+  useEffect(
+    () => () => {
+      dispatch(setIsChanges(false));
+    },
+    [dispatch]
+  );
   const {
+    defaultImpact,
+    confirmationImpact,
+    cancelDefaultConfirmation,
+    termUsage,
+    isLoadingImpact,
+    impactError,
     formik,
     boards,
     checks,
-    demandLabel,
     isSubmitting,
     isLoadingDetail,
     handleSubmit,
@@ -30,8 +51,14 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
     removeInstallment,
   } = usePaymentTermForm(editData, onClose);
 
+  const nextVersion = editData?.id
+    ? (formik.values.currentVersionNumber ?? 1) +
+      (formik.values.currentVersionStatus === 'Draft' ? 0 : 1)
+    : 1;
+  const busy = isSubmitting || isLoadingDetail;
   const requestClose = () => {
-    if (formik.dirty && !isSubmitting) {
+    if (busy || discardDialog.value || confirmationImpact) return;
+    if (formik.dirty) {
       discardDialog.onTrue();
       return;
     }
@@ -39,104 +66,181 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
   };
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Box sx={{ flexShrink: 0, bgcolor: 'background.paper' }}>
-          <DrawerHeader
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={requestClose}
+      slotProps={{
+        backdrop: { sx: { bgcolor: (theme) => alpha(theme.palette.common.black, 0.32) } },
+      }}
+      PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'payment-term-title',
+        sx: { width: { xs: '100%', sm: 'min(840px, 96vw)' }, maxWidth: '100%' },
+      }}
+    >
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+          <FinancePolicyDrawerHeader
             title={editData ? 'Edit Payment Term' : 'Create Payment Term'}
-            subtitle={
-              editData
-                ? 'Update the schedule, billing rule, and lifecycle status.'
-                : 'Configure a reusable installment and invoice schedule.'
+            titleId="payment-term-title"
+            description="Configure a reusable installment and invoice schedule."
+            descriptionDisplay="tooltip"
+            helpText="Payment terms set installment and invoice dates. Drafts remain editable; active terms are available to fee structures."
+            badges={
+              <Label color={formik.values.status === 'Active' ? 'success' : 'warning'}>
+                {formik.values.status === 'Active' ? 'Active' : 'Draft'}
+              </Label>
             }
-            helpText="Payment Terms define when student-fee installments are billed and due. Payment behaviour remains controlled by Finance policies."
             onClose={requestClose}
-            closeDisabled={isSubmitting}
+            disabled={busy}
           />
-          <Divider />
-          {(isLoadingDetail || isSubmitting) && (
-            <LinearProgress
-              aria-label={isSubmitting ? 'Saving payment term' : 'Loading payment term'}
-            />
-          )}
-        </Box>
 
-        {/* ── Downstream warning ─────────────────────────────────────────────── */}
-        {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
-          <Alert
-            severity="warning"
-            variant="filled"
-            sx={{ mx: 3, mt: 1.5, borderRadius: 1, flexShrink: 0, py: 0.75 }}
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              position: 'relative',
+              overflow: 'hidden',
+              bgcolor: 'background.neutral',
+            }}
           >
-            This term is mapped to active fee structures. Saving will create a new draft revision
-            automatically.
-          </Alert>
-        )}
+            <Scrollbar sx={{ height: 1 }}>
+              <Box
+                component="fieldset"
+                disabled={busy}
+                sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
+              >
+                <Stack spacing={2} sx={{ minWidth: 0 }}>
+                  {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
+                    <Alert severity="warning">
+                      This term is mapped to fee structures. Saving creates a revision and preserves
+                      existing assignments.
+                    </Alert>
+                  )}
+                  <GeneralInfoSection formik={formik} boards={boards} />
+                  {formik.values.isDefaultTerm &&
+                    (isLoadingImpact || impactError || defaultImpact) && (
+                      <Alert severity={impactError ? 'error' : 'info'}>
+                        {isLoadingImpact
+                          ? 'Loading default impact…'
+                          : impactError
+                            ? 'Unable to load default impact. Retry before saving.'
+                            : defaultImpact && (
+                                <PaymentTermDefaultSummary
+                                  impact={defaultImpact}
+                                  name={formik.values.paymentTermName}
+                                  version={nextVersion}
+                                />
+                              )}
+                      </Alert>
+                    )}
+                  {termUsage && <PaymentTermUsageSummary usage={termUsage} />}
+                  <InstallmentSection
+                    formik={formik}
+                    board={boards.find((board) => board.id === formik.values.boardId)}
+                    onAdd={addInstallment}
+                    onRemove={removeInstallment}
+                  />
+                </Stack>
+              </Box>
+            </Scrollbar>
+            {busy && (
+              <Stack
+                role="status"
+                alignItems="center"
+                justifyContent="center"
+                spacing={1.5}
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 1,
+                  bgcolor: (theme) => alpha(theme.palette.background.paper, 0.72),
+                }}
+              >
+                <CircularProgress size={28} />
+                <Typography variant="body2">
+                  {isSubmitting ? 'Saving payment term…' : 'Loading payment term…'}
+                </Typography>
+              </Stack>
+            )}
+          </Box>
 
-        {/* ── Body ───────────────────────────────────────────────────────────── */}
-        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {/* Left: Scrollable form */}
-          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-            <Box
-              sx={{
-                p: 3,
-                pb: 5,
-                opacity: isLoadingDetail ? 0.55 : 1,
-                pointerEvents: isLoadingDetail ? 'none' : 'auto',
-              }}
-            >
-              <Alert severity="info" variant="outlined" sx={{ mb: 2.5 }}>
-                Choose <strong>Draft</strong> to keep the schedule editable, or{' '}
-                <strong>Active</strong> to publish it. If this is selected as default, the previous
-                default for the selected board is replaced automatically.
-              </Alert>
-              <GeneralInfoSection formik={formik} boards={boards} />
-              <InstallmentSection
-                formik={formik}
-                board={boards.find((board) => board.id === formik.values.boardId)}
-                onAdd={addInstallment}
-                onRemove={removeInstallment}
-              />
-              <BillingScheduleSection formik={formik} />
-            </Box>
-          </Scrollbar>
-
-          {/* Right: Sticky summary panel */}
-          <SummaryPanel
-            values={formik.values}
-            boards={boards}
-            checks={checks}
-            demandLabel={demandLabel}
+          {/* ── Footer ─────────────────────────────────────────────────────────── */}
+          <FormFooter
+            isSubmitting={busy}
+            disabled={
+              isSubmitting ||
+              isLoadingDetail ||
+              !formik.dirty ||
+              !checks.isReadyToPublish ||
+              !formik.isValid ||
+              formik.isValidating
+            }
+            disabledReason={
+              isLoadingDetail
+                ? 'Loading payment term details'
+                : checks.validationMessage ||
+                  (!checks.isReadyToPublish
+                    ? 'Complete the required schedule fields before submitting.'
+                    : !formik.dirty
+                      ? 'Make a change before submitting'
+                      : 'Checking payment term validation')
+            }
+            onCancel={requestClose}
+            onSubmit={() => handleSubmit()}
+          />
+          <ConfirmDialog
+            open={Boolean(confirmationImpact)}
+            icon="warning"
+            title="Replace default payment term?"
+            onClose={cancelDefaultConfirmation}
+            disableCancel={isSubmitting}
+            disableBackdropClick={isSubmitting}
+            content={
+              confirmationImpact && (
+                <PaymentTermDefaultSummary
+                  impact={confirmationImpact}
+                  name={formik.values.paymentTermName}
+                  version={nextVersion}
+                />
+              )
+            }
+            action={
+              <Button
+                variant="contained"
+                disabled={isSubmitting}
+                onClick={() => handleSubmit(true)}
+              >
+                Confirm
+              </Button>
+            }
+          />
+          <ConfirmDialog
+            open={discardDialog.value}
+            icon="warning"
+            title="Discard unsaved changes?"
+            content="You have unsaved changes. Discard them?"
+            onClose={discardDialog.onFalse}
+            disableBackdropClick
+            cancelText="Stay"
+            action={
+              <Button
+                color="error"
+                variant="contained"
+                onClick={() => {
+                  discardDialog.onFalse();
+                  formik.resetForm();
+                  onClose();
+                }}
+              >
+                Discard
+              </Button>
+            }
           />
         </Box>
-
-        {/* ── Footer ─────────────────────────────────────────────────────────── */}
-        <FormFooter
-          isSubmitting={isSubmitting}
-          disabled={isLoadingDetail || !formik.dirty}
-          onCancel={requestClose}
-          onSubmit={handleSubmit}
-        />
-        <ConfirmDialog
-          open={discardDialog.value}
-          icon="warning"
-          title="Discard unsaved changes?"
-          content="Your Payment Term draft has not been saved. Closing now will discard these changes."
-          onClose={discardDialog.onFalse}
-          action={
-            <Button
-              color="error"
-              variant="contained"
-              onClick={() => {
-                discardDialog.onFalse();
-                onClose();
-              }}
-            >
-              Discard changes
-            </Button>
-          }
-        />
-      </Box>
-    </BackPopUpChecked>
+      </BackPopUpChecked>
+    </Drawer>
   );
 }

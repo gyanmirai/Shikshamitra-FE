@@ -38,6 +38,7 @@ import {
   TextField,
   IconButton,
   Typography,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -107,7 +108,12 @@ const families: {
 const money = (value: number | null) =>
   value == null
     ? 'Calculated during assignment'
-    : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' , minimumFractionDigits: 0, maximumFractionDigits: 0}).format(Math.ceil(value));
+    : new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(Math.ceil(value));
 
 export default function FeeStructureWorkspaceCard({
   initialData,
@@ -137,7 +143,14 @@ export default function FeeStructureWorkspaceCard({
     restoredProgress.current = true;
     if (!initialData.record) return;
     const savedStep = getStorage(progressKey);
-    if (workflowKeys.includes(savedStep)) setTab(savedStep);
+    if (workflowKeys.includes(savedStep))
+      setTab(
+        savedStep === 'review' &&
+          !initialData.record.collectionPolicyVersionId &&
+          initialData.record.status !== FeeStructureLockStatusType.Locked
+          ? 'policies'
+          : savedStep
+      );
   }, [initialData.record, progressKey]);
   const activeStep = workflowKeys.indexOf(tab);
   const [editing, setEditing] = useState(!initialData.record);
@@ -459,9 +472,14 @@ export default function FeeStructureWorkspaceCard({
   };
   const navigate = (step: number) => {
     if (navigationBusy || step === activeStep) return;
+    if (step === 2 && !locked && !candidate.collectionPolicyVersionId) {
+      setTab('policies');
+      return;
+    }
     setTab(workflowKeys[step]);
   };
   const saveAndNext = async () => {
+    if (tab === 'policies' && !candidate.collectionPolicyVersionId) return;
     if (!(await save())) return;
     // Stay in edit mode after saving so the next stage remains usable.
     setEditing(true);
@@ -726,7 +744,11 @@ export default function FeeStructureWorkspaceCard({
               initialValues={stepperValues}
               validationSchema={undefined}
               completedSteps={completedSteps}
-              errors={[Boolean(submitted && !headsValid), false, Boolean(preview?.errors.length)]}
+              errors={[
+                Boolean(submitted && !headsValid),
+                Boolean(!locked && !candidate.collectionPolicyVersionId),
+                Boolean(preview?.errors.length),
+              ]}
               onStepClick={navigate}
               isStepClickable={() => !navigationBusy}
               validateFinalStep={false}
@@ -756,6 +778,7 @@ export default function FeeStructureWorkspaceCard({
                 loading: saving || publishing,
                 disabled:
                   navigationBusy ||
+                  (!locked && activeStep === 1 && !candidate.collectionPolicyVersionId) ||
                   (writable && !record && families.some(({ key }) => catalogs[key].loading)),
                 sx: {
                   minHeight: { xs: 44, sm: 36 },
@@ -985,13 +1008,14 @@ export default function FeeStructureWorkspaceCard({
                             isFilter: false,
                             render: (_v, row) =>
                               row.isVariable ? (
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography variant="body2" color="text.secondary" textAlign="right">
                                   Entered during student assignment
                                 </Typography>
                               ) : writable ? (
                                 <TextField
                                   type="number"
                                   size="small"
+                                  fullWidth
                                   required
                                   label="Total fee"
                                   value={amountInputs[row.feeHeadId] ?? row.amount ?? ''}
@@ -1220,8 +1244,8 @@ export default function FeeStructureWorkspaceCard({
                   {tab === 'policies' && (
                     <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, width: '100%' }}>
                       <Typography variant="body2" color="text.secondary">
-                        Collection is required to publish. Refund is optional. Use
-                        the eye action to review fee head coverage.
+                        Collection is required to publish. Refund is optional. Use the eye action to
+                        review fee head coverage.
                       </Typography>
                       <Box
                         sx={{
@@ -1327,19 +1351,24 @@ export default function FeeStructureWorkspaceCard({
                                 options={options}
                                 isSearch
                                 isLoading={catalogs[key].loading}
-                                error={catalogs[key].error}
+                                error={
+                                  catalogs[key].error ||
+                                  (key === 'collection' && !locked && !candidate[versionKey])
+                                }
                                 helperText={
-                                  catalogs[key].error
-                                    ? 'Could not load this policy list. Retry to choose a policy.'
-                                    : !settings.permissions[`${key}Read`]
-                                      ? 'You do not have permission to browse this policy family.'
-                                      : candidate[versionKey]
-                                        ? 'This version stays attached until you change it.'
-                                        : settings.policies.filter(
-                                              (p) => p.family === key && p.isDefault
-                                            ).length > 1
-                                          ? 'Multiple default policies exist. Choose one explicitly and correct defaults in Settings.'
-                                          : empty
+                                  key === 'collection' && !locked && !candidate[versionKey]
+                                    ? 'Collection Policy is required'
+                                    : catalogs[key].error
+                                      ? 'Could not load this policy list. Retry to choose a policy.'
+                                      : !settings.permissions[`${key}Read`]
+                                        ? 'You do not have permission to browse this policy family.'
+                                        : candidate[versionKey]
+                                          ? 'This version stays attached until you change it.'
+                                          : settings.policies.filter(
+                                                (p) => p.family === key && p.isDefault
+                                              ).length > 1
+                                            ? 'Multiple default policies exist. Choose one explicitly and correct defaults in Settings.'
+                                            : empty
                                 }
                                 disabledValues={
                                   candidate[versionKey] &&
@@ -1490,11 +1519,17 @@ export default function FeeStructureWorkspaceCard({
                           {locked ? 'View publication checks' : 'Recheck configuration'}
                         </LoadingButton>
                       </Stack>
-                      {!preview && (
+                      {previewing && (
+                        <Alert severity="info" role="status">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <CircularProgress size={18} aria-label="Checking configuration" />
+                            <span>Checking policy coverage, settings and installment schedules…</span>
+                          </Stack>
+                        </Alert>
+                      )}
+                      {!preview && !previewing && (
                         <Alert severity="info">
-                          {previewing
-                            ? 'Checking policy coverage, settings and installment schedules…'
-                            : 'Check the current configuration to see readiness and coverage.'}
+                          Check the current configuration to see readiness and coverage.
                         </Alert>
                       )}
                       {preview && (

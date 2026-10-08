@@ -1,27 +1,19 @@
 'use client';
 
+import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { alpha } from '@mui/material/styles';
-import {
-  Box,
-  Stack,
-  Alert,
-  Paper,
-  Drawer,
-  Button,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Alert, Paper, Drawer, Button, Typography } from '@mui/material';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import VersionSidebar from './version/VersionSidebar';
 import VersionDiffTable from './version/VersionDiffTable';
-import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
-
+import FinancePolicySkeleton from './FinancePolicySkeleton';
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
+import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -99,6 +91,7 @@ export default function FinancePolicyVersionDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          minHeight: 0,
         },
       }}
     >
@@ -107,24 +100,24 @@ export default function FinancePolicyVersionDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          bgcolor: 'background.default',
+          minHeight: 0,
+          bgcolor: 'background.neutral',
         }}
       >
         <FinancePolicyDrawerHeader
-          title="Policy version history"
+          title="Policy Version History"
           titleId="policy-versions-title"
           description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+          badges={<Label color="default">Read Only</Label>}
+          helpText="Review recorded policy snapshots. Select a version to compare its values with the previous version. Viewing history does not change the current policy."
           onClose={onClose}
         />
 
         {/* Content Body */}
         {isLoading || (policy.policyType === 'collection' && isFeeHeadsLoading) ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ py: 10, flex: 1 }}>
-            <CircularProgress size={32} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Loading version history...
-            </Typography>
-          </Stack>
+          <Box sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto', flex: 1, minHeight: 0 }}>
+            <FinancePolicySkeleton label="Loading policy version history" />
+          </Box>
         ) : isError ? (
           <Box sx={{ p: 3 }}>
             <Alert
@@ -157,7 +150,6 @@ export default function FinancePolicyVersionDrawer({
                 maxWidth: 420,
                 textAlign: 'center',
                 borderRadius: 1.5,
-                borderStyle: 'dashed',
               }}
             >
               <Iconify
@@ -205,7 +197,7 @@ export default function FinancePolicyVersionDrawer({
 
             {/* Version Changes Display */}
             <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-              <Box sx={{ pr: { xs: 0.5, sm: 1 }, pb: 4 }}>
+              <Box sx={{ pr: { xs: 0.5, sm: 1 }, pb: 1 }}>
                 {selectedVersion && (
                   <VersionDiffTable selectedVersion={selectedVersion} valueContext={valueContext} />
                 )}
@@ -230,7 +222,6 @@ export default function FinancePolicyVersionDrawer({
           <Button
             variant="outlined"
             size="small"
-            color="inherit"
             onClick={onClose}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
           >

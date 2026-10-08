@@ -31,6 +31,11 @@ export interface IRequiredDocument {
 }
 
 export interface IConcessionRequestItem {
+  requesterId?: string | null;
+  submittedById?: string | null;
+  autoCreateRefund?: boolean;
+  paidConcessionAmount?: number;
+  canCreateRefundRequests?: boolean;
   id?: string;
   studentConcessionTypeRequestId: string;
   concessionTypeId: string;

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ProrationSimulationSection — Live Calculation Simulator
+ * ProrationSimulationSection — Calculation simulator
  *
  * Runs the server calculation algorithm against the last saved policy version.
  * Displays side-by-side scheduled amount vs computed prorated demand, reduction
@@ -30,7 +30,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { SectionCard } from '../collection/CollectionCommon';
+import { ConcessionSectionCard as SectionCard } from '../concession/ConcessionCommon';
 
 import type { IProrationFeeHeadRule } from '../../types/finance-policy.types';
 
@@ -101,8 +101,8 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
 
   return (
     <SectionCard
-      title="Live Calculation Simulator"
-      subtitle="Authoritative server evaluation simulating demand generation against saved policy parameters."
+      title="Calculation Simulator"
+      subtitle="Preview the calculation using the last saved policy version. Unsaved changes are not included."
       icon="solar:calculator-bold-duotone"
       action={
         <Label color="info" sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}>
@@ -110,7 +110,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
         </Label>
       }
     >
-      <Grid container spacing={2.5}>
+      <Grid container spacing={2}>
         {/* Quick Date Presets */}
         <Grid size={{ xs: 12 }}>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">

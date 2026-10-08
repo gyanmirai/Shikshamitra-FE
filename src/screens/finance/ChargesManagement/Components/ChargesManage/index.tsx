@@ -33,6 +33,7 @@ import { useChargePermissions } from '../../useChargePermissions';
 const ChargesManagement = () => {
   // State to store the currently selected charge data
   const [selectedChargeData, setSelectedChargeData] = useState<IChargeData | null>(null);
+  const [unsavedClose, setUnsavedClose] = useState<'create' | 'edit' | null>(null);
   const addChargeDialog = useBoolean();
   const onConfirmDialg = useBoolean();
   const academicFilters = useFinanceAcademicFilters();
@@ -72,16 +73,18 @@ const ChargesManagement = () => {
    * @param _e - Event object (unused)
    * @param isSubmit - Boolean indicating if form was submitted
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e: any, isSubmit?: boolean, discardConfirmed = false) => {
+    if (isChanges && !isSubmit && !discardConfirmed) {
+      setUnsavedClose('create');
+      return;
+    }
     // Helper function to reset changes state after a delay
     const resetState = () => {
-      setTimeout(() => {
-        dispatch(setIsChanges(false));
-      }, 200);
+      dispatch(setIsChanges(false));
     };
 
     // Close dialog if form was submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (isSubmit || discardConfirmed) {
       onConfirmDialg.onFalse();
       viewChargeDetailsDialog.onFalse();
       setSelectedMode('');
@@ -106,17 +109,19 @@ const ChargesManagement = () => {
    * @param _e - Event object (unused)
    * @param isSubmit - Boolean indicating if form was submitted
    */
-  const handleEditClose = (_e: any, isSubmit?: boolean) => {
+  const handleEditClose = (_e: any, isSubmit?: boolean, discardConfirmed = false) => {
+    if (isChanges && !isSubmit && !discardConfirmed) {
+      setUnsavedClose('edit');
+      return;
+    }
     // Helper function to reset changes state after a delay
     const resetState = () => {
-      setTimeout(() => {
-        dispatch(setIsChanges(false));
-        setSelectedChargeData(null);
-      }, 200);
+      dispatch(setIsChanges(false));
+      setSelectedChargeData(null);
     };
 
     // Close dialog if form was submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (isSubmit || discardConfirmed) {
       editChargeDialog.onFalse();
       if (isSubmit) {
         setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
@@ -191,8 +196,8 @@ const ChargesManagement = () => {
               name: 'Charges',
               href: '/finance/charge-management',
               onClick(e) {
-                addChargeDialog.onFalse();
-                setSelectedChargeData(null);
+                e.preventDefault();
+                handleClose(null, false);
               },
             },
             { name: 'Add Charge' },
@@ -213,16 +218,15 @@ const ChargesManagement = () => {
               name: 'Charges',
               href: '/finance/charge-management',
               onClick(e) {
-                editChargeDialog.onFalse();
-                setSelectedChargeData(null);
+                e.preventDefault();
+                handleEditClose(null, false);
               },
             },
             { name: 'Update Charge' },
           ]}
           isBack
           onBack={() => {
-            editChargeDialog.onFalse();
-            setSelectedChargeData(null);
+            handleEditClose(null, false);
           }}
           sx={{ px: 1 }}
         />
@@ -320,7 +324,16 @@ const ChargesManagement = () => {
 
       {/* Add Charge Dialog */}
       {addChargeDialog.value && (
-        <Card sx={{ flex: 1, minHeight: 0, boxShadow: 'var(--shadows-4)' }}>
+        <Card
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadows-4)',
+          }}
+        >
           <UpdateChargeForm
             open={addChargeDialog}
             onClose={handleClose}
@@ -342,7 +355,16 @@ const ChargesManagement = () => {
 
       {/* Edit Charge Dialog */}
       {editChargeDialog.value && selectedChargeData?.chargeId && (
-        <Card sx={{ flex: 1, minHeight: 0, boxShadow: 'var(--shadows-4)' }}>
+        <Card
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadows-4)',
+          }}
+        >
           <UpdateChargeForm
             chargeId={selectedChargeData.chargeId}
             open={editChargeDialog}
@@ -525,6 +547,26 @@ const ChargesManagement = () => {
             }}
           >
             Void charge
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={unsavedClose !== null}
+        icon="warning"
+        title="Discard unsaved changes?"
+        content="Your charge has unsaved changes. Leaving will discard them."
+        onClose={() => setUnsavedClose(null)}
+        action={
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={() => {
+              if (unsavedClose === 'create') handleClose(null, false, true);
+              if (unsavedClose === 'edit') handleEditClose(null, false, true);
+              setUnsavedClose(null);
+            }}
+          >
+            Discard changes
           </Button>
         }
       />

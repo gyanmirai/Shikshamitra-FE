@@ -18,8 +18,18 @@ import DefaultPolicyToggle from '../DefaultPolicyToggle';
 import { ConcessionSectionCard } from './ConcessionCommon';
 
 const STATUS_OPTIONS = [
-  { value: 'Draft', label: 'Draft', color: 'warning' as const },
-  { value: 'Active', label: 'Active', color: 'success' as const },
+  {
+    value: 'Draft',
+    label: 'Draft',
+    color: 'warning' as const,
+    caption: 'Save for review before making it active.',
+  },
+  {
+    value: 'Active',
+    label: 'Active',
+    color: 'success' as const,
+    caption: 'Available for concession requests.',
+  },
 ];
 
 interface ConcessionGeneralSectionProps {
@@ -44,11 +54,11 @@ export default function ConcessionGeneralSection({
 }: ConcessionGeneralSectionProps) {
   return (
     <ConcessionSectionCard
-      title="General information"
+      title="General Information"
       subtitle="Name the policy and choose when it is available."
       icon={GlobalIcons.notebook}
     >
-      <Grid container spacing={1}>
+      <Grid container spacing={2}>
         {/* Policy Name */}
         <Grid size={{ xs: 12, sm: 7 }}>
           <ShakingTextField error={!!(formik.touched.policyName && formik.errors.policyName)}>
@@ -79,6 +89,7 @@ export default function ConcessionGeneralSection({
               label="Status *"
               name="status"
               options={STATUS_OPTIONS}
+              optionDescriptionKey="caption"
               value={formik.values.status}
               onChange={(value) => {
                 formik.setFieldValue('status', value);
@@ -91,12 +102,7 @@ export default function ConcessionGeneralSection({
                 <Label color={value === 'Active' ? 'success' : 'warning'}>{String(value)}</Label>
               )}
               error={Boolean(formik.touched.status && formik.errors.status)}
-              helperText={
-                (formik.touched.status && formik.errors.status) ||
-                (formik.values.status === 'Active'
-                  ? 'Available for concession requests.'
-                  : 'Save for review before making it active.')
-              }
+              helperText={(formik.touched.status && formik.errors.status) || ''}
             />
           </ShakingTextField>
         </Grid>
@@ -108,17 +114,14 @@ export default function ConcessionGeneralSection({
               fullWidth
               size="small"
               multiline
-              rows={3}
+              rows={2}
               label="Description"
               name="description"
               value={formik.values.description}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={
-                (formik.touched.description && (formik.errors.description as string)) ||
-                `${(formik.values.description || '').length}/500 characters`
-              }
+              helperText={formik.touched.description && (formik.errors.description as string)}
               inputProps={{ maxLength: 500 }}
               placeholder="Describe who this policy supports and when to use it."
             />
@@ -127,6 +130,8 @@ export default function ConcessionGeneralSection({
 
         <Grid size={{ xs: 12, sm: 5 }}>
           <DefaultPolicyToggle
+            compact
+            descriptionDisplay="tooltip"
             policyLabel="Concession"
             status={formik.values.status}
             checked={Boolean(formik.values.isDefault)}

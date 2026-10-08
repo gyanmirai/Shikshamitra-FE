@@ -80,7 +80,7 @@ export function ProrationSummaryPanel({
   };
   const content = (
     <Stack spacing={2} sx={{ p: 2 }}>
-      <Typography variant="subtitle2">Policy summary</Typography>
+      <Typography variant="subtitle2">Policy Summary</Typography>
       <Stack spacing={1}>
         <SummaryRow
           label="Policy name"
@@ -134,7 +134,7 @@ export function ProrationSummaryPanel({
       )}
       <Divider />
       <Stack spacing={1.25}>
-        <Typography variant="subtitle2">Validation checklist</Typography>
+        <Typography variant="subtitle2">Validation Checklist</Typography>
         <ValidationCheckItem label="General information" valid={checks.generalValid} />
         <ValidationCheckItem
           label={`Daily or Monthly proration (${checks.recurringEnabledCount})`}
@@ -167,7 +167,7 @@ export function ProrationSummaryPanel({
   return (
     <Box
       component="aside"
-      aria-label="Policy summary"
+      aria-label="Policy Summary"
       sx={{
         width: inline ? '100%' : 280,
         minWidth: 0,

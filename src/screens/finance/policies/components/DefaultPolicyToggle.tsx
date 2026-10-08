@@ -2,12 +2,15 @@
 
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Card,
   Stack,
   Switch,
   Typography,
+  IconButton,
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
@@ -19,6 +22,8 @@ interface DefaultPolicyToggleProps {
   onChange: (checked: boolean) => void;
   otherDefaultPolicyName?: string;
   currentDefault?: boolean;
+  compact?: boolean;
+  descriptionDisplay?: 'inline' | 'tooltip';
 }
 
 export default function DefaultPolicyToggle({
@@ -28,16 +33,29 @@ export default function DefaultPolicyToggle({
   onChange,
   otherDefaultPolicyName,
   currentDefault = false,
+  compact = false,
+  descriptionDisplay = 'inline',
 }: DefaultPolicyToggleProps) {
   const disabled = status !== 'Active' || currentDefault;
+  const helpText = currentDefault
+    ? 'Designate another Active policy as Default before removing this default or archiving this policy.'
+    : status !== 'Active'
+      ? 'Only an Active policy can be selected as the default.'
+      : 'Replaces the current academic-year default.';
+  const shortDescription = currentDefault
+    ? 'Choose another default to change this.'
+    : status !== 'Active'
+      ? 'Activate this policy to make it the default.'
+      : null;
 
   return (
-    <Box>
+    <Box sx={{ height: compact ? '100%' : undefined }}>
       <Card
         variant="outlined"
         aria-disabled={disabled}
         sx={{
-          p: 2,
+          p: compact ? 0.5 : 2,
+          height: compact ? '100%' : undefined,
           display: 'flex',
           alignItems: 'center',
           borderRadius: 1.5,
@@ -62,7 +80,7 @@ export default function DefaultPolicyToggle({
       >
         <FormControlLabel
           disabled={disabled}
-          sx={{ m: 0, width: '100%' }}
+          sx={{ m: 0, flex: 1, minWidth: 0 }}
           onClick={(event) => event.stopPropagation()}
           control={
             <Switch
@@ -81,25 +99,34 @@ export default function DefaultPolicyToggle({
                 </Typography>
                 {checked && (
                   <Label color="primary" sx={{ height: 18, fontSize: '0.65rem' }}>
-                    Default Selected
+                    {descriptionDisplay === 'tooltip' ? 'Default' : 'Default Selected'}
                   </Label>
                 )}
               </Stack>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                sx={{ mt: 0.25 }}
-              >
-                {currentDefault
-                  ? 'Designate another Active policy as Default before removing this default or archiving this policy.'
-                  : status !== 'Active'
-                    ? 'Only an Active policy can be selected as the default.'
-                    : 'Replaces the current academic-year default.'}
-              </Typography>
+              {(descriptionDisplay === 'inline' || shortDescription) && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                  sx={{ mt: compact ? 0 : 0.25, lineHeight: compact ? 1.25 : undefined }}
+                >
+                  {descriptionDisplay === 'inline' ? helpText : shortDescription}
+                </Typography>
+              )}
             </Box>
           }
         />
+        {descriptionDisplay === 'tooltip' && (
+          <CustomTooltip arrow placement="right" title={helpText}>
+            <IconButton
+              size="small"
+              aria-label={`Default ${policyLabel.toLowerCase()} policy information`}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+            </IconButton>
+          </CustomTooltip>
+        )}
       </Card>
 
       {checked && otherDefaultPolicyName && (

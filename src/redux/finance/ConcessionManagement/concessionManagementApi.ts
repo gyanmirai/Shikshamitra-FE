@@ -39,10 +39,30 @@ type UpdateDraftCommand = ConcessionDraftCommand & {
 
 export const concessionManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    createConcessionRefundRequests: builder.mutation<
+      ApiDataResponse<ConcessionRequestDetail>,
+      {
+        concessionRequestId: string;
+        body: { requestConcurrencyStamp: string; idempotencyKey: string };
+      }
+    >({
+      query: ({ concessionRequestId, body }) => ({
+        url: `/concession-request/${concessionRequestId}/refund-requests`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.concessionRequest, financeModuleType.feeRefund],
+    }),
     getConcessionRequestContext: builder.query<
       ConcessionRequestContext,
-      { academicYearId: string; studentId: string; studentFeeStructureId?: string; concessionTypeId?: string;
-        concessionPolicyId?: string; concessionPolicyVersionId?: string }
+      {
+        academicYearId: string;
+        studentId: string;
+        studentFeeStructureId?: string;
+        concessionTypeId?: string;
+        concessionPolicyId?: string;
+        concessionPolicyVersionId?: string;
+      }
     >({
       query: (params) => ({ url: '/concession-request/context', method: 'GET', params }),
       providesTags: (_result, _error, arg) => [
@@ -293,6 +313,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useCreateConcessionRefundRequestsMutation,
   useGetConcessionRequestContextQuery,
   useCreateConcessionRequestMutation,
   useCreateConcessionDraftMutation,

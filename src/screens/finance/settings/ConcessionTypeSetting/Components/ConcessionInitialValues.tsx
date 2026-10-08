@@ -1,7 +1,4 @@
-import {
-  DEFAULT_CONCESSION_DOCUMENT_FORMATS,
-  DEFAULT_CONCESSION_DOCUMENT_SIZE_MB,
-} from '../type';
+import { DEFAULT_CONCESSION_DOCUMENT_FORMATS, DEFAULT_CONCESSION_DOCUMENT_SIZE_MB } from '../type';
 
 import type { IConcessionTypeForm } from '../type';
 
@@ -15,7 +12,7 @@ export const getInitialConcessionTypeData = (editData?: any | null): IConcession
       ? doc.maxFileSizeBytes / (1024 * 1024)
       : DEFAULT_CONCESSION_DOCUMENT_SIZE_MB,
     acceptedFormats: Array.isArray(doc?.acceptedFormats)
-      ? doc.acceptedFormats
+      ? doc.acceptedFormats.map(Number)
       : DEFAULT_CONCESSION_DOCUMENT_FORMATS,
     isRequired: doc?.isRequired ?? true,
   })),

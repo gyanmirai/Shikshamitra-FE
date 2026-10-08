@@ -6,7 +6,7 @@ import type {
 import CustomSelect from 'src/components/custom-select';
 import { Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
-  assignmentPolicyFamilies,
+  selectableAssignmentPolicyFamilies,
   useAssignmentPolicyOptionsQuery,
 } from 'src/redux/finance/studentFeeAssignment';
 
@@ -44,8 +44,8 @@ export default function AssignmentPolicies({
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
         {editing
-          ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts. Proration is inherited from the fee structure and cannot be changed here.'
-          : 'Policies default to the selected fee structure. Overrides apply only to this student. Proration is inherited from the fee structure.'}
+          ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts.'
+          : 'Policies default to the selected fee structure. Changes here apply only to this student.'}
       </Typography>
       {options.isLoading && <Skeleton height={48} />}
       {options.isError && (
@@ -60,19 +60,18 @@ export default function AssignmentPolicies({
           Policy choices could not be loaded. Retry to change a policy.
         </Alert>
       )}
-      {assignmentPolicyFamilies
-        .filter((family) => family !== 'proration')
-        .map((family) => {
-          const inherited = defaults.find((p) => p.family === family);
-          const selected = selections.find((p) => p.family === family);
-          const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
-          const available = [...(options.data ?? []).filter((p) => p.family === family)];
-          if (inherited && !available.some((p) => p.versionId === inherited.versionId))
-            available.push(inherited);
-          const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
-          return (
+      {selectableAssignmentPolicyFamilies.map((family) => {
+        const inherited = defaults.find((p) => p.family === family);
+        const selected = selections.find((p) => p.family === family);
+        const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
+        const available = [...(options.data ?? []).filter((p) => p.family === family)];
+        if (inherited && !available.some((p) => p.versionId === inherited.versionId))
+          available.push(inherited);
+        const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
+        const overridden = !editing && value !== (inherited?.versionId ?? '');
+        return (
+          <Stack key={family} spacing={0.5}>
             <CustomSelect
-              key={family}
               name={`${studentId}-${family}`}
               label={label}
               value={value}
@@ -85,22 +84,42 @@ export default function AssignmentPolicies({
                 })),
               ]}
               helperText={
-                !editing && selected && selected.versionId !== (inherited?.versionId ?? null)
-                  ? `Student override · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
+                overridden
+                  ? `Override for this student · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
                   : undefined
               }
-              onChange={(next) =>
-                onChange(
-                  [
-                    ...selections.filter((p) => p.family !== family),
-                    { family, versionId: String(next) || null },
-                  ],
-                  reason
-                )
-              }
+              onChange={(next) => {
+                const nextVersionId = String(next) || null;
+                const nextSelections = [
+                  ...selections.filter((p) => p.family !== family),
+                  ...(editing || nextVersionId !== (inherited?.versionId ?? null)
+                    ? [{ family, versionId: nextVersionId }]
+                    : []),
+                ];
+                const hasOverride = nextSelections.some(
+                  (policy) =>
+                    policy.versionId !==
+                    (defaults.find((item) => item.family === policy.family)?.versionId ?? null)
+                );
+                onChange(nextSelections, hasOverride || editing ? reason : '');
+              }}
             />
-          );
-        })}
+            {overridden && canOverride && (
+              <Button
+                size="small"
+                sx={{ alignSelf: 'flex-start' }}
+                disabled={disabled}
+                onClick={() => {
+                  const nextSelections = selections.filter((policy) => policy.family !== family);
+                  onChange(nextSelections, nextSelections.length ? reason : '');
+                }}
+              >
+                Reset {family} to fee structure default
+              </Button>
+            )}
+          </Stack>
+        );
+      })}
       {!editing && selections.length > 0 && (
         <Button size="small" disabled={disabled} onClick={() => onChange([], '')}>
           Restore fee structure defaults
@@ -126,10 +145,24 @@ export default function AssignmentPolicies({
       )}
       {!canOverride && (
         <Typography variant="caption" color="text.secondary">
-          Your access allows using the fee structure’s policies. Policy overrides require assignment
-          policy override permission.
+          You do not have permission to override policies. The fee structure defaults will be used.
         </Typography>
       )}
+      {canOverride &&
+        !options.isLoading &&
+        !options.isError &&
+        selectableAssignmentPolicyFamilies.every((family) =>
+          (options.data ?? [])
+            .filter((policy) => policy.family === family)
+            .every(
+              (policy) =>
+                policy.versionId === defaults.find((item) => item.family === family)?.versionId
+            )
+        ) && (
+          <Alert severity="info">
+            No other active policies are available for this student’s academic year.
+          </Alert>
+        )}
     </Stack>
   );
 }

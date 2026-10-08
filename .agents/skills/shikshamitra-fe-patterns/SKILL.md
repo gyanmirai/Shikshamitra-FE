@@ -35,6 +35,7 @@ invent behavior: preserve the governing contract and report the conflict.
 | Page title, breadcrumb, summary metrics, filters, tabs, or page-level actions                             | [page-headers.md](references/page-headers.md)                                                         |
 | Record table, toolbar, search, filters, columns, row actions, sticky columns, pagination, or table states | [tables.md](references/tables.md)                                                                     |
 | Create, edit, configure, or update form                                                                   | [forms.md](references/forms.md)                                                                       |
+| Data-entry dialog or drawer with repeating fields or a long scrollable form                              | [forms.md](references/forms.md) and [complex-dialogs.md](references/complex-dialogs.md)                |
 | Confirmation, warning, reason request, destructive decision, or short feedback dialog                     | [popups.md](references/popups.md)                                                                     |
 | Drawer, sidebar, or side panel                                                                            | [sidebars.md](references/sidebars.md)                                                                 |
 | Read-only record view or dependency/status summary                                                        | [detail-views.md](references/detail-views.md)                                                         |

@@ -2,24 +2,16 @@
 
 import React, { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import {
-  Box,
-  Stack,
-  Alert,
-  Paper,
-  Drawer,
-  Button,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Alert, Paper, Stack, Drawer, Button, Typography } from '@mui/material';
 
-import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
+import FinancePolicySkeleton from './FinancePolicySkeleton';
 import PolicyAuditTimeline from './version/PolicyAuditTimeline';
-
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
+import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -46,7 +38,7 @@ export default function FinancePolicyAuditDrawer({
     if (policy?.academicYearId && policy.academicYearName) {
       labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
     }
-    return { labelsById };
+    return { labelsById, policyType: policy?.policyType };
   }, [policy]);
 
   if (!policy) return null;
@@ -68,11 +60,12 @@ export default function FinancePolicyAuditDrawer({
         'aria-modal': true,
         'aria-labelledby': 'policy-audit-title',
         sx: {
-          width: { xs: '100%', sm: 'min(680px, 92vw)' },
+          width: { xs: '100%', sm: 'min(760px, 96vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          minHeight: 0,
         },
       }}
     >
@@ -81,48 +74,70 @@ export default function FinancePolicyAuditDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          bgcolor: 'background.default',
+          minHeight: 0,
+          bgcolor: 'background.neutral',
         }}
       >
         <FinancePolicyDrawerHeader
-          title="Policy audit trail"
+          title="Policy Audit Trail"
           titleId="policy-audit-title"
-          description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+          description="This read-only history shows who changed the policy and when. Expand an event to compare its recorded values."
+          descriptionDisplay="tooltip"
+          badges={<Label color="default">Read Only</Label>}
           onClose={onClose}
         />
 
-        {/* Audit Stats Banner */}
+        <Box
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 2,
+            bgcolor: 'background.paper',
+            borderBottom: 1,
+            borderColor: 'divider',
+            flexShrink: 0,
+          }}
+        >
+          <Typography variant="caption" color="text.secondary" display="block">
+            Policy
+          </Typography>
+          <Typography variant="subtitle1" sx={{ mt: 0.25, overflowWrap: 'anywhere' }}>
+            {policy.policyName}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+            Academic Year: {policy.academicYearName || 'Current academic year'}
+          </Typography>
+        </Box>
+
         <Box
           sx={{
             px: { xs: 2, sm: 3 },
             py: 1.5,
             borderBottom: '1px solid',
             borderColor: 'divider',
-            bgcolor: (theme) => alpha(theme.palette.background.default, 0.5),
+            bgcolor: 'background.neutral',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: 1,
             flexShrink: 0,
           }}
         >
-          <Typography variant="subtitle2">
-            Recorded activity{!isLoading && !isError && ` (${versions.length})`}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Typography variant="subtitle2" component="h3">
+              Recorded Activity
+            </Typography>
+            {!isLoading && !isError && <Label color="default">{versions.length}</Label>}
+          </Stack>
           <Typography variant="caption" color="text.secondary">
-            Newest first
+            Newest First
           </Typography>
         </Box>
 
         {/* Scrollable Timeline */}
-        <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-          <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+        <Scrollbar sx={{ flex: 1, minHeight: 0 }} aria-busy={isLoading}>
+          <Box sx={{ p: { xs: 2, sm: 3 } }}>
             {isLoading ? (
-              <Stack alignItems="center" justifyContent="center" sx={{ py: 10 }}>
-                <CircularProgress size={32} />
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  Loading audit trail events...
-                </Typography>
-              </Stack>
+              <FinancePolicySkeleton label="Loading policy activity" />
             ) : isError ? (
               <Alert
                 severity="warning"
@@ -141,9 +156,8 @@ export default function FinancePolicyAuditDrawer({
                 sx={{
                   p: 4,
                   textAlign: 'center',
-                  borderRadius: 1.5,
+                  borderRadius: 2,
                   bgcolor: 'background.paper',
-                  borderStyle: 'dashed',
                 }}
               >
                 <Iconify
@@ -166,7 +180,11 @@ export default function FinancePolicyAuditDrawer({
                 </Typography>
               </Paper>
             ) : (
-              <PolicyAuditTimeline versions={versions} valueContext={valueContext} />
+              <PolicyAuditTimeline
+                versions={versions}
+                valueContext={valueContext}
+                policyName={policy.policyName}
+              />
             )}
           </Box>
         </Scrollbar>
@@ -187,7 +205,6 @@ export default function FinancePolicyAuditDrawer({
           <Button
             variant="outlined"
             size="small"
-            color="inherit"
             onClick={onClose}
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
           >

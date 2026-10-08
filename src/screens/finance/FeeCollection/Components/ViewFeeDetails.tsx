@@ -3,7 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { Box, Grid, Stack } from '@mui/material';
+import { Alert, Box, Button, Grid, Skeleton, Stack } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStudentFeeDetailsQuery } from 'src/redux/feeCollection/feeCollection';
@@ -36,6 +36,8 @@ const ViewFeeDetails = ({
     data: feeDetails,
     isLoading: isFeeDetailsLoading,
     isFetching: isFeeDetailsFetching,
+    isError: isFeeDetailsError,
+    refetch: refetchFeeDetails,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeDetailsQuery,
@@ -46,9 +48,53 @@ const ViewFeeDetails = ({
     options: {
       skip: !student?.studentId || !currentYear?.id,
     },
+    popupConfig: { error: false },
   });
 
   const overview = feeDetails?.feeOverview;
+
+  if (!currentYear?.id) {
+    return <Alert severity="info">Select an academic year to view fee details.</Alert>;
+  }
+
+  if (isFeeDetailsError) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" disabled={isFeeDetailsFetching} onClick={refetchFeeDetails}>
+            Retry
+          </Button>
+        }
+      >
+        Fee details could not be loaded. Please try again.
+      </Alert>
+    );
+  }
+
+  if (isFeeDetailsLoading || (!feeDetails && isFeeDetailsFetching)) {
+    return (
+      <Grid container spacing={1} aria-label="Loading fee details">
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Stack spacing={1}>
+            <Skeleton variant="rounded" height={140} />
+            <Skeleton variant="rounded" height={240} />
+            <Skeleton variant="rounded" height={180} />
+          </Stack>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Stack spacing={1}>
+            <Skeleton variant="rounded" height={240} />
+            <Skeleton variant="rounded" height={180} />
+          </Stack>
+        </Grid>
+      </Grid>
+    );
+  }
+
+  if (!feeDetails) {
+    return <Alert severity="warning">Fee details are unavailable for this student.</Alert>;
+  }
 
   return (
     <Box display="flex" flexDirection="column" height="100%" pb={1}>
@@ -58,7 +104,7 @@ const ViewFeeDetails = ({
           <Grid size={{ xs: 12, md: 8 }}>
             <Stack spacing={1}>
               <motion.div {...slideUp(0)}>
-                <StudentFeesSummaryView student={feeDetails?.student} />
+                <StudentFeesSummaryView student={feeDetails.student} />
               </motion.div>
 
               <motion.div {...slideUp(0.08)}>

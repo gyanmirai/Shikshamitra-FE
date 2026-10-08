@@ -18,6 +18,7 @@ import {
 } from 'src/redux/finance/collectionPolicy';
 
 import { computeSlabIssues } from '../components/collection/CollectionCommon';
+import { acceptsNumericDraft, validCollectionNumber } from '../collectionNumericLimits';
 
 import type {
   IFinancePolicyRow,
@@ -25,15 +26,18 @@ import type {
   ICollectionPolicyFormValues,
 } from '../types/finance-policy.types';
 
-const emptyStringToNull = (value: number, originalValue: unknown) =>
-  originalValue === '' ? null : value;
-
 // Helper to get initial values
 const getInitialValues = (
   editData: IFinancePolicyRow | null | undefined,
   academicYearId: string
 ): ICollectionPolicyFormValues => {
   const data = editData as any;
+  // Legacy responses use zero for unused formula fields. Keep the selected
+  // formula's zero visible for correction; absent formulas are optional.
+  const formulaValue = (value: number | null | undefined, types: string[]) =>
+    value === 0 && (!data?.enableLateFee || !types.includes(data?.lateFeeType))
+      ? null
+      : (value ?? null);
   return {
     policyName: data?.policyName || '',
     policyCode: data?.policyCode || '',
@@ -49,12 +53,12 @@ const getInitialValues = (
     gracePeriodType: data?.gracePeriodType || 'Calendar',
     lateFeeApplyOnFeeHeads: data?.lateFeeApplyOnFeeHeads || [],
     lateFeeType: data?.lateFeeType || 'Flat',
-    flatAmount: data?.flatAmount ?? null,
-    percentage: data?.percentage ?? null,
+    flatAmount: formulaValue(data?.flatAmount, ['Flat']),
+    percentage: formulaValue(data?.percentage, ['Percentage', 'Compound']),
     percentageBase: data?.percentageBase || 'OutstandingAmount',
-    amountPerDay: data?.amountPerDay ?? null,
-    amountPerWeek: data?.amountPerWeek ?? null,
-    amountPerMonth: data?.amountPerMonth ?? null,
+    amountPerDay: formulaValue(data?.amountPerDay, ['PerDay']),
+    amountPerWeek: formulaValue(data?.amountPerWeek, ['PerWeek']),
+    amountPerMonth: formulaValue(data?.amountPerMonth, ['PerMonth']),
     compoundFrequency: data?.compoundFrequency || 'Daily',
     escalationRules: data?.escalationRules || [],
     feeHeadOverrides: data?.feeHeadOverrides || [],
@@ -67,6 +71,33 @@ const getInitialValues = (
     allowOnlineCollection: data?.allowOnlineCollection ?? true,
   };
 };
+
+const boundedNumber = (kind: 'days' | 'amount' | 'percentage', minimum: number) =>
+  Yup.number()
+    .nullable()
+    .transform((value, originalValue) =>
+      originalValue === ''
+        ? null
+        : typeof originalValue === 'string' && !acceptsNumericDraft(originalValue, kind)
+          ? Number.NaN
+          : value
+    )
+    .typeError(
+      kind === 'days'
+        ? 'Enter whole days between 0 and 365'
+        : kind === 'percentage'
+          ? 'Enter a percentage between 0.01 and 100'
+          : 'Enter an amount between 0.01 and 9,99,999'
+    )
+    .test(
+      'bounded-number',
+      kind === 'days'
+        ? `Enter whole days between ${minimum} and 365`
+        : kind === 'percentage'
+          ? 'Enter a percentage between 0.01 and 100 with up to 2 decimals'
+          : 'Enter an amount between 0.01 and 9,99,999 with up to 2 decimals',
+      (value) => value == null || validCollectionNumber(value, kind, minimum)
+    );
 
 // Validation schema
 const validationSchema = Yup.object().shape({
@@ -83,16 +114,10 @@ const validationSchema = Yup.object().shape({
   isDefault: Yup.boolean(),
 
   enableLateFee: Yup.boolean(),
-  gracePeriodDays: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .typeError('Grace Period must be a number')
-    .min(0, 'Must be 0 or greater')
-    .max(365, 'Cannot exceed 365 days')
-    .when('enableLateFee', {
-      is: true,
-      then: (s) => s.required('Grace Period is required'),
-    }),
+  gracePeriodDays: boundedNumber('days', 0).when('enableLateFee', {
+    is: true,
+    then: (s) => s.required('Grace Period is required'),
+  }),
   gracePeriodType: Yup.string().when('enableLateFee', {
     is: true,
     then: (schema) =>
@@ -110,71 +135,49 @@ const validationSchema = Yup.object().shape({
     is: true,
     then: (s) => s.required('Calculation Type is required'),
   }),
-  flatAmount: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .when(['enableLateFee', 'lateFeeType'], {
-      is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'Flat',
-      then: (s) => s.required('Amount is required').moreThan(0, 'Must be greater than 0'),
-    }),
-  percentage: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .when(['enableLateFee', 'lateFeeType'], {
-      is: (enableLateFee: boolean, lateFeeType: string) =>
-        enableLateFee && (lateFeeType === 'Percentage' || lateFeeType === 'Compound'),
-      then: (s) =>
-        s
-          .required('Percentage is required')
-          .moreThan(0, 'Must be greater than 0')
-          .max(100, 'Cannot exceed 100%'),
-    }),
-  amountPerDay: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .when(['enableLateFee', 'lateFeeType'], {
-      is: (enableLateFee: boolean, lateFeeType: string) =>
-        enableLateFee && lateFeeType === 'PerDay',
-      then: (s) => s.required('Amount Per Day is required').moreThan(0, 'Must be greater than 0'),
-    }),
-  amountPerWeek: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .when(['enableLateFee', 'lateFeeType'], {
-      is: (enableLateFee: boolean, lateFeeType: string) =>
-        enableLateFee && lateFeeType === 'PerWeek',
-      then: (s) => s.required('Amount Per Week is required').moreThan(0, 'Must be greater than 0'),
-    }),
-  amountPerMonth: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .when(['enableLateFee', 'lateFeeType'], {
-      is: (enableLateFee: boolean, lateFeeType: string) =>
-        enableLateFee && lateFeeType === 'PerMonth',
-      then: (s) => s.required('Amount Per Month is required').moreThan(0, 'Must be greater than 0'),
-    }),
+  flatAmount: boundedNumber('amount', 0.01).when(['enableLateFee', 'lateFeeType'], {
+    is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'Flat',
+    then: (s) => s.required('Amount is required'),
+  }),
+  percentage: boundedNumber('percentage', 0.01).when(['enableLateFee', 'lateFeeType'], {
+    is: (enableLateFee: boolean, lateFeeType: string) =>
+      enableLateFee && (lateFeeType === 'Percentage' || lateFeeType === 'Compound'),
+    then: (s) => s.required('Percentage is required'),
+  }),
+  amountPerDay: boundedNumber('amount', 0.01).when(['enableLateFee', 'lateFeeType'], {
+    is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'PerDay',
+    then: (s) => s.required('Amount Per Day is required'),
+  }),
+  amountPerWeek: boundedNumber('amount', 0.01).when(['enableLateFee', 'lateFeeType'], {
+    is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'PerWeek',
+    then: (s) => s.required('Amount Per Week is required'),
+  }),
+  amountPerMonth: boundedNumber('amount', 0.01).when(['enableLateFee', 'lateFeeType'], {
+    is: (enableLateFee: boolean, lateFeeType: string) =>
+      enableLateFee && lateFeeType === 'PerMonth',
+    then: (s) => s.required('Amount Per Month is required'),
+  }),
   escalationRules: Yup.array()
     .of(
       Yup.object({
-        startDay: Yup.number()
-          .required('Start day is required')
-          .integer('Use a whole day')
-          .min(0, 'Must be 0 or greater'),
-        endDay: Yup.number()
-          .nullable()
-          .integer('Use a whole day')
-          .test(
-            'after-start-day',
-            'Must be on or after the start day',
-            function validateEndDay(value) {
-              return value === null || value === undefined || value >= this.parent.startDay;
-            }
-          ),
+        startDay: boundedNumber('days', 1).required('Start day is required'),
+        endDay: boundedNumber('days', 1).test(
+          'after-start-day',
+          'Must be on or after the start day',
+          function validateEndDay(value) {
+            return value === null || value === undefined || value >= this.parent.startDay;
+          }
+        ),
         calculationType: Yup.string()
           .oneOf(['Flat', 'Percentage'])
           .required('Calculation type is required'),
-        value: Yup.number().required('Value is required').moreThan(0, 'Must be greater than 0'),
-        maxFee: Yup.number().nullable().min(0, 'Must be 0 or greater'),
+        value: boundedNumber('amount', 0.01)
+          .required('Value is required')
+          .when('calculationType', {
+            is: 'Percentage',
+            then: () => boundedNumber('percentage', 0.01).required('Value is required'),
+          }),
+        maxFee: boundedNumber('amount', 0.01),
       })
     )
     .when(['enableLateFee', 'lateFeeType'], {
@@ -184,22 +187,26 @@ const validationSchema = Yup.object().shape({
           .min(1, 'Add at least one late-fee slab')
           .test(
             'continuous-non-overlapping-ranges',
-            'Fix overlapping or missing-day-range slabs',
-            (rules) =>
-              !rules?.length || !computeSlabIssues(rules as ILateFeeEscalationRule[]).hasIssues
+            'Use valid contiguous slabs from day 1, within the charging cutoff',
+            function validateSlabCoverage(rules) {
+              return (
+                !rules?.length ||
+                !computeSlabIssues(
+                  rules as ILateFeeEscalationRule[],
+                  this.parent.maximumChargingDays
+                ).hasIssues
+              );
+            }
           ),
     }),
 
-  maximumLateFeeAmount: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .min(0, 'Must be 0 or greater'),
-  maximumChargingDays: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .integer('Must be a whole number')
-    .min(1, 'Must be at least 1 day'),
+  maximumLateFeeAmount: boundedNumber('amount', 0.01),
+  maximumChargingDays: boundedNumber('days', 1),
 
+  compoundFrequency: Yup.string().oneOf(
+    ['Daily', 'Weekly', 'Monthly'],
+    'Select a valid compound frequency'
+  ),
   allowOnlineCollection: Yup.boolean(),
   considerAsIncome: Yup.boolean(),
   lateFeeIncomeCategoryId: Yup.string()
@@ -284,28 +291,36 @@ export function useCollectionPolicyForm({
    */
   const checks = useMemo(() => {
     const v = formik.values;
-    const nameValid = v.policyName.trim().length >= 3;
-    const graceValid = !v.enableLateFee || (v.gracePeriodDays >= 0 && v.gracePeriodDays <= 365);
+    const nameValid = v.policyName.trim().length >= 3 && v.policyName.trim().length <= 100;
+    const graceValid = !v.enableLateFee || validCollectionNumber(v.gracePeriodDays, 'days');
     const graceTypeValid = !v.enableLateFee || v.gracePeriodType === 'Calendar';
     const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
 
     let lateFeeValid = true;
     if (v.enableLateFee) {
-      if (v.lateFeeType === 'Flat') lateFeeValid = v.flatAmount !== null && v.flatAmount > 0;
+      if (v.lateFeeType === 'Flat')
+        lateFeeValid = validCollectionNumber(v.flatAmount, 'amount', 0.01);
       else if (v.lateFeeType === 'Percentage' || v.lateFeeType === 'Compound') {
-        lateFeeValid = v.percentage !== null && v.percentage > 0 && v.percentage <= 100;
+        lateFeeValid =
+          validCollectionNumber(v.percentage, 'percentage', 0.01) &&
+          (v.lateFeeType !== 'Compound' ||
+            ['Daily', 'Weekly', 'Monthly'].includes(v.compoundFrequency));
       } else if (v.lateFeeType === 'PerDay')
-        lateFeeValid = v.amountPerDay !== null && v.amountPerDay > 0;
+        lateFeeValid = validCollectionNumber(v.amountPerDay, 'amount', 0.01);
       else if (v.lateFeeType === 'PerWeek')
-        lateFeeValid = v.amountPerWeek !== null && v.amountPerWeek > 0;
+        lateFeeValid = validCollectionNumber(v.amountPerWeek, 'amount', 0.01);
       else if (v.lateFeeType === 'PerMonth')
-        lateFeeValid = v.amountPerMonth !== null && v.amountPerMonth > 0;
+        lateFeeValid = validCollectionNumber(v.amountPerMonth, 'amount', 0.01);
       else if (v.lateFeeType === 'Slab') {
-        const slabIssues = computeSlabIssues(v.escalationRules);
+        const slabIssues = computeSlabIssues(v.escalationRules, v.maximumChargingDays);
         lateFeeValid =
           v.escalationRules.length > 0 &&
-          v.escalationRules.every(
-            (s) => s.startDay >= 0 && (s.endDay === null || s.endDay >= s.startDay) && s.value > 0
+          v.escalationRules.every((s) =>
+            validCollectionNumber(
+              s.value,
+              s.calculationType === 'Percentage' ? 'percentage' : 'amount',
+              0.01
+            )
           ) &&
           !slabIssues.hasIssues;
       }
@@ -314,8 +329,14 @@ export function useCollectionPolicyForm({
     const slabValid =
       v.lateFeeType !== 'Slab' ||
       !v.enableLateFee ||
-      !computeSlabIssues(v.escalationRules).hasIssues;
+      (v.escalationRules.length > 0 &&
+        !computeSlabIssues(v.escalationRules, v.maximumChargingDays).hasIssues);
 
+    const capsValid =
+      (v.maximumLateFeeAmount === null ||
+        validCollectionNumber(v.maximumLateFeeAmount, 'amount', 0.01)) &&
+      (v.maximumChargingDays === null || validCollectionNumber(v.maximumChargingDays, 'days', 1));
+    const numericValid = graceValid && lateFeeValid && slabValid && capsValid;
     const incomeHeadValid = !v.enableLateFee || Boolean(v.lateFeeIncomeCategoryId);
     const isDefaultConflict = false;
 
@@ -333,11 +354,14 @@ export function useCollectionPolicyForm({
       graceValid &&
       graceTypeValid &&
       headsValid &&
+      capsValid &&
       lateFeeValid &&
       incomeHeadValid &&
       slabValid;
 
     return {
+      numericValid,
+      capsValid,
       nameValid,
       graceValid,
       graceTypeValid,
@@ -407,6 +431,12 @@ export function useCollectionPolicyForm({
   };
 
   const addSlab = () => {
+    if (
+      formik.values.escalationRules.some(
+        (rule) => rule.endDay === null || rule.endDay >= (formik.values.maximumChargingDays ?? 365)
+      )
+    )
+      return;
     const nextStart =
       formik.values.escalationRules.length > 0
         ? (formik.values.escalationRules[formik.values.escalationRules.length - 1].endDay || 0) + 1
@@ -414,7 +444,7 @@ export function useCollectionPolicyForm({
 
     const newSlab: ILateFeeEscalationRule = {
       startDay: nextStart,
-      endDay: nextStart + 9,
+      endDay: Math.min(nextStart + 9, formik.values.maximumChargingDays ?? 365),
       calculationType: 'Flat',
       value: 10,
       maxFee: null,
@@ -434,7 +464,14 @@ export function useCollectionPolicyForm({
    */
   const calculatedLateFee = useMemo(() => {
     const v = formik.values;
-    if (!v.enableLateFee || calcDaysLate <= v.gracePeriodDays) return 0;
+    if (!v.enableLateFee) return 0;
+    if (
+      !checks.numericValid ||
+      !validCollectionNumber(calcAmount, 'amount') ||
+      !validCollectionNumber(calcDaysLate, 'days')
+    )
+      return Number.NaN;
+    if (calcDaysLate <= v.gracePeriodDays) return 0;
     const effectiveDays = Math.min(
       calcDaysLate - v.gracePeriodDays,
       v.maximumChargingDays ?? Number.MAX_SAFE_INTEGER
@@ -485,15 +522,20 @@ export function useCollectionPolicyForm({
     }
 
     if (v.maximumLateFeeAmount !== null) rawFee = Math.min(rawFee, v.maximumLateFeeAmount);
+    if (!Number.isFinite(rawFee) || rawFee > Number.MAX_SAFE_INTEGER - calcAmount)
+      return Number.NaN;
     return roundUpWithinAmount(rawFee, v.maximumLateFeeAmount ?? Number.MAX_SAFE_INTEGER);
-  }, [formik.values, calcAmount, calcDaysLate]);
+  }, [formik.values, calcAmount, calcDaysLate, checks.numericValid]);
 
   /**
    * Memoization Justification:
    * Keeps numeric allocations safe and avoids re-computing payment math on irrelevant changes.
    */
   const allocatedPayment = useMemo(
-    () => Math.min(calcPayment, calcAmount + calculatedLateFee),
+    () =>
+      validCollectionNumber(calcPayment, 'amount')
+        ? Math.min(calcPayment, calcAmount + calculatedLateFee)
+        : Number.NaN,
     [calcPayment, calcAmount, calculatedLateFee]
   );
 

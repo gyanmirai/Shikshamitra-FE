@@ -1,23 +1,33 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Chip, Alert, Button, LinearProgress, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Iconify } from 'src/components/iconify';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Button,
+  IconButton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useGetRefundPoliciesQuery,
   useGetRefundPolicyByIdQuery,
@@ -53,18 +63,23 @@ import {
   useArchiveConcessionPolicyMutation,
   useUnarchiveConcessionPolicyMutation,
 } from 'src/redux/finance/concessionPolicy';
-import {
-  CONCESSION_METHODS,
-  CONCESSION_SCOPES,
-  CONCESSION_VALUE_SOURCES,
-  concessionOptionLabel,
-  concessionValueLabel,
-  policyDateLabel,
-} from './concession/concessionPresentation';
 
+import { policyTableFilterArgs } from './policyTableQuery';
 import FinancePolicyAuditDrawer from './FinancePolicyAuditDrawer';
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
 import FinancePolicyVersionDrawer from './FinancePolicyVersionDrawer';
+import {
+  concessionFilterArgs,
+  normalizeConcessionFilters,
+} from './concession/concessionTableQuery';
+import {
+  policyDateLabel,
+  CONCESSION_SCOPES,
+  CONCESSION_METHODS,
+  concessionValueLabel,
+  concessionOptionLabel,
+  CONCESSION_VALUE_SOURCES,
+} from './concession/concessionPresentation';
 
 import type {
   IFinancePolicyRow,
@@ -81,6 +96,41 @@ const STATUS_COLOR: Record<FinancePolicyStatus, 'success' | 'warning' | 'error' 
   Inactive: 'error',
   Archived: 'default',
 };
+
+const BOOLEAN_OPTIONS = [
+  { label: 'Yes', value: 'true' },
+  { label: 'No', value: 'false' },
+];
+
+const LATE_FEE_TYPES = [
+  'Flat',
+  'Percentage',
+  'PerDay',
+  'PerWeek',
+  'PerMonth',
+  'Compound',
+  'Slab',
+].map((value) => ({ label: value.replace(/([a-z])([A-Z])/g, '$1 $2'), value }));
+
+const REFUND_AMOUNT_MODES = [
+  { label: 'Staff-entered amount', value: 'ManualUpToEligible' },
+  { label: 'Full eligible balance', value: 'RemainingPaidAmount' },
+  { label: 'Fixed amount', value: 'FixedAmount' },
+  { label: 'Percentage of eligible balance', value: 'Percentage' },
+];
+
+const REFUND_FEE_SCOPES = [
+  { label: 'All fee heads', value: 'AllFeeHeads' },
+  { label: 'Selected fee heads', value: 'SelectedFeeHeads' },
+];
+
+const REFUND_PAYOUT_METHODS = [
+  { label: 'Cash', value: 'Cash' },
+  { label: 'Cheque', value: 'Cheque' },
+  { label: 'Demand draft', value: 'DemandDraft' },
+  { label: 'Bank transfer', value: 'BankTransfer' },
+  { label: 'UPI', value: 'Upi' },
+];
 
 // Collection policies use archive/restore as their lifecycle and are never hard-deleted
 // from this table because fee structures and historical version snapshots may reference them.
@@ -111,6 +161,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     search: '',
     status: '' as FinancePolicyStatus | '',
   });
+  const [policyFilters, setPolicyFilters] = React.useState<IParams['filters']>([]);
+  const [policySorts, setPolicySorts] = React.useState<IParams['sorts']>([]);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -118,17 +170,22 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
 
   useEffect(() => {
     setQueryParams((previous) => ({ ...previous, page: 1, status: '' }));
+    setPolicyFilters([]);
+    setPolicySorts([]);
   }, [archived]);
 
   // ── Queries / Mutations ──────────────────────────────────────────────────────
-  // Collection Policy has a real backend (Phase 1); every other kind still calls
-  // the generic, not-yet-implemented `/finance-policies` slice. Both queries are
-  // called unconditionally (React hooks can't branch) and gated with `skip` —
-  // only the one matching `policyType` actually fires.
+  // Each policy workspace uses its own list API. Hooks are gated with `skip` so
+  // only the selected policy type requests rows.
   const isCollectionKind = policyType === 'collection';
   const isConcessionKind = policyType === 'concession';
   const isRefundKind = policyType === 'refund';
   const isProrationKind = policyType === 'proration';
+  const policyQueryFilters = policyTableFilterArgs(policyFilters);
+  const concessionQueryFilters = concessionFilterArgs(policyFilters);
+  const policySorting = policySorts[0]
+    ? `${policySorts[0].column} ${policySorts[0].direction}`
+    : undefined;
   const usesArchiveTabs = isCollectionKind || isConcessionKind || isRefundKind || isProrationKind;
   const concessionPermissions = financePermissions.policies.concessionPolicyActions;
   const collectionPermissions = financePermissions.policies.collectionPolicyActions;
@@ -192,7 +249,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   });
 
   const {
-    data: collectionPolicyData,
+    currentData: collectionPolicyData,
+    isError: isCollectionError,
+    refetch: refetchCollectionPolicies,
     isLoading: isCollectionLoading,
     isFetching: isCollectionFetching,
   } = useGetCollectionPoliciesQuery(
@@ -201,6 +260,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       status: archived ? 'Archived' : queryParams.status || undefined,
       includeArchived: archived,
       search: queryParams.search || undefined,
+      ...policyQueryFilters,
+      sorting: policySorting,
       skipCount: (queryParams.page - 1) * queryParams.pageSize,
       maxResultCount: queryParams.pageSize,
     },
@@ -218,6 +279,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       academicYearId,
       status: archived ? 'Archived' : queryParams.status || undefined,
       search: queryParams.search || undefined,
+      ...concessionQueryFilters,
+      sorting: policySorting,
       page: queryParams.page,
       pageSize: queryParams.pageSize,
     },
@@ -225,7 +288,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   );
 
   const {
-    data: refundPolicyData,
+    currentData: refundPolicyData,
+    isError: isRefundError,
+    refetch: refetchRefundPolicies,
     isLoading: isRefundLoading,
     isFetching: isRefundFetching,
   } = useGetRefundPoliciesQuery(
@@ -233,6 +298,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       academicYearId,
       status: archived ? 'Archived' : queryParams.status || undefined,
       search: queryParams.search || undefined,
+      ...policyQueryFilters,
+      sorting: policySorting,
       page: queryParams.page,
       pageSize: queryParams.pageSize,
     },
@@ -240,7 +307,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   );
 
   const {
-    data: prorationPolicyData,
+    currentData: prorationPolicyData,
+    isError: isProrationError,
+    refetch: refetchProrationPolicies,
     isLoading: isProrationLoading,
     isFetching: isProrationFetching,
   } = useGetProrationPoliciesQuery(
@@ -248,6 +317,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       academicYearId,
       status: archived ? 'Archived' : queryParams.status || undefined,
       search: queryParams.search || undefined,
+      ...policyQueryFilters,
+      sorting: policySorting,
       page: queryParams.page,
       pageSize: queryParams.pageSize,
     },
@@ -321,10 +392,14 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     useGetConcessionPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isConcessionKind,
     });
-  const { data: refundPolicyDetails, isLoading: isRefundDetailsLoading } =
-    useGetRefundPolicyByIdQuery(selected?.id || '', {
-      skip: !selected?.id || !detailsDialog.value || !isRefundKind,
-    });
+  const {
+    currentData: refundPolicyDetails,
+    isFetching: isRefundDetailsLoading,
+    isError: isRefundDetailsError,
+    refetch: refetchRefundDetails,
+  } = useGetRefundPolicyByIdQuery(selected?.id || '', {
+    skip: !selected?.id || !detailsDialog.value || !isRefundKind,
+  });
   const { data: prorationPolicyDetails, isLoading: isProrationDetailsLoading } =
     useGetProrationPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isProrationKind,
@@ -343,7 +418,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     : isConcessionKind
       ? isConcessionDetailsLoading
       : isRefundKind
-        ? isRefundDetailsLoading
+        ? isRefundDetailsLoading ||
+          Boolean(selected && detailsDialog.value && !refundPolicyDetails && !isRefundDetailsError)
         : isProrationKind
           ? isProrationDetailsLoading
           : isGenericDetailsLoading;
@@ -369,14 +445,24 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     () => [
       {
         id: 'policyName',
-        label: 'Policy Name',
+        label: isRefundKind ? 'Policy name' : 'Policy Name',
         align: 'left',
+        filterType: usesArchiveTabs ? 'string' : undefined,
         sticky: true,
         stickyPosition: 'left',
-        minWidth: 240,
+        stickyOnMobile: !isRefundKind,
+        minWidth: isRefundKind ? 180 : 240,
         render: (value, row) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-            <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 0.75,
+            }}
+          >
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
               {value}
             </Typography>
             {(row as IFinancePolicyRow).isDefault && (
@@ -384,8 +470,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                 label="Default"
                 size="small"
                 color="primary"
-                variant="outlined"
-                sx={{ height: 20, flexShrink: 0 }}
+                variant={isRefundKind ? 'soft' : 'outlined'}
+                sx={{ height: 20, flexShrink: 0, ...(isRefundKind && { fontSize: 11 }) }}
               />
             )}
           </Box>
@@ -440,6 +526,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               label: 'Value source',
               align: 'left' as const,
               minWidth: 155,
+              filterType: 'enum' as const,
+              enumOptions: CONCESSION_VALUE_SOURCES,
               render: (value: string) => (
                 <Typography variant="body2">
                   {concessionOptionLabel(CONCESSION_VALUE_SOURCES, value)}
@@ -451,6 +539,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               label: 'Calculation',
               align: 'left' as const,
               minWidth: 140,
+              filterType: 'enum' as const,
+              enumOptions: CONCESSION_METHODS,
               render: (value: string) => (
                 <Typography variant="body2">
                   {concessionOptionLabel(CONCESSION_METHODS, value)}
@@ -461,7 +551,18 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'policyLimit',
               label: 'Value / limit',
               align: 'right' as const,
-              minWidth: 115,
+              minWidth: 140,
+              filterType: 'number' as const,
+              renderColumn: () => (
+                <CustomTooltip
+                  title="Filter the displayed number. Use Calculation to choose percentage or rupee policies."
+                  arrow
+                >
+                  <Box component="span" sx={{ display: 'inline-flex', ml: 0.5 }}>
+                    <Iconify icon="solar:info-circle-linear" width={14} />
+                  </Box>
+                </CustomTooltip>
+              ),
               render: (_: unknown, row: any) => (
                 <Box>
                   <Typography
@@ -482,6 +583,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               label: 'Apply on',
               align: 'left' as const,
               minWidth: 195,
+              filterType: 'enum' as const,
+              enumOptions: CONCESSION_SCOPES,
               render: (value: string) => (
                 <Typography variant="body2">
                   {concessionOptionLabel(CONCESSION_SCOPES, value)}
@@ -494,51 +597,109 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         ? [
             {
               id: 'amountMode',
-              label: 'Amount Rule',
+              label: 'Amount rule',
+              minWidth: 170,
               align: 'left' as const,
+              filterType: 'enum' as const,
+              enumOptions: REFUND_AMOUNT_MODES,
               render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
+                <Typography variant="body2">
+                  {(
+                    {
+                      ManualUpToEligible: 'Staff-entered amount',
+                      RemainingPaidAmount: 'Full eligible balance',
+                      FixedAmount: 'Fixed amount',
+                      Percentage: 'Percentage of eligible balance',
+                    } as Record<string, string>
+                  )[value] ||
+                    value ||
+                    '—'}
                 </Typography>
               ),
             },
             {
               id: 'feeHeadScope',
-              label: 'Fee Head Scope',
+              label: 'Refundable fees',
+              minWidth: 140,
               align: 'left' as const,
+              filterType: 'enum' as const,
+              enumOptions: REFUND_FEE_SCOPES,
               render: (value: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
+                <Typography variant="body2">
                   {value === 'SelectedFeeHeads'
-                    ? `${row.applicableFeeHeadIds?.length ?? 0} selected`
-                    : 'All Fee Heads'}
+                    ? `${row.applicableFeeHeadIds?.length ?? 0} fee head${row.applicableFeeHeadIds?.length === 1 ? '' : 's'}`
+                    : 'All fee heads'}
                 </Typography>
               ),
             },
             {
-              id: 'processingTargetDays',
-              label: 'Processing Target',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value != null ? `${value} days` : '-'}
-                </Typography>
+              id: 'allowedPayoutMethods',
+              label: 'Payout methods',
+              align: 'left' as const,
+              minWidth: 150,
+              filterType: 'enum' as const,
+              enumOptions: REFUND_PAYOUT_METHODS,
+              renderColumn: () => (
+                <CustomTooltip title="Filter policies that allow a payout method." arrow>
+                  <Box component="span" sx={{ display: 'inline-flex', ml: 0.5 }}>
+                    <Iconify icon="solar:info-circle-linear" width={14} />
+                  </Box>
+                </CustomTooltip>
               ),
+              render: (value: string[], row: any) => {
+                const methods = Array.isArray(value)
+                  ? value.map(
+                      (method) =>
+                        (
+                          ({
+                            BankTransfer: 'Bank transfer',
+                            DemandDraft: 'Demand draft',
+                            Upi: 'UPI',
+                          }) as Record<string, string>
+                        )[method] || method
+                    )
+                  : [];
+                return (
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Typography variant="body2">
+                      {methods.length > 1 ? `${methods.length} methods` : methods[0] || '—'}
+                    </Typography>
+                    {methods.length > 1 && (
+                      <CustomTooltip
+                        arrow
+                        title={
+                          <Typography variant="body2" sx={{ p: 1.5 }}>
+                            {methods.join(', ')}
+                          </Typography>
+                        }
+                      >
+                        <IconButton
+                          size="small"
+                          aria-label={`Payout methods for ${row.policyName}`}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} />
+                        </IconButton>
+                      </CustomTooltip>
+                    )}
+                  </Stack>
+                );
+              },
             },
             {
               id: 'allowPartialRefund',
-              label: 'Partial Refund',
-              align: 'center' as const,
+              label: 'Partial refund',
+              align: 'left' as const,
+              minWidth: 130,
+              filterType: 'enum' as const,
+              enumOptions: [
+                { label: 'Allowed', value: 'true' },
+                { label: 'Full only', value: 'false' },
+              ],
               render: (value: any) => (
-                <Chip
-                  label={value ? 'Yes' : 'No'}
-                  color={value ? 'primary' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
+                <Label color={value ? 'primary' : 'default'}>
+                  {value ? 'Allowed' : 'Full only'}
+                </Label>
               ),
             },
           ]
@@ -549,6 +710,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'enableLateFee',
               label: 'Late Fee',
               align: 'center' as const,
+              filterType: 'enum' as const,
+              enumOptions: [
+                { label: 'Enabled', value: 'true' },
+                { label: 'Disabled', value: 'false' },
+              ],
               render: (value: any) => (
                 <Chip
                   label={value ? 'Enabled' : 'Disabled'}
@@ -562,6 +728,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'lateFeeType',
               label: 'Late Fee Type',
               align: 'left' as const,
+              filterType: 'enum' as const,
+              enumOptions: LATE_FEE_TYPES,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
                   {value || '-'}
@@ -572,6 +740,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'gracePeriodDays',
               label: 'Grace Days',
               align: 'center' as const,
+              filterType: 'number' as const,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
                   {value != null ? `${value} days` : '-'}
@@ -582,6 +751,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'allowOnlineCollection',
               label: 'Online Pay',
               align: 'center' as const,
+              filterType: 'enum' as const,
+              enumOptions: BOOLEAN_OPTIONS,
               render: (value: any) => (
                 <Chip
                   label={value ? 'Yes' : 'No'}
@@ -599,36 +770,24 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               id: 'feeHeadRules',
               label: 'Fee Heads Configured',
               align: 'center' as const,
+              filterType: 'number' as const,
               render: (_: any, row: any) => {
                 const rules: any[] = row.feeHeadRules ?? [];
-                const enabled = rules.filter((r: any) => r.ruleType !== 'NoProration').length;
                 const total = rules.length;
                 return (
                   <Chip
-                    label={total > 0 ? `${enabled} / ${total}` : '-'}
+                    label={total}
                     size="small"
-                    color={enabled > 0 ? 'primary' : 'default'}
-                    variant={enabled > 0 ? 'filled' : 'outlined'}
+                    color={total > 0 ? 'primary' : 'default'}
+                    variant={total > 0 ? 'filled' : 'outlined'}
                     sx={{ height: 20, fontSize: '0.7rem' }}
                   />
                 );
               },
             },
-            {
-              id: 'usedByCount',
-              label: 'Used By',
-              align: 'center' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {row.usedByCount != null
-                    ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
-                    : '-'}
-                </Typography>
-              ),
-            },
           ]
         : []),
-      ...(policyType !== 'collection' && policyType !== 'concession' && policyType !== 'refund'
+      ...(policyType === 'payment'
         ? [
             {
               id: 'effectiveFrom',
@@ -642,15 +801,16 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
             },
           ]
         : []),
-      ...(policyType !== 'concession'
+      ...(!usesArchiveTabs
         ? [
             {
               id: 'updatedBy',
-              label: 'Updated By',
+              label: isRefundKind ? 'Updated by' : 'Updated By',
+              defaultHidden: isRefundKind,
               align: 'left' as const,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
-                  {value || '-'}
+                  {value && value !== '-' ? value : '—'}
                 </Typography>
               ),
             },
@@ -658,8 +818,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         : []),
       {
         id: 'updatedAt',
-        label: 'Last Updated',
+        label: isRefundKind ? 'Last updated' : 'Last Updated',
+        defaultHidden: isRefundKind,
         align: 'left',
+        minWidth: isConcessionKind ? 140 : undefined,
+        filterType: usesArchiveTabs ? 'date' : undefined,
         render: (value, row: any) => (
           <Typography variant="caption" fontSize="13px">
             {policyDateLabel(row.updatedAt || row.lastModificationTime || row.creationTime)}
@@ -673,7 +836,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         minWidth: 100,
         filterType: 'enum',
         isFilter: !(usesArchiveTabs && archived),
+        isSort: !(usesArchiveTabs && archived),
         sticky: true,
+        stickyPosition: 'right',
         enumOptions: usesArchiveTabs
           ? archived
             ? [{ label: 'Archived', value: 'Archived' }]
@@ -687,7 +852,15 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               { label: 'Archived', value: 'Archived' },
             ],
         render: (value) => (
-          <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
+          <Label
+            color={
+              isRefundKind && value === 'Draft'
+                ? 'default'
+                : (STATUS_COLOR[value as FinancePolicyStatus] ?? 'default')
+            }
+          >
+            {value}
+          </Label>
         ),
       },
       {
@@ -698,22 +871,17 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: 160,
+        stickyPosition: 'right',
+        minWidth: 120,
+        width: 120,
         render: (_, row) => {
           const policy = row as IFinancePolicyRow;
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
+              placement="right-top"
               moreLabel={`Actions for ${policy.policyName}`}
               actions={[
-                {
-                  id: 'view',
-                  label: 'View',
-                  icon: 'carbon:view-filled',
-                  onClick: () => {
-                    setSelected(policy);
-                    detailsDialog.onTrue();
-                  },
-                },
                 ...(canEditPolicy && policy.status !== 'Archived'
                   ? [
                       {
@@ -721,23 +889,6 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                         label: 'Edit',
                         icon: 'solar:pen-bold',
                         onClick: () => onEdit(policy),
-                      },
-                    ]
-                  : []),
-                ...(isPolicyDeletable(policyType, policy.status)
-                  ? [
-                      {
-                        id: 'delete',
-                        label: 'Delete',
-                        icon: 'solar:trash-bin-trash-bold',
-                        color: 'error.main',
-                        disabled: policy.isUsedInDownstream,
-                        tooltip:
-                          'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
-                        onClick: () => {
-                          setSelected(policy);
-                          deleteDialog.onTrue();
-                        },
                       },
                     ]
                   : []),
@@ -797,6 +948,23 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                               message: parseApiProblemDetail(error).detail,
                             });
                           }
+                        },
+                      },
+                    ]
+                  : []),
+                ...(isPolicyDeletable(policyType, policy.status)
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: policy.isUsedInDownstream,
+                        tooltip:
+                          'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                        onClick: () => {
+                          setSelected(policy);
+                          deleteDialog.onTrue();
                         },
                       },
                     ]
@@ -929,17 +1097,28 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     ]
   );
 
-  const tableColumns = useMemo(
-    () =>
-      isConcessionKind
-        ? columns.map((column) => ({
-            ...column,
-            isSort: false,
-            isFilter: column.id === 'status' && !archived,
-          }))
-        : columns,
-    [columns, isConcessionKind, archived]
-  );
+  const listError =
+    (isCollectionKind && isCollectionError) ||
+    (isConcessionKind && isConcessionError) ||
+    (isRefundKind && isRefundError) ||
+    (isProrationKind && isProrationError);
+  const policyLabel = isRefundKind
+    ? 'Refund policies'
+    : isConcessionKind
+      ? 'Concession policies'
+      : isCollectionKind
+        ? 'Collection policies'
+        : isProrationKind
+          ? 'Proration policies'
+          : 'Finance policies';
+  const retryPolicies = () =>
+    isRefundKind
+      ? refetchRefundPolicies()
+      : isConcessionKind
+        ? refetchConcessionPolicies()
+        : isCollectionKind
+          ? refetchCollectionPolicies()
+          : refetchProrationPolicies();
   const lifecycleBusy = isConcessionArchiving || isConcessionRestoring;
   const restoring = selected?.status === 'Archived';
 
@@ -947,60 +1126,126 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
 
   return (
     <>
-      {isConcessionKind && isConcessionError && (
+      {listError && Boolean(policyData?.items.length) && (
         <Alert
           severity="error"
           action={
-            <Button size="small" color="inherit" onClick={() => refetchConcessionPolicies()}>
+            <Button size="small" color="inherit" onClick={retryPolicies}>
               Retry
             </Button>
           }
         >
-          Unable to load concession policies.
+          Unable to load {policyLabel.toLowerCase()}.
         </Alert>
       )}
-      {isConcessionKind && isFetching && Boolean(concessionPolicyData) && (
-        <LinearProgress aria-label="Refreshing concession policies" />
+      {usesArchiveTabs && isFetching && Boolean(policyData) && (
+        <LinearProgress aria-label={`Refreshing ${policyLabel.toLowerCase()}`} />
       )}
       <CustomizableTable
         tableId={`finance-${policyType}-policy-table`}
         isLoading={isLoading || (isFetching && !policyData)}
-        columns={tableColumns}
-        tableTitle={isConcessionKind ? 'Concession policies' : 'Finance policies'}
+        errorContent={
+          usesArchiveTabs && listError && !policyData?.items.length ? (
+            <Stack spacing={1.5} alignItems="center">
+              <Iconify
+                icon="solar:danger-triangle-linear"
+                width={32}
+                sx={{ color: 'error.main' }}
+              />
+              <Typography variant="subtitle2">
+                Unable to load {policyLabel.toLowerCase()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Try again to load policies for this academic year.
+              </Typography>
+              <Button variant="outlined" color="inherit" size="small" onClick={retryPolicies}>
+                Retry
+              </Button>
+            </Stack>
+          ) : undefined
+        }
+        columns={columns}
+        tableTitle={policyLabel}
         wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0 } }}
         tableContainerProps={{
-          'aria-label': isConcessionKind ? 'Concession policies' : 'Finance policies',
+          'aria-label': policyLabel,
           sx: { height: 1 },
         }}
         searchFieldProps={{
-          placeholder: isConcessionKind ? 'Search policies by name…' : 'Search…',
+          placeholder: usesArchiveTabs ? 'Search policies by name…' : 'Search…',
         }}
         page={queryParams.page - 1}
         rowsPerPage={queryParams.pageSize}
+        filters={usesArchiveTabs ? policyFilters : undefined}
+        sorts={usesArchiveTabs ? policySorts : undefined}
         data={policyData?.items || []}
+        handleRowClick={(row) => {
+          setSelected(row as IFinancePolicyRow);
+          detailsDialog.onTrue();
+        }}
+        rowProps={(row) => ({
+          tabIndex: 0,
+          'aria-label': `View policy ${row.policyName}`,
+          onKeyDown: (event) => {
+            if (
+              event.target === event.currentTarget &&
+              (event.key === 'Enter' || event.key === ' ')
+            ) {
+              event.preventDefault();
+              setSelected(row as IFinancePolicyRow);
+              detailsDialog.onTrue();
+            }
+          },
+          sx: {
+            cursor: 'pointer',
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: -2,
+            },
+          },
+        })}
         serverSidePagination
         serverSideSearch
         serverSideFilter
+        serverSideSort={usesArchiveTabs}
+        serverSideSortMode="single"
+        onServerSort={
+          usesArchiveTabs
+            ? (_column, sorts) => {
+                setPolicySorts(sorts);
+                setQueryParams((prev) => ({ ...prev, page: 1 }));
+              }
+            : undefined
+        }
         totalCount={policyData?.totalCount}
         onServerPagination={(page, pageSize) =>
           setQueryParams((prev) => ({ ...prev, page, pageSize }))
         }
         onServerSearch={(search) => setQueryParams((prev) => ({ ...prev, search, page: 1 }))}
         onServerFilter={(filters) => {
-          if (usesArchiveTabs && archived) return;
-          const statusFilter = filters.find((f) => f.column === 'status');
+          const activeFilters = usesArchiveTabs ? normalizeConcessionFilters(filters) : filters;
+          if (usesArchiveTabs) setPolicyFilters(activeFilters);
+          const statusFilter = activeFilters.find((f) => f.column === 'status');
           setQueryParams((prev) => ({
             ...prev,
-            status: statusFilter ? (statusFilter.value as FinancePolicyStatus) : '',
+            status:
+              usesArchiveTabs && archived
+                ? ''
+                : statusFilter
+                  ? (statusFilter.value as FinancePolicyStatus)
+                  : '',
             page: 1,
           }));
         }}
         noDataText={
-          isConcessionKind && isConcessionError ? (
+          listError ? (
             'Policies could not be loaded. Use Retry above.'
           ) : !academicYearId ? (
             'Select an academic year to view policies.'
-          ) : queryParams.search || queryParams.status ? (
+          ) : queryParams.search ||
+            queryParams.status ||
+            (usesArchiveTabs && policyFilters.length) ? (
             'No policies match your search or filters.'
           ) : usesArchiveTabs && archived ? (
             'No archived policies.'
@@ -1017,7 +1262,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                   sx={{ mt: 1.5 }}
                   startIcon={<Iconify icon="mingcute:add-line" />}
                 >
-                  Create policy
+                  {isRefundKind ? 'Policy' : 'Create policy'}
                 </Button>
               )}
             </Box>
@@ -1043,6 +1288,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         }
         policyDetails={policyDetails}
         isLoading={isDetailsLoading}
+        isError={isRefundKind && isRefundDetailsError}
+        onRetry={isRefundKind ? refetchRefundDetails : undefined}
       />
 
       {/* Audit Drawer */}
@@ -1093,7 +1340,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         disableCancel={lifecycleBusy}
         disableEscapeKeyDown={lifecycleBusy}
         icon={restoring ? 'info' : 'warning'}
-        title={restoring ? 'Restore concession policy?' : 'Archive concession policy?'}
+        title={restoring ? 'Restore Concession Policy?' : 'Archive Concession Policy?'}
         content={
           <>
             <strong>{selected?.policyName}</strong>

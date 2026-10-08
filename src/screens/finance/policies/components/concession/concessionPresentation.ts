@@ -58,7 +58,8 @@ export const CONCESSION_SCOPES = [
   {
     value: 'AllFees',
     label: 'All installments, including paid',
-    caption: 'Approved concessions on paid amounts create separate refund requests.',
+    caption:
+      'Apply to paid and unpaid installments. The paid portion is refundable; the policy controls automatic or manual refund request creation.',
   },
 ];
 

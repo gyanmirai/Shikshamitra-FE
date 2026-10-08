@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { getIn } from 'formik';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
+import { isAllowedRefundMethod, getAllowedRefundMethodOptions } from './refundPayoutMethods';
 import {
   refundPaymentMethodsConfig,
   getInitialRefundPaymentDetails,
@@ -37,16 +38,34 @@ import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 export default function FeeRefundDetailsForm({
   formik,
+  allowedPayoutMethods,
 }: {
   formik: RefundFormik;
+  allowedPayoutMethods?: string[];
 }): React.ReactElement {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
-  const { data: eligibility } = useGetRefundEligibilityQuery(
+  const { currentData: eligibility, isFetching: eligibilityFetching, isError: eligibilityError } = useGetRefundEligibilityQuery(
     { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
     { skip: !formik.values.studentId || !currentYear?.id }
   );
+  const methods = allowedPayoutMethods ?? eligibility?.allowedPayoutMethods;
+  const methodsReady = allowedPayoutMethods !== undefined || Boolean(eligibility && !eligibilityFetching && !eligibilityError);
+  const canConfigureRefund = allowedPayoutMethods !== undefined || Boolean(
+    eligibility && !eligibilityFetching && !eligibilityError && eligibility.totalRefundable > 0 &&
+    eligibility.feeHeads.some((head) => head.months.some((month) => month.refundable > 0))
+  );
+  const methodOptions = getAllowedRefundMethodOptions(methodsReady ? methods : undefined);
+  const { refundMethod } = formik.values;
+  const { setFieldValue, setFieldTouched } = formik;
+  useEffect(() => {
+    if (methodsReady && refundMethod && !isAllowedRefundMethod(refundMethod, methods)) {
+      setFieldValue('refundMethod', '', false);
+      setFieldValue('paymentDetails', {}, false);
+      setFieldTouched('refundMethod', false, false);
+    }
+  }, [methodsReady, methods, refundMethod, setFieldValue, setFieldTouched]);
   const {
     data: bankAccountsData,
     isLoading: bankAccountsLoading,
@@ -74,7 +93,7 @@ export default function FeeRefundDetailsForm({
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
       {/* ── Refund Type Selection ── */}
-      {formik.values.studentId && (
+      {formik.values.studentId && canConfigureRefund && (
         <Paper
           variant="outlined"
           sx={{
@@ -112,7 +131,7 @@ export default function FeeRefundDetailsForm({
         </Paper>
       )}
 
-      {eligibility?.refundPolicyName && (
+      {canConfigureRefund && eligibility?.refundPolicyName && (
         <Alert severity="info" sx={{ mb: 1 }}>
           Policy: <strong>{eligibility.refundPolicyName}</strong> · Maximum currently refundable: ₹
           {eligibility.totalRefundable.toLocaleString('en-IN')}
@@ -138,7 +157,7 @@ export default function FeeRefundDetailsForm({
       />
 
       {/* ── Refund Payment Details Card ── */}
-      {formik.values.studentId && hasPaymentRecords && (
+      {formik.values.studentId && hasPaymentRecords && canConfigureRefund && (
         <Box
           sx={{
             p: 1.5,
@@ -166,18 +185,10 @@ export default function FeeRefundDetailsForm({
                 error={!!(formik.touched.refundMethod && formik.errors.refundMethod)}
               >
                 <CustomSelect
-                  options={Object.keys(refundPaymentMethodsConfig)
-                    .filter(
-                      (method) =>
-                        !eligibility?.allowedPayoutMethods?.length ||
-                        eligibility.allowedPayoutMethods.includes(method)
-                    )
-                    .map((method) => ({
-                      value: method,
-                      label: method.charAt(0).toUpperCase() + method.slice(1),
-                    }))}
+                  options={methodOptions}
+                  disabled={!methodsReady || methodOptions.length === 0}
                   label="Refund Method *"
-                  value={formik.values.refundMethod}
+                  value={methodsReady && isAllowedRefundMethod(refundMethod, methods) ? refundMethod : ''}
                   onChange={(value) => {
                     formik.setFieldValue('refundMethod', value);
                     formik.setFieldTouched('refundMethod', false);
@@ -190,13 +201,17 @@ export default function FeeRefundDetailsForm({
                   name="refundMethod"
                   multiple={false}
                   error={formik.touched.refundMethod && Boolean(formik.errors.refundMethod)}
-                  helperText={(formik.touched.refundMethod && formik.errors.refundMethod) as string}
+                  helperText={eligibilityError && allowedPayoutMethods === undefined
+                    ? 'Unable to load refund policy payment methods. Retry before submitting.'
+                    : !methodsReady ? 'Loading refund policy payment methods…'
+                      : methodOptions.length === 0 ? 'No payment methods are available under this refund policy.'
+                        : (formik.touched.refundMethod && formik.errors.refundMethod) as string}
                 />
               </ShakingTextField>
             </Grid>
 
             {/* Dynamic payment fields */}
-            {formik.values.refundMethod &&
+            {methodsReady && isAllowedRefundMethod(refundMethod, methods) &&
               refundPaymentMethodsConfig[
                 formik.values.refundMethod as keyof typeof refundPaymentMethodsConfig
               ]

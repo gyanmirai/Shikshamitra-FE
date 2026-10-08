@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-03
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -35,6 +35,7 @@ Use this table to find the first integration file.
 | Direct charge/late-fee waiver | `src/redux/feeCollection/feeCollection.ts`                                                                                    |
 | Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                                                              |
 | Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                                                   |
+| Fee categories          | `src/redux/feeCategory/feeCategoryApi.ts`                                                                                     |
 | Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                                                           |
 | Collection policies     | `src/redux/finance/collectionPolicy.ts`                                                                                       |
 | Concession Types        | `src/redux/finance/concessionType.ts`                                                                                         |
@@ -46,7 +47,10 @@ Collections owns academic filter state in `FeeCollection/index.tsx` and passes i
 
 Payment Term create/update requests send `status` as `Draft` or `Active`. The client does not collect or send a version-effective date; when `Active` is submitted, the backend derives the next valid activation date inside the board period and publishes that version in the same unit of work. Board list responses provide `startDate` and `endDate`, which are the UI and API validation boundaries for installment periods. Payment-term responses use named enum values; the API client also normalizes legacy numeric enum responses at the boundary so form controls and derived bill-generation dates receive one stable string contract.
 
-The installment-template dialog calls `POST /finance/payment-terms/templates/preview` with the selected board, preset, due-date choice, and current demand-generation rule. It presents the server-generated schedule before applying it. Applying replaces only local Formik installment rows; the ordinary create/update request remains the persistence boundary and the backend revalidates the full schedule.
+The installment-template dialog calls `POST /finance/payment-terms/templates/preview` with the selected board, preset, due-date choice, and dialog invoice rule (`demandGenerationRule` / `demandOffsetDays`).
+For `SpecificDate`, `specificDemandDates` supplies calendar dates in installment sequence order.
+The dialog first obtains server-generated period boundaries to validate offsets and specific dates, then presents the complete server-generated schedule before applying it.
+Applying updates the local Formik rows and invoice rule together; the ordinary create/update request remains the persistence boundary and the backend revalidates the full schedule.
 
 Invoice creation is controlled once for the complete payment-term schedule. The editor synchronizes that choice to every installment's `demandEnabled` field, and manual or template-generated installments inherit the current choice.
 

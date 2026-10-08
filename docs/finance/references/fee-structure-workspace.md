@@ -12,6 +12,8 @@ audience: humans-and-agents
 
 The active screen at `/finance/settings/create-fee-structure` uses one class workspace for viewing and editing draft/published structures. This implementation covers configuration only. It does not change Fee Structure Assignment, demands, collections or refunds.
 
+The [UI and language proposal](fee-structure-ui-redesign.md) specifies the next presentation pass for the three workspace steps and policy coverage dialog.
+
 Backend rules, exact permissions, migration and API contracts are owned by [the backend implementation reference](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
 
 ## Screen flow
@@ -21,7 +23,7 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 3. Add a Fee Structure draft. Enter its name. Eligible current default policies initialize once in a new draft.
 4. In **Fee Heads & Terms**, add active Fee Heads, set total amounts and optional flags, and select each head's exact published Payment Term version.
 5. Open the shared schedule dialog to inspect inherited dates/percentages. Customize locally or restore the inherited schedule. Replacing a customized term requires confirmation.
-6. In **Policies**, select exact Collection and Refund policy versions. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns have been removed from Fee Structure settings.
+6. In **Policies**, select exact Collection and Refund policy versions. A missing Collection Policy shows an inline error and blocks Next and navigation to Review; Refund remains optional. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns have been removed from Fee Structure settings.
 7. Save the draft. Each added row requires an entered amount and a published Payment Term. Policy configuration may remain incomplete in a draft; invalid selected relationships are rejected by the backend.
 8. Open **Review & Publish** for backend readiness errors, mismatch warnings, per-head policy/accounting coverage and resolved installments.
 9. Publish only after saving and obtaining a ready review. The server revalidates and protects the configuration.
@@ -104,7 +106,7 @@ Only active current policy snapshots appear as new choices. An attached older ve
 
 Default initialization waits for a complete successful family list and requires exactly one attachable current default plus attachment permission. It runs once per family on a new unsaved draft. No default leaves an empty field; multiple defaults require explicit choice. Manual selection/clear marks the family handled, including while another request is pending. Existing drafts, revisions and published records never receive defaults. A failed lookup preserves input and exposes retry; it does not silently select another policy.
 
-The subject creation form is the validation reference: name/amount errors appear after blur or Save, guidance stays under the owning field, and the name uses shared `ShakingTextField`. Policy requiredness is helper text, never a fake dropdown option. Collection remains required at publication; Refund and Proration remain optional. Concession is no longer selected or required here. Receipt Book has no control or new request field.
+The subject creation form is the validation reference: name/amount errors appear after blur or Save, guidance stays under the owning field, and the name uses shared `ShakingTextField`. Policy requiredness is field guidance, never a fake dropdown option. Collection is validated on the Policies step before proceeding to Review and remains required at publication; Refund and Proration remain optional. Concession is no longer selected or required here. Receipt Book has no control or new request field.
 
 `buildStructureChanges` compares the immutable saved baseline and sends only changed fields. Head operations use saved line IDs; clearing a policy sends a null family; schedule replacement is explicit and atomic. A no-op causes no request. Request IDs remain stable for an identical retry. A changed command uses a different request ID. Canonical response replaces the local candidate and class cache, preserving new IDs/stamps.
 

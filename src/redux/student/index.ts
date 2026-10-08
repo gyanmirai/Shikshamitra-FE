@@ -152,6 +152,15 @@ export const StudentApi = api.injectEndpoints({
         classIds: string[];
         divisionIds?: string[];
         onlyWithFeeStructureAssignment?: boolean;
+        chargeCategoryId?: string;
+        search?: string;
+        gender?: number;
+        rollNoFrom?: number;
+        rollNoTo?: number;
+        hasFeeStructureAssignment?: boolean;
+        alreadyCharged?: boolean;
+        skipCount?: number;
+        maxResultCount?: number;
       }
     >({
       query: ({
@@ -161,6 +170,8 @@ export const StudentApi = api.injectEndpoints({
         classIds,
         divisionIds,
         onlyWithFeeStructureAssignment,
+        chargeCategoryId,
+        ...filters
       }) => {
         const params = new URLSearchParams();
         params.append('academicYearId', academicYearId);
@@ -168,6 +179,10 @@ export const StudentApi = api.injectEndpoints({
         params.append('educationMediumId', educationMediumId);
         classIds.forEach((id) => params.append('classIds', id));
         divisionIds?.forEach((id) => params.append('divisionIds', id));
+        if (chargeCategoryId) params.set('chargeCategoryId', chargeCategoryId);
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined) params.set(key, String(value));
+        });
         if (onlyWithFeeStructureAssignment !== undefined) {
           params.set('onlyWithFeeStructureAssignment', String(onlyWithFeeStructureAssignment));
         }
@@ -190,6 +205,9 @@ export type StudentLookupItem = {
   standardName?: string;
   divisionId?: string;
   divisionName?: string;
+  gender?: number;
+  hasFeeStructureAssignment?: boolean;
+  hasChargeInCategory?: boolean;
 };
 
 export type StudentAttendanceDashboardSummaryQuery = {

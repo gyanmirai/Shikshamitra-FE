@@ -37,6 +37,7 @@ export interface IStudentFeeData {
   _approvedAmount?: number;
   _settlementId?: string;
   _refundMethod?: string;
+  _allowedPayoutMethods?: string[];
   _expenseCategoryId?: string;
   _payingBankAccountId?: string;
   _defaultExpenseCategoryId?: string;

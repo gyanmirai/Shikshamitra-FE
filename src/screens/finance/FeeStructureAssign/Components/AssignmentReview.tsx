@@ -2,8 +2,7 @@ import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
 
 import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
-import { formatNumber } from 'src/utils/formate_number';
-import { assignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
+import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 import {
   Box,
   Stack,
@@ -19,6 +18,8 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import { formatAssignmentMoney } from './assignmentMoney';
+
 export default function AssignmentReview({
   data,
   committed = false,
@@ -33,13 +34,13 @@ export default function AssignmentReview({
       </Typography>
 
       <Typography variant="h6">
-        Obligation: {formatNumber(data.proratedTotal, data.currency)}
+        Obligation: {formatAssignmentMoney(data.proratedTotal, data.currency)}
       </Typography>
 
       {data.calculationVersion !== 'LegacyUnknown' && (
         <Typography variant="body2" color="text.secondary">
-          Configured schedule {formatNumber(data.scheduledTotal, data.currency)} · Service reduction{' '}
-          {formatNumber(data.reductionTotal, data.currency)}
+          Configured schedule {formatAssignmentMoney(data.scheduledTotal, data.currency)} · Service
+          reduction {formatAssignmentMoney(data.reductionTotal, data.currency)}
         </Typography>
       )}
       {data.overrideReason && <Alert severity="info">Amount override: {data.overrideReason}</Alert>}
@@ -70,22 +71,23 @@ export default function AssignmentReview({
             <Stack spacing={0.5} sx={{ mt: 1 }}>
               {data.calculationVersion === 'LegacyUnknown' ? (
                 <Typography variant="body2">
-                  Recorded obligation {formatNumber(head.obligation, data.currency)}
+                  Recorded obligation {formatAssignmentMoney(head.obligation, data.currency)}
                 </Typography>
               ) : (
                 <Typography variant="body2">
                   {head.isVariable ? 'Entered student amount' : 'Configured'}{' '}
-                  {formatNumber(
+                  {formatAssignmentMoney(
                     head.isVariable ? (head.effectiveAmount ?? 0) : (head.configuredAmount ?? 0),
                     data.currency
                   )}{' '}
                   · {head.amountBasis === 'OneTime' ? 'One-time charge' : 'Total for term coverage'}{' '}
-                  · Obligation {formatNumber(head.obligation, data.currency)}
+                  · Obligation {formatAssignmentMoney(head.obligation, data.currency)}
                 </Typography>
               )}
               {!head.isVariable && head.effectiveAmount !== head.configuredAmount && (
                 <Typography variant="body2">
-                  Authorized service total {formatNumber(head.effectiveAmount ?? 0, data.currency)}
+                  Authorized service total{' '}
+                  {formatAssignmentMoney(head.effectiveAmount ?? 0, data.currency)}
                 </Typography>
               )}
               {head.zeroAmountReason && (
@@ -154,12 +156,14 @@ export default function AssignmentReview({
                 </TableCell>
                 <TableCell>{line.demandDate ? fDate(line.demandDate) : '—'}</TableCell>
                 <TableCell>{fDate(line.dueDate)}</TableCell>
-                <TableCell>{formatNumber(line.proratedAmount, data.currency)}</TableCell>
+                <TableCell>{formatAssignmentMoney(line.proratedAmount, data.currency)}</TableCell>
 
                 {committed && (
                   <>
-                    <TableCell>{formatNumber(line.paidAmount, data.currency)}</TableCell>
-                    <TableCell>{formatNumber(line.outstandingAmount, data.currency)}</TableCell>
+                    <TableCell>{formatAssignmentMoney(line.paidAmount, data.currency)}</TableCell>
+                    <TableCell>
+                      {formatAssignmentMoney(line.outstandingAmount, data.currency)}
+                    </TableCell>
                   </>
                 )}
               </TableRow>
@@ -175,7 +179,7 @@ export default function AssignmentReview({
 
         <AccordionDetails>
           <Stack spacing={2}>
-            {assignmentPolicyFamilies.map((family) => {
+            {selectableAssignmentPolicyFamilies.map((family) => {
               const policy = data.policies.find((p) => p.family === family);
               return (
                 <Box key={family}>
@@ -206,11 +210,15 @@ export default function AssignmentReview({
               data.originalPolicies &&
               data.originalPolicies.some(
                 (original) =>
+                  selectableAssignmentPolicyFamilies.some((family) => family === original.family) &&
                   !data.policies.some((current) => current.versionId === original.versionId)
               ) && (
                 <Typography variant="body2" color="text.secondary">
                   Policies recorded when assigned:{' '}
                   {data.originalPolicies
+                    .filter((policy) =>
+                      selectableAssignmentPolicyFamilies.some((family) => family === policy.family)
+                    )
                     .map((p) => `${p.family}: ${p.name} · v${p.version}`)
                     .join('; ')}
                   . Existing charges retain this calculation evidence.

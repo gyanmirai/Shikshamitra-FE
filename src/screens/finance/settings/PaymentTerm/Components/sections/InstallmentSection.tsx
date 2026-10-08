@@ -25,7 +25,13 @@ import {
 } from '@mui/material';
 
 import { SectionCard } from '../ui/SectionCard';
+import { BillingScheduleSection } from './BillingScheduleSection';
 import { InstallmentTemplateDialog } from '../InstallmentTemplateDialog';
+import {
+  getInvoiceDate,
+  getInvoiceStart,
+  getInvoiceDateError,
+} from '../../invoiceScheduleValidation';
 
 import type { IPaymentTerm } from '../../type';
 import type { IBoard } from '../../hooks/usePaymentTermForm';
@@ -52,25 +58,9 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
   const allocationDelta = Math.round((100 - allocationTotal) * 100) / 100;
   const usesSpecificDate = formik.values.demandGenerationRule === 'SpecificDate';
 
-  const getBillGenerationDate = (inst: IPaymentTerm['installments'][number]) => {
-    if (usesSpecificDate) return parseDateOnly(inst.demandDate);
-    if (formik.values.demandGenerationRule === 'OnInstallmentStartDate') {
-      return parseDateOnly(inst.startDate);
-    }
-    if (formik.values.demandGenerationRule === 'OnDueDate') {
-      return parseDateOnly(inst.dueDate);
-    }
-    if (formik.values.demandGenerationRule === 'XDaysBeforeDue' && inst.dueDate) {
-      return (
-        parseDateOnly(inst.dueDate)?.subtract(formik.values.demandOffsetDays ?? 0, 'day') ?? null
-      );
-    }
-    return null;
-  };
-
   return (
     <SectionCard
-      title="Installment Schedule"
+      title="Installment schedule"
       subtitle="Define each installment's start and end dates, due date, and percentage allocation (must total 100%)."
       info="Every installment start date, end date, and due date must fall inside the selected board period. Installments cannot overlap and allocations must total 100%."
       action={
@@ -137,6 +127,8 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
         />
       </Card>
 
+      <BillingScheduleSection formik={formik} board={board} />
+
       {/* Array-level error */}
       {formik.touched.installments && typeof formik.errors.installments === 'string' && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -189,6 +181,11 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
               : {}
           ) as Record<string, string>;
           const hasError = Object.keys(errObj).length > 0;
+          const invoiceDate = getInvoiceDate(formik.values, inst);
+          const invoiceError =
+            usesSpecificDate || invoiceDate
+              ? errObj?.demandDate || getInvoiceDateError(formik.values, inst, board?.startDate)
+              : undefined;
 
           return (
             <Card
@@ -277,7 +274,9 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                         parseDateOnly(board?.startDate) ??
                         undefined
                       }
-                      value={getBillGenerationDate(inst)}
+                      value={invoiceDate}
+                      minDate={getInvoiceStart(inst, board?.startDate) ?? undefined}
+                      maxDate={parseDateOnly(inst.dueDate) ?? undefined}
                       onChange={(date) =>
                         formik.setFieldValue(`${prefix}.demandDate`, toDateOnly(date) || null)
                       }
@@ -286,9 +285,9 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                         textField: {
                           fullWidth: true,
                           size: 'small',
-                          error: Boolean(errObj?.demandDate),
+                          error: Boolean(invoiceError),
                           helperText:
-                            errObj?.demandDate ||
+                            invoiceError ||
                             (!usesSpecificDate
                               ? 'Calculated from the invoice date rule'
                               : undefined),
@@ -297,8 +296,6 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                     />
                   </Grid>
                 )}
-
-                {/* Due Date */}
                 <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <DatePicker
                     label="Payment Due Date *"
@@ -322,8 +319,6 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                     }}
                   />
                 </Grid>
-
-                {/* Allocation % */}
                 <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <TextField
                     fullWidth
@@ -344,7 +339,6 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
           );
         })}
       </Stack>
-
       <InstallmentTemplateDialog
         open={templateDialogOpen}
         boardId={formik.values.boardId}
@@ -352,14 +346,16 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
         demandGenerationRule={formik.values.demandGenerationRule}
         demandOffsetDays={formik.values.demandOffsetDays}
         onClose={() => setTemplateDialogOpen(false)}
-        onApply={(installments) => {
-          formik.setFieldValue(
-            'installments',
-            installments.map((installment) => ({
+        onApply={(installments, rule, offset) => {
+          formik.setValues({
+            ...formik.values,
+            demandGenerationRule: rule,
+            demandOffsetDays: offset,
+            installments: installments.map((installment) => ({
               ...installment,
               demandEnabled: formik.values.invoiceCreationEnabled,
-            }))
-          );
+            })),
+          });
           formik.setFieldTouched('installments', true, false);
         }}
       />

@@ -16,7 +16,10 @@ export interface AdaptiveThreeDotsAction {
 export interface AdaptiveThreeDotsActionsProps {
   actions: readonly AdaptiveThreeDotsAction[];
   moreLabel?: string;
-  mobileDirectActionLimit?: 0 | 1 | 2 | 3;
+  /** Put the complete action set in the menu when it exceeds the direct-action limit. */
+  collapseOnOverflow?: boolean;
+  directActionLimit?: 0 | 1 | 2;
+  mobileDirectActionLimit?: 0 | 1 | 2;
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;
   onClosePopover?: () => void;
   placement?: ThreeDotsActionsOptions['placement'];

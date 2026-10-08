@@ -10,7 +10,6 @@ export interface RoutingOption {
   label: string;
 }
 export type RoutingOperation =
-  | 'charge'
   | 'collection'
   | 'refund'
   | 'refund-policy'

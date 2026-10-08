@@ -27,7 +27,7 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
 
   return (
     <ConcessionSectionCard
-      title="Calculation rules"
+      title="Calculation Rules"
       subtitle={
         isFullWaiver
           ? 'Full waiver covers 100% of the eligible balance. No value is required.'
@@ -35,7 +35,7 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
       }
       icon="solar:calculator-linear"
     >
-      <Grid container spacing={1}>
+      <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={error('valueSource')}>
             <CustomSelect
@@ -44,6 +44,7 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
               label="Value source *"
               name="valueSource"
               options={CONCESSION_VALUE_SOURCES}
+              optionDescriptionKey="caption"
               value={formik.values.valueSource}
               onChange={(value) => {
                 formik.setFieldValue('valueSource', value);
@@ -53,11 +54,7 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
               }}
               onBlur={() => formik.setFieldTouched('valueSource', true)}
               error={error('valueSource')}
-              helperText={helper(
-                'valueSource',
-                CONCESSION_VALUE_SOURCES.find((o) => o.value === formik.values.valueSource)
-                  ?.caption || ''
-              )}
+              helperText={helper('valueSource', '')}
             />
           </ShakingTextField>
         </Grid>
@@ -69,16 +66,14 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
               label="Calculation method *"
               name="calculationMethod"
               options={CONCESSION_METHODS}
+              optionDescriptionKey="caption"
               value={method}
               onChange={(value) => formik.setFieldValue('calculationMethod', value)}
               onBlur={() => formik.setFieldTouched('calculationMethod', true)}
               disabledValues={isRequestEntered ? ['FullWaiver'] : []}
               disabledLabel="Requires a fixed policy value"
               error={error('calculationMethod')}
-              helperText={helper(
-                'calculationMethod',
-                CONCESSION_METHODS.find((o) => o.value === method)?.caption || ''
-              )}
+              helperText={helper('calculationMethod', '')}
             />
           </ShakingTextField>
         </Grid>

@@ -33,6 +33,7 @@ Follow this order when changing Finance frontend behavior:
 | 8 | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) | Review the current prototype and implement the typed policy, attachment, assignment preview, demand explanation, and cross-module UI flow |
 | 9 | [Charge Management frontend flow](./references/charge-management-frontend-flow.md) | Review the active routes, current collection handoff, missing permissions/contracts, target workspace, and browser acceptance flow |
 | 10 | [Integrated Accounts screen flow](./references/accounts-integrated-screen-flow.md) | Follow the target fields, actions, permissions, states, client changes, and school walkthrough for automatic Fees-to-Accounts posting |
+| 11 | [Admin request confirmation](./references/admin-request-auto-approval-ui.md) | Review the admin-only final confirmation for refund, charge, and concession submissions |
 
 ## Ownership boundary
 

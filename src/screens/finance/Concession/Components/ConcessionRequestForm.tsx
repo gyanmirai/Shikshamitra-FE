@@ -9,6 +9,7 @@ import type {
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSession } from 'next-auth/react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -18,7 +19,10 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -241,16 +245,30 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   defaultDivisionId = '',
 }) => {
   const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
+  const isAdminCreator = isFinanceAdministratorSession(session);
+  const [adminConfirmation, setAdminConfirmation] = useState<{
+    snapshot: string;
+    studentName: string;
+    amount: number;
+    autoCreateRefund: boolean;
+    concessionType: string;
+    policyName: string;
+  } | null>(null);
+  const confirmedAdminSnapshotRef = useRef<string | null>(null);
   const isEditMode = !!editData?.id;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const concessionPermissions = financePermissions.fees.concessionActions;
+  const adminCanApprove = hasGrantedPermission(permissions, concessionPermissions.approve);
   const canSaveDraft = hasGrantedPermission(
     permissions,
     isEditMode ? concessionPermissions.edit : concessionPermissions.add
   );
   const canSubmit =
+    sessionStatus !== 'loading' &&
     hasGrantedPermission(permissions, concessionPermissions.submit) &&
+    (!isAdminCreator || adminCanApprove) &&
     (isEditMode
       ? hasGrantedPermission(permissions, concessionPermissions.edit)
       : hasGrantedPermission(permissions, concessionPermissions.add));
@@ -376,6 +394,21 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           dueFeeConcessions,
         }).unwrap();
 
+        const adminSnapshot = JSON.stringify({ values, fingerprint: latestPreview.previewFingerprint });
+        if (isAdminCreator && confirmedAdminSnapshotRef.current !== adminSnapshot) {
+          setAdminConfirmation({
+            snapshot: adminSnapshot,
+            studentName: values.studentName,
+            amount: latestPreview.totalConcessionAmount,
+            autoCreateRefund: selectedPolicy?.autoCreateRefund === true,
+            concessionType: requestContext?.concessionTypes.find(
+              (type) => type.concessionTypeId === values.concessionTypeId
+            )?.name ?? 'Concession',
+            policyName: latestPreview.concessionPolicyName,
+          });
+          return;
+        }
+
         const isEditing = !!(editData?.id && values.concessionRequestId);
         const docBlock = values.concessionTypeDocuments?.find(
           (d: any) => d.concessionTypeId === typeId
@@ -399,6 +432,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           documents,
         };
 
+        let savedStatus: number;
         if (isEditing) {
           // A draft may have been changed in another tab or by another user
           // while this form was open. Always use the server's latest stamp.
@@ -411,27 +445,39 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             idempotencyKey: getCommandKey('update-draft'),
           }).unwrap();
           clearCommandKey('update-draft');
-          await submitConcessionRequest({
+          const submitted = await submitConcessionRequest({
             concessionRequestId: values.concessionRequestId,
             concurrencyStamp: updateResult.data.concurrencyStamp,
             previewFingerprint: latestPreview.previewFingerprint,
             idempotencyKey: getCommandKey('submit-draft'),
           }).unwrap();
+          savedStatus = submitted.data.status;
           clearCommandKey('submit-draft');
         } else {
-          await createConcessionRequest({
+          const created = await createConcessionRequest({
             ...baseCommand,
             previewFingerprint: latestPreview.previewFingerprint,
             idempotencyKey: getCommandKey('create-submit'),
           }).unwrap();
+          savedStatus = created.data.status;
           clearCommandKey('create-submit');
         }
 
-        shikshaMitraToast.success({
-          message: 'Concession request submitted for approval.',
-        });
+        if (isAdminCreator && savedStatus !== 1) {
+          shikshaMitraToast.warning({
+            message: 'Concession request is Pending. Automatic approval did not occur.',
+          });
+        } else {
+          shikshaMitraToast.success({
+            message: savedStatus === 1
+              ? 'Concession request created and approved.'
+              : 'Concession request submitted for approval.',
+          });
+        }
+        confirmedAdminSnapshotRef.current = null;
         onClose(null, true);
       } catch (err: any) {
+        confirmedAdminSnapshotRef.current = null;
         shikshaMitraToast.error({
           message:
             err?.data?.title ||
@@ -1182,6 +1228,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                             ? ' the earliest unpaid installment'
                             : ' installments after the earliest unpaid installment'}
                         .
+                        {selectedPolicy.applyOn === 'AllFees' && (selectedPolicy.autoCreateRefund === false
+                          ? ' The paid concession is refundable; create its linked refund requests manually after approval.'
+                          : ' The paid concession automatically creates linked refund requests after approval.')}
                       </Alert>
                     </Grid>
                   )}
@@ -1784,6 +1833,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               py: 1.5,
             }}
           >
+            {isAdminCreator && !adminCanApprove && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                Approve permission is required to submit an automatically approved concession.
+              </Alert>
+            )}
             <Box
               display="flex"
               alignItems="center"
@@ -1840,13 +1894,46 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     }
                     onClick={handleSubmit}
                   >
-                    Submit for approval
+                    {isAdminCreator ? 'Submit and approve' : 'Submit for approval'}
                   </LoadingButton>
                 )}
               </Stack>
             </Box>
           </Box>
         </Box>
+        <ConfirmDialog
+          open={adminConfirmation !== null}
+          icon="warning"
+          title="Submit and approve concession?"
+          disableBackdropClick
+          cancelText="Keep editing"
+          onClose={() => setAdminConfirmation(null)}
+          content={
+            <Stack spacing={1}>
+              <Typography>{adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}</Typography>
+              <Typography>{adminConfirmation?.concessionType} · {adminConfirmation?.policyName}</Typography>
+              <Typography>Concession: {formatCurrency(adminConfirmation?.amount ?? 0)}</Typography>
+              <Typography>This request will be approved automatically when you confirm and will affect dues immediately.</Typography>
+              {adminConfirmation?.autoCreateRefund && (
+                <Typography>Any linked refund request follows its own approval workflow.</Typography>
+              )}
+            </Stack>
+          }
+          action={
+            <LoadingButton
+              type="button"
+              variant="contained"
+              loading={formik.isSubmitting || createLoading || submitLoading}
+              onClick={() => {
+                confirmedAdminSnapshotRef.current = adminConfirmation?.snapshot ?? null;
+                setAdminConfirmation(null);
+                formik.submitForm();
+              }}
+            >
+              Submit and approve
+            </LoadingButton>
+          }
+        />
       </form>
     </BackPopUpChecked>
   );

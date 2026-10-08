@@ -3,7 +3,7 @@
 import type { FormikProps } from 'formik';
 import type { RoutingOperation } from 'src/redux/finance/financeRoutingApi';
 
-import { Stack, Alert } from '@mui/material';
+import { Stack, Alert, Skeleton } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 
@@ -16,6 +16,7 @@ interface Props {
   categoryLabel?: string;
   bankLabel?: string;
   disabled?: boolean;
+  skeletonLoading?: boolean;
 }
 export default function FinanceRoutingFields({
   formik,
@@ -26,6 +27,7 @@ export default function FinanceRoutingFields({
   categoryLabel = 'Income Category',
   bankLabel = 'Receiving Bank Account',
   disabled = false,
+  skeletonLoading = false,
 }: Props) {
   const { data, isFetching, isError } = useGetFinanceRoutingOptionsQuery(
     { academicYearId, operation },
@@ -84,8 +86,17 @@ export default function FinanceRoutingFields({
           Financial selections could not be loaded. Retry before saving.
         </Alert>
       )}
-      {field(categoryField, categoryLabel, categories)}
-      {bankField && field(bankField, bankLabel, data?.bankAccounts)}
+      {skeletonLoading && isFetching ? (
+        <Stack role="status" aria-label="Loading refund accounting options" spacing={2}>
+          <Skeleton variant="rounded" height={40} />
+          {bankField && <Skeleton variant="rounded" height={40} />}
+        </Stack>
+      ) : (
+        <>
+          {field(categoryField, categoryLabel, categories)}
+          {bankField && field(bankField, bankLabel, data?.bankAccounts)}
+        </>
+      )}
     </Stack>
   );
 }

@@ -165,10 +165,6 @@ const Concession = () => {
             setSelectedConcession(data);
             onViewAllConcession.onTrue();
           }}
-          onApprove={(data) => {
-            setSelectedConcessionForView(data);
-            viewConcessionRequest.onTrue();
-          }}
           onReject={(data) => {
             onConfirmDialg.onTrue();
             setSelectedMode('Reject');

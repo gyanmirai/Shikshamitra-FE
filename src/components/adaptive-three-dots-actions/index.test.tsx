@@ -15,6 +15,25 @@ vi.mock('../iconify', () => ({
 describe('AdaptiveThreeDotsActions', () => {
   const theme = createTheme(defaultSettings);
 
+  it('keeps the complete action set in one menu when collapseOnOverflow is enabled', async () => {
+    const actions = ['View', 'Edit', 'Clone', 'Archive'].map((label) => ({
+      id: label.toLowerCase(),
+      label,
+      icon: 'mdi:circle',
+      onClick: vi.fn(),
+    }));
+    render(
+      <ThemeProvider theme={theme}>
+        <AdaptiveThreeDotsActions actions={actions} collapseOnOverflow />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('button', { name: 'View' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(await screen.findAllByRole('menuitem')).toHaveLength(4);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    expect(actions[1].onClick).toHaveBeenCalledOnce();
+  });
+
   const renderActions = (
     actions: readonly AdaptiveThreeDotsAction[],
     onClosePopover?: () => void
@@ -25,8 +44,8 @@ describe('AdaptiveThreeDotsActions', () => {
       </ThemeProvider>
     );
 
-  it('renders up to three actions as direct icon buttons', () => {
-    const handlers = [vi.fn(), vi.fn(), vi.fn()];
+  it('renders up to two actions as direct icon buttons', () => {
+    const handlers = [vi.fn(), vi.fn()];
     const actions = handlers.map((onClick, index) => ({
       id: `action-${index + 1}`,
       label: `Action ${index + 1}`,
@@ -45,7 +64,7 @@ describe('AdaptiveThreeDotsActions', () => {
     expect(handlers[1]).toHaveBeenCalledOnce();
   });
 
-  it('renders the first three actions directly and remaining actions in the overflow menu', async () => {
+  it('renders the first two actions directly and remaining actions in the overflow menu', async () => {
     const onClosePopover = vi.fn();
     const handlers = [vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn()];
     const actions = handlers.map((onClick, index) => ({
@@ -59,11 +78,10 @@ describe('AdaptiveThreeDotsActions', () => {
 
     expect(screen.getByRole('button', { name: 'Action 1' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Action 2' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Action 3' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Action 4' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Action 3' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 
-    expect(await screen.findAllByRole('menuitem')).toHaveLength(2);
+    expect(await screen.findAllByRole('menuitem')).toHaveLength(3);
     expect(screen.queryByRole('menuitem', { name: 'Action 1' })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Action 5' })).toBeVisible();
     fireEvent.click(screen.getByRole('menuitem', { name: 'Action 4' }));
@@ -73,6 +91,29 @@ describe('AdaptiveThreeDotsActions', () => {
     await waitFor(() => {
       expect(screen.queryByRole('menuitem', { name: 'Action 4' })).not.toBeInTheDocument();
     });
+  });
+
+  it('allows a table to keep two primary actions visible and move the rest into the menu', async () => {
+    const actions = ['Edit', 'Clone', 'Archive', 'Audit Trail'].map((label) => ({
+      id: label.toLowerCase(),
+      label,
+      icon: 'mdi:circle',
+      onClick: vi.fn(),
+    }));
+
+    render(
+      <ThemeProvider theme={theme}>
+        <AdaptiveThreeDotsActions actions={actions} directActionLimit={2} />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Clone' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Archive' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(await screen.findAllByRole('menuitem')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Archive' }));
+    expect(actions[2].onClick).toHaveBeenCalledOnce();
   });
 
   it('keeps every action available in the menu on narrow screens', async () => {

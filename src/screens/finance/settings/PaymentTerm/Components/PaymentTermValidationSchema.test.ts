@@ -41,7 +41,7 @@ describe('paymentTermValidationSchema invoice creation', () => {
     };
 
     await expect(paymentTermValidationSchema([board]).validate(value)).rejects.toThrow(
-      'An invoice date on or before the due date is required when invoice creation is enabled'
+      'Invoice date is required'
     );
   });
 
@@ -53,5 +53,42 @@ describe('paymentTermValidationSchema invoice creation', () => {
     };
 
     await expect(paymentTermValidationSchema([board]).validate(value)).resolves.toBeDefined();
+  });
+
+  it.each(['2026-03-31', '2026-04-16'])('rejects manually entered invoice date outside start and due bounds: %s', async (demandDate) => {
+    const value = { ...validPaymentTerm, installments: [{ ...validPaymentTerm.installments[0], demandDate }] };
+    await expect(paymentTermValidationSchema([board]).validateAt('installments', value)).rejects.toMatchObject({
+      inner: expect.arrayContaining([expect.objectContaining({ path: 'installments[0].demandDate' })]),
+    });
+  });
+
+  it('accepts backfilled dates inside the installment period', async () => {
+    await expect(paymentTermValidationSchema([board]).validate(validPaymentTerm)).resolves.toBeDefined();
+  });
+
+  it('limits offset to the smallest gap and names the affected installment', async () => {
+    const value = { ...validPaymentTerm, demandGenerationRule: 'XDaysBeforeDue', demandOffsetDays: 99 };
+    await expect(paymentTermValidationSchema([board]).validateAt('demandOffsetDays', value)).rejects.toThrow('Max 14 days for Installment 1');
+    await expect(paymentTermValidationSchema([board]).validate({ ...value, demandOffsetDays: 14 })).resolves.toBeDefined();
+  });
+
+  it('revalidates offset against changed installment dates', async () => {
+    const value = { ...validPaymentTerm, demandGenerationRule: 'XDaysBeforeDue', demandOffsetDays: 14, installments: [{ ...validPaymentTerm.installments[0], startDate: '2026-04-14' }] };
+    await expect(paymentTermValidationSchema([board]).validateAt('demandOffsetDays', value)).rejects.toThrow('Max 1 days');
+  });
+
+  it('rejects fractional offset days', async () => {
+    await expect(paymentTermValidationSchema([board]).validateAt('demandOffsetDays', { ...validPaymentTerm, demandGenerationRule: 'XDaysBeforeDue', demandOffsetDays: 1.5 })).rejects.toThrow('whole number');
+  });
+
+  it('continues to allow due dates after coverage ends within the board period', async () => {
+    await expect(paymentTermValidationSchema([board]).validate({ ...validPaymentTerm, installments: [{ ...validPaymentTerm.installments[0], endDate: '2026-04-10' }] })).resolves.toBeDefined();
+  });
+
+  it('uses academic board start as an additional invoice lower bound', async () => {
+    const value = { ...validPaymentTerm, installments: [{ ...validPaymentTerm.installments[0], startDate: '2026-03-01', demandDate: '2026-03-15' }] };
+    await expect(paymentTermValidationSchema([board]).validateAt('installments', value, { abortEarly: false })).rejects.toMatchObject({
+      inner: expect.arrayContaining([expect.objectContaining({ path: 'installments[0].demandDate', message: 'Invoice date must be on or after 01/04/2026' })]),
+    });
   });
 });

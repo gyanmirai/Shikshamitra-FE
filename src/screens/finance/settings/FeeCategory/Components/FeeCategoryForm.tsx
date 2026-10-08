@@ -5,46 +5,63 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
+import {
+  Box,
+  Drawer,
+  Button,
+  Switch,
+  Divider,
+  Paper,
+  Stack,
+  Tooltip,
+  TextField,
+  Typography,
+  IconButton,
+  Autocomplete,
+  FormControlLabel,
+} from '@mui/material';
 import {
   useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
   useGetFeeCategoryByIdQuery,
   useUpdateFeeCategoryMutation,
 } from 'src/redux/feeCategory/feeCategoryApi';
-import {
-  Box,
-  Grid,
-  Paper,
-  Button,
-  Switch,
-  Tooltip,
-  TextField,
-  Typography,
-  IconButton,
-  Autocomplete,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 
 import type { IFeeCategoryFormProps } from './type';
+
+const FormInfoIcon = ({ label, title }: { label: string; title: string }) => (
+  <CustomTooltip arrow placement="right" title={title}>
+    <IconButton aria-label={label} size="small">
+      <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+    </IconButton>
+  </CustomTooltip>
+);
+
+const capitalizeWords = (value: string) =>
+  value
+    .split(' ')
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
+    .join(' ');
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -96,10 +113,16 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
 
   const incomeCategoryOptions = useMemo(
     () =>
-      (incomeCategoryData?.items ?? []).map((category: any) => ({
-        id: category.id,
-        displayName: category.name,
-      })),
+      (incomeCategoryData?.items ?? []).map((category: any) => {
+        const displayName = String(category.name ?? '');
+        const match = displayName.match(/^(.*?)\s*\[([^\]]+)\]$/);
+        return {
+          id: category.id,
+          displayName,
+          name: match?.[1]?.trim() || displayName,
+          code: match?.[2] || '',
+        };
+      }),
     [incomeCategoryData]
   );
 
@@ -191,13 +214,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   };
 
   const handleRemoveClick = (idx: number) => {
-    // If only one Fee Head exists, prevent deletion
-    if (formik.values.feeHeads.length <= 1) {
-      shikshaMitraToast.error({
-        message: 'At least one Fee Head is required. Cannot remove the last Fee Head.',
-      });
-      return;
-    }
+    if (formik.values.feeHeads.length <= 1) return;
     setRemoveIndex(idx);
     removeConfirm.onTrue();
   };
@@ -212,388 +229,574 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     setRemoveIndex(null);
   };
 
-  if (isLoadingDetails) {
-    return <LoadingScreen />;
-  }
+  const isSaving = isAddLoading || isUpdateLoading;
+
+  const handleSubmit = async () => {
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0) {
+      await formik.setTouched({
+        name: true,
+        description: true,
+        feeHeads: formik.values.feeHeads.map(() => ({
+          name: true,
+          incomeCategoryId: true,
+          description: true,
+        })),
+      });
+      requestAnimationFrame(() => {
+        const firstInvalid = document.querySelector<HTMLElement>(
+          '[data-fee-category-editor] [aria-invalid="true"]'
+        );
+        const nextAction = formik.values.feeHeads.length
+          ? document.querySelector<HTMLElement>(
+              '[data-fee-category-editor] input[name="feeHeads.0.name"]'
+            )
+          : document.querySelector<HTMLElement>('[data-add-fee-head]');
+        (firstInvalid ?? nextAction)?.focus();
+      });
+      return;
+    }
+    await formik.submitForm();
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent>
-        <Grid container spacing={3}>
-          {/* Section 1 -- Fee Category Information */}
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
-              <TextField
-                fullWidth
-                label="Category Name *"
-                name="name"
-                size="small"
-                value={formik.values.name}
-                onChange={(e) => {
-                  formik.setFieldValue(
-                    'name',
-                    e.target.value.replace(/\s+/g, ' ').replace(/^\s+/g, '')
-                  );
-                }}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={
-                  formik.touched.name && formik.errors.name ? (formik.errors.name as string) : ''
-                }
-                inputProps={{ maxLength: 100 }}
+      <Drawer
+        anchor="right"
+        open={open.value}
+        onClose={() => {
+          if (!isSaving) onClose(null, false);
+        }}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 760 }, maxWidth: '100%' } }}
+      >
+        <Box
+          data-fee-category-editor
+          sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+        >
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              py: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexShrink: 0,
+            }}
+          >
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1.5,
+                bgcolor: 'primary.lighter',
+                color: 'primary.main',
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon="solar:tag-bold-duotone" width={22} />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1, minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {editData ? 'Update Fee Category' : 'Add Fee Category'}
+              </Typography>
+              <FormInfoIcon
+                label="About fee categories"
+                title="A fee category groups related fee heads for fee setup."
               />
-            </ShakingTextField>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Description"
-              name="description"
-              size="small"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={
-                formik.touched.description && formik.errors.description
-                  ? (formik.errors.description as string)
-                  : ''
-              }
-              inputProps={{ maxLength: 500 }}
-            />
-          </Grid>
-
-          {/* Section 2 -- Fee Heads */}
-          <Grid size={{ xs: 12 }}>
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.neutral' }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Fee Heads
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Add and configure all Fee Heads belonging to this Fee Category.
-                  </Typography>
-                </Box>
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={handleAddFeeHead}
-                    size="small"
+            </Box>
+            <IconButton
+              aria-label="Close fee category editor"
+              onClick={() => onClose(null, false)}
+              disabled={isSaving}
+              sx={{ width: 44, height: 44 }}
+            >
+              <Iconify icon="mingcute:close-line" width={20} />
+            </IconButton>
+          </Box>
+          <Divider />
+          {isLoadingDetails ? (
+            <LoadingScreen />
+          ) : (
+            <Scrollbar sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}>
+              <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                <Stack spacing={2} sx={{ minWidth: 0 }}>
+                  <Paper
+                    component="section"
+                    aria-labelledby="category-details-heading"
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
                   >
-                    Add Fee Head
-                  </Button>
-                </Box>
-              </Box>
-
-              {formik.values.feeHeads.length === 0 ? (
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  justifyContent="center"
-                  py={4}
-                  border="1px dashed"
-                  borderColor="divider"
-                  borderRadius={1}
-                >
-                  <Iconify
-                    icon="solar:document-bold-duotone"
-                    width={48}
-                    height={48}
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    No Fee Heads added.
-                  </Typography>
-                  <Typography variant="caption" color="text.disabled">
-                    Click &quot;Add Fee Head&quot; to map Fee Heads.
-                  </Typography>
-                </Box>
-              ) : (
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {formik.values.feeHeads.map((fh, idx) => {
-                    const feeHeadError = Array.isArray(formik.errors.feeHeads)
-                      ? (formik.errors.feeHeads[idx] as FormikErrors<any>)
-                      : undefined;
-
-                    const feeHeadTouched = Array.isArray(formik.touched.feeHeads)
-                      ? formik.touched.feeHeads[idx]
-                      : undefined;
-
-                    const selectedIncomeCategory =
-                      incomeCategoryOptions.find(
-                        (option: any) => option.id === fh.incomeCategoryId
-                      ) ?? null;
-
-                    return (
-                      <Paper
-                        key={idx}
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          position: 'relative',
-                          border: '1px solid',
-                          borderColor: 'divider',
-                        }}
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                      <Iconify
+                        icon="solar:tag-linear"
+                        width={20}
+                        sx={{ color: 'text.secondary' }}
+                      />
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Typography
+                          id="category-details-heading"
+                          variant="subtitle1"
+                          component="h3"
+                        >
+                          Category Details
+                        </Typography>
+                        <FormInfoIcon
+                          label="About category details"
+                          title="Give this group a clear name. The description is optional."
+                        />
+                      </Stack>
+                    </Stack>
+                    <Stack spacing={2}>
+                      <ShakingTextField
+                        error={!!(formik.touched.name && formik.errors.name) || false}
                       >
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          mb={2}
-                        >
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            Fee Head {idx + 1}
-                          </Typography>
-                          <Tooltip title="Remove fee head">
-                            <IconButton
-                              color="error"
-                              size="small"
-                              aria-label={`Remove fee head ${idx + 1}`}
-                              onClick={() => handleRemoveClick(idx)}
-                            >
-                              <Iconify icon={GlobalIcons.delete} />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-
-                        <Box
-                          sx={{
-                            display: 'grid',
-                            gridTemplateColumns: {
-                              xs: 'minmax(0, 1fr)',
-                              sm: 'repeat(2, minmax(0, 1fr))',
-                              md: 'minmax(150px, 1fr) minmax(220px, 1.45fr) minmax(170px, auto)',
-                            },
-                            gap: 2,
-                            alignItems: 'start',
+                        <TextField
+                          fullWidth
+                          label="Category name *"
+                          name="name"
+                          size="small"
+                          value={formik.values.name}
+                          onChange={(event) => {
+                            formik.setFieldValue('name', capitalizeWords(event.target.value));
                           }}
-                        >
-                          {/* Fee Head Name */}
-                          <Box minWidth={0}>
-                            <ShakingTextField
-                              error={!!(feeHeadTouched?.name && feeHeadError?.name)}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Fee Head Name *"
-                                name={`feeHeads.${idx}.name`}
-                                value={fh.name}
-                                onChange={(e) => {
-                                  formik.setFieldValue(
-                                    `feeHeads.${idx}.name`,
-                                    e.target.value.replace(/\s+/g, ' ').replace(/^\s+/g, '')
-                                  );
-                                }}
-                                error={!!(feeHeadTouched?.name && feeHeadError?.name)}
-                                helperText={
-                                  feeHeadTouched?.name && feeHeadError?.name
-                                    ? (feeHeadError.name as string)
-                                    : `${fh.name.length}/40 Maximum characters allowed`
-                                }
-                                inputProps={{ maxLength: 40 }}
-                              />
-                            </ShakingTextField>
-                          </Box>
+                          error={formik.touched.name && Boolean(formik.errors.name)}
+                          helperText={
+                            formik.touched.name && formik.errors.name
+                              ? (formik.errors.name as string)
+                              : ''
+                          }
+                          inputProps={{ maxLength: 100 }}
+                        />
+                      </ShakingTextField>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        maxRows={4}
+                        label="Description (optional)"
+                        name="description"
+                        size="small"
+                        value={formik.values.description}
+                        onChange={formik.handleChange}
+                        error={formik.touched.description && Boolean(formik.errors.description)}
+                        helperText={
+                          formik.touched.description && formik.errors.description
+                            ? (formik.errors.description as string)
+                            : ''
+                        }
+                        inputProps={{ maxLength: 500 }}
+                      />
+                    </Stack>
+                  </Paper>
 
-                          {/* Income Category */}
-                          <Box minWidth={0}>
-                            <ShakingTextField
-                              error={
-                                !!(
-                                  feeHeadTouched?.incomeCategoryId && feeHeadError?.incomeCategoryId
-                                )
-                              }
-                            >
-                              <Autocomplete
-                                size="small"
-                                fullWidth
-                                options={incomeCategoryOptions}
-                                value={selectedIncomeCategory}
-                                loading={isIncomeCategoryLoading || isIncomeCategoryFetching}
-                                disabled={Boolean(fh.isUsedInDownstream)}
-                                getOptionLabel={(option: any) => option?.displayName || ''}
-                                isOptionEqualToValue={(option: any, value: any) =>
-                                  option?.id === value?.id
-                                }
-                                onChange={(_event, value: any) => {
-                                  formik.setFieldValue(
-                                    `feeHeads.${idx}.incomeCategoryId`,
-                                    value?.id || ''
-                                  );
-                                  formik.setFieldTouched(`feeHeads.${idx}.incomeCategoryId`, false);
-                                }}
-                                onBlur={() =>
-                                  formik.setFieldTouched(`feeHeads.${idx}.incomeCategoryId`, true)
-                                }
-                                noOptionsText="No income categories found"
-                                renderOption={(props, option: any) => {
-                                  const { key, ...optionProps } = props;
+                  <Paper
+                    component="section"
+                    aria-labelledby="fee-heads-heading"
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                      <Iconify
+                        icon="solar:layers-linear"
+                        width={20}
+                        sx={{ color: 'text.secondary', flexShrink: 0 }}
+                      />
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        alignItems="center"
+                        sx={{ flex: 1, minWidth: 0 }}
+                      >
+                        <Typography id="fee-heads-heading" variant="subtitle1" component="h3">
+                          Fee Heads
+                        </Typography>
+                        <FormInfoIcon
+                          label="About fee heads"
+                          title="Add at least one fee head. Each head needs a name and an active income category."
+                        />
+                      </Stack>
+                      <Button
+                        variant="outlined"
+                        startIcon={<Add />}
+                        onClick={handleAddFeeHead}
+                        size="small"
+                        data-add-fee-head
+                      >
+                        Add Fee Head
+                      </Button>
+                    </Stack>
 
-                                  return (
-                                    <Box
-                                      component="li"
-                                      key={key}
-                                      {...optionProps}
-                                      sx={{ minWidth: 0 }}
-                                    >
-                                      <Typography
-                                        noWrap
-                                        title={option.displayName}
-                                        sx={{
-                                          minWidth: 0,
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                        }}
-                                      >
-                                        {option.displayName}
-                                      </Typography>
-                                    </Box>
-                                  );
+                    {formik.values.feeHeads.length === 0 ? (
+                      <Box
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        py={3}
+                        border="1px dashed"
+                        borderColor="divider"
+                        borderRadius={1}
+                      >
+                        <Iconify
+                          icon="solar:document-bold-duotone"
+                          width={48}
+                          height={48}
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          Add at least one fee head to this category.
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled">
+                          Each fee head needs an income category.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Stack spacing={1.5}>
+                        {formik.values.feeHeads.map((fh, idx) => {
+                          const feeHeadError = Array.isArray(formik.errors.feeHeads)
+                            ? (formik.errors.feeHeads[idx] as FormikErrors<any>)
+                            : undefined;
+
+                          const feeHeadTouched = Array.isArray(formik.touched.feeHeads)
+                            ? formik.touched.feeHeads[idx]
+                            : undefined;
+
+                          const selectedIncomeCategory =
+                            incomeCategoryOptions.find(
+                              (option: any) => option.id === fh.incomeCategoryId
+                            ) ?? null;
+
+                          return (
+                            <Paper
+                              key={idx}
+                              component="section"
+                              aria-label={`Fee head ${idx + 1}${fh.name.trim() ? `: ${fh.name.trim()}` : ''}`}
+                              variant="outlined"
+                              sx={{
+                                p: { xs: 1.5, sm: 2 },
+                                bgcolor: 'background.neutral',
+                                borderRadius: 2,
+                                borderLeft: '4px solid',
+                                borderLeftColor: 'primary.main',
+                                display: 'grid',
+                                gridTemplateColumns: '38px minmax(0, 1fr) 44px',
+                                columnGap: 1.5,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  gridColumn: 1,
+                                  gridRow: 1,
+                                  alignSelf: 'start',
                                 }}
-                                renderInput={(params) => (
-                                  <TextField
-                                    {...params}
-                                    name={`feeHeads.${idx}.incomeCategoryId`}
-                                    label="Income Category *"
+                              >
+                                <Box
+                                  aria-label={`Fee head ${idx + 1}`}
+                                  sx={{
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: 1.25,
+                                    bgcolor: 'primary.lighter',
+                                    color: 'primary.main',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    fontWeight: 700,
+                                    typography: 'subtitle2',
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {String(idx + 1).padStart(2, '0')}
+                                </Box>
+                              </Box>
+
+                              <Box
+                                sx={{
+                                  gridColumn: 2,
+                                  gridRow: 1,
+                                  display: 'grid',
+                                  gridTemplateColumns: {
+                                    xs: 'minmax(0, 1fr)',
+                                    sm: 'repeat(2, minmax(0, 1fr))',
+                                    md: 'repeat(2, minmax(0, 1fr))',
+                                  },
+                                  gap: 1.5,
+                                  alignItems: 'start',
+                                }}
+                              >
+                                {/* Fee Head Name */}
+                                <Box minWidth={0}>
+                                  <ShakingTextField
+                                    error={!!(feeHeadTouched?.name && feeHeadError?.name)}
+                                  >
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Fee head name *"
+                                      name={`feeHeads.${idx}.name`}
+                                      value={fh.name}
+                                      onChange={(event) => {
+                                        formik.setFieldValue(
+                                          `feeHeads.${idx}.name`,
+                                          capitalizeWords(event.target.value)
+                                        );
+                                      }}
+                                      error={!!(feeHeadTouched?.name && feeHeadError?.name)}
+                                      helperText={
+                                        feeHeadTouched?.name && feeHeadError?.name
+                                          ? (feeHeadError.name as string)
+                                          : `${fh.name.length}/40 characters`
+                                      }
+                                      inputProps={{ maxLength: 40 }}
+                                    />
+                                  </ShakingTextField>
+                                </Box>
+
+                                {/* Income Category */}
+                                <Box minWidth={0}>
+                                  <ShakingTextField
                                     error={
                                       !!(
                                         feeHeadTouched?.incomeCategoryId &&
                                         feeHeadError?.incomeCategoryId
                                       )
                                     }
-                                    helperText={
-                                      feeHeadTouched?.incomeCategoryId &&
-                                      feeHeadError?.incomeCategoryId
-                                        ? (feeHeadError.incomeCategoryId as string)
-                                        : 'Collections are recorded under this Income Category.'
-                                    }
-                                    inputProps={{
-                                      ...params.inputProps,
-                                      title: selectedIncomeCategory?.displayName || '',
+                                  >
+                                    <Autocomplete
+                                      size="small"
+                                      fullWidth
+                                      options={incomeCategoryOptions}
+                                      value={selectedIncomeCategory}
+                                      loading={isIncomeCategoryLoading || isIncomeCategoryFetching}
+                                      disabled={Boolean(fh.isUsedInDownstream)}
+                                      getOptionLabel={(option: any) => option?.name || ''}
+                                      filterOptions={createFilterOptions({
+                                        stringify: (option: any) => option.displayName,
+                                      })}
+                                      isOptionEqualToValue={(option: any, value: any) =>
+                                        option?.id === value?.id
+                                      }
+                                      onChange={(_event, value: any) => {
+                                        formik.setFieldValue(
+                                          `feeHeads.${idx}.incomeCategoryId`,
+                                          value?.id || ''
+                                        );
+                                        formik.setFieldTouched(
+                                          `feeHeads.${idx}.incomeCategoryId`,
+                                          false
+                                        );
+                                      }}
+                                      onBlur={() =>
+                                        formik.setFieldTouched(
+                                          `feeHeads.${idx}.incomeCategoryId`,
+                                          true
+                                        )
+                                      }
+                                      noOptionsText="No income categories found"
+                                      renderOption={(props, option: any) => {
+                                        const { key, ...optionProps } = props;
+
+                                        return (
+                                          <Box
+                                            component="li"
+                                            key={key}
+                                            {...optionProps}
+                                            sx={{ minWidth: 0 }}
+                                          >
+                                            <Box sx={{ minWidth: 0 }} title={option.displayName}>
+                                              <Typography noWrap>{option.name}</Typography>
+                                              {option.code && (
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                  noWrap
+                                                >
+                                                  {option.code}
+                                                </Typography>
+                                              )}
+                                            </Box>
+                                          </Box>
+                                        );
+                                      }}
+                                      renderInput={(params) => (
+                                        <TextField
+                                          {...params}
+                                          name={`feeHeads.${idx}.incomeCategoryId`}
+                                          label="Income Category *"
+                                          error={
+                                            !!(
+                                              feeHeadTouched?.incomeCategoryId &&
+                                              feeHeadError?.incomeCategoryId
+                                            )
+                                          }
+                                          helperText={
+                                            feeHeadTouched?.incomeCategoryId &&
+                                            feeHeadError?.incomeCategoryId
+                                              ? (feeHeadError.incomeCategoryId as string)
+                                              : 'Classifies income from this fee head.'
+                                          }
+                                          inputProps={{
+                                            ...params.inputProps,
+                                            title: selectedIncomeCategory?.displayName || '',
+                                          }}
+                                        />
+                                      )}
+                                      slotProps={{
+                                        paper: { sx: { overflowX: 'hidden' } },
+                                        listbox: { sx: { overflowX: 'hidden' } },
+                                      }}
+                                      sx={{
+                                        minWidth: 0,
+                                        '& .MuiAutocomplete-inputRoot': {
+                                          minWidth: 0,
+                                          flexWrap: 'nowrap',
+                                        },
+                                        '& .MuiAutocomplete-input': {
+                                          minWidth: '0 !important',
+                                          textOverflow: 'ellipsis',
+                                        },
+                                      }}
+                                    />
+                                  </ShakingTextField>
+                                </Box>
+
+                                {/* Concession Applicable Switch */}
+                                <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>
+                                  <FormControlLabel
+                                    sx={{
+                                      m: 0,
+                                      gap: 0.5,
                                     }}
+                                    control={
+                                      <Switch
+                                        checked={fh.isConcessionApplied}
+                                        onChange={(e) => {
+                                          formik.setFieldValue(
+                                            `feeHeads.${idx}.isConcessionApplied`,
+                                            e.target.checked
+                                          );
+                                        }}
+                                        size="small"
+                                      />
+                                    }
+                                    label={
+                                      <Typography variant="body2" color="text.secondary">
+                                        Enable concessions
+                                      </Typography>
+                                    }
                                   />
-                                )}
-                                slotProps={{
-                                  paper: { sx: { overflowX: 'hidden' } },
-                                  listbox: { sx: { overflowX: 'hidden' } },
-                                }}
+                                </Box>
+
+                                <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>
+                                  <TextField
+                                    fullWidth
+                                    multiline
+                                    minRows={2}
+                                    maxRows={4}
+                                    label="Description (optional)"
+                                    name={`feeHeads.${idx}.description`}
+                                    value={fh.description}
+                                    onChange={formik.handleChange}
+                                    error={
+                                      !!(feeHeadTouched?.description && feeHeadError?.description)
+                                    }
+                                    helperText={
+                                      feeHeadTouched?.description && feeHeadError?.description
+                                        ? (feeHeadError.description as string)
+                                        : ''
+                                    }
+                                    inputProps={{ maxLength: 500 }}
+                                  />
+                                </Box>
+                              </Box>
+                              <Box
                                 sx={{
-                                  minWidth: 0,
-                                  '& .MuiAutocomplete-inputRoot': {
-                                    minWidth: 0,
-                                    flexWrap: 'nowrap',
-                                  },
-                                  '& .MuiAutocomplete-input': {
-                                    minWidth: '0 !important',
-                                    textOverflow: 'ellipsis',
-                                  },
+                                  gridColumn: 3,
+                                  gridRow: 1,
+                                  justifySelf: 'end',
+                                  alignSelf: 'start',
                                 }}
-                              />
-                            </ShakingTextField>
-                          </Box>
+                              >
+                                <Tooltip
+                                  title={
+                                    formik.values.feeHeads.length <= 1
+                                      ? 'At least one fee head is required'
+                                      : 'Remove fee head'
+                                  }
+                                >
+                                  <span>
+                                    <IconButton
+                                      color="error"
+                                      size="small"
+                                      sx={{ width: 44, height: 44 }}
+                                      disabled={formik.values.feeHeads.length <= 1}
+                                      aria-label={`Remove ${fh.name.trim() || `fee head ${idx + 1}`}`}
+                                      onClick={() => handleRemoveClick(idx)}
+                                    >
+                                      <Iconify icon={GlobalIcons.delete} />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </Box>
+                            </Paper>
+                          );
+                        })}
+                      </Stack>
+                    )}
+                    {typeof formik.errors.feeHeads === 'string' && formik.touched.feeHeads && (
+                      <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                        {formik.errors.feeHeads}
+                      </Typography>
+                    )}
+                  </Paper>
+                </Stack>
+              </Box>
+            </Scrollbar>
+          )}
 
-                          {/* Concession Applicable Switch */}
-                          <Box
-                            sx={{
-                              minWidth: 0,
-                              minHeight: 40,
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <FormControlLabel
-                              sx={{
-                                m: 0,
-                                gap: 0.5,
-                                '& .MuiFormControlLabel-label': { whiteSpace: 'nowrap' },
-                              }}
-                              control={
-                                <Switch
-                                  checked={fh.isConcessionApplied}
-                                  onChange={(e) => {
-                                    formik.setFieldValue(
-                                      `feeHeads.${idx}.isConcessionApplied`,
-                                      e.target.checked
-                                    );
-                                  }}
-                                  size="small"
-                                />
-                              }
-                              label={
-                                <Typography variant="body2" color="text.secondary" noWrap>
-                                  Enable concessions
-                                </Typography>
-                              }
-                            />
-                          </Box>
-
-                          {/* Description */}
-                          <Box sx={{ gridColumn: { xs: '1', sm: '1 / -1' }, minWidth: 0 }}>
-                            <TextField
-                              fullWidth
-                              multiline
-                              minRows={2}
-                              maxRows={4}
-                              label="Description"
-                              name={`feeHeads.${idx}.description`}
-                              value={fh.description}
-                              onChange={formik.handleChange}
-                              error={!!(feeHeadTouched?.description && feeHeadError?.description)}
-                              helperText={
-                                feeHeadTouched?.description && feeHeadError?.description
-                                  ? (feeHeadError.description as string)
-                                  : ''
-                              }
-                              inputProps={{ maxLength: 500 }}
-                            />
-                          </Box>
-                        </Box>
-                      </Paper>
-                    );
-                  })}
-                </Box>
-              )}
-              {typeof formik.errors.feeHeads === 'string' && formik.touched.feeHeads && (
-                <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                  {formik.errors.feeHeads}
-                </Typography>
-              )}
-            </Paper>
-          </Grid>
-        </Grid>
-      </DialogScrollContent>
-
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => onClose(null, false)}
-          variant="outlined"
-          size="small"
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={editData ? 16 : 20}
-              height={editData ? 16 : 20}
-            />
-          }
-          type="submit"
-          variant="contained"
-          size="small"
-          onClick={(e: any) => formik.handleSubmit(e)}
-          loading={isAddLoading || isUpdateLoading}
-        >
-          {editData ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              py: 1.75,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 1,
+              bgcolor: 'background.paper',
+              borderTop: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => onClose(null, false)}
+              variant="outlined"
+              size="small"
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              startIcon={
+                <Iconify
+                  icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={editData ? 16 : 20}
+                  height={editData ? 16 : 20}
+                />
+              }
+              variant="contained"
+              size="small"
+              onClick={handleSubmit}
+              loading={isSaving}
+              disabled={isLoadingDetails}
+            >
+              {editData ? 'Update' : 'Submit'}
+            </LoadingButton>
+          </Box>
+        </Box>
+      </Drawer>
 
       {/* Downstream Usage Warning Dialog */}
       <DownstreamUsageWarning

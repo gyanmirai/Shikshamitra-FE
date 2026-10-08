@@ -40,6 +40,15 @@ export interface ProrationPolicyListArgs {
   search?: string;
   page?: number;
   pageSize?: number;
+  sorting?: string;
+  policyNameFilter?: string;
+  policyNameOperator?: string;
+  ruleCountOperator?: string;
+  ruleCountValue?: number;
+  ruleCountMax?: number;
+  updatedAtOperator?: string;
+  updatedAt?: string;
+  updatedAtEnd?: string;
 }
 
 export interface ProrationPolicyListResponse {

@@ -38,41 +38,33 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
 
   return (
     <SectionCard
-      title="General Information"
+      title="General information"
       subtitle="Identify the schedule and optionally make it the board default after publishing."
       info="Draft keeps the schedule editable. Active publishes the current version for use by Fee Structures."
     >
-      <Grid container spacing={2.5}>
-        {/* Board */}
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <FormControl
+      <Grid container spacing={2}>
+        {/* Name */}
+        <Grid size={{ xs: 12, sm: 7 }}>
+          <TextField
             fullWidth
             size="small"
-            error={formik.touched.boardId && Boolean(formik.errors.boardId)}
-          >
-            <InputLabel>Board *</InputLabel>
-            <Select
-              label="Board *"
-              name="boardId"
-              value={formik.values.boardId}
-              disabled={Boolean(formik.values.id)}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            >
-              {boards.map((b) => (
-                <MenuItem key={b.id} value={b.id}>
-                  {b.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {formik.touched.boardId && formik.errors.boardId && (
-              <FormHelperText>{formik.errors.boardId}</FormHelperText>
-            )}
-          </FormControl>
+            label="Payment term name *"
+            name="paymentTermName"
+            placeholder="e.g. Monthly installments"
+            value={formik.values.paymentTermName || ''}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.paymentTermName && Boolean(formik.errors.paymentTermName)}
+            helperText={
+              (formik.touched.paymentTermName && formik.errors.paymentTermName) ||
+              `${(formik.values.paymentTermName || '').length}/100`
+            }
+            inputProps={{ maxLength: 100 }}
+          />
         </Grid>
 
         {/* Editable lifecycle status — archive remains a guarded table action. */}
-        <Grid size={{ xs: 12, sm: 3 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <FormControl
             fullWidth
             size="small"
@@ -102,28 +94,36 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
           </FormControl>
         </Grid>
 
-        {/* Name */}
-        <Grid size={{ xs: 12, sm: 5 }}>
-          <TextField
+        {/* Board */}
+        <Grid size={{ xs: 12 }}>
+          <FormControl
             fullWidth
             size="small"
-            label="Payment Term Name *"
-            name="paymentTermName"
-            placeholder="e.g. Monthly Installments — 2025-26"
-            value={formik.values.paymentTermName || ''}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.paymentTermName && Boolean(formik.errors.paymentTermName)}
-            helperText={
-              (formik.touched.paymentTermName && formik.errors.paymentTermName) ||
-              `${(formik.values.paymentTermName || '').length}/100`
-            }
-            inputProps={{ maxLength: 100 }}
-          />
+            error={formik.touched.boardId && Boolean(formik.errors.boardId)}
+          >
+            <InputLabel>Board *</InputLabel>
+            <Select
+              label="Board *"
+              name="boardId"
+              value={formik.values.boardId}
+              disabled={Boolean(formik.values.id)}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            >
+              {boards.map((b) => (
+                <MenuItem key={b.id} value={b.id}>
+                  {b.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {formik.touched.boardId && formik.errors.boardId && (
+              <FormHelperText>{formik.errors.boardId}</FormHelperText>
+            )}
+          </FormControl>
         </Grid>
 
         {/* Description */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <TextField
             fullWidth
             size="small"
@@ -143,34 +143,26 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
         </Grid>
 
         {/* Default Term toggle */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <Card
             data-testid="default-payment-term-toggle"
             variant="outlined"
             sx={{
-              px: 2,
-              py: 1.25,
+              px: 1.5,
+              py: 1,
               display: 'flex',
               alignItems: 'center',
-              bgcolor: formik.values.isDefaultTerm ? 'primary.lighter' : 'transparent',
-              borderColor: formik.values.isDefaultTerm ? 'primary.main' : 'divider',
-              transition: 'all 0.2s ease',
-              cursor: defaultSelectionDisabled ? 'not-allowed' : 'pointer',
-            }}
-            onClick={() => {
-              if (!defaultSelectionDisabled) {
-                formik.setFieldValue('isDefaultTerm', !formik.values.isDefaultTerm);
-              }
+              minHeight: 88,
             }}
           >
             <FormControlLabel
-              sx={{ m: 0, pointerEvents: 'none' }}
+              sx={{ m: 0, alignItems: 'flex-start' }}
               control={
                 <Switch
                   size="small"
                   checked={formik.values.isDefaultTerm}
                   disabled={defaultSelectionDisabled}
-                  onChange={() => {}}
+                  onChange={(event) => formik.setFieldValue('isDefaultTerm', event.target.checked)}
                 />
               }
               label={

@@ -10,6 +10,33 @@ export type FormattedVersionValue = {
 
 export type VersionValueContext = {
   labelsById?: Record<string, string>;
+  policyType?: string;
+};
+
+export const contextFromRefundSnapshot = (
+  snapshot: Record<string, unknown> | undefined,
+  context?: VersionValueContext
+): VersionValueContext => {
+  const labelsById = { ...context?.labelsById };
+  if (!snapshot) return { labelsById, policyType: context?.policyType };
+  const names = snapshot.FeeHeadNames ?? snapshot.feeHeadNames;
+  if (names && typeof names === 'object' && !Array.isArray(names)) {
+    Object.entries(names).forEach(([id, name]) => {
+      if (typeof name === 'string' && name.trim()) labelsById[id.toLowerCase()] = name;
+    });
+  }
+  const references = [
+    ['ExpenseCategoryId', 'ExpenseCategoryName'],
+    ['DefaultPayingBankAccountId', 'DefaultPayingBankAccountName'],
+  ] as const;
+  references.forEach(([idKey, nameKey]) => {
+    const id = snapshot[idKey] ?? snapshot[idKey.charAt(0).toLowerCase() + idKey.slice(1)];
+    const name = snapshot[nameKey] ?? snapshot[nameKey.charAt(0).toLowerCase() + nameKey.slice(1)];
+    if (typeof id === 'string' && typeof name === 'string' && name.trim()) {
+      labelsById[id.toLowerCase()] = name;
+    }
+  });
+  return { labelsById, policyType: context?.policyType };
 };
 
 export const formatVersionTimestamp = (value: string) =>
@@ -20,6 +47,11 @@ const FIELD_LABELS: Record<string, string> = {
   academicyearid: 'Academic Year',
   applicablefeeheadids: 'Applicable Fee Heads',
   applicablefeeheads: 'Applicable Fee Heads',
+  expensecategoryid: 'Expense Category',
+  defaultpayingbankaccountid: 'Default Paying Bank Account',
+  allowedpayoutmethods: 'Allowed Payout Methods',
+  amountmode: 'Amount Mode',
+  deductiontype: 'Deduction Type',
   approvalroleids: 'Approval Roles',
   roundingmethod: 'Rounding Method',
   roundoff: 'Rounding Method',
@@ -50,6 +82,36 @@ const ENUM_LABELS: Record<string, Record<string, string>> = {
   feeheadscope: {
     '0': 'Entire Fee Structure',
     '1': 'Selected Fee Heads',
+  },
+  amountmode: {
+    '0': 'Remaining paid amount',
+    '1': 'Up to eligible amount',
+    '2': 'Fixed amount',
+    '3': 'Percentage of eligible amount',
+    remainingpaidamount: 'Remaining paid amount',
+    manualuptoeligible: 'Up to eligible amount',
+    fixedamount: 'Fixed amount',
+    percentage: 'Percentage of eligible amount',
+  },
+  deductiontype: {
+    '0': 'No deduction',
+    '1': 'Fixed amount',
+    '2': 'Percentage',
+    none: 'No deduction',
+    fixedamount: 'Fixed amount',
+    percentage: 'Percentage',
+  },
+  allowedpayoutmethods: {
+    '0': 'Cash',
+    '1': 'Cheque',
+    '2': 'Demand draft',
+    '3': 'Bank transfer',
+    '4': 'UPI',
+    cash: 'Cash',
+    cheque: 'Cheque',
+    demanddraft: 'Demand draft',
+    banktransfer: 'Bank transfer',
+    upi: 'UPI',
   },
   applyon: {
     '0': 'All Outstanding Fees',
@@ -143,6 +205,17 @@ const findReferenceLabel = (value: unknown, context?: VersionValueContext) => {
   return context?.labelsById?.[value.toLowerCase()];
 };
 
+const isGuid = (value: unknown): value is string =>
+  typeof value === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
+
+const unavailableReferenceLabel = (fieldKey: string) => {
+  if (fieldKey === 'applicablefeeheadids' || fieldKey === 'latefeeapplyonfeeheads')
+    return 'Fee head name not recorded';
+  if (fieldKey === 'expensecategoryid') return 'Expense category name not recorded';
+  if (fieldKey === 'defaultpayingbankaccountid') return 'Bank account name not recorded';
+  return 'Name not recorded';
+};
+
 const formatObject = (value: Record<string, unknown>, context?: VersionValueContext) =>
   Object.entries(value)
     .map(([key, item]) => {
@@ -174,6 +247,13 @@ export const formatFinancePolicyVersionValue = (
     }
   }
 
+  if (fieldKey === 'feeheadscope' && context?.policyType === 'refund') {
+    const scope = String(value).toLowerCase();
+    if (scope === '0' || scope === 'allfeeheads') return { kind: 'text', text: 'All fee heads' };
+    if (scope === '1' || scope === 'selectedfeeheads')
+      return { kind: 'text', text: 'Selected fee heads' };
+  }
+
   const enumLabel = ENUM_LABELS[fieldKey]?.[String(value).toLowerCase()];
   if (enumLabel) {
     return { kind: fieldKey === 'status' ? 'status' : 'text', text: enumLabel };
@@ -184,21 +264,17 @@ export const formatFinancePolicyVersionValue = (
 
     const text = value
       .map((item) => {
+        const itemEnumLabel = ENUM_LABELS[fieldKey]?.[String(item).toLowerCase()];
+        if (itemEnumLabel) return itemEnumLabel;
         const referenceLabel = findReferenceLabel(item, context);
         if (referenceLabel) return referenceLabel;
-        if (
-          fieldKey === 'latefeeapplyonfeeheads' &&
-          typeof item === 'string' &&
-          /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(item)
-        ) {
-          return 'Fee head unavailable';
-        }
+        if (isGuid(item)) return unavailableReferenceLabel(fieldKey);
         if (item && typeof item === 'object') {
           return formatObject(item as Record<string, unknown>, context);
         }
         return String(deserializeVersionValue(item));
       })
-      .join(', ');
+      .join(fieldKey === 'applicablefeeheadids' ? '\n' : ', ');
 
     return { kind: 'text', text };
   }
@@ -226,6 +302,8 @@ export const formatFinancePolicyVersionValue = (
 
   const referenceLabel = findReferenceLabel(value, context);
   if (referenceLabel) return { kind: 'text', text: referenceLabel };
+
+  if (isGuid(value)) return { kind: 'text', text: unavailableReferenceLabel(fieldKey) };
 
   return { kind: 'text', text: String(value) };
 };

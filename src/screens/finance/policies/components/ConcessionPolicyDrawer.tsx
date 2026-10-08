@@ -2,14 +2,14 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
+import React, { useCallback } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
 
 import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import { useConcessionPolicyForm } from '../hooks/useConcessionPolicyForm';
@@ -27,7 +27,14 @@ interface ConcessionPolicyDrawerProps {
   academicYearId?: string;
 }
 
-export default function ConcessionPolicyDrawer({
+// Scope form hooks to the open drawer so discarded drafts and simulation state
+// cannot survive into the next create, edit, or duplicate session.
+export default function ConcessionPolicyDrawer(props: ConcessionPolicyDrawerProps) {
+  const { open } = props;
+  return open ? <ConcessionPolicyDrawerSession {...props} /> : null;
+}
+
+function ConcessionPolicyDrawerSession({
   open,
   onClose,
   editData,
@@ -86,7 +93,7 @@ export default function ConcessionPolicyDrawer({
           aria-busy={busy}
         >
           <FinancePolicyDrawerHeader
-            title={editData ? 'Edit concession policy' : 'Create concession policy'}
+            title={editData ? 'Edit Concession Policy' : 'Create Concession Policy'}
             titleId="concession-policy-title"
             description={`Configure calculation rules and limits · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
             descriptionDisplay="tooltip"
@@ -156,7 +163,7 @@ export default function ConcessionPolicyDrawer({
         icon="warning"
         disableBackdropClick
         onClose={unsavedChangesDialog.onFalse}
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         content="Your changes to this concession policy will be lost."
         action={
           <Button

@@ -10,6 +10,8 @@ import { Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material'
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 
+import { normalizeRefundMethod, getAllowedRefundMethodOptions } from '../NewRefundForm/refundPayoutMethods';
+
 /** Extended props that also pass the entered notes/reason back on close. */
 interface IFeeRefundApprovalFormProps {
   onClose: (
@@ -22,6 +24,7 @@ interface IFeeRefundApprovalFormProps {
   defaultCategoryId?: string;
   defaultBankId?: string;
   defaultMethod?: string;
+  allowedPayoutMethods?: string[];
   mode: string;
   loading?: boolean;
 }
@@ -33,21 +36,18 @@ const FeeRefundReasonApprovalForm = ({
   academicYearId = '',
   defaultCategoryId = '',
   defaultBankId = '',
-  defaultMethod = 'Cash',
+  defaultMethod = '',
+  allowedPayoutMethods,
 }: IFeeRefundApprovalFormProps) => {
+  const methodOptions = getAllowedRefundMethodOptions(allowedPayoutMethods);
+  const normalizedDefault = normalizeRefundMethod(defaultMethod);
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       reason: '',
       expenseCategoryId: defaultCategoryId,
       bankAccountId: defaultBankId,
-      method:
-        defaultMethod === 'UPI'
-          ? 'Upi'
-          : defaultMethod === 'Demand Draft (DD)'
-            ? 'DemandDraft'
-            : defaultMethod === 'Bank Transfer (NEFT/RTGS/IMPS)'
-              ? 'BankTransfer'
-              : defaultMethod,
+      method: methodOptions.some((method) => method.value === normalizedDefault) ? normalizedDefault : '',
     },
     validationSchema: Yup.object().shape({
       expenseCategoryId:
@@ -56,9 +56,9 @@ const FeeRefundReasonApprovalForm = ({
         is: (method: string) => mode === 'Approve' && method !== 'Cash',
         then: (s) => s.required('Paying Bank Account is required'),
       }),
-      method: Yup.string()
-        .oneOf(['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'])
-        .required(),
+      method: mode === 'Approve'
+        ? Yup.string().oneOf(methodOptions.map((method) => method.value), 'Select a payment method allowed by the refund policy').required('Payout method is required')
+        : Yup.string(),
       reason:
         mode === 'Reject' || mode === 'Cancel'
           ? Yup.string().trim().required('Reason is required')
@@ -94,10 +94,16 @@ const FeeRefundReasonApprovalForm = ({
                 name="method"
                 value={formik.values.method}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                required
+                disabled={loading || methodOptions.length === 0}
+                error={Boolean(formik.touched.method && formik.errors.method)}
+                helperText={formik.touched.method && formik.errors.method
+                  ? formik.errors.method : methodOptions.length === 0 ? 'No payment methods are available under this refund policy.' : undefined}
               >
-                {['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'].map((method) => (
-                  <MenuItem key={method} value={method}>
-                    {method}
+                {methodOptions.map((method) => (
+                  <MenuItem key={method.value} value={method.value}>
+                    {method.label}
                   </MenuItem>
                 ))}
               </TextField>
@@ -107,7 +113,7 @@ const FeeRefundReasonApprovalForm = ({
                 operation="refund"
                 categoryField="expenseCategoryId"
                 categoryLabel="Expense Category"
-                bankField="bankAccountId"
+                bankField={formik.values.method && formik.values.method !== 'Cash' ? 'bankAccountId' : undefined}
                 bankLabel="Paying Bank Account"
               />
             </Grid>
@@ -154,6 +160,7 @@ const FeeRefundReasonApprovalForm = ({
           color={mode === 'Reject' || mode === 'Cancel' ? 'error' : 'success'}
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           loading={loading}
+          disabled={mode === 'Approve' && methodOptions.length === 0}
           onClick={(e: any) => {
             e.preventDefault();
             formik.handleSubmit(e);

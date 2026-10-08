@@ -10,4 +10,5 @@ export type ConfirmDialogProps = Omit<DialogProps, 'title' | 'content'> & {
   icon?: React.ReactNode;
   disableBackdropClick?: boolean;
   disableCancel?: boolean;
+  cancelText?: string;
 };

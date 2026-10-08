@@ -3,6 +3,7 @@
 import React from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { capitalizeWords } from 'src/utils/input-format';
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
@@ -18,7 +19,7 @@ import {
 } from '@mui/material';
 
 import DefaultPolicyToggle from '../DefaultPolicyToggle';
-import { SectionCard } from '../collection/CollectionCommon';
+import { ConcessionSectionCard as SectionCard } from '../concession/ConcessionCommon';
 
 interface ProrationGeneralSectionProps {
   formik: any;
@@ -36,30 +37,35 @@ export default function ProrationGeneralSection({
   return (
     <SectionCard
       title="General Information"
-      subtitle="Configure policy identity, status, description, and academic year defaults."
+      subtitle="Name the policy and choose when it is available."
       icon={GlobalIcons.notebook}
     >
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, sm: 8 }}>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <ShakingTextField error={formik.touched.policyName && Boolean(formik.errors.policyName)}>
             <TextField
               fullWidth
               required
               size="small"
-              label="Proration Policy Name"
+              label="Policy name"
               placeholder="e.g. Standard Mid-Session Proration Policy"
               name="policyName"
               value={formik.values.policyName}
-              onChange={formik.handleChange}
+              onChange={(event) => {
+                formik.setFieldValue('policyName', capitalizeWords(event.target.value));
+              }}
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}
-              helperText={formik.touched.policyName && (formik.errors.policyName as string)}
+              helperText={
+                (formik.touched.policyName && (formik.errors.policyName as string)) ||
+                `${(formik.values.policyName || '').length}/128 characters`
+              }
               inputProps={{ maxLength: 128 }}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <ShakingTextField error={formik.touched.status && Boolean(formik.errors.status)}>
             <FormControl
               fullWidth
@@ -67,8 +73,9 @@ export default function ProrationGeneralSection({
               size="small"
               error={formik.touched.status && Boolean(formik.errors.status)}
             >
-              <InputLabel>Status</InputLabel>
+              <InputLabel id="proration-status-label">Status</InputLabel>
               <Select
+                labelId="proration-status-label"
                 label="Status"
                 name="status"
                 value={formik.values.status}
@@ -116,7 +123,7 @@ export default function ProrationGeneralSection({
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <ShakingTextField
             error={formik.touched.description && Boolean(formik.errors.description)}
           >
@@ -125,24 +132,23 @@ export default function ProrationGeneralSection({
               size="small"
               multiline
               rows={2}
-              label="Policy Description"
+              label="Description"
               name="description"
               placeholder="Describe when and where this proration policy should be used..."
               value={formik.values.description}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={
-                (formik.touched.description && (formik.errors.description as string)) ||
-                `${(formik.values.description || '').length}/500 characters`
-              }
+              helperText={formik.touched.description && (formik.errors.description as string)}
               inputProps={{ maxLength: 500 }}
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <DefaultPolicyToggle
+            compact
+            descriptionDisplay="tooltip"
             policyLabel="Proration"
             status={formik.values.status}
             checked={Boolean(formik.values.isDefault)}
@@ -163,7 +169,7 @@ export default function ProrationGeneralSection({
                 size="small"
                 multiline
                 rows={2}
-                label="Change Reason"
+                label="Change reason"
                 name="changeReason"
                 placeholder="Explain why this active proration policy is being changed..."
                 value={formik.values.changeReason || ''}

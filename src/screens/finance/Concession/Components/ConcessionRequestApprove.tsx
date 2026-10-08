@@ -5,6 +5,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -52,7 +53,7 @@ const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalForm
         commandKey.current = '';
         onClose(null, true);
       } catch (error) {
-        console.error(error);
+        shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
       }
     },
   });

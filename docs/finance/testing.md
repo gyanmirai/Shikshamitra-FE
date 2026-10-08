@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-03
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -47,6 +47,20 @@ Use these commands as the first validation set.
 
 ## Add coverage when needed
 
+For the Finance drawer and navigation regressions, run these focused suites serially on memory-constrained Windows hosts:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/nav-section/vertical/nav-list.test.tsx src/components/nav-section/path-utils.test.ts --pool=threads --maxWorkers=1
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/settings/PaymentTerm/Components/PaymentTermValidationSchema.test.ts src/screens/finance/settings/PaymentTerm/Components/sections/InstallmentSection.test.tsx src/screens/finance/settings/PaymentTerm/Components/FormFooter.test.tsx --pool=threads --maxWorkers=1
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/policies/hooks/useRefundPolicyForm.test.tsx src/screens/finance/policies/components/FinancePolicyDetailsDrawer.test.tsx src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx --pool=threads --maxWorkers=1
+```
+
+Finish in the in-app browser: collapse Fees and Settings on Fee Category and confirm the active item remains visible; check Refund Policy Create/Edit/View loading and retry states; enter invalid invoice dates, excessive offsets, and incomplete allocations in Payment Terms and confirm inline errors, checklist failures, and disabled Submit. No policy mutation is needed for this smoke check.
+
+For the unified Payment Term template workflow, run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vite/bin/vite.js --config e2e/fixtures/payment-term-template/vite.config.mts` on Windows and open `http://127.0.0.1:4185/` in the in-app browser.
+This fixture renders the real drawer with synthetic API data and supports Create, Edit, and a copied draft; it does not prove live backend integration or introduce a production Duplicate action.
+Check conditional Days Before Due, zero-gap and excessive-offset blocking, per-installment specific dates, complete preview dates, replacement warning, atomic rule/row application, Cancel preservation, and disabled Submit for invalid manual dates.
+
 Proration form validation and event interactions are covered by
 `src/screens/finance/policies/hooks/useProrationPolicyForm.test.ts` and
 `src/screens/finance/policies/components/proration/ProrationFeeHeadsSection.test.tsx`.
@@ -70,6 +84,7 @@ Add or update tests when a change affects these areas.
 | Charge request payload                    | Client or mapper test                                                                                                                                                                       |
 | Optimistic cache update                   | Client cache test                                                                                                                                                                           |
 | Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                              |
+| Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh |
 | Late-fee waiver queue and decisions       | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
 | Audit Trail mapping                       | Mapper test                                                                                                                                                                                 |
 | Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                     |
@@ -121,6 +136,22 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 
 ## Charge lifecycle regression checks
 
+For charge creation, cover stable division/student selections during refetch and mode changes,
+failed and out-of-order student responses, combined quick filters, filtered Select All, the
+`Finance.Fees.Charges.Add` permission, required-field validation, unsaved Cancel/back confirmation,
+and a successful Pending charge. The `e2e/fixtures/charge-create` fixture uses synthetic data;
+it does not create backend charges.
+
+For Payment Terms, verify the all-version Used In breakdown, inline default replacement impact,
+Cancel without writes, and Confirm before saving in Create, Edit, and Duplicate. Existing fee
+structure version assignments must remain unchanged. The focused hook regression is
+`usePaymentTermForm.impact.test.tsx`; the browser fixture is `e2e/fixtures/payment-term-impact`.
+
+For archived Fee Categories, verify mapped fee-head status controls are disabled with the restore
+tooltip and direct API status changes are rejected. For Fee Structure Policies, clear Collection
+Policy and verify its inline error blocks Next and direct Review navigation while draft saving
+and an empty Refund Policy remain allowed.
+
 Run `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts` for four-tab counts, server status parameters, pending-only decision actions, field validation and charge cache refresh after collection/waiver. In the in-app browser, open `/finance/charge-management`, switch each tab, inspect detail balances and approval status, and verify the server status after final settlement and reversal. Browser checks are unverified when the browser connection cannot be established.
 
 ## Income, expense, and bank routing
@@ -128,5 +159,15 @@ Run `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollecti
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
 
 ## Variable fee assignment checks
+
+Collection policy bounds and discard regressions use the actual components in
+`e2e/fixtures/collection-policy` with synthetic lookups and no backend writes.
+Check long typing and paste, scientific notation, day/rate/amount boundaries and
+decimal precision for each calculation type. Check first-day gaps, overlaps,
+reversed ranges and cutoff violations, including a single invalid slab. Confirm
+invalid fields block submission and preview; compound growth must remain readable
+without silently truncating the calculated fee. Confirm Create/Edit/Duplicate
+discard sessions reopen with defaults or saved source values. The retained summary
+component can be tested separately via the fixture's simulation toggle.
 
 See [variable fee assignment](./references/variable-fee-assignment.md) for focused suites and the current workflow acceptance checks.

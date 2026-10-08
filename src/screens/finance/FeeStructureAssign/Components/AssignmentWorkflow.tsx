@@ -68,6 +68,17 @@ function AssignmentDirtyState({ dirty }: { dirty: boolean }) {
   return null;
 }
 
+function AssignmentAmountValidity({
+  invalid,
+  onChange,
+}: {
+  invalid: boolean;
+  onChange: (invalid: boolean) => void;
+}) {
+  useEffect(() => onChange(invalid), [invalid, onChange]);
+  return null;
+}
+
 export default function AssignmentWorkflow({
   students,
   academicYearId,
@@ -83,10 +94,6 @@ export default function AssignmentWorkflow({
   const canAssign = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
-  );
-  const canOverrideAmount = hasGrantedPermission(
-    permissions,
-    `${financePermissions.fees.structureAssign}.OverrideAmount`
   );
   const canOverrideDates = hasGrantedPermission(
     permissions,
@@ -112,6 +119,7 @@ export default function AssignmentWorkflow({
   const [preview, setPreview] = useState<AssignmentBulkPreview>();
   const [outcomes, setOutcomes] = useState<AssignmentBulkResult>();
   const [error, setError] = useState('');
+  const [invalidAmounts, setInvalidAmounts] = useState(false);
   const generation = useRef(0);
   const operation = useRef(false);
   const [previewBulk, previewState] = useAssignmentBulkPreviewMutation();
@@ -318,6 +326,7 @@ export default function AssignmentWorkflow({
           disabled:
             busy ||
             (activeStep === 0 && (candidates.isLoading || candidates.isError)) ||
+            (activeStep === 1 && invalidAmounts) ||
             (activeStep === 3 && selectedPreviewItems.length === 0),
           startIcon: (
             <Iconify
@@ -351,7 +360,7 @@ export default function AssignmentWorkflow({
                   const message = variableAssignmentError(candidate, request);
                   if (!message) return undefined;
                   const student = students.find((s) => s.studentId === request.studentId);
-                  return `${student?.studentName ?? 'Student'  }: ${  message}`;
+                  return `${student?.studentName ?? 'Student'}: ${message}`;
                 })
                 .find(Boolean);
               if (problem) {
@@ -407,6 +416,17 @@ export default function AssignmentWorkflow({
               <AssignmentDirtyState
                 dirty={values.requests.some((r) => !committedIds.has(r.studentId))}
               />
+              {activeStep === 1 && (
+                <AssignmentAmountValidity
+                  invalid={
+                    !candidate ||
+                    values.requests
+                      .filter((request) => !committedIds.has(request.studentId))
+                      .some((request) => Boolean(variableAssignmentError(candidate, request)))
+                  }
+                  onChange={setInvalidAmounts}
+                />
+              )}
               <Typography variant="body2" color="text.secondary">
                 {students.length} student{students.length === 1 ? '' : 's'} · {steps[activeStep]}
               </Typography>
@@ -505,7 +525,6 @@ export default function AssignmentWorkflow({
                                     );
                                   }}
                                   canOverrideDates={canOverrideDates}
-                                  canOverrideAmount={canOverrideAmount}
                                   disabled={busy}
                                 />
                               )}

@@ -46,18 +46,6 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
           {/* Top Row: Key Metrics */}
           <InfoItem
             icon={<Description />}
-            label="Income Category"
-            value={charge?.incomeCategoryName || 'Selection required'}
-            iconColor={detailIconColor}
-          />
-          <InfoItem
-            icon={<Description />}
-            label="Receiving Bank Account"
-            value={charge?.receivingBankLabel || 'Selection required'}
-            iconColor={detailIconColor}
-          />
-          <InfoItem
-            icon={<Description />}
             label="Charge Name"
             value={charge?.chargeName || 'N/A'}
             iconColor={detailIconColor}

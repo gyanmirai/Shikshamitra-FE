@@ -15,6 +15,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -34,14 +35,17 @@ import {
   concessionManagementApi,
   useGetConcessionApplicationsQuery,
   useCancelConcessionRequestMutation,
+  useApproveConcessionRequestMutation,
+  usePreviewConcessionApprovalMutation,
+  useGetConcessionApprovalContextQuery,
   useDeleteConcessionApplicationMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type { IStudentInfo } from '../type';
+import { canDecideConcession } from '../concessionDecisionEligibility';
 
 interface ICombinedProps {
   onRequestConcession?: (student: IStudentInfo) => void;
-  onApprove: (data: IStudentInfo) => void;
   onReject: (data: IStudentInfo) => void;
   onAddConcession: () => void;
   onViewConcession?: (student: IStudentInfo) => void;
@@ -54,7 +58,6 @@ interface StudentConcessionTableProps extends ICombinedProps {
 }
 
 const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
-  onApprove,
   onReject,
   onAddConcession,
   onRequestConcession,
@@ -85,12 +88,28 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   } = filters;
   const tabs = useTabs('pending');
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
   const actions = financePermissions.fees.concessionActions;
+  const canApprove = hasGrantedPermission(permissions, actions.approve);
+  const canReject = hasGrantedPermission(permissions, actions.reject);
   const canAdd = hasGrantedPermission(permissions, actions.add);
   const canEdit = hasGrantedPermission(permissions, actions.edit);
   const canDelete = hasGrantedPermission(permissions, actions.delete);
   const canCancel = hasGrantedPermission(permissions, actions.cancel);
   const [selectedConcession, setSelectedConcession] = useState<ConcessionApplication | null>(null);
+  const [approvalRequest, setApprovalRequest] = useState<ConcessionApplication | null>(null);
+  const [approvalPreview, setApprovalPreview] = useState<{
+    total: number;
+    requestConcurrencyStamp: string;
+    previewFingerprint: string;
+  } | null>(null);
+  const approvalCommandKey = useRef('');
+  const approvalContext = useGetConcessionApprovalContextQuery(approvalRequest?.id ?? '', {
+    skip: !approvalRequest?.id,
+  });
+  const [previewApproval, { isLoading: isPreviewingApproval }] =
+    usePreviewConcessionApprovalMutation();
+  const [approveRequest, { isLoading: isApproving }] = useApproveConcessionRequestMutation();
   const [cancelReason, setCancelReason] = useState('');
   const [cancelReasonError, setCancelReasonError] = useState('');
   const cancelCommandKey = useRef('');
@@ -106,6 +125,62 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useCancelConcessionRequestMutation,
   });
+
+  const closeApproval = () => {
+    if (isApproving) return;
+    setApprovalRequest(null);
+    setApprovalPreview(null);
+    approvalCommandKey.current = '';
+  };
+
+  const reviewApproval = async () => {
+    if (!approvalRequest || !approvalContext.data) return;
+    if (!canDecideConcession(currentUserId, approvalRequest.requesterId, approvalRequest.submittedById)) {
+      closeApproval();
+      return;
+    }
+    try {
+      const preview = await previewApproval({
+        concessionRequestId: approvalRequest.id,
+        body: {
+          requestConcurrencyStamp: approvalContext.data.requestConcurrencyStamp,
+          previewFingerprint: approvalContext.data.previewFingerprint,
+        },
+      }).unwrap();
+      setApprovalPreview({
+        total: preview.totalApprovedAmount,
+        requestConcurrencyStamp: preview.requestConcurrencyStamp,
+        previewFingerprint: preview.previewFingerprint,
+      });
+    } catch (error) {
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+      setApprovalPreview(null);
+    }
+  };
+
+  const confirmApproval = async () => {
+    if (!approvalRequest || !approvalPreview) return;
+    if (!canDecideConcession(currentUserId, approvalRequest.requesterId, approvalRequest.submittedById)) {
+      closeApproval();
+      return;
+    }
+    try {
+      await approveRequest({
+        studentConcessionTypeRequestId: approvalRequest.id,
+        body: {
+          requestConcurrencyStamp: approvalPreview.requestConcurrencyStamp,
+          previewFingerprint: approvalPreview.previewFingerprint,
+          idempotencyKey: (approvalCommandKey.current ||= window.crypto.randomUUID()),
+        },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Concession request approved successfully' });
+      closeApproval();
+    } catch (error) {
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+      setApprovalPreview(null);
+      approvalContext.refetch();
+    }
+  };
 
   const closeCancelDialog = () => {
     cancelConcessionDialog.onFalse();
@@ -356,6 +431,20 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             sticky: true,
             render: (value, row) => {
               const isDraft = row.status === ConcessionStatusType.Draft;
+              const isPending = row.status === ConcessionStatusType.Pending;
+              const isOwnRequest = Boolean(
+                currentUserId &&
+                  (currentUserId.toLowerCase() === row.requesterId?.toLowerCase() ||
+                    currentUserId.toLowerCase() === row.submittedById?.toLowerCase())
+              );
+              const canDecide = canDecideConcession(
+                currentUserId,
+                row.requesterId,
+                row.submittedById
+              );
+              const decisionTooltip = !currentUserId || !row.requesterId
+                ? 'Decision identity is unavailable'
+                : 'You cannot approve or reject your own request';
               const serverAllows = (action: string) =>
                 !row.availableActions?.length || row.availableActions.includes(action);
               const canCancelRow =
@@ -378,6 +467,31 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                       icon: 'carbon:view-filled',
                       onClick: () => onViewConcession?.(row as IStudentInfo),
                     },
+                    ...(isPending && canApprove && (row.availableActions?.includes('approve') || isOwnRequest)
+                      ? [{
+                          id: 'approve',
+                          label: 'Approve',
+                          icon: 'solar:check-circle-bold',
+                          color: 'success.main',
+                          disabled: !canDecide,
+                          tooltip: !canDecide ? decisionTooltip : undefined,
+                          onClick: () => {
+                            setApprovalPreview(null);
+                            setApprovalRequest(row as ConcessionApplication);
+                          },
+                        }]
+                      : []),
+                    ...(isPending && canReject && (row.availableActions?.includes('reject') || isOwnRequest)
+                      ? [{
+                          id: 'reject',
+                          label: 'Reject',
+                          icon: 'solar:close-circle-bold',
+                          color: 'error.main',
+                          disabled: !canDecide,
+                          tooltip: !canDecide ? decisionTooltip : undefined,
+                          onClick: () => onReject(row as IStudentInfo),
+                        }]
+                      : []),
                     ...(isDraft && canEdit && serverAllows('edit')
                       ? [
                           {
@@ -457,6 +571,46 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               </Box>
             )}
           </>
+        }
+      />
+
+      <ConfirmDialog
+        open={Boolean(approvalRequest)}
+        onClose={closeApproval}
+        title="Approve concession request?"
+        content={
+          <Box>
+            <Typography variant="body2">
+              {approvalRequest?.studentName} · {approvalRequest?.concessionTypeName}
+            </Typography>
+            {approvalContext.isFetching ? (
+              <Typography variant="body2">Checking current concession impact…</Typography>
+            ) : approvalContext.isError ? (
+              <Typography variant="body2" color="error.main">
+                Unable to load the current impact. Close this dialog and try again.
+              </Typography>
+            ) : approvalPreview === null ? (
+              <Typography variant="body2">
+                Review the current fee impact before approving this request.
+              </Typography>
+            ) : (
+              <Typography variant="body2">
+                Approve {formatNumber(approvalPreview.total, 'INR')} in concessions? This updates the student’s fees.
+              </Typography>
+            )}
+          </Box>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="success"
+            size="small"
+            loading={isPreviewingApproval || isApproving}
+            disabled={!approvalContext.data || approvalContext.isFetching || approvalContext.isError}
+            onClick={approvalPreview === null ? reviewApproval : confirmApproval}
+          >
+            {approvalPreview === null ? 'Review impact' : 'Confirm approve'}
+          </LoadingButton>
         }
       />
 

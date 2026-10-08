@@ -49,6 +49,55 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useConcessionPolicyForm submission validation', () => {
+  it('preserves the paid refund entitlement when automatic request creation is off', async () => {
+    const { result } = renderHook(() => useConcessionPolicyForm({ open: true, onClose: vi.fn() }));
+    await act(async () => {
+      result.current.setSimFeeAmount(10000);
+      result.current.setSimAlreadyPaid(4000);
+      await result.current.formik.setValues({
+        ...result.current.formik.values,
+        applyOn: 'AllFees',
+        autoCreateRefund: false,
+        valueSource: 'PolicyFixed',
+        calculationMethod: 'FullWaiver',
+      });
+    });
+    expect(result.current.simulation.concessionAmount).toBe(10000);
+    expect(result.current.simulation.refundRequired).toBe(4000);
+    expect(result.current.simulation.newOutstanding).toBe(0);
+  });
+  it('defaults legacy paid policies to automatic refunds and retains explicit manual mode', () => {
+    const { result } = renderHook(() =>
+      useConcessionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        editData: { applyOn: 'AllFees', autoCreateRefund: false } as never,
+      })
+    );
+    expect(result.current.formik.values.autoCreateRefund).toBe(false);
+    const legacy = renderHook(() =>
+      useConcessionPolicyForm({
+        open: true,
+        onClose: vi.fn(),
+        editData: { applyOn: 'AllFees' } as never,
+      })
+    );
+    expect(legacy.result.current.formik.values.autoCreateRefund).toBe(true);
+  });
+
+  it('rejects automatic refunds for unpaid scopes', async () => {
+    const { result } = renderHook(() => useConcessionPolicyForm({ open: true, onClose: vi.fn() }));
+    await act(async () => {
+      await result.current.formik.setFieldValue('autoCreateRefund', true);
+    });
+    let errors: Record<string, unknown> = {};
+    await act(async () => {
+      errors = await result.current.formik.validateForm();
+    });
+    expect(errors.autoCreateRefund).toBe(
+      'Automatic refunds require a scope that includes paid installments'
+    );
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.createPolicy.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });

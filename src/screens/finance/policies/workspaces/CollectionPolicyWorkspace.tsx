@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -17,6 +16,7 @@ import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolic
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import CollectionPolicyDrawer from '../components/CollectionPolicyDrawer';
 import ExceptionWindowsDialog from '../components/ExceptionWindowsDialog';
+import { FinancePolicyArchiveTabs } from '../components/FinancePolicyArchiveTabs';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -36,7 +36,7 @@ export default function CollectionPolicyWorkspace() {
   );
   const academicYearId = currentYear?.id || '';
   const isArchived = archiveView === 'archived';
-  const archivedSummary = useGetCollectionPoliciesQuery(
+  const { currentData: archivedSummary } = useGetCollectionPoliciesQuery(
     {
       academicYearId,
       status: 'Archived',
@@ -58,7 +58,7 @@ export default function CollectionPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Collection Policy"
         description="Configure grace periods, late fee structures, waivers, and online payment options."
@@ -69,32 +69,19 @@ export default function CollectionPolicyWorkspace() {
         ]}
       />
 
-      <Card sx={{ p: 1.25, mb: 1.5 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1} alignItems="center">
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Button
-              size="small"
-              variant={!isArchived ? 'contained' : 'outlined'}
-              onClick={() => setArchiveView('current')}
-            >
-              Current Policies
-            </Button>
-            <Button
-              size="small"
-              variant={isArchived ? 'contained' : 'outlined'}
-              onClick={() => setArchiveView('archived')}
-              endIcon={
-                <Label
-                  color={isArchived ? 'primary' : 'default'}
-                  sx={{ height: 18, fontSize: '0.65rem' }}
-                >
-                  {archivedSummary.data?.totalCount ?? 0}
-                </Label>
-              }
-            >
-              Archived
-            </Button>
-          </Stack>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent="space-between"
+          spacing={1}
+          alignItems={{ xs: 'stretch', md: 'center' }}
+        >
+          <FinancePolicyArchiveTabs
+            value={archiveView}
+            onChange={setArchiveView}
+            archivedCount={archivedSummary?.totalCount}
+            ariaLabel="Collection policy views"
+          />
 
           <Box sx={{ display: 'flex', gap: 1 }}>
             {!isArchived && canCreate && (
@@ -103,16 +90,19 @@ export default function CollectionPolicyWorkspace() {
                 size="small"
                 startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                 onClick={handleAdd}
+                disabled={!academicYearId}
                 sx={{ px: 2 }}
               >
-                Collection Policy
+                Create policy
               </Button>
             )}
           </Box>
         </Stack>
       </Card>
 
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      >
         <FinancePolicyTable
           policyType="collection"
           onAdd={handleAdd}

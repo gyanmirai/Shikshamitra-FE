@@ -1,3 +1,10 @@
+export function capitalizeWords(input: string): string {
+  return input
+    .split(' ')
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
+    .join(' ');
+}
+
 export function toLettersTitleCase(input: string): string {
   const sanitized = input.replace(/[^a-zA-Z\s]/g, '');
   return sanitized

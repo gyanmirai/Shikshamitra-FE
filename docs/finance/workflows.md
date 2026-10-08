@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,14 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Fee settings and charge authoring
+
+Payment Terms display usage across all versions with a class, Fee Structure, Fee Head and version breakdown. Create, Edit and Duplicate show the current-to-new default and current-default usage when Default is on; saving a replacement requires Confirm/Cancel. The server impact is refreshed before confirmation. Existing structure assignments retain their saved versions. Archived Fee Category mapped-head status switches are disabled with a restore-category explanation.
+
+The Fee Category table applies category name and description text filters, fee-head-count numeric filters, status options, and single-column sorting on the server before pagination. Current and Archived tabs set the status scope; the Status filter offers Active and Archived within that scope. Clicking a category row, or pressing Enter or Space on a focused row, opens its detail view; View is not an Actions-column item. The fee-head drawer loads the full category detail, so its search, filters, and sorting cover every mapped head even if the parent table page changes. Its status switch sits in the Actions column and is disabled while the category is archived.
+
+Charge authoring keeps academic scope and selected students in the form. Search and quick filters narrow results without removing selections; Select All applies to matching results, and All students in scope remains the complete eligible academic scope. Failed reloads preserve selections and offer retry. Invalid selections are removed only after an authoritative scope load and a visible notice. The persistent footer checks the canonical Add/Update grant, required values and audience. Successful creation returns to the list as Pending; Cancel and back use the unsaved-changes guard. Fee Structure Policies validate Collection before Next/Review while retaining optional Refund and incomplete draft saves.
 
 ## Accounts source activity
 
@@ -81,7 +89,11 @@ Use this page to pick the first files for common Finance changes.
 
 ## Trace charge management changes
 
-Charge changes start at `/finance/charge-management`. The workspace has Pending, In Process, Completed and Rejected tabs with server counts. Each row and detail header displays the server `workflowStatus`; the student table distinguishes approval, collected, waived and outstanding amounts. New charges always need an independent checker, and the form explains this for every category. Collection/waiver and reconciliation decisions invalidate the charge cache so rows move between tabs after settlement or reversal. The active tab is preserved when returning from detail. See the [backend lifecycle contract](../../../Shikshamitra-BE/docs/modules/finance/references/charge-management-end-to-end.md#four-state-batch-lifecycle) for state and compatibility rules.
+Charge changes start at `/finance/charge-management`. The workspace has Pending, In Process, Completed and Rejected tabs with server counts. Each row and detail header displays the server `workflowStatus`; the student table distinguishes approval, collected, waived and outstanding amounts. Ordinary staff requests need an independent checker; administrator creation shows a final confirmation and returns approved lines. Collection/waiver and reconciliation decisions invalidate the charge cache so rows move between tabs after settlement or reversal. The active tab is preserved when returning from detail. See the [backend lifecycle contract](../../../Shikshamitra-BE/docs/modules/finance/references/charge-management-end-to-end.md#four-state-batch-lifecycle) and [admin confirmation flow](./references/admin-request-auto-approval-ui.md).
+
+## Concession decisions
+
+The Pending concession table shows View, Approve, and Reject as direct row actions for a submitted request when the exact action permission and server available action allow them. The immutable requester ID must be present, and the signed-in requester or submitter cannot decide the request. Approval stays on the list: it loads the current approval context, previews the server-calculated impact, and requires confirmation before submitting the preview fingerprint and request stamp. Rejection requires a reason. Both decisions invalidate the concession query so the row and Pending/Approved/Rejected counts refresh. The View Concession controls apply the same identity restriction. The backend enforces the decision rule independently of these UI guards.
 
 1. Inspect `src/app/(auth-route)/finance/charge-management/**`.
 2. Inspect `src/screens/finance/ChargesManagement/**`.
@@ -163,7 +175,15 @@ Use `src/constants/finance-menu.ts` to confirm active visibility before changing
 
 ### Payment Term lifecycle
 
-Before manually entering installment rows, a user may choose **Apply Template** after selecting a board. Annual, half-yearly, quarterly, monthly, and custom-count presets are previewed by the backend using the board's exact period and the form's invoice-date rule. The user reviews dates and percentages, explicitly applies or replaces the local schedule, may edit any generated row, and then follows the normal Draft/Active save lifecycle. One schedule-level toggle controls invoice creation for every installment; manual and template-generated rows inherit its value. The form labels the demand date as **Invoice Date** and the coverage range as **Installment Start-End Date** while preserving the existing API contract.
+After selecting a board, **Apply Template** configures the schedule preset, payment due-date rule, and invoice-date rule together.
+Days Before Due appears only for the X-days rule and is limited by the shortest generated start-to-due gap; Generate preview stays disabled while that value is invalid.
+For a specific invoice date, enter one date per generated installment within its start-to-due range before generating the final preview.
+The preview shows each installment's start/end, due date, invoice date, and allocation; applying it replaces the local rows and invoice rule together after the replacement warning.
+Changing dialog inputs invalidates the previous preview, and Cancel preserves the drawer's current schedule and rule.
+The Installment Schedule includes compact invoice-rule controls for manual entry, alongside the link to Apply Template; there is no separate bottom Invoice Schedule section.
+Create, Edit, and Duplicate use the same controls and validation; the selected invoice rule remains visible beside the schedule.
+One schedule-level toggle controls invoice creation for every installment; manual and template-generated rows inherit its value.
+The form labels the demand date as **Invoice Date** and the coverage range as **Installment Start-End Date** while preserving the existing save contract.
 
 1. The drawer exposes the same editable lifecycle as HR Attendance Policy: `Draft` or `Active`. Archive remains a separate guarded action.
 2. Saving as `Draft` keeps the schedule unassignable. Saving as `Active` atomically publishes an immutable version; the backend derives its activation date inside the selected board period.
@@ -178,6 +198,12 @@ Before manually entering installment rows, a user may choose **Apply Template** 
 
 The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.
 
+Invoice dates must be on or after both the installment start and selected board start, and on or before the payment due date. Historical dates remain allowed for backfilled terms. Days Before Due accepts whole days from 1 through the smallest start-to-due gap across all installments and identifies the limiting installment. The date picker, inline validation, and Submit readiness use these same bounds. Create, Edit, Duplicate, and applied templates revalidate immediately; Submit stays disabled until all form checks pass, with a tooltip explaining the correction needed.
+
+The Payment Term editor follows the Collection Policy drawer: a bounded width on desktop, full width on mobile, one scrolling form body, and fixed Cancel/Submit actions. Name/status and description/default controls share rows on desktop and stack on mobile. Drawer and section guidance uses keyboard-accessible information tooltips. Default replacement and mapped-term impact stay beside the related fields; the auxiliary live summary and validation-checklist sidebar are omitted. Loading and saving lock the form and close actions with a progress overlay, and closing a changed form requires a discard decision.
+
+The shared vertical navigation keeps every ancestor of the active page expanded, including Finance groups whose nesting differs from the URL structure. Clicking an active ancestor cannot hide the current page; unrelated groups can still be opened and closed. Direct access, reloads, and route changes use the same behavior across modules.
+
 ### Fee Structure policy defaults
 
 When a new Fee Structure opens, the Policies form loads the academic year's Active Collection and Refund policies. It fills an untouched empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections, including intentionally absent optional policies.
@@ -188,12 +214,48 @@ first. Default selection uses the policy's current immutable version; manual cho
 clears are retained when lookups refresh. The backend owns the
 [default invariant](../../../Shikshamitra-BE/docs/modules/finance/product.md).
 
+### Collection Policy form
+
+The create/edit drawer follows the Concession Policy form: a bounded desktop width,
+full width on mobile, independently scrolling section cards, and fixed Cancel/Submit
+actions. General information pairs name/status and description/default controls.
+Drawer and section guidance is available through accessible information tooltips.
+Status uses the shared dropdown with option help; late-fee selectors have associated
+labels and consistent sentence-case field names.
+Late-fee and online-collection switches support keyboard interaction. The selected
+status still determines whether submission saves a draft or activates the policy.
+Saving locks the form, close, and footer actions with a visible progress overlay;
+unsaved changes retain the discard confirmation. The configuration form omits the
+auxiliary live summary, illustrative payment simulation, and validation checklist.
+
+### Proration Policy form
+
+The Proration Policy editor uses the same bounded drawer, section cards, information
+tooltips and fixed Cancel/Submit footer as Concession Policy. Name/status and
+description/default controls share rows on desktop and stack on mobile. The form
+body owns scrolling, with no summary or validation-checklist sidebar and no submit
+shortcut. Fee-head admission and early-withdrawal settings remain independent;
+presets and inline validation are retained. The permission-gated simulator remains
+available for saved policies and uses the last saved version. Loading and saving
+lock the form and close actions; unsaved changes retain the discard confirmation.
+
 ### Collection Policy history and audit
 
 1. The row action menu exposes Audit Trail and Version History only when Collection Policy `View` is granted.
 2. Both drawers lazily load the immutable Collection Policy version stream when opened.
 3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
 4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.
+
+Collection and Concession use the same read-only audit drawer and date-grouped
+activity cards. The bounded desktop drawer provides a wider comparison area and
+becomes full width on mobile. Policy identity and activity count remain visible
+while the timeline scrolls. Expanding an event shows its recorded reason and a
+Before/After table; events without a diff state that no changes were recorded.
+
+The version-history drawer uses a searchable snapshot list and a separate scrolling
+comparison. Accessible info icons explain read-only history, the Latest badge,
+recorded change reasons, and Before/After values. The selected version remains
+visible when a search returns no matches, and clearing search restores the list.
 
 ### Concession Policy workspace
 
@@ -207,6 +269,16 @@ the status badge. Policy name and Status share a row; Description and the defaul
 share the next row on wider screens. The create/edit form has a neutral Submit action, no
 submit shortcut, and no policy-summary, balance-preview or completion-checklist sidebar.
 Archive and restore use focused confirmations; restore returns a policy to Draft.
+
+Status, value source, calculation method and application scope use option info tooltips in the
+menu and beside the selected value. Descriptive dropdown helper text is omitted; validation
+errors stay inline. The four scope options are unchanged. Automatic refund creation is enabled
+only for the scope including paid installments and is cleared when an unpaid scope is selected.
+The approval impact panel describes automatic or manual refund creation. Approved student
+request cards show the paid concession and creation mode; Refund Add permits the manual
+creation action when the server reports eligibility. The mutation refreshes concession and
+refund caches. Business rules and historical-version behavior are owned by the
+[backend concession contract](../../../Shikshamitra-BE/docs/modules/finance/references/concession-policy-end-to-end.md).
 
 Policy audit events are grouped by date, newest first, with expandable Before/After field
 comparisons. Version history uses keyboard-accessible snapshot selection and identifies the
@@ -232,6 +304,18 @@ See [variable fee assignment](./references/variable-fee-assignment.md) for the a
 Included variable heads require a student amount before preview and commit; skipped optional heads create no dues.
 
 ## Whole-rupee amount display
+
+Collection policy numeric entry uses plain decimal text: exponent notation, signs,
+extra digits and more than two fractional digits are rejected before storage.
+Grace is 0–365 whole days; charging cutoffs and finite slab endpoints are 1–365.
+Rates are 0.01–100%; amounts and optional ceilings are 0.01–999999. Empty ceilings
+mean no limit. Slab days begin after grace, start at charging day 1 and must be
+continuous without overlaps and within the configured cutoff; the last slab may
+remain open-ended. Backend validation applies the same bounds on policy writes.
+Invalid configuration blocks submission and simulation; excessive compound
+results require a ceiling or shorter preview rather than displaying huge totals.
+Closing a Finance policy or Payment Term editor ends its form session. Confirmed
+discard restores defaults on Create and saved source values on Edit/Duplicate.
 
 Collection, concession, refund and proration editors, fee-head overrides and policy details no longer show a selectable rounding field. The client sends the system RoundUp rule (RoundUpRupee for proration), and the server remains authoritative for amounts and caps. Shared monetary formatters round upward and show no decimal places, including receipts, library charges, admission payments, transport amounts and payroll displays. Percentages retain fractional precision.
 

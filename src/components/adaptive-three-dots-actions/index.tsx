@@ -10,7 +10,7 @@ import ThreeDotsActions from '../three-dots-actions';
 
 import type { AdaptiveThreeDotsAction, AdaptiveThreeDotsActionsProps } from './types';
 
-const DIRECT_ACTION_LIMIT = 3;
+const DIRECT_ACTION_LIMIT = 2;
 
 type OverflowActionMenuItemProps = {
   action: AdaptiveThreeDotsAction;
@@ -46,6 +46,8 @@ function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProp
 const AdaptiveThreeDotsActions = ({
   actions,
   moreLabel = 'More actions',
+  collapseOnOverflow = false,
+  directActionLimit = DIRECT_ACTION_LIMIT,
   mobileDirectActionLimit,
   onClickThreeDots,
   onClosePopover,
@@ -59,9 +61,13 @@ const AdaptiveThreeDotsActions = ({
     return null;
   }
 
-  const directActionLimit = isMobile ? mobileDirectActionLimit ?? DIRECT_ACTION_LIMIT : DIRECT_ACTION_LIMIT;
-  const directActions = actions.slice(0, directActionLimit);
-  const overflowActions = actions.slice(directActionLimit);
+  const visibleLimitForViewport = isMobile
+    ? (mobileDirectActionLimit ?? directActionLimit)
+    : directActionLimit;
+  const visibleLimit =
+    collapseOnOverflow && actions.length > visibleLimitForViewport ? 0 : visibleLimitForViewport;
+  const directActions = actions.slice(0, visibleLimit);
+  const overflowActions = actions.slice(visibleLimit);
   const usesOverflowMenu = overflowActions.length > 0;
 
   return (

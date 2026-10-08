@@ -17,6 +17,8 @@ export interface PolicyVersion {
   status?: string;
   changeReason?: string | null;
   summary: string;
+  snapshotBefore?: Record<string, unknown>;
+  snapshotAfter?: Record<string, unknown>;
   changedFields: Array<{
     field: string;
     oldValue?: unknown;
@@ -83,8 +85,8 @@ export function useFinancePolicyVersion({
     { skip: !open || !policyId || !isCollection }
   );
   const {
-    data: refundVersionData,
-    isLoading: isRefundLoading,
+    currentData: refundVersionData,
+    isFetching: isRefundLoading,
     isError: isRefundError,
     refetch: refetchRefund,
   } = useGetRefundPolicyVersionsQuery(policyId || '', {
@@ -125,7 +127,12 @@ export function useFinancePolicyVersion({
           };
           const current = parseSnapshot(item.snapshotJson);
           const previous = index ? parseSnapshot(items[index - 1].snapshotJson) : {};
-          const fields = Array.from(new Set([...Object.keys(previous), ...Object.keys(current)]));
+          const fields = Array.from(new Set([...Object.keys(previous), ...Object.keys(current)]))
+            .filter((field) => ![
+              'feeheadnames',
+              'expensecategoryname',
+              'defaultpayingbankaccountname',
+            ].includes(field.toLowerCase()));
           return {
             versionNumber: item.versionNumber,
             eventId: item.id,
@@ -140,6 +147,8 @@ export function useFinancePolicyVersion({
             status: actorDetails.status,
             changeReason: item.changeReason,
             summary: item.changeReason || item.changeAction || 'Policy updated',
+            snapshotBefore: previous,
+            snapshotAfter: current,
             changedFields: fields
               .filter((field) => JSON.stringify(previous[field]) !== JSON.stringify(current[field]))
               .map((field) => ({

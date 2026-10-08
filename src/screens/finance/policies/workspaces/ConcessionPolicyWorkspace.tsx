@@ -4,11 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Tabs, Card, Stack, Button } from '@mui/material';
+import { Box, Card, Stack, Button } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -16,6 +15,7 @@ import { useGetConcessionPoliciesQuery } from 'src/redux/finance/concessionPolic
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import ConcessionPolicyDrawer from '../components/ConcessionPolicyDrawer';
+import { FinancePolicyArchiveTabs } from '../components/FinancePolicyArchiveTabs';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -32,7 +32,7 @@ export default function ConcessionPolicyWorkspace() {
   );
   const academicYearId = currentYear?.id || '';
   const isArchived = archiveView === 'archived';
-  const { data: archivedSummary } = useGetConcessionPoliciesQuery(
+  const { currentData: archivedSummary } = useGetConcessionPoliciesQuery(
     {
       academicYearId,
       status: 'Archived',
@@ -64,39 +64,19 @@ export default function ConcessionPolicyWorkspace() {
         ]}
       />
 
-      <Card sx={{ px: 1, py: 0.75, flexShrink: 0 }}>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           alignItems={{ xs: 'stretch', md: 'center' }}
           justifyContent="space-between"
           spacing={1}
         >
-          <Tabs
+          <FinancePolicyArchiveTabs
             value={archiveView}
-            onChange={(_, value) => setArchiveView(value)}
-            aria-label="Concession policy views"
-            sx={{ minHeight: 40 }}
-          >
-            <Tab
-              value="current"
-              label="Current policies"
-              icon={<Iconify icon="solar:document-text-linear" width={18} />}
-              iconPosition="start"
-              sx={{ minHeight: 40, px: 1 }}
-            />
-            <Tab
-              value="archived"
-              label={
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <span>Archived</span>
-                  {archivedSummary && <Label color="default">{archivedSummary.totalCount}</Label>}
-                </Stack>
-              }
-              icon={<Iconify icon="solar:archive-linear" width={18} />}
-              iconPosition="start"
-              sx={{ minHeight: 40, px: 1 }}
-            />
-          </Tabs>
+            onChange={setArchiveView}
+            archivedCount={archivedSummary?.totalCount}
+            ariaLabel="Concession policy views"
+          />
 
           {!isArchived && canCreate && (
             <Button

@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -105,26 +106,36 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
   ): IColumn => ({
     id,
     label,
-    minWidth: 175,
+    minWidth: 190,
     isFilter: false,
     isSort: false,
-    render: (_value, row) => (
-      <TextField
-        size="small"
-        type="date"
-        fullWidth
-        inputProps={{ 'aria-label': `${row.name} ${label}` }}
-        value={
-          id === 'demandDate'
-            ? (derivedDate(row as StructureInstallment)?.slice(0, 10) ?? '')
-            : row[id]
-              ? String(row[id]).slice(0, 10)
-              : ''
-        }
-        disabled={readOnly || disabled}
-        onChange={(e) => change(row.sourcePaymentTermInstallmentId, id, e.target.value || null)}
-      />
-    ),
+    render: (_value, row) => {
+      const rawDate = id === 'demandDate' ? derivedDate(row as StructureInstallment) : row[id];
+      const selectedDate =
+        typeof rawDate === 'string' && dayjs(rawDate).isValid() ? dayjs(rawDate) : null;
+      return (
+        <DatePicker
+          label={label}
+          format="DD/MM/YYYY"
+          value={selectedDate}
+          disabled={readOnly || disabled}
+          onChange={(date) =>
+            change(
+              row.sourcePaymentTermInstallmentId,
+              id,
+              date?.isValid() ? date.format('YYYY-MM-DD') : null
+            )
+          }
+          slotProps={{
+            textField: {
+              size: 'small',
+              fullWidth: true,
+              inputProps: { 'aria-label': `${row.name} ${label}` },
+            },
+          }}
+        />
+      );
+    },
   });
   return (
     <CustomDialog

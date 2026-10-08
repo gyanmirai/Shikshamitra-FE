@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useSession } from 'next-auth/react';
 import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
@@ -10,11 +11,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -31,7 +34,6 @@ import {
 import {
   Box,
   Grid,
-  Paper,
   Stack,
   Alert,
   Radio,
@@ -40,10 +42,14 @@ import {
   Skeleton,
   TextField,
   Typography,
+  Tooltip,
   RadioGroup,
   FormControlLabel,
+  Collapse,
 } from '@mui/material';
 
+import { useChargePermissions } from '../../useChargePermissions';
+import { emptyStudentFilters, filterChargeStudents } from './studentFilters';
 import { useStudentsInScope } from './useStudentsInScope';
 import { SelectedStudentsPanel } from './SelectedStudentsPanel';
 import { StudentSelectionLayout } from './StudentSelectionLayout';
@@ -53,7 +59,7 @@ import {
   createUpdateChargeValidationSchema,
 } from './UpdateChargeValidation';
 
-import type { IUpdateChargeFormProps, IUpdateChargeFormValues } from './types';
+import type { IStudentOption, IUpdateChargeFormProps, IUpdateChargeFormValues } from './types';
 
 /**
  * UpdateChargeForm Component
@@ -70,6 +76,26 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   defaultDivisionId = '',
 }) => {
   const theme = useTheme();
+  const permissions = useChargePermissions();
+  const { data: session, status: sessionStatus } = useSession();
+  const isAdminCreator = isFinanceAdministratorSession(session);
+  const [adminConfirmation, setAdminConfirmation] = useState<{
+    snapshot: string;
+    count: number;
+    amount: number;
+    name: string;
+    category: string;
+    dueDate: string;
+  } | null>(null);
+  const confirmedAdminSnapshotRef = useRef<string | null>(null);
+  const [studentFilters, setStudentFilters] = useState(emptyStudentFilters);
+  const [selectionNotice, setSelectionNotice] = useState('');
+  const [allScopeConfirmation, setAllScopeConfirmation] = useState<{
+    count: number;
+    snapshot: string;
+    updated: boolean;
+  } | null>(null);
+  const approvedAllScopeRef = useRef<string | null>(null);
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [openingScope] = useState(() => ({
@@ -95,6 +121,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
+  const [showStudentFilters, setShowStudentFilters] = useState(false);
   const [pendingSelectionChange, setPendingSelectionChange] = useState<null | {
     type: 'class' | 'division';
     nextStandardIds?: string[];
@@ -138,11 +165,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   const isSubmitLoading = isEditMode ? updateChargeLoading : postChargeLoading;
   const candidateStudentIdsRef = useRef<string[]>([]);
+  const editInitialValuesRef = useRef<IUpdateChargeFormValues | null>(null);
+  const editConcurrencyStampRef = useRef('');
+  if (prefillValues && !editInitialValuesRef.current) {
+    editInitialValuesRef.current = prefillValues;
+    editConcurrencyStampRef.current = chargeDetail?.concurrencyStamp ?? '';
+  }
 
   // Initialize form with prefilled values
   const initialValues: IUpdateChargeFormValues = useMemo(() => {
-    if (prefillValues) {
-      return prefillValues;
+    if (editInitialValuesRef.current) {
+      return editInitialValuesRef.current;
     }
     return {
       chargeId: '',
@@ -171,8 +204,13 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     initialValues,
     enableReinitialize: true,
     validationSchema,
+    validateOnMount: true,
     onSubmit: async (values) => {
       try {
+        if (!permissions.isReady || !(isEditMode ? permissions.canEdit : permissions.canAdd)) {
+          shikshaMitraToast.error({ message: 'You do not have permission to save this charge.' });
+          return;
+        }
         if (!currentYear?.id) {
           shikshaMitraToast.error({ message: 'Academic year is not selected.' });
           return;
@@ -190,15 +228,18 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           return;
         }
 
-        if (
-          values.selectionMode === 'all' &&
-          !window.confirm(
-            `Create this charge for all ${candidateStudentIdsRef.current.length} students currently in scope?`
-          )
-        ) {
+        const audienceSnapshot = JSON.stringify({
+          values,
+          studentIds: [...candidateStudentIdsRef.current].sort(),
+        });
+        if (values.selectionMode === 'all' && approvedAllScopeRef.current !== audienceSnapshot) {
+          setAllScopeConfirmation({
+            count: candidateStudentIdsRef.current.length,
+            snapshot: audienceSnapshot,
+            updated: false,
+          });
           return;
         }
-
         const audience = buildAudiencePayload(values, candidateStudentIdsRef.current);
         const payload = {
           chargeName: values.chargeName,
@@ -209,20 +250,54 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           audience,
         };
 
+        if (
+          !isEditMode &&
+          isAdminCreator &&
+          confirmedAdminSnapshotRef.current !== audienceSnapshot
+        ) {
+          setAdminConfirmation({
+            snapshot: audienceSnapshot,
+            count:
+              values.selectionMode === 'all'
+                ? candidateStudentIdsRef.current.length
+                : values.studentIds.length,
+            amount: payload.amount,
+            name: payload.chargeName,
+            category: categoryName,
+            dueDate: dayjs(values.dueDate).format('DD MMM YYYY'),
+          });
+          return;
+        }
+        approvedAllScopeRef.current = null;
+
         if (isEditMode && chargeId) {
           await updateCharge({
             id: chargeId,
-            body: { ...payload, concurrencyStamp: chargeDetail?.concurrencyStamp ?? '' },
+            body: { ...payload, concurrencyStamp: editConcurrencyStampRef.current },
           }).unwrap();
           shikshaMitraToast.success({
             message: `Charge updated successfully for ${categoryName}`,
           });
         } else {
-          await postCharge({ academicYearId: currentYear.id, body: payload }).unwrap();
-          shikshaMitraToast.success({
-            message: `Charge created successfully for ${categoryName}`,
-          });
+          const created = await postCharge({
+            academicYearId: currentYear.id,
+            body: payload,
+          }).unwrap();
+          if (isAdminCreator && created.data.status !== 1) {
+            shikshaMitraToast.warning({
+              message: 'Charge was created as Pending. Automatic approval did not occur.',
+            });
+          } else {
+            shikshaMitraToast.success({
+              message:
+                created.data.status === 1
+                  ? `Charge created and approved for ${categoryName}`
+                  : `Charge created as Pending for ${categoryName}`,
+            });
+          }
         }
+        confirmedAdminSnapshotRef.current = null;
+        dispatch(setIsChanges(false));
         onClose(null, true);
       } catch (error) {
         console.error('Failed to submit charge:', error);
@@ -235,7 +310,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     },
   });
 
-  const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+  const { values, touched, errors, setFieldValue, setFieldTouched, setValues } = formik;
   const isDirty = useDirtyState(initialValues, values);
 
   const applySelectionChange = useCallback(
@@ -251,45 +326,30 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     ) => {
       if (change.type === 'class') {
         const nextStandardIds = change.nextStandardIds || [];
-        setFieldValue('standardId', nextStandardIds);
-        setFieldTouched('standardId', false);
+        setValues((previous) => ({
+          ...previous,
+          standardId: nextStandardIds,
+          divisionIds: nextStandardIds.length === 1 ? previous.divisionIds : [],
+        }));
+        setFieldTouched('standardId', false, false);
         if (nextStandardIds.length !== 1) {
-          setFieldValue('divisionIds', []);
+          if (values.divisionIds.length)
+            setSelectionNotice(
+              'Division selection was cleared because the scope now includes multiple classes or no class.'
+            );
         }
       }
 
       if (change.type === 'division') {
         const nextDivisionIds = change.nextDivisionIds || [];
-        setFieldValue('divisionIds', nextDivisionIds);
-        setFieldTouched('divisionIds', false);
+        setValues((previous) => ({ ...previous, divisionIds: nextDivisionIds }));
+        setFieldTouched('divisionIds', false, false);
       }
 
-      if (clearStudents) {
-        if (change.type === 'class' && change.deselectedStandardId) {
-          const newSelectedStudents = values.selectedStudents.filter(
-            (s: any) => s.standardId !== change.deselectedStandardId
-          );
-          setFieldValue(
-            'studentIds',
-            newSelectedStudents.map((s) => s.id)
-          );
-          setFieldValue('selectedStudents', newSelectedStudents);
-        } else if (change.type === 'division' && change.deselectedDivisionId) {
-          const newSelectedStudents = values.selectedStudents.filter(
-            (s: any) => s.divisionId !== change.deselectedDivisionId
-          );
-          setFieldValue(
-            'studentIds',
-            newSelectedStudents.map((s) => s.id)
-          );
-          setFieldValue('selectedStudents', newSelectedStudents);
-        } else {
-          setFieldValue('studentIds', []);
-          setFieldValue('selectedStudents', []);
-        }
-      }
+      if (clearStudents)
+        setSelectionNotice('Student selections will be checked against the updated scope.');
     },
-    [setFieldValue, setFieldTouched, values.selectedStudents]
+    [setValues, setFieldTouched, values.divisionIds]
   );
 
   const {
@@ -297,44 +357,47 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     isLoading: studentsLoading,
     hasFetched: studentsFetched,
     candidateStudentIds,
+    isError: studentsError,
+    retry: retryStudents,
   } = useStudentsInScope(
     values.boardId,
     values.educationMediumId,
     values.standardId,
-    values.divisionIds
+    values.divisionIds,
+    values.chargeCategoryId
   );
 
   candidateStudentIdsRef.current = candidateStudentIds;
+  const audienceSnapshot = JSON.stringify({ values, studentIds: [...candidateStudentIds].sort() });
+  useEffect(() => {
+    if (
+      allScopeConfirmation &&
+      !studentsLoading &&
+      !studentsError &&
+      allScopeConfirmation.snapshot !== audienceSnapshot
+    ) {
+      setAllScopeConfirmation({
+        count: candidateStudentIds.length,
+        snapshot: audienceSnapshot,
+        updated: true,
+      });
+    }
+  }, [
+    allScopeConfirmation,
+    audienceSnapshot,
+    candidateStudentIds.length,
+    studentsLoading,
+    studentsError,
+  ]);
 
-  const filteredStudents = useMemo(() => {
-    const query = studentSearch.toLowerCase();
-    if (!query) return scopeStudents;
-    return scopeStudents.filter(
-      (student) =>
-        student.label.toLowerCase().includes(query) ||
-        student.grNumber?.toString().includes(query) ||
-        student.rollNumber?.toString().includes(query)
-    );
-  }, [scopeStudents, studentSearch]);
+  const filteredStudents = useMemo(
+    () => filterChargeStudents(scopeStudents, studentSearch, studentFilters),
+    [scopeStudents, studentSearch, studentFilters]
+  );
+  const activeStudentFilterCount = Object.values(studentFilters).filter(Boolean).length;
 
   // Handle dialog close with dirty state check
-  const handleClose = useCallback(
-    (_e: any, isSubmit?: boolean) => {
-      const resetState = () => {
-        setTimeout(() => {
-          dispatch(setIsChanges(false));
-        }, 200);
-      };
-
-      if (isSubmit || (isDirty && window.confirm('You have unsaved changes. Leave page?'))) {
-        open.onFalse();
-        resetState();
-      } else if (!isDirty) {
-        open.onFalse();
-      }
-    },
-    [isDirty, open, dispatch]
-  );
+  const handleClose = useCallback(() => onClose(null, false), [onClose]);
 
   // Load boards on component mount
   useEffect(() => {
@@ -343,16 +406,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     if (yearBoards.length > 0) {
       if (!values.boardId) {
         const firstBoard = yearBoards[0];
-        setFieldValue('boardId', firstBoard.id);
         const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
-        setFieldValue('educationMediumId', firstMedium);
+        setValues((previous) => ({
+          ...previous,
+          boardId: firstBoard.id,
+          educationMediumId: firstMedium,
+        }));
       } else if (!values.educationMediumId) {
         const board = yearBoards.find((b: any) => b.id === values.boardId);
         const firstMedium = board?.educationMediums?.[0]?.id ?? '';
         setFieldValue('educationMediumId', firstMedium);
       }
     }
-  }, [currentYear, values.boardId, values.educationMediumId, setFieldValue]);
+  }, [currentYear, values.boardId, values.educationMediumId, setFieldValue, setValues]);
 
   // Load mediums when board changes
   useEffect(() => {
@@ -381,20 +447,31 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   // Clean up selected students that are no longer in scope
   useEffect(() => {
+    // Existing edit audiences are snapshots. A lookup refetch must not remove historical
+    // students unless the user actually changes the charge's academic scope.
+    const scopeChanged =
+      initialValues.boardId !== values.boardId ||
+      initialValues.educationMediumId !== values.educationMediumId ||
+      JSON.stringify(initialValues.standardId) !== JSON.stringify(values.standardId) ||
+      JSON.stringify(initialValues.divisionIds) !== JSON.stringify(values.divisionIds);
+    if (isEditMode && !scopeChanged) return;
     if (!studentsLoading && studentsFetched) {
       if (values.standardId.length === 0 && values.studentIds.length > 0) {
-        setFieldValue('studentIds', []);
-        setFieldValue('selectedStudents', []);
+        setSelectionNotice('Selected students were cleared because no class is selected.');
+        setValues((previous) => ({ ...previous, studentIds: [], selectedStudents: [] }));
       } else if (values.standardId.length > 0 && scopeStudents) {
         const validIds = new Set(candidateStudentIdsRef.current);
         const needsCleanup = values.studentIds.some((id) => !validIds.has(id));
         if (needsCleanup) {
-          const newSelectedStudents = values.selectedStudents.filter((s) => validIds.has(s.id));
-          setFieldValue(
-            'studentIds',
-            newSelectedStudents.map((s) => s.id)
+          setSelectionNotice(
+            `${values.studentIds.filter((id) => !validIds.has(id)).length} selected student(s) were removed because they are outside the updated scope.`
           );
-          setFieldValue('selectedStudents', newSelectedStudents);
+          const newSelectedStudents = values.selectedStudents.filter((s) => validIds.has(s.id));
+          setValues((previous) => ({
+            ...previous,
+            studentIds: newSelectedStudents.map((student) => student.id),
+            selectedStudents: newSelectedStudents,
+          }));
         }
       }
     }
@@ -405,7 +482,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     values.standardId,
     values.studentIds,
     values.selectedStudents,
-    setFieldValue,
+    setValues,
+    isEditMode,
+    initialValues,
+    values.boardId,
+    values.educationMediumId,
+    values.divisionIds,
   ]);
 
   const handleSubmit = useCallback(async () => {
@@ -427,6 +509,26 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     await formik.submitForm();
   }, [formik]);
 
+  const submitDisabledReason =
+    sessionStatus === 'loading'
+      ? 'Checking your role…'
+      : !permissions.isReady
+        ? 'Checking charge permissions…'
+        : !(isEditMode ? permissions.canEdit : permissions.canAdd)
+          ? `You do not have permission to ${isEditMode ? 'update' : 'create'} charges.`
+          : !isEditMode && isAdminCreator && !permissions.canApprove
+            ? 'Approve permission is required for an administrator to create an automatically approved charge.'
+            : studentsLoading
+              ? 'Wait for the student list to finish loading.'
+              : studentsError
+                ? 'Reload the student list before saving.'
+                : !formik.isValid
+                  ? getFirstValidationMessage(errors) ||
+                    'Complete all required fields and select at least one student.'
+                  : values.selectionMode === 'all' && candidateStudentIds.length === 0
+                    ? 'No students are available in the selected scope.'
+                    : '';
+
   if (chargeLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -437,7 +539,13 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!submitDisabledReason) handleSubmit();
+        }}
+        style={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}
+      >
         <Box
           component={motion.div}
           initial={{ opacity: 0, y: 12 }}
@@ -448,9 +556,14 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           height="100%"
           minHeight={0}
         >
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: 2 }}>
-              <Grid container spacing={2}>
+          <Box
+            role="region"
+            aria-label="Charge form fields"
+            tabIndex={0}
+            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+          >
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Grid container spacing={1.5}>
                 {/* Restrictions Alert - Only show in edit mode */}
                 {isEditMode &&
                   (!restrictions.canChangeBoardId || !restrictions.canChangeEducationMediumId) && (
@@ -466,38 +579,18 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
                 {/* Charge Details Section */}
                 <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
+                  <FormSectionCard
+                    icon="solar:bill-list-bold-duotone"
+                    title="Charge details"
+                    descriptionTooltip="Set the charge name, category, amount, due date, and reason."
                   >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="mdi:information-outline"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Charge Details
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Update charge information and settings
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1.5}>
                       {/* Charge Name */}
-                      <Grid size={{ xs: 12, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField error={!!(touched.chargeName && errors.chargeName)}>
                           <TextField
                             name="chargeName"
-                            label="Charge Name *"
+                            label="Charge name *"
                             fullWidth
                             size="small"
                             disabled={isEditMode}
@@ -511,26 +604,31 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                       </Grid>
 
                       {/* Charge Category */}
-                      <Grid size={{ xs: 12, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField
                           error={!!(touched.chargeCategoryId && errors.chargeCategoryId)}
                         >
                           <CustomSelect
                             disabled={isEditMode}
                             name="chargeCategoryId"
-                            label="Charge Category"
+                            label="Charge category *"
                             isLoading={chargeCategoriesLoading}
                             options={availableChargeCategories}
                             labelKey="name"
                             valueKey="id"
                             value={values.chargeCategoryId}
                             onChange={(value) => {
-                              setFieldValue('chargeCategoryId', value);
-                              setFieldTouched('chargeCategoryId', false);
+                              if (Array.isArray(value)) return;
+                              const chargeCategoryId = String(value);
                               const category = availableChargeCategories.find(
-                                (item: { id: string }) => item.id === value
+                                (item: { id: string }) => item.id === chargeCategoryId
                               );
-                              setFieldValue('chargeCategoryName', category?.name ?? '');
+                              setValues((previous) => ({
+                                ...previous,
+                                chargeCategoryId,
+                                chargeCategoryName: category?.name ?? '',
+                              }));
+                              setFieldTouched('chargeCategoryId', false, false);
                             }}
                             error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                             helperText={
@@ -540,15 +638,16 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           />
                           {values.chargeCategoryId && (
                             <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
-                              All charges start as Pending and require approval from an authorized
-                              person.
+                              {isAdminCreator
+                                ? 'Your charge will be approved automatically after confirmation.'
+                                : 'This charge will start as Pending and require approval.'}
                             </Typography>
                           )}
                         </ShakingTextField>
                       </Grid>
 
                       {/* Amount */}
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
                           <NumericFormatCustom
                             size="small"
@@ -569,10 +668,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                       </Grid>
 
                       {/* Due Date */}
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
                           <DatePicker
-                            label="Due Date *"
+                            label="Due date *"
                             format="DD/MM/YYYY"
                             minDate={dayjs().startOf('day')}
                             maxDate={dayjs(currentYear?.endDate)}
@@ -600,7 +699,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         >
                           <TextField
                             name="purposeDescription"
-                            label="Purpose/Description *"
+                            label="Purpose / description *"
                             multiline
                             minRows={2}
                             fullWidth
@@ -615,39 +714,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         </ShakingTextField>
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
                 </Grid>
 
                 {/* Student Information */}
                 <Grid size={{ xs: 12 }}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: 4 },
-                    }}
+                  <FormSectionCard
+                    icon="solar:users-group-rounded-bold-duotone"
+                    title="Academic scope"
+                    descriptionTooltip="Choose the board, medium, and classes whose students can receive this charge."
                   >
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="solar:users-group-rounded-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Student Information
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Update academic structure and student mappings
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1.5}>
                       {/* Board */}
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
                           <CustomSelect
                             disabled={!restrictions.canChangeBoardId}
@@ -657,12 +736,27 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             valueKey="id"
                             value={values.boardId}
                             onChange={(val) => {
-                              setFieldValue('boardId', val);
-                              setFieldTouched('boardId', false);
-                              setFieldValue('educationMediumId', '');
-                              setFieldValue('standardId', []);
-                              setFieldValue('divisionIds', []);
-                              setFieldValue('studentIds', []);
+                              if (Array.isArray(val)) return;
+                              const boardId = String(val);
+                              if (boardId === values.boardId) return;
+                              if (
+                                values.standardId.length ||
+                                values.divisionIds.length ||
+                                values.studentIds.length
+                              )
+                                setSelectionNotice(
+                                  'Classes, divisions and students were cleared because the selected board changed.'
+                                );
+                              setValues((previous) => ({
+                                ...previous,
+                                boardId,
+                                educationMediumId: '',
+                                standardId: [],
+                                divisionIds: [],
+                                studentIds: [],
+                                selectedStudents: [],
+                              }));
+                              setFieldTouched('boardId', false, false);
                             }}
                             error={!!errors.boardId && touched.boardId}
                             helperText={
@@ -674,7 +768,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                       </Grid>
 
                       {/* Medium */}
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
                         <ShakingTextField
                           error={!!(touched.educationMediumId && errors.educationMediumId)}
                         >
@@ -686,11 +780,26 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             valueKey="id"
                             value={values.educationMediumId}
                             onChange={(val) => {
-                              setFieldValue('educationMediumId', val);
-                              setFieldTouched('educationMediumId', false);
-                              setFieldValue('standardId', []);
-                              setFieldValue('divisionIds', []);
-                              setFieldValue('studentIds', []);
+                              if (Array.isArray(val)) return;
+                              const educationMediumId = String(val);
+                              if (educationMediumId === values.educationMediumId) return;
+                              if (
+                                values.standardId.length ||
+                                values.divisionIds.length ||
+                                values.studentIds.length
+                              )
+                                setSelectionNotice(
+                                  'Classes, divisions and students were cleared because the selected medium changed.'
+                                );
+                              setValues((previous) => ({
+                                ...previous,
+                                educationMediumId,
+                                standardId: [],
+                                divisionIds: [],
+                                studentIds: [],
+                                selectedStudents: [],
+                              }));
+                              setFieldTouched('educationMediumId', false, false);
                             }}
                             error={!!errors.educationMediumId && touched.educationMediumId}
                             helperText={
@@ -722,65 +831,61 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             </Box>
                           </Stack>
                           <Divider sx={{ mb: 1.5 }} />
-                          <Scrollbar sx={{ height: 'auto', maxHeight: '140px' }}>
-                            <Box display="flex" flexWrap="wrap" gap={1} pb={1}>
-                              {classesLoading ? (
-                                Array.from(new Array(6)).map((_, index) => (
-                                  <Skeleton
-                                    key={index}
-                                    variant="rectangular"
-                                    sx={{ width: 90, height: 36, borderRadius: 1 }}
-                                  />
-                                ))
-                              ) : (classes || []).length > 0 ? (
-                                (classes || []).map((cls: any) => (
-                                  <Button
-                                    key={cls.id}
-                                    variant={
-                                      values.standardId.includes(cls.id) ? 'contained' : 'outlined'
-                                    }
-                                    color={
-                                      values.standardId.includes(cls.id) ? 'primary' : undefined
-                                    }
-                                    sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
-                                    onClick={() => {
-                                      const isSelected = values.standardId.includes(cls.id);
-                                      const updated = isSelected
-                                        ? values.standardId.filter((id) => id !== cls.id)
-                                        : [...values.standardId, cls.id];
+                          <Box display="flex" flexWrap="wrap" gap={1}>
+                            {classesLoading ? (
+                              Array.from(new Array(6)).map((_, index) => (
+                                <Skeleton
+                                  key={index}
+                                  variant="rectangular"
+                                  sx={{ width: 90, height: 36, borderRadius: 1 }}
+                                />
+                              ))
+                            ) : (classes || []).length > 0 ? (
+                              (classes || []).map((cls: any) => (
+                                <Button
+                                  key={cls.id}
+                                  variant={
+                                    values.standardId.includes(cls.id) ? 'contained' : 'outlined'
+                                  }
+                                  color={values.standardId.includes(cls.id) ? 'primary' : undefined}
+                                  sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
+                                  onClick={() => {
+                                    const isSelected = values.standardId.includes(cls.id);
+                                    const updated = isSelected
+                                      ? values.standardId.filter((id) => id !== cls.id)
+                                      : [...values.standardId, cls.id];
 
-                                      if (isSelected && values.studentIds.length > 0) {
-                                        setPendingSelectionChange({
-                                          type: 'class',
-                                          nextStandardIds: updated,
-                                          deselectedStandardId: cls.id,
-                                        });
-                                        return;
-                                      }
+                                    if (isSelected && values.studentIds.length > 0) {
+                                      setPendingSelectionChange({
+                                        type: 'class',
+                                        nextStandardIds: updated,
+                                        deselectedStandardId: cls.id,
+                                      });
+                                      return;
+                                    }
 
-                                      applySelectionChange(
-                                        {
-                                          type: 'class',
-                                          nextStandardIds: updated,
-                                          deselectedStandardId: cls.id,
-                                        },
-                                        isSelected
-                                      );
-                                    }}
-                                    disabled={!values.educationMediumId}
-                                  >
-                                    {cls.name.replace('Class ', '')}
-                                  </Button>
-                                ))
-                              ) : (
-                                <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
-                                  <Typography variant="body2" color="text.secondary">
-                                    No classes available
-                                  </Typography>
-                                </Box>
-                              )}
-                            </Box>
-                          </Scrollbar>
+                                    applySelectionChange(
+                                      {
+                                        type: 'class',
+                                        nextStandardIds: updated,
+                                        deselectedStandardId: cls.id,
+                                      },
+                                      isSelected
+                                    );
+                                  }}
+                                  disabled={!values.educationMediumId}
+                                >
+                                  {cls.name.replace('Class ', '')}
+                                </Button>
+                              ))
+                            ) : (
+                              <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  No classes available
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
                           {touched.standardId && errors.standardId && (
                             <Typography
                               variant="caption"
@@ -814,58 +919,54 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               </Box>
                             </Stack>
                             <Divider sx={{ mb: 1.5 }} />
-                            <Scrollbar sx={{ height: 'auto', maxHeight: '140px' }}>
-                              <Box display="flex" flexWrap="wrap" gap={1}>
-                                {!allDivision || allDivision.length === 0 ? (
-                                  <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                      No divisions available
-                                    </Typography>
-                                  </Box>
-                                ) : (
-                                  allDivision.map((div) => (
-                                    <Button
-                                      key={div.id}
-                                      variant={
-                                        values.divisionIds.includes(div.id)
-                                          ? 'contained'
-                                          : 'outlined'
-                                      }
-                                      color={
-                                        values.divisionIds.includes(div.id) ? 'primary' : undefined
-                                      }
-                                      sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
-                                      onClick={() => {
-                                        const isSelected = values.divisionIds.includes(div.id);
-                                        const updated = isSelected
-                                          ? values.divisionIds.filter((id) => id !== div.id)
-                                          : [...values.divisionIds, div.id];
+                            <Box display="flex" flexWrap="wrap" gap={1}>
+                              {!allDivision || allDivision.length === 0 ? (
+                                <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
+                                  <Typography variant="body2" color="text.secondary">
+                                    No divisions available
+                                  </Typography>
+                                </Box>
+                              ) : (
+                                allDivision.map((div) => (
+                                  <Button
+                                    key={div.id}
+                                    variant={
+                                      values.divisionIds.includes(div.id) ? 'contained' : 'outlined'
+                                    }
+                                    color={
+                                      values.divisionIds.includes(div.id) ? 'primary' : undefined
+                                    }
+                                    sx={{ minWidth: 60, textTransform: 'none', fontWeight: 500 }}
+                                    onClick={() => {
+                                      const isSelected = values.divisionIds.includes(div.id);
+                                      const updated = isSelected
+                                        ? values.divisionIds.filter((id) => id !== div.id)
+                                        : [...values.divisionIds, div.id];
 
-                                        if (isSelected && values.studentIds.length > 0) {
-                                          setPendingSelectionChange({
-                                            type: 'division',
-                                            nextDivisionIds: updated,
-                                            deselectedDivisionId: div.id,
-                                          });
-                                          return;
-                                        }
+                                      if (isSelected && values.studentIds.length > 0) {
+                                        setPendingSelectionChange({
+                                          type: 'division',
+                                          nextDivisionIds: updated,
+                                          deselectedDivisionId: div.id,
+                                        });
+                                        return;
+                                      }
 
-                                        applySelectionChange(
-                                          {
-                                            type: 'division',
-                                            nextDivisionIds: updated,
-                                            deselectedDivisionId: div.id,
-                                          },
-                                          isSelected
-                                        );
-                                      }}
-                                    >
-                                      {div.name}
-                                    </Button>
-                                  ))
-                                )}
-                              </Box>
-                            </Scrollbar>
+                                      applySelectionChange(
+                                        {
+                                          type: 'division',
+                                          nextDivisionIds: updated,
+                                          deselectedDivisionId: div.id,
+                                        },
+                                        isSelected
+                                      );
+                                    }}
+                                  >
+                                    {div.name}
+                                  </Button>
+                                ))
+                              )}
+                            </Box>
                             {touched.divisionIds && errors.divisionIds && (
                               <Typography
                                 variant="caption"
@@ -878,78 +979,285 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                         </Grid>
                       )}
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
                 </Grid>
 
                 {/* Student Selection Section */}
                 <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" fontWeight={700} mb={1.5}>
-                    Student Selection
-                  </Typography>
-                  <RadioGroup
-                    row
-                    value={values.selectionMode}
-                    onChange={(event) => {
-                      const mode = event.target.value as 'selected' | 'all';
-                      setFieldValue('selectionMode', mode);
-                      if (mode === 'all') {
-                        setFieldValue('studentIds', []);
-                        setFieldValue('selectedStudents', []);
-                      }
-                    }}
+                  <FormSectionCard
+                    icon="solar:user-check-rounded-bold-duotone"
+                    title="Student selection"
+                    descriptionTooltip="Only enrolled students with a fee structure assignment can receive charges. Already charged means a pending or approved charge in this category and academic year. Search and filters change the visible list only."
                   >
-                    <FormControlLabel
-                      value="selected"
-                      control={<Radio size="small" />}
-                      label="Selected students"
-                    />
-                    <FormControlLabel
-                      value="all"
-                      control={<Radio size="small" />}
-                      label="All students in scope"
-                    />
-                  </RadioGroup>
-                  {values.selectionMode === 'all' && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                      This will resolve all currently accessible students in the selected scope on
-                      the server.
-                    </Alert>
-                  )}
-                  <Grid container spacing={2}>
-                    {/* Student List */}
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <StudentSelectionLayout
-                        students={filteredStudents}
-                        selectedStudentIds={values.studentIds}
-                        isLoading={studentsLoading}
-                        onSelectionChange={(selectedIds) => {
-                          setFieldValue('studentIds', selectedIds);
-                          const selected = scopeStudents.filter((s) => selectedIds.includes(s.id));
-                          setFieldValue('selectedStudents', selected);
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      alignItems={{ xs: 'stretch', sm: 'center' }}
+                      justifyContent="space-between"
+                      gap={1}
+                    >
+                      <RadioGroup
+                        row
+                        aria-label="Student selection mode"
+                        value={values.selectionMode}
+                        onChange={(event) => {
+                          const mode = event.target.value as 'selected' | 'all';
+                          setFieldValue('selectionMode', mode);
                         }}
-                        searchQuery={studentSearch}
-                        onSearchChange={setStudentSearch}
-                        disabled={values.selectionMode === 'all'}
-                      />
-                    </Grid>
+                      >
+                        <FormControlLabel
+                          value="selected"
+                          control={<Radio size="small" />}
+                          label="Selected students"
+                        />
+                        <FormControlLabel
+                          value="all"
+                          control={<Radio size="small" />}
+                          label="All students in scope"
+                        />
+                      </RadioGroup>
+                      <Typography variant="body2" color="text.secondary">
+                        {values.selectionMode === 'all'
+                          ? `${candidateStudentIds.length} eligible students in scope`
+                          : `${values.studentIds.length} students selected`}
+                      </Typography>
+                    </Stack>
+                    {values.selectionMode === 'all' && (
+                      <Alert severity="warning" sx={{ mb: 2 }}>
+                        All {candidateStudentIds.length} eligible students in the academic scope
+                        will receive this charge. Quick filters and search only narrow the displayed
+                        list.
+                      </Alert>
+                    )}
+                    {selectionNotice && (
+                      <Alert severity="info" onClose={() => setSelectionNotice('')} sx={{ mb: 1 }}>
+                        {selectionNotice}
+                      </Alert>
+                    )}
+                    {studentsError && (
+                      <Alert
+                        severity="error"
+                        action={<Button onClick={retryStudents}>Retry</Button>}
+                        sx={{ mb: 1 }}
+                      >
+                        Students could not be loaded. Your selections have been kept.
+                      </Alert>
+                    )}
+                    <Box>
+                      <Button
+                        size="small"
+                        onClick={() => setShowStudentFilters((visible) => !visible)}
+                        aria-expanded={showStudentFilters}
+                        aria-controls="charge-student-filters"
+                        startIcon={<Iconify icon="solar:filter-bold-duotone" />}
+                      >
+                        Filters{activeStudentFilterCount ? ` (${activeStudentFilterCount})` : ''}
+                      </Button>
+                      <Collapse in={showStudentFilters}>
+                        <Box
+                          id="charge-student-filters"
+                          sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                              xs: '1fr',
+                              sm: 'repeat(2, minmax(0, 1fr))',
+                              lg: 'repeat(3, minmax(0, 1fr))',
+                            },
+                            gap: 1,
+                            pt: 1.5,
+                            '& > *': { minWidth: 0 },
+                          }}
+                        >
+                          <CustomSelect
+                            label="Division filter"
+                            value={studentFilters.division}
+                            options={Array.from(
+                              new Map(
+                                scopeStudents
+                                  .filter(
+                                    (student): student is IStudentOption & { divisionId: string } =>
+                                      !!student.divisionId
+                                  )
+                                  .map((student) => [
+                                    student.divisionId,
+                                    {
+                                      id: student.divisionId,
+                                      name: [student.standardName, student.divisionName]
+                                        .filter(Boolean)
+                                        .join(' · '),
+                                    },
+                                  ])
+                              ).values()
+                            )}
+                            labelKey="name"
+                            valueKey="id"
+                            onChange={(value) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                division: value as string,
+                              }))
+                            }
+                            formControlProps={{ fullWidth: true }}
+                          />
+                          <CustomSelect
+                            label="Gender"
+                            value={studentFilters.gender}
+                            options={[
+                              { id: '0', name: 'Male' },
+                              { id: '1', name: 'Female' },
+                            ]}
+                            labelKey="name"
+                            valueKey="id"
+                            onChange={(value) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                gender: value as string,
+                              }))
+                            }
+                            formControlProps={{ fullWidth: true }}
+                          />
+                          <TextField
+                            size="small"
+                            label="Roll No. from"
+                            type="number"
+                            value={studentFilters.rollFrom}
+                            onChange={(event) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                rollFrom: event.target.value,
+                              }))
+                            }
+                            fullWidth
+                          />
+                          <TextField
+                            size="small"
+                            label="Roll No. to"
+                            type="number"
+                            value={studentFilters.rollTo}
+                            onChange={(event) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                rollTo: event.target.value,
+                              }))
+                            }
+                            fullWidth
+                          />
+                          <CustomSelect
+                            label="Fee structure assigned"
+                            value={studentFilters.assigned}
+                            options={[
+                              { id: 'yes', name: 'Assigned' },
+                              { id: 'no', name: 'Not assigned' },
+                            ]}
+                            labelKey="name"
+                            valueKey="id"
+                            onChange={(value) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                assigned: value as string,
+                              }))
+                            }
+                            formControlProps={{ fullWidth: true }}
+                          />
+                          <CustomSelect
+                            label="Charged in selected category"
+                            disabled={!values.chargeCategoryId}
+                            value={studentFilters.charged}
+                            options={[
+                              { id: 'yes', name: 'Already charged' },
+                              { id: 'no', name: 'Not charged' },
+                            ]}
+                            labelKey="name"
+                            valueKey="id"
+                            onChange={(value) =>
+                              setStudentFilters((filters) => ({
+                                ...filters,
+                                charged: value as string,
+                              }))
+                            }
+                            formControlProps={{ fullWidth: true }}
+                          />
+                          <Button
+                            size="small"
+                            disabled={activeStudentFilterCount === 0 && !studentSearch}
+                            onClick={() => {
+                              setStudentFilters(emptyStudentFilters);
+                              setStudentSearch('');
+                            }}
+                          >
+                            Reset filters
+                          </Button>
+                        </Box>
+                      </Collapse>
+                    </Box>
+                    <Grid container spacing={1.5}>
+                      {/* Student List */}
+                      <Grid
+                        size={{
+                          xs: 12,
+                          md:
+                            values.selectionMode === 'selected' &&
+                            values.selectedStudents.length > 0
+                              ? 8
+                              : 12,
+                        }}
+                      >
+                        <StudentSelectionLayout
+                          students={filteredStudents}
+                          totalCount={scopeStudents.length}
+                          emptyMessage={
+                            values.standardId.length === 0
+                              ? 'Select at least one class to see students.'
+                              : studentSearch || activeStudentFilterCount > 0
+                                ? 'No students match the current search or filters.'
+                                : 'No students are available in this academic scope.'
+                          }
+                          selectedStudentIds={
+                            values.selectionMode === 'all' ? candidateStudentIds : values.studentIds
+                          }
+                          isLoading={studentsLoading}
+                          onSelectionChange={(selectedIds) => {
+                            const selected = scopeStudents.filter((s) =>
+                              selectedIds.includes(s.id)
+                            );
+                            setValues((previous) => ({
+                              ...previous,
+                              studentIds: selectedIds,
+                              selectedStudents: selected,
+                            }));
+                          }}
+                          searchQuery={studentSearch}
+                          onSearchChange={setStudentSearch}
+                          disabled={values.selectionMode === 'all'}
+                        />
+                      </Grid>
 
-                    {/* Selected Students Panel */}
-                    <Grid size={{ xs: 12, md: 4 }}>
-                      <SelectedStudentsPanel
-                        selectedStudents={values.selectedStudents || []}
-                        onRemove={(studentId) => {
-                          const newIds = values.studentIds.filter((id) => id !== studentId);
-                          setFieldValue('studentIds', newIds);
-                          const selected = scopeStudents.filter((s) => newIds.includes(s.id));
-                          setFieldValue('selectedStudents', selected);
-                        }}
-                        onClearAll={() => {
-                          setFieldValue('studentIds', []);
-                          setFieldValue('selectedStudents', []);
-                        }}
-                      />
+                      {/* Selected Students Panel */}
+                      {values.selectionMode === 'selected' &&
+                        values.selectedStudents.length > 0 && (
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <SelectedStudentsPanel
+                              selectedStudents={values.selectedStudents}
+                              onRemove={(studentId) => {
+                                const newIds = values.studentIds.filter((id) => id !== studentId);
+                                const selected = scopeStudents.filter((s) => newIds.includes(s.id));
+                                setValues((previous) => ({
+                                  ...previous,
+                                  studentIds: newIds,
+                                  selectedStudents: selected,
+                                }));
+                              }}
+                              onClearAll={() => {
+                                setValues((previous) => ({
+                                  ...previous,
+                                  studentIds: [],
+                                  selectedStudents: [],
+                                }));
+                              }}
+                            />
+                          </Grid>
+                        )}
                     </Grid>
-                  </Grid>
+                  </FormSectionCard>
                 </Grid>
 
                 <ConfirmDialog
@@ -975,12 +1283,16 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                 />
               </Grid>
             </Box>
-          </Scrollbar>
+          </Box>
 
           {/* Sticky Action Bar */}
           <Box
             sx={{
               flexShrink: 0,
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 2,
+              bgcolor: 'background.paper',
               borderTop: `1px solid ${theme.palette.divider}`,
               backdropFilter: 'blur(12px)',
               px: { xs: 2, md: 3 },
@@ -990,35 +1302,140 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
             <Box
               display="flex"
               alignItems="center"
-              justifyContent="flex-end"
+              justifyContent="space-between"
               flexWrap="wrap"
               gap={1}
             >
+              <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 520 }}>
+                {submitDisabledReason ||
+                  `${values.selectionMode === 'all' ? candidateStudentIds.length : values.studentIds.length} students will receive this charge.`}
+              </Typography>
               <Stack direction="row" spacing={1.5} flexWrap="wrap">
                 <Button
                   variant="outlined"
                   color="inherit"
                   size="small"
-                  onClick={() => handleClose(null, false)}
+                  onClick={handleClose}
                   startIcon={<Iconify icon={GlobalIcons.cancel} />}
                   disabled={isSubmitLoading}
                 >
                   Cancel
                 </Button>
-                <LoadingButton
-                  type="button"
-                  variant="contained"
-                  loading={isSubmitLoading}
-                  startIcon={<Iconify icon={isEditMode ? GlobalIcons.edit : GlobalIcons.submit} />}
-                  size="small"
-                  onClick={handleSubmit}
-                >
-                  Submit
-                </LoadingButton>
+                <Tooltip title={submitDisabledReason}>
+                  <span tabIndex={submitDisabledReason ? 0 : undefined}>
+                    <LoadingButton
+                      disabled={!!submitDisabledReason}
+                      type="button"
+                      variant="contained"
+                      loading={isSubmitLoading || formik.isSubmitting}
+                      startIcon={
+                        <Iconify icon={isEditMode ? GlobalIcons.edit : GlobalIcons.submit} />
+                      }
+                      size="small"
+                      onClick={handleSubmit}
+                    >
+                      Submit
+                    </LoadingButton>
+                  </span>
+                </Tooltip>
               </Stack>
             </Box>
           </Box>
         </Box>
+        <ConfirmDialog
+          open={allScopeConfirmation !== null}
+          icon="warning"
+          title={isEditMode ? 'Update charge audience?' : 'Create charge for all students?'}
+          content={
+            <Stack spacing={1}>
+              <Typography>
+                This charge will apply to all {allScopeConfirmation?.count ?? 0} eligible students
+                in the selected academic scope.
+              </Typography>
+              <Typography variant="body2">
+                Quick filters and search do not restrict this audience.
+              </Typography>
+              {allScopeConfirmation?.updated && (
+                <Alert severity="warning">
+                  The scope changed. Review the updated student count before confirming.
+                </Alert>
+              )}
+            </Stack>
+          }
+          onClose={() => {
+            approvedAllScopeRef.current = null;
+            setAllScopeConfirmation(null);
+          }}
+          action={
+            <LoadingButton
+              type="button"
+              variant="contained"
+              loading={formik.isSubmitting || isSubmitLoading}
+              disabled={
+                !!submitDisabledReason || allScopeConfirmation?.snapshot !== audienceSnapshot
+              }
+              onClick={async () => {
+                const currentSnapshot = JSON.stringify({
+                  values: formik.values,
+                  studentIds: [...candidateStudentIdsRef.current].sort(),
+                });
+                if (allScopeConfirmation?.snapshot !== currentSnapshot) {
+                  setAllScopeConfirmation({
+                    count: candidateStudentIdsRef.current.length,
+                    snapshot: currentSnapshot,
+                    updated: true,
+                  });
+                  return;
+                }
+                approvedAllScopeRef.current = currentSnapshot;
+                setAllScopeConfirmation(null);
+                await formik.submitForm();
+              }}
+            >
+              Confirm
+            </LoadingButton>
+          }
+        />
+        <ConfirmDialog
+          open={adminConfirmation !== null}
+          icon="warning"
+          title="Create and approve charge?"
+          disableBackdropClick
+          content={
+            <Stack spacing={1}>
+              <Typography>
+                {adminConfirmation?.name} · {adminConfirmation?.category} · {currentYear?.name}
+              </Typography>
+              <Typography>
+                {formatCurrency(adminConfirmation?.amount ?? 0)} per student for{' '}
+                {adminConfirmation?.count ?? 0} students.
+              </Typography>
+              <Typography>
+                Total:{' '}
+                {formatCurrency((adminConfirmation?.amount ?? 0) * (adminConfirmation?.count ?? 0))}{' '}
+                · Due {adminConfirmation?.dueDate}
+              </Typography>
+              <Typography>This request will be approved automatically when you confirm.</Typography>
+            </Stack>
+          }
+          onClose={() => setAdminConfirmation(null)}
+          cancelText="Keep editing"
+          action={
+            <LoadingButton
+              type="button"
+              variant="contained"
+              loading={formik.isSubmitting || isSubmitLoading}
+              onClick={async () => {
+                if (!adminConfirmation) return;
+                confirmedAdminSnapshotRef.current = adminConfirmation.snapshot;
+                setAdminConfirmation(null);
+                await formik.submitForm();
+              }}
+            >
+              Create and approve
+            </LoadingButton>
+          }
+        />
       </form>
     </BackPopUpChecked>
   );

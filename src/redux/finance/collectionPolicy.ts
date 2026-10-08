@@ -18,6 +18,18 @@ export interface ICollectionPolicyListParams {
   search?: string;
   skipCount?: number;
   maxResultCount?: number;
+  sorting?: string;
+  policyNameFilter?: string;
+  policyNameOperator?: string;
+  enableLateFee?: boolean;
+  lateFeeType?: string;
+  graceDaysOperator?: string;
+  graceDaysValue?: number;
+  graceDaysMax?: number;
+  allowOnlineCollection?: boolean;
+  updatedAtOperator?: string;
+  updatedAt?: string;
+  updatedAtEnd?: string;
 }
 
 export interface CollectionPolicyVersionResponse {

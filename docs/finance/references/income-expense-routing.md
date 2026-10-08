@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-02
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,23 +17,23 @@ Income Categories, Expense Categories, and Bank Accounts have independent settin
 | Screen | Financial fields |
 |---|---|
 | Fee Head editor and embedded Fee Head editor | Income Category |
-| Charge create/update forms | Required Income Category and Receiving Bank Account |
-| Charge detail | Saved category and masked bank label |
+| Charge create/update forms | Charge Category; income mapping is resolved by the backend |
+| Charge detail | Charge Category |
 | Collection Policy late-fee section | Late Fee Income Category |
 | Refund Policy editor | Expense Category and Default Paying Bank Account |
-| Fee Collection | Receiving School Bank Account; default from selected charges when they share one bank |
+| Fee Collection | Receiving School Bank Account for non-cash payments |
 | Refund approval | Expense Category, Payout Method, and Paying Bank Account |
 | Refund payout recording | Approved method and bank, reference, and evidence |
 | Income/Expense tables | Automatic source entries visible; manual edit/delete actions hidden for those rows |
 | Combined Income & Expenses register | Category and masked bank snapshots; each payment counted once |
 
-The shared `FinanceRoutingFields` component uses searchable `CustomSelect` controls with Formik. It reports failed lookups and displays an unavailable saved selection explicitly. Forms validate mandatory routing; policy drafts may omit mappings, while activation requires them.
+The shared `FinanceRoutingFields` component uses searchable `CustomSelect` controls with Formik for flows that choose routing. It reports failed lookups and displays an unavailable saved selection explicitly. Policy drafts may omit mappings, while activation requires them. Charge Category settings own the income mapping; the charge form has no routing selector.
 
 `src/redux/finance/financeRoutingApi.ts` calls `/finance-routing-options` with an owning operation. Cashiers and refund approvers do not need category/bank master View permission merely to choose an eligible account. Category and bank edits invalidate lookup tags. Collection, reconciliation, and payout mutations refresh income/expense activity.
 
 Refund approval defaults come from the request's pinned policy snapshot. Changing the configured category or bank requires a reason in approval notes. Recording payout uses the approved bank and method. A refund becomes Expense after payment confirmation, and returned payments appear as signed corrections.
 
-Cash fee collections may leave the school bank empty. Charges and non-cash payments require a school bank. Charges routed to different banks require separate collections; the backend checks the routing even if a client sends a different bank. The existing pending-payment restriction remains: multiple instruments or mixed fee/charge receipts cannot be deferred for receipt-level reconciliation. Confirmed split instruments remain a supported API contract.
+Selecting Cash hides the school bank selector for fees and charges, clears a previously selected bank, and excludes it from the payment payload and review. Non-cash payments show the required school bank selector. For non-cash charge routing and separate-collection requirements, see the backend routing reference below. The existing pending-payment restriction remains: multiple instruments or mixed fee/charge receipts cannot be deferred for receipt-level reconciliation. Confirmed split instruments remain a supported API contract.
 
 ## Validation and rollout
 

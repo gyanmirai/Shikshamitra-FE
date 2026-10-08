@@ -6,6 +6,7 @@ import type { RefundPolicyImpactResponse } from 'src/redux/finance/refundPolicy'
 import React from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { capitalizeWords } from 'src/utils/input-format';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -16,6 +17,7 @@ import {
   Stack,
   Select,
   MenuItem,
+  Skeleton,
   TextField,
   InputLabel,
   Typography,
@@ -61,25 +63,29 @@ export default function RefundGeneralSection({
           icon={<Iconify icon="solar:info-circle-bold" />}
           sx={{ mb: 2.5, borderRadius: 1.25 }}
         >
-          {isImpactLoading
-            ? 'Calculating downstream impact across attached fee structures...'
-            : `This Active policy is currently attached to ${impact?.attachedFeeStructureCount ?? 0} fee structure(s) and referenced by ${impact?.studentAssignmentCount ?? 0} student assignment(s). Modifying this policy will create a new version snapshot.`}
+          {isImpactLoading ? (
+            <Skeleton width="100%" height={24} aria-label="Loading policy impact" />
+          ) : (
+            `This Active policy is currently attached to ${impact?.attachedFeeStructureCount ?? 0} fee structure(s) and referenced by ${impact?.studentAssignmentCount ?? 0} student assignment(s). Modifying this policy will create a new version snapshot.`
+          )}
         </Alert>
       )}
 
       <Grid container spacing={2}>
         {/* Policy Name */}
-        <Grid size={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={isFieldInvalid('policyName')}>
             <TextField
               fullWidth
               size="small"
               required
               name="policyName"
-              label="Refund Policy Name *"
+              label="Policy name"
               placeholder="e.g. Standard Admission Refund Policy"
               value={values.policyName}
-              onChange={handleChange}
+              onChange={(event) => {
+                formik.setFieldValue('policyName', capitalizeWords(event.target.value));
+              }}
               onBlur={handleBlur}
               error={isFieldInvalid('policyName')}
               helperText={getHelperText('policyName')}
@@ -88,7 +94,7 @@ export default function RefundGeneralSection({
         </Grid>
 
         {/* Status */}
-        <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={isFieldInvalid('status')}>
             <FormControl fullWidth size="small" error={isFieldInvalid('status')}>
               <InputLabel>Status *</InputLabel>
@@ -138,11 +144,11 @@ export default function RefundGeneralSection({
         </Grid>
 
         {/* Description */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <TextField
             fullWidth
             multiline
-            minRows={2}
+            rows={2}
             size="small"
             name="description"
             label="Description"
@@ -152,11 +158,14 @@ export default function RefundGeneralSection({
             onBlur={handleBlur}
             error={isFieldInvalid('description')}
             helperText={getHelperText('description')}
+            inputProps={{ maxLength: 500 }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <DefaultPolicyToggle
+            compact
+            descriptionDisplay="tooltip"
             policyLabel="Refund"
             status={values.status}
             checked={Boolean(values.isDefault)}
@@ -190,7 +199,10 @@ export default function RefundGeneralSection({
                       title="This explanation is permanently logged in the policy version audit trail for regulatory compliance."
                       arrow
                     >
-                      <Box component="span" sx={{ cursor: 'pointer', display: 'flex', color: 'info.main' }}>
+                      <Box
+                        component="span"
+                        sx={{ cursor: 'pointer', display: 'flex', color: 'info.main' }}
+                      >
                         <Iconify icon={GlobalIcons.info} width={18} height={18} />
                       </Box>
                     </CustomTooltip>
