@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -395,3 +395,19 @@ Authenticated localhost browser checks verified missing-Offering guidance and di
 ## Credential-email and document-override checks
 
 Focused cases in `student-onboarding-credential-emails.ui.test.tsx`, the onboarding settings UI/context tests, and `student-onboarding-api.test.ts` cover safe legacy defaults, serialized school choices, email/account validation, readiness/permission-denied requests, pending duplicate prevention, retry/error/loading states, and required notes for individual/all-document overrides. Browser acceptance additionally checks saved school settings after reload, authorized account requests, actual mailbox sending, mobile login, sibling preservation, exit revocation, and responsive drawer actions.
+## Student dashboard validation
+
+Run from the frontend repository:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/student/dashboard
+node node_modules/eslint/bin/eslint.js src/screens/student/dashboard/*.ts src/screens/student/dashboard/*.tsx src/screens/student/dashboard/components/*.tsx src/screens/student/dashboard/hooks/*.ts src/redux/student/dashboard/*.ts --max-warnings 0
+npm run ts
+npm run docs:check
+```
+
+Twelve network-backed tests exercise real RTK Query, Redux, session and components: teacher order and destination links; absent exact grant; denied context; independent failed-section retry; immediate year-result clearing including graphs; GET-only refresh with preserved strength expansion; shared read counts and graph order; a restricted default workspace; forbidden graph/priority values; an incomplete queue on failure; true zero/empty graphs; and a verified personal view without staff queries. Decorative Iconify components are stubbed to avoid third-party TLS requests; service hooks and dashboard data flow remain real.
+
+Final browser smoke uses the Codex in-app browser with the authenticated local app for actual empty/scoped data and isolated HTTP sample responses for non-empty graphs and alternate role layouts. Check desktop/mobile, dark theme, teacher/common/admin order, linked-account context, missing permissions, independent failures and actual hrefs. Sample responses do not establish live acceptance for other signed-in roles. Backend authorization and population tests are documented [there](../../../Shikshamitra-BE/docs/modules/student/testing.md#student-dashboard-validation).
+
+On 2026-10-08 the full typecheck reports four unrelated errors in `e2e/fixtures/concession-type-form/main.tsx`, `e2e/fixtures/fee-category-readonly/main.tsx` and `src/components/custom-select/descriptions.test.tsx`.

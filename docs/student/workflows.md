@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-06
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -324,3 +324,13 @@ Readiness & Access configures student and parent/guardian credential emails inde
 Student Setup shows persistent Pending/Sent/Failed/Blocked sending states and authorized send/retry actions. Sent means sender acceptance, not inbox delivery. Existing sibling parent accounts retain their password. The staff interface never displays passwords. Document uploads remain awaiting verification until validated, accepted Admissions evidence is available, or an authorized staff member records an individual/all-document override with a mandatory note. Overrides are available independently of whether further uploads are enabled.
 
 See the [backend Student rules](../../../Shikshamitra-BE/docs/modules/student/product.md) for contracts and lifecycle access rules.
+## Student dashboard
+
+1. Open Dashboard from the Student menu with its exact View grant. The existing Student header supplies the academic year.
+2. Wait for server-confirmed identity, role mode, academic scope and permitted destinations. Admin/leadership prioritize records; teachers prioritize attendance; common staff prioritize assigned admission work. Role names change priority, while permissions and scope determine access.
+3. Read available Student records, Admissions & student setup, and Attendance & leave sections. Each section has its own loading, error, retry and update time. A failed section does not block the others.
+4. Scan Needs attention for setup requiring review, ready-to-activate students, attendance drafts and pending leave requests. This queue uses permitted positive counts and follows role priority; failed reads mark it incomplete. It does not invent an overall health score.
+5. Review Student population and Attendance registers doughnuts, then Class strength and Admissions workload bars. Charts show the selected year and scope; register submission is not a student attendance percentage, and setup states overlap within unfinished cases. Graph value links open existing permitted workspaces. Non-empty charts mount near the viewport through the shared chart implementation; all graphs share the same three reads as the summary cards. The existing class-strength expansion remains available.
+6. Use Refresh dashboard to repeat live reads. Switching academic years clears previous-year metrics, priorities and chart values immediately. Missing access, missing year and empty data have explicit states. Follow Quick links into other permitted workspaces; section spacing, breadcrumbs and `DashboardSectionCard` match the academic dashboard.
+
+Verified Student/Parent-only identities see only their linked student names and relationships. Staff reports and directory links are withheld for this portal context. The current frontend has no independent student-self dashboard destination to invent; personal Attendance percentages remain owned by established reports/API surfaces. Mixed staff/portal roles retain staff permission and scope handling.

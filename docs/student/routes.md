@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -86,3 +86,8 @@ The existing `/student/profile?student={id}` entry resolves the protected record
 
 Do not describe an Admissions page as visible navigation unless its route and permission are present in `src/constants/student-menu.ts`.
 The Applicant 360 and application detail pages are deep-linked detail surfaces and should be reached from the corresponding Applicant or Application list.
+## Student dashboard route
+
+`/student/dashboard` renders `src/screens/student/dashboard/index.tsx` for all permitted users. The route requires `Students.Dashboard.View`. Links require both the exact destination action grant and its submodule visibility grant; server context determines available sections. The admin/teacher/principal sample-dashboard folders are inactive and are not routed here.
+
+Directory metric links preserve supported `population=Active` or `population=Former`; class strength adds `class={standardId}`. Personal inquiry links use the supported `owner=__mine__` filter. Setup and application links open their owning worklists; they do not imply an unsupported status or owner URL filter.

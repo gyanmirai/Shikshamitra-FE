@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -108,3 +108,18 @@ Use the existing Admissions RTK Query client for a new screen or mutation instea
 `student-onboarding-api.ts` owns credential-email status/request and document override endpoints under the existing onboarding case boundary. Email request mutations invalidate that case's detail and handoff tags; document overrides additionally invalidate its document requirements. No credential/password is returned to the staff interface.
 
 The readiness profile persists separate student/guardian email switches (default OFF), activation/completion timing, manual/automatic provisioning, and the selected guardian relationship for automatic provisioning. Legacy configurations receive safe email-OFF defaults without changing their account requirements.
+## Student dashboard client
+
+| Source | Responsibility |
+|---|---|
+| `src/redux/student/dashboard/student-module-dashboard-api.ts` | Context and section GETs; raw or `{data}` response adaptation |
+| `src/redux/student/dashboard/student-module-dashboard-types.ts` | Modes, links, metrics, bounded class strength and query inputs |
+| `src/screens/student/dashboard/hooks/use-student-dashboard.ts` | Session/grant initialization, permission guard, year and refresh |
+| `src/screens/student/dashboard/hooks/use-student-dashboard-sections.ts` | One subscription per permitted section, shared by metrics, priorities and graphs |
+| `src/screens/student/dashboard/dashboard-insights.ts` and `dashboard-graph-data.ts` | Permission-filtered presentation of existing scoped totals; no independent data fetch |
+
+Context reads `/api/students/dashboard/context`; sections read `/api/students/dashboard/sections/{section}?academicYearId={guid}`, with section `records`, `admissions` or `attendance`. Permitted sections load independently after context resolves. Cache arguments include subject, tenant and granted permission names; section arguments also include year. Identity keys partition cache entries and are not sent as API authority. `currentData` clears previous identity/year results, errors withhold data, and unused dashboard entries expire immediately. The `Student/MODULE-DASHBOARD` tag supports manual GET refresh. There is no polling, Reporting preview refresh mutation or snapshot job. Destination mutations remain owned by their clients; returning to the dashboard refetches sections.
+
+See [backend dashboard API](../../../Shikshamitra-BE/docs/modules/student/api.md#student-dashboard-live-reads). Existing Reporting preview APIs remain available to their existing consumers.
+
+Population and saved-register doughnuts, class-strength bars and admissions workload bars reuse the same section responses. Chart code is dynamically loaded through the shared chart component when a non-empty graph approaches the viewport; no analytics endpoint, polling or additional query is introduced. Accessible value links remain available before the graph mounts. Failed/skipped reads contribute no graph or priority data, and each chart respects the section's server-confirmed availability and exact metric grants.
