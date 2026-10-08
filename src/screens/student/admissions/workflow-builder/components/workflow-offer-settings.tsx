@@ -2,11 +2,19 @@ import type { FormikProps } from 'formik';
 import type { AdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { Alert, Stack, Typography } from '@mui/material';
+import CustomAccordion from 'src/components/custom-accordian';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
-import { Alert, Paper, Radio, Stack, Divider, RadioGroup, Typography, FormControlLabel } from '@mui/material';
-import { DEFAULT_OFFER_POLICY, readAdmissionOfferPolicy, writeAdmissionOfferPolicy, getAdmissionOfferConfigurationError } from 'src/redux/student/admissions/admission-offer-policy';
+import {
+  DEFAULT_OFFER_POLICY,
+  readAdmissionOfferPolicy,
+  writeAdmissionOfferPolicy,
+  getAdmissionOfferConfigurationError,
+} from 'src/redux/student/admissions/admission-offer-policy';
 
 import { OfferContentSettings } from './offer-content-settings';
+import { WorkflowProcessChoice } from './workflow-process-choice';
 import { OfferResponseSettings } from './offer-response-settings';
 
 type Props = { formik: FormikProps<AdmissionWorkflowStage>; available: boolean; readOnly: boolean };
@@ -17,38 +25,78 @@ export function WorkflowOfferSettings({ formik, available, readOnly }: Props) {
   const error = getAdmissionOfferConfigurationError(json);
   const unreadable = Boolean(readStageConfiguration(json)?.offer !== undefined && !policy);
   const disabled = readOnly || !available || unreadable;
-  const update = (change: Partial<AdmissionOfferPolicy>) => formik.setFieldValue('configurationJson',
-    writeAdmissionOfferPolicy(json, { ...(policy ?? DEFAULT_OFFER_POLICY), ...change }));
+  const update = (change: Partial<AdmissionOfferPolicy>) =>
+    formik.setFieldValue(
+      'configurationJson',
+      writeAdmissionOfferPolicy(json, { ...(policy ?? DEFAULT_OFFER_POLICY), ...change })
+    );
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-      <Stack spacing={2}>
-        <Stack spacing={0.5}>
-          <Typography variant="subtitle1">Admission offer</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Configure the offer content, validity, response evidence, exceptions, and completion outcomes.
-          </Typography>
+    <Stack spacing={2}>
+      <FormSectionCard
+        icon="mdi:email-check-outline"
+        title="Offer process"
+        descriptionTooltip="Configure offer content, validity, responses and allowed completion outcomes. Every offer action is recorded. The workflow continues only for the selected completion outcomes."
+      >
+        <Stack spacing={2}>
+          {!available && (
+            <Alert severity="info">
+              Managed Offer settings are not available in this environment yet.
+            </Alert>
+          )}
+          <WorkflowProcessChoice
+            label="Offer process"
+            value={policy?.enabled ? 'managed' : 'basic'}
+            disabled={disabled}
+            onChange={(value) => update({ enabled: value === 'managed' })}
+            options={[
+              {
+                value: 'basic',
+                title: 'Use existing offer actions',
+                description: 'Keep the existing Offer actions and completion process.',
+                icon: 'mdi:email-outline',
+              },
+              {
+                value: 'managed',
+                title: 'Manage offer validity and responses',
+                description:
+                  'Configure the offer message, expiry, response evidence and permitted completion outcomes.',
+                icon: 'mdi:email-check-outline',
+              },
+            ]}
+          />
+          {error && <Alert severity="error">{error}</Alert>}
         </Stack>
-        {!available && <Alert severity="info">Managed Offer settings are not available in this environment yet.</Alert>}
-        <RadioGroup value={policy?.enabled ? 'managed' : 'basic'} onChange={(_, value) => update({ enabled: value === 'managed' })}>
-          <FormControlLabel value="basic" disabled={disabled} control={<Radio size="small" />} label="Basic offer actions (existing process)" />
-          <FormControlLabel value="managed" disabled={disabled} control={<Radio size="small" />} label="Managed offer with expiry and response controls" />
-        </RadioGroup>
-        {policy?.enabled && <>
+      </FormSectionCard>
+      {policy?.enabled && (
+        <>
           <OfferContentSettings policy={policy} disabled={disabled} onChange={update} />
-          <Divider />
           <OfferResponseSettings policy={policy} disabled={disabled} onChange={update} />
-          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.neutral' }}>
-            <Typography variant="overline" color="text.secondary">Offer preview</Typography>
-            <Typography variant="subtitle1">{policy.title || 'Untitled offer'}</Typography>
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>{policy.message || 'Add the offer message.'}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {policy.offerType === 'conditional' ? 'Conditional' : 'Unconditional'} · valid for {policy.validityDays} days
-            </Typography>
-          </Paper>
-          <Alert severity="success">Every offer action is recorded. The workflow can continue only for the outcomes selected above.</Alert>
-        </>}
-        {error && <Alert severity="error">{error}</Alert>}
-      </Stack>
-    </Paper>
+          <FormSectionCard
+            icon="mdi:eye-outline"
+            title="Offer preview"
+            descriptionTooltip="Review the title and message before applying this offer configuration."
+          >
+            <CustomAccordion
+              title="Preview offer content"
+              content={
+                <Stack spacing={1}>
+                  <Typography variant="subtitle1">{policy.title || 'Untitled offer'}</Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+                  >
+                    {policy.message || 'Add the offer message.'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {policy.offerType === 'conditional' ? 'Conditional' : 'Unconditional'} · valid
+                    for {policy.validityDays} days
+                  </Typography>
+                </Stack>
+              }
+            />
+          </FormSectionCard>
+        </>
+      )}
+    </Stack>
   );
 }

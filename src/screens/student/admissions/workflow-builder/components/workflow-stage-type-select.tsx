@@ -53,7 +53,6 @@ export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly
               item.type === formik.values.stageType
           )
           .map((item) => ({ value: item.type, label: item.displayName }))}
-        helperText={metadata?.description}
         onChange={(value) => {
           const next = stageTypes.find((item) => item.type === Number(value));
           if (!next || readOnly || next.type === formik.values.stageType) return;

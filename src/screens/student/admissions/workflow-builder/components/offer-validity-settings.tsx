@@ -4,6 +4,8 @@ import { Stack } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import { WorkflowSettingLabel } from './workflow-setting-label';
+
 export function OfferValiditySettings({
   policy,
   disabled,
@@ -31,20 +33,24 @@ export function OfferValiditySettings({
             <NumericFormatCustom
               fullWidth
               size="small"
-              label={label}
+              label={
+                key === 'validityDays' ? (
+                  <WorkflowSettingLabel
+                    label={label}
+                    help="Days from issue until the offer expires."
+                  />
+                ) : (
+                  label
+                )
+              }
               value={policy[key] || ''}
+              slotProps={{ htmlInput: { 'aria-label': label } }}
               prefix=""
               thousandSeparator={false}
               decimalScale={0}
               disabled={disabled}
               error={invalid}
-              helperText={
-                invalid
-                  ? 'Enter a whole number from 1 to 365.'
-                  : key === 'validityDays'
-                    ? 'Days from issue until the offer expires.'
-                    : undefined
-              }
+              helperText={invalid ? 'Enter a whole number from 1 to 365.' : undefined}
               onValueChange={({ floatValue }) => {
                 const value = floatValue ?? 0;
                 onChange({

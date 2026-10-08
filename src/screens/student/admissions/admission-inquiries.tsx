@@ -21,6 +21,7 @@ import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
+import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
@@ -48,6 +49,7 @@ export default function AdmissionInquiriesScreen() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
+  const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
   const [dismissedInquiryId, setDismissedInquiryId] = useState('');
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
@@ -126,6 +128,7 @@ export default function AdmissionInquiriesScreen() {
       isMoving: handoff.moving,
       ...rowOptions,
       onManage: openInquiry,
+      onFollowUp: setFollowUpInquiry,
       onMove: handoff.move,
     }).map((column) => ({
       ...column,
@@ -159,7 +162,7 @@ export default function AdmissionInquiriesScreen() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Admission inquiries"
-        description="Capture inquiries for open admissions, record interest, and manage family follow-ups."
+        description="Capture open-admission inquiries, edit their forms, and record follow-up notes separately."
         slotProps={{
           action: {},
           heading: {},
@@ -285,6 +288,7 @@ export default function AdmissionInquiriesScreen() {
           />
         </Box>
       )}
+      <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
     </Box>
   );
 }

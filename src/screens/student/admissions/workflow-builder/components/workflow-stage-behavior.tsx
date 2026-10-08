@@ -4,139 +4,96 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Iconify } from 'src/components/iconify';
+import CustomAccordion from 'src/components/custom-accordian';
+import { Stack, Switch, FormControlLabel } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
 import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
 import { readAdmissionPaymentPolicy } from 'src/redux/student/admissions/admission-payment-policy';
-import {
-  Stack,
-  Switch,
-  Accordion,
-  Typography,
-  AccordionDetails,
-  FormControlLabel,
-  AccordionSummary,
-} from '@mui/material';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
   readOnly: boolean;
+  advanced?: boolean;
 };
 
-export function WorkflowStageBehavior({ formik, metadata, readOnly }: Props) {
-  const managedReview =
-    formik.values.stageType === 6 &&
-    readAdmissionReviewPolicy(formik.values.configurationJson)?.enabled === true;
-  const managedPayment =
-    formik.values.stageType === 4 &&
-    readAdmissionPaymentPolicy(formik.values.configurationJson)?.enabled === true;
-  const managedOffer =
-    formik.values.stageType === 8 &&
-    readAdmissionOfferPolicy(formik.values.configurationJson)?.enabled === true;
-  const managedSeat =
-    formik.values.stageType === 9 &&
-    readAdmissionSeatPolicy(formik.values.configurationJson)?.enabled === true;
-  const managed = managedReview || managedPayment || managedOffer || managedSeat;
-  const options = [
-    { field: 'isRequired', label: 'Required — cannot be skipped', unavailable: false },
-    {
-      field: 'allowManualSkip',
-      label: 'Allow authorized manual skip',
-      unavailable: managed || formik.values.isRequired,
-    },
-  ] as const;
-
-  return (
-    <Stack>
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Stage behavior
-      </Typography>
-      {options.map(({ field, label, unavailable }) => (
-        <FormControlLabel
-          key={field}
-          label={label}
-          control={
-            <Switch
-              size="small"
-              checked={
-                field === 'allowManualSkip' && (managed || formik.values.isRequired)
-                  ? false
-                  : formik.values[field]
-              }
-              disabled={readOnly || unavailable}
-              onChange={(_, value) => {
-                formik.setFieldValue(field, value);
-                if (field === 'isRequired' && value) {
-                  formik.setFieldValue('allowManualSkip', false);
-                }
-              }}
-            />
+export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = false }: Props) {
+  const managed =
+    (formik.values.stageType === 6 &&
+      readAdmissionReviewPolicy(formik.values.configurationJson)?.enabled === true) ||
+    (formik.values.stageType === 4 &&
+      readAdmissionPaymentPolicy(formik.values.configurationJson)?.enabled === true) ||
+    (formik.values.stageType === 8 &&
+      readAdmissionOfferPolicy(formik.values.configurationJson)?.enabled === true) ||
+    (formik.values.stageType === 9 &&
+      readAdmissionSeatPolicy(formik.values.configurationJson)?.enabled === true);
+  const setting = (
+    field: 'isRequired' | 'allowManualSkip' | 'isEntryStage' | 'isTerminalStage',
+    label: string,
+    help: string,
+    disabled = false
+  ) => (
+    <FormControlLabel
+      label={label}
+      control={
+        <Switch
+          size="small"
+          slotProps={{ input: { 'aria-label': label, 'aria-description': help } }}
+          checked={
+            field === 'allowManualSkip' && (managed || formik.values.isRequired)
+              ? false
+              : formik.values[field]
           }
+          disabled={readOnly || disabled}
+          onChange={(_, checked) => {
+            formik.setFieldValue(field, checked);
+            if (field === 'isRequired' && checked) formik.setFieldValue('allowManualSkip', false);
+          }}
         />
-      ))}
-      {formik.values.isRequired && (
-        <Typography variant="body2" color="text.secondary">
-          Required stages cannot use normal skip. A separately authorized emergency override must
-          include a reason.
-        </Typography>
-      )}
-      {managedReview && (
-        <Typography variant="body2" color="text.secondary">
-          Managed Review requires a recorded decision and cannot be skipped.
-        </Typography>
-      )}
-      {managedPayment && (
-        <Typography variant="body2" color="text.secondary">
-          Managed Payment requires settlement or an authorized waiver and cannot be skipped.
-        </Typography>
-      )}
-      {managedOffer && (
-        <Typography variant="body2" color="text.secondary">
-          Managed Offer requires a configured response outcome and cannot be skipped.
-        </Typography>
-      )}
-      {managedSeat && (
-        <Typography variant="body2" color="text.secondary">
-          Managed Seat requires a configured capacity outcome and cannot be skipped.
-        </Typography>
-      )}
-      <Accordion disableGutters elevation={0} sx={{ mt: 1.5, border: 1, borderColor: 'divider' }}>
-        <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-          <Typography variant="subtitle2">Journey position (advanced)</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Stack>
-            <FormControlLabel
-              label="Applicants start here"
-              control={
-                <Switch
-                  size="small"
-                  checked={formik.values.isEntryStage}
-                  disabled={readOnly || !metadata?.canBeEntryStage}
-                  onChange={(_, value) => formik.setFieldValue('isEntryStage', value)}
-                />
-              }
-            />
-            <FormControlLabel
-              label="Admission journey ends here"
-              control={
-                <Switch
-                  size="small"
-                  checked={formik.values.isTerminalStage}
-                  disabled={readOnly}
-                  onChange={(_, value) => formik.setFieldValue('isTerminalStage', value)}
-                />
-              }
-            />
-            <Typography variant="body2" color="text.secondary">
-              Most schools need one starting stage and one or more ending stages. Change these only
-              when building a branched journey.
-            </Typography>
-          </Stack>
-        </AccordionDetails>
-      </Accordion>
-    </Stack>
+      }
+      sx={{ m: 0, width: 1, justifyContent: 'space-between', flexDirection: 'row-reverse', gap: 1 }}
+    />
+  );
+
+  return advanced ? (
+    <CustomAccordion
+      title="Advanced settings"
+      content={
+        <Stack spacing={1}>
+          {setting(
+            'isEntryStage',
+            'Entry stage',
+            'Applicants begin at this stage. The journey must have exactly one starting stage.',
+            !metadata?.canBeEntryStage
+          )}
+          {setting(
+            'isTerminalStage',
+            'End of journey',
+            'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
+          )}
+        </Stack>
+      }
+    />
+  ) : (
+    <FormSectionCard title="Stage behavior" icon="mdi:cog-outline">
+      <Stack spacing={1}>
+        {setting(
+          'isRequired',
+          'Required stage',
+          'Applicants must complete this stage. Ordinary skip is unavailable; a separately authorized emergency override requires a reason.'
+        )}
+        {!formik.values.isRequired &&
+          setting(
+            'allowManualSkip',
+            'Allow authorized skip',
+            managed
+              ? 'This configured process must meet its completion requirements and cannot use ordinary manual skip.'
+              : 'Authorized staff can skip this optional stage using the existing workflow action.',
+            managed
+          )}
+      </Stack>
+    </FormSectionCard>
   );
 }

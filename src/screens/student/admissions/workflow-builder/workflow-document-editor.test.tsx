@@ -9,8 +9,8 @@ import {
 
 import { renderDocumentEditor, chooseDocumentOption } from './document-editor-test-fixture';
 
-const setupDocumentEditor = (...args: Parameters<typeof renderDocumentEditor>) => ({
-  ...renderDocumentEditor(...args),
+const setupDocumentEditor = async (...args: Parameters<typeof renderDocumentEditor>) => ({
+  ...(await renderDocumentEditor(...args)),
   user: userEvent.setup(),
 });
 
@@ -50,22 +50,25 @@ const json = (change = {}) =>
 describe('document verification stage editor', { timeout: 15000 }, () => {
   it('preserves basic completion and unrelated settings when saving stage details', async () => {
     const original = '{"extension":{"source":"existing"}}';
-    const { user, onSave } = setupDocumentEditor(original);
-    expect(
-      screen.getByRole('radio', { name: 'Basic completion (existing process)' })
-    ).toBeChecked();
-    await user.click(screen.getByRole('tab', { name: 'Basics' }));
-    await user.type(
-      screen.getByRole('textbox', { name: 'Staff instructions' }),
-      'Review originals at reception'
-    );
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    const { user, onSave } = await setupDocumentEditor(original);
+    expect(screen.getByRole('radio', { name: 'Complete manually' })).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    const name = screen.getByRole('textbox', { name: 'Stage name *' });
+    await user.clear(name);
+    await user.type(name, 'Documents checked at reception');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ configurationJson: original }))
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configurationJson: original,
+          name: 'Documents checked at reception',
+        })
+      )
     );
   });
   it('adds a standard requirement, enables independent review, and saves the stage only after the requirement', async () => {
-    const { user, onSave } = setupDocumentEditor('{"extension":{"source":"existing"}}');
+    const { user, onSave } = await setupDocumentEditor('{"extension":{"source":"existing"}}');
     await user.click(screen.getByRole('radio', { name: 'Collect and verify documents' }));
     await chooseDocumentOption(user, 'Add a standard document', 'Birth certificate');
     const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
@@ -79,7 +82,7 @@ describe('document verification stage editor', { timeout: 15000 }, () => {
     await user.click(
       screen.getByRole('switch', { name: 'Require a different staff member to review' })
     );
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       extension: { source: 'existing' },
@@ -91,40 +94,40 @@ describe('document verification stage editor', { timeout: 15000 }, () => {
     });
   });
   it('blocks empty enabled checklists and preserves requirements when returning to basic completion', async () => {
-    const { user, onSave } = setupDocumentEditor(json({ requirements: [] }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    const { user, onSave } = await setupDocumentEditor(json({ requirements: [] }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText('Add between 1 and 30 document requirements.')).toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: 'Basic completion (existing process)' }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('radio', { name: 'Complete manually' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
     ).toMatchObject({ enabled: false, requirements: [] });
   });
   it('requires confirmation before removing a configured document', async () => {
-    const { user } = setupDocumentEditor(json());
+    const { user } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Remove Birth certificate' }));
     const dialog = screen.getByRole('dialog', { name: 'Remove document requirement?' });
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Birth certificate')).toBeInTheDocument();
   });
   it('prevents unsupported policy versions from being silently overwritten', async () => {
-    const { user, onSave } = setupDocumentEditor(json({ version: 2 }));
+    const { user, onSave } = await setupDocumentEditor(json({ version: 2 }));
     expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
   });
-  it('keeps published settings read-only', () => {
-    setupDocumentEditor(json(), true);
+  it('keeps published settings read-only', async () => {
+    await setupDocumentEditor(json(), true);
     expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
     expect(
       screen.queryByRole('button', { name: 'Edit Birth certificate' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save stage' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
   });
-  it('explains unavailable document features before enabling them', () => {
-    setupDocumentEditor(undefined, false, false);
+  it('explains unavailable document features before enabling them', async () => {
+    await setupDocumentEditor(undefined, false, false);
     expect(screen.getByText(/not available in this environment/)).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
   });

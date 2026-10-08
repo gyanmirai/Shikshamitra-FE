@@ -10,8 +10,8 @@ import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
-import { type WorkflowDetails, AdmissionWorkflowDialog } from '../admission-workflow-dialog';
 import { getAdmissionWorkflowTemplate } from '../workflow-template';
+import { type WorkflowDetails, AdmissionWorkflowDialog } from '../admission-workflow-dialog';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -322,7 +322,7 @@ describe('inline workflow details editing', () => {
   it('requires confirmation before replacing the journey and can keep the current graph', async () => {
     const user = userEvent.setup();
     const { onSave } = renderEdit();
-    await user.click(screen.getByRole('radio', { name: /Simple direct admission/ }));
+    await user.click(screen.getByRole('radio', { name: /Simple admission/ }));
     expect(screen.queryByText('School-specific registration')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Save & continue' }));
     expect(
@@ -345,7 +345,7 @@ describe('inline workflow details editing', () => {
   it('saves an explicitly confirmed replacement, retaining form selection', async () => {
     const user = userEvent.setup();
     const { onSave } = renderEdit();
-    await user.click(screen.getByRole('radio', { name: /Simple direct admission/ }));
+    await user.click(screen.getByRole('radio', { name: /Simple admission/ }));
     await user.click(screen.getByRole('button', { name: 'Save & continue' }));
     await user.click(await screen.findByRole('button', { name: 'Replace & save' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());

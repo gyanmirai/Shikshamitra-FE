@@ -1,12 +1,8 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
-import type {
-  AdmissionTrack,
-  AdmissionEntryMode,
-} from 'src/redux/student/admissions/admission-offerings-api';
 
 import dayjs from 'dayjs';
-import { Grid, TextField } from '@mui/material';
+import { Grid } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
@@ -27,7 +23,6 @@ type Props = {
   cycle: AdmissionCycle;
   fetchWorkflows: AdmissionDefinitionFetcher;
   fetchInquiryForms: AdmissionDefinitionFetcher;
-  fetchRegistrationForms: AdmissionDefinitionFetcher;
   change: (field: keyof BulkOfferingValues, value: unknown) => void;
 };
 
@@ -36,12 +31,11 @@ export function BulkAdmissionConfigurationFields({
   cycle,
   fetchWorkflows,
   fetchInquiryForms,
-  fetchRegistrationForms,
   change,
 }: Props) {
   const { values, errors, touched } = formik;
   const setups = useGetAdmissionIntakeSetupsQuery();
-  const startsWithInquiry = values.entryMode !== 1;
+  const startsWithInquiry = true;
   const selectedSetup = findSelectedIntakeSetup(
     setups.data ?? [],
     values.inquiryIntakeProfileId,
@@ -56,103 +50,29 @@ export function BulkAdmissionConfigurationFields({
   );
   return (
     <Grid container spacing={1.5}>
-      <Grid size={{ xs: 12, sm: 4 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Code prefix *"
-          {...formik.getFieldProps('codePrefix')}
-          onChange={(event) => change('codePrefix', event.target.value)}
-          error={touched.codePrefix && Boolean(errors.codePrefix)}
-          helperText={touched.codePrefix ? errors.codePrefix : undefined}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 4 }}>
-        <CustomSelect
-          label="Admission track *"
-          options={[
-            { value: 0, label: 'General' },
-            { value: 1, label: 'RTE' },
-            { value: 2, label: 'Management' },
-            { value: 3, label: 'Staff' },
-          ]}
-          value={values.track}
-          onChange={(value) => {
-            const track = Number(value) as AdmissionTrack;
-            change('track', track);
-            if (track === 1) {
-              change('entryMode', 1);
-              change('inquiryFormDefinitionId', '');
-              change('inquiryIntakeProfileId', '');
-            }
-          }}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 4 }}>
-        <CustomSelect
-          label="Entry mode *"
-          options={
-            values.track === 1
-              ? [{ value: 1, label: 'Start with registration' }]
-              : [
-                  { value: 0, label: 'Start with inquiry' },
-                  { value: 1, label: 'Start with registration' },
-                  { value: 2, label: 'Inquiry or direct registration' },
-                ]
-          }
-          value={values.entryMode}
-          onChange={(value) => {
-            const entryMode = Number(value) as AdmissionEntryMode;
-            change('entryMode', entryMode);
-            if (entryMode === 1) {
-              change('inquiryFormDefinitionId', '');
-              change('inquiryIntakeProfileId', '');
-            } else if (!values.inquiryIntakeProfileId) {
-              const setup = (setups.data ?? []).find(
-                (item) =>
-                  item.counsellorAssignmentProfileId === values.counsellorAssignmentProfileId
-              );
-              if (setup) change('inquiryIntakeProfileId', setup.inquiryIntakeProfileId);
-            }
-          }}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: values.entryMode !== 1 ? 4 : 6 }}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <AdmissionDefinitionSelect
           label="Published workflow"
           valueId={values.workflowDefinitionId || null}
           fetchOptions={fetchWorkflows}
-          onChange={(id) => change('workflowDefinitionId', id)}
+          onChange={(id) => change('workflowDefinitionId', id ?? '')}
           error={touched.workflowDefinitionId && Boolean(errors.workflowDefinitionId)}
-          helperText={touched.workflowDefinitionId ? errors.workflowDefinitionId : undefined}
+          helperText={
+            touched.workflowDefinitionId
+              ? errors.workflowDefinitionId
+              : 'Application form comes from the workflow’s Form stage.'
+          }
           noOptionsText="No published workflows found"
         />
       </Grid>
-      {values.entryMode !== 1 && (
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <AdmissionDefinitionSelect
-            label="Inquiry form"
-            valueId={values.inquiryFormDefinitionId || null}
-            fetchOptions={fetchInquiryForms}
-            onChange={(id) => change('inquiryFormDefinitionId', id)}
-            error={touched.inquiryFormDefinitionId && Boolean(errors.inquiryFormDefinitionId)}
-            helperText={
-              touched.inquiryFormDefinitionId ? errors.inquiryFormDefinitionId : undefined
-            }
-            noOptionsText="No published forms found"
-          />
-        </Grid>
-      )}
-      <Grid size={{ xs: 12, sm: values.entryMode !== 1 ? 4 : 6 }}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <AdmissionDefinitionSelect
-          label="Application form"
-          valueId={values.applicationFormDefinitionId || null}
-          fetchOptions={fetchRegistrationForms}
-          onChange={(id) => change('applicationFormDefinitionId', id)}
-          error={touched.applicationFormDefinitionId && Boolean(errors.applicationFormDefinitionId)}
-          helperText={
-            touched.applicationFormDefinitionId ? errors.applicationFormDefinitionId : undefined
-          }
+          label="Inquiry form"
+          valueId={values.inquiryFormDefinitionId || null}
+          fetchOptions={fetchInquiryForms}
+          onChange={(id) => change('inquiryFormDefinitionId', id ?? '')}
+          error={touched.inquiryFormDefinitionId && Boolean(errors.inquiryFormDefinitionId)}
+          helperText={touched.inquiryFormDefinitionId ? errors.inquiryFormDefinitionId : undefined}
           noOptionsText="No published forms found"
         />
       </Grid>

@@ -41,7 +41,7 @@ export function EligibilitySourceStageFields({
           { value: '', label: 'Choose a stage' },
           ...options.map((stage) => ({ value: stage.code, label: stage.name })),
           ...(selectedMissing
-            ? [{ value: value.sourceStageCode!, label: `${value.sourceStageCode} (unavailable)` }]
+            ? [{ value: value.sourceStageCode!, label: 'Selected source stage is unavailable' }]
             : []),
         ]}
         onChange={(sourceStageCode) =>

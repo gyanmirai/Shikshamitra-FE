@@ -13,6 +13,8 @@ import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admissio
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 ['mdi:close', 'mdi:clipboard-check-outline', 'basil:cross-solid'].forEach((name) =>
   addIcon(name, {
     body: '<path d="M0 0h16v16H0z"/>',
@@ -56,7 +58,7 @@ const metadata: AdmissionWorkflowStageTypeMetadata = {
   isRuntimeReady: true,
 };
 export const reviewerId = '11111111-1111-4111-8111-111111111111';
-export function setupReviewEditor(
+export async function setupReviewEditor(
   configurationJson?: string,
   readOnly = false,
   available = true,
@@ -85,7 +87,8 @@ export function setupReviewEditor(
       onClose={onClose}
     />
   );
-  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
   return { onSave, onClose };
 }
 export async function chooseReviewOption(

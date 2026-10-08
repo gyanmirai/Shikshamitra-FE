@@ -43,5 +43,7 @@ export function getReviewStageError(
           getReviewPrerequisiteKind(source) === item.kind
       )
   );
-  return invalid ? `Choose an earlier configured stage for ${invalid.sourceStageCode}.` : undefined;
+  if (!invalid) return undefined;
+  const sourceName = stages.find((item) => item.code === invalid.sourceStageCode)?.name;
+  return `Choose an earlier configured stage for ${sourceName || `the saved ${invalid.kind} prerequisite`}.`;
 }

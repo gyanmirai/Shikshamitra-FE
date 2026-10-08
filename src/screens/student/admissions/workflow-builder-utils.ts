@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
+
 import { ROUTE_OPERATOR_LABELS } from './workflow-builder/workflow-condition-catalog';
 
 export type SimpleTransitionCondition = {
@@ -27,19 +28,25 @@ export type SimpleTransitionCondition = {
 export const createStage = (
   metadata: AdmissionWorkflowStageTypeMetadata,
   displayOrder: number,
-  isEntryStage: boolean
-): AdmissionWorkflowStage => ({
-  id: crypto.randomUUID(),
-  code: `STAGE_${displayOrder + 1}`,
-  name: metadata.displayName,
-  description: metadata.description,
-  stageType: metadata.type,
-  displayOrder,
-  isRequired: true,
-  allowManualSkip: false,
-  isEntryStage,
-  isTerminalStage: false,
-});
+  isEntryStage: boolean,
+  existingStages: AdmissionWorkflowStage[] = []
+): AdmissionWorkflowStage => {
+  const existingCodes = new Set(existingStages.map((stage) => stage.code.trim().toUpperCase()));
+  let number = displayOrder + 1;
+  while (existingCodes.has(`STAGE_${number}`)) number += 1;
+  return {
+    id: crypto.randomUUID(),
+    code: `STAGE_${number}`,
+    name: metadata.displayName,
+    description: metadata.description,
+    stageType: metadata.type,
+    displayOrder,
+    isRequired: true,
+    allowManualSkip: false,
+    isEntryStage,
+    isTerminalStage: false,
+  };
+};
 
 export const normalizeAdmissionWorkflowFormStages = (
   stages: AdmissionWorkflowStage[]
@@ -71,12 +78,12 @@ export const duplicateStage = (
   const sourceIndex = stages.findIndex((stage) => stage.id === sourceId);
   if (sourceIndex < 0) return stages;
   const source = stages[sourceIndex];
-  const existingCodes = new Set(stages.map((stage) => stage.code.toUpperCase()));
-  const baseCode = `${source.code}_COPY`;
-  let code = baseCode;
+  const existingCodes = new Set(stages.map((stage) => stage.code.trim().toUpperCase()));
+  const copyCode = (suffix: string) => `${source.code.slice(0, 64 - suffix.length)}${suffix}`;
+  let code = copyCode('_COPY');
   let suffix = 2;
   while (existingCodes.has(code.toUpperCase())) {
-    code = `${baseCode}_${suffix}`;
+    code = copyCode(`_COPY_${suffix}`);
     suffix += 1;
   }
   const copy: AdmissionWorkflowStage = {

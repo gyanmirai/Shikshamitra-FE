@@ -1,7 +1,7 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionReviewPrerequisite } from 'src/redux/student/admissions/admission-review-policy';
 
-import { Alert, Stack, Button, Checkbox, Typography, FormControlLabel } from '@mui/material';
+import { Alert, Stack, Button, Checkbox, FormControlLabel } from '@mui/material';
 
 import { getReviewPrerequisiteKind } from '../review-stage-prerequisites';
 
@@ -30,11 +30,6 @@ export function ReviewPrerequisites({
   );
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Evidence to review</Typography>
-      <Typography variant="body2" color="text.secondary">
-        Choose earlier checks that must be current before a decision. Approval requires them to
-        pass.
-      </Typography>
       {!options.length && (
         <Alert severity="info">
           Configure earlier Assessment, Document verification, or Eligibility stages to use their
@@ -81,8 +76,9 @@ export function ReviewPrerequisites({
             )
           }
         >
-          {item.sourceStageCode} is no longer an earlier configured {item.kind} stage. Choose a
-          valid source.
+          {stages.find((stage) => stage.code === item.sourceStageCode)?.name ||
+            'A saved prerequisite'}{' '}
+          is no longer an earlier configured {item.kind} stage. Choose a valid source.
         </Alert>
       ))}
     </Stack>

@@ -30,13 +30,13 @@ See the maintained [Enrollment Admissions workflow](../workflows.md) for the cur
 ## Demo path
 
 1. Open `/student/admissions/settings/cycles` and create an admission cycle.
-2. Open `/student/admissions/settings/workflows`, create a draft, use the dedicated builder to mark one entry stage and at least one terminal stage, connect every non-terminal stage, validate, preview, and publish.
+2. Open `/student/admissions/settings/workflows`, create a draft from the appropriate starting journey, configure its stages and connect every non-terminal stage, then save and publish after server validation. Use the stage drawer's Advanced settings to set the entry and ending stages; plain labels replace their redundant information icons, and the saved flags retain their existing runtime behavior.
 3. Open `/student/admissions/settings/forms` and publish an inquiry and application form.
 4. Open `/student/admissions/settings/intake-assignment` and create Inquiry and Counsellor Assignment profiles.
 5. Open `/student/admissions/settings/offerings`, select scoped academic hierarchy, entry mode, published definitions, and the matching profiles, then save or activate the offering.
 6. Use Bulk create when several Standards share one workflow, forms, profiles, and admission window; commit only after every preview row is ready.
 7. Under `/student/admissions/inquiries`, choose the admission period, Board, Medium, and Class. An open, ready Offering is required before the configured Inquiry form opens; unavailable classes are denied. Public links use the same gate.
-8. Use **Edit / Follow-up** to maintain the originally captured form and mark the inquiry Pending, Interested, or Not interested. The first Interested transition requests a qualification email when a valid contact email exists; delivery remains governed by Communication consent, approval, and provider settings.
+8. Use **Edit** for the originally captured form and its form-change history. Use **Follow-up** separately for notes cards, staff attribution, a reminder date, and Pending, Interested, or Not interested. One atomic submit saves the note, status, and reminder; Not interested needs no reminder. The first Interested transition requests a qualification email when a valid contact email exists; delivery remains governed by Communication consent, approval, and provider settings.
 9. For an Interested inquiry, use **Move to next stage**. The server rechecks availability and capacity and creates or reuses the linked draft application. The inquiry appears in **Pipeline** and opens the existing application journey; repeated moves do not create duplicates.
 10. Complete, save, and submit the application through its configured journey. Direct Registration remains a separate entry route.
 

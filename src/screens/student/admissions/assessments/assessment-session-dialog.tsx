@@ -10,8 +10,8 @@ import { Iconify } from 'src/components/iconify';
 import { Alert, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import { assessmentErrorMessage } from './assessment-utils';
 import { AssessmentSessionFields } from './assessment-session-fields';
+import { assessmentScopeLabel, assessmentErrorMessage } from './assessment-utils';
 import {
   assessmentSessionInitialValues,
   assessmentSessionSchemaWithBookings,
@@ -47,14 +47,14 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
     <CustomDialog
       open
       handleClose={onClose}
-      guardUnsavedChanges={formik.dirty}
+      hasUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
       maxWidth="sm"
       title={session ? 'Edit assessment session' : 'Create assessment session'}
     >
       <DialogScrollContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {scope.offeringName} · {scope.stageName} · Workflow v{scope.workflowVersion}
+          {assessmentScopeLabel(scope)}
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

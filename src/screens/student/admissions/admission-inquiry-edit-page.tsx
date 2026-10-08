@@ -1,14 +1,22 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Box, Alert, Stack, Paper, Button, Skeleton } from '@mui/material';
 import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
+import { getAdmissionInquiryAccess } from './inquiry-access';
 import { formatAdmissionReference } from './admission-reference';
+import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
 import { InquiryOverviewForm } from './inquiry-management/inquiry-overview-form';
 
 export function getInquiryEditReturnUrl(value: string | null) {
@@ -32,11 +40,14 @@ export default function AdmissionInquiryEditPage() {
     : studentPaths.enrollment.inquiries;
   const inquiry = useGetAdmissionInquiryQuery(id, { skip: !id });
   const management = useGetAdmissionInquiryManagementQuery(id, { skip: !id });
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const { canManage } = getAdmissionInquiryAccess(permissions);
   const [draft, setDraft] = useState({ dirty: false, busy: false });
+  const discard = useBoolean();
   const returnToList = () => {
     if (draft.busy) return;
-    if (draft.dirty && !window.confirm('Discard unsaved inquiry changes?')) return;
-    router.push(returnUrl);
+    if (draft.dirty) discard.onTrue();
+    else router.push(returnUrl);
   };
 
   return (
@@ -87,7 +98,7 @@ export default function AdmissionInquiryEditPage() {
               Inquiry details could not be loaded. Try again.
             </Alert>
           )}
-          {inquiry.data && management.data && (
+          {inquiry.data && management.data && !inquiry.isError && !management.isError && (
             <>
               {management.data.isLocked && (
                 <Alert severity="info">
@@ -100,16 +111,38 @@ export default function AdmissionInquiryEditPage() {
               >
                 <InquiryOverviewForm
                   inquiry={inquiry.data}
-                  readOnly={management.data.isLocked}
-                  onCancel={() => router.push(returnUrl)}
+                  readOnly={
+                    !canManage || management.data.isLocked || Boolean(inquiry.data.isTransferred)
+                  }
+                  onCancel={returnToList}
                   onDraftChange={setDraft}
                   title="Inquiry details"
                 />
               </Box>
+              <InquiryTimeline inquiryId={id} scope="form" />
             </>
           )}
         </Stack>
       </Paper>
+      <ConfirmDialog
+        open={discard.value}
+        onClose={discard.onFalse}
+        icon="warning"
+        title="Discard changes?"
+        content="Your unsaved inquiry form changes will be lost."
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={() => {
+              discard.onFalse();
+              router.push(returnUrl);
+            }}
+          >
+            Discard
+          </Button>
+        }
+      />
     </Box>
   );
 }

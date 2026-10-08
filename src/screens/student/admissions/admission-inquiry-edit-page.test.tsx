@@ -19,6 +19,13 @@ const { loadOfferingChoices } = vi.hoisted(() => ({
 }));
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+vi.mock('src/components/empty-content', () => ({
+  EmptyContent: ({ title, description }: { title: string; description: string }) => (
+    <div>
+      {title} {description}
+    </div>
+  ),
+}));
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'inquiry-1' }),
@@ -28,6 +35,7 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
   useGetAdmissionInquiryQuery: vi.fn(),
+  useGetAdmissionInquiryTimelineQuery: () => ({ data: [], isLoading: false, isError: false }),
   useUpdateAdmissionInquiryMutation: vi.fn(),
   useGetAdmissionInquiryCaptureContextQuery: vi.fn(),
   useGetAdmissionInquiryCaptureCatalogueQuery: vi.fn(),
@@ -38,7 +46,10 @@ vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => (
 
 vi.mock('react-redux', () => ({
   useSelector: (select: (state: unknown) => unknown) =>
-    select({ globalState: { currentYear: { id: 'year-1' } } }),
+    select({
+      globalState: { currentYear: { id: 'year-1' } },
+      auth: { permissions: [{ name: 'Students.Admissions.Inquiries.Add', isGranted: true }] },
+    }),
 }));
 vi.mock('src/redux/class/classApi', () => ({
   useGetClassByMediumQuery: () => ({
@@ -285,6 +296,9 @@ describe('Edit inquiry page', () => {
 
     expect(screen.getByRole('heading', { name: 'Edit inquiry' })).toBeInTheDocument();
     expect(screen.getByText('Original inquiry · Version 1')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Form history' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Status' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule follow-up' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
     fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), {
       target: { value: 'Riya S' },
@@ -308,17 +322,34 @@ describe('Edit inquiry page', () => {
 
   it('preserves the draft when a status save refreshes the concurrency stamp', async () => {
     const { rerender } = render(<AdmissionInquiryEditPage />);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), { target: { value: 'Riya Updated' } });
-    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({ data: { ...inquiry, status: 2, concurrencyStamp: 'status-stamp' }, isLoading: false, isError: false } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), {
+      target: { value: 'Riya Updated' },
+    });
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: { ...inquiry, status: 2, concurrencyStamp: 'status-stamp' },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
     rerender(<AdmissionInquiryEditPage />);
     expect(screen.getByRole('textbox', { name: 'Applicant name' })).toHaveValue('Riya Updated');
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
-    await waitFor(() => expect(update).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ applicantName: 'Riya Updated', concurrencyStamp: 'status-stamp' }) })));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            applicantName: 'Riya Updated',
+            concurrencyStamp: 'status-stamp',
+          }),
+        })
+      )
+    );
   });
 
   it('does not replace an unavailable original form with the latest configured version', () => {
     vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
-      data: { ...inquiry, formDefinition: null }, isLoading: false, isError: false,
+      data: { ...inquiry, formDefinition: null },
+      isLoading: false,
+      isError: false,
     } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
     render(<AdmissionInquiryEditPage />);
     expect(screen.getByText(/original attached inquiry form is unavailable/i)).toBeInTheDocument();

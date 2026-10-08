@@ -48,7 +48,7 @@ export function InquiryOverviewForm({
   readOnly,
   onCancel,
   onDraftChange,
-  title = 'Overview',
+  title = 'Inquiry form',
 }: {
   inquiry: AdmissionInquiry;
   readOnly: boolean;
@@ -144,8 +144,9 @@ export function InquiryOverviewForm({
     skip: !formik.values.offeringId || readOnly,
     refetchOnMountOrArgChange: true,
   });
-  const form =
-    !offeringChanged ? current.formDefinition ?? undefined : runtime.currentData?.form ?? undefined;
+  const form = !offeringChanged
+    ? (current.formDefinition ?? undefined)
+    : (runtime.currentData?.form ?? undefined);
   const formId = form?.id;
   const sections = getAdmissionInquirySections(form);
   const fields = getAdmissionInquiryFields(form);
@@ -201,11 +202,16 @@ export function InquiryOverviewForm({
       return;
     }
     // A status or follow-up save updates concurrency without discarding this form draft.
-    const unchangedDetails = JSON.stringify(current.formValues) === JSON.stringify(inquiry.formValues) &&
-      current.admissionOfferingId === inquiry.admissionOfferingId && current.applicantName === inquiry.applicantName &&
-      current.normalizedPhone === inquiry.normalizedPhone && current.email === inquiry.email &&
-      current.source === inquiry.source && current.sourceDetail === inquiry.sourceDetail;
-    if (unchangedDetails) setCurrent((previous) => ({ ...previous, concurrencyStamp: inquiry.concurrencyStamp }));
+    const unchangedDetails =
+      JSON.stringify(current.formValues) === JSON.stringify(inquiry.formValues) &&
+      current.admissionOfferingId === inquiry.admissionOfferingId &&
+      current.applicantName === inquiry.applicantName &&
+      current.normalizedPhone === inquiry.normalizedPhone &&
+      current.email === inquiry.email &&
+      current.source === inquiry.source &&
+      current.sourceDetail === inquiry.sourceDetail;
+    if (unchangedDetails)
+      setCurrent((previous) => ({ ...previous, concurrencyStamp: inquiry.concurrencyStamp }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inquiry]);
   useEffect(() => {
@@ -245,7 +251,8 @@ export function InquiryOverviewForm({
       ...formik.values,
       boardId: formik.values.boardId || selectedOffering?.boardId || current.boardId || '',
       mediumId: formik.values.mediumId || selectedOffering?.mediumId || current.mediumId || '',
-      standardId: formik.values.standardId || selectedOffering?.standardId || current.standardId || '',
+      standardId:
+        formik.values.standardId || selectedOffering?.standardId || current.standardId || '',
       fields: next,
     };
     if (JSON.stringify(hydrated) !== JSON.stringify(formik.values))
@@ -418,7 +425,7 @@ export function InquiryOverviewForm({
                     >
                       <AdmissionRuntimeField
                         onBusyChange={(busy) => onPhotoReading(field.code, busy)}
-                  field={field}
+                        field={field}
                         value={formik.values.fields[field.code] ?? ''}
                         disabled={locked || field.readOnly}
                         error={
@@ -489,10 +496,7 @@ export function InquiryOverviewForm({
               size="small"
               variant="outlined"
               disabled={updateState.isLoading}
-              onClick={() => {
-                if (formik.dirty && !window.confirm('Discard unsaved inquiry changes?')) return;
-                onCancel();
-              }}
+              onClick={onCancel}
             >
               Cancel
             </Button>

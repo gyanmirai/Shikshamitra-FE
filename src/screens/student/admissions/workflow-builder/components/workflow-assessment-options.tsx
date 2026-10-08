@@ -1,6 +1,10 @@
 import type { AdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
-import { Grid, Stack, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomAccordion from 'src/components/custom-accordian';
+import { Grid, Stack, Switch, TextField, FormControlLabel } from '@mui/material';
+
+import { WorkflowSettingLabel } from './workflow-setting-label';
 
 type Props = {
   policy: AdmissionAssessmentPolicy;
@@ -9,6 +13,9 @@ type Props = {
 };
 
 export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props) {
+  const attempts = useBoolean();
+  const invalidAttempts =
+    !Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1 || policy.maxAttempts > 10;
   const options = [
     {
       field: 'attendanceRequired',
@@ -32,19 +39,17 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
       {options.map(({ field, label, help }) => (
         <Stack key={field}>
           <FormControlLabel
-            label={label}
+            label={<WorkflowSettingLabel label={label} help={help} />}
             control={
               <Switch
                 size="small"
+                slotProps={{ input: { 'aria-label': label } }}
                 checked={policy[field]}
                 disabled={readOnly}
                 onChange={(_, value) => onChange({ [field]: value })}
               />
             }
           />
-          <Typography variant="caption" color="text.secondary">
-            {help}
-          </Typography>
         </Stack>
       ))}
       {policy.scoringEnabled && (
@@ -72,34 +77,68 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
               fullWidth
               size="small"
               type="number"
-              label="Passing marks *"
+              label={
+                <WorkflowSettingLabel
+                  label="Passing marks *"
+                  help="An equal or higher score passes."
+                />
+              }
               disabled={readOnly}
               value={policy.passingMarks}
               onChange={(event) => onChange({ passingMarks: Number(event.target.value) })}
-              slotProps={{ htmlInput: { min: 0, max: policy.totalMarks, step: 'any' } }}
+              slotProps={{
+                htmlInput: {
+                  min: 0,
+                  max: policy.totalMarks,
+                  step: 'any',
+                  'aria-label': 'Passing marks *',
+                },
+              }}
               error={policy.passingMarks < 0 || policy.passingMarks > policy.totalMarks}
               helperText={
                 policy.passingMarks < 0 || policy.passingMarks > policy.totalMarks
                   ? 'Use a value between 0 and total marks.'
-                  : 'An equal or higher score passes.'
+                  : undefined
               }
             />
           </Grid>
         </Grid>
       )}
-      <TextField
-        fullWidth
-        size="small"
-        type="number"
-        label="Maximum attempts *"
-        disabled={readOnly}
-        value={policy.maxAttempts}
-        onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
-        slotProps={{ htmlInput: { min: 1, max: 10, step: 1 } }}
-        error={
-          !Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1 || policy.maxAttempts > 10
+      <CustomAccordion
+        title="Attempt limits"
+        expanded={attempts.value || invalidAttempts}
+        onChange={attempts.onToggle}
+        content={
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label={
+              <WorkflowSettingLabel
+                label="Maximum attempts *"
+                help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
+              />
+            }
+            disabled={readOnly}
+            value={policy.maxAttempts}
+            onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
+            slotProps={{
+              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
+            }}
+            error={
+              !Number.isInteger(policy.maxAttempts) ||
+              policy.maxAttempts < 1 ||
+              policy.maxAttempts > 10
+            }
+            helperText={
+              !Number.isInteger(policy.maxAttempts) ||
+              policy.maxAttempts < 1 ||
+              policy.maxAttempts > 10
+                ? 'Enter a whole number from 1 to 10.'
+                : undefined
+            }
+          />
         }
-        helperText="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
       />
     </Stack>
   );

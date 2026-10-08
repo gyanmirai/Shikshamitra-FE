@@ -11,7 +11,8 @@ audience: humans-and-agents
 # Understand Student frontend integration
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
-Student Enrollment uses Admission Year Setup and a six-step Applicant Stepper, with Pipeline as the source of truth before activation.
+Admissions starts from qualified inquiries, and Pipeline projects active application progress from the existing workflow.
+Finalization creates an Onboarding case; Onboarding owns enrollment activation.
 Student Onboarding uses a persisted Student Setup worklist with readiness, placement, identifiers, Finance and portal-account actions. Settings are consolidated into Readiness & Access and Numbering & Placement; obsolete saved-default menus and production workflow preview are removed. The Student header selects only the academic year. Rule editors use dependent Board/Medium selectors and checkbox School Level/Standard selections from the school's configured hierarchy; DDVS currently enables Secondary and Higher Secondary. The backend resolves scoped configuration and enforces activation, numbering, permissions, capacity and completion. Activation creates enrollment and enters Provisioning; completion requires Finance assignment, confirmed first-installment settlement, required account links, and recorded service consent when an existing policy requires it. See [workflows.md](./workflows.md) and [testing.md](./testing.md).
 
 ## Read order

@@ -14,6 +14,8 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 
 ## Admission Cycle client
 
+Offering writes retain the existing RTK Query client. The backend resolves the Application form from the selected workflow; new UI writes omit a separate Application form choice. Inquiry form selection remains explicit. Bulk input no longer needs a shared school-level ID: each selected class supplies its own academic path at the backend. Existing read DTOs retain historical track, entry-mode and form metadata.
+
 `src/redux/student/admissions/admission-cycles-api.ts` owns the Admission Cycle RTK Query contract.
 It provides server-paged list/detail reads, impact/history reads, Draft create/edit, readiness validation, publish, close, reopen, archive, unused-Draft delete, clone, window revision, and schedule commands.
 Every mutation invalidates `studentAdmissionsCrmType.admissionCycle`; impact/history reads are loaded only when their dialogs open.
@@ -53,6 +55,7 @@ Document requirements retain selected class IDs in `standardIds`; omitted/null m
 Document action guards match the canonical backend bundles: `Students.Admissions.Documents.View` permits viewing/downloading, `.Add` permits upload/original/review actions, and `.Delete` permits waiver. Server capabilities still restrict each action by stage and evidence state; retired granular permission names are not accepted as grants.
 Both clients use the existing global RTK Query API and refresh assessment/application data after mutations; workflow or offering changes also invalidate assessment scope choices.
 Server-provided assessment capabilities determine available applicant actions, while the existing workflow-advance client remains responsible for progression.
+The paginated applicant workbench uses `admission-assessment-roster-api.ts` and the existing authenticated API. Its counts come from the same offering/stage/session/search context before the queue filter; export is explicitly limited to the current page. Assessment actions invalidate roster, application, session capacity and Applicant 360 caches. Workbench polling is bounded to one minute while focused, with explicit applicant refresh. Invalid session filters require explicit clearing rather than silently showing all applicants. Active session rosters follow the latest attempt; completed stage history can show the selected earlier session. Continue refetches application, workflow and assessment evidence before sending the current stamp, expected stage and idempotency key.
 
 Eligibility summaries, explicit evaluation, exception requests and review, and lazy evaluation history use `admission-eligibility-api.ts` with `admission-eligibility-types.ts`.
 The optional `eligibilityEnabled` workflow-stage flag mounts this runtime only when the backend enables it.
@@ -66,12 +69,20 @@ The existing application decision client continues to own approval, rejection, w
 
 Historical Inquiry stage configuration uses `admission-inquiry-policy.ts`; Inquiry is no longer selectable in new Admission Stage workflows, while disabled or missing settings preserve the Basic inquiry process.
 `admission-inquiry-settings-api.ts` loads offering-scoped active counsellors for workflow setup.
-`admission-inquiry-management-api.ts` reads the safe management summary and records structured contacts, follow-ups, qualification with closure codes, and reopen actions.
+`admission-inquiry-management-api.ts` reads the safe management summary and records structured contacts, follow-ups, qualification with closure codes, and reopen actions. The compact Inquiry Follow-up dialog uses one atomic `follow-up-notes` command with both management and inquiry concurrency stamps to save the note, business status, and replacement reminder; Not interested clears open reminders. Its history cards use the returned note snapshots. Edit uses the original configured form and form activity history independently.
 Successful management commands invalidate the inquiry tag so the list and open drawer reload authoritative state.
 Runtime counsellor search and assignment stay in `admission-inquiries-api.ts`; the detail workspace uses server `canReassign`, an offering-scoped eligible pool, and a required transfer reason. Lists display returned counsellor names without requesting the manager-only assignment endpoint. Counsellor and offering column-filter choices come from the loaded page; academic filters and global search still run on the server.
 The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups. The backend filters these queues before paging and returns the row's cycle, offering, counsellor, management readiness, deadlines, and next follow-up in the list response.
-Inquiries and Pipeline reuse the server-paged list with `isTransferred: false` and `isTransferred: true` respectively. Pipeline includes post-application records and opens the returned `applicationId`. Inquiry status is projected to Pending, Interested, or Not interested without removing legacy status/history. The Update client saves optional status/reason, academic context, and original raw form values with concurrency.
-The Inquiry list and Pipeline also reuse `createAdmissionInquiryCommunication`. The compose dialog permits WhatsApp, SMS, and Email, supplies language-aware acknowledgement/follow-up/application templates, requires a subject for Email, hides immediate delivery without `Communication.Campaigns.Send`, and is visible only when the user has both Inquiry Manage and `Communication.Campaigns.Add`. Inquiry creation can invoke the same contract for an automatic acknowledgement; the backend remains authoritative for approval, providers, consent, delivery tracking, retries, and usage.
+Inquiries uses the server-paged inquiry list with `isTransferred: false`.
+Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
+Both application and inquiry tags refresh the Pipeline projection after mutations; returning from detail refetches the worklist.
+The table exporter explicitly labels its loaded-row scope as **Export current page**.
+Inquiry status remains projected to Pending, Interested, or Not interested without removing legacy status/history.
+The Update client saves optional status/reason, academic context, and original raw form values with concurrency.
+Application follow-ups use `src/redux/student/admissions/admission-application-follow-ups-api.ts` and the shared inquiry follow-up panel, with backend capabilities controlling writes.
+The Inquiry list reuses `createAdmissionInquiryCommunication`.
+The compose dialog permits WhatsApp, SMS, and Email, supplies language-aware acknowledgement/follow-up/application templates, requires a subject for Email, hides immediate delivery without `Communication.Campaigns.Send`, and is visible only when the user has both Inquiry Manage and `Communication.Campaigns.Add`.
+Inquiry creation can invoke the same contract for an automatic acknowledgement; the backend remains authoritative for approval, providers, consent, delivery tracking, retries, and usage.
 
 Managed Form stages use `admission-form-stage-api.ts` for the scoped stage summary, section verification, verification revocation, and correction requests. The client keeps application, stage, and section identifiers in the route and sends only command data plus the application concurrency stamp. Both mutations invalidate the stage-specific and application tags so blockers, attempts, form state, and workflow controls refresh together. `admission-form-stage-policy.ts` owns the versioned editor shape and preserves unrelated stage configuration. The stage editor uses the published-form list for selection, then reads the selected form detail when staff verification is enabled because list records contain section counts but omit section details.
 

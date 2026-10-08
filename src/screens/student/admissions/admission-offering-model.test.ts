@@ -21,12 +21,35 @@ describe('Admission Offering form rules', () => {
     expect(bulkOfferingInitialValues.isActive).toBe(false);
   });
 
-  it('marks an offering incomplete until all published configuration references are selected', () => {
+  it('normalizes unused legacy offerings while preserving used admission paths', () => {
+    const legacy = {
+      boardId: 'board',
+      mediumId: 'medium',
+      stageId: 'stage',
+      standardId: 'standard',
+      code: 'LEGACY',
+      track: 1 as const,
+      entryMode: 1 as const,
+      useCycleDates: true,
+      isActive: false,
+    };
+    expect(getOfferingInitialValues({ ...legacy, applicationCount: 0 })).toMatchObject({
+      track: 0,
+      entryMode: 0,
+    });
+    expect(getOfferingInitialValues({ ...legacy, applicationCount: 1 })).toMatchObject({
+      track: 1,
+      entryMode: 1,
+    });
+    expect(getOfferingInitialValues(legacy)).toMatchObject({ track: 1, entryMode: 1 });
+  });
+
+  it('requires inquiry and setup while application form is derived by the server', () => {
     expect(
       isAdmissionOfferingConfigurationIncomplete({
         entryMode: 0,
         workflowDefinitionId: 'workflow-1',
-        inquiryFormDefinitionId: 'inquiry-1',
+        inquiryFormDefinitionId: null,
         applicationFormDefinitionId: null,
         inquiryIntakeProfileId: 'inquiry-profile-1',
         counsellorAssignmentProfileId: 'assignment-profile-1',
@@ -157,9 +180,7 @@ describe('Admission Offering form rules', () => {
       ...bulkOfferingInitialValues,
       boardId: 'board',
       mediumId: 'medium',
-      stageId: 'stage',
       standardIds: ['standard'],
-      codePrefix: 'ADM',
       isActive: false,
     };
 

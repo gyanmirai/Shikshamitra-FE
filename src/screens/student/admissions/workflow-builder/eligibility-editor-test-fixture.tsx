@@ -13,9 +13,15 @@ import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
 
-['mdi:close', 'mdi:shield-check-outline', 'basil:cross-solid'].forEach((name) => addIcon(name, {
-  body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16,
-}));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
+['mdi:close', 'mdi:shield-check-outline', 'basil:cross-solid'].forEach((name) =>
+  addIcon(name, {
+    body: '<path d="M0 0h16v16H0z"/>',
+    width: 16,
+    height: 16,
+  })
+);
 
 export const eligibilityEditorStage: AdmissionWorkflowStage = {
   id: 'eligibility-stage',
@@ -86,7 +92,7 @@ export const eligibilityFormDetail: AdmissionForm = {
     },
   ],
 };
-export function setupEligibilityEditor(
+export async function setupEligibilityEditor(
   configurationJson?: string,
   readOnly = false,
   available = true
@@ -113,7 +119,8 @@ export function setupEligibilityEditor(
       onClose={onClose}
     />
   );
-  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
   return { onSave, onClose };
 }
 export async function chooseEligibilityOption(

@@ -47,7 +47,12 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
    * - Formik compares initial values on every render when enableReinitialize is enabled.
    * - The object only changes when the detailed offering being edited changes.
    */
-  const initialValues = useMemo(() => getOfferingInitialValues(offering), [offering]);
+  const initialValues = useMemo(() => {
+    const values = getOfferingInitialValues(offering);
+    return mode === 'clone'
+      ? { ...values, track: 0 as const, entryMode: 0 as const, applicationFormDefinitionId: null }
+      : values;
+  }, [mode, offering]);
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,

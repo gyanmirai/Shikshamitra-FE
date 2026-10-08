@@ -71,7 +71,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   },
   {
     id: 'simple',
-    name: 'Simple direct admission',
+    name: 'Simple admission',
 
 
     icon: 'mdi:lightning-bolt-outline',

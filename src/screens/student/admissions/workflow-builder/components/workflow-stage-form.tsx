@@ -36,11 +36,7 @@ export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }:
         error={hasError}
         helperText={
           (hasError && formik.errors.configurationJson) ||
-          (forms.length === 0
-            ? 'Publish a form before attaching it to this stage.'
-            : formDefinitionId
-              ? 'The selected version is frozen with the workflow.'
-              : undefined)
+          (forms.length === 0 ? 'Publish a form before attaching it to this stage.' : undefined)
         }
       >
         {forms.map((form) => (

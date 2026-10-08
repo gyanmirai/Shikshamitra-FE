@@ -39,22 +39,17 @@ export function FormStageVerificationSettings({
   return (
     <Stack spacing={1.25}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-          <Typography variant="body2">
-            Require staff verification before completing this stage
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
-          >
-            Staff must verify selected sections before this stage is marked complete.
-          </Typography>
-        </Stack>
+        <Typography variant="body2" sx={{ minWidth: 0 }}>
+          Require staff verification
+        </Typography>
         <Switch
           size="small"
           slotProps={{
-            input: { 'aria-label': 'Require staff verification before completing this stage' },
+            input: {
+              'aria-label': 'Require staff verification before completing this stage',
+              'aria-description':
+                'Staff must verify selected sections before completing this stage.',
+            },
           }}
           checked={policy.requireSectionVerification}
           disabled={disabled}
@@ -86,7 +81,9 @@ export function FormStageVerificationSettings({
           ) : !form ? (
             <Alert severity="warning">Select a published form first.</Alert>
           ) : form.sections.length === 0 ? (
-            <Alert severity="warning">This published form has no sections available to verify.</Alert>
+            <Alert severity="warning">
+              This published form has no sections available to verify.
+            </Alert>
           ) : (
             <FormGroup>
               {form.sections.map((section) => (

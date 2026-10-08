@@ -121,12 +121,12 @@ function AdmissionOfferingLegacyDialog({
           <Typography id="admission-offering-drawer-title" variant="h6" component="div">
             <AdmissionDialogTitle
               title={mode === 'clone' ? 'Clone Admission Offering' : 'Add Admission Offering'}
-              helpText="An offering connects a class and admission track to its entry mode, workflow, and forms."
+              helpText="An offering connects a class to its admission workflow and intake setup."
               helpLabel="Admission offering information"
             />
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure the class, admission track, entry mode, dates, workflow, and published forms.
+            Configure the class, dates, published workflow, and intake setup.
           </Typography>
         </Box>
         <IconButton
@@ -216,7 +216,6 @@ function AdmissionOfferingLegacyDialog({
               formik={form.formik}
               fetchWorkflows={form.fetchWorkflows}
               fetchInquiryForms={form.fetchInquiryForms}
-              fetchRegistrationForms={form.fetchRegistrationForms}
             />
           </>
         )}
