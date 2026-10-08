@@ -85,7 +85,7 @@ export default function StudentSetupKpiStrip({
   return (
     <Box
       component="section"
-      aria-label="Student Onboarding summary"
+      aria-label="Onboarding summary"
       sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', pb: 0.5, flexShrink: 0 }}
     >
       {cards.map((card) => {

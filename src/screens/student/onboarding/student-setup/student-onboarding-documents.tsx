@@ -10,6 +10,7 @@ import {
   useUploadStudentOnboardingDocumentMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import { StudentSetupLoadingRows } from './student-setup-loading';
 import StudentOnboardingDocumentOverrideDialog from './student-onboarding-document-override-dialog';
 
 type StudentOnboardingDocumentsProps = {
@@ -59,6 +60,10 @@ export default function StudentOnboardingDocuments({
         Onboarding documents could not be loaded.
       </Alert>
     );
+  }
+
+  if (documentsQuery.isFetching && !documentsQuery.data) {
+    return <StudentSetupLoadingRows label="Loading document requirements" count={2} />;
   }
 
   return (
@@ -125,9 +130,7 @@ export default function StudentOnboardingDocuments({
         })
       ) : (
         <Typography variant="body2" color="text.secondary">
-          {documentsQuery.isFetching
-            ? 'Loading document requirements...'
-            : 'No onboarding document requirements are configured.'}
+          No onboarding document requirements are configured.
         </Typography>
       )}
 

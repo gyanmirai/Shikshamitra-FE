@@ -101,9 +101,10 @@ describe('Onboarding credential email recovery', () => {
   it('keeps loading and failed reads visible with a retry', () => {
     mocks.emails = { isFetching: true, data: undefined };
     const { rerender } = render(<StudentOnboardingCredentialEmails caseId="case-1" />);
-    expect(
-      screen.getByRole('progressbar', { name: 'Loading credential email status' })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Loading credential email status' }))
+      .toBeInTheDocument();
+    expect(screen.queryByText('No credential email requests are available for this case.'))
+      .not.toBeInTheDocument();
     mocks.emails = { isError: true, refetch: vi.fn() };
     rerender(<StudentOnboardingCredentialEmails caseId="case-1" />);
     fireEvent.click(screen.getByRole('button', { name: 'Retry email status' }));
@@ -112,6 +113,15 @@ describe('Onboarding credential email recovery', () => {
 });
 
 describe('Authorized document overrides', () => {
+  it('keeps the document section shaped while requirements load', () => {
+    mocks.documents = { isFetching: true, data: undefined };
+    render(<StudentOnboardingDocuments caseId="case-1" enabled canManage />);
+    expect(screen.getByRole('status', { name: 'Loading document requirements' }))
+      .toBeInTheDocument();
+    expect(screen.queryByText('No onboarding document requirements are configured.'))
+      .not.toBeInTheDocument();
+  });
+
   it('does not count an upload as verified and requires an audit note for individual overrides', async () => {
     mocks.override.mockReturnValue({ unwrap: () => Promise.resolve({}) });
     render(<StudentOnboardingDocuments caseId="case-1" enabled canManage />);

@@ -271,7 +271,7 @@ const studentModule = (isDdvs: boolean) => ({
           ],
         },
         {
-          title: 'Student Onboarding',
+          title: 'Onboarding',
           path: studentPaths.onboarding.root,
           _action: 'student-onboarding',
           permissionName: studentPermissions.onboarding.root,

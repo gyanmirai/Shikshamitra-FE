@@ -86,7 +86,7 @@ describe('Onboarding uses unchanged Finance navigation', () => {
   it('explains why a viewer cannot recheck the completion gate', () => {
     render(<StudentOnboardingFees caseId="case-1" canManage={false} />);
     expect(screen.getByRole('button', { name: 'Recheck payment and onboarding' })).toBeDisabled();
-    expect(screen.getByText(/authorized Student Onboarding user/)).toBeInTheDocument();
+    expect(screen.getByText(/authorized onboarding user/)).toBeInTheDocument();
   });
 
   it('offers a retry when fee readiness cannot be loaded', () => {

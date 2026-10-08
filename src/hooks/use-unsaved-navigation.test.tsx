@@ -1,5 +1,5 @@
 import { vi, it, expect, describe, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { act, render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { useUnsavedNavigation } from './use-unsaved-navigation';
 
@@ -38,6 +38,33 @@ afterEach(() => {
 });
 
 describe('shared unsaved navigation', () => {
+  it('guards browser history traversal until unsaved changes are discarded', () => {
+    const navigation = new EventTarget() as EventTarget & {
+      traverseTo: ReturnType<typeof vi.fn>;
+    };
+    navigation.traverseTo = vi.fn().mockReturnValue({ finished: Promise.resolve() });
+    vi.stubGlobal('navigation', navigation);
+    render(<Fixture push={vi.fn()} />);
+
+    const goBack = () => {
+      const event = new Event('navigate', { cancelable: true });
+      Object.assign(event, {
+        navigationType: 'traverse',
+        destination: { key: 'previous-entry', url: `${window.location.origin}/previous` },
+      });
+      act(() => { navigation.dispatchEvent(event); });
+      return event;
+    };
+
+    expect(goBack().defaultPrevented).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(navigation.traverseTo).not.toHaveBeenCalled();
+
+    expect(goBack().defaultPrevented).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(navigation.traverseTo).toHaveBeenCalledExactlyOnceWith('previous-entry');
+  });
+
   it('guards same-origin application links and navigates only after confirmation', () => {
     const push = vi.fn();
     render(<Fixture push={push} />);

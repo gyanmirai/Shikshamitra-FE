@@ -6,6 +6,16 @@ export type StudentOnboardingServiceHandoffStatus = 0 | 1 | 2 | 3 | 4;
 export type StudentOnboardingListInput = {
   search?: string;
   status?: StudentOnboardingStatus;
+  studentNameFilter?: string;
+  studentNameOperator?: 'contains' | 'equals' | 'startsWith' | 'endsWith';
+  ownerNameFilter?: string;
+  ownerNameOperator?: 'contains' | 'equals' | 'startsWith' | 'endsWith';
+  rollNumberFilter?: number;
+  rollNumberMin?: number;
+  rollNumberMax?: number;
+  rollNumberOperator?: 'equals' | 'greaterThan' | 'lessThan' | 'between';
+  pendingTask?: 'gr-number' | 'roll-number' | 'division';
+  placementDivisionId?: string;
   academicYearId?: string;
   boardId?: string;
   mediumId?: string;

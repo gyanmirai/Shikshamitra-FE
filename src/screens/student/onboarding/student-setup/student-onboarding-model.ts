@@ -228,7 +228,7 @@ const buildCompatibilityChecks = (student: StudentLookupItem): OnboardingCheckli
         : 'GR number is pending.',
     status: student.grNo !== undefined && student.grNo !== null ? 'passed' : 'pending',
     blocking: true,
-    owner: 'Student Onboarding',
+    owner: 'Onboarding',
   },
   {
     key: 'roll-number',
@@ -239,7 +239,7 @@ const buildCompatibilityChecks = (student: StudentLookupItem): OnboardingCheckli
         : 'Roll number is pending.',
     status: student.rollNo !== undefined && student.rollNo !== null ? 'passed' : 'pending',
     blocking: true,
-    owner: 'Student Onboarding',
+    owner: 'Onboarding',
   },
   {
     key: 'documents',
@@ -384,7 +384,7 @@ export const mapOnboardingCaseToItem = (
           : systemStepFallbackDetails[step.key] || 'No additional detail available.'),
       status: onboardingStepStatus[step.status],
       blocking: step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
-      owner: onboardingCase.assignedToUserName || 'Student Onboarding',
+      owner: onboardingCase.assignedToUserName || 'Onboarding',
     })),
     activity: onboardingCase.events.map((event) => ({
       id: event.id,

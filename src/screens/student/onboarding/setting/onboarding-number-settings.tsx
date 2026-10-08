@@ -2,18 +2,21 @@
 
 import type { ReactNode } from 'react';
 import type { TooltipProps } from '@mui/material';
-import type { IData } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
-import { useState, useCallback } from 'react';
-import { DatePicker } from '@mui/x-date-pickers';
+import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
@@ -32,6 +35,7 @@ import {
   TextField,
   IconButton,
   Typography,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -61,8 +65,8 @@ import type {
 
 
 const rollNumberScopeOptions = [
-  { value: 'class-division', label: 'Class and Division' },
-  { value: 'class', label: 'Entire Class' },
+  { value: 'class-division', label: 'Class and division' },
+  { value: 'class', label: 'Entire class' },
 ];
 
 
@@ -70,6 +74,7 @@ export function SettingsDrawer({
   open,
   title,
   description,
+  descriptionDisplay = 'inline',
   icon,
   statusLabel,
   footerNote,
@@ -77,37 +82,43 @@ export function SettingsDrawer({
   children,
   onSubmit,
   submitLabel = 'Apply configuration',
-  submitIcon = 'mdi:content-save-outline',
+  submitIcon = GlobalIcons.submit,
   submitDisabled = false,
   onReset,
   resetDisabled = false,
   showCancel = true,
+  busy = false,
 }: {
   open: boolean;
   title: string;
   description: string;
+  descriptionDisplay?: 'inline' | 'tooltip';
   icon: string;
   statusLabel: string;
-  footerNote: string;
+  footerNote?: string;
   onClose: () => void;
   children: ReactNode;
   onSubmit: () => void;
   submitLabel?: string;
-  submitIcon?: string;
+  submitIcon?: string | null;
   submitDisabled?: boolean;
   onReset?: () => void;
   resetDisabled?: boolean;
   showCancel?: boolean;
+  busy?: boolean;
 }) {
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={busy ? undefined : onClose}
       transitionDuration={{ enter: 300, exit: 250 }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': title,
         sx: {
-          width: { xs: '100%', sm: 'min(760px, 95vw)' },
+          width: { xs: '100%', sm: descriptionDisplay === 'tooltip' ? 'min(840px, 96vw)' : 'min(760px, 95vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -131,47 +142,82 @@ export function SettingsDrawer({
         }}
       >
         <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              display: 'grid',
-              placeItems: 'center',
-              borderRadius: '50%',
-              bgcolor: 'action.selected',
-              color: 'text.secondary',
-            }}
-          >
-            <Iconify icon={icon} width={22} />
-          </Box>
+          {descriptionDisplay === 'inline' && (
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                flexShrink: 0,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: '50%',
+                bgcolor: 'action.selected',
+                color: 'text.secondary',
+              }}
+            >
+              <Iconify icon={icon} width={22} />
+            </Box>
+          )}
           <Box sx={{ minWidth: 0 }}>
-            <Typography component="h2" variant="subtitle1" fontWeight={700}>
-              {title}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {description}
-            </Typography>
+            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography component="h2" variant="subtitle1" fontWeight={700}>
+                {title}
+              </Typography>
+              {descriptionDisplay === 'tooltip' && (
+                <>
+                  {statusLabel && <Label color="default" variant="outlined">{statusLabel}</Label>}
+                  <CustomTooltip arrow placement="bottom" title={description}>
+                    <IconButton size="small" aria-label={`${title} information`}>
+                      <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+                    </IconButton>
+                  </CustomTooltip>
+                </>
+              )}
+            </Stack>
+            {descriptionDisplay === 'inline' && (
+              <Typography variant="caption" color="text.secondary">{description}</Typography>
+            )}
           </Box>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
-          <Label
-            color="default"
-            variant="outlined"
-            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
-          >
-            {statusLabel}
-          </Label>
+          {descriptionDisplay === 'inline' && (
+            <Label
+              color="default"
+              variant="outlined"
+              sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+            >
+              {statusLabel}
+            </Label>
+          )}
           <IconButton
             aria-label={`Close ${title}`}
             onClick={onClose}
+            disabled={busy}
             sx={{ minWidth: 44, minHeight: 44 }}
           >
             <Iconify icon="mdi:close" width={20} />
           </IconButton>
         </Stack>
       </Stack>
-      <Scrollbar sx={{ flex: 1, minHeight: 0, p: { xs: 1.5, sm: 2 } }}>{children}</Scrollbar>
+      <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        <Scrollbar sx={{ height: 1, p: { xs: 1.5, sm: 2 }, bgcolor: descriptionDisplay === 'tooltip' ? 'background.neutral' : 'background.paper' }}>
+          <Box component="fieldset" disabled={busy} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
+            {children}
+          </Box>
+        </Scrollbar>
+        {busy && (
+          <Stack
+            role="status"
+            alignItems="center"
+            justifyContent="center"
+            spacing={1}
+            sx={{ position: 'absolute', inset: 0, bgcolor: 'background.paper', opacity: 0.9 }}
+          >
+            <CircularProgress size={26} />
+            <Typography variant="body2">Saving configuration…</Typography>
+          </Stack>
+        )}
+      </Box>
       <Divider />
       <Stack
         component="footer"
@@ -179,39 +225,46 @@ export function SettingsDrawer({
         alignItems={{ sm: 'center' }}
         justifyContent="space-between"
         gap={1}
-        sx={{ px: 2, py: 1.25, flexShrink: 0, bgcolor: 'background.paper' }}
+        sx={{ px: 2, py: 1.75, flexShrink: 0, bgcolor: 'background.paper' }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          {footerNote}
-        </Typography>
-        <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0 }}>
+        {footerNote ? (
+          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+            {footerNote}
+          </Typography>
+        ) : <Box sx={{ flex: 1 }} />}
+        <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ flexShrink: 0 }}>
           {onReset ? (
             <Button
               variant="outlined"
               size="small"
-              startIcon={<Iconify icon="mdi:refresh" width={16} />}
-              disabled={resetDisabled}
+              startIcon={<Iconify icon={GlobalIcons.resetIcon} width={18} />}
+              disabled={busy || resetDisabled}
               onClick={onReset}
-              sx={{ borderRadius: 1.5 }}
             >
               Reset
             </Button>
           ) : null}
           {showCancel ? (
-            <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: 1.5 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+              disabled={busy}
+              onClick={onClose}
+            >
               Cancel
             </Button>
           ) : null}
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
-            startIcon={<Iconify icon={submitIcon} width={16} />}
-            disabled={submitDisabled}
+            startIcon={submitIcon ? <Iconify icon={submitIcon} width={18} /> : undefined}
+            loading={busy}
+            disabled={busy || submitDisabled}
             onClick={onSubmit}
-            sx={{ borderRadius: 1.5 }}
           >
             {submitLabel}
-          </Button>
+          </LoadingButton>
         </Stack>
       </Stack>
     </Drawer>
@@ -222,41 +275,50 @@ export function SettingsSectionCard({
   icon,
   title,
   description,
+  descriptionDisplay = 'inline',
   children,
 }: {
   icon: string;
   title: string;
   description: string;
+  descriptionDisplay?: 'inline' | 'tooltip';
   children: ReactNode;
 }) {
   return (
-    <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+    <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: descriptionDisplay === 'tooltip' ? 2 : undefined }}>
       <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} alignItems="flex-start">
+        <Stack direction="row" spacing={1} alignItems={descriptionDisplay === 'tooltip' ? 'center' : 'flex-start'}>
           <Box
             sx={{
-              width: 36,
-              height: 36,
+              width: descriptionDisplay === 'tooltip' ? 24 : 36,
+              height: descriptionDisplay === 'tooltip' ? 24 : 36,
               flexShrink: 0,
               display: 'grid',
               placeItems: 'center',
               borderRadius: 1,
-              bgcolor: 'background.neutral',
+              bgcolor: descriptionDisplay === 'tooltip' ? 'transparent' : 'background.neutral',
               color: 'text.secondary',
             }}
           >
             <Iconify icon={icon} width={20} />
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography component="h3" variant="subtitle2">
-              {title}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {description}
-            </Typography>
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography component="h3" variant="subtitle2">{title}</Typography>
+              {descriptionDisplay === 'tooltip' && (
+                <CustomTooltip arrow placement="right" title={description}>
+                  <IconButton size="small" aria-label={`${title} information`}>
+                    <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+                  </IconButton>
+                </CustomTooltip>
+              )}
+            </Stack>
+            {descriptionDisplay === 'inline' && (
+              <Typography variant="caption" color="text.secondary">{description}</Typography>
+            )}
           </Box>
         </Stack>
-        <Stack spacing={1.5}>{children}</Stack>
+        <Stack spacing={descriptionDisplay === 'tooltip' ? 2 : 1.5}>{children}</Stack>
       </Stack>
     </Card>
   );
@@ -352,10 +414,20 @@ const academicApplicabilitySchemaFields = {
 
 const grSchema = Yup.object({
   ...academicApplicabilitySchemaFields,
-  name: Yup.string().trim().required('Enter a series name').max(80),
+  name: Yup.string().trim().required('Series name is required').max(80, 'Series name must be 80 characters or fewer'),
   prefix: Yup.string().max(12, 'Prefix must be 12 characters or fewer'),
-  startingNumber: Yup.number().integer().min(1, 'Starting number must be at least 1').required(),
-  padding: Yup.number().integer().min(1).max(12, 'Padding must be between 1 and 12').required(),
+  startingNumber: Yup.number()
+    .typeError('Starting number must be a whole number')
+    .integer('Starting number must be a whole number')
+    .min(1, 'Starting number must be at least 1')
+    .max(Number.MAX_SAFE_INTEGER, 'Starting number is too large')
+    .required('Starting number is required'),
+  padding: Yup.number()
+    .typeError('Number padding must be a whole number')
+    .integer('Number padding must be a whole number')
+    .min(1, 'Number padding must be between 1 and 12')
+    .max(12, 'Number padding must be between 1 and 12')
+    .required('Number padding is required'),
   suffix: Yup.string().max(12, 'Suffix must be 12 characters or fewer'),
   formatPattern: Yup.string()
     .trim()
@@ -363,12 +435,15 @@ const grSchema = Yup.object({
     .test('sequence-token', 'Use one {SEQUENCE} and only PREFIX, SUFFIX, YEAR or YEAR_SHORT tokens.', (value) =>
       Boolean(value && value.split('{SEQUENCE}').length === 2 && !value.replace(/\{(?:PREFIX|SUFFIX|YEAR|YEAR_SHORT|SEQUENCE)\}/g, '').match(/[{}]/))
     ),
-  sequenceScope: Yup.string().required(),
-  resetPolicy: Yup.string().required(),
+  sequenceScope: Yup.string().oneOf(['school', 'academic-year'], 'Select a sequence scope').required('Select a sequence scope'),
+  resetPolicy: Yup.string().oneOf(['continuous', 'academic-year'], 'Select a reset policy').required('Select a reset policy'),
   maximumNumber: Yup.number()
     .nullable()
     .transform((value, originalValue) => (originalValue === '' ? null : value))
+    .typeError('Maximum number must be a whole number')
     .integer('Maximum number must be a whole number')
+    .min(1, 'Maximum number must be at least 1')
+    .max(Number.MAX_SAFE_INTEGER, 'Maximum number is too large')
     .test(
       'after-start',
       'Maximum number must be greater than or equal to the starting number',
@@ -379,13 +454,18 @@ const grSchema = Yup.object({
   manualEntryAllowed: Yup.boolean().required(),
   requireManualReason: Yup.boolean().required(),
   requireManualApproval: Yup.boolean().required(),
-  effectiveFrom: Yup.string(),
+  effectiveFrom: Yup.string().test('valid-date', 'Enter a valid effective date', (value) =>
+    !value || /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value
+  ),
   isActive: Yup.boolean().required(),
 });
 
 const rollSchema = Yup.object({
   ...academicApplicabilitySchemaFields,
-  numberingScope: Yup.string().required('Select a numbering scope'),
+  numberingScope: Yup.string()
+    .oneOf(['class-division', 'class'], 'Select a numbering scope')
+    .required('Select a numbering scope'),
   assignmentTiming: Yup.string().required('Select assignment timing'),
   midYearHandling: Yup.string().required('Select mid-year handling'),
   arrangeBy: Yup.string().required('Select an arrange-by option'),
@@ -394,12 +474,20 @@ const rollSchema = Yup.object({
   tieBreakerOneDirection: Yup.string(),
   tieBreakerTwo: Yup.string(),
   tieBreakerTwoDirection: Yup.string(),
-  startingNumber: Yup.number().integer().min(1, 'Starting number must be at least 1').required(),
+  startingNumber: Yup.number()
+    .typeError('Starting number must be a whole number')
+    .integer('Starting number must be a whole number')
+    .min(1, 'Starting number must be at least 1')
+    .max(Number.MAX_SAFE_INTEGER, 'Starting number is too large')
+    .required('Starting number is required'),
   preserveExisting: Yup.boolean().required(),
   allowIndividualLocks: Yup.boolean().required(),
   requireChangeReason: Yup.boolean().required(),
   requireApproval: Yup.boolean().required(),
-  effectiveFrom: Yup.string(),
+  effectiveFrom: Yup.string().test('valid-date', 'Enter a valid effective date', (value) =>
+    !value || /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value
+  ),
   isActive: Yup.boolean().required(),
 });
 
@@ -458,7 +546,7 @@ function SettingsPageHeader({ title, description }: { title: string; description
   return (
     <CustomBreadcrumbs
       heading={title}
-      description=" "
+      description={description}
       tooltipProps={
         {
           title: (
@@ -475,33 +563,30 @@ function SettingsPageHeader({ title, description }: { title: string; description
         } as TooltipProps
       }
       links={[
-        { name: 'Student Management', href: studentPaths.dashboard },
-        { name: 'Student Onboarding', href: studentPaths.onboarding.setup },
+        { name: 'Student', href: studentPaths.dashboard },
+        { name: 'Onboarding', href: studentPaths.onboarding.setup },
         { name: 'Settings', href: studentPaths.onboarding.settings },
         { name: title },
       ]}
-      slotProps={{
-        action: {},
-        heading: { overflowWrap: 'normal', textWrap: 'wrap' },
-        moreLink: {},
-        breadcrumbs: { display: { xs: 'none', md: 'block' } },
-      }}
-      sx={{
-        flexDirection: { xs: 'column !important', md: 'row !important' },
-        alignItems: { xs: 'stretch', md: 'center' },
-        gap: { xs: 0, md: 2 },
-        minHeight: { xs: 'auto', md: 56 },
-        py: { xs: 0.75, md: 0 },
-        '& .MuiBreadcrumbs-root': { display: { xs: 'none', md: 'block' } },
-        '& .MuiTypography-h6': { overflowWrap: 'normal !important' },
-      }}
     />
   );
 }
 
-export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
+type CreateActionRef = { current: (() => void) | null };
+
+export function GrNumberSettingsScreen({
+  embedded = false,
+  showWorkspaceBar = true,
+  createActionRef,
+}: {
+  embedded?: boolean;
+  showWorkspaceBar?: boolean;
+  createActionRef?: CreateActionRef;
+}) {
   const filters = useOnboardingAcademicStructure();
   const { settings, scope, saveGrNumberConfiguration } = useOnboardingSettings();
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusedSubmitCount = useRef(0);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
   const { configurations } = settings.grNumber;
@@ -513,6 +598,8 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
       const configuration: GrNumberConfiguration = {
         ...values,
         ...applicability,
+        requireManualReason: values.manualEntryAllowed,
+        requireManualApproval: values.manualEntryAllowed && values.requireManualApproval,
         applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
         id: editingConfigurationId ?? `gr-${Date.now()}`,
       };
@@ -524,15 +611,35 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
         return;
       }
 
-      await saveGrNumberConfiguration(configuration);
-      helpers.resetForm();
-      setEditingConfigurationId(null);
-      setEditorOpen(false);
+      try {
+        await saveGrNumberConfiguration(configuration);
+        helpers.resetForm();
+        setEditingConfigurationId(null);
+        setEditorOpen(false);
+      } catch {
+        helpers.setStatus('The series could not be saved. Review the values and try again.');
+      }
     },
   });
 
+  useEffect(() => {
+    if (!editorOpen || !formik.submitCount || formik.isValid ||
+      focusedSubmitCount.current === formik.submitCount) return;
+    focusedSubmitCount.current = formik.submitCount;
+    formRef.current?.querySelector<HTMLElement>('.Mui-error input, .Mui-error [role="combobox"]')?.focus();
+  }, [editorOpen, formik.submitCount, formik.isValid]);
+
+  const closeEditor = () => {
+    if (formik.isSubmitting) return;
+    if (formik.dirty && !window.confirm('Discard unsaved identifier-series changes?')) return;
+    formik.resetForm();
+    setEditingConfigurationId(null);
+    setEditorOpen(false);
+  };
+
   const openNewConfiguration = () => {
     setEditingConfigurationId(null);
+    focusedSubmitCount.current = 0;
     formik.resetForm({
       values: {
         ...createGrNumberFormValues(),
@@ -542,13 +649,22 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
     setEditorOpen(true);
   };
 
+  useEffect(() => {
+    if (!createActionRef) return undefined;
+    createActionRef.current = openNewConfiguration;
+    return () => { createActionRef.current = null; };
+  });
+
   const openExistingConfiguration = (configuration: GrNumberConfiguration) => {
     const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
     setEditingConfigurationId(configuration.id);
+    focusedSubmitCount.current = 0;
     formik.resetForm({
       values: {
         ...configuration,
         ...applicability,
+        requireManualReason: configuration.manualEntryAllowed,
+        requireManualApproval: configuration.manualEntryAllowed && configuration.requireManualApproval,
         applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
       },
     });
@@ -562,71 +678,107 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
     schoolCode: scope.schoolCode,
   };
 
-  const columns = [
-    { id: 'name', label: 'Series Name', width: 210, minWidth: 180 },
+  const tableData = configurations.map((configuration) => ({
+    ...configuration,
+    academicCoverage: getAcademicApplicabilitySummary(
+      configuration, filters.allBoards, filters.campuses
+    ),
+    sequenceScope: configuration.sequenceScope === 'academic-year' ? 'Academic year' : 'School-wide',
+    preview: formatGrNumber(configuration, 0, formatContext),
+    status: configuration.isActive ? 'Active' : 'Inactive',
+  }));
+  const columns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'Series name',
+      minWidth: 250,
+      filterType: 'string',
+      sticky: true,
+      stickyPosition: 'left',
+      render: (value: string, row: IData) => (
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: '50%',
+              bgcolor: 'info.lighter',
+              color: 'info.dark',
+            }}
+          >
+            <Typography variant="caption" fontWeight={700} aria-hidden>GR</Typography>
+          </Box>
+          <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>{value}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Starts at {row.startingNumber} · {row.padding}-digit sequence
+            </Typography>
+          </Stack>
+        </Stack>
+      ),
+    },
     {
       id: 'academicCoverage',
-      label: 'Academic Path',
-      width: 360,
-      minWidth: 280,
-      isFilter: false,
-      render: (_value: string, row: IData) => {
-        const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses) : '—';
-      },
+      label: 'Academic coverage',
+      minWidth: 300,
+      filterType: 'string',
+      cellSx: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
     },
     {
       id: 'sequenceScope',
-      label: 'Sequence Scope',
-      width: 160,
-      minWidth: 145,
-      render: (value: string) => (value === 'academic-year' ? 'Academic year' : 'School-wide'),
+      label: 'Sequence scope',
+      minWidth: 150,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'School-wide', value: 'School-wide' },
+        { label: 'Academic year', value: 'Academic year' },
+      ],
     },
     {
       id: 'preview',
       label: 'Preview',
-      isFilter: false,
-      width: 170,
       minWidth: 150,
-      render: (_value: string, row: IData) => {
-        const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? (
-          <Label color="info">{formatGrNumber(configuration, 0, formatContext)}</Label>
-        ) : null;
-      },
+      filterType: 'string',
+      render: (value: string) => <Label color="info">{value}</Label>,
     },
     {
       id: 'status',
       label: 'Status',
-      isFilter: false,
       width: 100,
-      minWidth: 90,
-      render: (_value: string, row: IData) => (
-        <Label color={row.isActive ? 'success' : 'default'}>
-          {row.isActive ? 'Active' : 'Inactive'}
+      minWidth: 100,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Active', value: 'Active' },
+        { label: 'Inactive', value: 'Inactive' },
+      ],
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value: string) => (
+        <Label color={value === 'Active' ? 'success' : 'default'} variant="soft">
+          {value}
         </Label>
       ),
     },
     {
-      id: 'action',
-      label: 'Action',
+      id: 'actions',
+      label: 'Actions',
       isFilter: false,
-      width: 105,
-      minWidth: 100,
+      isSort: false,
+      align: 'right',
+      width: 80,
+      minWidth: 80,
       sticky: true,
-      stickyPosition: 'right' as const,
+      stickyPosition: 'right',
+      excludeFromExport: true,
       render: (_value: string, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
         return configuration ? (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:pencil-outline" width={17} />}
-            onClick={() => openExistingConfiguration(configuration)}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Edit
-          </Button>
+          <ThreeDotsActions sx={{ justifyContent: 'flex-end' }} showEditIcon showThreeDots={false}
+            editLabel={`Edit ${configuration.name}`}
+            handleEditClick={() => openExistingConfiguration(configuration)} />
         ) : null;
       },
     },
@@ -637,61 +789,65 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
       {!embedded ? (
         <SettingsPageHeader
           title="Identifier Series"
-          description="Define the General Register identifier format used by Student Onboarding."
+          description="Define the General Register identifier format used by Onboarding."
         />
       ) : null}
-      <NumberingWorkspaceBar
-        title="Identifier series"
-        icon="mdi:identifier"
-        summaries={[
-          `${activeConfigurations.length} active series`,
-          `Preview: ${
-            currentPreviewConfiguration
-              ? formatGrNumber(currentPreviewConfiguration, 0, formatContext)
-              : 'Not configured'
-          }`,
-          'Saved scope',
-        ]}
-        buttonLabel="Add configuration"
-        onClick={openNewConfiguration}
-      />
-      <Box sx={{ minHeight: 0, flex: 1, display: 'flex' }}>
+      {showWorkspaceBar && (
+        <NumberingWorkspaceBar
+          title="Identifier series"
+          icon="mdi:identifier"
+          summaries={[
+            `${activeConfigurations.length} active series`,
+            `Preview: ${
+              currentPreviewConfiguration
+                ? formatGrNumber(currentPreviewConfiguration, 0, formatContext)
+                : 'Not configured'
+            }`,
+            'Saved scope',
+          ]}
+          buttonLabel="Add series"
+          onClick={openNewConfiguration}
+        />
+      )}
+      <Box sx={{ minHeight: 0, minWidth: 0, flex: 1, display: 'flex', overflow: 'hidden' }}>
         <CustomizableTable
           tableId="student-onboarding-gr-number-settings"
-          tableTitle="Identifier Series Configurations"
+          tableTitle="Identifier series"
           columns={columns}
-          data={configurations}
-          isFilter={false}
-          wrapperProps={{ sx: { minHeight: { xs: 360, md: 320 }, height: '100%' } }}
-          noDataText={<>No identifier series configurations are available for this scope.</>}
+          data={tableData}
+          isFilter
+          searchFieldProps={{ placeholder: 'Search...' }}
+          wrapperProps={{ sx: { flex: 1, minHeight: { xs: 360, md: 0 }, minWidth: 0 } }}
+          tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+          noDataText={<>No identifier series have been added yet.</>}
         />
       </Box>
       <SettingsDrawer
         open={editorOpen}
-        title={`${editingConfigurationId ? 'Edit' : 'Add'} Identifier Series Configuration`}
+        title={`${editingConfigurationId ? 'Edit' : 'Add'} identifier series`}
         description="Control where the series applies, how it increments, and whether staff can override it."
+        descriptionDisplay="tooltip"
         icon="mdi:identifier"
-        statusLabel={editingConfigurationId ? 'Editing series' : 'New series'}
-        footerNote="Saved for the selected scope and reused by Student Setup after reload."
-        onClose={() => {
-          formik.resetForm();
-          setEditingConfigurationId(null);
-          setEditorOpen(false);
-        }}
+        statusLabel={formik.dirty ? 'Unsaved changes' : ''}
+        onClose={closeEditor}
         onSubmit={() => formik.submitForm()}
+        submitLabel="Submit"
+        busy={formik.isSubmitting}
       >
-        <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
+        <Stack ref={formRef} spacing={2} component="form" onSubmit={formik.handleSubmit}>
 
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
 
           <SettingsSectionCard
             icon="mdi:target-account"
-            title="Series details"
+            title="Series Details"
             description="Give staff a clear series name and choose a Board, Medium, School Levels, and Standards."
+            descriptionDisplay="tooltip"
           >
             <TextField
               fullWidth
               size="small"
+              required
               name="name"
               label="Series name"
               value={formik.values.name}
@@ -707,6 +863,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               campusesLoading={filters.campusesLoading}
               campusesError={filters.campusesError}
               showErrors={formik.submitCount > 0}
+              compactHelp
               onChange={(applicability) => {
                 formik.setValues({ ...formik.values, ...applicability }, false);
                 formik.setStatus(undefined);
@@ -723,10 +880,14 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 select
                 fullWidth
                 size="small"
+                required
                 name="sequenceScope"
                 label="Sequence scope"
                 value={formik.values.sequenceScope}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.sequenceScope && Boolean(formik.errors.sequenceScope)}
+                helperText={formik.touched.sequenceScope ? formik.errors.sequenceScope : undefined}
               >
                 <MenuItem value="school">School-wide</MenuItem>
                 <MenuItem value="academic-year">Academic year</MenuItem>
@@ -735,10 +896,14 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 select
                 fullWidth
                 size="small"
+                required
                 name="resetPolicy"
                 label="Reset policy"
                 value={formik.values.resetPolicy}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.resetPolicy && Boolean(formik.errors.resetPolicy)}
+                helperText={formik.touched.resetPolicy ? formik.errors.resetPolicy : undefined}
               >
                 <MenuItem value="continuous">Never reset</MenuItem>
                 <MenuItem value="academic-year">Reset each academic year</MenuItem>
@@ -748,12 +913,14 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
 
           <SettingsSectionCard
             icon="mdi:form-textbox"
-            title="Number format and range"
-            description="Use tokens to create a readable identifier without maintaining separate formats."
+            title="Number Format And Range"
+            description="Use exactly one {SEQUENCE} token. Available tokens: {PREFIX}, {SUFFIX}, {YEAR}, and {YEAR_SHORT}. Put the school code in Prefix if needed."
+            descriptionDisplay="tooltip"
           >
             <TextField
               fullWidth
               size="small"
+              required
               name="formatPattern"
               label="Format pattern"
               value={formik.values.formatPattern}
@@ -763,11 +930,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               }}
               onBlur={formik.handleBlur}
               error={formik.touched.formatPattern && Boolean(formik.errors.formatPattern)}
-              helperText={
-                formik.touched.formatPattern && formik.errors.formatPattern
-                  ? formik.errors.formatPattern
-                  : 'Tokens: {PREFIX}, {SEQUENCE}, {SUFFIX}, {YEAR}, {YEAR_SHORT}. Put your school code in Prefix.'
-              }
+              helperText={formik.touched.formatPattern ? formik.errors.formatPattern : undefined}
             />
             <Box
               sx={{
@@ -790,8 +953,9 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               <TextField
                 fullWidth
                 size="small"
+                required
                 name="startingNumber"
-                label="Starting Number"
+                label="Starting number"
                 type="number"
                 value={formik.values.startingNumber}
                 onChange={formik.handleChange}
@@ -804,8 +968,9 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               <TextField
                 fullWidth
                 size="small"
+                required
                 name="padding"
-                label="Number Padding"
+                label="Number padding"
                 type="number"
                 value={formik.values.padding}
                 onChange={formik.handleChange}
@@ -837,29 +1002,23 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 helperText={formik.touched.maximumNumber ? formik.errors.maximumNumber : undefined}
               />
             </Box>
-            <Card variant="outlined" sx={{ p: 1.5, bgcolor: 'background.neutral' }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    Live preview
-                  </Typography>
-                  <Typography variant="h5" fontFamily="monospace">
-                    {formatGrNumber(
-                      { ...formik.values, id: editingConfigurationId ?? 'preview' },
-                      0,
-                      formatContext
-                    )}
-                  </Typography>
-                </Box>
-                <Label color="info">Format example</Label>
-              </Stack>
-            </Card>
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}>
+              <Typography variant="caption" color="text.secondary">Preview</Typography>
+              <Typography variant="subtitle2" fontFamily="monospace" sx={{ overflowWrap: 'anywhere' }}>
+                {formatGrNumber(
+                  { ...formik.values, id: editingConfigurationId ?? 'preview' },
+                  0,
+                  formatContext
+                )}
+              </Typography>
+            </Stack>
           </SettingsSectionCard>
 
           <SettingsSectionCard
             icon="mdi:shield-account-outline"
-            title="Manual control"
-            description="Decide whether authorized staff may override automatic assignment and how it is governed."
+            title="Manual Control"
+            description="Authorized staff can enter a GR manually. A reason is always required; approval can be configured."
+            descriptionDisplay="tooltip"
           >
             <Stack spacing={0.5}>
               <FormControlLabel
@@ -869,24 +1028,14 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                     checked={formik.values.manualEntryAllowed}
                     onChange={(event) => {
                       formik.handleChange(event);
+                      formik.setFieldValue('requireManualReason', event.target.checked);
                       if (!event.target.checked) {
-                        formik.setFieldValue('requireManualReason', false);
                         formik.setFieldValue('requireManualApproval', false);
                       }
                     }}
                   />
                 }
                 label="Allow manual GR entry"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    name="requireManualReason"
-                    checked
-                    disabled
-                  />
-                }
-                label="Require reason for a manual value"
               />
               <FormControlLabel
                 control={
@@ -915,6 +1064,9 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 type="date"
                 value={formik.values.effectiveFrom}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.effectiveFrom && Boolean(formik.errors.effectiveFrom)}
+                helperText={formik.touched.effectiveFrom ? formik.errors.effectiveFrom : undefined}
                 InputLabelProps={{ shrink: true }}
               />
               <FormControlLabel
@@ -979,9 +1131,19 @@ const hasRollConfigurationOverlap = (
       academicTargetsOverlap(existing, candidate)
   );
 
-export function RollNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
+export function RollNumberSettingsScreen({
+  embedded = false,
+  showWorkspaceBar = true,
+  createActionRef,
+}: {
+  embedded?: boolean;
+  showWorkspaceBar?: boolean;
+  createActionRef?: CreateActionRef;
+}) {
   const filters = useOnboardingAcademicStructure();
   const { settings, saveRollNumberConfiguration } = useOnboardingSettings();
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusedSubmitCount = useRef(0);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
   const { configurations } = settings.rollNumber;
@@ -1014,6 +1176,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       const configuration: RollNumberConfiguration = {
         ...configurationValues,
         ...applicability,
+        startingNumber: Number(values.startingNumber),
         orderingRules,
         id: editingConfigurationId ?? `roll-${Date.now()}`,
         classId:
@@ -1033,22 +1196,49 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         return;
       }
 
-      await saveRollNumberConfiguration(configuration);
-      helpers.resetForm();
-      setEditingConfigurationId(null);
-      setEditorOpen(false);
+      try {
+        await saveRollNumberConfiguration(configuration);
+        helpers.resetForm();
+        setEditingConfigurationId(null);
+        setEditorOpen(false);
+      } catch {
+        helpers.setStatus('The Roll Number Rule could not be saved. Review the values and try again.');
+      }
     },
   });
 
+  useEffect(() => {
+    if (!editorOpen || !formik.submitCount || formik.isValid ||
+      focusedSubmitCount.current === formik.submitCount) return;
+    focusedSubmitCount.current = formik.submitCount;
+    formRef.current?.querySelector<HTMLElement>('.Mui-error input, .Mui-error [role="combobox"]')?.focus();
+  }, [editorOpen, formik.submitCount, formik.isValid]);
+
+  const closeEditor = () => {
+    if (formik.isSubmitting) return;
+    if (formik.dirty && !window.confirm('Discard unsaved Roll Number Rule changes?')) return;
+    formik.resetForm();
+    setEditingConfigurationId(null);
+    setEditorOpen(false);
+  };
+
   const openNewConfiguration = () => {
     setEditingConfigurationId(null);
+    focusedSubmitCount.current = 0;
     formik.resetForm({ values: createRollNumberFormValues() });
     setEditorOpen(true);
   };
 
+  useEffect(() => {
+    if (!createActionRef) return undefined;
+    createActionRef.current = openNewConfiguration;
+    return () => { createActionRef.current = null; };
+  });
+
   const openExistingConfiguration = (configuration: RollNumberConfiguration) => {
     const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
     setEditingConfigurationId(configuration.id);
+    focusedSubmitCount.current = 0;
     formik.resetForm({
       values: {
         ...configuration,
@@ -1062,56 +1252,71 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
     setEditorOpen(true);
   };
 
-  const columns = [
+  const tableData = configurations.map((configuration) => ({
+    ...configuration,
+    academicCoverage: getAcademicApplicabilitySummary(
+      configuration, filters.allBoards, filters.campuses
+    ),
+    numberingScope: rollNumberScopeOptions.find(
+      (option) => option.value === configuration.numberingScope
+    )?.label ?? configuration.numberingScope,
+    status: configuration.isActive ? 'Active' : 'Inactive',
+  }));
+  const columns: IColumn[] = [
     {
       id: 'academicCoverage',
-      label: 'Academic Path',
-      width: 380,
-      minWidth: 300,
-      isFilter: false,
-      render: (_value: unknown, row: IData) => {
-        const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses) : '—';
-      },
+      label: 'Academic coverage',
+      minWidth: 320,
+      filterType: 'string',
+      sticky: true,
+      stickyPosition: 'left',
+      cellSx: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
     },
     {
       id: 'numberingScope',
-      label: 'Scope',
-      width: 160,
-      render: (value: string) =>
-        rollNumberScopeOptions.find((option) => option.value === value)?.label ?? value,
+      label: 'Numbering scope',
+      minWidth: 160,
+      filterType: 'enum',
+      enumOptions: rollNumberScopeOptions.map((option) => ({
+        label: option.label, value: option.label,
+      })),
     },
-    { id: 'startingNumber', label: 'Starts At', width: 105, filterType: 'number' as const },
+    { id: 'startingNumber', label: 'Starts at', minWidth: 110, align: 'right', filterType: 'number' },
     {
       id: 'status',
       label: 'Status',
-      isFilter: false,
-      width: 95,
-      render: (_value: unknown, row: IData) => (
-        <Label color={row.isActive ? 'success' : 'default'}>
-          {row.isActive ? 'Active' : 'Inactive'}
+      width: 100,
+      minWidth: 100,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Active', value: 'Active' },
+        { label: 'Inactive', value: 'Inactive' },
+      ],
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value: string) => (
+        <Label color={value === 'Active' ? 'success' : 'default'} variant="soft">
+          {value}
         </Label>
       ),
     },
     {
-      id: 'action',
-      label: 'Action',
+      id: 'actions',
+      label: 'Actions',
       isFilter: false,
-      width: 105,
+      isSort: false,
+      align: 'right',
+      width: 80,
+      minWidth: 80,
       sticky: true,
-      stickyPosition: 'right' as const,
+      stickyPosition: 'right',
+      excludeFromExport: true,
       render: (_value: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
         return configuration ? (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:pencil-outline" width={17} />}
-            onClick={() => openExistingConfiguration(configuration)}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Edit
-          </Button>
+          <ThreeDotsActions sx={{ justifyContent: 'flex-end' }} showEditIcon showThreeDots={false}
+            editLabel={`Edit roll number rule for ${configuration.className || 'all classes'}`}
+            handleEditClick={() => openExistingConfiguration(configuration)} />
         ) : null;
       },
     },
@@ -1122,55 +1327,55 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       {!embedded ? (
         <SettingsPageHeader
           title="Roll Number Rules"
-          description="Configure Roll number scope, starting values, and approval requirements for Student Onboarding."
+          description="Configure Roll number scope, starting values, and approval requirements for Onboarding."
         />
       ) : null}
-      <NumberingWorkspaceBar
-        title="Class-wise roll number rules"
-        icon="mdi:format-list-numbered"
-        summaries={[
-          `${configurations.length} configured rules`,
-          `${configurations.filter((configuration) => configuration.classMode === 'selected').length} specific academic paths`,
-          'Saved scope',
-        ]}
-        buttonLabel="Add configuration"
-        onClick={openNewConfiguration}
-      />
-      <Box sx={{ minHeight: 0, flex: 1, display: 'flex' }}>
+      {showWorkspaceBar && (
+        <NumberingWorkspaceBar
+          title="Class-wise roll number rules"
+          icon="mdi:format-list-numbered"
+          summaries={[
+            `${configurations.length} configured rules`,
+            `${configurations.filter((configuration) => configuration.classMode === 'selected').length} specific academic paths`,
+            'Saved scope',
+          ]}
+          buttonLabel="Add roll number rule"
+          onClick={openNewConfiguration}
+        />
+      )}
+      <Box sx={{ minHeight: 0, minWidth: 0, flex: 1, display: 'flex', overflow: 'hidden' }}>
         <CustomizableTable
           tableId="student-onboarding-roll-number-settings"
-          tableTitle="Roll Number Configurations"
+          tableTitle="Roll number configurations"
           columns={columns}
-          data={configurations}
-          isFilter={false}
-          wrapperProps={{ sx: { minHeight: { xs: 360, md: 320 }, height: '100%' } }}
-          noDataText={<>No Roll Number configurations are available for this scope.</>}
+          data={tableData}
+          isFilter
+          searchFieldProps={{ placeholder: 'Search...' }}
+          wrapperProps={{ sx: { flex: 1, minHeight: { xs: 360, md: 0 }, minWidth: 0 } }}
+          tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+          noDataText={<>No roll number configurations have been added yet.</>}
         />
       </Box>
       <SettingsDrawer
         open={editorOpen}
-        title={`${editingConfigurationId ? 'Edit' : 'Add'} Roll Number Configuration`}
+        title={`${editingConfigurationId ? 'Edit' : 'Add'} Roll Number Rule`}
         description="Choose where Roll numbers must be unique, their starting value, and required approvals."
+        descriptionDisplay="tooltip"
         icon="mdi:format-list-numbered"
-        statusLabel={editingConfigurationId ? 'Editing rule' : 'New rule'}
-        footerNote="Saved for the selected scope and reused by Student Setup after reload."
-        onClose={() => {
-          formik.resetForm();
-          setEditingConfigurationId(null);
-          setEditorOpen(false);
-        }}
+        statusLabel={formik.dirty ? 'Unsaved changes' : ''}
+        onClose={closeEditor}
         onSubmit={() => formik.submitForm()}
+        submitLabel="Submit"
+        submitIcon={GlobalIcons.submit}
+        busy={formik.isSubmitting}
       >
-        <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
-          <Alert severity="info">
-            Saved rules are checked when staff assign Roll numbers in Student Setup. Duplicate
-            numbers within the selected numbering scope are blocked.
-          </Alert>
+        <Stack ref={formRef} spacing={2} component="form" onSubmit={formik.handleSubmit}>
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:calendar-account-outline"
-            title="Academic path and numbering scope"
-            description="Choose a Board and Medium, then select School Levels, Standards, and the numbering scope."
+            title="Academic Path And Numbering Scope"
+            description="Choose the academic path and scope used to prevent duplicate Roll numbers when staff assign them in Student Setup."
+            descriptionDisplay="tooltip"
           >
             <SingleAcademicPathFields
               value={formik.values}
@@ -1179,84 +1384,54 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
               campusesLoading={filters.campusesLoading}
               campusesError={filters.campusesError}
               showErrors={formik.submitCount > 0}
+              compactHelp
               onChange={(applicability) => {
                 formik.setValues({ ...formik.values, ...applicability }, false);
                 formik.setStatus(undefined);
               }}
             />
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.5,
-              }}
+            <TextField
+              select
+              fullWidth
+              size="small"
+              required
+              name="numberingScope"
+              label="Numbering scope"
+              value={formik.values.numberingScope}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={(formik.touched.numberingScope || formik.submitCount > 0) && Boolean(formik.errors.numberingScope)}
+              helperText={formik.touched.numberingScope || formik.submitCount > 0 ? formik.errors.numberingScope : undefined}
             >
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="numberingScope"
-                label="Numbering scope"
-                value={formik.values.numberingScope}
-                onChange={formik.handleChange}
-              >
-                {rollNumberScopeOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
+              {rollNumberScopeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </SettingsSectionCard>
-
-          <Alert severity="info">Roll numbers are entered by authorized staff during identifier preparation. Existing students are not renumbered automatically.</Alert>
 
           <SettingsSectionCard
             icon="mdi:shield-lock-outline"
-            title="Preservation and governance"
-            description="Protect existing numbers and control changes that need explanation or approval."
+            title="Preservation And Governance"
+            description="Authorized staff enter Roll numbers during identifier preparation. Existing students are not renumbered automatically. Set the starting value and controls for later changes."
+            descriptionDisplay="tooltip"
           >
-            <TextField
-              fullWidth
-              size="small"
-              name="startingNumber"
-              label="Starting Number"
-              type="number"
-              value={formik.values.startingNumber}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.startingNumber && Boolean(formik.errors.startingNumber)}
-              helperText={formik.touched.startingNumber ? formik.errors.startingNumber : undefined}
-            />
-            <Stack spacing={0.5}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    name="requireChangeReason"
-                    checked={formik.values.requireChangeReason}
-                    onChange={formik.handleChange}
-                  />
-                }
-                label="Require reason for Roll number changes"
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                required
+                name="startingNumber"
+                label="Starting number"
+                type="number"
+                value={formik.values.startingNumber}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={(formik.touched.startingNumber || formik.submitCount > 0) && Boolean(formik.errors.startingNumber)}
+                helperText={formik.touched.startingNumber || formik.submitCount > 0 ? formik.errors.startingNumber : undefined}
+                slotProps={{ htmlInput: { min: 1, step: 1 } }}
               />
-              <FormControlLabel
-                control={
-                  <Switch
-                    name="requireApproval"
-                    checked={formik.values.requireApproval}
-                    onChange={formik.handleChange}
-                  />
-                }
-                label="Require approval after Roll number preparation"
-              />
-            </Stack>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.5,
-              }}
-            >
               <TextField
                 fullWidth
                 size="small"
@@ -1265,12 +1440,42 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
                 type="date"
                 value={formik.values.effectiveFrom}
                 onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={(formik.touched.effectiveFrom || formik.submitCount > 0) && Boolean(formik.errors.effectiveFrom)}
+                helperText={formik.touched.effectiveFrom || formik.submitCount > 0 ? formik.errors.effectiveFrom : undefined}
                 InputLabelProps={{ shrink: true }}
               />
+            </Box>
+            <Stack spacing={1}>
               <FormControlLabel
-                sx={{ m: 0, minHeight: 40 }}
+                sx={{ m: 0 }}
                 control={
                   <Switch
+                    size="small"
+                    name="requireChangeReason"
+                    checked={formik.values.requireChangeReason}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Require reason for Roll number changes"
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    size="small"
+                    name="requireApproval"
+                    checked={formik.values.requireApproval}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Require approval after Roll number preparation"
+              />
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    size="small"
                     name="isActive"
                     checked={formik.values.isActive}
                     onChange={formik.handleChange}
@@ -1278,7 +1483,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
                 }
                 label="Rule is active"
               />
-            </Box>
+            </Stack>
           </SettingsSectionCard>
         </Stack>
       </SettingsDrawer>
@@ -1289,42 +1494,27 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
 
 function DivisionRuleRow({
   title,
-  description,
   checked,
   onChange,
 }: {
   title: string;
-  description: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      alignItems={{ sm: 'flex-start' }}
-      justifyContent="space-between"
-      spacing={1.5}
-      sx={{ py: 1.5 }}
-    >
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="subtitle2">{title}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-      </Box>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={checked}
-            onChange={(event) => onChange(event.target.checked)}
-            slotProps={{ input: { 'aria-label': title } }}
-          />
-        }
-        label={checked ? 'Enabled' : 'Disabled'}
-        labelPlacement="start"
-        sx={{ m: 0, minHeight: 44, flexShrink: 0 }}
-      />
-    </Stack>
+    <FormControlLabel
+      label={title}
+      labelPlacement="start"
+      control={
+        <Switch
+          size="small"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          slotProps={{ input: { 'aria-label': title } }}
+        />
+      }
+      sx={{ m: 0, width: '100%', minHeight: 40, justifyContent: 'space-between' }}
+    />
   );
 }
 
@@ -1348,10 +1538,18 @@ const hasDivisionConfigurationOverlap = (
       academicTargetsOverlap(existing, candidate)
   );
 
-export function DivisionChangesSettingsPanel() {
+export function DivisionChangesSettingsPanel({
+  showWorkspaceBar = true,
+  createActionRef,
+}: {
+  showWorkspaceBar?: boolean;
+  createActionRef?: CreateActionRef;
+} = {}) {
   const filters = useOnboardingAcademicStructure();
   const { settings, saveDivisionChangeConfiguration } = useOnboardingSettings();
   const { configurations } = settings.divisionChange;
+  const formRef = useRef<HTMLDivElement>(null);
+  const focusedSubmitAttempt = useRef(0);
   const [baseline, setBaseline] = useState<DivisionChangeConfiguration>(
     createDivisionChangeConfiguration()
   );
@@ -1360,32 +1558,52 @@ export function DivisionChangesSettingsPanel() {
   );
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
   const [validationError, setValidationError] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
+  const [dateTouched, setDateTouched] = useState(false);
+  const [submitAttempt, setSubmitAttempt] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const isDirty = JSON.stringify(baseline) !== JSON.stringify(draft);
   const activeConfigurations = configurations.filter((configuration) => configuration.isActive);
+  const nameError = !draft.name.trim()
+    ? 'Rule name is required.'
+    : draft.name.trim().length > 100
+      ? 'Rule name must be 100 characters or fewer.' : '';
+  const applicabilityError = getSingleAcademicPathValidationError(draft);
+  const dateError = draft.effectiveDate && (!/^\d{4}-\d{2}-\d{2}$/.test(draft.effectiveDate) ||
+    Number.isNaN(Date.parse(draft.effectiveDate)) ||
+    new Date(draft.effectiveDate).toISOString().slice(0, 10) !== draft.effectiveDate)
+    ? 'Enter a valid effective date.' : '';
   const setBooleanRule =
-    (
-      key:
-        | 'capacityRequired'
-        | 'requireReason'
-        | 'requireApproval'
-        | 'recalculateRollNumber'
-        | 'notifyClassTeacher'
-    ) =>
-    (value: boolean) =>
+    (key: 'requireReason' | 'requireApproval' | 'isActive') =>
+    (value: boolean) => {
+      setValidationError('');
       setDraft((current) => ({ ...current, [key]: value }));
+    };
 
-  const toDateValue = (value: string) => (value ? dayjs(value) : null);
-  const toIsoDate = (value: ReturnType<typeof dayjs> | null) =>
-    value?.isValid() ? value.format('YYYY-MM-DD') : '';
+  useEffect(() => {
+    if (!editorOpen || !submitAttempt || focusedSubmitAttempt.current === submitAttempt ||
+      !(nameError || applicabilityError || dateError)) return;
+    focusedSubmitAttempt.current = submitAttempt;
+    formRef.current?.querySelector<HTMLElement>('.Mui-error input, .Mui-error [role="combobox"]')?.focus();
+  }, [editorOpen, submitAttempt, nameError, applicabilityError, dateError]);
   const openNewConfiguration = () => {
     const initial = createDivisionChangeConfiguration();
     setEditingConfigurationId(null);
     setBaseline(initial);
     setDraft(initial);
     setValidationError('');
+    setNameTouched(false);
+    setDateTouched(false);
+    setSubmitAttempt(0);
+    focusedSubmitAttempt.current = 0;
     setEditorOpen(true);
   };
+  useEffect(() => {
+    if (!createActionRef) return undefined;
+    createActionRef.current = openNewConfiguration;
+    return () => { createActionRef.current = null; };
+  });
   const openExistingConfiguration = (configuration: DivisionChangeConfiguration) => {
     const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
     const initial = {
@@ -1396,24 +1614,24 @@ export function DivisionChangesSettingsPanel() {
     setBaseline(initial);
     setDraft(initial);
     setValidationError('');
+    setNameTouched(false);
+    setDateTouched(false);
+    setSubmitAttempt(0);
+    focusedSubmitAttempt.current = 0;
     setEditorOpen(true);
   };
   const closeEditor = () => {
+    if (saving) return;
+    if (isDirty && !window.confirm('Discard unsaved division-assignment rule changes?')) return;
     setDraft(baseline);
     setValidationError('');
     setEditorOpen(false);
   };
   const applyDraft = async () => {
-    if (!draft.name.trim()) {
-      setValidationError('Enter a rule name.');
-      return;
-    }
+    if (saving) return;
+    setSubmitAttempt((current) => current + 1);
+    if (nameError || applicabilityError || dateError) return;
     const applicability = normalizeSingleAcademicApplicability(draft, filters.boards);
-    const applicabilityError = getSingleAcademicPathValidationError(applicability);
-    if (applicabilityError) {
-      setValidationError(applicabilityError);
-      return;
-    }
     const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
     const selectedStandards = academicOptions.standards.filter((item) =>
       applicability.standardIds.includes(item.id)
@@ -1438,58 +1656,86 @@ export function DivisionChangesSettingsPanel() {
       );
       return;
     }
-    await saveDivisionChangeConfiguration(configuration);
-    setEditorOpen(false);
+    setSaving(true);
+    try {
+      await saveDivisionChangeConfiguration(configuration);
+      setEditorOpen(false);
+    } catch {
+      setValidationError('The division assignment rule could not be saved. Review the values and try again.');
+    } finally {
+      setSaving(false);
+    }
   };
   const tableData = configurations.map((configuration) => ({
     ...configuration,
     academicCoverage: getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses),
-    assignmentMethod: 'Manual placement',
-    capacity: 'Live capacity; full divisions blocked',
     approval: configuration.requireApproval ? 'Required for changes' : 'Readiness rule applies',
     effectiveDateLabel: configuration.effectiveDate
       ? dayjs(configuration.effectiveDate).format('DD MMM YYYY')
       : 'Immediate',
+    status: configuration.isActive ? 'Active' : 'Inactive',
   }));
-  const columns = [
-    { id: 'name', label: 'Rule', width: 190, minWidth: 170 },
-    { id: 'academicCoverage', label: 'Academic Path', width: 380, minWidth: 300 },
-    { id: 'assignmentMethod', label: 'Assignment Method', width: 175, minWidth: 155 },
-    { id: 'capacity', label: 'Capacity', width: 170, minWidth: 150 },
-    { id: 'approval', label: 'Approval', width: 170, minWidth: 150 },
-    { id: 'effectiveDateLabel', label: 'Effective Date', width: 135, minWidth: 120 },
+  const columns: IColumn[] = [
+    { id: 'name', label: 'Rule', minWidth: 190, filterType: 'string', sticky: true, stickyPosition: 'left' },
+    {
+      id: 'academicCoverage',
+      label: 'Academic coverage',
+      minWidth: 320,
+      filterType: 'string',
+      cellSx: { whiteSpace: 'normal', overflowWrap: 'anywhere' },
+    },
+    {
+      id: 'approval',
+      label: 'Approval',
+      minWidth: 180,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Required for changes', value: 'Required for changes' },
+        { label: 'Readiness rule applies', value: 'Readiness rule applies' },
+      ],
+    },
+    {
+      id: 'effectiveDateLabel',
+      label: 'Effective date',
+      minWidth: 150,
+      filterType: 'string',
+      isSort: false,
+    },
     {
       id: 'status',
       label: 'Status',
       width: 100,
-      minWidth: 90,
-      isFilter: false,
-      render: (_value: string, row: IData) => (
-        <Label color={row.isActive ? 'success' : 'default'}>
-          {row.isActive ? 'Active' : 'Inactive'}
+      minWidth: 100,
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Active', value: 'Active' },
+        { label: 'Inactive', value: 'Inactive' },
+      ],
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value: string) => (
+        <Label color={value === 'Active' ? 'success' : 'default'} variant="soft">
+          {value}
         </Label>
       ),
     },
     {
-      id: 'action',
-      label: 'Action',
-      width: 105,
-      minWidth: 100,
+      id: 'actions',
+      label: 'Actions',
+      width: 80,
+      minWidth: 80,
+      align: 'right',
       isFilter: false,
+      isSort: false,
       sticky: true,
-      stickyPosition: 'right' as const,
+      stickyPosition: 'right',
+      excludeFromExport: true,
       render: (_value: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
         return configuration ? (
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:pencil-outline" width={17} />}
-            onClick={() => openExistingConfiguration(configuration)}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Edit
-          </Button>
+          <ThreeDotsActions sx={{ justifyContent: 'flex-end' }} showEditIcon showThreeDots={false}
+            editLabel={`Edit ${configuration.name}`}
+            handleEditClick={() => openExistingConfiguration(configuration)} />
         ) : null;
       },
     },
@@ -1497,68 +1743,76 @@ export function DivisionChangesSettingsPanel() {
 
   return (
     <Stack spacing={1.25} sx={{ minWidth: 0, minHeight: 0, height: '100%', flex: 1 }}>
-      <NumberingWorkspaceBar
-        title="Division assignment rules"
-        icon="mdi:account-switch-outline"
-        summaries={[
-          `${activeConfigurations.length} active rules`,
-          `${configurations.filter((item) => getAcademicApplicabilityScore(item) > 0).length} specific academic paths`,
-          'Saved scope',
-        ]}
-        buttonLabel="Add override"
-        buttonIcon="mdi:plus"
-        onClick={openNewConfiguration}
-      />
-      <Box sx={{ minHeight: 0, flex: 1, display: 'flex' }}>
+      {showWorkspaceBar && (
+        <NumberingWorkspaceBar
+          title="Division assignment rules"
+          icon="mdi:account-switch-outline"
+          summaries={[
+            `${activeConfigurations.length} active rules`,
+            `${configurations.filter((item) => getAcademicApplicabilityScore(item) > 0).length} specific academic paths`,
+            'Saved scope',
+          ]}
+          buttonLabel="Add division rule"
+          buttonIcon="mdi:plus"
+          onClick={openNewConfiguration}
+        />
+      )}
+      <Box sx={{ minHeight: 0, minWidth: 0, flex: 1, display: 'flex', overflow: 'hidden' }}>
         <CustomizableTable
           tableId="student-onboarding-division-settings"
-          tableTitle="Division Assignment Rules"
+          tableTitle="Division assignment rules"
           columns={columns}
           data={tableData}
-          isFilter={false}
-          wrapperProps={{ sx: { minHeight: { xs: 360, md: 320 }, height: '100%' } }}
-          noDataText={<>No Division assignment rule is available for this scope.</>}
+          isFilter
+          searchFieldProps={{ placeholder: 'Search...' }}
+          wrapperProps={{ sx: { flex: 1, minHeight: { xs: 360, md: 0 }, minWidth: 0 } }}
+          tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+          noDataText={<>No division assignment rules have been added yet.</>}
         />
       </Box>
       <SettingsDrawer
         open={editorOpen}
         title={`${editingConfigurationId ? 'Edit' : 'Add'} Division Assignment Rule`}
         description="Choose where placement rules apply and whether changes need a reason or approval."
+        descriptionDisplay="tooltip"
         icon="mdi:account-switch-outline"
-        statusLabel={editingConfigurationId ? 'Editing rule' : 'New override'}
-        footerNote="Saved for the selected scope and reused by Student Setup after reload."
+        statusLabel={isDirty ? 'Unsaved changes' : ''}
         onClose={closeEditor}
         onReset={() => {
           setDraft(baseline);
           setValidationError('');
+          setNameTouched(false);
+          setDateTouched(false);
+          setSubmitAttempt(0);
         }}
         resetDisabled={!isDirty}
         onSubmit={applyDraft}
-        submitLabel="Apply to Setup"
-        submitDisabled={!isDirty}
+        submitLabel="Submit"
+        submitIcon={GlobalIcons.submit}
+        busy={saving}
       >
-        <Stack spacing={2}>
-          <Alert severity="info">
-            Saved rules apply when authorized staff select or change a Division in Student Setup.
-            Full divisions cannot be selected.
-          </Alert>
+        <Stack ref={formRef} spacing={2}>
           {validationError ? <Alert severity="error">{validationError}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:target-account"
-            title="Academic path"
-            description="Choose a Board and Medium, then select the School Levels and Standards where this rule applies."
+            title="Academic Path"
+            description="Choose where this rule applies. Staff select divisions manually in Student Setup; full divisions cannot be selected."
+            descriptionDisplay="tooltip"
           >
             <TextField
               fullWidth
               size="small"
+              required
               label="Rule name"
               value={draft.name}
               onChange={(event) => {
                 setDraft((current) => ({ ...current, name: event.target.value }));
                 setValidationError('');
               }}
-              error={Boolean(validationError && !draft.name.trim())}
-              helperText={validationError && !draft.name.trim() ? validationError : undefined}
+              onBlur={() => setNameTouched(true)}
+              error={(nameTouched || submitAttempt > 0) && Boolean(nameError)}
+              helperText={nameTouched || submitAttempt > 0 ? nameError : undefined}
+              slotProps={{ htmlInput: { maxLength: 100 } }}
             />
             <SingleAcademicPathFields
               value={draft}
@@ -1566,55 +1820,49 @@ export function DivisionChangesSettingsPanel() {
               campuses={filters.campuses}
               campusesLoading={filters.campusesLoading}
               campusesError={filters.campusesError}
-              showErrors={Boolean(validationError && validationError.startsWith('Select one'))}
+              showErrors={submitAttempt > 0}
+              compactHelp
               onChange={(applicability) => {
                 setDraft((current) => ({ ...current, ...applicability }));
                 setValidationError('');
               }}
             />
-            <FormControlLabel
-              sx={{ m: 0 }}
-              control={
-                <Switch
-                  checked={draft.isActive}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, isActive: event.target.checked }))
-                  }
-                />
-              }
-              label="Rule is active"
-            />
-          </SettingsSectionCard>
-          <SettingsSectionCard icon="mdi:account-group-outline" title="Assignment and capacity" description="Staff reserve a division using live capacity.">
-            <Alert severity="info">Placement is manual. Full divisions are blocked; automatic balancing and capacity overrides are not available.</Alert>
           </SettingsSectionCard>
           <SettingsSectionCard
             icon="mdi:shield-check-outline"
-            title="Change approval"
-            description="Choose the reason and approval requirements and when this rule takes effect."
+            title="Change Approval"
+            description="Require an explanation or approval for division changes. The effective date is optional; an active rule applies when its date arrives."
+            descriptionDisplay="tooltip"
           >
             <DivisionRuleRow
               title="Require a change reason"
-              description="Require staff to explain changes to an onboarding student's Division."
               checked={draft.requireReason}
               onChange={setBooleanRule('requireReason')}
             />
-            <Divider />
             <DivisionRuleRow
               title="Require approval"
-              description="Require onboarding approval after a Division change before activation."
               checked={draft.requireApproval}
               onChange={setBooleanRule('requireApproval')}
             />
-            <Divider />
-            <DatePicker
-              label="Effective date for Division changes"
-              value={toDateValue(draft.effectiveDate)}
-              onChange={(value) =>
-                setDraft((current) => ({ ...current, effectiveDate: toIsoDate(value) }))
-              }
-              format="DD/MM/YYYY"
-              slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+            <DivisionRuleRow
+              title="Rule is active"
+              checked={draft.isActive}
+              onChange={setBooleanRule('isActive')}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              label="Effective date"
+              type="date"
+              value={draft.effectiveDate}
+              onChange={(event) => {
+                setDraft((current) => ({ ...current, effectiveDate: event.target.value }));
+                setValidationError('');
+              }}
+              onBlur={() => setDateTouched(true)}
+              error={(dateTouched || submitAttempt > 0) && Boolean(dateError)}
+              helperText={dateTouched || submitAttempt > 0 ? dateError : undefined}
+              InputLabelProps={{ shrink: true }}
             />
           </SettingsSectionCard>
         </Stack>
@@ -1634,6 +1882,7 @@ export function NumberingPlacementSettingsScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const createActionRef = useRef<(() => void) | null>(null);
   const requestedTab = searchParams.get('tab');
   const activeTab = numberingPlacementTabs.some((tab) => tab.value === requestedTab)
     ? requestedTab
@@ -1653,7 +1902,7 @@ export function NumberingPlacementSettingsScreen() {
     <Stack spacing={1.25} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
       <CustomBreadcrumbs
         heading="Numbering & Placement"
-        description=" "
+        description="Configure GR and roll numbering together with safe division-change behavior."
         tooltipProps={
           {
             title: (
@@ -1670,32 +1919,16 @@ export function NumberingPlacementSettingsScreen() {
           } as TooltipProps
         }
         links={[
-          { name: 'Student Management', href: studentPaths.dashboard },
-          { name: 'Student Onboarding', href: studentPaths.onboarding.setup },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Onboarding', href: studentPaths.onboarding.setup },
           { name: 'Settings', href: studentPaths.onboarding.settings },
           { name: 'Numbering & Placement' },
         ]}
-        slotProps={{
-          action: {},
-          heading: { overflowWrap: 'normal', textWrap: 'wrap' },
-          moreLink: {},
-          breadcrumbs: { display: { xs: 'none', md: 'block' } },
-        }}
-        sx={{
-          flexDirection: { xs: 'column !important', md: 'row !important' },
-          alignItems: { xs: 'stretch', md: 'center' },
-          gap: { xs: 0, md: 2 },
-          minHeight: { xs: 'auto', md: 56 },
-          py: { xs: 0.75, md: 0 },
-          '& .MuiBreadcrumbs-root': { display: { xs: 'none', md: 'block' } },
-          '& .MuiTypography-h6': { overflowWrap: 'normal !important' },
-        }}
       />
-      <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ overflow: 'hidden', flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           alignItems={{ xs: 'stretch', sm: 'center' }}
-          sx={{ pr: { sm: 1 }, pb: { xs: 1, sm: 0 } }}
         >
           <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
             <CustomTabs
@@ -1704,6 +1937,7 @@ export function NumberingPlacementSettingsScreen() {
               variant="scrollable"
               scrollButtons="auto"
               allowScrollButtonsMobile
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
             >
               {numberingPlacementTabs.map((tab) => (
                 <Tab
@@ -1713,21 +1947,52 @@ export function NumberingPlacementSettingsScreen() {
                   icon={<Iconify icon={tab.icon} width={20} />}
                   iconPosition="start"
                   sx={{ minHeight: 44, py: 1 }}
+                  id={`numbering-placement-tab-${tab.value}`}
+                  aria-controls={`numbering-placement-panel-${tab.value}`}
                 />
               ))}
             </CustomTabs>
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: { xs: 'flex-end', sm: 'initial' },
+              p: 1,
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:plus" width={18} />}
+              onClick={() => createActionRef.current?.()}
+              sx={{ minWidth: 160, whiteSpace: 'nowrap' }}
+            >
+              {activeTab === 'gr-number'
+                ? 'Add series'
+                : activeTab === 'roll-number'
+                  ? 'Add roll number rule'
+                  : 'Add division rule'}
+            </Button>
           </Box>
         </Stack>
       </Paper>
       <Box
         role="tabpanel"
         id={`numbering-placement-panel-${activeTab}`}
+        aria-labelledby={`numbering-placement-tab-${activeTab}`}
         aria-label={numberingPlacementTabs.find((tab) => tab.value === activeTab)?.label}
         sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column' }}
       >
-        {activeTab === 'gr-number' ? <GrNumberSettingsScreen embedded /> : null}
-        {activeTab === 'roll-number' ? <RollNumberSettingsScreen embedded /> : null}
-        {activeTab === 'division-changes' ? <DivisionChangesSettingsPanel /> : null}
+        {activeTab === 'gr-number' ? (
+          <GrNumberSettingsScreen embedded showWorkspaceBar={false} createActionRef={createActionRef} />
+        ) : null}
+        {activeTab === 'roll-number' ? (
+          <RollNumberSettingsScreen embedded showWorkspaceBar={false} createActionRef={createActionRef} />
+        ) : null}
+        {activeTab === 'division-changes' ? (
+          <DivisionChangesSettingsPanel showWorkspaceBar={false} createActionRef={createActionRef} />
+        ) : null}
       </Box>
     </Stack>
   );

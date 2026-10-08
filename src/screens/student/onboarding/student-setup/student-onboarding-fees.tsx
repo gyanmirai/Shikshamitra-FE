@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Alert, Stack, Button, Typography } from '@mui/material';
+import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
 import AdmissionFeeSelectionPanel from 'src/screens/student/admissions/fee-selection/admission-fee-selection-panel';
@@ -26,7 +26,17 @@ export default function StudentOnboardingFees({ caseId, canManage }: { caseId: s
   if (query.isError) return <Alert severity="error" action={
     <Button size="small" onClick={() => query.refetch()}>Retry</Button>
   }>Fee readiness could not be verified.</Alert>;
-  if (!item) return <Typography variant="body2">Loading fee readiness…</Typography>;
+  if (!item) return (
+    <Stack role="status" aria-label="Loading finance readiness" spacing={1}>
+      <Skeleton variant="rounded" height={56} />
+      <Skeleton variant="text" width="90%" height={22} />
+      <Skeleton variant="text" width="68%" height={22} />
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Skeleton variant="rounded" width={150} height={32} />
+        <Skeleton variant="rounded" width={180} height={32} />
+      </Stack>
+    </Stack>
+  );
   const canAssign = hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.Add`);
   const canCollect = hasGrantedPermission(permissions, `${financePermissions.fees.collections}.Add`);
   return (
@@ -38,7 +48,7 @@ export default function StudentOnboardingFees({ caseId, canManage }: { caseId: s
           canConfirm={canManage}
         />
       )}
-      <Alert severity={item.firstPaymentConfirmed ? 'success' : 'info'}>
+      <Alert severity={item.firstPaymentConfirmed ? 'success' : 'info'} variant="outlined">
         {item.financeReadinessDetail ?? 'Fee assignment and the first installment must be verified in Finance.'}
       </Alert>
       <Typography variant="body2">
@@ -86,7 +96,7 @@ export default function StudentOnboardingFees({ caseId, canManage }: { caseId: s
       </Stack>
       {item.studentEnrollmentId && item.status !== 4 && item.status !== 5 && !canManage && (
         <Typography variant="body2" color="text.secondary">
-          An authorized Student Onboarding user must recheck readiness after payment.
+          An authorized onboarding user must recheck readiness after payment.
         </Typography>
       )}
       {assigning && <AssignmentDrawer
