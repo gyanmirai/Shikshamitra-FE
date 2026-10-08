@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => ({
   calculate: vi.fn(),
   saveSalary: vi.fn(),
   refetchReadiness: vi.fn(),
+  canManageSalary: true,
+  refetchRevisions: vi.fn(),
   canViewEsi: true,
   canManageEsi: true,
   updateEnrollment: vi.fn(),
@@ -32,6 +34,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, name: string) => {
+    if (name.endsWith('CompensationRevisions.Manage')) return mocks.canManageSalary;
     if (name.endsWith('StatutorySchemes.View')) return mocks.canViewEsi;
     if (name.endsWith('StatutorySchemes.ManageEnrollment')) return mocks.canManageEsi;
     return true;
@@ -93,6 +96,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
   useGetCompensationRevisionsQuery: () => ({
     data: { items: mocks.revisions },
+    refetch: mocks.refetchRevisions,
     isLoading: false,
     isError: false,
   }),
@@ -125,6 +129,23 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.revisions = [];
+    mocks.canManageSalary = true;
+    mocks.refetchRevisions.mockResolvedValue({});
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        grossSalary: 10000,
+        totalDeductions: 100,
+        netSalary: 9900,
+        employerCost: 10100,
+        earnings: [],
+        deductions: [],
+        employerContributions: [],
+        warnings: [],
+        employeeStateInsurance: { canCalculate: true, issueCodes: [] },
+        targetResult: { isExact: true, difference: 0 },
+      }),
+    });
+    mocks.saveSalary.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({ revisionNumber: 1 }) });
     mocks.readiness = { canActivate: false, blockerCodes: [] };
     mocks.activate.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
     mocks.refetchReadiness.mockResolvedValue({});
@@ -173,7 +194,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
     await user.click(await screen.findByRole('button', { name: 'Save salary' }));
     await waitFor(() => expect(mocks.refetchReadiness).toHaveBeenCalled());
     expect(mocks.saveSalary).toHaveBeenCalledWith(
@@ -181,10 +202,124 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         body: expect.objectContaining({ salaryBasis: 'EMPLOYER_COST', monthlyAmount: 10000 }),
       })
     );
-    expect(formik.setFieldValue).toHaveBeenCalledTimes(1);
-    expect(formik.setFieldValue).toHaveBeenCalledWith('pfRule', null, false);
+    expect(formik.setFieldValue).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
 
+  it('requires a fresh calculation after changing an input and reports dirty state', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '1');
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByText('Recalculate to review your changes.')).toBeVisible();
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+  });
+  it('retains input and permits retry after calculation failure', async () => {
+    mocks.calculate.mockReturnValue({
+      unwrap: vi
+        .fn()
+        .mockRejectedValue({ data: { error: { message: 'Calculation unavailable' } } }),
+    });
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeEnabled()
+    );
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(10000);
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toBeVisible();
+  });
+  it('retains the draft after a save failure and resets the baseline only after success', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    mocks.saveSalary.mockReturnValueOnce({ unwrap: vi.fn().mockRejectedValue({ status: 500 }) });
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(mocks.saveSalary.mock.calls[1][0].body).not.toHaveProperty('earningComponents');
+    expect(mocks.saveSalary.mock.calls[1][0].body).not.toHaveProperty('deductionComponents');
+  });
+
+  it('requires conflict review and recalculation before retrying', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    mocks.saveSalary.mockReturnValueOnce({ unwrap: vi.fn().mockRejectedValue({ status: 409 }) });
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(await screen.findByText(/Salary changed in another session/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Reload salary history' }));
+    expect(mocks.refetchRevisions).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(10000);
+  });
+  it('does not calculate or save without the compensation Manage permission', () => {
+    mocks.canManageSalary = false;
+    renderBuilder();
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+  });
+  it('blocks saving when the server reports a statutory calculation blocker', async () => {
+    const result = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...result,
+        employeeStateInsurance: { canCalculate: false, issueCodes: ['ESI_RULE_MISSING'] },
+      }),
+    });
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+  });
+
+  it('keeps scheduled revisions in collapsed history until expanded', async () => {
+    mocks.revisions = [
+      {
+        id: 'future',
+        revisionNumber: 2,
+        status: 'EFFECTIVE',
+        effectiveMonth: '2027-01-01T00:00:00Z',
+        sourceSalaryTemplateId: 'template-saved',
+        salaryBasis: 'GROSS',
+        quotedMonthlyAmount: 50000,
+        pfRuleId: null,
+        overrides: [],
+        isCustomized: false,
+        isCurrent: false,
+        isScheduled: true,
+        netSalary: 48000,
+      },
+    ];
+    const user = userEvent.setup();
+    renderBuilder();
+    const history = screen.getByRole('button', {
+      name: /Salary history No effective salary.*1 scheduled/,
+    });
+    expect(history).toHaveAttribute('aria-expanded', 'false');
+    await user.click(history);
+    expect(history).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Scheduled')).toBeVisible();
+    expect(screen.getByText('Revision 2 - 2027-01')).toBeVisible();
+  });
   it('reopens the saved immutable revision and offers activation as a separate action', async () => {
     const user = userEvent.setup();
     mocks.revisions = [

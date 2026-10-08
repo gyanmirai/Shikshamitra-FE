@@ -8,6 +8,7 @@ type Options = {
   title?: string;
   description?: string;
   push?: (href: string) => void;
+  blockNavigation?: boolean;
 };
 
 type TraversalEvent = Event & {
@@ -20,26 +21,27 @@ type BrowserNavigation = EventTarget & {
 };
 
 export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
-  const { title, description, push } = options;
+  const { title, description, push, blockNavigation = false } = options;
   const [pending, setPending] = useState<(() => void) | null>(null);
   const permittedTraversal = useRef<string | null>(null);
   const requestNavigation = useCallback(
     (proceed: () => void) => {
+      if (blockNavigation) return;
       if (!isDirty) proceed();
       else setPending(() => proceed);
     },
-    [isDirty]
+    [isDirty, blockNavigation]
   );
 
   useEffect(() => {
-    if (!isDirty) return undefined;
+    if (!isDirty && !blockNavigation) return undefined;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [isDirty]);
+  }, [isDirty, blockNavigation]);
 
   useEffect(() => {
-    if (!isDirty || !push) return undefined;
+    if ((!isDirty && !blockNavigation) || !push) return undefined;
 
     const guardLink = (event: MouseEvent) => {
       if (
@@ -107,7 +109,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       document.removeEventListener('click', guardLink, true);
       navigation?.removeEventListener('navigate', guardTraversal);
     };
-  }, [isDirty, push, requestNavigation]);
+  }, [isDirty, blockNavigation, push, requestNavigation]);
 
   const confirmation = pending ? (
     <CustomDialog

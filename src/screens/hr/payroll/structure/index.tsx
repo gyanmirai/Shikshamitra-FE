@@ -2,45 +2,32 @@
 
 import type { RootState } from 'src/redux/store';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { isApplicableToMonth } from 'src/screens/hr/employee/salary-utils';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Grid, Card, Alert, Paper, Button, Typography } from '@mui/material';
 import { useLazyGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
-import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
-import { Box, Grid, Card, Alert, Paper, Button, Typography, DialogActions } from '@mui/material';
+import { useGetEmployeeSalaryStructureQuery } from 'src/redux/hr/employee-salary-structure-api';
 import { useGetEffectiveCompensationRevisionQuery } from 'src/redux/hr/compensation-revision-api';
+import {
+  staffPayrollEditHref,
+  staffPayrollProfileHref,
+} from 'src/screens/hr/employee/payroll-profile-utils';
 import {
   type EmployeeOption,
   buildEmployeeSelectOptions,
 } from 'src/screens/hr/leave-request/leave-request.utils';
-import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
-  isApplicableToMonth,
-  isSalaryComponentFixed,
-  toApplicableMonthPayload,
-  getSalaryComponentPayloadAmount,
-} from 'src/screens/hr/employee/salary-utils';
 
-import { SalaryStructureBuilder } from './SalaryStructureBuilder';
+import { SalaryEditorDialog } from './salary-editor-dialog';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 
 const EmployeeSalaryStructureScreen = () => {
@@ -56,8 +43,7 @@ const EmployeeSalaryStructureScreen = () => {
     permissions,
     hrPermissions.payroll.compensationRevisionActions.manage
   );
-  const canReadCompensationRevisions =
-    canViewCompensationRevisions || canManageCompensation;
+  const canReadCompensationRevisions = canViewCompensationRevisions || canManageCompensation;
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: requestedEmployee } = useGetEmployeeByIdQuery(requestedEmployeeId, {
@@ -151,6 +137,22 @@ const EmployeeSalaryStructureScreen = () => {
           { name: 'Payroll Structure' },
         ]}
       />
+      {['staff-profile', 'staff-edit'].includes(searchParams.get('from') || '') &&
+        requestedEmployeeId && (
+          <Button
+            href={
+              searchParams.get('from') === 'staff-edit'
+                ? staffPayrollEditHref(requestedEmployeeId)
+                : staffPayrollProfileHref(requestedEmployeeId)
+            }
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            {searchParams.get('from') === 'staff-edit'
+              ? 'Back to staff edit'
+              : 'Back to staff profile'}
+          </Button>
+        )}
+
       <Card>
         <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
@@ -201,7 +203,9 @@ const EmployeeSalaryStructureScreen = () => {
         <>
           {effectiveRevision && (
             <Paper variant="outlined" sx={{ p: 2, my: 1 }}>
-              <Typography variant="body2" color="text.secondary">Full-month gross</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Full-month gross
+              </Typography>
               <Typography variant="h5">{formatCurrency(effectiveRevision.grossSalary)}</Typography>
               <Typography variant="caption" color="text.secondary">
                 System calculation base. Payroll adjusts this amount once using payable days.
@@ -222,8 +226,8 @@ const EmployeeSalaryStructureScreen = () => {
           )}
           {canReadCompensationRevisions && !effectiveRevision && !isRevisionLoading && (
             <Alert severity="warning" sx={{ mb: 1 }}>
-              This staff member has no effective compensation revision for the current month. Payroll
-              cannot be locked until salary is saved.
+              This staff member has no effective compensation revision for the current month.
+              Payroll cannot be locked until salary is saved.
             </Alert>
           )}
           <Grid container spacing={1} alignItems="stretch">
@@ -245,31 +249,9 @@ const EmployeeSalaryStructureScreen = () => {
             </Grid>
           </Grid>
 
-          <CustomDialog
-            maxWidth="lg"
-            open={editDialogOpen}
-            handleClose={handleCloseEdit}
-            title={
-              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                <Typography variant="h5">
-                  {effectiveRevision ? 'Edit salary' : 'Set up salary'}
-                </Typography>
-                <CustomTooltip
-                  arrow
-                  placement="right"
-                  sx={{ textAlign: 'justify' }}
-                  title="Define the staff's salary structure by assigning fixed or temporary earning and deduction components."
-                >
-                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                </CustomTooltip>
-              </Box>
-            }
-            paperProps={{ sx: { maxHeight: '70vh' } }}
-          >
-            {editDialogOpen && (
-              <SalaryStructureEdit employeeId={employeeId} handleClose={handleCloseEdit} />
-            )}
-          </CustomDialog>
+          {editDialogOpen && (
+            <SalaryEditorDialog employeeId={employeeId} handleClose={handleCloseEdit} />
+          )}
         </>
       )}
     </Box>
@@ -316,201 +298,5 @@ const Section = ({
     </Box>
   </Paper>
 );
-
-const SalaryStructureEdit = ({
-  employeeId,
-  handleClose,
-}: {
-  employeeId: string;
-  handleClose: () => void;
-}) => {
-  const { data: salaryStructure, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
-    params: { employeeId },
-    options: { skip: !employeeId },
-  });
-  const { data: employee } = useGetEmployeeByIdQuery(employeeId, { skip: !employeeId });
-  const employeeStatus = employee?.employeeStatusType ?? employee?.status;
-  const employeeIsActive =
-    employeeStatus === EmployeeStatusType.Active ||
-    String(employeeStatus).toLowerCase() === 'active';
-
-  const [updateSalaryStructure, { isLoading: isUpdating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeSalaryStructureMutation,
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      earningComponents: [] as any[],
-      deductionComponents: [] as any[],
-      pfRule: '',
-      quotedSalaryBasis: '',
-      quotedMonthlyAmount: null as number | null,
-      sourceSalaryTemplateId: null as string | null,
-      sourceSalaryTemplateVersionId: null as string | null,
-      sourceSalaryTemplateVersion: null as number | null,
-      salaryGeneratedAt: null as string | null,
-      wasModifiedAfterGeneration: false,
-    },
-    validationSchema: Yup.object({
-      earningComponents: Yup.array().of(
-        Yup.object({
-          name: Yup.string(),
-          componentType: Yup.string(),
-          amount: Yup.string().required('Amount is required'),
-          applicableMonth: Yup.mixed().when('isTemp', {
-            is: true,
-            then: (schema) => schema.required('Applicable month is required'),
-            otherwise: (schema) => schema.nullable(),
-          }),
-        })
-      ),
-      deductionComponents: Yup.array().of(
-        Yup.object({
-          name: Yup.string(),
-          componentType: Yup.string(),
-          amount: Yup.string().required('Amount is required'),
-          applicableMonth: Yup.mixed().when('isTemp', {
-            is: true,
-            then: (schema) => schema.required('Applicable month is required'),
-            otherwise: (schema) => schema.nullable(),
-          }),
-        })
-      ),
-    }),
-    onSubmit: async (values) => {
-      const data = {
-        earningComponents: values.earningComponents
-          .filter((item: any) => item.isTemp)
-          .map((item: any) => ({
-            id: item?.id && item?.id !== item?.componentId ? item.id : null,
-            componentId: item?.componentId || null,
-            name: item?.earningComponentName || item?.name,
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: !!item?.isTemp,
-            usesMasterValue: item?.usesMasterValue,
-            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-            semanticType: item?.semanticType || 'Ordinary',
-            statutoryRuleId: item?.statutoryRuleId || null,
-          })),
-        deductionComponents: values.deductionComponents
-          .filter((item: any) => item.isTemp)
-          .map((item: any) => ({
-            id: item?.id && item?.id !== item?.componentId ? item.id : null,
-            componentId: item?.componentId || null,
-            name: item?.deductionComponentName || item?.name,
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: !!item?.isTemp,
-            usesMasterValue: item?.usesMasterValue,
-            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-            semanticType: item?.semanticType || 'Ordinary',
-            statutoryRuleId: item?.statutoryRuleId || null,
-          })),
-        pfRuleId: values.pfRule || null,
-        quotedSalaryBasis: values.quotedSalaryBasis || null,
-        quotedMonthlyAmount: values.quotedMonthlyAmount,
-        sourceSalaryTemplateId: values.sourceSalaryTemplateId,
-        sourceSalaryTemplateVersionId: values.sourceSalaryTemplateVersionId,
-        sourceSalaryTemplateVersion: values.sourceSalaryTemplateVersion,
-        salaryGeneratedAt: values.salaryGeneratedAt,
-        wasModifiedAfterGeneration: values.wasModifiedAfterGeneration,
-      };
-
-      try {
-        await updateSalaryStructure({ employeeId, data }).unwrap();
-        handleClose();
-      } catch (error) {
-        console.error(error);
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (salaryStructure) {
-      formik.setValues({
-        earningComponents: (salaryStructure?.earningComponents ?? []).filter(
-          (item: any) => item.isTemp
-        ),
-        deductionComponents: (salaryStructure?.deductionComponents ?? []).filter(
-          (item: any) => item.isTemp
-        ),
-        pfRule: salaryStructure?.pfRuleId ?? '',
-        quotedSalaryBasis: salaryStructure?.quotedSalaryBasis ?? '',
-        quotedMonthlyAmount: salaryStructure?.quotedMonthlyAmount ?? null,
-        sourceSalaryTemplateId: salaryStructure?.sourceSalaryTemplateId ?? null,
-        sourceSalaryTemplateVersionId: salaryStructure?.sourceSalaryTemplateVersionId ?? null,
-        sourceSalaryTemplateVersion: salaryStructure?.sourceSalaryTemplateVersion ?? null,
-        salaryGeneratedAt: salaryStructure?.salaryGeneratedAt ?? null,
-        wasModifiedAfterGeneration: salaryStructure?.wasModifiedAfterGeneration ?? false,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salaryStructure]);
-
-  return (
-    <>
-      <DialogScrollContent>
-        {isLoading ? (
-          <LoadingScreen />
-        ) : (
-          <Paper elevation={2} sx={{ p: 1 }}>
-            <Grid container spacing={3}>
-              <SalaryStructureBuilder
-                formik={formik}
-                employeeId={employeeId}
-                dateOfJoining={employee?.dateOfJoining ?? employee?.doj}
-                employeeIsActive={employeeIsActive}
-              />
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RenderComponents
-                  formik={formik}
-                  name="earningComponents"
-                  label="One-time earning components"
-                  type="earning"
-                  showTempAdd
-                  temporaryOnly
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RenderComponents
-                  formik={formik}
-                  name="deductionComponents"
-                  label="One-time deduction components"
-                  type="deduction"
-                  showTempAdd
-                  temporaryOnly
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        )}
-      </DialogScrollContent>
-
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          size="small"
-          loading={isUpdating}
-          variant="contained"
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          Save one-time components
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};
 
 export default EmployeeSalaryStructureScreen;

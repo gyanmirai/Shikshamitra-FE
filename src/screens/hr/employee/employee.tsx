@@ -5,24 +5,21 @@ import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
 import UserHoverProfile from 'src/components/student-popover';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -30,9 +27,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
+import { useGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeStatusType,
@@ -40,13 +37,8 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
   Box,
   Card,
-  Grid,
   Alert,
   Stack,
   Button,
@@ -65,16 +57,13 @@ import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
-import { RenderComponents } from './employee-form-fields/PayrollFields';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
-import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
-import {
-  isSalaryComponentFixed,
-  toApplicableMonthPayload,
-  getSalaryComponentPayloadAmount,
-} from './salary-utils';
+import { SalaryEditorDialog } from '../payroll/structure/salary-editor-dialog';
 
 const HrEmployee = () => {
+  const router = useRouter();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const [staffFormBusy, setStaffFormBusy] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { options: organizationOptions, isLoading: organizationOptionsLoading } =
@@ -92,15 +81,23 @@ const HrEmployee = () => {
   const open = searchParams?.mode === 'form';
   const setOpen = useCallback(
     (value: boolean) => {
-      if (value) {
-        setSearchParams('mode', 'form');
-      } else {
-        deleteParam('mode');
-      }
+      const params = new URLSearchParams(window.location.search);
+      params.delete('editEmployee');
+      params.delete('step');
+      if (value) params.set('mode', 'form');
+      else params.delete('mode');
+      router.push(`${hrPaths.employee.list}?${params.toString()}`);
     },
-    [setSearchParams, deleteParam]
+    [router]
   );
   const [editData, setEditData] = useState<any>(null);
+  const requestedEditId = open ? searchParams.editEmployee || '' : '';
+  const canOpenEdit = hasGrantedPermission(permissions, `${hrPermissions.employee.list}.Edit`);
+  const requestedEdit = useGetEmployeeByIdQuery(requestedEditId, {
+    skip: !requestedEditId || !canOpenEdit,
+    refetchOnMountOrArgChange: true,
+  });
+  const formEmployee = requestedEditId ? requestedEdit.currentData : editData;
   const [createdEmployee, setCreatedEmployee] = useState<{ id: string; name: string }>();
 
   // Clear editData only after the form panel is gone, so the heading
@@ -202,6 +199,7 @@ const HrEmployee = () => {
   });
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
+      if (staffFormBusy) return;
       if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
         dispatch(setIsChanges(false));
         setOpen(false);
@@ -210,7 +208,7 @@ const HrEmployee = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dispatch, isChanges, deleteParam]
+    [dispatch, isChanges, deleteParam, staffFormBusy, setOpen]
   );
   const handleEmployeeCreated = useCallback(
     (created: { id: string; name: string }) => {
@@ -457,13 +455,13 @@ const HrEmployee = () => {
       {open ? (
         <Box data-testid="hr-employee-form" display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
-            heading={`${editData?.id ? 'Update' : 'Add'} Staff ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
+            heading={`${formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`}
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
               { name: 'Staff', onClick: () => handleClose() },
               { name: 'Staff Directory', onClick: () => handleClose() },
               {
-                name: `${editData?.id ? 'Update' : 'Add'} Staff ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
+                name: `${formEmployee?.id ? 'Update' : 'Add'} Staff ${formEmployee?.fullName ? `(${formEmployee?.fullName})` : ''}`,
               },
             ]}
             description="Fill out the form below with personal, contact, and employment details. Required fields are marked with an asterisk (*)."
@@ -472,11 +470,29 @@ const HrEmployee = () => {
           />
 
           <Card sx={{ height: '100%' }}>
-            <EmployeeFrom
-              editData={editData}
-              handleClose={handleClose}
-              onCreated={handleEmployeeCreated}
-            />
+            {requestedEditId && (!canOpenEdit || (requestedEdit.isError && !formEmployee)) ? (
+              <Alert
+                severity="error"
+                action={
+                  canOpenEdit ? (
+                    <Button onClick={() => requestedEdit.refetch()}>Retry</Button>
+                  ) : undefined
+                }
+              >
+                Unable to open this staff edit form. Check your access or retry.
+              </Alert>
+            ) : requestedEditId && !formEmployee ? (
+              <LoadingScreen />
+            ) : (
+              <EmployeeFrom
+                key={formEmployee?.id || 'new'}
+                initialStep={requestedEditId && searchParams.step === 'payroll' ? 5 : 0}
+                onBusyChange={setStaffFormBusy}
+                editData={formEmployee}
+                handleClose={handleClose}
+                onCreated={handleEmployeeCreated}
+              />
+            )}
           </Card>
         </Box>
       ) : !searchParams?.employee ? (
@@ -637,38 +653,9 @@ const HrEmployee = () => {
           {/* <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee"> */}
           {/*  <EmployeeFrom editData={editData} handleClose={handleClose} /> */}
           {/* </CustomDialog> */}
-          <CustomDialog
-            data-testid="hr-employee-salary-dialog"
-            maxWidth="lg"
-            open={payrollDialog.value}
-            handleClose={handleClosePayroll}
-            title={
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                  <Typography variant="h5">Salary Structure</Typography>
-                  <CustomTooltip
-                    arrow
-                    placement="right"
-                    sx={{ textAlign: 'justify' }}
-                    title="Define the staff's salary structure by assigning fixed or temporary earning and deduction components."
-                  >
-                    <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                  </CustomTooltip>
-                </Box>
-                {editData?.fullName && (
-                  <Typography variant="caption" color="text.secondary">
-                    {editData.fullName}
-                    {editData.employeeIdentifier ? ` · ${editData.employeeIdentifier}` : ''}
-                  </Typography>
-                )}
-              </Box>
-            }
-            paperProps={{ sx: { maxHeight: '80vh' } }}
-          >
-            {payrollDialog.value && editData && (
-              <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
-            )}
-          </CustomDialog>
+          {payrollDialog.value && editData?.id && (
+            <SalaryEditorDialog employeeId={editData.id} handleClose={handleClosePayroll} />
+          )}
         </>
       ) : (
         <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />
@@ -685,20 +672,29 @@ const HrEmployee = () => {
             <Alert severity="warning">
               <Typography variant="subtitle2">Payroll setup required</Typography>
               <Typography variant="body2">
-                {createdEmployee?.name || 'The staff'} is inactive. Set up salary, then activate the staff as a separate action.
+                {createdEmployee?.name || 'The staff'} is inactive. Set up salary, then activate the
+                staff as a separate action.
               </Typography>
             </Alert>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button
-            href={createdEmployee ? `${hrPaths.employee.list}?employee=${createdEmployee.id}` : undefined}
+            href={
+              createdEmployee
+                ? `${hrPaths.employee.list}?employee=${createdEmployee.id}`
+                : undefined
+            }
             sx={{ minHeight: 44 }}
           >
             View staff
           </Button>
           <Button
-            href={createdEmployee ? `${hrPaths.payroll.structure}?employeeId=${createdEmployee.id}&setup=salary` : undefined}
+            href={
+              createdEmployee
+                ? `${hrPaths.payroll.structure}?employeeId=${createdEmployee.id}&setup=salary`
+                : undefined
+            }
             variant="contained"
             sx={{ minHeight: 44 }}
           >
@@ -710,179 +706,3 @@ const HrEmployee = () => {
   );
 };
 export default HrEmployee;
-
-const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; editData: any }) => {
-  const { data: salaryStructure, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
-    params: { employeeId: editData?.id },
-    options: { skip: !editData?.id },
-  });
-
-  const [updateSalaryStructure, { isLoading: isUpdating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeSalaryStructureMutation,
-  });
-  const formik = useFormik({
-    initialValues: {
-      earningComponents: [],
-      deductionComponents: [],
-    },
-    validationSchema: Yup.object({
-      earningComponents: Yup.array().of(
-        Yup.object({
-          name: Yup.string(),
-          componentType: Yup.string(),
-          // eslint-disable-next-line func-names
-          amount: Yup.string().when('calculationType', {
-            is: (val: any) => val === 'PERCENTAGE' || val === 1,
-            then: (schema) => schema.nullable(),
-            otherwise: (schema) => schema.required('Amount is required'),
-          }),
-          applicableMonth: Yup.mixed().when('isTemp', {
-            is: true,
-            then: (schema) => schema.required('Applicable month is required'),
-            otherwise: (schema) => schema.nullable(),
-          }),
-        })
-      ),
-      deductionComponents: Yup.array().of(
-        Yup.object({
-          name: Yup.string(),
-          componentType: Yup.string(),
-          // eslint-disable-next-line func-names
-          amount: Yup.string().when('calculationType', {
-            is: (val: any) => val === 'PERCENTAGE' || val === 1,
-            then: (schema) => schema.nullable(),
-            otherwise: (schema) => schema.required('Amount is required'),
-          }),
-          applicableMonth: Yup.mixed().when('isTemp', {
-            is: true,
-            then: (schema) => schema.required('Applicable month is required'),
-            otherwise: (schema) => schema.nullable(),
-          }),
-        })
-      ),
-    }),
-    onSubmit: async (values) => {
-      const data = {
-        earningComponents: values.earningComponents
-          .filter((item: any) => item.isTemp)
-          .map((item: any) => ({
-            id: item?.id && item?.id !== item?.componentId ? item.id : null,
-            componentId: item?.componentId || null,
-            name: item?.earningComponentName || item?.name,
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: !!item?.isTemp,
-            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-          })),
-        deductionComponents: values.deductionComponents
-          .filter((item: any) => item.isTemp)
-          .map((item: any) => ({
-            id: item?.id && item?.id !== item?.componentId ? item.id : null,
-            componentId: item?.componentId || null,
-            name: item?.deductionComponentName || item?.name,
-            amount: getSalaryComponentPayloadAmount(item),
-            isFixed: isSalaryComponentFixed(item),
-            isTemp: !!item?.isTemp,
-            applicableMonth: toApplicableMonthPayload(item?.applicableMonth),
-          })),
-      };
-
-      try {
-        await updateSalaryStructure({
-          employeeId: editData?.id,
-          data,
-        }).unwrap();
-        handleClose();
-      } catch (error) {
-        console.error(error);
-        shikshaMitraToast.error({
-          message:
-            (error as any)?.data?.message ||
-            (error as any)?.error ||
-            'Failed to update salary structure.',
-        });
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (salaryStructure) {
-      formik.setValues({
-        earningComponents: (salaryStructure?.earningComponents || []).filter(
-          (item: any) => item.isTemp
-        ),
-        deductionComponents: (salaryStructure?.deductionComponents || []).filter(
-          (item: any) => item.isTemp
-        ),
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [salaryStructure]);
-
-  return (
-    <>
-      <DialogScrollContent>
-        {isLoading ? (
-          <LoadingScreen />
-        ) : (
-          // <Paper elevation={0} sx={{ p: 2, border: (t: any) => `1px solid ${t.vars.palette.divider}`, borderRadius: 2 }}>
-          <Grid container spacing={1}>
-            <SalaryStructureBuilder
-              formik={formik}
-              employeeId={editData?.id}
-              dateOfJoining={editData?.doj}
-              employeeIsActive={
-                editData?.status === EmployeeStatusType.Active ||
-                String(editData?.status).toLowerCase() === 'active'
-              }
-            />
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="earningComponents"
-                label="One-time earning components"
-                type="earning"
-                showTempAdd
-                temporaryOnly
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="deductionComponents"
-                label="One-time deduction components"
-                type="deduction"
-                showTempAdd
-                temporaryOnly
-              />
-            </Grid>
-          </Grid>
-          // </Paper>
-        )}
-      </DialogScrollContent>
-
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={() => handleClose()}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          size="small"
-          loading={isUpdating}
-          variant="contained"
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          Save one-time components
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};

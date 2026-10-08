@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-07
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -609,3 +609,21 @@ Native printer selection and physical output are unrun; provider acceptance is n
 The user deferred DOC-15 legal-format applicability for this iteration on 7 October.
 Applicability for both private unaided and government-aided Gujarat schools remains unverified, with no legal certification or change to statutory, permission, scope, freshness or immutable-document guards.
 Independent review and publication remain outside the writer's completion handoff.
+
+## Staff payroll profile checks
+
+Run `src/screens/hr/employee/payroll-profile.test.tsx` and `src/screens/hr/employee/payroll-profile-policy-editor.test.tsx` alongside the employee policy override and default-policy assignment tests.
+Cover missing/current/scheduled compensation, recurring lines, fixed salary return routes, policy lookup failures, exact action guards, changed-group requests, retained failed edits, impact confirmation, and return to organization policies.
+Authenticated browser acceptance must cover desktop, tablet, mobile, keyboard access, drawer dismissal, and salary return navigation.
+Live profile writes require the matching backend profile-details endpoint; frontend preview alone does not establish save acceptance.
+
+Inline payroll tests live in `src/screens/hr/employee/payroll-edit-details.test.tsx` and `src/screens/hr/employee/employee-form.payroll.test.tsx`.
+Run them with the profile, policy drawer, default-policy, and shared unsaved-navigation tests.
+Verify Save versus Save & Next, unchanged continuation, group-only requests, failed-save retention, validation focus, draft preservation on refetch, and salary edit-return links.
+
+## Recurring salary editor acceptance
+
+Run SalaryStructureBuilder and salary-editor-dialog tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
+Check both Staff Directory and Payroll Structure entry points at desktop, tablet, and mobile widths.
+Verify sticky footer access, keyboard history expansion, draft retention, and return to staff edit.
+Assert compensation requests contain no temporary component collections and monthly payroll restrictions remain unchanged.

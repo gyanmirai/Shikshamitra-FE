@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-06
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -345,3 +345,34 @@ An earlier refresh observed during saving cannot overwrite the acknowledged save
 Connection and timeout failures show plain save/retry guidance while retaining the draft and its idempotency key.
 Server validation and concurrency messages remain actionable rather than being replaced by that connection message.
 Preserve compact labelled controls, stable loading/error layouts, draft protection and keyboard focus behavior.
+
+## Staff payroll profile
+
+The Payroll section shares salary and policy summaries between the staff profile and employee editor.
+Salary uses server compensation revisions for the current month, with scheduled changes listed separately and estimated net salary explicitly excluding monthly attendance and one-time adjustments.
+Change salary opens the existing salary workspace with the employee selected.
+Back to staff profile restores Payroll, which refetches compensation on mounting.
+One-time adjustments remain in monthly payroll; profile details never submit earning or deduction components.
+Assigned policies show their source, effective date, and both derived work calendars.
+Change assignment offers organization policies or employee-specific selectors, followed by required date, reason, impact review, warnings, and confirmation.
+Lookup failures display retry states rather than organization defaults.
+The staff profile edits bank details, statutory identifiers, and attendance integration in a drawer that submits only changed groups.
+Both drawers retain failed edits and protect unsaved changes; mobile drawers fill the viewport width.
+Employee creation still assigns default policies and checks activation readiness through its existing flow.
+
+In Update Staff, those same details are inline fields with their own saved baseline.
+Save persists changed groups without advancing; Save & Next advances only after a successful save, or immediately without a write when nothing changed.
+Validation failures focus the first invalid field, and failed saves preserve the draft.
+Policy changes remain in their separate drawer and never reset the inline draft during employee/payroll refetches.
+The edit URL accepts `mode=form&editEmployee=<id>&step=payroll`, loads the selected employee with existing access checks, and never falls back to Add Staff after a failed lookup.
+Salary setup opened from this step returns through Back to staff edit and refetches compensation.
+Dirty navigation is confirmed, navigation and duplicate actions are blocked while saving, and other steps and creation retain their existing behavior.
+
+## Recurring salary editor
+
+Payroll Structure and Staff Directory share the recurring salary dialog.
+The footer owns Calculate salary and Save salary; saving retains the dialog, refreshes history, and clears the draft baseline.
+History starts collapsed, and employee deductions remain separate from employer contributions.
+Input changes require recalculation, failures retain the draft, and leaving with unsaved changes requires confirmation.
+One-time additions use the monthly payroll link and its existing employee and month selection.
+The editor never calls the legacy component-update API or removes existing temporary components.

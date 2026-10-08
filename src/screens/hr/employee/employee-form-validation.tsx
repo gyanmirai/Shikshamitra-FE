@@ -427,7 +427,7 @@ export const validations = [
   additionalDetailsValidationSchema,
   Yup.object({}),
   workExperienceValidationSchema,
-  payrollValidationSchema,
+  Yup.object({}),
   reportingManagerValidationSchema,
   Yup.object({}),
 ];
@@ -439,6 +439,6 @@ export const infoValidations = [
   familyInformationValidationSchema,
   additionalDetailsValidationSchema,
   workExperienceValidationSchema,
-  payrollValidationSchema,
+  Yup.object({}),
   reportingManagerValidationSchema,
 ];

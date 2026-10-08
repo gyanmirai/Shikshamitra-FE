@@ -1,18 +1,18 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useRouter } from 'src/routes/hooks';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { hasNavigationPermission } from 'src/utils/permissions';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { hasNavigationPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,16 +25,13 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import { buildUserScopeBulkAssignPayload } from 'src/utils/userScopeBulkAssignPayload';
 import {
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
+} from 'src/redux/hr/hr-policy-api';
+import {
   expandAccessibleHierarchy,
   compressExplicitAcademicSelection,
 } from 'src/utils/academicHierarchyUtils';
-import {
-  hrPolicyApi,
-  policyInvalidationTags,
-  useGetPayrollPoliciesQuery,
-  useGetAttendancePoliciesQuery,
-  usePreviewPolicyAssignmentImpactMutation,
-} from 'src/redux/hr/hr-policy-api';
 import {
   useGetBankDetailsQuery,
   useGetAccessControlQuery,
@@ -42,7 +39,6 @@ import {
   useGetWorkExperienceQuery,
   useGetBasicInformationQuery,
   useAddAccessControlMutation,
-  useUpdateBankDetailsMutation,
   useGetFamilyInformationQuery,
   useAddBasicInformationMutation,
   useGetAdditionalInformationQuery,
@@ -52,24 +48,24 @@ import {
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
 } from 'src/redux/hr/employeeApi';
-import { getDefaultPolicySetupState } from '../policies/hr-policy-workspace-utils';
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
+import { PayrollProfileWorkspace } from './payroll-profile-workspace';
 import { buildWorkExperiencePayload } from './work-experience-payload';
 import { applyEmployeeCreateResponseToFormValues } from './employee-form-state';
+import { getDefaultPolicySetupState } from '../policies/hr-policy-workspace-utils';
 import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
-import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
+import {
+  PayrollEditDetails,
+  type PayrollEditState,
+  type PayrollEditHandle,
+} from './payroll-edit-details';
 import {
   validations,
   reportingManagerValidationSchema,
   getPersonalInformationValidationSchema,
 } from './employee-form-validation';
-import {
-  buildEmployeePolicyOverride,
-  buildEmployeePolicyOverrideAction,
-  buildEmployeePolicyOverridePreviewRequest,
-} from './employee-policy-override-utils';
 import {
   getEmployeeCreationDefaultPolicyMessage,
   EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE,
@@ -333,11 +329,6 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   policyOverrideAssignmentReason: '',
 });
 
-const toOptionalGuid = (value: unknown) =>
-  typeof value === 'string' && value.trim() ? value : null;
-const toOptionalNumber = (value: unknown) => (value === '' || value == null ? null : Number(value));
-
-const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
 export const getEmployeeUserId = (values: any, editData?: any) =>
   values?.userId || editData?.userId || null;
 const getSavedEmployeeId = (values: any, editData?: any) =>
@@ -394,22 +385,27 @@ const steps = [
   'Academic Permission',
 ];
 
-const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
+const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBusyChange }: any) => {
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const router = useRouter();
   const [pendingPolicyRoute, setPendingPolicyRoute] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(editData && initialStep === 5 ? 5 : 0);
+  const payrollEditRef = React.useRef<PayrollEditHandle>(null);
+  const [payrollState, setPayrollState] = useState<PayrollEditState>({
+    dirty: false,
+    busy: false,
+    ready: false,
+  });
+  const inlinePayroll = Boolean(editData?.id && activeStep === 5);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
-  const [policyImpactPreview, setPolicyImpactPreview] = useState<any | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [academicPermissionSubmitReady, setAcademicPermissionSubmitReady] = useState(false);
   const formikRef = React.useRef<any>(null);
   const resetCurrentStepRef = React.useRef<(() => void) | null>(null);
-  const policyImpactConfirmationRef = React.useRef<((confirmed: boolean) => void) | null>(null);
 
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -440,13 +436,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     isThrowError: true,
     popupConfig: { error: false },
   });
-  const [updateBankDetails] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateBankDetailsMutation,
-    isThrowError: true,
-    popupConfig: { error: false },
-  });
-  const [previewPolicyAssignmentImpact] = usePreviewPolicyAssignmentImpactMutation();
   const {
     currentData: defaultPayrollPolicies,
     error: defaultPayrollPoliciesError,
@@ -805,128 +794,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     },
     [editData, updateExperienceInfo]
   );
-  const requestPolicyImpactConfirmation = useCallback((preview: any) => {
-    if (preview?.blockingWarnings?.length) {
-      return Promise.reject(
-        new Error(preview.blockingWarnings[0]?.message || 'Policy impact is blocking.')
-      );
-    }
-
-    if (!preview?.requiresConfirmation) {
-      return Promise.resolve<string | null>(null);
-    }
-
-    return new Promise<string | null>((resolve, reject) => {
-      policyImpactConfirmationRef.current = (confirmed: boolean) => {
-        const token = preview?.confirmationToken;
-        setPolicyImpactPreview(null);
-        policyImpactConfirmationRef.current = null;
-
-        if (!confirmed) {
-          reject(new Error('Policy override was not confirmed.'));
-          return;
-        }
-
-        if (!token) {
-          reject(new Error('Policy confirmation token is missing.'));
-          return;
-        }
-
-        resolve(token);
-      };
-      setPolicyImpactPreview(preview);
-    });
-  }, []);
-
-  const handleBankDetailsInformation = useCallback(
-    async (values: any, formik: any, confirmationToken?: string | null) => {
-      const employeeId = getSavedEmployeeId(values, editData);
-      if (!employeeId) {
-        throw new Error('Staff must be saved before payroll details can be updated.');
-      }
-
-      const policyOverride = buildEmployeePolicyOverride(
-        values,
-        currentYear?.id,
-        confirmationToken
-      );
-      const policyOverrideAction = buildEmployeePolicyOverrideAction(values, currentYear?.id);
-      const policyOverrideDisableEffectiveFrom =
-        values.policyOverrideEffectiveFrom ||
-        (values.dateOfJoining
-          ? dayjs(values.dateOfJoining).format('YYYY-MM-DD')
-          : dayjs().format('YYYY-MM-DD'));
-      const disablePolicyOverride =
-        policyOverrideAction === 'disable'
-          ? {
-              academicYearId: currentYear?.id,
-              assignmentId: values.policyOverrideAssignmentId || undefined,
-              effectiveFrom: policyOverrideDisableEffectiveFrom,
-              assignmentReason:
-                values.policyOverrideAssignmentReason || 'Staff payroll step override disabled',
-              ...(confirmationToken ? { confirmationToken } : {}),
-            }
-          : undefined;
-      const res = await updateBankDetails({
-        employeeId,
-        body: {
-          bankDetails: {
-            bankName: values.bankName,
-            branchName: values.branchName,
-            accountHolderName: values.accountHolderName,
-            accountNumber: values.accountNumber,
-            ifscCode: values.ifscCode,
-          },
-
-          salaryDetails: {
-            pfRuleId: toOptionalGuid(values.pfRule),
-            epfNumber: values.epfNumber,
-            uanNumber: values.uanNumber,
-            punchId: values.punchId,
-            totalWorkingHourPerMonth: toOptionalNumber(values.totalWorkingHourPerMonth),
-            quotedSalaryBasis: values.quotedSalaryBasis || null,
-            quotedMonthlyAmount: toOptionalNumber(values.quotedMonthlyAmount),
-            sourceSalaryTemplateId: toOptionalGuid(values.sourceSalaryTemplateId),
-            sourceSalaryTemplateVersionId: toOptionalGuid(values.sourceSalaryTemplateVersionId),
-            sourceSalaryTemplateVersion: toOptionalNumber(values.sourceSalaryTemplateVersion),
-            salaryGeneratedAt: values.salaryGeneratedAt || null,
-            wasModifiedAfterGeneration: Boolean(values.wasModifiedAfterGeneration),
-          },
-
-          earningComponents: values.earningComponents
-            .filter((item: any) => item.isTemp)
-            .map((item: any) => ({
-              componentId: getPayrollComponentId(item),
-              name: item?.name || item?.earningComponentName || '',
-              amount: getSalaryComponentPayloadAmount(item),
-              isFixed: isSalaryComponentFixed(item),
-              isTemp: Boolean(item?.isTemp),
-              usesMasterValue: item?.usesMasterValue,
-              semanticType: item?.semanticType || 'Ordinary',
-              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-            })),
-          deductionComponents: values.deductionComponents
-            .filter((item: any) => item.isTemp)
-            .map((item: any) => ({
-              componentId: getPayrollComponentId(item),
-              name: item?.name || item?.deductionComponentName || '',
-              amount: getSalaryComponentPayloadAmount(item),
-              isFixed: isSalaryComponentFixed(item),
-              isTemp: Boolean(item?.isTemp),
-              usesMasterValue: item?.usesMasterValue,
-              semanticType: item?.semanticType || 'Ordinary',
-              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-            })),
-          ...(policyOverrideAction ? { policyOverrideAction } : {}),
-          ...(policyOverride ? { policyOverride } : {}),
-          ...(disablePolicyOverride ? { policyOverride: disablePolicyOverride } : {}),
-        },
-      }).unwrap();
-      return res;
-    },
-    [currentYear?.id, editData, updateBankDetails]
-  );
-
   const handelUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
       const body = buildProfilePersonalInfoUpdatePayload(values, {
@@ -1004,6 +871,20 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
       setIsLoading: (val: boolean) => void,
       isSaveButton: boolean = false
     ) => {
+      if (editData?.id && activeStep === 5) {
+        setIsLoading(true);
+        onBusyChange?.(true);
+        try {
+          if (await payrollEditRef.current?.save()) {
+            dispatch(setIsChanges(false));
+            if (!isSaveButton) setActiveStep(6);
+          }
+        } finally {
+          setIsLoading(false);
+          onBusyChange?.(false);
+        }
+        return;
+      }
       let saveSucceeded = false;
       let resolvedEmployeeId = values.employeeId;
       let resolvedUserId = getEmployeeUserId(values, editData);
@@ -1050,22 +931,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
           }
           saveSucceeded = true;
         } else if (activeStep === 5) {
-          const employeeId = getSavedEmployeeId(values, editData);
-          const previewRequest = buildEmployeePolicyOverridePreviewRequest(
-            values,
-            currentYear?.id,
-            employeeId
-          );
-          const confirmationToken = previewRequest
-            ? await requestPolicyImpactConfirmation(
-                await previewPolicyAssignmentImpact(previewRequest).unwrap()
-              )
-            : null;
-          await handleBankDetailsInformation(values, formik, confirmationToken);
-          dispatch(hrPolicyApi.util.invalidateTags(policyInvalidationTags));
-          if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
-          }
+          // Payroll profile drawers own validation, impact review, and persistence.
           saveSucceeded = true;
         } else if (activeStep === 6) {
           await handleReportingManager(values, formik, values.employeeId);
@@ -1133,19 +999,16 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     },
     [
       activeStep,
-      dispatch,
       editData,
-      currentYear?.id,
       handleBasicInformation,
+      onBusyChange,
+      dispatch,
       handleClose,
       onCreated,
       handelUpdateEmployee,
       handleFamilyInformation,
       handleAdditionalDetails,
       handleWorkExperience,
-      handleBankDetailsInformation,
-      previewPolicyAssignmentImpact,
-      requestPolicyImpactConfirmation,
       handleReportingManager,
       handleAcademicPermission,
       resetCurrentStepRef,
@@ -1177,7 +1040,10 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
   return (
     <>
       <CustomStepperWithFormik
-        showSaveButton={isChanges}
+        showSaveButton={inlinePayroll ? payrollState.dirty : isChanges}
+        saveAndNextButtonProps={
+          inlinePayroll ? { disabled: !payrollState.ready, loading: payrollState.busy } : undefined
+        }
         disableSubmit={disableStepperSubmit}
         key={editData?.id || 'new'}
         initialValues={initialValues}
@@ -1187,7 +1053,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
         completedSteps={!editData ? completedSteps : undefined}
         isStepClickable={canNavigateToStep}
         handleBack={() => {
-          setActiveStep(activeStep - 1);
+          if (inlinePayroll && payrollState.dirty) setPendingStep(activeStep - 1);
+          else setActiveStep(activeStep - 1);
         }}
         validationSchema={employeeValidations[activeStep]}
         onStepClick={(step) => {
@@ -1218,61 +1085,43 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
           formikRef.current = formik;
           return (
             <>
-              <SyncReduxDirty formik={formik} />
-              {!isSubmitted && (
-                <FormSlider
-                  step={step}
-                  formik={formik}
-                  editData={editData}
-                  defaultPolicyAssignment={defaultPolicyAssignment}
-                  resetCurrentStepRef={resetCurrentStepRef}
-                  isSubmitted={isSubmitted}
-                  onAcademicPermissionReadyChange={setAcademicPermissionSubmitReady}
+              <SyncReduxDirty
+                formik={formik}
+                dirtyOverride={inlinePayroll ? payrollState.dirty : undefined}
+              />
+              {inlinePayroll ? (
+                <PayrollProfileWorkspace
+                  employeeId={editData.id}
+                  employeeName={editData.fullName}
+                  origin="staff-edit"
+                  actionsDisabled={payrollState.busy}
+                  detailsContent={(values, canEdit) => (
+                    <PayrollEditDetails
+                      ref={payrollEditRef}
+                      key={editData.id}
+                      employeeId={editData.id}
+                      initialValues={values}
+                      canEdit={canEdit}
+                      onStateChange={setPayrollState}
+                    />
+                  )}
                 />
+              ) : (
+                !isSubmitted && (
+                  <FormSlider
+                    step={step}
+                    formik={formik}
+                    editData={editData}
+                    defaultPolicyAssignment={defaultPolicyAssignment}
+                    resetCurrentStepRef={resetCurrentStepRef}
+                    isSubmitted={isSubmitted}
+                    onAcademicPermissionReadyChange={setAcademicPermissionSubmitReady}
+                  />
+                )
               )}
             </>
           );
         }}
-      />
-
-      <ConfirmDialog
-        open={Boolean(policyImpactPreview)}
-        onClose={() => policyImpactConfirmationRef.current?.(false)}
-        icon="warning"
-        title="Confirm policy override"
-        content={
-          <Box>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              This staff member-level policy override affects existing policy resolution. Confirm to
-              save it for this staff member.
-            </Typography>
-            {(policyImpactPreview?.warnings || []).slice(0, 4).map((warning: any) => (
-              <Typography
-                key={`${warning.code}-${warning.message}`}
-                variant="caption"
-                display="block"
-              >
-                {warning.message || warning.code}
-              </Typography>
-            ))}
-          </Box>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="inherit"
-            startIcon={<Iconify icon={GlobalIcons.tick} />}
-            sx={{
-              bgcolor: 'grey.900',
-              color: 'common.white',
-              '&:hover': { bgcolor: 'grey.800' },
-            }}
-            size="small"
-            onClick={() => policyImpactConfirmationRef.current?.(true)}
-          >
-            Confirm
-          </Button>
-        }
       />
 
       <ConfirmDialog
@@ -1716,9 +1565,13 @@ const FormSlider = ({
   );
 };
 
-const SyncReduxDirty = ({ formik }: { formik: any }) => {
+const SyncReduxDirty = ({ formik, dirtyOverride }: { formik: any; dirtyOverride?: boolean }) => {
   const dispatch = useDispatch();
   useEffect(() => {
+    if (dirtyOverride !== undefined) {
+      dispatch(setIsChanges(dirtyOverride));
+      return;
+    }
     let isReallyDirty = false;
 
     if (formik.dirty) {
@@ -1759,7 +1612,7 @@ const SyncReduxDirty = ({ formik }: { formik: any }) => {
       });
     }
     dispatch(setIsChanges(isReallyDirty));
-  }, [dispatch, formik.dirty, formik.values, formik.initialValues]);
+  }, [dispatch, dirtyOverride, formik.dirty, formik.values, formik.initialValues]);
 
   return null;
 };

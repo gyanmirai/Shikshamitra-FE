@@ -54,6 +54,7 @@ export type CompensationRevision = {
   savedByUserId?: string | null;
   savedAt?: string | null;
   lines: CompensationRevisionLine[];
+  estimatedStatutoryDeductions?: Array<{ code: string; name: string; amount: number }>;
 };
 
 export type SaveEmployeeCompensation = {

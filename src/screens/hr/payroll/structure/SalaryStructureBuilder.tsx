@@ -10,15 +10,16 @@ import type {
 
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Tune, Calculate, RestartAlt } from '@mui/icons-material';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
+import { Tune, Calculate, RestartAlt, ExpandMore } from '@mui/icons-material';
 import {
   useGetActiveSalaryTemplatesQuery,
   useCalculateSalaryTemplateMutation,
@@ -41,10 +42,13 @@ import {
   MenuItem,
   Skeleton,
   TextField,
+  Accordion,
   Typography,
   InputLabel,
   FormControl,
   FormControlLabel,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 import { getLocalMonthKey } from './salary-structure-builder-utils';
@@ -55,6 +59,8 @@ type Props = {
   employeeId?: string;
   dateOfJoining?: string | null;
   employeeIsActive?: boolean;
+  actionContainer?: HTMLElement | null;
+  onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
 const monthlyPayload = (month: string) => `${month}-01T00:00:00.000Z`;
@@ -86,6 +92,8 @@ export function SalaryStructureBuilder({
   employeeId,
   dateOfJoining,
   employeeIsActive = false,
+  actionContainer,
+  onEditorStateChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(
@@ -109,6 +117,7 @@ export function SalaryStructureBuilder({
     data: revisionData,
     isLoading: revisionsLoading,
     isError: revisionsError,
+    refetch: refetchRevisions,
   } = useGetCompensationRevisionsQuery(employeeId || '', {
     skip: !employeeId || !canReadCompensation,
   });
@@ -133,6 +142,13 @@ export function SalaryStructureBuilder({
   const [calculation, setCalculation] = useState<SalaryTemplateCalculation | null>(null);
   const [calculatedSignature, setCalculatedSignature] = useState('');
   const [activationCompleted, setActivationCompleted] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const [baseline, setBaseline] = useState<string | null>(null);
+  const [savedSignature, setSavedSignature] = useState('');
+  const [operationError, setOperationError] = useState('');
+  const [hasConflict, setHasConflict] = useState(false);
+  const [localBusy, setLocalBusy] = useState(false);
+  const operationPending = useRef(false);
   const initializedRef = useRef('');
   const operationKeyRef = useRef('');
   const operationSignatureRef = useRef('');
@@ -184,6 +200,7 @@ export function SalaryStructureBuilder({
       if (joining) setEffectiveMonth(dayjs(joining).format('YYYY-MM'));
     }
     initializedRef.current = initializationKey;
+    setInitialized(true);
   }, [dateOfJoining, employeeId, revisionData?.items, revisionsLoading, selectedTemplate]);
 
   useEffect(() => setActivationCompleted(false), [employeeId]);
@@ -198,6 +215,14 @@ export function SalaryStructureBuilder({
     overrides: customizing ? overrides : [],
     customizationReason: customizing ? customizationReason.trim() : '',
   });
+  const busy =
+    localBusy || calculationState.isLoading || saveState.isLoading || activationState.isLoading;
+  useEffect(() => {
+    if (initialized && baseline === null) setBaseline(signature);
+  }, [initialized, baseline, signature]);
+  useEffect(() => {
+    onEditorStateChange?.({ dirty: baseline !== null && baseline !== signature, busy });
+  }, [baseline, signature, busy, onEditorStateChange]);
   const calculationCurrent = Boolean(calculation && calculatedSignature === signature);
 
   useEffect(() => {
@@ -221,7 +246,19 @@ export function SalaryStructureBuilder({
   };
 
   const calculateSalary = async () => {
-    if (!selectedVersion || monthlyAmount <= 0 || (pfApplicable && !pfRuleId)) return;
+    if (
+      operationPending.current ||
+      !canManage ||
+      !selectedVersion ||
+      !Number.isFinite(monthlyAmount) ||
+      monthlyAmount <= 0 ||
+      !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
+      (pfApplicable && !pfRuleId)
+    )
+      return;
+    operationPending.current = true;
+    setLocalBusy(true);
+    setOperationError('');
     try {
       const result = await calculate({
         templateVersionId: selectedVersion.id,
@@ -237,17 +274,34 @@ export function SalaryStructureBuilder({
       setCalculation(result);
       setCalculatedSignature(signature);
     } catch (error: any) {
-      toast.error(parseApiProblemDetail(error).detail);
+      setOperationError(parseApiProblemDetail(error).detail);
       setCalculation(null);
+    } finally {
+      operationPending.current = false;
+      setLocalBusy(false);
     }
   };
 
   const save = async () => {
-    if (!employeeId || !selectedVersion || !calculationCurrent || !calculation) return;
+    if (
+      operationPending.current ||
+      !canManage ||
+      !employeeId ||
+      !selectedVersion ||
+      !calculationCurrent ||
+      !calculation ||
+      savedSignature === signature ||
+      hasConflict ||
+      statutoryBlocked
+    )
+      return;
     if (customizing && overrides.length > 0 && !customizationReason.trim()) {
       toast.error('Add a reason for the staff-specific salary customization.');
       return;
     }
+    operationPending.current = true;
+    setLocalBusy(true);
+    setOperationError('');
     operationKeyRef.current ||= newKey();
     operationSignatureRef.current = signature;
     try {
@@ -268,9 +322,9 @@ export function SalaryStructureBuilder({
         },
       }).unwrap();
       operationKeyRef.current = '';
-      // Compensation owns salary amounts and provenance. Do not copy partial metadata
-      // into the independent bank-details and one-time-component form.
-      formik.setFieldValue('pfRule', result.pfRuleId || null, false);
+      setBaseline(signature);
+      setSavedSignature(signature);
+      if (refetchRevisions) await refetchRevisions();
       toast.success(
         result.isScheduled
           ? `Salary revision ${result.revisionNumber} is scheduled for ${effectiveMonth}.`
@@ -281,11 +335,15 @@ export function SalaryStructureBuilder({
       }
     } catch (error: any) {
       const parsed = parseApiProblemDetail(error);
-      toast.error(
+      if (error?.status === 409) setHasConflict(true);
+      setOperationError(
         error?.status === 409
           ? 'Salary changed in another session. Reload the history and review before saving again.'
           : parsed.detail
       );
+    } finally {
+      operationPending.current = false;
+      setLocalBusy(false);
     }
   };
 
@@ -396,433 +454,519 @@ export function SalaryStructureBuilder({
       )
     : false;
 
-  return (
-    <Box display="grid" gap={2.5}>
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-        flexWrap="wrap"
+  const actions = (
+    <>
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<Calculate />}
+        onClick={calculateSalary}
+        disabled={
+          !canManage ||
+          busy ||
+          !selectedVersion ||
+          !Number.isFinite(monthlyAmount) ||
+          monthlyAmount <= 0 ||
+          !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
+          (pfApplicable && !pfRuleId)
+        }
       >
-        {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
-          <Typography variant="body2" color="error.main">
-            Enter the staff’s ESIC insurance number before activation.
-          </Typography>
-        )}
-        <EmployeeEsiDetails
-          employeeId={employeeId}
-          employeeName={
-            [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
-            'Employee'
-          }
-          employeeIdentifier={formik.values.employeeIdentifier || ''}
-          onSaved={async () => {
-            setCalculation(null);
-            if (canActivate) await refetchReadiness();
-          }}
-        />
-      </Box>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormControl fullWidth disabled={!canManage}>
-            <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
-            <Select
-              labelId={salaryTemplateLabelId}
-              label="Salary template"
-              value={selectedTemplate?.id || ''}
-              onChange={(event) => chooseTemplate(event.target.value)}
-            >
-              {templates.map((template) => (
-                <MenuItem key={template.id} value={template.id}>
-                  {template.name}
-                  {template.isDefault ? ' (School default)' : ''}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <TextField
-            fullWidth
-            label="Effective month"
-            type="month"
-            value={effectiveMonth}
-            disabled={!canManage}
-            onChange={(event) => {
-              setEffectiveMonth(event.target.value);
-              setCalculation(null);
-            }}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <TextField
-            fullWidth
-            label={
-              salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
+        Calculate salary
+      </Button>
+      <Button
+        size="small"
+        variant="contained"
+        onClick={save}
+        disabled={
+          !canManage ||
+          busy ||
+          !calculationCurrent ||
+          statutoryBlocked ||
+          savedSignature === signature ||
+          hasConflict ||
+          revisionsError
+        }
+      >
+        Save salary
+      </Button>
+    </>
+  );
+  return (
+    <Box display="grid" gap={2}>
+      <Box
+        component="fieldset"
+        disabled={busy}
+        sx={{ border: 0, p: 0, m: 0, minWidth: 0, display: 'grid', gap: 2 }}
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          gap={1}
+          flexWrap="wrap"
+        >
+          {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
+            <Typography variant="body2" color="error.main">
+              Enter the staff’s ESIC insurance number before activation.
+            </Typography>
+          )}
+          <EmployeeEsiDetails
+            employeeId={employeeId}
+            employeeName={
+              [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
+              'Employee'
             }
-            type="number"
-            value={monthlyAmount || ''}
-            disabled={!canManage}
-            onChange={(event) => {
-              setMonthlyAmount(Number(event.target.value));
+            employeeIdentifier={formik.values.employeeIdentifier || ''}
+            onSaved={async () => {
               setCalculation(null);
+              if (canActivate) await refetchReadiness();
             }}
-            slotProps={{ htmlInput: { min: 1, step: 100 } }}
           />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormControl fullWidth disabled={!canManage}>
-            <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
-            <Select
-              labelId={salaryBasisLabelId}
-              label="Amount basis"
-              value={salaryBasis}
+        </Box>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth disabled={!canManage || busy}>
+              <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
+              <Select
+                labelId={salaryTemplateLabelId}
+                label="Salary template"
+                value={selectedTemplate?.id || ''}
+                onChange={(event) => chooseTemplate(event.target.value)}
+              >
+                {templates.map((template) => (
+                  <MenuItem key={template.id} value={template.id}>
+                    {template.name}
+                    {template.isDefault ? ' (School default)' : ''}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Effective month"
+              type="month"
+              value={effectiveMonth}
+              disabled={!canManage || busy}
               onChange={(event) => {
-                setSalaryBasis(event.target.value as SalaryBasis);
+                setEffectiveMonth(event.target.value);
                 setCalculation(null);
               }}
-            >
-              <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
-              <MenuItem value="GROSS">Monthly salary</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid size={{ xs: 12, md: 5 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={pfApplicable}
-                disabled={!canManage}
-                onChange={(_, checked) => {
-                  setPfApplicable(checked);
-                  if (!checked) setPfRuleId('');
-                  else if (!pfRuleId)
-                    setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <TextField
+              fullWidth
+              label={
+                salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
+              }
+              type="number"
+              value={monthlyAmount || ''}
+              disabled={!canManage || busy}
+              onChange={(event) => {
+                setMonthlyAmount(Number(event.target.value));
+                setCalculation(null);
+              }}
+              slotProps={{ htmlInput: { min: 1, step: 100 } }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth disabled={!canManage || busy}>
+              <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
+              <Select
+                labelId={salaryBasisLabelId}
+                label="Amount basis"
+                value={salaryBasis}
+                onChange={(event) => {
+                  setSalaryBasis(event.target.value as SalaryBasis);
                   setCalculation(null);
                 }}
-                inputProps={{ 'aria-label': 'PF applicable for staff' }}
-              />
-            }
-            label="PF applicable"
-          />
+              >
+                <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
+                <MenuItem value="GROSS">Monthly salary</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={pfApplicable}
+                  disabled={!canManage || busy}
+                  onChange={(_, checked) => {
+                    setPfApplicable(checked);
+                    if (!checked) setPfRuleId('');
+                    else if (!pfRuleId)
+                      setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+                    setCalculation(null);
+                  }}
+                  inputProps={{ 'aria-label': 'PF applicable for staff' }}
+                />
+              }
+              label="PF applicable"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 7 }}>
+            <FormControl fullWidth disabled={!canManage || busy || !pfApplicable || pfRulesError}>
+              <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+              <Select
+                labelId={pfRuleLabelId}
+                label="PF rule"
+                value={pfRuleId}
+                onChange={(event) => {
+                  setPfRuleId(event.target.value);
+                  setCalculation(null);
+                }}
+              >
+                {pfRules.map((rule: any) => (
+                  <MenuItem key={rule.id} value={rule.id}>
+                    {rule.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 7 }}>
-          <FormControl fullWidth disabled={!canManage || !pfApplicable || pfRulesError}>
-            <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-            <Select
-              labelId={pfRuleLabelId}
-              label="PF rule"
-              value={pfRuleId}
-              onChange={(event) => {
-                setPfRuleId(event.target.value);
-                setCalculation(null);
-              }}
-            >
-              {pfRules.map((rule: any) => (
-                <MenuItem key={rule.id} value={rule.id}>
-                  {rule.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
 
-      <Divider />
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        gap={2}
-        alignItems="center"
-        flexWrap="wrap"
-      >
-        <Box>
-          <Box display="flex" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Staff-specific customization</Typography>
-            {customizing && overrides.length ? (
-              <Chip size="small" color="warning" label="Customized" />
-            ) : null}
+        <Divider />
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          gap={2}
+          alignItems="center"
+          flexWrap="wrap"
+        >
+          <Box>
+            <Box display="flex" gap={1} alignItems="center">
+              <Typography variant="subtitle1">Staff-specific customization</Typography>
+              {customizing && overrides.length ? (
+                <Chip size="small" color="warning" label="Customized" />
+              ) : null}
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay
+              locked.
+            </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay
-            locked.
-          </Typography>
-        </Box>
-        {canManage ? (
-          <Box display="flex" gap={1}>
-            {customizing ? (
-              <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
-                Reset to template
+          {canManage ? (
+            <Box display="flex" gap={1}>
+              {customizing ? (
+                <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
+                  Reset to template
+                </Button>
+              ) : null}
+              <Button
+                variant="outlined"
+                startIcon={<Tune />}
+                onClick={() => setCustomizing(true)}
+                disabled={customizing}
+              >
+                Customize
               </Button>
-            ) : null}
-            <Button
-              variant="outlined"
-              startIcon={<Tune />}
-              onClick={() => setCustomizing(true)}
-              disabled={customizing}
-            >
-              Customize
-            </Button>
-          </Box>
-        ) : null}
-      </Box>
-      {customizing ? (
-        <Grid container spacing={1.5}>
-          {permittedRules.map((rule) => {
-            const override = overrides.find((item) => item.componentId === rule.componentId);
-            return (
-              <Grid key={rule.componentId} size={{ xs: 12, md: 6 }}>
-                <Paper variant="outlined" sx={{ p: 1.5 }}>
-                  <Typography variant="subtitle2">{contractLabel(rule.semanticType)}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
-                  </Typography>
-                  <Grid container spacing={1} mt={0.5}>
-                    <Grid size={{ xs: 7 }}>
-                      <FormControl fullWidth size="small">
-                        <InputLabel id={`calculation-${rule.componentId}-label`}>
-                          Calculation
-                        </InputLabel>
-                        <Select
-                          labelId={`calculation-${rule.componentId}-label`}
-                          label="Calculation"
-                          value={override?.formulaType || rule.formulaType}
+            </Box>
+          ) : null}
+        </Box>
+        {customizing ? (
+          <Grid container spacing={1.5}>
+            {permittedRules.map((rule) => {
+              const override = overrides.find((item) => item.componentId === rule.componentId);
+              return (
+                <Grid key={rule.componentId} size={{ xs: 12, md: 6 }}>
+                  <Paper variant="outlined" sx={{ p: 1.5 }}>
+                    <Typography variant="subtitle2">{contractLabel(rule.semanticType)}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
+                    </Typography>
+                    <Grid container spacing={1} mt={0.5}>
+                      <Grid size={{ xs: 7 }}>
+                        <FormControl fullWidth size="small" disabled={busy}>
+                          <InputLabel id={`calculation-${rule.componentId}-label`}>
+                            Calculation
+                          </InputLabel>
+                          <Select
+                            labelId={`calculation-${rule.componentId}-label`}
+                            label="Calculation"
+                            value={override?.formulaType || rule.formulaType}
+                            onChange={(event) =>
+                              setOverride(
+                                rule.componentId,
+                                event.target.value,
+                                override?.value ?? rule.value ?? 0
+                              )
+                            }
+                          >
+                            <MenuItem value="FIXED_AMOUNT">Fixed amount</MenuItem>
+                            <MenuItem value="PERCENTAGE_OF_GROSS">Percent of gross</MenuItem>
+                            <MenuItem value="PERCENTAGE_OF_BASIC">Percent of basic</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid size={{ xs: 5 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Value"
+                          value={override?.value ?? rule.value ?? 0}
                           onChange={(event) =>
                             setOverride(
                               rule.componentId,
-                              event.target.value,
-                              override?.value ?? rule.value ?? 0
+                              override?.formulaType || rule.formulaType,
+                              Number(event.target.value)
                             )
                           }
-                        >
-                          <MenuItem value="FIXED_AMOUNT">Fixed amount</MenuItem>
-                          <MenuItem value="PERCENTAGE_OF_GROSS">Percent of gross</MenuItem>
-                          <MenuItem value="PERCENTAGE_OF_BASIC">Percent of basic</MenuItem>
-                        </Select>
-                      </FormControl>
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid size={{ xs: 5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        type="number"
-                        label="Value"
-                        value={override?.value ?? rule.value ?? 0}
-                        onChange={(event) =>
-                          setOverride(
-                            rule.componentId,
-                            override?.formulaType || rule.formulaType,
-                            Number(event.target.value)
-                          )
-                        }
-                      />
-                    </Grid>
-                  </Grid>
+                  </Paper>
+                </Grid>
+              );
+            })}
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                required={overrides.length > 0}
+                label="Customization reason"
+                value={customizationReason}
+                onChange={(event) => {
+                  setCustomizationReason(event.target.value);
+                  setCalculation(null);
+                }}
+                helperText="Required when any row differs from the source template."
+              />
+            </Grid>
+          </Grid>
+        ) : null}
+
+        {operationError && (
+          <Alert
+            severity="error"
+            action={
+              hasConflict ? (
+                <Button
+                  disabled={busy}
+                  onClick={async () => {
+                    setLocalBusy(true);
+                    try {
+                      const response = await refetchRevisions();
+                      if (!response.error) {
+                        setHasConflict(false);
+                        setCalculation(null);
+                        setOperationError('');
+                        operationKeyRef.current = '';
+                      }
+                    } finally {
+                      setLocalBusy(false);
+                    }
+                  }}
+                >
+                  Reload salary history
+                </Button>
+              ) : undefined
+            }
+          >
+            {operationError}
+          </Alert>
+        )}
+        {calculatedSignature && !calculationCurrent && (
+          <Alert severity="info">Recalculate to review your changes.</Alert>
+        )}
+        {calculation ? (
+          <Box display="grid" gap={2} aria-live="polite">
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 6, md: 3 }}>
+                <Summary label="Full-month gross" amount={calculation.grossSalary} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 3 }}>
+                <Summary label="Deductions" amount={calculation.totalDeductions} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 3 }}>
+                <Summary label="Estimated net salary" amount={calculation.netSalary} />
+              </Grid>
+              <Grid size={{ xs: 6, md: 3 }}>
+                <Summary label="Employer cost" amount={calculation.employerCost} />
+              </Grid>
+            </Grid>
+            <Typography variant="caption" color="text.secondary">
+              Estimated net salary excludes monthly attendance effects and one-time adjustments.
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" mb={1}>
+                    Earnings
+                  </Typography>
+                  {calculation.earnings.map((line) => (
+                    <Box
+                      key={`${line.componentId}-${line.code}`}
+                      display="flex"
+                      justifyContent="space-between"
+                      py={0.5}
+                    >
+                      <Box display="flex" gap={0.75}>
+                        {line.name}
+                        {line.lineSource === 'CUSTOMIZED' ? (
+                          <Chip size="small" label="Customized" />
+                        ) : null}
+                      </Box>
+                      <Typography>{formatCurrency(line.amount)}</Typography>
+                    </Box>
+                  ))}
                 </Paper>
               </Grid>
-            );
-          })}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              required={overrides.length > 0}
-              label="Customization reason"
-              value={customizationReason}
-              onChange={(event) => {
-                setCustomizationReason(event.target.value);
-                setCalculation(null);
-              }}
-              helperText="Required when any row differs from the source template."
-            />
-          </Grid>
-        </Grid>
-      ) : null}
-
-      <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="outlined"
-          startIcon={<Calculate />}
-          onClick={calculateSalary}
-          disabled={
-            !canManage ||
-            calculationState.isLoading ||
-            monthlyAmount <= 0 ||
-            (pfApplicable && !pfRuleId)
-          }
-          size="small"
-        >
-          Calculate
-        </Button>
-      </Box>
-
-      {calculation ? (
-        <Box display="grid" gap={2} aria-live="polite">
-          <Grid container spacing={1.5}>
-            <Grid size={{ xs: 6, md: 3 }}>
-              <Summary label="Full-month gross" amount={calculation.grossSalary} />
-            </Grid>
-            <Grid size={{ xs: 6, md: 3 }}>
-              <Summary label="Deductions" amount={calculation.totalDeductions} />
-            </Grid>
-            <Grid size={{ xs: 6, md: 3 }}>
-              <Summary label="Net salary" amount={calculation.netSalary} />
-            </Grid>
-            <Grid size={{ xs: 6, md: 3 }}>
-              <Summary label="Employer cost" amount={calculation.employerCost} />
-            </Grid>
-          </Grid>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="subtitle1" mb={1}>
-                  Earnings
-                </Typography>
-                {calculation.earnings.map((line) => (
-                  <Box
-                    key={`${line.componentId}-${line.code}`}
-                    display="flex"
-                    justifyContent="space-between"
-                    py={0.5}
-                  >
-                    <Box display="flex" gap={0.75}>
-                      {line.name}
-                      {line.lineSource === 'CUSTOMIZED' ? (
-                        <Chip size="small" label="Customized" />
-                      ) : null}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" mb={1}>
+                    Employee deductions
+                  </Typography>
+                  {calculation.deductions.map((line) => (
+                    <Box
+                      key={`${line.componentId}-${line.code}-${line.name}`}
+                      display="flex"
+                      justifyContent="space-between"
+                      py={0.5}
+                    >
+                      <Box display="flex" gap={0.75}>
+                        {line.name}
+                        {line.lineSource === 'CUSTOMIZED' ? (
+                          <Chip size="small" label="Customized" />
+                        ) : null}
+                      </Box>
+                      <Typography>{formatCurrency(line.amount)}</Typography>
                     </Box>
-                    <Typography>{formatCurrency(line.amount)}</Typography>
+                  ))}
+                </Paper>
+              </Grid>
+            </Grid>
+            {calculation.employerContributions.length > 0 && (
+              <Box>
+                <Typography variant="subtitle1">Employer contributions</Typography>
+                {calculation.employerContributions.map((line) => (
+                  <Box key={line.code} display="flex" justifyContent="space-between" gap={2}>
+                    <Typography variant="body2">{line.name}</Typography>
+                    <Typography variant="body2">{formatCurrency(line.amount)}</Typography>
                   </Box>
                 ))}
-              </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="subtitle1" mb={1}>
-                  Deductions and employer contributions
-                </Typography>
-                {[...calculation.deductions, ...calculation.employerContributions].map((line) => (
-                  <Box
-                    key={`${line.componentId}-${line.code}-${line.name}`}
-                    display="flex"
-                    justifyContent="space-between"
-                    py={0.5}
-                  >
-                    <Box display="flex" gap={0.75}>
-                      {line.name}
-                      {line.lineSource === 'CUSTOMIZED' ? (
-                        <Chip size="small" label="Customized" />
-                      ) : null}
-                    </Box>
-                    <Typography>{formatCurrency(line.amount)}</Typography>
-                  </Box>
-                ))}
-              </Paper>
-            </Grid>
-          </Grid>
-          {calculation.employeeStateInsurance.ruleId && (
-            <Alert
-              severity={
-                statutoryBlocked
-                  ? 'error'
-                  : calculation.employeeStateInsurance.registrationPending
-                    ? 'warning'
-                    : 'info'
-              }
-            >
-              ESI:{' '}
-              {contractLabel(
-                calculation.employeeStateInsurance.coverageDecision || 'not evaluated'
-              )}
-              .
-              {calculation.employeeStateInsurance.registrationPending
-                ? ' Registration is pending. Salary can be saved and the insurance number remains a visible follow-up.'
-                : ''}
-              {calculation.employeeStateInsurance.issueCodes.length
-                ? ` ${calculation.employeeStateInsurance.issueCodes.map(contractLabel).join(', ')}.`
-                : ''}
-            </Alert>
-          )}
-          <Box display="flex" justifyContent="flex-end" gap={1} flexWrap="wrap">
-            <Button
-              variant="contained"
-              onClick={save}
-              disabled={
-                !canManage || !calculationCurrent || statutoryBlocked || saveState.isLoading
-              }
-              size="small"
-            >
-              Save salary
-            </Button>
-          </Box>
-        </Box>
-      ) : null}
-
-      {readiness?.canActivate && canActivate && !employeeIsActive && !activationCompleted ? (
-        <Alert
-          severity="success"
-          action={
-            <Button
-              color="success"
-              variant="contained"
-              onClick={activate}
-              disabled={activationState.isLoading}
-              size="small"
-            >
-              Activate staff
-            </Button>
-          }
-        >
-          Salary is ready. Activate the staff when the remaining onboarding checks are complete.
-        </Alert>
-      ) : null}
-
-      {revisionsError ? <Alert severity="error">Salary history could not be loaded.</Alert> : null}
-      {revisionData?.items.length ? (
-        <Box>
-          <Typography variant="h6" mb={1}>
-            Salary history
-          </Typography>
-          <Box display="grid" gap={1}>
-            {revisionData.items.map((revision) => (
-              <Paper
-                key={revision.id}
-                variant="outlined"
-                sx={{
-                  p: 1.5,
-                  display: 'flex',
-                  gap: 1.5,
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                }}
+              </Box>
+            )}
+            {calculation.employeeStateInsurance.ruleId && (
+              <Alert
+                severity={
+                  statutoryBlocked
+                    ? 'error'
+                    : calculation.employeeStateInsurance.registrationPending
+                      ? 'warning'
+                      : 'info'
+                }
               >
-                <Box>
-                  <Typography variant="subtitle2">
-                    Revision {revision.revisionNumber} - {revision.effectiveMonth.slice(0, 7)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Template version {revision.sourceSalaryTemplateVersion || 'Legacy'}
-                  </Typography>
-                </Box>
-                <Box display="flex" gap={1} alignItems="center">
-                  {revision.isCurrent ? (
-                    <Chip size="small" color="success" label="Current" />
-                  ) : null}
-                  {revision.isScheduled ? (
-                    <Chip size="small" color="info" label="Scheduled" />
-                  ) : null}
-                  {revision.isCustomized ? (
-                    <Chip size="small" color="warning" label="Customized" />
-                  ) : null}
-                  <Chip size="small" label={contractLabel(revision.status)} />
-                  <Typography fontWeight={700}>{formatCurrency(revision.netSalary)}</Typography>
-                </Box>
-              </Paper>
-            ))}
+                ESI:{' '}
+                {contractLabel(
+                  calculation.employeeStateInsurance.coverageDecision || 'not evaluated'
+                )}
+                .
+                {calculation.employeeStateInsurance.registrationPending
+                  ? ' Registration is pending. Salary can be saved and the insurance number remains a visible follow-up.'
+                  : ''}
+                {calculation.employeeStateInsurance.issueCodes.length
+                  ? ` ${calculation.employeeStateInsurance.issueCodes.map(contractLabel).join(', ')}.`
+                  : ''}
+              </Alert>
+            )}
           </Box>
+        ) : null}
+
+        {readiness?.canActivate && canActivate && !employeeIsActive && !activationCompleted ? (
+          <Alert
+            severity="success"
+            action={
+              <Button
+                color="success"
+                variant="contained"
+                onClick={activate}
+                disabled={activationState.isLoading}
+                size="small"
+              >
+                Activate staff
+              </Button>
+            }
+          >
+            Salary is ready. Activate the staff when the remaining onboarding checks are complete.
+          </Alert>
+        ) : null}
+
+        {revisionsError ? (
+          <Alert severity="error">Salary history could not be loaded.</Alert>
+        ) : null}
+        {revisionData?.items.length ? (
+          <Accordion
+            disableGutters
+            elevation={0}
+            sx={{ border: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
+          >
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Box>
+                <Typography variant="subtitle1">Salary history</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {revisionData.items.find((item) => item.isCurrent)?.effectiveMonth.slice(0, 7)
+                    ? `Current from ${revisionData.items
+                        .find((item) => item.isCurrent)
+                        ?.effectiveMonth.slice(0, 7)}`
+                    : 'No effective salary'}{' '}
+                  · {revisionData.items.filter((item) => item.isScheduled).length} scheduled
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box display="grid" gap={1}>
+                {revisionData.items.map((revision) => (
+                  <Paper
+                    key={revision.id}
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      display: 'flex',
+                      gap: 1.5,
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="subtitle2">
+                        Revision {revision.revisionNumber} - {revision.effectiveMonth.slice(0, 7)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Template version {revision.sourceSalaryTemplateVersion || 'Legacy'}
+                      </Typography>
+                    </Box>
+                    <Box display="flex" gap={1} alignItems="center">
+                      {revision.isCurrent ? (
+                        <Chip size="small" color="success" label="Current" />
+                      ) : null}
+                      {revision.isScheduled ? (
+                        <Chip size="small" color="info" label="Scheduled" />
+                      ) : null}
+                      {revision.isCustomized ? (
+                        <Chip size="small" color="warning" label="Customized" />
+                      ) : null}
+                      <Chip size="small" label={contractLabel(revision.status)} />
+                      <Typography fontWeight={700}>{formatCurrency(revision.netSalary)}</Typography>
+                    </Box>
+                  </Paper>
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        ) : null}
+      </Box>
+      {actionContainer ? (
+        createPortal(actions, actionContainer)
+      ) : (
+        <Box display="flex" justifyContent="flex-end" gap={1}>
+          {actions}
         </Box>
-      ) : null}
+      )}
     </Box>
   );
 }
