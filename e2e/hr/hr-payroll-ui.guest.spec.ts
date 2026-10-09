@@ -45,7 +45,7 @@ const readiness = {
 
 async function mockPayroll(
   page: Page,
-  options: { failReadiness?: boolean; delayDashboard?: boolean } = {}
+  options: { failReadiness?: boolean; delayDashboard?: boolean; zeroTaxRange?: boolean } = {}
 ) {
   await page.clock.setFixedTime(new Date('2026-10-09T04:00:00Z'));
   await page.addInitScript((academicYear) => {
@@ -140,11 +140,11 @@ async function mockPayroll(
         items: [
           {
             id: 'ui-tax',
-            jurisdictionCode: 'GJ',
+            jurisdictionCode: 'IN-GJ',
             effectiveFrom: '2026-04-01',
-            fromSalary: 12000,
-            toSalary: null,
-            taxAmount: 200,
+            fromSalary: options.zeroTaxRange ? 0 : 12000,
+            toSalary: options.zeroTaxRange ? 12000 : null,
+            taxAmount: options.zeroTaxRange ? 0 : 200,
             isActive: true,
             deductInCessationMonth: true,
           },
@@ -270,6 +270,24 @@ test.describe('Payroll interface consistency', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
     await expectCompactActions(page, '[role="dialog"]');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+  });
+
+  test('editing professional tax retains zero salary and zero tax amounts', async ({ page }) => {
+    await mockPayroll(page, { zeroTaxRange: true });
+    await page.goto('/hr/payroll/setting/professional-tax');
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await expect(page.getByLabel('From Salary', { exact: true })).toHaveValue('0');
+    await expect(page.getByLabel('Tax Amount', { exact: true })).toHaveValue('0');
+    const update = page.waitForRequest(
+      (request) => request.method() === 'PUT' && request.url().includes('/professional-taxes/')
+    );
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    expect((await update).postDataJSON()).toMatchObject({
+      fromSalary: 0,
+      toSalary: 12000,
+      taxAmount: 0,
+    });
     await expect(page.getByRole('dialog')).not.toBeVisible();
   });
 });
