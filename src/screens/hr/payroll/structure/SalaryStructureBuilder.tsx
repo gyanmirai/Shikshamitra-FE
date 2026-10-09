@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
@@ -50,7 +51,6 @@ import {
   Typography,
   InputLabel,
   FormControl,
-  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -168,6 +168,7 @@ export function SalaryStructureBuilder({
   const salaryTemplateLabelId = useId();
   const salaryBasisLabelId = useId();
   const pfRuleLabelId = useId();
+  const pfApplicableId = useId();
 
   const templates = templateData?.items || [];
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
@@ -705,31 +706,64 @@ export function SalaryStructureBuilder({
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Box
+              role="group"
+              aria-label="Provident fund"
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'auto minmax(0, 1fr)' },
+                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
                 alignItems: 'center',
-                gap: 2,
+                gap: { xs: 1.5, sm: 2 },
+                p: 1.25,
+                border: 1,
+                borderRadius: 1,
+                borderColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.24),
+                bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
               }}
             >
-              <FormControlLabel
-                sx={{ m: 0 }}
-                control={
-                  <Switch
-                    checked={pfApplicable}
-                    disabled={!canManage || busy}
-                    onChange={(_, checked) => {
-                      setPfApplicable(checked);
-                      if (!checked) setPfRuleId('');
-                      else if (!pfRuleId)
-                        setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
-                      setCalculation(null);
-                    }}
-                    inputProps={{ 'aria-label': 'PF applicable for staff' }}
-                  />
-                }
-                label="PF applicable"
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                <Switch
+                  checked={pfApplicable}
+                  disabled={!canManage || busy}
+                  onChange={(_, checked) => {
+                    setPfApplicable(checked);
+                    if (!checked) setPfRuleId('');
+                    else if (!pfRuleId)
+                      setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+                    setCalculation(null);
+                  }}
+                  slotProps={{
+                    input: {
+                      id: pfApplicableId,
+                      'aria-describedby': `${pfApplicableId}-description`,
+                    },
+                  }}
+                />
+                <Box sx={{ minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <Typography
+                      component="label"
+                      htmlFor={pfApplicableId}
+                      variant="body2"
+                      sx={{ fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      PF applicable
+                    </Typography>
+                    <Tooltip title="The selected PF rule determines the provident fund contributions in the salary calculation.">
+                      <IconButton size="small" aria-label="About PF applicability">
+                        <Iconify icon="eva:info-outline" width={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                  <Typography
+                    id={`${pfApplicableId}-description`}
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block' }}
+                  >
+                    Deduct Provident Fund for this employee
+                  </Typography>
+                </Box>
+              </Box>
               <FormControl
                 fullWidth
                 size="small"

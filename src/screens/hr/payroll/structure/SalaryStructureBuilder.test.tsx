@@ -186,6 +186,25 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(screen.getByRole('button', { name: 'ESIC details' })).toBeVisible();
   });
 
+  it('keeps the PF label, description and keyboard toggle accessible without help changing the draft', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    const pfSwitch = screen.getByRole('switch', { name: 'PF applicable' });
+    expect(pfSwitch).toHaveAccessibleDescription('Deduct Provident Fund for this employee');
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute('aria-disabled', 'true');
+
+    await user.click(screen.getByText('PF applicable', { exact: true }));
+    expect(pfSwitch).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByRole('button', { name: 'About PF applicability' }));
+    expect(pfSwitch).toBeChecked();
+    await user.click(pfSwitch);
+    await user.keyboard(' ');
+    expect(pfSwitch).toBeChecked();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
   it('preserves formatted decimal and large amounts in calculation and save payloads', async () => {
     const user = userEvent.setup();
     const calculation = await mocks.calculate().unwrap();
