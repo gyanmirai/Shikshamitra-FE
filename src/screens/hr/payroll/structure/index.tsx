@@ -5,10 +5,10 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
-import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -148,14 +148,15 @@ const EmployeeSalaryStructureContent = () => {
         heading="Payroll Structure"
         description="View and manage staff salary structures."
         links={[
-          { name: 'HR/Staff' },
-          { name: 'Payroll Management' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Payroll Structure' },
         ]}
       />
       {['staff-profile', 'staff-edit'].includes(searchParams.get('from') || '') &&
         requestedEmployeeId && (
           <Button
+            size="small"
             component={RouterLink}
             href={
               searchParams.get('from') === 'staff-edit'
@@ -170,7 +171,7 @@ const EmployeeSalaryStructureContent = () => {
           </Button>
         )}
 
-      <Card>
+      <Card variant="outlined" sx={{ boxShadow: 'none' }}>
         <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
             label="Staff"
@@ -213,7 +214,11 @@ const EmployeeSalaryStructureContent = () => {
       {employeeError && selectedEmployee?.id === requestedEmployeeId && (
         <Alert
           severity="error"
-          action={<Button onClick={() => refetchEmployee()}>Retry</Button>}
+          action={
+            <Button size="small" onClick={() => refetchEmployee()}>
+              Retry
+            </Button>
+          }
           sx={{ mt: 1 }}
         >
           Unable to load staff details.
@@ -221,7 +226,7 @@ const EmployeeSalaryStructureContent = () => {
       )}
 
       {!employeeId ? (
-        <Paper elevation={3} sx={{ p: 3, mt: 1, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ p: 3, mt: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Select a staff member to view salary structure.
           </Typography>

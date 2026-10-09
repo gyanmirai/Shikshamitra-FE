@@ -3,6 +3,7 @@
 import { useFormik } from 'formik';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'src/routes/hooks';
+import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
@@ -71,7 +72,14 @@ export function SalaryEditorDialog({
           {isLoading ? (
             <LoadingScreen />
           ) : isError && !employee ? (
-            <Alert severity="error" action={<Button onClick={() => refetch()}>Retry</Button>}>
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              }
+            >
               Unable to load staff details.
             </Alert>
           ) : employee ? (
@@ -116,7 +124,14 @@ export function SalaryEditorDialog({
             '& > :not(style) ~ :not(style)': { ml: 0 },
           }}
         >
-          <Button onClick={close} disabled={editorState.busy} color="inherit">
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={close}
+            disabled={editorState.busy}
+            color="inherit"
+          >
             Close
           </Button>
           <Box ref={setActionContainer} sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} />

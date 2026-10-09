@@ -149,7 +149,6 @@ export function EsiStatutoryEmployees({
                     onOpenEmployee(employee);
                   }}
                   aria-label={`View all ${employee.issues.length} issues for ${employee.employeeName}`}
-                  sx={{ minHeight: 36, px: 0.5 }}
                 >
                   View all issues ({employee.issues.length})
                 </Button>
@@ -179,7 +178,7 @@ export function EsiStatutoryEmployees({
                   href={`/hr/payroll/structure?employeeId=${employee.employeeId}`}
                   onClick={(event) => event.stopPropagation()}
                   size="small"
-                  sx={{ minHeight: 44, whiteSpace: 'nowrap' }}
+                  sx={{ whiteSpace: 'nowrap' }}
                 >
                   Payroll structure
                 </Button>
@@ -274,7 +273,14 @@ export function EsiStatutoryEmployees({
       </Box>
 
       {isError ? (
-        <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={onRetry}>
+              Retry
+            </Button>
+          }
+        >
           The staff ESI preview could not be loaded.
         </Alert>
       ) : null}

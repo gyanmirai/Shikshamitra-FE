@@ -12,7 +12,6 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import { useResponsive } from 'src/hooks/use-responsive';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -70,8 +69,6 @@ import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
 } from './run-payroll-adjustment-utils';
-
-
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -178,7 +175,6 @@ const resolveIssueSeverity = (codes: string[]): PayrollRow['issueSeverity'] => {
 };
 
 const RunPayroll = () => {
-  const isDesktop = useResponsive('up', 'md');
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -878,7 +874,16 @@ const RunPayroll = () => {
               ? { label: 'Needs attention', color: 'warning' as const }
               : previewReadiness
                 ? { label: 'Ready to review', color: 'success' as const }
-                : { label: 'Select month', color: 'default' as const };
+                : {
+                    label: !month
+                      ? 'Select month'
+                      : !academicYearId
+                        ? 'Select academic year'
+                        : readinessBusy
+                          ? 'Loading readiness'
+                          : 'Not loaded',
+                    color: 'default' as const,
+                  };
   const totalForProgress = stats.total || Number(previewReadiness?.employeeCount || 0);
   const readinessMetrics = [
     {
@@ -935,8 +940,11 @@ const RunPayroll = () => {
     >
       <CustomBreadcrumbs
         heading="Run Payroll"
-        layout={isDesktop ? 'inline' : 'stacked'}
-        links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
+          { name: 'Run Payroll' },
+        ]}
         description="Generate, review, and lock monthly payroll from one workbench."
       />
 
@@ -955,11 +963,6 @@ const RunPayroll = () => {
           border: (theme) => `1px solid ${theme.palette.divider}`,
           borderRadius: 1.5,
           bgcolor: 'background.paper',
-          boxShadow: (theme) =>
-            theme.palette.mode === 'dark'
-              ? '0 6px 20px -5px rgba(0, 0, 0, 0.5)'
-              : '0 6px 20px -5px rgba(145, 158, 171, 0.08)',
-          transition: (theme) => theme.transitions.create(['box-shadow']),
         }}
       >
         <DatePicker
@@ -1029,10 +1032,10 @@ const RunPayroll = () => {
           spacing={1}
           sx={{ flex: 1, minHeight: 0, overflow: { xs: 'visible', md: 'hidden' } }}
         >
-          <Card variant="outlined" sx={{ p: 0, flexShrink: 0 }}>
+          <Card variant="outlined" sx={{ p: 0, flexShrink: 0, boxShadow: 'none' }}>
             <Stack
-              direction="row"
-              alignItems="center"
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
               justifyContent="space-between"
               spacing={1}
               sx={{
@@ -1144,6 +1147,7 @@ const RunPayroll = () => {
             </Alert>
           ) : null}
           <Card
+            variant="outlined"
             sx={{
               p: 1.25,
               display: 'flex',
@@ -1151,6 +1155,7 @@ const RunPayroll = () => {
               flex: 1,
               minHeight: { xs: 480, md: 0 },
               overflow: 'hidden',
+              boxShadow: 'none',
             }}
           >
             <Stack
@@ -1173,7 +1178,8 @@ const RunPayroll = () => {
                   size="small"
                   variant="outlined"
                   startIcon={<Iconify icon="solar:calendar-mark-linear" />}
-                  onClick={() => router.push('/hr/manual-attendance')}
+                  component={RouterLink}
+                  href={hrPaths.attendance.markAttendance}
                 >
                   Move to Attendance
                 </LoadingButton>
@@ -1198,6 +1204,7 @@ const RunPayroll = () => {
                   size="small"
                   variant="outlined"
                   color="warning"
+                  startIcon={<Iconify icon="mdi:undo" />}
                   loading={unmarkLoading}
                   disabled={!preview.isCurrent || !selectedReviewedIds.length}
                   onClick={() =>
@@ -1237,7 +1244,7 @@ const RunPayroll = () => {
               noDataText={
                 !isDataForSelectedMonth && selectedMonthKey ? (
                   <>
-                    This month is not loaded yet. Use <strong>Load preview</strong> above.
+                    This month is not loaded yet. Use <strong>Generate preview</strong> above.
                   </>
                 ) : (
                   <>No payroll preview rows found for this month. Refresh preview to recompute.</>
@@ -1672,7 +1679,9 @@ const RunPayroll = () => {
                               Normalized Result
                             </Typography>
                             <Typography variant="body2" fontWeight={700}>
-                              {formatPayrollCurrency(activeRow.compensationNormalizedProtectedAmount || 0)}
+                              {formatPayrollCurrency(
+                                activeRow.compensationNormalizedProtectedAmount || 0
+                              )}
                             </Typography>
                           </Grid>
                           <Grid size={{ xs: 6, sm: 3 }}>
@@ -2163,6 +2172,7 @@ const RunPayroll = () => {
             }
             action={
               <LoadingButton
+                size="small"
                 variant="contained"
                 color="error"
                 loading={lockLoading}

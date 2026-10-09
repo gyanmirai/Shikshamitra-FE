@@ -291,7 +291,7 @@ export default function PaySlipGenerationScreen() {
             : versions.isFetching ? 'Refreshing payslip status.' : 'Refresh the payslip before resending.'}</Typography>
           {retryDocumentStatus && <Button size="small" onClick={retryDocumentStatus}>Retry</Button>}
         </Stack>}
-        action={<Button variant="contained" disabled={sendBlocked} onClick={handleSend}>Resend</Button>} />
+        action={<Button size="small" variant="contained" disabled={sendBlocked} onClick={handleSend}>Resend</Button>} />
     </Stack>
   );
 }

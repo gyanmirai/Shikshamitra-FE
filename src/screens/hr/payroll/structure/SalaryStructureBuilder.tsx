@@ -672,13 +672,14 @@ export function SalaryStructureBuilder({
             </Typography>
           </Box>
           {canManage ? (
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} flexWrap="wrap">
               {customizing ? (
-                <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
+                <Button size="small" startIcon={<RestartAlt />} onClick={resetToTemplate}>
                   Reset to template
                 </Button>
               ) : null}
               <Button
+                size="small"
                 variant="outlined"
                 startIcon={<Tune />}
                 onClick={() => setCustomizing(true)}
@@ -767,6 +768,7 @@ export function SalaryStructureBuilder({
             action={
               hasConflict ? (
                 <Button
+                  size="small"
                   disabled={busy}
                   onClick={async () => {
                     setLocalBusy(true);

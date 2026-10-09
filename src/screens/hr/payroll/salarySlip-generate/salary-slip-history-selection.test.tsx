@@ -35,7 +35,7 @@ vi.mock('src/components/paginated-search-select', () => ({
   </>,
 }));
 vi.mock('src/redux/runPayroll/runPayrollApi', () => ({
-  useGetEmployeeSalarySlipQuery: () => ({ currentData: null, isSuccess: true }),
+  useGetEmployeeSalarySlipQuery: () => ({ currentData: null, isSuccess: true, refetch: vi.fn() }),
   useLazyGetEmployeeSalarySlipPreviewPdfQuery: () => [vi.fn()],
 }));
 vi.mock('./payslip-settings-form', () => ({ default: () => null }));
