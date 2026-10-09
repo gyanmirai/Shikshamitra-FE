@@ -92,8 +92,13 @@ export function WorkflowStageFields(props: Props) {
         </FormSectionCard>
 
         {policy()}
-        <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
-        <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
+        <WorkflowStageBehavior
+          formik={formik}
+          metadata={metadata}
+          stages={stages}
+          readOnly={readOnly}
+        />
+        <FormSectionCard title="Special outcomes" icon="mdi:source-branch-plus">
           <WorkflowStageNextSteps
             stage={formik.values}
             stages={stages}
@@ -104,7 +109,6 @@ export function WorkflowStageFields(props: Props) {
             onEditPath={onEditPath}
           />
         </FormSectionCard>
-        <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} advanced />
       </>
     </Stack>
   );

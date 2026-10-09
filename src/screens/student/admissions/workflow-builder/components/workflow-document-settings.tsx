@@ -27,6 +27,7 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
   const disabled = readOnly || !available || unreadable;
   const {
     data: documentTypes = [],
+    isFetching,
     isError,
     refetch,
   } = useGetAdmissionDocumentTypesQuery(undefined, { skip: !available || !policy?.enabled });
@@ -68,6 +69,9 @@ export function WorkflowDocumentSettings({ formik, available, readOnly }: Props)
                 requirements={policy.requirements}
                 readOnly={disabled}
                 documentTypes={documentTypes}
+                documentTypesLoading={isFetching}
+                documentTypesError={isError}
+                onRetryDocumentTypes={() => refetch()}
                 onChange={(requirements) => update({ requirements })}
               />
               {invalid && <Alert severity="error">{invalid}</Alert>}

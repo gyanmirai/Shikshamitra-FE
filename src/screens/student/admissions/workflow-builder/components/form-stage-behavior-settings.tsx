@@ -44,13 +44,9 @@ export function FormStageBehaviorSettings({ policy, disabled, onChange }: Props)
         <Stack spacing={1.5}>
           <SwitchRow
             label="Allow late submission"
-            description={
-              policy.dueInDays == null
-                ? 'Late submission requires an existing workflow deadline.'
-                : 'Let applicants submit after the deadline.'
-            }
-            checked={policy.dueInDays != null && policy.allowLateSubmission}
-            disabled={disabled || policy.dueInDays == null}
+            description="Let applicants submit after a configured deadline. Without a deadline, submissions remain open."
+            checked={policy.allowLateSubmission}
+            disabled={disabled}
             onChange={(checked) => onChange({ allowLateSubmission: checked })}
           />
           <SwitchRow

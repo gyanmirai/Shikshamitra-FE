@@ -133,14 +133,19 @@ export function WorkflowStandardTemplateDialog({
         <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
             <Typography id="workflow-template-drawer-title" variant="h6">
-              Choose a workflow template
+              Choose a Workflow Template
             </Typography>
             <CustomTooltip
               title="Replace this draft’s journey and select the published forms it uses."
               arrow
               placement={isMobile ? 'bottom' : 'right'}
             >
-              <IconButton size="small" color="info" aria-label="Workflow template information">
+              <IconButton
+                size="small"
+                color="info"
+                aria-label="Workflow template information"
+                sx={{ width: 44, height: 44, flexShrink: 0 }}
+              >
                 <Iconify icon="mdi:information-outline" width={18} />
               </IconButton>
             </CustomTooltip>
@@ -149,7 +154,7 @@ export function WorkflowStandardTemplateDialog({
             size="small"
             aria-label="Close workflow template"
             onClick={() => requestExit('close')}
-            sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
+            sx={{ width: 44, height: 44, flexShrink: 0 }}
           >
             <Iconify icon="mdi:close" />
           </IconButton>
@@ -163,7 +168,7 @@ export function WorkflowStandardTemplateDialog({
             minHeight: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            p: 2,
+            p: { xs: 1.5, sm: 2 },
             bgcolor: 'background.neutral',
           }}
         >
@@ -174,39 +179,40 @@ export function WorkflowStandardTemplateDialog({
                 icon={<Iconify icon="mdi:alert-outline" />}
                 closeText="Dismiss template replacement warning"
                 onClose={() => setWarningDismissed(true)}
+                sx={{ '& .MuiAlert-action .MuiIconButton-root': { width: 44, height: 44 } }}
               >
                 This replaces the current stages and routes when you apply it. Save the draft to
                 keep the change.
               </Alert>
             )}
             <FormSectionCard icon="mdi:sitemap-outline" title="Starting journey">
-              <WorkflowTemplateSelector
-                value={formik.values.templateId}
-                onChange={(value) => formik.setFieldValue('templateId', value)}
-                columns={1}
-              />
-            </FormSectionCard>
-            <FormSectionCard icon="mdi:eye-outline" title="Journey preview">
-              <CustomAccordion
-                title="Preview selected journey"
-                expanded={previewOpen.value}
-                onChange={previewOpen.onToggle}
-                content={
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={0.75}>
-                      <Label variant="outlined">{selectedTemplate.stages.length} stages</Label>
-                      <Label variant="outlined">
-                        {Math.max(selectedTemplate.stages.length - 1, 0)} routes
-                      </Label>
+              <Stack spacing={2}>
+                <WorkflowTemplateSelector
+                  value={formik.values.templateId}
+                  onChange={(value) => formik.setFieldValue('templateId', value)}
+                  columns={1}
+                />
+                <CustomAccordion
+                  title="Preview selected journey"
+                  expanded={previewOpen.value}
+                  onChange={previewOpen.onToggle}
+                  content={
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={0.75}>
+                        <Label variant="outlined">{selectedTemplate.stages.length} stages</Label>
+                        <Label variant="outlined">
+                          {Math.max(selectedTemplate.stages.length - 1, 0)} routes
+                        </Label>
+                      </Stack>
+                      {selectedTemplate.stages.map((stage, index) => (
+                        <Typography key={stage.code} variant="body2">
+                          {index + 1}. {stage.name}
+                        </Typography>
+                      ))}
                     </Stack>
-                    {selectedTemplate.stages.map((stage, index) => (
-                      <Typography key={stage.code} variant="body2">
-                        {index + 1}. {stage.name}
-                      </Typography>
-                    ))}
-                  </Stack>
-                }
-              />
+                  }
+                />
+              </Stack>
             </FormSectionCard>
             <FormSectionCard icon="mdi:form-select" title="Published forms">
               <Stack spacing={2}>
@@ -258,7 +264,7 @@ export function WorkflowStandardTemplateDialog({
           </Stack>
         </Box>
         <Divider />
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: 2 }}>
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ p: { xs: 1.5, sm: 2 } }}>
           <Button
             size="small"
             variant="outlined"

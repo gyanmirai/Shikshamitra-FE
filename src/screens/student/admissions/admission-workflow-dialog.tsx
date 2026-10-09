@@ -377,7 +377,13 @@ function CreateWorkflowDialog({
             onCancel={requestClose}
             handleBack={() => undefined}
             handleNext={continueToJourney}
-            isStepClickable={(index) => index === 0}
+            isStepClickable={(index) => index === 0 || inline}
+            validateForwardStepClick
+            onStepClick={(index, _label, formik) => {
+              if (index === 1 && inline) {
+                void continueToJourney(false, formik.values, formik, () => undefined);
+              }
+            }}
             saveAndNextButtonProps={{ loading: busy, size: 'small' }}
             backButtonProps={{ size: 'small' }}
             renderItem={({ formik }) => {

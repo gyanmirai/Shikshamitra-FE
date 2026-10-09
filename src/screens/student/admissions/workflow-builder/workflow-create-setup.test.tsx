@@ -11,7 +11,7 @@ import { vi, it, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, renderHook } from '@testing-library/react';
+import { act, render, screen, waitFor, renderHook, fireEvent } from '@testing-library/react';
 
 import { WorkflowSetupProgress } from './components/workflow-setup-progress';
 import { useWorkflowBuilderDraft } from './hooks/use-workflow-builder-draft';
@@ -22,6 +22,7 @@ vi.hoisted(() => {
 });
 
 vi.mock('../use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
+vi.mock('next-auth/react', () => ({ getSession: vi.fn().mockResolvedValue(null) }));
 
 addIcon('mdi:arrow-left', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 addIcon('eva:checkmark-fill', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
@@ -94,6 +95,89 @@ it('keeps the details step compact without duplicated progress text', () => {
   expect(
     screen.queryByRole('button', { name: 'Back to workflow details' })
   ).not.toBeInTheDocument();
+});
+
+it('returns to saved workflow details through its completed step and locks it while busy', () => {
+  const onBackToDetails = vi.fn();
+  const { rerender } = render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <WorkflowSetupProgress onBackToDetails={onBackToDetails} />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Back to workflow details' }));
+  expect(onBackToDetails).toHaveBeenCalledOnce();
+  rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <WorkflowSetupProgress onBackToDetails={onBackToDetails} disabled />
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('button', { name: 'Back to workflow details' })).toBeDisabled();
+});
+
+it('saves the current journey, validates, reloads its stamp and publishes immediately once', async () => {
+  const store = makeStore();
+  const requests: string[] = [];
+  let saved = workflow;
+  mswServer.use(
+    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) => {
+      requests.push('save');
+      saved = { ...workflow, ...(await request.json() as object), concurrencyStamp: 'saved-stamp' };
+      return HttpResponse.json({ data: saved });
+    }),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () => {
+      requests.push('validate');
+      saved = { ...saved, status: 3, concurrencyStamp: 'validated-stamp' };
+      return HttpResponse.json({ data: { isValid: true, issues: [] } });
+    }),
+    http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () => {
+      requests.push('refresh');
+      return HttpResponse.json({ data: saved });
+    }),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/publish', ({ request }) => {
+      requests.push('publish');
+      expect(new URL(request.url).searchParams.get('concurrencyStamp')).toBe('validated-stamp');
+      expect(new URL(request.url).searchParams.has('effectiveAt')).toBe(false);
+      return HttpResponse.json({ data: { ...saved, status: 1 } });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => <Provider store={store}>{children}</Provider>;
+  const { result } = renderHook(() => {
+    const draft = useWorkflowBuilderDraft(workflow, null);
+    return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+  }, { wrapper });
+  act(() => result.current.draft.markDirty());
+  await act(async () => {
+    const first = result.current.commands.publish();
+    const duplicate = await result.current.commands.publish();
+    expect(duplicate).toBeNull();
+    expect((await first)?.status).toBe(1);
+  });
+  expect(requests.slice(0, 4)).toEqual(['save', 'validate', 'refresh', 'publish']);
+  expect(requests.filter((request) => request === 'publish')).toHaveLength(1);
+  expect(result.current.draft.dirty).toBe(false);
+  store.dispatch(api.util.resetApiState());
+});
+
+it('keeps an invalid workflow in the builder without publishing', async () => {
+  const store = makeStore();
+  const publish = vi.fn();
+  mswServer.use(
+    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', () => HttpResponse.json({ data: workflow })),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () =>
+      HttpResponse.json({ data: { isValid: false, issues: [{ code: 'MissingRoute', message: 'Add a route' }] } })),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/publish', () => {
+      publish(); return HttpResponse.json({ data: workflow });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => <Provider store={store}>{children}</Provider>;
+  const { result } = renderHook(() => {
+    const draft = useWorkflowBuilderDraft(workflow, null);
+    return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+  }, { wrapper });
+  await act(async () => expect(await result.current.commands.publish()).toBeNull());
+  expect(publish).not.toHaveBeenCalled();
+  expect(result.current.draft.sidePanel).toBe('validation');
+  store.dispatch(api.util.resetApiState());
 });
 
 it('updates the same draft with edited details and its unsaved journey', async () => {

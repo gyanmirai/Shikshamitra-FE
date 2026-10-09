@@ -64,7 +64,11 @@ const form: AdmissionForm = {
   ],
 };
 
-function setup(configurationJson?: string, stageChanges: Partial<AdmissionWorkflowStage> = {}) {
+function setup(
+  configurationJson?: string,
+  stageChanges: Partial<AdmissionWorkflowStage> = {},
+  stages: AdmissionWorkflowStage[] = []
+) {
   const onSave = vi.fn();
   const editorStage = {
     ...stage,
@@ -77,6 +81,7 @@ function setup(configurationJson?: string, stageChanges: Partial<AdmissionWorkfl
       stage={editorStage}
       stageTypes={[metadata]}
       forms={[form]}
+      stages={stages}
       readOnly={false}
       onClose={vi.fn()}
       onSave={onSave}
@@ -105,10 +110,10 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       'Stage details',
       'Form completion',
       'Stage behavior',
-      'Next step',
-      'Advanced settings',
+      'Special outcomes',
       'Advanced submission settings',
     ].forEach((name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument());
+    expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
@@ -147,6 +152,49 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         allowCorrectionRequests: !DEFAULT_FORM_STAGE_POLICY.allowCorrectionRequests,
       },
     });
+  });
+  it('collapses Form completion without changing submission settings and keeps common controls visible', async () => {
+    const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
+    const completion = screen.getByRole('button', { name: 'Submission and verification' });
+    expect(completion).toHaveAttribute('aria-expanded', 'true');
+    await user.click(completion);
+    expect(completion).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Required stage')).toBeVisible();
+    expect(screen.getByText('Entry stage')).toBeVisible();
+    expect(screen.getByText('End of journey', { selector: '.MuiFormControlLabel-label' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject(
+      DEFAULT_FORM_STAGE_POLICY
+    );
+  });
+  it('keeps completion validation visible when staff attempt to collapse an invalid section', async () => {
+    const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
+    const completion = screen.getByRole('button', { name: 'Submission and verification' });
+    await user.click(
+      screen.getByRole('switch', { name: 'Require staff verification before completing this stage' })
+    );
+    await user.click(completion);
+    expect(completion).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Choose at least one section that staff must verify.')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(onSave).not.toHaveBeenCalled();
+  });
+  it('hides Entry stage on other stages when a starting stage is already selected', () => {
+    setup(JSON.stringify({ formDefinitionId: form.id }), { isEntryStage: false }, [
+      stage,
+      { ...stage, id: 'other-entry', code: 'OTHER_ENTRY' },
+    ]);
+    expect(screen.queryByRole('switch', { name: 'Entry stage' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'End of journey' })).toBeInTheDocument();
+  });
+  it('keeps the current Entry stage toggle available so staff can change the starting stage', async () => {
+    const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }), {}, [stage]);
+    expect(screen.getByRole('switch', { name: 'Entry stage' })).toBeChecked();
+    await user.click(screen.getByRole('switch', { name: 'Entry stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave.mock.calls[0][0].isEntryStage).toBe(false);
   });
   it('blocks an unattached form and exposes the published-form validation', async () => {
     const { user, onSave } = setup();

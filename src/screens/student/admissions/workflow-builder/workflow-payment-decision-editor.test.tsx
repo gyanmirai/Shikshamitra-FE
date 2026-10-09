@@ -85,7 +85,8 @@ describe('Finance fee confirmation and admission decision setup', () => {
   it('keeps Admission Decision terminal behavior on the same page', async () => {
     const { user, onSave } = setup(7);
     expect(screen.getByRole('heading', { name: 'Stage details' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Advanced settings' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stage behavior' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'End of journey' })).toBeChecked();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));

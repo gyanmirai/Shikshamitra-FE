@@ -7,6 +7,7 @@ import type {
 
 import { api } from 'src/redux/service';
 import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 import type {
   StudentOnboardingCase,
@@ -325,7 +326,10 @@ export const studentOnboardingApi = api.injectEndpoints({
       StudentOnboardingCasePage,
       StudentOnboardingListInput | void
     >({
-      query: (params) => ({ url: '/student/onboarding', params: params ?? undefined }),
+      query: (params) => ({
+        url: '/student/onboarding',
+        params: studentAcademicFilterParams(params ?? {}),
+      }),
       transformResponse: (
         response: Result<StudentOnboardingCasePage> | StudentOnboardingCasePage
       ) => unwrap(response),

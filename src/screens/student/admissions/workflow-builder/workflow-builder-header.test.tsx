@@ -32,19 +32,11 @@ const actions = {
   dirty: true,
   readOnly: false,
   canPublish: true,
-  canSubmit: false,
-  canApprove: false,
-  canReject: false,
-  canRollback: false,
   saving: false,
   validating: false,
   publishing: false,
   onSave: vi.fn(),
   onPublish: vi.fn(),
-  onSubmit: vi.fn(),
-  onApprove: vi.fn(),
-  onReject: vi.fn(),
-  onRollback: vi.fn(),
 };
 const store = configureStore({ reducer: { confirmPopup } });
 function Wrapper({ children }: { children: ReactNode }) {
@@ -127,13 +119,11 @@ describe('WorkflowLifecycleActions', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('retains approval actions for a submitted read-only workflow', () => {
-    render(
-      <WorkflowLifecycleActions {...actions} readOnly canPublish={false} canApprove canReject />,
-      { wrapper: Wrapper }
-    );
-    expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Request changes' })).toBeEnabled();
+  it('shows only the current save and publish actions for a managed draft', () => {
+    render(<WorkflowLifecycleActions {...actions} />, { wrapper: Wrapper });
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    ['Approve', 'Request changes', 'Submit for approval', 'Create rollback draft'].forEach((name) => {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    });
   });
 });

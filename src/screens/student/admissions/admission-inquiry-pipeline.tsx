@@ -13,6 +13,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   useGetAdmissionPipelineQuery,
   useGetAdmissionPipelineOptionsQuery,
@@ -57,9 +58,9 @@ export default function AdmissionInquiryPipelineScreen() {
     academicYearId: academic.academicYearId ?? '',
     boardId: academic.boardId || undefined,
     mediumId: academic.mediumId || undefined,
-    standardId: academic.standardId || undefined,
+    ...academicClassFilterInput(academic.standardId),
   };
-  const skip = !canView || !academic.academicYearId;
+  const skip = !canView || !academic.academicYearId || !academic.boardId || !academic.mediumId;
   const optionsQuery = useGetAdmissionPipelineOptionsQuery(academicInput, {
     skip,
     refetchOnMountOrArgChange: true,

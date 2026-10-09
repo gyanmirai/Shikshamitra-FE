@@ -99,6 +99,7 @@ export type ReviewQueueInput = {
   boardId?: string;
   mediumId?: string;
   standardId?: string;
+  standardIds?: string[];
   overdueOnly?: boolean;
   assignedToMe?: boolean;
   skipCount: number;

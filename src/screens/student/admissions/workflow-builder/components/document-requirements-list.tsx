@@ -10,6 +10,8 @@ import { createDocumentRequirement } from 'src/redux/student/admissions/admissio
 import { DocumentRequirementItem } from './document-requirement-item';
 import { DocumentRequirementDialog } from './document-requirement-dialog';
 
+import type { DocumentCategoryQueryState } from './document-requirement-collection';
+
 const presets = [
   { value: 'BIRTH_CERTIFICATE', label: 'Birth certificate' },
   { value: 'TRANSFER_CERTIFICATE', label: 'Transfer certificate' },
@@ -17,7 +19,7 @@ const presets = [
   { value: 'ADDRESS_PROOF', label: 'Address proof' },
   { value: 'STUDENT_PHOTO', label: 'Student photograph' },
 ];
-type Props = {
+type Props = DocumentCategoryQueryState & {
   requirements: AdmissionDocumentRequirementPolicy[];
   onChange: (requirements: AdmissionDocumentRequirementPolicy[]) => void;
   readOnly: boolean;

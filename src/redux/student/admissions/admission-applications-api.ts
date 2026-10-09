@@ -1,4 +1,5 @@
 import { api } from 'src/redux/service';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 import {
   studentType,
   studentOnboardingType,
@@ -73,6 +74,7 @@ export type AdmissionApplicationListInput = {
   boardId?: string;
   mediumId?: string;
   standardId?: string;
+  standardIds?: string[];
   status?: AdmissionApplicationStatus;
   search?: string;
   skipCount?: number;
@@ -290,7 +292,10 @@ export const admissionApplicationsApi = api.injectEndpoints({
       { totalCount: number; items: AdmissionApplication[] },
       AdmissionApplicationListInput
     >({
-      query: (params) => ({ url: '/student/enrollment/admissions/applications', params }),
+      query: (params) => ({
+        url: '/student/enrollment/admissions/applications',
+        params: studentAcademicFilterParams(params),
+      }),
       transformResponse: (
         response:
           | Result<{ totalCount: number; items: AdmissionApplication[] }>

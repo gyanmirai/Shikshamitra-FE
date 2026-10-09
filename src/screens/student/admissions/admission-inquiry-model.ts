@@ -123,6 +123,13 @@ const guardianPhoneFallback: AdmissionFormField = {
   displayOrder: Number.MAX_SAFE_INTEGER,
 };
 
+// These UI-only controls populate the request identity, not the published form response.
+const inquiryIdentityFallbackIds = new Set([
+  applicantFirstNameFallback.id,
+  guardianFirstNameFallback.id,
+  guardianPhoneFallback.id,
+]);
+
 const legacyIdentityFieldCodes: Record<string, readonly string[]> = {
   'Applicant.Name': ['STUDENT_NAME', 'APPLICANT_NAME', 'CHILD_NAME'],
   'Applicant.FirstName': [
@@ -335,7 +342,9 @@ export function buildAdmissionInquiryPayload(
     applicantDateOfBirth:
       boundValue(values, fields, 'Applicant.DateOfBirth', 'applicantDateOfBirth') || null,
     formValues: fields
-      .filter((field) => values.fields[field.code] !== undefined)
+      .filter(
+        (field) => !inquiryIdentityFallbackIds.has(field.id) && values.fields[field.code] !== undefined
+      )
       .map((field) => ({
         fieldCode: field.code,
         valueJson: serializeFieldValue(field, values.fields[field.code]),

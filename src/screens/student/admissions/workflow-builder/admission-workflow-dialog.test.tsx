@@ -296,7 +296,7 @@ describe('inline workflow details editing', () => {
       'aria-current',
       'step'
     );
-    expect(screen.getByRole('button', { name: 'Step 2: Build journey' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Step 2: Build journey' })).toBeEnabled();
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     expect(screen.getByRole('heading', { name: 'Journey preview' })).toBeInTheDocument();
     expect(screen.getByText('School-specific registration')).toBeInTheDocument();
@@ -317,6 +317,18 @@ describe('inline workflow details editing', () => {
         registrationFormDefinitionId: registrationForm.id,
       })
     );
+  });
+
+  it('validates the edited details before navigating with the Build journey step', async () => {
+    const { onSave, onClose } = renderEdit();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
+    expect(await screen.findByText('Workflow name is required')).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: 'Edited through step' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Edited through step', starterJourney: undefined }));
   });
 
   it('requires confirmation before replacing the journey and can keep the current graph', async () => {

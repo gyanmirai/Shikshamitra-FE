@@ -113,8 +113,8 @@ export function BulkAdmissionConfigurationFields({
                 : touched.inquiryIntakeProfileId || touched.counsellorAssignmentProfileId
                   ? errors.inquiryIntakeProfileId || errors.counsellorAssignmentProfileId
                   : startsWithInquiry
-                    ? 'Required for activation. Applies inquiry handling and counsellor routing together.'
-                    : 'Required for activation. Direct registration uses this setup’s counsellor routing.'
+                  ?'Required for activation. Direct registration uses this setup’s counsellor routing.'
+                  : ''
           }
         />
       </Grid>

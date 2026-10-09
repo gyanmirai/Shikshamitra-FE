@@ -3,23 +3,24 @@
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
 import type { IData, IParams, IColumn } from 'src/components/customizabaleTable/types';
-import type {
-  StudentOnboardingStatus,
-  StudentOnboardingFilterOptions,
-} from 'src/redux/student/onboarding/student-onboarding-types';
+import type { StudentOnboardingStatus } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import {
+  readAcademicFilterIds,
+  academicClassFilterInput,
+} from 'src/utils/student-academic-filter-query';
 import {
   Box,
   Menu,
@@ -50,6 +51,7 @@ import {
 
 import StudentSetupDrawer from './student-setup-drawer';
 import StudentPendingTasks from './student-pending-tasks';
+import { StudentSetupFilters } from './student-setup-academic-filters';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
@@ -130,81 +132,6 @@ function getTextFilterOperator(value: string | null) {
 
 function getNumberFilterOperator(value: string | null) {
   return numberFilterOperators.find((operator) => operator === value) ?? 'equals';
-}
-
-function StudentSetupFilters({
-  options,
-  selectedBoardId,
-  selectedMediumId,
-  selectedStandardId,
-  selectedDivisionId,
-  onBoardChange,
-  onMediumChange,
-  onStandardChange,
-  onDivisionChange,
-}: {
-  options?: StudentOnboardingFilterOptions;
-  selectedBoardId: string;
-  selectedMediumId: string;
-  selectedStandardId: string;
-  selectedDivisionId: string;
-  onBoardChange: (value: string) => void;
-  onMediumChange: (value: string) => void;
-  onStandardChange: (value: string) => void;
-  onDivisionChange: (value: string) => void;
-}) {
-  const mediums = (options?.mediums ?? []).filter((item) => item.parentId === selectedBoardId);
-  const standards = (options?.standards ?? []).filter((item) => item.parentId === selectedMediumId);
-  const divisions = (options?.divisions ?? []).filter(
-    (item) => item.parentId === selectedStandardId
-  );
-
-  return (
-    <Paper variant="outlined" sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}>
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
-        <CustomSelect
-          fullWidth
-          options={[{ id: ALL_STANDARDS, name: 'All boards' }, ...(options?.boards ?? [])]}
-          label="Board"
-          value={selectedBoardId}
-          onChange={(value) => onBoardChange(String(value))}
-          labelKey="name"
-          valueKey="id"
-        />
-        <CustomSelect
-          fullWidth
-          options={[{ id: ALL_STANDARDS, name: 'All mediums' }, ...mediums]}
-          label="Medium"
-          value={selectedMediumId}
-          onChange={(value) => onMediumChange(String(value))}
-          labelKey="name"
-          valueKey="id"
-          disabled={selectedBoardId === ALL_STANDARDS}
-        />
-        <CustomSelect
-          fullWidth
-          options={[{ id: ALL_STANDARDS, name: 'All classes' }, ...standards]}
-          label="Class"
-          value={selectedStandardId}
-          onChange={(value) => onStandardChange(value as string)}
-          labelKey="name"
-          valueKey="id"
-          isSearch
-          disabled={selectedMediumId === ALL_STANDARDS}
-        />
-        <CustomSelect
-          fullWidth
-          options={[{ id: ALL_STANDARDS, name: 'All divisions' }, ...divisions]}
-          label="Division"
-          value={selectedDivisionId}
-          onChange={(value) => onDivisionChange(String(value))}
-          labelKey="name"
-          valueKey="id"
-          disabled={selectedStandardId === ALL_STANDARDS}
-        />
-      </Stack>
-    </Paper>
-  );
 }
 
 function StudentSetupTable({
@@ -1035,10 +962,14 @@ export default function StudentSetupScreen() {
   } | null>(null);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<HTMLElement | null>(null);
   const [showFilterAlert, setShowFilterAlert] = useState(true);
-  const selectedBoardId = searchParams.get('board') ?? ALL_STANDARDS;
-  const selectedMediumId = searchParams.get('medium') ?? ALL_STANDARDS;
-  const selectedStandardId = searchParams.get('class') ?? ALL_STANDARDS;
-  const selectedDivisionId = searchParams.get('division') ?? ALL_STANDARDS;
+  const selectedBoardId = readAcademicFilterIds(searchParams.get('board'))[0] ?? '';
+  const selectedMediumId = readAcademicFilterIds(searchParams.get('medium'))[0] ?? '';
+  const [selectedStandardId, setSelectedStandardId] = useUrlFilterValue(
+    searchParams.get('class') ?? ALL_STANDARDS
+  );
+  const [selectedDivisionId, setSelectedDivisionId] = useUrlFilterValue(
+    searchParams.get('division') ?? ALL_STANDARDS
+  );
   const placementDivisionId = searchParams.get('placementDivision') ?? '';
   const selectedStatusOption = studentSetupStatusOptions.find(
     ({ status }) => String(status) === searchParams.get('status')
@@ -1080,16 +1011,27 @@ export default function StudentSetupScreen() {
   const [refreshReadiness, refreshReadinessState] = useRefreshStudentOnboardingReadinessMutation();
   const [activateOnboarding, activateOnboardingState] = useActivateStudentOnboardingMutation();
   const hasWorklistFilters =
-    selectedBoardId !== ALL_STANDARDS ||
-    selectedMediumId !== ALL_STANDARDS ||
-    selectedStandardId !== ALL_STANDARDS ||
-    selectedDivisionId !== ALL_STANDARDS ||
-    Boolean(placementDivisionId);
+    Boolean(
+      readAcademicFilterIds(selectedStandardId).length ||
+      readAcademicFilterIds(selectedDivisionId).length
+    ) || Boolean(placementDivisionId);
 
   const changeAcademicFilter = useCallback(
     (key: 'board' | 'medium' | 'class' | 'division', value: string) => {
       const next = new URLSearchParams(searchParams.toString());
-      if (value === ALL_STANDARDS) next.delete(key);
+      [
+        ['class', selectedStandardId],
+        ['division', selectedDivisionId],
+      ].forEach(([selectionKey, selectionValue]) => {
+        if (selectionValue && selectionValue !== ALL_STANDARDS)
+          next.set(selectionKey, selectionValue);
+        else next.delete(selectionKey);
+      });
+      if (key === 'class') setSelectedStandardId(value);
+      if (key === 'division') setSelectedDivisionId(value);
+      else setSelectedDivisionId(ALL_STANDARDS);
+      if (key === 'board' || key === 'medium') setSelectedStandardId(ALL_STANDARDS);
+      if (!value || value === ALL_STANDARDS) next.delete(key);
       else next.set(key, value);
       if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
       if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
@@ -1100,14 +1042,22 @@ export default function StudentSetupScreen() {
       const query = next.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [
+      pathname,
+      router,
+      searchParams,
+      selectedStandardId,
+      selectedDivisionId,
+      setSelectedStandardId,
+      setSelectedDivisionId,
+    ]
   );
 
   const clearWorklistFilters = () => {
+    setSelectedStandardId(ALL_STANDARDS);
+    setSelectedDivisionId(ALL_STANDARDS);
     const next = new URLSearchParams(searchParams.toString());
-    ['board', 'medium', 'class', 'division', 'placementDivision'].forEach((key) =>
-      next.delete(key)
-    );
+    ['class', 'division', 'placementDivision'].forEach((key) => next.delete(key));
     setTablePage(1);
     setSelectedStudentIds([]);
     const query = next.toString();
@@ -1182,10 +1132,12 @@ export default function StudentSetupScreen() {
   const queryArgs = useMemo(
     () => ({
       academicYearId: currentYear?.id || '',
-      boardId: selectedBoardId === ALL_STANDARDS ? undefined : selectedBoardId,
-      mediumId: selectedMediumId === ALL_STANDARDS ? undefined : selectedMediumId,
-      standardId: selectedStandardId === ALL_STANDARDS ? undefined : selectedStandardId,
-      divisionId: selectedDivisionId === ALL_STANDARDS ? undefined : selectedDivisionId,
+      boardId: selectedBoardId || undefined,
+      mediumId: selectedMediumId || undefined,
+      ...academicClassFilterInput(selectedStandardId),
+      ...(readAcademicFilterIds(selectedDivisionId).length > 1
+        ? { divisionIds: readAcademicFilterIds(selectedDivisionId) }
+        : { divisionId: readAcademicFilterIds(selectedDivisionId)[0] }),
       placementDivisionId: placementFilterApplicable ? placementDivisionId || undefined : undefined,
       status: selectedStatusOption?.status,
       pendingTask:
@@ -1248,7 +1200,7 @@ export default function StudentSetupScreen() {
   );
 
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
-    skip: !currentYear?.id,
+    skip: !currentYear?.id || !selectedBoardId || !selectedMediumId,
   });
   const pendingCountQuery = useGetStudentOnboardingCasesQuery(
     {
@@ -1259,7 +1211,12 @@ export default function StudentSetupScreen() {
       maxResultCount: 1,
     },
     {
-      skip: !currentYear?.id || activeView === 'readiness' || activeTaskScope === 'pending',
+      skip:
+        !currentYear?.id ||
+        !selectedBoardId ||
+        !selectedMediumId ||
+        activeView === 'readiness' ||
+        activeTaskScope === 'pending',
     }
   );
   const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(currentYear?.id ?? '', {
@@ -1270,17 +1227,15 @@ export default function StudentSetupScreen() {
     if (!options) return [];
     const mediumIds = new Set(
       options.mediums
-        .filter(
-          (medium) => selectedBoardId === ALL_STANDARDS || medium.parentId === selectedBoardId
-        )
+        .filter((medium) => medium.parentId === selectedBoardId)
         .map((medium) => medium.id)
     );
     const standards = options.standards.filter(
       (standard) =>
-        (selectedMediumId === ALL_STANDARDS
-          ? mediumIds.has(String(standard.parentId))
-          : standard.parentId === selectedMediumId) &&
-        (selectedStandardId === ALL_STANDARDS || standard.id === selectedStandardId)
+        standard.parentId === selectedMediumId &&
+        mediumIds.has(String(standard.parentId)) &&
+        (!readAcademicFilterIds(selectedStandardId).length ||
+          readAcademicFilterIds(selectedStandardId).includes(standard.id))
     );
     const standardNames = new Map(standards.map((standard) => [standard.id, standard.name]));
     return options.divisions
@@ -1357,32 +1312,28 @@ export default function StudentSetupScreen() {
   useEffect(() => {
     const options = filterOptionsQuery.currentData;
     if (!options) return;
-    if (
-      selectedBoardId !== ALL_STANDARDS &&
-      !options.boards?.some((item) => item.id === selectedBoardId)
-    )
-      changeAcademicFilter('board', ALL_STANDARDS);
-    else if (
-      selectedMediumId !== ALL_STANDARDS &&
-      !options.mediums?.some(
-        (item) => item.id === selectedMediumId && item.parentId === selectedBoardId
+    const board = options.boards.find((item) => item.id === selectedBoardId);
+    const mediums = options.mediums.filter((item) => item.parentId === selectedBoardId);
+    const standards = options.standards.filter((item) => item.parentId === selectedMediumId);
+    const classIds = readAcademicFilterIds(selectedStandardId);
+    const validClasses = classIds.filter((id) => standards.some((item) => item.id === id));
+    const validDivisions = readAcademicFilterIds(selectedDivisionId).filter((id) =>
+      options.divisions.some(
+        (item) =>
+          item.id === id &&
+          (validClasses.length
+            ? validClasses.includes(String(item.parentId))
+            : standards.some((standard) => standard.id === item.parentId))
       )
-    )
-      changeAcademicFilter('medium', ALL_STANDARDS);
-    else if (
-      selectedStandardId !== ALL_STANDARDS &&
-      !options.standards?.some(
-        (item) => item.id === selectedStandardId && item.parentId === selectedMediumId
-      )
-    )
-      changeAcademicFilter('class', ALL_STANDARDS);
-    else if (
-      selectedDivisionId !== ALL_STANDARDS &&
-      !options.divisions?.some(
-        (item) => item.id === selectedDivisionId && item.parentId === selectedStandardId
-      )
-    )
-      changeAcademicFilter('division', ALL_STANDARDS);
+    );
+    if (!board) {
+      if (options.boards[0]) changeAcademicFilter('board', options.boards[0].id);
+    } else if (!mediums.some((item) => item.id === selectedMediumId)) {
+      if (mediums[0]) changeAcademicFilter('medium', mediums[0].id);
+    } else if (validClasses.join(',') !== classIds.join(','))
+      changeAcademicFilter('class', validClasses.join(','));
+    else if (validDivisions.join(',') !== readAcademicFilterIds(selectedDivisionId).join(','))
+      changeAcademicFilter('division', validDivisions.join(','));
     else if (
       placementDivisionId &&
       !placementOptions.some((option) => option.value === placementDivisionId)
@@ -1655,7 +1606,9 @@ export default function StudentSetupScreen() {
         }}
       >
         <StudentSetupFilters
-          options={filterOptionsQuery.data}
+          options={filterOptionsQuery.currentData}
+          isLoading={filterOptionsQuery.isFetching}
+          disabled={!currentYear?.id || filterOptionsQuery.isError}
           selectedBoardId={selectedBoardId}
           selectedMediumId={selectedMediumId}
           selectedStandardId={selectedStandardId}
@@ -1665,6 +1618,19 @@ export default function StudentSetupScreen() {
           onStandardChange={(value) => changeAcademicFilter('class', value)}
           onDivisionChange={(value) => changeAcademicFilter('division', value)}
         />
+
+        {filterOptionsQuery.isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => filterOptionsQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Could not load academic filter options.
+          </Alert>
+        )}
 
         {!currentYear?.id && showFilterAlert ? (
           <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
@@ -1677,7 +1643,11 @@ export default function StudentSetupScreen() {
             {(activeView === 'gr-number' || activeView === 'roll-number') && (
               <StudentIdentifierLockControls
                 academicYearId={currentYear?.id}
-                divisionId={selectedDivisionId === ALL_STANDARDS ? undefined : selectedDivisionId}
+                divisionId={
+                  readAcademicFilterIds(selectedDivisionId).length === 1
+                    ? readAcademicFilterIds(selectedDivisionId)[0]
+                    : undefined
+                }
                 identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
                 canLock={canManageOnboarding}
                 canUnlock={

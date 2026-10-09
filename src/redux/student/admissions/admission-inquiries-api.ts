@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 import type { AdmissionForm } from './admission-forms-api';
 import type { AdmissionInquiryPolicy } from './admission-inquiry-policy';
@@ -90,6 +91,7 @@ export type AdmissionInquiryListInput = {
   boardId?: string;
   mediumId?: string;
   standardId?: string;
+  standardIds?: string[];
   admissionCycleId?: string;
   admissionOfferingId?: string;
   inquiryNumber?: string;
@@ -257,7 +259,10 @@ export const admissionInquiriesApi = api.injectEndpoints({
       { totalCount: number; items: AdmissionInquiry[] },
       AdmissionInquiryListInput
     >({
-      query: (params) => ({ url: '/student/enrollment/admissions/inquiries', params }),
+      query: (params) => ({
+        url: '/student/enrollment/admissions/inquiries',
+        params: studentAcademicFilterParams(params),
+      }),
       transformResponse: (
         response:
           | Result<{ totalCount: number; items: AdmissionInquiry[] }>
@@ -319,7 +324,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
     exportAdmissionInquiries: builder.query<Blob, AdmissionInquiryListInput>({
       query: (params) => ({
         url: '/student/enrollment/admissions/inquiries/export',
-        params,
+        params: studentAcademicFilterParams(params),
         responseHandler: (response) => response.blob(),
       }),
     }),

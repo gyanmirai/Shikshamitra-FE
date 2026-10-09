@@ -3,6 +3,7 @@
 import type { AdmissionOfferingListInput } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useSearchParams } from 'next/navigation';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
@@ -18,7 +19,7 @@ const toListInput = (
   boardId: filters.boardId || undefined,
   mediumId: filters.mediumId || undefined,
   stageId: filters.stageId || undefined,
-  standardId: filters.standardId || undefined,
+  ...academicClassFilterInput(filters.standardId),
   isActive: filters.isActive === '' ? undefined : filters.isActive === 'true',
   availabilityStatus:
     filters.availabilityStatus === ''
@@ -42,7 +43,7 @@ export function useAdmissionOfferingsScreen() {
     cycles.find((item) => item.id === filterState.filters.admissionCycleId) ?? cycles[0] ?? null;
   const offeringsQuery = useGetAdmissionOfferingsQuery(
     toListInput(cycle?.id, filterState.filters),
-    { skip: !cycle }
+    { skip: !cycle || !filterState.filters.boardId || !filterState.filters.mediumId }
   );
   const actions = useAdmissionOfferingActions(cycle, Boolean(initialIntakeSetupId));
   return {
