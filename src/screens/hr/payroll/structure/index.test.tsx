@@ -4,12 +4,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import EmployeeSalaryStructureScreen from './index';
 
 const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
   params: 'employeeId=staff-1&setup=salary&from=staff-edit',
   employee: undefined as any,
   structure: vi.fn(),
   revision: vi.fn(),
 }));
-vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(mocks.params) }));
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(mocks.params),
+  useRouter: () => ({ replace: mocks.replace }),
+}));
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 vi.mock('src/redux/hr/employeeApi', () => ({
@@ -50,24 +54,17 @@ vi.mock('src/components/paginated-search-select', () => ({
     </>
   ),
 }));
-vi.mock('./salary-editor-dialog', () => ({
-  SalaryEditorDialog: ({ employeeId, handleClose }: any) => (
-    <div role="dialog" aria-label={employeeId}>
-      <button type="button" onClick={handleClose}>
-        Close editor
-      </button>
-    </div>
-  ),
-}));
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = 'employeeId=staff-1&setup=salary&from=staff-edit';
   mocks.employee = undefined;
 });
 
-it('opens the editor and starts salary reads before staff details resolve', () => {
+it('replaces a legacy salary link and starts salary reads before staff details resolve', () => {
   render(<EmployeeSalaryStructureScreen />);
-  expect(screen.getByRole('dialog', { name: 'staff-1' })).toBeVisible();
+  expect(mocks.replace).toHaveBeenCalledWith(
+    '/hr/payroll/structure/staff-1/edit?returnTo=%2Fhr%2Femployee%3Fmode%3Dform%26editEmployee%3Dstaff-1%26step%3Dpayroll'
+  );
   expect(mocks.structure).toHaveBeenCalledWith({ employeeId: 'staff-1' }, { skip: false });
   expect(mocks.revision).toHaveBeenCalledWith(expect.objectContaining({ employeeId: 'staff-1' }), {
     skip: false,
@@ -76,9 +73,8 @@ it('opens the editor and starts salary reads before staff details resolve', () =
     screen.queryByText('Select a staff member to view salary structure.')
   ).not.toBeInTheDocument();
 });
-it('does not reopen a dismissed editor when details arrive or override manual selection', () => {
+it('does not override manual selection when staff details arrive', () => {
   const { rerender } = render(<EmployeeSalaryStructureScreen />);
-  fireEvent.click(screen.getByRole('button', { name: 'Close editor' }));
   mocks.employee = { fullName: 'First staff', status: 0 };
   rerender(<EmployeeSalaryStructureScreen />);
   expect(screen.getByText('First staff')).toBeVisible();
@@ -93,7 +89,9 @@ it('resets employee selection for another deep link and keeps the plain route id
   const { rerender } = render(<EmployeeSalaryStructureScreen />);
   mocks.params = 'employeeId=staff-2&setup=salary';
   rerender(<EmployeeSalaryStructureScreen />);
-  expect(screen.getByRole('dialog', { name: 'staff-2' })).toBeVisible();
+  expect(mocks.replace).toHaveBeenLastCalledWith(
+    '/hr/payroll/structure/staff-2/edit?returnTo=%2Fhr%2Fpayroll%2Fstructure%3FemployeeId%3Dstaff-2'
+  );
   mocks.params = '';
   rerender(<EmployeeSalaryStructureScreen />);
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

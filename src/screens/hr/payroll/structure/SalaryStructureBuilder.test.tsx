@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
@@ -32,7 +32,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('react-redux', () => ({ useSelector: () => [] }));
+vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
 vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, name: string) => {
     if (name.endsWith('CompensationRevisions.Manage')) return mocks.canManageSalary;
@@ -70,7 +70,15 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
             defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST',
             defaultPfApplicable: false,
             defaultPfRuleId: null,
-            rules: [],
+            rules: [
+              {
+                componentId: 'basic',
+                componentName: 'Basic',
+                semanticType: 'BASIC',
+                formulaType: 'FIXED',
+                value: 5000,
+              },
+            ],
           },
         },
         {
@@ -168,6 +176,142 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
   });
 
+  it('renders staff identity with ESIC access in the editor header', () => {
+    renderBuilder({
+      formik: {
+        values: { fullName: 'Test Staff', employeeIdentifier: 'STAFF001' },
+      } as FormikProps<any>,
+    });
+    expect(screen.getByText('Test Staff · STAFF001')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'ESIC details' })).toBeVisible();
+  });
+
+  it('keeps the PF label, description and keyboard toggle accessible without help changing the draft', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    const pfSwitch = screen.getByRole('switch', { name: 'PF applicable' });
+    expect(pfSwitch).toHaveAccessibleDescription('Deduct Provident Fund for this employee');
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute('aria-disabled', 'true');
+
+    await user.click(screen.getByText('PF applicable', { exact: true }));
+    expect(pfSwitch).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByRole('button', { name: 'About PF applicability' }));
+    expect(pfSwitch).toBeChecked();
+    await user.click(pfSwitch);
+    await user.keyboard(' ');
+    expect(pfSwitch).toBeChecked();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
+  it('preserves formatted decimal and large amounts in calculation and save payloads', async () => {
+    const user = userEvent.setup();
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({ ...calculation, employerCost: 12345678.25 }),
+    });
+    renderBuilder();
+    const amount = screen.getByLabelText('Monthly cost to school (CTC)');
+    await user.type(amount, '12345678.25');
+    expect(amount).toHaveValue('₹ 1,23,45,678.25');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({ monthlyAmount: 12345678.25 })
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('Ready to save');
+    expect(screen.getByText('₹1,23,45,678.25')).toBeVisible();
+    expect(screen.getAllByText(/Annual equivalent:/)).toHaveLength(4);
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(mocks.saveSalary).toHaveBeenCalledWith(
+      expect.objectContaining({ body: expect.objectContaining({ monthlyAmount: 12345678.25 }) })
+    );
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved'));
+    await user.clear(amount);
+    await user.type(amount, '74200.50');
+    expect(amount).toHaveValue('₹ 74,200.50');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+  });
+
+  it('shows amount errors after blur and keeps invalid values out of calculations', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    const amount = screen.getByLabelText('Monthly cost to school (CTC)');
+    expect(amount).not.toHaveAttribute('aria-invalid', 'true');
+    await user.type(amount, '-100.25');
+    await user.tab();
+    expect(amount).toHaveAttribute('aria-invalid', 'true');
+    expect(amount).toHaveAccessibleDescription('Enter an amount greater than zero.');
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    await user.clear(amount);
+    await user.type(amount, '10000');
+    expect(amount).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeEnabled();
+  });
+
+  it('focuses the missing customization reason and preserves the draft', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Customize' }));
+    await user.clear(screen.getByLabelText('Value'));
+    await user.type(screen.getByLabelText('Value'), '6000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    const reason = screen.getByLabelText(/Customization reason/);
+    expect(reason).toHaveFocus();
+    expect(reason).toHaveAttribute('aria-invalid', 'true');
+    expect(reason).toHaveAccessibleDescription(
+      'Add a reason for the staff-specific salary customization.'
+    );
+    expect(screen.getByLabelText('Value')).toHaveValue(6000);
+    expect(mocks.saveSalary).not.toHaveBeenCalled();
+    await user.type(reason, 'Staff salary revision');
+    expect(reason).toHaveAttribute('aria-invalid', 'false');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(mocks.saveSalary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ customizationReason: 'Staff salary revision' }),
+      })
+    );
+  });
+
+  it('announces calculation and saving until data refresh finishes', async () => {
+    const user = userEvent.setup();
+    const result = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    let finishCalculation!: (value: any) => void;
+    let finishRefresh!: () => void;
+    mocks.calculate.mockReturnValue({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finishCalculation = resolve;
+        }),
+    });
+    mocks.refetchRevisions.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishRefresh = resolve;
+        })
+    );
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Calculating salary');
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toBeDisabled();
+    await act(async () => finishCalculation(result));
+    expect(screen.getByRole('status')).toHaveTextContent('Ready to save');
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Saving salary');
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await act(async () => finishRefresh());
+    expect(screen.getByRole('status')).toHaveTextContent('Saved');
+  });
+
   it('waits for an in-flight revision refresh before initializing and retains edits on later refreshes', async () => {
     mocks.revisionsFetching = true;
     mocks.revisions = [
@@ -193,17 +337,17 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         </ThemeProvider>
       );
     rerender();
-    expect(await screen.findByLabelText('Monthly cost to school (CTC)')).toHaveValue(20000);
+    expect(await screen.findByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 20,000');
     const user = userEvent.setup();
     await user.clear(screen.getByLabelText('Monthly cost to school (CTC)'));
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '25000');
     mocks.revisionsFetching = true;
     rerender();
-    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(25000);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 25,000');
     mocks.revisionsFetching = false;
     mocks.revisions = [{ ...mocks.revisions[0], quotedMonthlyAmount: 30000 }];
     rerender();
-    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(25000);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 25,000');
   });
 
   it('saves CTC without contaminating the separate payroll form with partial salary provenance', async () => {
@@ -272,7 +416,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeEnabled()
     );
-    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(10000);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     expect(screen.getByRole('alert')).toBeVisible();
   });
@@ -307,7 +451,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByRole('button', { name: 'Reload salary history' }));
     expect(mocks.refetchRevisions).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
-    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(10000);
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
   });
   it('does not calculate or save without the compensation Manage permission', () => {
     mocks.canManageSalary = false;
@@ -359,7 +503,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(history);
     expect(history).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Scheduled')).toBeVisible();
-    expect(screen.getByText('Revision 2 - 2027-01')).toBeVisible();
+    expect(screen.getByText('Revision 2 - January 2027')).toBeVisible();
   });
   it('reopens the saved immutable revision and offers activation as a separate action', async () => {
     const user = userEvent.setup();
@@ -392,7 +536,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         'Saved Template'
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-10');
-      expect(screen.getByLabelText('Monthly salary')).toHaveValue(55_000);
+      expect(screen.getByLabelText('Monthly salary')).toHaveValue('₹ 55,000');
     });
 
     await user.click(screen.getByRole('button', { name: 'Activate staff' }));
@@ -422,6 +566,57 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         body: expect.objectContaining({ insuranceNumber: '1234567890' }),
       })
     );
+    expect(mocks.refetchReadiness).toHaveBeenCalled();
+  });
+
+  it('includes an ESIC-only draft in page navigation protection and clears it after discard', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toHaveValue(
+      '1234567890'
+    );
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    expect(mocks.updateEnrollment).not.toHaveBeenCalled();
+  });
+
+  it('blocks page navigation during ESIC saves and invalidates the salary calculation afterwards', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    let completeSave!: () => void;
+    mocks.updateEnrollment.mockReturnValue({
+      unwrap: () =>
+        new Promise<void>((resolve) => {
+          completeSave = resolve;
+        }),
+    });
+    renderBuilder({ onEditorStateChange });
+    await user.type(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' }), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true });
+    expect(screen.getByRole('button', { name: 'Close staff ESIC details' })).toBeDisabled();
+    await act(async () => completeSave());
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled());
     expect(mocks.refetchReadiness).toHaveBeenCalled();
   });
 

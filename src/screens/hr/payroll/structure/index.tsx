@@ -4,12 +4,12 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useSearchParams } from 'next/navigation';
+import { useMemo, useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -28,7 +28,7 @@ import {
   buildEmployeeSelectOptions,
 } from 'src/screens/hr/leave-request/leave-request.utils';
 
-import { SalaryEditorDialog } from './salary-editor-dialog';
+import { salaryEditorHref } from './salary-editor-navigation';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 
 const EmployeeSalaryStructureScreen = () => {
@@ -42,6 +42,9 @@ const EmployeeSalaryStructureScreen = () => {
 
 const EmployeeSalaryStructureContent = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryString = searchParams.toString();
+
   const requestedEmployeeId = searchParams.get('employeeId')?.trim() || '';
   const openRequestedSalarySetup = searchParams.get('setup') === 'salary';
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -56,9 +59,6 @@ const EmployeeSalaryStructureContent = () => {
   const canReadCompensationRevisions = canViewCompensationRevisions || canManageCompensation;
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(() =>
     requestedEmployeeId ? { id: requestedEmployeeId, label: 'Loading staff...' } : null
-  );
-  const [editDialogOpen, setEditDialogOpen] = useState(
-    Boolean(requestedEmployeeId && openRequestedSalarySetup)
   );
   const {
     currentData: requestedEmployee,
@@ -85,6 +85,20 @@ const EmployeeSalaryStructureContent = () => {
       status,
     });
   }, [requestedEmployee, requestedEmployeeId, selectedEmployee]);
+
+  useEffect(() => {
+    if (!openRequestedSalarySetup || !requestedEmployeeId) return;
+    const params = new URLSearchParams(queryString);
+    const from = params.get('from');
+    params.delete('setup');
+    const returnTo =
+      from === 'staff-edit'
+        ? staffPayrollEditHref(requestedEmployeeId)
+        : from === 'staff-profile'
+          ? staffPayrollProfileHref(requestedEmployeeId)
+          : `${hrPaths.payroll.structure}?${params}`;
+    router.replace(salaryEditorHref(requestedEmployeeId, returnTo));
+  }, [openRequestedSalarySetup, requestedEmployeeId, queryString, router]);
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -134,13 +148,10 @@ const EmployeeSalaryStructureContent = () => {
     return [...recurringRows, ...earningRows, ...deductionRows];
   }, [effectiveRevision, monthKey, structureData]);
 
-  const handleOpenEdit = useCallback(() => {
-    setEditDialogOpen(true);
-  }, []);
-
-  const handleCloseEdit = useCallback(() => {
-    setEditDialogOpen(false);
-  }, []);
+  const returnParams = new URLSearchParams(queryString);
+  returnParams.set('employeeId', employeeId);
+  returnParams.delete('setup');
+  const returnHref = `${hrPaths.payroll.structure}?${returnParams}`;
 
   return (
     <Box>
@@ -250,7 +261,8 @@ const EmployeeSalaryStructureContent = () => {
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon="solar:pen-bold" />}
-                onClick={handleOpenEdit}
+                component={RouterLink}
+                href={salaryEditorHref(employeeId, returnHref)}
               >
                 {effectiveRevision ? 'Edit salary' : 'Set up salary'}
               </Button>
@@ -280,14 +292,6 @@ const EmployeeSalaryStructureContent = () => {
               />
             </Grid>
           </Grid>
-
-          {editDialogOpen && (
-            <SalaryEditorDialog
-              key={employeeId}
-              employeeId={employeeId}
-              handleClose={handleCloseEdit}
-            />
-          )}
         </>
       )}
     </Box>
