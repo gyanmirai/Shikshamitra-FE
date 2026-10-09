@@ -47,6 +47,7 @@ import {
 } from '@mui/material';
 
 import { extractRollNumberProjectionItems } from '../roll-generation/roll-number-projections';
+import { getGrNumberChanges, hasAssignedGrNumber, buildGrNumberUpdates } from '../gr-generation/gr-number-updates';
 import {
   hasRollNumberValidationErrors,
   buildRollNumberValidationErrors,
@@ -171,7 +172,7 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
 
   // ── Tab-specific table rows ────────────────────────────────────────────────
   const grTabData = useMemo(
-    () => tableData.filter((s) => s.grNo === null || s.grNo === undefined),
+    () => tableData.filter((s) => !hasAssignedGrNumber(s)),
     [tableData]
   );
 
@@ -181,20 +182,10 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
   );
 
   // ── Changes summaries ─────────────────────────────────────────────────────
-  const grChangesSummary = useMemo(() => {
-    const changes: { studentName: string; oldGrNo: number | null; newGrNo: number | null }[] = [];
-    tableData.forEach((current) => {
-      const original = initialData.find((item) => item.studentId === current.studentId);
-      if (original && original.grNo !== current.grNo) {
-        changes.push({
-          studentName: current.studentName || 'Unknown',
-          oldGrNo: original.grNo ?? null,
-          newGrNo: current.grNo ?? null,
-        });
-      }
-    });
-    return changes;
-  }, [tableData, initialData]);
+  const grChangesSummary = useMemo(
+    () => getGrNumberChanges(tableData, initialData),
+    [tableData, initialData]
+  );
 
   const rollChangesSummary = useMemo(() => {
     const changes: { studentName: string; oldRollNo: number | null; newRollNo: number | null }[] =
@@ -264,7 +255,7 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
       if (result?.data && Array.isArray(result.data)) {
         const studentGrMap = new Map<string, number>();
         result.data.forEach((student: any) => {
-          if (student.studentId && student.grNumber !== null && student.grNumber !== undefined) {
+          if (student.studentId && !student.currentGrNumber?.trim() && student.grNumber !== null && student.grNumber !== undefined) {
             studentGrMap.set(student.studentId, student.grNumber);
           }
         });
@@ -275,7 +266,7 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
         setTableData((prev) =>
           prev.map((item) => {
             const autoGr = studentGrMap.get(item.studentId);
-            if ((item.grNo === null || item.grNo === undefined) && autoGr !== undefined) {
+            if (!hasAssignedGrNumber(item) && autoGr !== undefined) {
               newModifiedIds.add(item.studentId);
               generatedCount += 1;
               return { ...item, grNo: autoGr };
@@ -355,11 +346,9 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
 
   // ── Save — GR ─────────────────────────────────────────────────────────────
   const handleGrSave = async () => {
+    if (!grChangesSummary.length) return;
     saveConfirmDialog.onFalse();
-    const requestBody = tableData.map((item) => ({
-      studentId: item.studentId,
-      grNo: item.grNo ?? null,
-    }));
+    const requestBody = buildGrNumberUpdates(grChangesSummary, {});
     try {
       await updateGrNumbers({ body: requestBody }).unwrap();
       const count = grChangesSummary.length;
@@ -367,7 +356,10 @@ const PendingAssignmentScreen = ({ division, classes }: { division: string; clas
         message:
           count === 1 ? 'Successfully updated 1 GR No.' : `Successfully updated ${count} GR Nos.`,
       });
-      setInitialData(tableData);
+      const savedData = tableData.map((item) => grChangesSummary.some((change) => change.studentId === item.studentId)
+        ? { ...item, grNumber: item.grNo?.toString() ?? null } : item);
+      setTableData(savedData);
+      setInitialData(savedData);
       setIsManual(false);
       setModifiedRowIds(new Set());
       dispatch(StudentApi.util.invalidateTags(['Student']));

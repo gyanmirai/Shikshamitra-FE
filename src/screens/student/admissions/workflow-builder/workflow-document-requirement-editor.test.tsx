@@ -16,6 +16,8 @@ const setupDocumentEditor = async (...args: Parameters<typeof renderDocumentEdit
   user: userEvent.setup(),
 });
 
+vi.mock('src/hooks/use-responsive', () => ({ useResponsive: () => true }));
+
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
@@ -35,7 +37,7 @@ vi.mock('@mui/icons-material', async () => {
     Close: Close.default,
   };
 });
-['close', 'content-save-outline', 'file-check-outline'].forEach((name) => {
+['close', 'content-save-outline', 'file-check-outline', 'information-outline'].forEach((name) => {
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
 addIcon('basil:cross-solid', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
@@ -49,7 +51,37 @@ const json = (change = {}) =>
     extension: { source: 'existing' },
   });
 
-describe('document requirement editor', { timeout: 15000 }, () => {
+describe('compact document requirement editor', { timeout: 15000 }, () => {
+  it('opens standard documents in the same popover and preserves preset references through editing', async () => {
+    const { user, onSave } = await setupDocumentEditor();
+    await chooseDocumentOption(user, 'Add a standard document', 'Birth certificate');
+    const requirementDialog = screen.getByRole('dialog', {
+      name: 'Configure document requirement',
+    });
+    expect(requirementDialog.closest('.MuiPopover-root')).toBeInTheDocument();
+    const dialog = within(requirementDialog);
+    expect(dialog.getByRole('textbox', { name: 'Document name *' })).toHaveValue(
+      'Birth certificate'
+    );
+    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await user.click(await screen.findByRole('button', { name: 'Edit Birth certificate' }));
+    const editor = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
+    await user.type(editor.getByRole('textbox', { name: 'Instructions (optional)' }), 'Clear scan');
+    await user.click(editor.getByRole('button', { name: 'Save requirement' }));
+    await user.click(await screen.findByRole('button', { name: 'Remove Birth certificate' }));
+    const confirmation = within(
+      screen.getByRole('dialog', { name: 'Remove document requirement?' })
+    );
+    await user.click(confirmation.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByText('Clear scan')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(
+      JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
+    ).toMatchObject([
+      { code: 'BIRTH_CERTIFICATE', name: 'Birth certificate', description: 'Clear scan' },
+    ]);
+  });
   it('selects classes without a form answer and preserves them when saving the stage', async () => {
     const id = '10101010-1010-e010-b010-101010101010';
     mswServer.use(
@@ -81,90 +113,71 @@ describe('document requirement editor', { timeout: 15000 }, () => {
         .standardIds
     ).toEqual([id]);
   });
-  it('requires a comparison before saving a conditional document and preserves the chosen rule', async () => {
-    const { user, onSave } = await setupDocumentEditor(json());
-    await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
-    const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
-    await chooseDocumentOption(user, 'When is it required?', 'Required when conditions match');
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
-    expect(
-      await dialog.findByText(
-        'Choose an application, inquiry, or assessment field for the condition.'
-      )
-    ).toBeInTheDocument();
-    await user.click(dialog.getByRole('combobox', { name: 'Applicant answer or fact' }));
-    await user.paste('application.TRANSFER');
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
-    expect(
-      await dialog.findByText('Enter a comparison value for the condition.')
-    ).toBeInTheDocument();
-    expect(onSave).not.toHaveBeenCalled();
-    await user.type(dialog.getByRole('textbox', { name: 'Comparison value' }), 'yes');
-    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
-    await waitFor(() =>
+  it('creates two custom requirements with server-generated references and optional/required toggles', async () => {
+    const { user, onSave } = await setupDocumentEditor();
+    const addRequirement = async (name: string) => {
+      await user.click(screen.getByRole('button', { name: 'Add custom document' }));
+      const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
       expect(
-        screen.queryByRole('dialog', { name: 'Configure document requirement' })
-      ).not.toBeInTheDocument()
-    );
+        screen
+          .getByRole('dialog', { name: 'Configure document requirement' })
+          .closest('.MuiPopover-root')
+      ).toBeInTheDocument();
+      expect(dialog.getByRole('button', { name: 'Save requirement' })).toHaveClass(
+        'MuiButton-sizeSmall'
+      );
+      expect(dialog.queryByRole('textbox', { name: 'Document code *' })).not.toBeInTheDocument();
+      expect(
+        dialog.queryByRole('combobox', { name: 'Evidence to collect' })
+      ).not.toBeInTheDocument();
+      expect(
+        dialog.getByRole('combobox', { name: 'Student document category (optional)' })
+      ).toBeInTheDocument();
+      expect(
+        dialog.getByRole('button', { name: 'Student document category information' })
+      ).toBeInTheDocument();
+      await user.type(dialog.getByRole('textbox', { name: 'Document name *' }), name);
+      if (name === 'Address evidence')
+        await user.click(dialog.getByRole('switch', { name: 'Required document' }));
+      await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+      await waitFor(() =>
+        expect(
+          screen.queryByRole('dialog', { name: 'Configure document requirement' })
+        ).not.toBeInTheDocument()
+      );
+    };
+    await addRequirement('Transfer proof');
+    await addRequirement('Address evidence');
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    const [item] = JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
-      .requirements;
-    expect(item.requirement).toBe('conditional');
-    expect(JSON.parse(item.conditionJson)).toEqual({
-      field: 'application.TRANSFER',
-      operator: 'Equals',
-      value: 'yes',
-    });
+    expect(
+      JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements
+    ).toMatchObject([
+      { code: '', name: 'Transfer proof', requirement: 'required', collectionMode: 'upload' },
+      { code: '', name: 'Address evidence', requirement: 'optional', collectionMode: 'upload' },
+    ]);
   });
-  it('keeps an unsaved requirement open when cancellation is declined', async () => {
-    const confirm = vi.fn(() => false);
-    vi.stubGlobal('confirm', confirm);
+  it('uses a shared discard dialog and preserves unsaved values when cancellation is declined', async () => {
     const { user } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
     await user.type(
       within(dialog).getByRole('textbox', { name: 'Instructions (optional)' }),
-      'Bring the original'
+      'Bring a clear scan'
     );
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-    expect(confirm).toHaveBeenCalledOnce();
-    expect(dialog).toBeInTheDocument();
-    vi.unstubAllGlobals();
+    const discard = screen.getByRole('dialog', { name: 'Discard document changes?' });
+    await user.click(within(discard).getByRole('button', { name: 'Cancel' }));
+    expect(within(dialog).getByRole('textbox', { name: 'Instructions (optional)' })).toHaveValue(
+      'Bring a clear scan'
+    );
   });
-  it('creates a conditional custom requirement collected as a physical original with one save', async () => {
+  it('validates custom requirement names before saving', async () => {
     const { user, onSave } = await setupDocumentEditor();
-    await user.click(screen.getByRole('radio', { name: 'Collect and verify documents' }));
     await user.click(screen.getByRole('button', { name: 'Add custom document' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
-    await user.click(dialog.getByRole('textbox', { name: 'Document name *' }));
-    await user.paste('Transfer certificate');
-    await chooseDocumentOption(user, 'When is it required?', 'Required when conditions match');
-    await user.click(dialog.getByRole('combobox', { name: 'Applicant answer or fact' }));
-    await user.paste('application.TRANSFER');
-    await user.type(dialog.getByRole('textbox', { name: 'Comparison value' }), 'yes');
-    await chooseDocumentOption(user, 'Evidence to collect', 'Inspect the physical original');
     await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('dialog', { name: 'Configure document requirement' })
-      ).not.toBeInTheDocument()
-    );
+    expect(await dialog.findByText('Document name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    const [item] = JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
-      .requirements;
-    expect(item).toMatchObject({
-      code: 'DOCUMENT_1',
-      name: 'Transfer certificate',
-      requirement: 'conditional',
-      collectionMode: 'original',
-    });
-    expect(JSON.parse(item.conditionJson)).toEqual({
-      field: 'application.TRANSFER',
-      operator: 'Equals',
-      value: 'yes',
-    });
   });
 });

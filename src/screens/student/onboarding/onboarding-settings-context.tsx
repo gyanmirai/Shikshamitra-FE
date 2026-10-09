@@ -59,6 +59,7 @@ const cloneInitialSettings = (
   },
   onboardingProfiles: settings.onboardingProfiles.map((profile): OnboardingProfile => ({
     ...profile,
+    offeringIds: [...(profile.offeringIds ?? [])],
     admissionRoutes: [...profile.admissionRoutes],
     applicability: {
       ...profile.applicability,
@@ -80,7 +81,7 @@ const cloneInitialSettings = (
     ...settings.grNumber,
     configurations: settings.grNumber.configurations.map((configuration) => ({
       ...configuration,
-      campusIds: [...(configuration.campusIds ?? [])],
+      ...(Array.isArray(configuration.campusIds) ? { campusIds: [...configuration.campusIds] } : {}),
       boardIds: [...configuration.boardIds],
       academicMediumIds: [...configuration.academicMediumIds],
       academicMediumStageIds: [...configuration.academicMediumStageIds],
@@ -93,7 +94,7 @@ const cloneInitialSettings = (
     ...settings.rollNumber,
     configurations: settings.rollNumber.configurations.map((configuration) => ({
       ...configuration,
-      campusIds: [...(configuration.campusIds ?? [])],
+      ...(Array.isArray(configuration.campusIds) ? { campusIds: [...configuration.campusIds] } : {}),
       boardIds: [...configuration.boardIds],
       academicMediumIds: [...configuration.academicMediumIds],
       academicMediumStageIds: [...configuration.academicMediumStageIds],
@@ -227,6 +228,7 @@ export function OnboardingSettingsProvider({
         onboardingProfiles: (() => {
           const nextProfile: OnboardingProfile = {
             ...updatedProfile,
+            offeringIds: [...(updatedProfile.offeringIds ?? [])],
             admissionRoutes: [...updatedProfile.admissionRoutes],
             applicability: {
               ...updatedProfile.applicability,
@@ -262,9 +264,13 @@ export function OnboardingSettingsProvider({
             (item) => item.id === configuration.id
           )
             ? current.grNumber.configurations.map((item) =>
-                item.id === configuration.id ? configuration : item
+                item.id === configuration.id ? configuration
+                  : configuration.status === 'published' && item.id === configuration.previousVersionId
+                    ? { ...item, status: 'superseded' as const, isActive: false } : item
               )
-            : [...current.grNumber.configurations, configuration],
+            : [...current.grNumber.configurations.map((item) =>
+                configuration.status === 'published' && item.id === configuration.previousVersionId
+                  ? { ...item, status: 'superseded' as const, isActive: false } : item), configuration],
         },
       })),
     [updateSettings]
@@ -287,9 +293,13 @@ export function OnboardingSettingsProvider({
             (item) => item.id === configuration.id
           )
             ? current.rollNumber.configurations.map((item) =>
-                item.id === configuration.id ? configuration : item
+                item.id === configuration.id ? configuration
+                  : configuration.status === 'published' && item.id === configuration.previousVersionId
+                    ? { ...item, status: 'superseded' as const, isActive: false } : item
               )
-            : [...current.rollNumber.configurations, configuration],
+            : [...current.rollNumber.configurations.map((item) =>
+                configuration.status === 'published' && item.id === configuration.previousVersionId
+                  ? { ...item, status: 'superseded' as const, isActive: false } : item), configuration],
         },
       })),
     [updateSettings]

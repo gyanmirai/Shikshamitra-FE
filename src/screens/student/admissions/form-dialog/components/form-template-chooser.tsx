@@ -1,3 +1,5 @@
+import type { AdmissionFormPurpose } from 'src/redux/student/admissions/admission-forms-api';
+
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
@@ -9,6 +11,7 @@ import Typography from '@mui/material/Typography';
 export type AdmissionFormStarter = 'blank' | 'admission-application' | 'admission-inquiry';
 
 type Props = {
+  purpose: AdmissionFormPurpose;
   selectedStarter: AdmissionFormStarter | null;
   onSelect: (starter: AdmissionFormStarter) => void;
 };
@@ -47,7 +50,12 @@ const STARTERS: Array<{
   },
 ];
 
-export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
+export function FormTemplateChooser({ purpose, selectedStarter, onSelect }: Props) {
+  const starters = STARTERS.filter(
+    (starter) =>
+      starter.id === 'blank' ||
+      starter.id === (purpose === 0 ? 'admission-inquiry' : 'admission-application')
+  );
   return (
     <Stack spacing={1.5}>
       <Typography variant="h6">Start with a form</Typography>
@@ -55,11 +63,11 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
           gap: 1.5,
         }}
       >
-        {STARTERS.map((starter) => (
+        {starters.map((starter) => (
           <Paper
             key={starter.id}
             variant="outlined"

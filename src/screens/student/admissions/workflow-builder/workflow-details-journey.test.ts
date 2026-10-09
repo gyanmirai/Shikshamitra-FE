@@ -53,7 +53,7 @@ it('replaces the graph only for an explicit template choice with fresh IDs and s
   expect(readStageConfiguration(result.stages[0].configurationJson)?.formDefinitionId).toBe(
     'form-2'
   );
-  expect(graph.stages).toHaveLength(6);
+  expect(graph.stages).toHaveLength(4);
 });
 
 it('starts a blank journey only for an explicit blank choice', () => {

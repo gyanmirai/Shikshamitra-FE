@@ -12,6 +12,7 @@ import type {
 import { isEqual } from 'src/utils/helper';
 import { useRef, useState, useEffect } from 'react';
 
+import { isApplicationStageType } from '../workflow-stage-configuration';
 import { getSequentialAppendRoute } from '../workflow-route-diagnostics';
 import { createStage, reorderStages } from '../../workflow-builder-utils';
 import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
@@ -135,7 +136,8 @@ export function useWorkflowBuilderDraft(
   };
   const addStage = (stageTypes: AdmissionWorkflowStageTypeMetadata[]) => {
     const metadata = stageTypes.find(
-      (item) => item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false
+      (item) =>
+        isApplicationStageType(item.type) && item.isRuntimeReady && item.isSelectable !== false
     );
     if (!metadata) return;
     setEditingStage(

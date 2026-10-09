@@ -451,19 +451,6 @@ export const admissionApplicationsApi = api.injectEndpoints({
       ) => unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
-    markAdmissionApplicationInReview: builder.mutation<
-      AdmissionApplication,
-      { id: string; input: AdmissionApplicationDecisionInput }
-    >({
-      query: ({ id, input }) => ({
-        url: `/student/enrollment/admissions/applications/${id}/decision/review`,
-        method: 'POST',
-        body: input,
-      }),
-      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
-        unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
-    }),
     approveAdmissionApplication: builder.mutation<
       AdmissionApplication,
       { id: string; input: AdmissionApplicationDecisionInput }
@@ -496,48 +483,6 @@ export const admissionApplicationsApi = api.injectEndpoints({
     >({
       query: ({ id, input }) => ({
         url: `/student/enrollment/admissions/applications/${id}/decision/waitlist`,
-        method: 'POST',
-        body: input,
-      }),
-      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
-        unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
-    }),
-    issueAdmissionOffer: builder.mutation<
-      AdmissionApplication,
-      { id: string; input: AdmissionApplicationDecisionInput }
-    >({
-      query: ({ id, input }) => ({
-        url: `/student/enrollment/admissions/applications/${id}/offer`,
-        method: 'POST',
-        body: input,
-      }),
-      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
-        unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
-    }),
-    acceptAdmissionOffer: builder.mutation<
-      AdmissionApplication,
-      { id: string; input: AdmissionApplicationDecisionInput }
-    >({
-      query: ({ id, input }) => ({
-        url: `/student/enrollment/admissions/applications/${id}/offer/accept`,
-        method: 'POST',
-        body: input,
-      }),
-      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
-        unwrap(response),
-      invalidatesTags: [
-        studentAdmissionsCrmType.admissionApplication,
-        studentAdmissionsCrmType.admissionOffering,
-      ],
-    }),
-    declineAdmissionOffer: builder.mutation<
-      AdmissionApplication,
-      { id: string; input: AdmissionApplicationDecisionInput }
-    >({
-      query: ({ id, input }) => ({
-        url: `/student/enrollment/admissions/applications/${id}/offer/decline`,
         method: 'POST',
         body: input,
       }),
@@ -623,13 +568,9 @@ export const {
   useReopenAdmissionApplicationFormMutation,
   useGetAdmissionApplicationFormHistoryQuery,
   useGetAdmissionApplicationDecisionHistoryQuery,
-  useMarkAdmissionApplicationInReviewMutation,
   useApproveAdmissionApplicationMutation,
   useRejectAdmissionApplicationMutation,
   useWaitlistAdmissionApplicationMutation,
-  useIssueAdmissionOfferMutation,
-  useAcceptAdmissionOfferMutation,
-  useDeclineAdmissionOfferMutation,
   useGetAdmissionFinalizationPreviewQuery,
   useFinalizeAdmissionApplicationMutation,
   useAdvanceAdmissionApplicationWorkflowMutation,

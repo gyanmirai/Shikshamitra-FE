@@ -11,7 +11,10 @@ import {
   getAdmissionApplicationStatusLabel,
 } from '../application-status';
 
-export function buildAdmissionPipelineColumns(applicationUrl: (id: string) => string): IColumn[] {
+export function buildAdmissionPipelineColumns(
+  applicationUrl: (id: string) => string,
+  onOpen?: (id: string) => void
+): IColumn[] {
   const columns: IColumn[] = [
     {
       id: 'applicantName',
@@ -154,7 +157,20 @@ export function buildAdmissionPipelineColumns(applicationUrl: (id: string) => st
           aria-label={`Continue ${formatAdmissionReference(row.applicationNumber)}`}
           size="small"
           variant="outlined"
-          sx={{ minHeight: 44 }}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (
+              onOpen &&
+              !event.ctrlKey &&
+              !event.metaKey &&
+              !event.shiftKey &&
+              !event.altKey &&
+              event.button === 0
+            ) {
+              event.preventDefault();
+              onOpen(row.id);
+            }
+          }}
         >
           Continue
         </Button>

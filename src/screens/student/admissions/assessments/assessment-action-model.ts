@@ -3,8 +3,7 @@ import type {
   ManagedApplicationAssessment,
 } from 'src/redux/student/admissions/admission-assessment-types';
 
-export type AssessmentAction =
-  'book' | 'attendance' | 'result' | 'review' | 'retake' | 'cancel' | 'waive';
+export type AssessmentAction = 'book' | 'attendance' | 'result' | 'retake' | 'cancel' | 'waive';
 export type AssessmentActionValues = {
   sessionId: string;
   attendance: 'present' | 'absent';
@@ -17,7 +16,6 @@ export const assessmentActionLabels: Record<AssessmentAction, string> = {
   book: 'Start assessment',
   attendance: 'Record attendance',
   result: 'Record result',
-  review: 'Review result',
   retake: 'Allow retake',
   cancel: 'Cancel attempt',
   waive: 'Waive assessment',
@@ -51,13 +49,7 @@ export function validateAssessmentAction(
   ) {
     errors.marks = `Enter marks between 0 and ${assessment.policy.totalMarks}`;
   }
-  if (
-    (action === 'waive' ||
-      action === 'retake' ||
-      action === 'cancel' ||
-      (action === 'review' && !values.approved)) &&
-    !values.notes.trim()
-  ) {
+  if ((action === 'waive' || action === 'retake' || action === 'cancel') && !values.notes.trim()) {
     errors.notes = 'Enter a reason for this action';
   }
   if (action === 'result' && !assessment.policy.scoringEnabled && !values.outcome)

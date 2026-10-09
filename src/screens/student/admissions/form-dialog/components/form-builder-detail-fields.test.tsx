@@ -27,6 +27,7 @@ describe('FormBuilderDetailFields', () => {
     expect(nameLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(descriptionLabel).not.toHaveClass('MuiInputLabel-shrink');
     expect(screen.queryByRole('combobox', { name: /Fields per row/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /Form purpose/i })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('textbox', { name: 'Form name *' }));
     expect(nameLabel).toHaveClass('MuiInputLabel-shrink');

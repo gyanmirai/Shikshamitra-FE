@@ -2,7 +2,9 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "paths": {
-      "*": ["./*"]
+      "*": [
+        "./*"
+      ]
     },
     "target": "es2015",
     "lib": [

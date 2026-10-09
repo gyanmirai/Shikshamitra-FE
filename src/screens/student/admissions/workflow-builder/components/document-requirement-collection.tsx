@@ -2,8 +2,10 @@ import type { FormikProps } from 'formik';
 import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/admission-document-settings-api';
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Alert, Stack, Typography, IconButton, InputAdornment } from '@mui/material';
 import { DOCUMENT_FORMATS } from 'src/redux/student/admissions/admission-document-policy';
 
 import { DocumentUploadLimits } from './document-upload-limits';
@@ -52,42 +54,42 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
   }
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Collection and student record</Typography>
-      <CustomSelect
-        size="small"
-        fullWidth
-        label="Evidence to collect"
-        value={values.collectionMode}
-        options={[
-          { value: 'upload', label: 'Upload a file' },
-          { value: 'original', label: 'Inspect the physical original' },
-          { value: 'either', label: 'File upload or physical original' },
-          { value: 'both', label: 'File upload and physical original' },
-        ]}
-        onChange={(value) =>
-          formik.setValues({
-            ...values,
-            collectionMode: value as AdmissionDocumentRequirementPolicy['collectionMode'],
-            ...(value === 'original' && values.allowedExtensions.length === 0
-              ? { allowedExtensions: [...DOCUMENT_FORMATS] }
-              : {}),
-          })
-        }
-      />
-      {uploads && <DocumentUploadLimits formik={formik} />}
+      <Typography variant="subtitle2">Upload and student record</Typography>
+      <DocumentUploadLimits formik={formik} />
       <CustomSelect
         size="small"
         fullWidth
         label="Student document category (optional)"
+        endAdornment={
+          <InputAdornment position="end" sx={{ mr: 2.5 }}>
+            <CustomTooltip
+              title="Accepted uploads connect to the student record and matching Onboarding requirements when admission is finalized."
+              arrow
+              placement="right"
+            >
+              <IconButton
+                type="button"
+                size="small"
+                aria-label="Student document category information"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                sx={{ color: 'info.main', width: { xs: 44, sm: 28 }, height: { xs: 44, sm: 28 } }}
+              >
+                <Iconify icon="mdi:information-outline" width={16} />
+              </IconButton>
+            </CustomTooltip>
+          </InputAdornment>
+        }
         value={values.documentTypeId ?? ''}
         options={mappings}
         onChange={(id) => changeMapping(String(id))}
         onBlur={() => formik.setFieldTouched('documentTypeId')}
         error={Boolean(touched.documentTypeId && errors.documentTypeId)}
         helperText={
-          touched.documentTypeId && errors.documentTypeId
-            ? errors.documentTypeId
-            : 'Evidence is linked to the student when admission is finalized. A category also connects accepted uploads to the student record.'
+          touched.documentTypeId && errors.documentTypeId ? errors.documentTypeId : undefined
         }
       />
       {incompatible && (
@@ -104,8 +106,8 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
       )}
       {values.documentTypeId && (
         <Alert severity="info">
-          Uploads must also meet this student document category’s file limits. Waivers and original
-          checks do not replace a required file upload.
+          Uploads must also meet this student document category’s file limits. Accepted uploads
+          connect to the student record after finalization.
         </Alert>
       )}
     </Stack>

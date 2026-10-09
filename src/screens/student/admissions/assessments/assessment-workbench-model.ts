@@ -11,7 +11,6 @@ export const assessmentQueues: { value: AssessmentQueue | 'all'; label: string }
   { value: 'toBook', label: 'To book' },
   { value: 'attendance', label: 'Attendance' },
   { value: 'result', label: 'Results' },
-  { value: 'review', label: 'Review' },
   { value: 'ready', label: 'Ready' },
   { value: 'attention', label: 'Needs attention' },
   { value: 'completed', label: 'Completed' },
@@ -41,13 +40,12 @@ export function getAssessmentRowActions(
   permissions: ReturnType<typeof getAssessmentPermissions>
 ): AssessmentAction[] {
   if (!row.isActive || !row.assessment.policy) return [];
-  const {assessment} = row;
+  const { assessment } = row;
   return (
     [
       ['book', assessment.canBook && permissions.book],
       ['attendance', assessment.canRecordAttendance && permissions.attendance],
       ['result', assessment.canRecordResult && permissions.results],
-      ['review', assessment.canReview && permissions.review],
       ['retake', assessment.canRetake && permissions.book],
       ['cancel', assessment.canCancel && permissions.book],
       ['waive', assessment.canWaive && permissions.waive],

@@ -61,6 +61,7 @@ export type OnboardingProfile = {
   id: string;
   name: string;
   description: string;
+  offeringIds?: string[];
   admissionRoutes: string[];
   applicability: AcademicApplicableRule;
   rules: ReadinessAccessRules;
@@ -102,24 +103,52 @@ export type GrSequenceScope = 'school' | 'academic-year';
 
 export type GrResetPolicy = 'continuous' | 'academic-year';
 
-export type GrNumberConfiguration = AcademicApplicableRule & {
-  id: string;
-  name: string;
-  prefix: string;
-  startingNumber: number;
-  padding: number;
-  suffix: string;
-  formatPattern: string;
-  applicableProfileIds: string[];
-  sequenceScope: GrSequenceScope;
-  resetPolicy: GrResetPolicy;
-  maximumNumber: number | null;
-  manualEntryAllowed: boolean;
-  requireManualReason: boolean;
-  requireManualApproval: boolean;
-  effectiveFrom: string;
-  isActive: boolean;
+export type NumberingRuleLifecycle = {
+  status?: 'draft' | 'published' | 'superseded';
+  version?: number;
+  previousVersionId?: string;
 };
+
+export const getNumberingRuleStatus = (rule: NumberingRuleLifecycle & { isActive: boolean }) =>
+  rule.status ?? (rule.isActive ? 'published' : 'draft');
+
+/** Start a new version without mutating the published rule or its number assignments. */
+export const createNumberingDraftVersion = <
+  T extends NumberingRuleLifecycle & { id: string; isActive: boolean },
+>(
+  rule: T,
+  draftId: string
+): T => {
+  const published = getNumberingRuleStatus(rule) === 'published';
+  return {
+    ...rule,
+    id: published ? draftId : rule.id,
+    previousVersionId: published ? rule.id : rule.previousVersionId,
+    version: published ? (rule.version ?? 1) + 1 : (rule.version ?? 1),
+    status: 'draft',
+    isActive: false,
+  };
+};
+
+export type GrNumberConfiguration = AcademicApplicableRule &
+  NumberingRuleLifecycle & {
+    id: string;
+    name: string;
+    prefix: string;
+    startingNumber: number;
+    padding: number;
+    suffix: string;
+    formatPattern: string;
+    applicableProfileIds: string[];
+    sequenceScope: GrSequenceScope;
+    resetPolicy: GrResetPolicy;
+    maximumNumber: number | null;
+    manualEntryAllowed: boolean;
+    requireManualReason: boolean;
+    requireManualApproval: boolean;
+    effectiveFrom: string;
+    isActive: boolean;
+  };
 
 export type GrNumberFormatContext = {
   academicYearName?: string;
@@ -143,24 +172,25 @@ export type RollOrderingRule = {
   direction: RollArrangeType;
 };
 
-export type RollNumberConfiguration = AcademicApplicableRule & {
-  id: string;
-  classId: string;
-  className: string;
-  arrangeBy: RollArrangeBy;
-  arrangeType: RollArrangeType;
-  startingNumber: number;
-  preserveExisting: boolean;
-  numberingScope: RollNumberScope;
-  assignmentTiming: RollAssignmentTiming;
-  midYearHandling: MidYearRollHandling;
-  orderingRules: RollOrderingRule[];
-  allowIndividualLocks: boolean;
-  requireChangeReason: boolean;
-  requireApproval: boolean;
-  effectiveFrom: string;
-  isActive: boolean;
-};
+export type RollNumberConfiguration = AcademicApplicableRule &
+  NumberingRuleLifecycle & {
+    id: string;
+    classId: string;
+    className: string;
+    arrangeBy: RollArrangeBy;
+    arrangeType: RollArrangeType;
+    startingNumber: number;
+    preserveExisting: boolean;
+    numberingScope: RollNumberScope;
+    assignmentTiming: RollAssignmentTiming;
+    midYearHandling: MidYearRollHandling;
+    orderingRules: RollOrderingRule[];
+    allowIndividualLocks: boolean;
+    requireChangeReason: boolean;
+    requireApproval: boolean;
+    effectiveFrom: string;
+    isActive: boolean;
+  };
 
 export type DivisionAssignmentStrategy =
   'next-available' | 'balance-count' | 'balance-tolerance' | 'sequential' | 'preserve-preferred';
@@ -411,11 +441,21 @@ export const defaultOnboardingSettings: OnboardingSettingsConfiguration = {
   onboardingProfiles: defaultOnboardingProfiles,
   grNumber: {
     assignmentMode: 'both',
-    configurations: [defaultGrNumberConfiguration],
+    configurations: [
+      {
+        ...defaultGrNumberConfiguration,
+        status: 'draft',
+        version: 1,
+        isActive: false,
+        requireManualApproval: false,
+      },
+    ],
   },
   rollNumber: {
     assignmentMode: 'both',
-    configurations: [defaultRollNumberConfiguration],
+    configurations: [
+      { ...defaultRollNumberConfiguration, status: 'draft', version: 1, isActive: false },
+    ],
   },
   divisionChange: {
     configurations: [defaultDivisionChangeConfiguration],
@@ -480,7 +520,11 @@ export const isAcademicApplicabilityMatch = (
 ) => {
   const standardApplicability = getStandardApplicability(configuration);
   return (
-    isSelectedValueApplicable(configuration.campusMode ?? 'all', configuration.campusIds ?? [], context.campusId) &&
+    isSelectedValueApplicable(
+      configuration.campusMode ?? 'all',
+      configuration.campusIds ?? [],
+      context.campusId
+    ) &&
     isSelectedValueApplicable(configuration.boardMode, configuration.boardIds, context.boardId) &&
     isSelectedValueApplicable(
       configuration.mediumMode,
@@ -543,8 +587,12 @@ export const academicTargetsOverlap = (
   const firstStandard = getStandardApplicability(first);
   const secondStandard = getStandardApplicability(second);
   return (
-    selectedTargetsOverlap(first.campusMode ?? 'all', first.campusIds ?? [],
-      second.campusMode ?? 'all', second.campusIds ?? []) &&
+    selectedTargetsOverlap(
+      first.campusMode ?? 'all',
+      first.campusIds ?? [],
+      second.campusMode ?? 'all',
+      second.campusIds ?? []
+    ) &&
     selectedTargetsOverlap(first.boardMode, first.boardIds, second.boardMode, second.boardIds) &&
     selectedTargetsOverlap(
       first.mediumMode,
@@ -593,6 +641,7 @@ export const isGrConfigurationApplicable = (
   context: AcademicPathContext = {}
 ) =>
   configuration.isActive &&
+  getNumberingRuleStatus(configuration) === 'published' &&
   (!configuration.effectiveFrom || configuration.effectiveFrom <= effectiveDate) &&
   isAcademicApplicabilityMatch(configuration, context) &&
   Boolean(profileId && configuration.applicableProfileIds.includes(profileId));
@@ -606,6 +655,7 @@ export const findRollNumberConfiguration = (
     .filter(
       (configuration) =>
         configuration.isActive &&
+        getNumberingRuleStatus(configuration) === 'published' &&
         (!configuration.effectiveFrom || configuration.effectiveFrom <= effectiveDate) &&
         isAcademicApplicabilityMatch(configuration, context)
     )
@@ -646,27 +696,42 @@ export const isAssignmentModeAllowed = (
 export const findOnboardingProfile = (
   profiles: OnboardingProfile[],
   admissionRoute: string,
-  context: AcademicPathContext = {}
-) =>
-  profiles
+  context: AcademicPathContext = {},
+  offeringId?: string | null
+) => {
+  if (offeringId) {
+    const linked = profiles.filter((profile) => profile.offeringIds?.includes(offeringId));
+    return linked.length === 1 ? linked[0] : undefined;
+  }
+  return profiles
     .filter(
       (profile) =>
-        profile.admissionRoutes.some((route) =>
-          route.toLocaleLowerCase() === admissionRoute.toLocaleLowerCase()
-        ) &&
-        isAcademicApplicabilityMatch(profile.applicability, context)
+        profile.admissionRoutes.some(
+          (route) => route.toLocaleLowerCase() === admissionRoute.toLocaleLowerCase()
+        ) && isAcademicApplicabilityMatch(profile.applicability, context)
     )
     .sort((first, second) =>
       compareAcademicApplicability(first.applicability, second.applicability)
     )[0];
+};
 
 export const getEffectiveReadinessRules = (
   settings: OnboardingSettingsConfiguration,
   admissionRoute: string,
-  context: AcademicPathContext = {}
-) =>
-  findOnboardingProfile(settings.onboardingProfiles, admissionRoute, context)?.rules ??
-  settings.readinessAccess;
+  context: AcademicPathContext = {},
+  offeringId?: string | null
+) => {
+  const profile = findOnboardingProfile(
+    settings.onboardingProfiles,
+    admissionRoute,
+    context,
+    offeringId
+  );
+  if (offeringId && !profile) {
+    throw new Error('The Admission Offering must have exactly one readiness rule.');
+  }
+  return profile?.rules ?? settings.readinessAccess;
+};
 
 export const isApprovalTriggerRequired = (
   rules: ReadinessAccessRules,

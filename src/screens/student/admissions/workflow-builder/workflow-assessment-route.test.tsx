@@ -31,7 +31,7 @@ const destination: AdmissionWorkflowStage = {
   id: 'registration-1',
   code: 'REGISTRATION',
   name: 'Registration',
-  stageType: 11,
+  stageType: 7,
   displayOrder: 1,
   isEntryStage: false,
   configurationJson: undefined,

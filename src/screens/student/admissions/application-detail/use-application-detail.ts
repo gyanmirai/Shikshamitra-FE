@@ -113,9 +113,7 @@ export function useApplicationDetail(id: string) {
       return false;
     }
   };
-  const save = async () => {
-    await persistChanges(true);
-  };
+  const save = () => persistChanges(true);
   const [advancing, setAdvancing] = useState(false);
   const advance = async (options?: AdvanceOptions) => {
     setAdvancing(true);
@@ -259,6 +257,11 @@ export function useApplicationDetail(id: string) {
     formHistoryQuery,
     currentValues,
     hasUnsavedAnswers: formik.dirty,
+    discardUnsavedAnswers: () => {
+      formik.resetForm();
+      setErrors([]);
+      setFieldErrors({});
+    },
     errors,
     fieldErrors,
     runtimeAction,

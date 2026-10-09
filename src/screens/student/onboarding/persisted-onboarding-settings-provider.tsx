@@ -5,9 +5,12 @@ import type { RootState } from 'src/redux/store';
 import type { StudentOnboardingSettingsRecord } from 'src/redux/student/onboarding/student-onboarding-types';
 
 import { useSelector } from 'react-redux';
+import { usePathname } from 'next/navigation';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
-import { Box, Alert, Button, LinearProgress } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Alert, Button, LinearProgress } from '@mui/material';
 import {
   useGetStudentOnboardingSettingsQuery,
   useSaveStudentOnboardingSettingsMutation,
@@ -58,7 +61,52 @@ const parseConfiguration = (
 
 const getRecordKey = (academicYearId?: string | null) => academicYearId ?? 'school';
 
+function SettingsStateHeader({ pathname }: { pathname: string }) {
+  const sections = studentPaths.onboarding.settingsSections;
+  const isSettings = pathname.startsWith(studentPaths.onboarding.settings);
+  const isNumbering = [
+    sections.numberingPlacement,
+    sections.grNumber,
+    sections.rollNumber,
+  ].includes(pathname);
+  const isReadiness = isSettings && pathname !== studentPaths.onboarding.settings && !isNumbering;
+  const heading = isNumbering
+    ? 'Numbering & Placement'
+    : isReadiness
+      ? 'Readiness & Access'
+      : isSettings
+        ? 'Onboarding Settings'
+        : 'Student Setup';
+  const description = isNumbering
+    ? 'Create and publish GR series and Roll rules for Onboarding.'
+    : isReadiness
+      ? 'Connect Admission Offerings to activation requirements and app login emails.'
+      : isSettings
+        ? 'Configure admission readiness, student identifiers and app access.'
+        : 'Prepare admission students for activation and complete their app access.';
+  return (
+    <CustomBreadcrumbs
+      heading={heading}
+      description={description}
+      links={[
+        { name: 'Student', href: studentPaths.dashboard },
+        { name: 'Onboarding', href: studentPaths.onboarding.setup },
+        ...(isSettings
+          ? [
+              {
+                name: 'Settings',
+                ...(isNumbering || isReadiness ? { href: studentPaths.onboarding.settings } : {}),
+              },
+            ]
+          : []),
+        ...(isNumbering || isReadiness || !isSettings ? [{ name: heading }] : []),
+      ]}
+    />
+  );
+}
+
 export function PersistedOnboardingSettingsProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const academicYearId = currentYear?.id;
   const settingsQuery = useGetStudentOnboardingSettingsQuery(
@@ -91,9 +139,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
     }
 
     if (academicYearId) {
-      const academicRecord = records?.find(
-        (record) => record.academicYearId === academicYearId
-      );
+      const academicRecord = records?.find((record) => record.academicYearId === academicYearId);
       const academicSettings = parseConfiguration(academicRecord);
       if (academicSettings) {
         initialOverrides[getAcademicScopeKey(academicYearId)] = academicSettings;
@@ -104,10 +150,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
   }, [academicYearId, records]);
 
   const persist = useCallback(
-    async (
-      scope: OnboardingConfigurationScope,
-      configuration: OnboardingSettingsConfiguration
-    ) => {
+    async (scope: OnboardingConfigurationScope, configuration: OnboardingSettingsConfiguration) => {
       const scopeAcademicYearId = scope.level === 'academic-year' ? scope.academicYearId : null;
       if (scope.level === 'academic-year' && !scopeAcademicYearId) {
         throw new Error('Select an academic year before saving this onboarding override.');
@@ -158,37 +201,53 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
     [deleteSettings]
   );
 
-  if (settingsQuery.isLoading || (!records && !settingsQuery.isError)) {
+  const isLoading = settingsQuery.isLoading || (!records && !settingsQuery.isError);
+  const isInvalid = records?.some((record) => !parseConfiguration(record));
+  if (isLoading || settingsQuery.isError || isInvalid) {
     return (
-      <Box sx={{ width: 1, pt: 0.5 }}>
-        <LinearProgress aria-label="Loading onboarding configuration" />
-      </Box>
+      <Stack spacing={1} sx={{ minWidth: 0, height: '100%' }}>
+        <SettingsStateHeader pathname={pathname} />
+        <Box sx={{ minWidth: 0 }}>
+          {isLoading ? (
+            <LinearProgress aria-label="Loading onboarding configuration" />
+          ) : settingsQuery.isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" color="inherit" onClick={() => settingsQuery.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Onboarding settings could not be loaded. Retry before making changes.
+            </Alert>
+          ) : (
+            <Alert severity="error">
+              The saved onboarding configuration is invalid or uses an unsupported version. Ask an
+              administrator to repair it before making changes; saved rules have not been replaced
+              with defaults.
+            </Alert>
+          )}
+        </Box>
+      </Stack>
     );
-  }
-
-  if (settingsQuery.isError) {
-    return (
-      <Alert severity="error" action={<Button size="small" color="inherit" onClick={() => settingsQuery.refetch()}>Retry</Button>}>
-        Onboarding settings could not be loaded. Retry before making changes.
-      </Alert>
-    );
-  }
-
-  if (records?.some(record => !parseConfiguration(record))) {
-    return <Alert severity="error">The saved onboarding configuration is invalid or uses an unsupported version. Ask an administrator to repair it before making changes; saved rules have not been replaced with defaults.</Alert>;
   }
 
   return (
     <OnboardingSettingsProvider
       key={academicYearId ?? 'school'}
-      initialScope={academicYearId ? {
-        ...defaultOnboardingConfigurationScope,
-        level: 'academic-year',
-        key: getAcademicScopeKey(academicYearId),
-        label: `Academic year — ${currentYear?.name ?? ''}`,
-        academicYearId,
-        academicYearName: currentYear?.name ?? '',
-      } : defaultOnboardingConfigurationScope}
+      initialScope={
+        academicYearId
+          ? {
+              ...defaultOnboardingConfigurationScope,
+              level: 'academic-year',
+              key: getAcademicScopeKey(academicYearId),
+              label: `Academic year — ${currentYear?.name ?? ''}`,
+              academicYearId,
+              academicYearName: currentYear?.name ?? '',
+            }
+          : defaultOnboardingConfigurationScope
+      }
       initialSettings={defaultOnboardingSettings}
       initialOverrides={initialState.initialOverrides}
       onPersist={persist}

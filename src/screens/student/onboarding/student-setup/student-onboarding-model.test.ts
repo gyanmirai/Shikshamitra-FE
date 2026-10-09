@@ -82,25 +82,122 @@ const buildCase = (overrides: Partial<StudentOnboardingCase> = {}): StudentOnboa
 });
 
 describe('mapOnboardingCaseToItem', () => {
+  it('shows the server-confirmed finalized admission independently from profile identity', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        hasDocumentRequirementsSnapshot: true,
+        admissionConfirmed: true,
+        steps: [],
+      })
+    );
+    expect(item.readinessItems).toEqual([
+      expect.objectContaining({
+        key: 'admission_confirmed',
+        label: 'Admission confirmed',
+        status: 'passed',
+        blocking: false,
+      }),
+    ]);
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 1,
+      requiredCount: 1,
+      progress: 100,
+    });
+  });
+
+  it('retains the server admission-finalization blocker for an unconfirmed frozen case', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        hasDocumentRequirementsSnapshot: true,
+        admissionConfirmed: false,
+        steps: [],
+      })
+    );
+    expect(item.readinessItems).toEqual([
+      expect.objectContaining({
+        key: 'admission_confirmed',
+        status: 'failed',
+        blocking: true,
+      }),
+    ]);
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 0,
+      requiredCount: 1,
+      blockingCount: 1,
+    });
+  });
+
+  it('keeps imported legacy readiness separate from the Offering admission check', () => {
+    const item = mapOnboardingCaseToItem(buildCase({ admissionConfirmed: false }));
+    expect(item.readinessItems.some((check) => check.key === 'admission_confirmed')).toBe(false);
+    expect(item.readinessItems.find((check) => check.key === 'identity')?.label).toBe(
+      'Core identity'
+    );
+  });
+  it('splits identifier readiness into GR and Roll using their actual assignments', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        grNumber: '1001',
+        rollNumber: null,
+        steps: [
+          {
+            id: 'identifiers',
+            key: 'identifiers_roll',
+            label: 'Identifiers',
+            required: true,
+            status: 0,
+            displayOrder: 3,
+          },
+        ],
+      })
+    );
+    expect(
+      item.readinessItems.map(({ key, status, blocking }) => ({ key, status, blocking }))
+    ).toEqual([
+      { key: 'gr_number', status: 'passed', blocking: false },
+      { key: 'roll_number', status: 'pending', blocking: true },
+    ]);
+    expect(getReadinessSummary(item).blockingCount).toBe(1);
+  });
   it('keeps an unplaced live case in the pending-division worklist despite its display placeholder', () => {
     const unplaced = mapOnboardingCaseToItem(buildCase({ divisionId: null, divisionName: null }));
     const placed = mapOnboardingCaseToItem(buildCase({ id: 'case-2' }));
     expect(unplaced.divisionName).toBe('Pending');
     expect(getPendingStudentCount([unplaced, placed], 'division')).toBe(1);
-    expect(filterStudentsForSetupView([unplaced, placed], 'division', 'pending')).toEqual([unplaced]);
+    expect(filterStudentsForSetupView([unplaced, placed], 'division', 'pending')).toEqual([
+      unplaced,
+    ]);
   });
   it('uses separate portal handoffs even when the pre-activation combined check is optional', () => {
-    const item = mapOnboardingCaseToItem(buildCase({
-      intendedBoardName: 'CBSE', intendedMediumName: 'English',
-      studentAccountRequired: true, guardianAccountRequired: true,
-      studentAccountStatus: 2, guardianAccountStatus: 0,
-      steps: [{ id: 'accounts', key: 'finance_accounts_services', label: 'Services',
-        displayOrder: 8, required: false, status: 5 }],
-    }));
-    expect(item).toMatchObject({ boardName: 'CBSE', mediumName: 'English',
-      studentAccountStatus: 'ready', guardianAccountStatus: 'pending' });
-    expect(mapOnboardingCaseToItem(buildCase({ studentAccountRequired: false })).studentAccountStatus)
-      .toBe('not-required');
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        intendedBoardName: 'CBSE',
+        intendedMediumName: 'English',
+        studentAccountRequired: true,
+        guardianAccountRequired: true,
+        studentAccountStatus: 2,
+        guardianAccountStatus: 0,
+        steps: [
+          {
+            id: 'accounts',
+            key: 'finance_accounts_services',
+            label: 'Services',
+            displayOrder: 8,
+            required: false,
+            status: 5,
+          },
+        ],
+      })
+    );
+    expect(item).toMatchObject({
+      boardName: 'CBSE',
+      mediumName: 'English',
+      studentAccountStatus: 'ready',
+      guardianAccountStatus: 'pending',
+    });
+    expect(
+      mapOnboardingCaseToItem(buildCase({ studentAccountRequired: false })).studentAccountStatus
+    ).toBe('not-required');
     expect(mapOnboardingCaseToItem(buildCase()).studentAccountStatus).toBe('not-connected');
   });
 
@@ -129,7 +226,6 @@ describe('mapOnboardingCaseToItem', () => {
       { key: 'identity', status: 'passed', blocking: false },
       { key: 'documents', status: 'failed', blocking: true },
       { key: 'medical_previous_school', status: 'not-required', blocking: false },
-      { key: 'final_readiness', status: 'pending', blocking: false },
     ]);
     expect(item.activity[0]).toMatchObject({
       title: 'ReadinessRefreshed',
@@ -137,13 +233,13 @@ describe('mapOnboardingCaseToItem', () => {
     });
     expect(getReadinessSummary(item)).toMatchObject({
       passedCount: 1,
-      requiredCount: 3,
+      requiredCount: 2,
       blockingCount: 1,
-      progress: 33,
+      progress: 50,
     });
   });
 
-  it('does not treat the system-owned final-readiness step as a manual blocker', () => {
+  it('excludes the final-readiness aggregate from the task checklist and readiness counts', () => {
     const item = mapOnboardingCaseToItem(
       buildCase({
         status: 1,
@@ -160,12 +256,51 @@ describe('mapOnboardingCaseToItem', () => {
       })
     );
 
-    expect(item.readinessItems[0]).toMatchObject({
-      status: 'pending',
-      blocking: false,
-      detail: 'This is completed automatically when activation validates every required check.',
+    expect(item.readinessItems).toEqual([]);
+    expect(getReadinessSummary(item)).toMatchObject({ requiredCount: 0, blockingCount: 0 });
+  });
+
+  it('shows completed actual requirements without waiting for the activation aggregate', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        steps: [
+          {
+            id: 'fee',
+            key: 'fee_structure',
+            label: 'Fee structure',
+            displayOrder: 6,
+            required: true,
+            status: 2,
+          },
+          {
+            id: 'approval',
+            key: 'approval_review',
+            label: 'Approval',
+            displayOrder: 7,
+            required: true,
+            status: 2,
+          },
+          {
+            id: 'final',
+            key: 'final_readiness',
+            label: 'Final readiness',
+            displayOrder: 99,
+            required: true,
+            status: 0,
+          },
+        ],
+      })
+    );
+    expect(item.readinessItems.map((check) => check.key)).toEqual([
+      'fee_structure',
+      'approval_review',
+    ]);
+    expect(getReadinessSummary(item)).toMatchObject({
+      passedCount: 2,
+      requiredCount: 2,
+      progress: 100,
+      blockingCount: 0,
     });
-    expect(getReadinessSummary(item).blockingCount).toBe(0);
   });
 
   it('explains a pending approval requirement before a staff member records it', () => {

@@ -14,6 +14,8 @@ type Props = {
   disabled?: boolean;
   children?: ReactNode;
   renderStepLabel?: (index: number) => ReactNode;
+  orientation?: 'responsive' | 'horizontal';
+  compact?: boolean;
 };
 
 export function AdmissionFormStepNavigation({
@@ -25,8 +27,11 @@ export function AdmissionFormStepNavigation({
   disabled = false,
   children,
   renderStepLabel,
+  orientation = 'responsive',
+  compact = false,
 }: Props) {
-  const vertical = useResponsive('up', 'md');
+  const desktop = useResponsive('up', 'md');
+  const vertical = orientation === 'responsive' && desktop;
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const container = scrollRef.current;
@@ -62,7 +67,7 @@ export function AdmissionFormStepNavigation({
             type="button"
             disabled={disabled}
             onClick={() => onStepChange(index)}
-            sx={{ textAlign: 'left', minHeight: 44, py: 1 }}
+            sx={{ textAlign: 'left', minHeight: 44, py: compact ? 0.5 : 1 }}
           >
             <StepLabel error={stepErrors[index]} optional={step.caption}>
               {step.name}
@@ -82,10 +87,18 @@ export function AdmissionFormStepNavigation({
       orientation={vertical ? 'vertical' : 'horizontal'}
       nonLinear
       sx={{
-        width: vertical ? 1 : 'max-content',
+        width: vertical ? 1 : compact ? { xs: 'max-content', sm: 1 } : 'max-content',
         minWidth: 1,
-        '& .MuiStepConnector-line': { minHeight: 24 },
-        '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
+        '& .MuiStepConnector-line': { minHeight: compact && !vertical ? 0 : 24 },
+        ...(compact && {
+          '& .MuiStep-root': { px: 1, flex: 1 },
+          '& .MuiStepIcon-root': { fontSize: 20 },
+        }),
+        '& .MuiStepLabel-label': {
+          typography: 'subtitle2',
+          overflowWrap: 'anywhere',
+          ...(compact && { whiteSpace: 'nowrap' }),
+        },
       }}
     >
       {renderSteps()}

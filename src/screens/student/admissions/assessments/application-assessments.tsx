@@ -17,10 +17,31 @@ type Props = {
   canAdvance: boolean;
   advancing: boolean;
   onComplete: () => void;
+  compact?: boolean;
+  selectedStageId?: string;
 };
 
-export function ApplicationAssessments({ stages, currentStage, ...props }: Props) {
+export function ApplicationAssessments({ stages, currentStage, selectedStageId, ...props }: Props) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const selectedStage = selectedStageId
+    ? stages.find((stage) => stage.id === selectedStageId)
+    : undefined;
+  if (selectedStageId) {
+    if (!selectedStage?.assessmentEnabled) return null;
+    if (selectedStage.id === currentStage?.id && selectedStage.status < 2)
+      return <ApplicationAssessmentPanel key={selectedStage.id} {...props} stage={selectedStage} />;
+    if (selectedStage.status < 2) return null;
+    return (
+      <Stack spacing={1}>
+        <Typography variant="subtitle2">{selectedStage.name} · Assessment history</Typography>
+        <AssessmentHistoryDetails
+          applicationId={props.applicationId}
+          stageInstanceId={selectedStage.id}
+          compact={props.compact}
+        />
+      </Stack>
+    );
+  }
   const history = stages.filter(
     (stage) => stage.assessmentEnabled && stage.id !== currentStage?.id && stage.status >= 2
   );

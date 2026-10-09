@@ -55,18 +55,6 @@ export const admissionAssessmentsApi = api.injectEndpoints({
       transformResponse: unwrapAssessment<ApplicationAssessment>,
       invalidatesTags: assessmentTags,
     }),
-    reviewAssessmentResult: builder.mutation<
-      ApplicationAssessment,
-      AssessmentAttemptAction & { approved: boolean }
-    >({
-      query: ({ attemptId, ...body }) => ({
-        url: `${ASSESSMENTS_URL}/attempts/${attemptId}/review`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: unwrapAssessment<ApplicationAssessment>,
-      invalidatesTags: assessmentTags,
-    }),
     allowAssessmentRetake: builder.mutation<ApplicationAssessment, AssessmentAttemptAction>({
       query: ({ attemptId, ...body }) => ({
         url: `${ASSESSMENTS_URL}/attempts/${attemptId}/retake`,
@@ -105,7 +93,6 @@ export const {
   useBookAssessmentAttemptMutation,
   useRecordAssessmentAttendanceMutation,
   useRecordAssessmentResultMutation,
-  useReviewAssessmentResultMutation,
   useAllowAssessmentRetakeMutation,
   useCancelAssessmentAttemptMutation,
   useWaiveApplicationAssessmentMutation,

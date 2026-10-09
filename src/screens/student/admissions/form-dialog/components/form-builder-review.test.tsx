@@ -151,3 +151,35 @@ it('shows publishing issues without opening an editor from review', async () => 
   expect(screen.queryByRole('dialog', { name: 'Field settings' })).not.toBeInTheDocument();
   expect(definition()).toEqual(values);
 });
+
+it('puts a later profile photo in the left rail and preserves preview answers and definition order', async () => {
+  const user = userEvent.setup({ delay: null });
+  const values = reviewForm();
+  values.fieldsPerRow = 4;
+  values.sections[0].fields.push({
+    id: 'profile-photo',
+    code: 'PROFILE_PHOTO',
+    label: 'Student photo',
+    fieldType: 0,
+    bindingType: 0,
+    bindingKey: 'Applicant.ProfilePhoto',
+    required: false,
+    readOnly: false,
+    displayOrder: 2,
+    validationJson: '{"format":"photo"}',
+  });
+  mountReview(values);
+
+  const photo = screen.getByRole('button', { name: 'Choose student photo' });
+  const name = screen.getByRole('textbox', { name: 'Student name' });
+  expect(screen.getByLabelText('Profile photos')).toContainElement(photo);
+  expect(photo.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  await user.type(name, 'Preview student');
+  expect(name).toHaveValue('Preview student');
+  expect(definition()).toEqual(values);
+  expect(definition().sections[0].fields.map((field) => field.code)).toEqual([
+    'STUDENT_NAME',
+    'CONSENT',
+    'PROFILE_PHOTO',
+  ]);
+});

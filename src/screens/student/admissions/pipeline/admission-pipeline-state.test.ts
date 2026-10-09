@@ -7,6 +7,21 @@ import {
 } from './admission-pipeline-state';
 
 describe('Pipeline navigation state', () => {
+  it('opens and closes a drawer without resetting the underlying list context', () => {
+    const params = new URLSearchParams('board=board-id&search=Jay&page=3&size=10');
+    const opened = admissionPipelineUrl(params, { application: 'app-id' }, false);
+    expect(opened).toBe(
+      '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10&application=app-id'
+    );
+    const drawerParams = new URL(opened, 'https://school.test').searchParams;
+    expect(admissionPipelineUrl(drawerParams, { application: undefined }, false)).toBe(
+      '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
+    );
+    const direct = admissionPipelineApplicationUrl('app-id', drawerParams);
+    expect(new URL(direct, 'https://school.test').searchParams.get('returnTo')).toBe(
+      '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
+    );
+  });
   it('restores shareable search, queue, filters, sort and pagination', () => {
     expect(
       readAdmissionPipelineState(

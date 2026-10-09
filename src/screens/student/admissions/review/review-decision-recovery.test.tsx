@@ -27,7 +27,7 @@ const application: AdmissionApplication = {
 };
 
 it.each([true, false])(
-  'recovers a decision conflict using the explicit latest application and respects canReject=%s',
+  'recovers a decision conflict using the explicit latest application and respects latest application status (still allowed: %s)',
   async (stillAllowed) => {
     let reloads = 0;
     const bodies: { concurrencyStamp: string; reason: string }[] = [];
@@ -39,7 +39,7 @@ it.each([true, false])(
           data: {
             ...application,
             concurrencyStamp: 'fresh-stamp',
-            reviewDecision: { ...application.reviewDecision, canReject: stillAllowed },
+            status: stillAllowed ? 1 : 11,
           },
         });
       }),
@@ -52,7 +52,7 @@ it.each([true, false])(
       })
     );
     const user = userEvent.setup();
-    renderReviewUi(<ApplicationDecisionCard application={application} />, [
+    renderReviewUi(<ApplicationDecisionCard application={application} journeyCompleted={false} />, [
       'Students.Admissions.Applications.Add',
     ]);
     await user.click(screen.getByRole('button', { name: 'Reject' }));

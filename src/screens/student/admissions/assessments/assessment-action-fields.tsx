@@ -6,7 +6,6 @@ import CustomSelect from 'src/components/custom-select';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { AssessmentBookingField } from './assessment-booking-field';
-import { latestAssessmentAttempt } from './assessment-action-model';
 
 import type { AssessmentAction, AssessmentActionValues } from './assessment-action-model';
 
@@ -26,7 +25,6 @@ export function AssessmentActionFields({
   workflowStageDefinitionId,
 }: Props) {
   const { values, touched, errors, isSubmitting } = formik;
-  const latest = latestAssessmentAttempt(assessment);
   return (
     <Stack spacing={2}>
       {action === 'book' &&
@@ -90,25 +88,6 @@ export function AssessmentActionFields({
             ]}
           />
         ))}
-      {action === 'review' && latest && (
-        <Alert severity="info">
-          Attempt {latest.attemptNumber}: {latest.outcome}
-          {latest.marks != null ? ` · ${latest.marks} / ${assessment.policy.totalMarks} marks` : ''}
-          .{latest.notes ? ` Staff notes: ${latest.notes}` : ''}
-        </Alert>
-      )}
-      {action === 'review' && (
-        <CustomSelect
-          label="Review decision"
-          value={values.approved ? 'approve' : 'return'}
-          disabled={isSubmitting}
-          onChange={(value) => formik.setFieldValue('approved', value === 'approve')}
-          options={[
-            { value: 'approve', label: 'Approve result' },
-            { value: 'return', label: 'Return for correction' },
-          ]}
-        />
-      )}
       {action === 'retake' && (
         <Alert severity="info">
           Allow another attempt within the configured limit of {assessment.policy.maxAttempts}. Book

@@ -5,6 +5,7 @@ import { Box, Grid, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import AdmissionRuntimeField from '../../admission-runtime-field';
+import { AdmissionSectionFields } from '../../components/admission-section-fields';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -20,17 +21,12 @@ export function FormReviewSection({ formik, sectionIndex, answers, onChangeAnswe
     <SectionCard
       title={section.name}
       paperProps={{ sx: { mb: 0, minWidth: 0, '& h6': { overflowWrap: 'anywhere' } } }}
-      gridProps={{ spacing: 1.5 }}
+      gridProps={{ spacing: 1 }}
     >
-      {section.fields.map((field) => (
-        <Grid
-          key={field.id}
-          size={{
-            xs: 12,
-            sm: field.fieldType === 1 ? 12 : 12 / Math.min(columns, 2),
-            lg: field.fieldType === 1 ? 12 : 12 / columns,
-          }}
-        >
+      <AdmissionSectionFields
+        fields={section.fields}
+        columns={columns}
+        renderField={(field) => (
           <Box
             sx={{ minWidth: 0 }}
             onKeyDownCapture={(event) => {
@@ -50,8 +46,8 @@ export function FormReviewSection({ formik, sectionIndex, answers, onChangeAnswe
               onChange={(value) => onChangeAnswer(field.code, value)}
             />
           </Box>
-        </Grid>
-      ))}
+        )}
+      />
       {!section.fields.length && (
         <Grid size={{ xs: 12 }}>
           <Typography variant="body2" color="text.secondary">

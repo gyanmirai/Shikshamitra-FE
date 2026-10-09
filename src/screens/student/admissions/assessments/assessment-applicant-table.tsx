@@ -47,7 +47,6 @@ const actionIcons: Record<AssessmentAction | 'continue', string> = {
   book: 'mdi:calendar-plus',
   attendance: 'mdi:account-check-outline',
   result: 'mdi:pencil-outline',
-  review: 'mdi:clipboard-check-outline',
   retake: 'mdi:refresh',
   cancel: 'mdi:cancel',
   waive: 'mdi:shield-check-outline',
