@@ -1,3 +1,5 @@
+import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
+
 import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
@@ -13,9 +15,9 @@ describe('Form submission behavior', () => {
   it('allows changing late submission without a deadline and preserves hidden policy values', async () => {
     const changed = vi.fn();
     function Settings() {
-      const [policy, setPolicy] = useState({
+      const [policy, setPolicy] = useState<AdmissionFormStagePolicy>({
         ...DEFAULT_FORM_STAGE_POLICY,
-        responsibility: 'staff' as const,
+        responsibility: 'staff',
         dueInDays: null,
         allowLateSubmission: false,
       });
