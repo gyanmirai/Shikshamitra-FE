@@ -95,11 +95,10 @@ beforeEach(() => {
   mocks.employeeError = false;
 });
 
-it('renders a page, staff identity and persistent actions without a salary dialog', () => {
+it('renders a page and persistent actions without a salary dialog', () => {
   render(<SalaryEditorScreen employeeId="staff" />);
   expect(screen.getByRole('heading', { name: 'Edit Salary' })).toBeVisible();
   expect(mocks.prefetch).toHaveBeenCalled();
-  expect(screen.getByText('Test Staff · STAFF001')).toBeVisible();
   expect(screen.getByTestId('salary-editor-footer')).toContainElement(
     screen.getByRole('button', { name: 'Save salary' })
   );

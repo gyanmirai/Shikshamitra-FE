@@ -8,10 +8,15 @@ import { NumericFormat } from 'react-number-format';
 const NumericFormatCustom = ({
   value,
   onChange,
+  roundToWholeRupees = true,
   ...props
-}: Omit<NumericFormatProps, 'size'> & TextFieldProps) => (
+}: Omit<NumericFormatProps, 'size'> & TextFieldProps & { roundToWholeRupees?: boolean }) => (
   <NumericFormat
-    value={value == null || value === '' ? value as any : Math.ceil(Number(value))}
+    value={
+      !roundToWholeRupees || value == null || value === ''
+        ? (value as any)
+        : Math.ceil(Number(value))
+    }
     onChange={onChange}
     isAllowed={(values) => {
       const { floatValue } = values;

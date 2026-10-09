@@ -146,8 +146,9 @@ export async function openFirstRowEdit(page: Page) {
 }
 
 export async function openFirstRowAction(page: Page, actionName: string) {
-  const row = await firstDataRow(page);
-  await row.getByTestId(testIds.moreAction).click();
+  const moreAction = table(page).getByTestId(testIds.moreAction).first();
+  await expect(moreAction).toBeVisible({ timeout: 45_000 });
+  await moreAction.click();
   await page.getByRole('menuitem', { name: actionName }).click();
 }
 

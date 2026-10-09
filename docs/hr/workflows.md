@@ -375,8 +375,13 @@ The staff payroll salary link and return link use client-side navigation to pres
 Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
 Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
 The footer owns Calculate salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+Footer feedback explains calculation readiness, active operations, and completed saves without changing action permissions or enabled states.
+The compact employee header includes ESIC access, and the quoted monthly amount uses the shared currency input without rounding its numeric request value.
+Invalid amounts show inline errors after blur; saving with a missing customization reason focuses the reason field and preserves the draft.
 
 History starts collapsed, and employee deductions remain separate from employer contributions.
+History dates use readable month names, and monthly preview totals remain prominent above their annual equivalents.
+Preview and history amounts use the shared payroll formatter to preserve recorded paise without changing calculation rules.
 Input changes require recalculation, failures retain the draft, and leaving with unsaved changes requires confirmation.
 One-time additions use the monthly payroll link and its existing employee and month selection.
 The editor never calls the legacy component-update API or removes existing temporary components.

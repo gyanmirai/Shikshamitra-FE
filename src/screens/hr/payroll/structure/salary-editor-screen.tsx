@@ -14,7 +14,7 @@ import { useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Link, Alert, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Link, Alert, Paper, Button, Skeleton } from '@mui/material';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 import { useSalaryEditorPrefetch } from './use-salary-editor-prefetch';
@@ -159,10 +159,6 @@ function SalaryEditorWorkspace({
           </Alert>
         ) : (
           <Box display="grid" gap={2}>
-            <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
-              {employee.fullName}
-              {employee.employeeIdentifier ? ` · ${employee.employeeIdentifier}` : ''}
-            </Typography>
             <SalaryStructureBuilder
               formik={formik}
               employeeId={employeeId}
@@ -188,11 +184,10 @@ function SalaryEditorWorkspace({
       <Box
         data-testid="salary-editor-footer"
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr) auto', sm: 'auto minmax(0, 1fr) auto auto' },
           alignItems: 'center',
           flexShrink: 0,
-          flexWrap: 'wrap',
           gap: 1,
           px: 2,
           py: 1.5,
@@ -206,13 +201,11 @@ function SalaryEditorWorkspace({
           onClick={() => requestNavigation(() => router.push(returnHref))}
           disabled={editorState.busy}
           color="inherit"
+          sx={{ gridColumn: 1, gridRow: 1, justifySelf: 'start' }}
         >
           Back
         </Button>
-        <Box
-          ref={setActionContainer}
-          sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap', ml: 'auto' }}
-        />
+        <Box ref={setActionContainer} sx={{ display: 'contents' }} />
       </Box>
     </Paper>
   );

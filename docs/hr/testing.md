@@ -635,3 +635,5 @@ Assert compensation requests contain no temporary component collections and mont
 
 Run `e2e/hr/employee/employee-salary-structure.spec.ts` for page entry, draft preservation, ESIC drawer focus, legacy redirects, and return navigation.
 The salary editor tests cover denied access, unavailable staff reads, persistent footer actions, guarded navigation, and validated return destinations.
+They also cover formatted decimal and large amounts with unchanged numeric payloads, inline amount errors, missing-reason focus, and calculation/save feedback through the history refresh.
+Verify the compact employee/ESIC header, readable history months, annual equivalent labels, and footer wrapping in the authenticated browser at desktop and narrow widths.

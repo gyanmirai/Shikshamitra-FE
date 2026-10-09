@@ -16,10 +16,11 @@ import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
-import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {
   useGetActiveSalaryTemplatesQuery,
@@ -55,6 +56,7 @@ import {
 } from '@mui/material';
 
 import { getLocalMonthKey } from './salary-structure-builder-utils';
+import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 import { EmployeeEsiDetails } from '../setting/employee-esi-details';
 
 type Props = {
@@ -80,11 +82,11 @@ function Summary({ label, amount }: { label: string; amount: number }) {
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="subtitle1" fontWeight={700}>
-        {formatCurrency(amount)}
+      <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        {formatPayrollCurrency(amount)}
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        {formatCurrency(amount * 12)} yearly
+        Annual equivalent: {formatPayrollCurrency(amount * 12)}
       </Typography>
     </Paper>
   );
@@ -155,6 +157,10 @@ export function SalaryStructureBuilder({
   const [operationError, setOperationError] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
+  const [operation, setOperation] = useState<'calculate' | 'save' | null>(null);
+  const [amountTouched, setAmountTouched] = useState(false);
+  const [reasonTouched, setReasonTouched] = useState(false);
+  const reasonInput = useRef<HTMLInputElement>(null);
   const operationPending = useRef(false);
   const initializedRef = useRef('');
   const operationKeyRef = useRef('');
@@ -281,6 +287,7 @@ export function SalaryStructureBuilder({
     )
       return;
     operationPending.current = true;
+    setOperation('calculate');
     setLocalBusy(true);
     setOperationError('');
     try {
@@ -302,6 +309,7 @@ export function SalaryStructureBuilder({
       setCalculation(null);
     } finally {
       operationPending.current = false;
+      setOperation(null);
       setLocalBusy(false);
     }
   };
@@ -320,10 +328,12 @@ export function SalaryStructureBuilder({
     )
       return;
     if (customizing && overrides.length > 0 && !customizationReason.trim()) {
-      toast.error('Add a reason for the staff-specific salary customization.');
+      setReasonTouched(true);
+      reasonInput.current?.focus();
       return;
     }
     operationPending.current = true;
+    setOperation('save');
     setLocalBusy(true);
     setOperationError('');
     operationKeyRef.current ||= newKey();
@@ -367,6 +377,7 @@ export function SalaryStructureBuilder({
       );
     } finally {
       operationPending.current = false;
+      setOperation(null);
       setLocalBusy(false);
     }
   };
@@ -404,6 +415,7 @@ export function SalaryStructureBuilder({
     setOverrides([]);
     setCustomizationReason('');
     setCustomizing(false);
+    setReasonTouched(false);
     setCalculation(null);
   };
 
@@ -481,14 +493,61 @@ export function SalaryStructureBuilder({
           !calculation.employeeStateInsurance.registrationPending
       )
     : false;
+  const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
+  const reasonInvalid = customizing && overrides.length > 0 && !customizationReason.trim();
+  const currentRevision = revisionData?.items.find((item) => item.isCurrent);
+  const employeeName =
+    formik.values.fullName ||
+    [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ');
+  let footerStatus = 'Calculate to review changes';
+  if (busy) {
+    footerStatus = operation === 'calculate' ? 'Calculating salary…' : 'Refreshing salary…';
+    if (operation === 'save') footerStatus = 'Saving salary…';
+    if (activationState.isLoading) footerStatus = 'Activating staff…';
+  } else if (!canManage) footerStatus = 'View-only salary';
+  else if (hasConflict || revisionsError) footerStatus = 'Review salary history before saving';
+  else if (!selectedVersion) footerStatus = 'Choose a salary template';
+  else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
+  else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
+  else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
+  else if (statutoryBlocked) footerStatus = 'Resolve ESIC details before saving';
+  else if (savedSignature === signature && calculationCurrent) footerStatus = 'Saved';
+  else if (calculationCurrent) {
+    footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Ready to save';
+  }
 
   const actions = (
     <>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        role="status"
+        aria-live="polite"
+        sx={
+          actionContainer
+            ? {
+                gridColumn: { xs: '1 / -1', sm: 2 },
+                gridRow: 1,
+                justifySelf: 'end',
+                maxWidth: { xs: 'calc(100% - 72px)', sm: '100%' },
+              }
+            : { alignSelf: 'center', flexBasis: { xs: '100%', sm: 'auto' } }
+        }
+      >
+        {footerStatus}
+      </Typography>
       <Button
         size="small"
         variant="outlined"
         startIcon={<Iconify icon="mdi:calculator" />}
         onClick={calculateSalary}
+        loading={operation === 'calculate'}
+        loadingPosition="start"
+        sx={
+          actionContainer
+            ? { gridColumn: { xs: 1, sm: 3 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+            : undefined
+        }
         disabled={
           !canManage ||
           busy ||
@@ -505,6 +564,12 @@ export function SalaryStructureBuilder({
         size="small"
         variant="contained"
         onClick={save}
+        loading={operation === 'save'}
+        sx={
+          actionContainer
+            ? { gridColumn: { xs: 2, sm: 4 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+            : undefined
+        }
         disabled={
           !canManage ||
           busy ||
@@ -533,9 +598,10 @@ export function SalaryStructureBuilder({
           gap={1}
           flexWrap="wrap"
         >
-          {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
-            <Typography variant="body2" color="error.main">
-              Enter the staff’s ESIC insurance number before activation.
+          {employeeName && (
+            <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>
+              {employeeName}
+              {formik.values.employeeIdentifier ? ` · ${formik.values.employeeIdentifier}` : ''}
             </Typography>
           )}
           <EmployeeEsiDetails
@@ -552,6 +618,11 @@ export function SalaryStructureBuilder({
             }}
           />
         </Box>
+        {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
+          <Typography variant="body2" color="error.main">
+            Enter the staff’s ESIC insurance number before activation.
+          </Typography>
+        )}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
             <FormControl fullWidth size="small" disabled={!canManage || busy}>
@@ -576,6 +647,8 @@ export function SalaryStructureBuilder({
               fullWidth
               size="small"
               label="Effective month"
+              name="effectiveMonth"
+              autoComplete="off"
               type="month"
               value={effectiveMonth}
               disabled={!canManage || busy}
@@ -587,20 +660,30 @@ export function SalaryStructureBuilder({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
+            <NumericFormatCustom
               fullWidth
               size="small"
+              roundToWholeRupees={false}
+              name="monthlyAmount"
+              autoComplete="off"
               label={
                 salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
               }
-              type="number"
               value={monthlyAmount || ''}
+              allowNegative
+              isAllowed={() => true}
               disabled={!canManage || busy}
-              onChange={(event) => {
-                setMonthlyAmount(Number(event.target.value));
+              onValueChange={({ floatValue }, { source }) => {
+                if (source !== 'event') return;
+                setMonthlyAmount(floatValue ?? 0);
                 setCalculation(null);
               }}
-              slotProps={{ htmlInput: { min: 1, step: 100 } }}
+              onBlur={() => setAmountTouched(true)}
+              error={amountTouched && amountInvalid}
+              helperText={
+                amountTouched && amountInvalid ? 'Enter an amount greater than zero.' : ''
+              }
+              slotProps={{ htmlInput: { inputMode: 'decimal' } }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -783,12 +866,21 @@ export function SalaryStructureBuilder({
                 size="small"
                 required={overrides.length > 0}
                 label="Customization reason"
+                name="customizationReason"
+                autoComplete="off"
+                inputRef={reasonInput}
+                onBlur={() => setReasonTouched(true)}
+                error={reasonTouched && reasonInvalid}
                 value={customizationReason}
                 onChange={(event) => {
                   setCustomizationReason(event.target.value);
                   setCalculation(null);
                 }}
-                helperText="Required when any row differs from the source template."
+                helperText={
+                  reasonTouched && reasonInvalid
+                    ? 'Add a reason for the staff-specific salary customization.'
+                    : 'Required when any row differs from the source template.'
+                }
               />
             </Grid>
           </Grid>
@@ -866,7 +958,7 @@ export function SalaryStructureBuilder({
                           <Chip size="small" label="Customized" />
                         ) : null}
                       </Box>
-                      <Typography>{formatCurrency(line.amount)}</Typography>
+                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
                     </Box>
                   ))}
                 </Paper>
@@ -889,7 +981,7 @@ export function SalaryStructureBuilder({
                           <Chip size="small" label="Customized" />
                         ) : null}
                       </Box>
-                      <Typography>{formatCurrency(line.amount)}</Typography>
+                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
                     </Box>
                   ))}
                 </Paper>
@@ -901,7 +993,7 @@ export function SalaryStructureBuilder({
                 {calculation.employerContributions.map((line) => (
                   <Box key={line.code} display="flex" justifyContent="space-between" gap={2}>
                     <Typography variant="body2">{line.name}</Typography>
-                    <Typography variant="body2">{formatCurrency(line.amount)}</Typography>
+                    <Typography variant="body2">{formatPayrollCurrency(line.amount)}</Typography>
                   </Box>
                 ))}
               </Box>
@@ -964,10 +1056,8 @@ export function SalaryStructureBuilder({
               <Box>
                 <Typography variant="subtitle1">Salary history</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {revisionData.items.find((item) => item.isCurrent)?.effectiveMonth.slice(0, 7)
-                    ? `Current from ${revisionData.items
-                        .find((item) => item.isCurrent)
-                        ?.effectiveMonth.slice(0, 7)}`
+                  {currentRevision
+                    ? `Current from ${formatPayrollMonth(currentRevision.effectiveMonth.slice(0, 7))}`
                     : 'No effective salary'}{' '}
                   · {revisionData.items.filter((item) => item.isScheduled).length} scheduled
                 </Typography>
@@ -989,7 +1079,8 @@ export function SalaryStructureBuilder({
                   >
                     <Box>
                       <Typography variant="subtitle2">
-                        Revision {revision.revisionNumber} - {revision.effectiveMonth.slice(0, 7)}
+                        Revision {revision.revisionNumber} -{' '}
+                        {formatPayrollMonth(revision.effectiveMonth.slice(0, 7))}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Template version {revision.sourceSalaryTemplateVersion || 'Legacy'}
@@ -1006,7 +1097,9 @@ export function SalaryStructureBuilder({
                         <Chip size="small" color="warning" label="Customized" />
                       ) : null}
                       <Chip size="small" label={contractLabel(revision.status)} />
-                      <Typography fontWeight={700}>{formatCurrency(revision.netSalary)}</Typography>
+                      <Typography fontWeight={700}>
+                        {formatPayrollCurrency(revision.netSalary)}
+                      </Typography>
                     </Box>
                   </Paper>
                 ))}
@@ -1018,7 +1111,7 @@ export function SalaryStructureBuilder({
       {actionContainer ? (
         createPortal(actions, actionContainer)
       ) : (
-        <Box display="flex" justifyContent="flex-end" gap={1}>
+        <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap={1}>
           {actions}
         </Box>
       )}

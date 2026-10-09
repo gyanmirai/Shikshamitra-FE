@@ -17,10 +17,13 @@ test.describe('HR Staff salary editor page', () => {
     await expect(
       page.getByTestId('salary-editor-footer').getByRole('button', { name: 'Calculate salary' })
     ).toBeVisible();
-    const amount = page.getByRole('spinbutton', { name: /Monthly/ }).first();
+    const amount = page.getByRole('textbox', { name: /Monthly/ }).first();
     const originalAmount = await amount.inputValue();
-    const draftAmount = String(Number(originalAmount || 0) + 100);
+    const draftAmount = String(Number(originalAmount.replace(/[^\d.-]/g, '') || 0) + 100);
     await amount.fill(draftAmount);
+    const formattedDraft = await amount.inputValue();
+    expect(formattedDraft).toContain('₹');
+    expect(Number(formattedDraft.replace(/[^\d.-]/g, ''))).toBe(Number(draftAmount));
     const esiTrigger = page.getByRole('button', { name: 'ESIC details', exact: true });
     await esiTrigger.click();
     const esiClose = page.getByRole('button', { name: 'Close staff ESIC details' });
@@ -30,13 +33,13 @@ test.describe('HR Staff salary editor page', () => {
     await page.keyboard.press('Escape');
     await expect(esiClose).toBeHidden();
     await expect(esiTrigger).toBeFocused();
-    await expect(amount).toHaveValue(draftAmount);
+    await expect(amount).toHaveValue(formattedDraft);
     await page
       .getByTestId('salary-editor-footer')
       .getByRole('button', { name: 'Back', exact: true })
       .click();
     await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
-    await expect(amount).toHaveValue(draftAmount);
+    await expect(amount).toHaveValue(formattedDraft);
     await page
       .getByTestId('salary-editor-footer')
       .getByRole('button', { name: 'Back', exact: true })
