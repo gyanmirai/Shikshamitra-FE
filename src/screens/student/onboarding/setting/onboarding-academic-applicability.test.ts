@@ -44,6 +44,24 @@ const academicBoards = [
 
 describe('Student Onboarding academic applicability', () => {
 
+  it('normalizes CBSE and Roll paths without requiring a school-level selection', () => {
+    const boards = structuredClone(academicBoards);
+    boards[0].type = 0;
+    const value = {
+      ...createAllAcademicApplicability(), boardMode: 'selected' as const, boardIds: ['board-gseb'],
+      mediumMode: 'selected' as const, academicMediumIds: ['medium-gujarati'],
+      stageMode: 'selected' as const, academicMediumStageIds: [],
+      classMode: 'selected' as const, standardIds: ['standard-9'],
+    };
+    const cbse = normalizeSingleAcademicApplicability(value, boards, 'gseb');
+    expect(cbse.stageMode).toBe('all');
+    expect(cbse.standardIds).toEqual(['standard-9']);
+    expect(getSingleAcademicPathValidationError(cbse)).toBeNull();
+    boards[0].type = 1;
+    expect(normalizeSingleAcademicApplicability(value, boards, 'none').standardIds).toEqual(['standard-9']);
+    expect(normalizeSingleAcademicApplicability(value, boards, 'gseb').standardIds).toEqual([]);
+  });
+
   it('offers only boards configured in the selected school hierarchy', () => {
     const boards = [...academicBoards, { id: 'board-icse', name: 'ICSE', educationMediums: [] }] as Board[];
     expect(buildOnboardingAcademicStructureOptions(boards).boards.map(board => board.name)).toEqual(['GSEB', 'ICSE']);

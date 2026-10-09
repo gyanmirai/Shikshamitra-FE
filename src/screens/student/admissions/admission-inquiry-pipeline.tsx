@@ -20,6 +20,7 @@ import {
 
 import { AdmissionQueryError } from './admission-query-error';
 import { getAdmissionApplicationStatusLabel } from './application-status';
+import AdmissionApplicationDetailScreen from './admission-application-detail';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import {
@@ -84,7 +85,20 @@ export default function AdmissionInquiryPipelineScreen() {
     (id: string) => admissionPipelineApplicationUrl(id, new URLSearchParams(params.toString())),
     [params]
   );
-  const columns = useMemo(() => buildAdmissionPipelineColumns(applicationUrl), [applicationUrl]);
+  const openDrawer = useCallback(
+    (id: string) => {
+      if (canView)
+        router.push(
+          admissionPipelineUrl(new URLSearchParams(params.toString()), { application: id }, false),
+          { scroll: false }
+        );
+    },
+    [canView, params, router]
+  );
+  const columns = useMemo(
+    () => buildAdmissionPipelineColumns(applicationUrl, openDrawer),
+    [applicationUrl, openDrawer]
+  );
   useEffect(() => {
     if (previousYear.current !== academic.academicYearId) {
       previousYear.current = academic.academicYearId;
@@ -106,7 +120,7 @@ export default function AdmissionInquiryPipelineScreen() {
       update({ page: String(Math.max(1, Math.ceil(data.totalCount / state.rowsPerPage))) }, false);
   }, [academic.academicYearId, data, listQuery.isFetching, state.page, state.rowsPerPage, update]);
   const openApplication = (row: AdmissionPipelineItem) => {
-    if (canView) router.push(applicationUrl(row.id));
+    openDrawer(row.id);
   };
   const hasFilters = Boolean(
     state.search ||
@@ -136,7 +150,12 @@ export default function AdmissionInquiryPipelineScreen() {
         }}
         action={
           canView && (
-            <Button component={Link} href={studentPaths.enrollment.applications} variant="outlined">
+            <Button
+              size="small"
+              component={Link}
+              href={studentPaths.enrollment.applications}
+              variant="outlined"
+            >
               View all applications
             </Button>
           )
@@ -320,6 +339,22 @@ export default function AdmissionInquiryPipelineScreen() {
             </Box>
           )}
         </>
+      )}
+      {canView && params.get('application') && (
+        <AdmissionApplicationDetailScreen
+          key={params.get('application')}
+          applicationId={params.get('application')!}
+          onClose={() =>
+            router.replace(
+              admissionPipelineUrl(
+                new URLSearchParams(params.toString()),
+                { application: undefined },
+                false
+              ),
+              { scroll: false }
+            )
+          }
+        />
       )}
     </Box>
   );

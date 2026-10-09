@@ -412,6 +412,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       <ConfirmDialog
         open={publishHomeworkDialog.value}
         disableBackdropClick
+        icon="info"
         onClose={() => {
           publishHomeworkDialog.onFalse();
           setSelectedHomework(null);

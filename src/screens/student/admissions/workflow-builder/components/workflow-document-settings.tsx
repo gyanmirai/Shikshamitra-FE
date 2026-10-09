@@ -1,5 +1,4 @@
 import type { FormikProps } from 'formik';
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
@@ -13,25 +12,14 @@ import {
   writeAdmissionDocumentPolicy,
 } from 'src/redux/student/admissions/admission-document-policy';
 
-import { WorkflowProcessChoice } from './workflow-process-choice';
-import { DocumentReviewOptions } from './document-review-options';
 import { DocumentRequirementsList } from './document-requirements-list';
-import { DocumentCollectionSettings } from './document-collection-settings';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   available: boolean;
   readOnly: boolean;
-  forms: AdmissionForm[];
-  stages?: AdmissionWorkflowStage[];
 };
-export function WorkflowDocumentSettings({
-  formik,
-  available,
-  readOnly,
-  forms,
-  stages = [],
-}: Props) {
+export function WorkflowDocumentSettings({ formik, available, readOnly }: Props) {
   const json = formik.values.configurationJson;
   const policy = readAdmissionDocumentPolicy(json);
   const invalid = getDocumentConfigurationError(json);
@@ -52,7 +40,7 @@ export function WorkflowDocumentSettings({
       <FormSectionCard
         icon="mdi:file-document-check-outline"
         title="Document checklist"
-        descriptionTooltip="Collect evidence, review documents and resolve required items before continuing. Replacement documents require fresh review. Missing answers for conditional requirements must be resolved."
+        descriptionTooltip="Upload documents and accept required items before continuing. Rejected documents need replacement and fresh verification. Student document categories link accepted uploads to Student Records."
       >
         <Stack spacing={2}>
           {!available && (
@@ -61,27 +49,6 @@ export function WorkflowDocumentSettings({
             </Alert>
           )}
           {unreadable && <Alert severity="error">{invalid}</Alert>}
-          <WorkflowProcessChoice
-            label="Document verification process"
-            value={policy?.enabled ? 'managed' : 'basic'}
-            disabled={disabled}
-            onChange={(value) => update({ enabled: value === 'managed' })}
-            options={[
-              {
-                value: 'basic',
-                title: 'Complete manually',
-                description: 'Staff complete the stage using the existing workflow controls.',
-                icon: 'mdi:check-circle-outline',
-              },
-              {
-                value: 'managed',
-                title: 'Collect and verify documents',
-                description:
-                  'Applicants receive a checklist. Staff review evidence, request replacements and resolve required documents.',
-                icon: 'mdi:file-document-check-outline',
-              },
-            ]}
-          />
           {policy?.enabled && (
             <>
               {isError && (
@@ -100,7 +67,6 @@ export function WorkflowDocumentSettings({
               <DocumentRequirementsList
                 requirements={policy.requirements}
                 readOnly={disabled}
-                forms={forms}
                 documentTypes={documentTypes}
                 onChange={(requirements) => update({ requirements })}
               />
@@ -109,17 +75,6 @@ export function WorkflowDocumentSettings({
           )}
         </Stack>
       </FormSectionCard>
-      {policy?.enabled && (
-        <>
-          <DocumentCollectionSettings
-            policy={policy}
-            stages={stages}
-            disabled={disabled}
-            onChange={update}
-          />
-          <DocumentReviewOptions policy={policy} disabled={disabled} onChange={update} />
-        </>
-      )}
     </Stack>
   );
 }

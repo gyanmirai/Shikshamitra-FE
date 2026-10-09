@@ -6,11 +6,24 @@ import { Box, Stack, Typography } from '@mui/material';
 
 import { normalizeAssessmentDateTime } from './assessment-date-time';
 
-export function AssessmentAttemptHistory({ attempts }: { attempts: AssessmentAttempt[] }) {
+export function AssessmentAttemptHistory({
+  attempts,
+  compact = false,
+}: {
+  attempts: AssessmentAttempt[];
+  compact?: boolean;
+}) {
   return (
     <Stack spacing={1}>
       {attempts.map((attempt) => (
-        <Box key={attempt.id} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
+        <Box
+          key={attempt.id}
+          sx={
+            compact
+              ? { py: 0.5, minWidth: 0, overflowWrap: 'anywhere' }
+              : { border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }
+          }
+        >
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
             <Typography variant="subtitle2">Attempt {attempt.attemptNumber}</Typography>
             <Label

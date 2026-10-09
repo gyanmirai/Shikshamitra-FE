@@ -102,7 +102,10 @@ describe('safe stage type changes', () => {
       code: 'FORM',
       isEntryStage: false,
     });
-    expect(draft().configurationJson).toBeUndefined();
+    expect(JSON.parse(draft().configurationJson).assessment).toMatchObject({
+      enabled: true,
+      reviewRequired: false,
+    });
   });
   it('keeps custom copy and changes an unconfigured stage without a destructive confirmation', async () => {
     const user = userEvent.setup();

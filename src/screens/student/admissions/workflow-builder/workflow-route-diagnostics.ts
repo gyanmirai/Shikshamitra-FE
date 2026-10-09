@@ -4,6 +4,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { getStageOutcomeRule } from './workflow-runtime-route-rules';
+import { isApplicationStageType } from './workflow-stage-configuration';
 
 export function simpleRouteKey(json?: string): string | undefined {
   if (!json) return undefined;
@@ -33,6 +34,15 @@ export function getRouteSaveError(
   stages: AdmissionWorkflowStage[],
   transitions: AdmissionWorkflowTransition[]
 ): string | undefined {
+  const sourceStage = stages.find((item) => item.id === route.fromStageId);
+  const destinationStage = stages.find((item) => item.id === route.toStageId);
+  if (
+    !sourceStage ||
+    !destinationStage ||
+    !isApplicationStageType(sourceStage.stageType) ||
+    !isApplicationStageType(destinationStage.stageType)
+  )
+    return 'Replace retired stage types before configuring their next steps.';
   const key = simpleRouteKey(route.conditionRuleJson);
   if (
     !route.isDefault &&

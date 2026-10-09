@@ -15,6 +15,7 @@ import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mu
 
 import { serializeSimpleCondition } from './workflow-builder-utils';
 import { getRouteSaveError } from './workflow-builder/workflow-route-diagnostics';
+import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
 import { WorkflowTransitionFields } from './workflow-builder/components/workflow-transition-fields';
 import {
   isValidRouteNumber,
@@ -222,7 +223,21 @@ export function AdmissionWorkflowTransitionDrawer({
             readOnly={readOnly}
             lockFromStage
           />
-          {!readOnly && <DrawerActions onCancel={requestClose} />}
+          {!readOnly && (
+            <DrawerActions
+              onCancel={requestClose}
+              disabled={
+                !stages.some(
+                  (item) =>
+                    item.id === formik.values.fromStageId && isApplicationStageType(item.stageType)
+                ) ||
+                !stages.some(
+                  (item) =>
+                    item.id === formik.values.toStageId && isApplicationStageType(item.stageType)
+                )
+              }
+            />
+          )}
         </Box>
       </Drawer>
       <ConfirmDialog
@@ -240,7 +255,7 @@ export function AdmissionWorkflowTransitionDrawer({
   );
 }
 
-function DrawerActions({ onCancel }: { onCancel: () => void }) {
+function DrawerActions({ onCancel, disabled }: { onCancel: () => void; disabled: boolean }) {
   return (
     <>
       <Divider />
@@ -260,6 +275,7 @@ function DrawerActions({ onCancel }: { onCancel: () => void }) {
         </Button>
         <Button
           type="submit"
+          disabled={disabled}
           variant="contained"
           size="small"
           startIcon={<Iconify icon="mdi:content-save-outline" />}

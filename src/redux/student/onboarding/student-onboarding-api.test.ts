@@ -52,13 +52,144 @@ afterEach(() => {
 });
 
 describe('student onboarding API', () => {
+  it('loads Offering requirements context through the scoped Onboarding settings boundary', async () => {
+    const offerings = [
+      { id: 'offering-1', academicYearId: 'year-1', workflowDefinitionId: 'workflow-1' },
+    ];
+    let requestUrl = '';
+    mswServer.use(
+      http.get('*/api/student/onboarding/settings/offerings', ({ request }) => {
+        requestUrl = request.url;
+        return HttpResponse.json({ data: offerings });
+      })
+    );
+    const query = store.dispatch(
+      studentOnboardingApi.endpoints.getAvailableOnboardingOfferings.initiate('year-1')
+    );
+    expect(await query.unwrap()).toEqual(offerings);
+    const url = new URL(requestUrl);
+    expect(url.pathname).toBe('/api/student/onboarding/settings/offerings');
+    expect(url.searchParams.get('academicYearId')).toBe('year-1');
+    query.unsubscribe();
+  });
+  it('records and reviews canonical workflow evidence through the Onboarding boundary', async () => {
+    const requests: Array<{ path: string; body: unknown }> = [];
+    mswServer.use(
+      http.post('*/api/student/onboarding/case-1/workflow-documents/*', async ({ request }) => {
+        requests.push({ path: new URL(request.url).pathname, body: await request.json() });
+        return HttpResponse.json({ data: { stageInstanceId: 'stage-1', requirements: [] } });
+      })
+    );
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.recordStudentOnboardingWorkflowOriginal.initiate({
+          id: 'case-1',
+          stageId: 'stage-1',
+          code: 'birth-cert',
+          concurrencyStamp: 'application-stamp',
+          notes: 'Physical original checked',
+        })
+      )
+      .unwrap();
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.reviewStudentOnboardingWorkflowDocument.initiate({
+          id: 'case-1',
+          evidenceId: 'evidence-1',
+          concurrencyStamp: 'application-stamp',
+          decision: 'accepted',
+        })
+      )
+      .unwrap();
+    expect(requests).toEqual([
+      {
+        path: '/api/student/onboarding/case-1/workflow-documents/stage-1/birth-cert/original',
+        body: { concurrencyStamp: 'application-stamp', notes: 'Physical original checked' },
+      },
+      {
+        path: '/api/student/onboarding/case-1/workflow-documents/evidence/evidence-1/review',
+        body: { concurrencyStamp: 'application-stamp', decision: 'accepted' },
+      },
+    ]);
+  });
+  it('assigns GR and Roll through separate operations without unrelated fields', async () => {
+    const requests: Array<{ path: string; body: unknown }> = [];
+    mswServer.use(
+      http.post('*/api/student/onboarding/case-1/:operation', async ({ request }) => {
+        requests.push({ path: new URL(request.url).pathname, body: await request.json() });
+        return HttpResponse.json({ data: onboardingCase });
+      })
+    );
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.assignStudentOnboardingGr.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'stamp',
+          numberSeriesId: 'series-1',
+        })
+      )
+      .unwrap();
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.assignStudentOnboardingRoll.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'stamp',
+          rollNumber: 1,
+          rollAssignmentMode: 'automatic',
+        })
+      )
+      .unwrap();
+    expect(requests).toEqual([
+      {
+        path: '/api/student/onboarding/case-1/gr-number',
+        body: { concurrencyStamp: 'stamp', numberSeriesId: 'series-1' },
+      },
+      {
+        path: '/api/student/onboarding/case-1/roll-number',
+        body: { concurrencyStamp: 'stamp', rollNumber: 1, rollAssignmentMode: 'automatic' },
+      },
+    ]);
+  });
+  it('confirms fees through the Onboarding boundary and filters cases entered today', async () => {
+    let body: unknown;
+    let today: string | null = null;
+    mswServer.use(
+      http.put('*/api/student/onboarding/case-1/fee-structure', async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ data: { onboardingConfirmed: true } });
+      }),
+      http.get('*/api/student/onboarding', ({ request }) => {
+        today = new URL(request.url).searchParams.get('enteredToday');
+        return HttpResponse.json({ data: { items: [], totalCount: 0 } });
+      })
+    );
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.confirmStudentOnboardingFeeStructure.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'stamp',
+          structureId: 'fee-1',
+          optionalHeadIds: [],
+        })
+      )
+      .unwrap();
+    await store
+      .dispatch(
+        studentOnboardingApi.endpoints.getStudentOnboardingCases.initiate({ enteredToday: true })
+      )
+      .unwrap();
+    expect(body).toEqual({ concurrencyStamp: 'stamp', structureId: 'fee-1', optionalHeadIds: [] });
+    expect(today).toBe('true');
+  });
   it('loads active campus choices from the onboarding settings boundary', async () => {
     const campuses = [{ id: 'campus-north', code: 'N', name: 'North Campus' }];
     let requestPath = '';
-    mswServer.use(http.get('*/api/student/onboarding/settings/campuses', ({ request }) => {
-      requestPath = new URL(request.url).pathname;
-      return HttpResponse.json({ data: campuses });
-    }));
+    mswServer.use(
+      http.get('*/api/student/onboarding/settings/campuses', ({ request }) => {
+        requestPath = new URL(request.url).pathname;
+        return HttpResponse.json({ data: campuses });
+      })
+    );
 
     const query = store.dispatch(
       studentOnboardingApi.endpoints.getAvailableOnboardingCampuses.initiate()
@@ -243,9 +374,15 @@ describe('student onboarding API', () => {
         })
       )
       .unwrap();
-    await store.dispatch(endpoints.confirmStudentOnboardingServiceConsent.initiate({
-      id: 'case-1', concurrencyStamp: 'case-stamp-3', evidenceReference: 'Signed form CONSENT-001',
-    })).unwrap();
+    await store
+      .dispatch(
+        endpoints.confirmStudentOnboardingServiceConsent.initiate({
+          id: 'case-1',
+          concurrencyStamp: 'case-stamp-3',
+          evidenceReference: 'Signed form CONSENT-001',
+        })
+      )
+      .unwrap();
 
     expect(commandBodies).toEqual({
       owner: { concurrencyStamp: 'case-stamp-1', userId: 'user-1' },
@@ -406,13 +543,10 @@ describe('student onboarding API', () => {
           data: { ...savedRecord, ...saveBody, concurrencyStamp: 'settings-stamp-2' },
         });
       }),
-      http.delete(
-        '*/api/student/onboarding/settings/configurations/settings-1',
-        ({ request }) => {
-          deleteStamp = new URL(request.url).searchParams.get('concurrencyStamp') ?? '';
-          return HttpResponse.json({ success: true });
-        }
-      )
+      http.delete('*/api/student/onboarding/settings/configurations/settings-1', ({ request }) => {
+        deleteStamp = new URL(request.url).searchParams.get('concurrencyStamp') ?? '';
+        return HttpResponse.json({ success: true });
+      })
     );
 
     const { endpoints } = studentOnboardingApi;
@@ -493,30 +627,87 @@ describe('student onboarding API', () => {
   });
 });
 it('uses the onboarding credential status and request contracts', async () => {
-  const email = { id: 'email-1', accountType: 'guardian' as const, email: 'parent@example.com', status: 'Pending', attemptCount: 0, emailEnabled: true, canSend: true };
+  const email = {
+    id: 'email-1',
+    accountType: 'guardian' as const,
+    email: 'parent@example.com',
+    status: 'Pending',
+    attemptCount: 0,
+    emailEnabled: true,
+    canSend: true,
+  };
   let body: any;
   mswServer.use(
-    http.get('*/api/student/onboarding/case-1/credential-emails', () => HttpResponse.json({ data: [email] })),
-    http.post('*/api/student/onboarding/case-1/credential-emails', async ({ request }) => { body = await request.json(); return HttpResponse.json({ data: email }); })
+    http.get('*/api/student/onboarding/case-1/credential-emails', () =>
+      HttpResponse.json({ data: [email] })
+    ),
+    http.post('*/api/student/onboarding/case-1/credential-emails', async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json({ data: email });
+    })
   );
-  const query = store.dispatch(studentOnboardingApi.endpoints.getStudentCredentialEmails.initiate('case-1'));
+  const query = store.dispatch(
+    studentOnboardingApi.endpoints.getStudentCredentialEmails.initiate('case-1')
+  );
   expect(await query.unwrap()).toEqual([email]);
-  const result = await store.dispatch(studentOnboardingApi.endpoints.sendStudentCredentialEmail.initiate({ id: 'case-1', accountType: 'guardian', concurrencyStamp: 'latest-stamp' })).unwrap();
+  const result = await store
+    .dispatch(
+      studentOnboardingApi.endpoints.sendStudentCredentialEmail.initiate({
+        id: 'case-1',
+        accountType: 'guardian',
+        concurrencyStamp: 'latest-stamp',
+      })
+    )
+    .unwrap();
   expect(result).toEqual(email);
   expect(body).toEqual({ accountType: 'guardian', concurrencyStamp: 'latest-stamp' });
   query.unsubscribe();
 });
 
 it('sends individual and all document overrides through the authenticated owning API', async () => {
-  const documents = { caseId: 'case-1', studentId: 'student-1', concurrencyStamp: 'new-stamp', canUpload: true, canOverride: true, documents: [] };
+  const documents = {
+    caseId: 'case-1',
+    studentId: 'student-1',
+    concurrencyStamp: 'new-stamp',
+    canUpload: true,
+    canOverride: true,
+    documents: [],
+  };
   const bodies: any[] = [];
-  mswServer.use(http.post('*/api/student/onboarding/case-1/documents/override', async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ data: documents }); }));
-  for (const overrideAll of [false, true]) {
-    const result = await store.dispatch(studentOnboardingApi.endpoints.overrideStudentOnboardingDocuments.initiate({ caseId: 'case-1', documentTypeIds: overrideAll ? [] : ['doc-1'], overrideAll, reason: 'Authorized exception', concurrencyStamp: 'stamp' })).unwrap();
+  mswServer.use(
+    http.post('*/api/student/onboarding/case-1/documents/override', async ({ request }) => {
+      bodies.push(await request.json());
+      return HttpResponse.json({ data: documents });
+    })
+  );
+  const submitOverride = async (overrideAll: boolean) => {
+    const result = await store
+      .dispatch(
+        studentOnboardingApi.endpoints.overrideStudentOnboardingDocuments.initiate({
+          caseId: 'case-1',
+          documentTypeIds: overrideAll ? [] : ['doc-1'],
+          overrideAll,
+          reason: 'Authorized exception',
+          concurrencyStamp: 'stamp',
+        })
+      )
+      .unwrap();
     expect(result).toEqual(documents);
-  }
+  };
+  await submitOverride(false);
+  await submitOverride(true);
   expect(bodies).toEqual([
-    { documentTypeIds: ['doc-1'], overrideAll: false, reason: 'Authorized exception', concurrencyStamp: 'stamp' },
-    { documentTypeIds: [], overrideAll: true, reason: 'Authorized exception', concurrencyStamp: 'stamp' },
+    {
+      documentTypeIds: ['doc-1'],
+      overrideAll: false,
+      reason: 'Authorized exception',
+      concurrencyStamp: 'stamp',
+    },
+    {
+      documentTypeIds: [],
+      overrideAll: true,
+      reason: 'Authorized exception',
+      concurrencyStamp: 'stamp',
+    },
   ]);
 });

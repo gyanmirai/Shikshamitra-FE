@@ -9,6 +9,7 @@ import { ApplicationDocumentsPanel } from './application-documents-panel';
 export function ApplicationDocuments({
   stages,
   currentStage,
+  selectedStageId,
   ...props
 }: {
   applicationId: string;
@@ -17,12 +18,28 @@ export function ApplicationDocuments({
   canAdvance: boolean;
   advancing: boolean;
   onComplete: () => void;
+  layout?: 'cards' | 'table';
+  selectedStageId?: string;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const history = stages.filter(
     (stage) =>
       stage.documentVerificationEnabled && stage.id !== currentStage?.id && stage.status >= 2
   );
+  if (selectedStageId) {
+    const selected = stages.find((stage) => stage.id === selectedStageId);
+    if (!selected?.documentVerificationEnabled) return null;
+    const historical = selected.id !== currentStage?.id || selected.status >= 2;
+    if (historical && selected.status < 2) return null;
+    return (
+      <ApplicationDocumentsPanel
+        key={selected.id}
+        {...props}
+        stage={selected}
+        historical={historical}
+      />
+    );
+  }
   if (!currentStage?.documentVerificationEnabled && !history.length) return null;
   return (
     <Stack spacing={1}>
@@ -42,6 +59,7 @@ export function ApplicationDocuments({
             {expanded === stage.id && (
               <ApplicationDocumentsPanel
                 applicationId={props.applicationId}
+                layout={props.layout}
                 stage={stage}
                 historical
               />

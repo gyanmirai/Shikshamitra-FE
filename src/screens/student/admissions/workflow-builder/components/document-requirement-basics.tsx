@@ -23,21 +23,6 @@ export function DocumentRequirementBasics({
           helperText={formik.touched.name && formik.errors.name}
         />
       </ShakingTextField>
-      <ShakingTextField error={error('code')}>
-        <TextField
-          size="small"
-          fullWidth
-          label="Document code *"
-          {...formik.getFieldProps('code')}
-          onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
-          error={error('code')}
-          helperText={
-            error('code')
-              ? formik.errors.code
-              : 'A unique reference for this requirement. Existing evidence stays with its published version.'
-          }
-        />
-      </ShakingTextField>
       <ShakingTextField error={error('description')}>
         <TextField
           size="small"

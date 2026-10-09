@@ -50,10 +50,15 @@ export function FormStageReasonDialog({
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button variant="outlined" disabled={busy} onClick={onClose}>
+        <Button size="small" variant="outlined" disabled={busy} onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="contained" disabled={busy} onClick={() => formik.handleSubmit()}>
+        <Button
+          size="small"
+          variant="contained"
+          disabled={busy}
+          onClick={() => formik.handleSubmit()}
+        >
           {busy ? 'Saving…' : confirmLabel}
         </Button>
       </DialogActions>

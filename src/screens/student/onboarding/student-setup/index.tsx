@@ -16,9 +16,9 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -28,6 +28,7 @@ import {
   Stack,
   Avatar,
   Button,
+  Switch,
   Tooltip,
   Divider,
   Checkbox,
@@ -37,8 +38,10 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
+  FormControlLabel,
 } from '@mui/material';
 import {
+  useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingCasesQuery,
   useActivateStudentOnboardingMutation,
   useGetStudentOnboardingFilterOptionsQuery,
@@ -46,18 +49,14 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentSetupDrawer from './student-setup-drawer';
+import StudentPendingTasks from './student-pending-tasks';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
+import StudentIdentifierLockControls from './student-identifier-lock-controls';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
 import OnboardingBulkActionDialog, {
   type BulkOnboardingAction,
 } from './onboarding-bulk-action-dialog';
-import {
-  type StudentSetupView,
-  parseStudentSetupView,
-  type StudentSetupTaskScope,
-  parseStudentSetupTaskScope,
-} from './student-setup-view';
 import {
   accountStatusMeta,
   getReadinessSummary,
@@ -65,6 +64,13 @@ import {
   mapOnboardingCaseToItem,
   type StudentOnboardingItem,
 } from './student-onboarding-model';
+import {
+  studentSetupTaskHref,
+  type StudentSetupView,
+  parseStudentSetupView,
+  type StudentSetupTaskScope,
+  parseStudentSetupTaskScope,
+} from './student-setup-view';
 
 import type { StudentAssignmentType } from './student-onboarding-operation-dialog';
 
@@ -214,6 +220,7 @@ function StudentSetupTable({
   noDataDescription,
   onClearWorklistFilters,
   onOpen,
+  onOpenTask,
   selectedStudentIds,
   onToggleSelection,
   allStudentsSelected,
@@ -244,6 +251,7 @@ function StudentSetupTable({
   noDataDescription?: string;
   onClearWorklistFilters?: () => void;
   onOpen: (studentId: string) => void;
+  onOpenTask: (studentId: string, view: StudentSetupView) => void;
   selectedStudentIds: string[];
   onToggleSelection: (studentId: string) => void;
   allStudentsSelected: boolean;
@@ -262,6 +270,22 @@ function StudentSetupTable({
   placementOptions: Array<{ label: string; value: string }>;
   isServerBacked: boolean;
 }) {
+  const [hoveredStudentId, setHoveredStudentId] = useState<string | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepPendingOpen = useCallback((id: string) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    setHoveredStudentId(id);
+  }, []);
+  const closePending = useCallback(() => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHoveredStudentId(null), 200);
+  }, []);
+  useEffect(
+    () => () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    },
+    []
+  );
   const tableData = useMemo(
     () =>
       rows.map((student) => {
@@ -384,6 +408,13 @@ function StudentSetupTable({
               aria-label={`${String(row.studentName)} readiness ${String(value)} percent`}
               sx={{ height: 5, borderRadius: 1 }}
             />
+            <StudentPendingTasks
+              student={rows.find((student) => student.id === row.id)!}
+              hovered={hoveredStudentId === row.id}
+              onKeepOpen={() => keepPendingOpen(String(row.id))}
+              onLeave={closePending}
+              onOpenTask={(nextView) => onOpenTask(String(row.id), nextView)}
+            />
           </Stack>
         ),
       },
@@ -438,6 +469,16 @@ function StudentSetupTable({
         },
       },
       {
+        id: 'feesTask',
+        label: 'Fee structure',
+        minWidth: 170,
+        render: (_value, row) => (
+          <Label color={row.feeStructureConfirmed ? 'success' : 'warning'}>
+            {row.feeStructureConfirmed ? 'Confirmed' : 'Pending'}
+          </Label>
+        ),
+      },
+      {
         id: 'grNumberTask',
         label: 'GR number',
         minWidth: 180,
@@ -455,7 +496,13 @@ function StudentSetupTable({
                 variant="soft"
                 color={hasCommittedValue ? 'success' : row.grPreview ? 'info' : 'warning'}
               >
-                {hasCommittedValue ? 'Assigned' : row.grPreview ? 'Preview only' : 'Pending'}
+                {hasCommittedValue
+                  ? row.grNumberLocked
+                    ? 'Locked'
+                    : 'Assigned'
+                  : row.grPreview
+                    ? 'Preview only'
+                    : 'Pending'}
               </Label>
             </Stack>
           );
@@ -475,7 +522,7 @@ function StudentSetupTable({
                 {hasCommittedValue ? row.rollNo : 'Not assigned'}
               </Typography>
               <Label variant="soft" color={hasCommittedValue ? 'success' : 'warning'}>
-                {hasCommittedValue ? 'Assigned' : 'Pending'}
+                {hasCommittedValue ? (row.rollNumberLocked ? 'Locked' : 'Assigned') : 'Pending'}
               </Label>
             </Stack>
           );
@@ -651,6 +698,24 @@ function StudentSetupTable({
         'statusLabel',
         'actions',
       ],
+      fees: [
+        'selection',
+        'studentName',
+        'placement',
+        'feesTask',
+        'ownerName',
+        'statusLabel',
+        'actions',
+      ],
+      credentials: [
+        'selection',
+        'studentName',
+        'placement',
+        'accounts',
+        'ownerName',
+        'statusLabel',
+        'actions',
+      ],
     };
 
     const filterableColumns = new Set(['studentName', 'ownerName', 'statusLabel']);
@@ -672,10 +737,14 @@ function StudentSetupTable({
   }, [
     allStudentsSelected,
     onOpen,
+    onOpenTask,
+    hoveredStudentId,
+    keepPendingOpen,
+    closePending,
     onToggleAll,
     onToggleSelection,
     placementOptions,
-    rows.length,
+    rows,
     selectedStudentIds,
     someStudentsSelected,
     taskScope,
@@ -684,6 +753,14 @@ function StudentSetupTable({
 
   return (
     <CustomizableTable
+      rowProps={
+        view === 'readiness'
+          ? (row) => ({
+              onMouseEnter: () => keepPendingOpen(String(row.id)),
+              onMouseLeave: closePending,
+            })
+          : undefined
+      }
       tableId={tableId}
       tableTitle={tableTitle}
       exportLabel="Export current page"
@@ -761,8 +838,29 @@ const assignmentViewMeta: Record<
     actionLabel: string;
     pendingScopeLabel: string;
     allScopeLabel: string;
+    pendingEmptyText: string;
   }
 > = {
+  fees: {
+    title: 'Fee structure confirmation',
+    description: 'Confirm the published fee structure for each student.',
+    icon: 'mdi:receipt-text-outline',
+    actionLabel: 'Confirm Fees',
+    pendingScopeLabel: 'Remaining',
+    allScopeLabel: 'All students',
+    pendingEmptyText:
+      'No students are waiting for fee structure confirmation. Switch to All students to review confirmed fee structures.',
+  },
+  credentials: {
+    title: 'App credentials',
+    description: 'Prepare app access and send login details after activation.',
+    icon: 'mdi:account-key-outline',
+    actionLabel: 'Manage Credentials',
+    pendingScopeLabel: 'Remaining',
+    allScopeLabel: 'All students',
+    pendingEmptyText:
+      'No students have pending app access or credential emails. Switch to All students to review app access.',
+  },
   'gr-number': {
     title: 'GR number assignment',
     description:
@@ -771,15 +869,18 @@ const assignmentViewMeta: Record<
     actionLabel: 'Assign GR No.',
     pendingScopeLabel: 'Remaining',
     allScopeLabel: 'All students',
+    pendingEmptyText:
+      'No students are waiting for a GR number. Switch to All students to review existing GR numbers.',
   },
   'roll-number': {
     title: 'Roll number assignment',
-    description:
-      'Enter student-wise roll numbers. Saved rules validate the starting number, uniqueness scope and approval requirements.',
+    description: 'Assign Roll numbers starting at 1 within each Class and Division.',
     icon: 'mdi:format-list-numbered',
     actionLabel: 'Assign Roll No.',
     pendingScopeLabel: 'Remaining',
     allScopeLabel: 'All students',
+    pendingEmptyText:
+      'No students are waiting for a Roll number. Switch to All students to review existing Roll numbers.',
   },
   division: {
     title: 'Division assignment',
@@ -789,6 +890,8 @@ const assignmentViewMeta: Record<
     actionLabel: 'Assign / Change Division',
     pendingScopeLabel: 'Unassigned',
     allScopeLabel: 'All students',
+    pendingEmptyText:
+      'No students are without a division. Switch to All students to review existing placements.',
   },
 };
 
@@ -815,7 +918,7 @@ function StudentSetupAssignmentBar({
   pendingCount: number;
   visibleCount: number;
   selectedCount: number;
-  assignmentMode: 'automatic' | 'manual' | 'both';
+  assignmentMode?: 'automatic' | 'manual' | 'both';
   onSelectAll: () => void;
   onAssign: () => void;
   onClear: () => void;
@@ -846,9 +949,16 @@ function StudentSetupAssignmentBar({
               <Label variant="soft" color={pendingCount ? 'warning' : 'success'}>
                 {pendingCount} pending
               </Label>
-              <Label variant="soft" color="default">
-                {assignmentModeLabel(assignmentMode)}
-              </Label>
+              {view === 'gr-number' && assignmentMode && (
+                <Label variant="soft" color="default">
+                  {assignmentModeLabel(assignmentMode)}
+                </Label>
+              )}
+              {view === 'roll-number' && (
+                <Label variant="soft" color="default">
+                  Uses student numbering rules
+                </Label>
+              )}
             </Stack>
             <Typography variant="caption" color="text.secondary">
               {meta.description}
@@ -903,6 +1013,7 @@ function StudentSetupAssignmentBar({
 }
 
 export default function StudentSetupScreen() {
+  const [drawerTaskView, setDrawerTaskView] = useState<StudentSetupView | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -913,7 +1024,8 @@ export default function StudentSetupScreen() {
   const { settings } = useOnboardingSettings();
   const activeView = parseStudentSetupView(searchParams.get('view'));
   const activeTaskScope = parseStudentSetupTaskScope(searchParams.get('scope'), activeView);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const focusedCaseId = searchParams.get('case');
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(focusedCaseId);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkOnboardingAction | null>(null);
   const [bulkActionStudents, setBulkActionStudents] = useState<StudentOnboardingItem[]>([]);
@@ -955,8 +1067,8 @@ export default function StudentSetupScreen() {
     (selectedSortColumn !== 'divisionTask' || activeTaskScope === 'all');
   const sorts: IParams['sorts'] =
     selectedSortColumn &&
-      sortAppliesToView &&
-      Object.prototype.hasOwnProperty.call(studentSetupSortFields, selectedSortColumn)
+    sortAppliesToView &&
+    Object.prototype.hasOwnProperty.call(studentSetupSortFields, selectedSortColumn)
       ? [{ column: selectedSortColumn, direction: selectedSortDirection }]
       : [];
   const sortOrder = sorts[0]
@@ -1078,6 +1190,8 @@ export default function StudentSetupScreen() {
       status: selectedStatusOption?.status,
       pendingTask:
         activeView !== 'readiness' && activeTaskScope === 'pending' ? activeView : undefined,
+      enteredToday:
+        activeView === 'readiness' && searchParams.get('today') === 'true' ? true : undefined,
       studentNameFilter: studentNameFilter || undefined,
       studentNameOperator: studentNameFilter ? studentNameOperator : undefined,
       ownerNameFilter: ownerNameFilter || undefined,
@@ -1105,6 +1219,7 @@ export default function StudentSetupScreen() {
     }),
     [
       currentYear?.id,
+      searchParams,
       activeView,
       activeTaskScope,
       selectedBoardId,
@@ -1178,65 +1293,65 @@ export default function StudentSetupScreen() {
   const columnFilters: IParams['filters'] = [
     ...(studentNameFilter
       ? [
-        {
-          column: 'studentName',
-          type: studentNameOperator,
-          value: studentNameFilter,
-          valueType: 'string',
-          label: 'Student',
-        },
-      ]
+          {
+            column: 'studentName',
+            type: studentNameOperator,
+            value: studentNameFilter,
+            valueType: 'string',
+            label: 'Student',
+          },
+        ]
       : []),
     ...(placementFilterApplicable && placementDivisionId
       ? [
-        {
-          column: activeView === 'division' ? 'divisionTask' : 'placement',
-          type: 'equals',
-          value: placementDivisionId,
-          valueType: 'enum',
-          label: activeView === 'division' ? 'Current placement' : 'Placement',
-          displayValue:
-            placementOptions.find((option) => option.value === placementDivisionId)?.label ??
-            'Selected division',
-        },
-      ]
+          {
+            column: activeView === 'division' ? 'divisionTask' : 'placement',
+            type: 'equals',
+            value: placementDivisionId,
+            valueType: 'enum',
+            label: activeView === 'division' ? 'Current placement' : 'Placement',
+            displayValue:
+              placementOptions.find((option) => option.value === placementDivisionId)?.label ??
+              'Selected division',
+          },
+        ]
       : []),
     ...(ownerNameFilter
       ? [
-        {
-          column: 'ownerName',
-          type: ownerNameOperator,
-          value: ownerNameFilter,
-          valueType: 'string',
-          label: 'Owner',
-        },
-      ]
+          {
+            column: 'ownerName',
+            type: ownerNameOperator,
+            value: ownerNameFilter,
+            valueType: 'string',
+            label: 'Owner',
+          },
+        ]
       : []),
     ...(rollFilterApplicable && (hasRollNumberFilter || hasRollNumberRange)
       ? [
-        {
-          column: 'rollNumberTask',
-          type: rollNumberOperator,
-          value:
-            rollNumberOperator === 'between'
-              ? { min: rollNumberMin, max: rollNumberMax }
-              : rollNumberFilter,
-          valueType: 'number',
-          label: 'Roll number',
-        },
-      ]
+          {
+            column: 'rollNumberTask',
+            type: rollNumberOperator,
+            value:
+              rollNumberOperator === 'between'
+                ? { min: rollNumberMin, max: rollNumberMax }
+                : rollNumberFilter,
+            valueType: 'number',
+            label: 'Roll number',
+          },
+        ]
       : []),
     ...(selectedStatusOption
       ? [
-        {
-          column: 'statusLabel',
-          type: 'equals',
-          value: selectedStatusOption.label,
-          valueType: 'enum',
-          label: 'Status',
-          displayValue: selectedStatusOption.label,
-        },
-      ]
+          {
+            column: 'statusLabel',
+            type: 'equals',
+            value: selectedStatusOption.label,
+            valueType: 'enum',
+            label: 'Status',
+            displayValue: selectedStatusOption.label,
+          },
+        ]
       : []),
   ];
   useEffect(() => {
@@ -1304,7 +1419,17 @@ export default function StudentSetupScreen() {
     () => sourceRows.filter((student) => selectedStudentIds.includes(student.id)),
     [selectedStudentIds, sourceRows]
   );
-  const selectedStudent = sourceRows.find((student) => student.id === selectedStudentId) || null;
+  const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
+  const focusedCaseQuery = useGetStudentOnboardingCaseQuery(focusedCaseId ?? '', {
+    skip: !focusedCaseId || Boolean(sourceRows.find((student) => student.id === focusedCaseId)),
+  });
+  const selectedStudent =
+    selectedRow ||
+    (focusedCaseQuery.currentData &&
+    focusedCaseQuery.currentData.id === focusedCaseId &&
+    focusedCaseId === selectedStudentId
+      ? mapOnboardingCaseToItem(focusedCaseQuery.currentData)
+      : null);
   const assignmentStudents = useMemo(
     () =>
       assignmentRequest
@@ -1313,9 +1438,11 @@ export default function StudentSetupScreen() {
     [assignmentRequest, sourceRows]
   );
   const operationalAssignmentStudent =
-    assignmentStudents.length === 1 && assignmentStudents[0].source === 'onboarding-case'
-      ? assignmentStudents[0]
-      : null;
+    assignmentRequest?.studentIds[0] === selectedStudent?.id
+      ? selectedStudent
+      : assignmentStudents.length === 1 && assignmentStudents[0].source === 'onboarding-case'
+        ? assignmentStudents[0]
+        : null;
   const allStudentsSelected =
     displayedRows.length > 0 &&
     displayedRows.every((student) => selectedStudentIds.includes(student.id));
@@ -1328,18 +1455,21 @@ export default function StudentSetupScreen() {
       current.filter((id) => sourceRows.some((student) => student.id === id))
     );
     setSelectedStudentId((current) =>
-      current && sourceRows.some((student) => student.id === current) ? current : null
+      current && (current === focusedCaseId || sourceRows.some((student) => student.id === current))
+        ? current
+        : null
     );
-  }, [sourceRows]);
+  }, [sourceRows, focusedCaseId]);
 
   useEffect(() => {
     setSelectedStudentIds([]);
-    setSelectedStudentId(null);
-  }, [activeTaskScope, activeView]);
+    setSelectedStudentId(focusedCaseId);
+  }, [activeTaskScope, activeView, focusedCaseId]);
 
   const getViewHref = (view: StudentSetupView) => {
     const next = new URLSearchParams(searchParams.toString());
     next.set('view', view);
+    next.delete('case');
     if (view !== activeView) next.delete('scope');
     if (view !== 'readiness') next.delete('stage');
     if (view !== activeView) {
@@ -1439,7 +1569,7 @@ export default function StudentSetupScreen() {
           idempotencyKey: crypto.randomUUID(),
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${student.studentName} is enrolled. Complete fee assignment, first payment and required handoffs to finish onboarding.`,
+          message: `${student.studentName} is active and available in Student Records. Complete Credentials if app access is pending.`,
         });
         setSelectedStudentId(null);
         return;
@@ -1476,6 +1606,40 @@ export default function StudentSetupScreen() {
       />
 
       <StudentSetupTaskNavigation activeView={activeView} getViewHref={getViewHref} />
+      {focusedCaseId && !selectedRow && focusedCaseQuery.isFetching && (
+        <LinearProgress aria-label="Loading selected onboarding student" />
+      )}
+      {focusedCaseId && !selectedRow && focusedCaseQuery.isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => focusedCaseQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          The selected onboarding case could not be loaded.
+        </Alert>
+      )}
+      {activeView === 'readiness' && (
+        <FormControlLabel
+          sx={{ px: 1, m: 0 }}
+          control={
+            <Switch
+              size="small"
+              checked={searchParams.get('today') === 'true'}
+              onChange={(_event, checked) => {
+                const next = new URLSearchParams(searchParams.toString());
+                if (checked) next.set('today', 'true');
+                else next.delete('today');
+                setTablePage(1);
+                router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+              }}
+            />
+          }
+          label="Entered onboarding today"
+        />
+      )}
 
       <Box
         role="tabpanel"
@@ -1510,6 +1674,19 @@ export default function StudentSetupScreen() {
 
         <Box sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}>
           <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, flex: 1 }}>
+            {(activeView === 'gr-number' || activeView === 'roll-number') && (
+              <StudentIdentifierLockControls
+                academicYearId={currentYear?.id}
+                divisionId={selectedDivisionId === ALL_STANDARDS ? undefined : selectedDivisionId}
+                identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
+                canLock={canManageOnboarding}
+                canUnlock={
+                  canManageOnboarding &&
+                  !filterOptionsQuery.isError &&
+                  filterOptionsQuery.currentData?.canUnlockIdentifiers === true
+                }
+              />
+            )}
             {activeView !== 'readiness' ? (
               <StudentSetupAssignmentBar
                 view={activeView}
@@ -1519,10 +1696,19 @@ export default function StudentSetupScreen() {
                 visibleCount={displayedRows.length}
                 selectedCount={selectedStudentIds.length}
                 assignmentMode={
-                  activeView === 'gr-number' ? settings.grNumber.assignmentMode : 'manual'
+                  activeView === 'gr-number' ? settings.grNumber.assignmentMode : undefined
                 }
                 onSelectAll={selectAllVisible}
-                onAssign={() => openAssignment(activeView, selectedStudentIds)}
+                onAssign={() => {
+                  if (activeView === 'fees' || activeView === 'credentials') {
+                    if (selectedStudentIds.length === 1)
+                      setSelectedStudentId(selectedStudentIds[0]);
+                    else
+                      shikshaMitraToast.error({
+                        message: 'Select one student to review this task.',
+                      });
+                  } else openAssignment(activeView, selectedStudentIds);
+                }}
                 onClear={() => setSelectedStudentIds([])}
               />
             ) : selectedStudentIds.length ? (
@@ -1644,7 +1830,7 @@ export default function StudentSetupScreen() {
                       ? 'No students match the selected filters.'
                       : 'No students are in onboarding for this academic year.'
                     : activeTaskScope === 'pending'
-                      ? `No students are currently ${activeView === 'division' ? 'without a division' : `waiting for a ${activeView === 'gr-number' ? 'GR number' : 'roll number'}`}. Switch to All students to review existing assignments.`
+                      ? assignmentViewMeta[activeView].pendingEmptyText
                       : hasWorklistFilters
                         ? 'No students match the selected filters.'
                         : 'No students are in onboarding for this academic year.'
@@ -1657,7 +1843,17 @@ export default function StudentSetupScreen() {
               onClearWorklistFilters={
                 hasWorklistFilters && currentYear?.id ? clearWorklistFilters : undefined
               }
-              onOpen={setSelectedStudentId}
+              onOpen={(id) => {
+                setDrawerTaskView(null);
+                setSelectedStudentId(id);
+              }}
+              onOpenTask={(id, view) => {
+                setDrawerTaskView(null);
+                setSelectedStudentId(id);
+                router.replace(studentSetupTaskHref(pathname, searchParams.toString(), id, view), {
+                  scroll: false,
+                });
+              }}
               selectedStudentIds={selectedStudentIds}
               onToggleSelection={toggleStudent}
               allStudentsSelected={allStudentsSelected}
@@ -1691,9 +1887,15 @@ export default function StudentSetupScreen() {
       </Box>
 
       <StudentSetupDrawer
+        taskView={drawerTaskView ?? activeView}
         open={Boolean(selectedStudent)}
         student={selectedStudent}
-        onClose={() => setSelectedStudentId(null)}
+        onClose={() => {
+          setSelectedStudentId(null);
+          const next = new URLSearchParams(searchParams.toString());
+          next.delete('case');
+          router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+        }}
         onAssignDivision={() => selectedStudent && openAssignment('division', [selectedStudent.id])}
         onAssignGrNumber={() =>
           selectedStudent && openAssignment('gr-number', [selectedStudent.id])

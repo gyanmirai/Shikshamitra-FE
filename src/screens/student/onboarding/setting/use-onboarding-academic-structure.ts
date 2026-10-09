@@ -32,7 +32,7 @@ export function filterOnboardingBoardsBySchoolLevels(
 }
 
 /** The selected year's school hierarchy is supplied by the authenticated global context. */
-export function useOnboardingAcademicStructure(): {
+export function useOnboardingAcademicStructure({ includeCampuses = true }: { includeCampuses?: boolean } = {}): {
   boards: Board[];
   allBoards: Board[];
   campuses: StudentOnboardingCampus[];
@@ -41,6 +41,7 @@ export function useOnboardingAcademicStructure(): {
 } {
   const { settings } = useOnboardingSettings();
   const campusQuery = useGetAvailableOnboardingCampusesQuery(undefined, {
+    skip: !includeCampuses,
     refetchOnMountOrArgChange: true,
   });
   const boards = useSelector((state: RootState) => state.globalState.currentYear?.boards);

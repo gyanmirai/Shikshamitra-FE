@@ -35,7 +35,10 @@ import {
 import { StudentSetupLoadingRows } from './student-setup-loading';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { isAcademicApplicabilityMatch } from '../onboarding-settings-model';
-import { type StudentOnboardingItem, getStudentAcademicPathContext } from './student-onboarding-model';
+import {
+  type StudentOnboardingItem,
+  getStudentAcademicPathContext,
+} from './student-onboarding-model';
 
 type UserOption = {
   id: string;
@@ -76,7 +79,10 @@ export default function StudentOnboardingCaseOperations({
   canCancel,
   onCancelled,
 }: StudentOnboardingCaseOperationsProps) {
-  const isClosed = Boolean(student.studentEnrollmentId) || student.backendStatus === 4 || student.backendStatus === 5;
+  const isClosed =
+    Boolean(student.studentEnrollmentId) ||
+    student.backendStatus === 4 ||
+    student.backendStatus === 5;
   const { settings } = useOnboardingSettings();
   const [setRoute, routeState] = useSetStudentOnboardingRouteMutation();
   const [route, setRouteDraft] = useState(student.admissionRoute);
@@ -93,24 +99,49 @@ export default function StudentOnboardingCaseOperations({
   const [cancellationReason, setCancellationReason] = useState('');
   const [consentOpen, setConsentOpen] = useState(false);
   const [consentReference, setConsentReference] = useState('');
-  const consentEditable = canManage && Boolean(student.studentEnrollmentId) &&
-    student.backendStatus !== 4 && student.backendStatus !== 5;
+  const consentEditable =
+    canManage &&
+    Boolean(student.studentEnrollmentId) &&
+    student.backendStatus !== 4 &&
+    student.backendStatus !== 5;
   const userResponse = usersQuery.data as
     { items?: UserOption[]; data?: { items?: UserOption[] } } | undefined;
-  const users = useMemo(
-    () => userResponse?.items ?? userResponse?.data?.items ?? [],
-    [userResponse]
+  const users = useMemo(() => {
+    const available = userResponse?.items ?? userResponse?.data?.items ?? [];
+    const persistedOwnerId = student.assignedToUserId;
+    if (!persistedOwnerId || available.some((user) => user.id === persistedOwnerId))
+      return available;
+    return [
+      ...available,
+      {
+        id: persistedOwnerId,
+        name: student.ownerName === 'Not assigned' ? 'Current owner' : student.ownerName,
+      },
+    ];
+  }, [userResponse, student.assignedToUserId, student.ownerName]);
+  const routeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          'Fresh admission',
+          'Transfer student',
+          'Mid-year admission',
+          'Returning student',
+          ...settings.onboardingProfiles
+            .filter((profile) =>
+              isAcademicApplicabilityMatch(
+                profile.applicability,
+                getStudentAcademicPathContext(student)
+              )
+            )
+            .flatMap((profile) => profile.admissionRoutes),
+          student.admissionRoute,
+        ])
+      )
+        .filter(Boolean)
+        .map((name) => ({ label: name, value: name })),
+    [settings.onboardingProfiles, student]
   );
-  const routeOptions = useMemo(() => Array.from(new Set([
-    'Fresh admission', 'Transfer student', 'Mid-year admission', 'Returning student',
-    ...settings.onboardingProfiles
-      .filter((profile) => isAcademicApplicabilityMatch(
-        profile.applicability, getStudentAcademicPathContext(student)
-      ))
-      .flatMap((profile) => profile.admissionRoutes),
-    student.admissionRoute,
-  ])).filter(Boolean).map((name) => ({ label: name, value: name })),
-  [settings.onboardingProfiles, student]);
 
   useEffect(() => {
     setRouteDraft(student.admissionRoute);
@@ -159,15 +190,23 @@ export default function StudentOnboardingCaseOperations({
 
   const saveConsent = async () => {
     const evidenceReference = consentReference.trim();
-    if (evidenceReference.length < 3 || evidenceReference.length > 200 || !student.concurrencyStamp) return;
+    if (evidenceReference.length < 3 || evidenceReference.length > 200 || !student.concurrencyStamp)
+      return;
     try {
-      await confirmConsent({ id: student.id, concurrencyStamp: student.concurrencyStamp,
-        evidenceReference }).unwrap();
-      shikshaMitraToast.success({ message: 'Service consent recorded. Onboarding readiness was rechecked.' });
+      await confirmConsent({
+        id: student.id,
+        concurrencyStamp: student.concurrencyStamp,
+        evidenceReference,
+      }).unwrap();
+      shikshaMitraToast.success({
+        message: 'Service consent recorded. Onboarding readiness was rechecked.',
+      });
       setConsentOpen(false);
       setConsentReference('');
     } catch {
-      shikshaMitraToast.error({ message: 'Service consent could not be recorded. Reload the case and retry.' });
+      shikshaMitraToast.error({
+        message: 'Service consent could not be recorded. Reload the case and retry.',
+      });
     }
   };
 
@@ -180,85 +219,122 @@ export default function StudentOnboardingCaseOperations({
           </AccordionSummary>
           <AccordionDetails>
             <Stack spacing={1.5}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-        <CustomSelect label="Admission route" size="small" value={route}
-          options={routeOptions}
-          disabled={!canManage || isClosed || routeState.isLoading}
-          onChange={value => setRouteDraft(String(value))} />
-        <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:content-save-outline" />}
-          disabled={!canManage || isClosed || routeState.isLoading || route === student.admissionRoute}
-          onClick={async () => {
-            try {
-              await setRoute({ id: student.id, admissionRoute: route, concurrencyStamp: student.concurrencyStamp }).unwrap();
-              shikshaMitraToast.success({ message: 'Admission route saved and readiness rules refreshed.' });
-            } catch { shikshaMitraToast.error({ message: 'Admission route could not be saved. Refresh the case and retry.' }); }
-          }}>Save route</Button>
-      </Stack>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'flex-start' }}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Case owner"
-          value={ownerId}
-          onChange={(event) => setOwnerId(event.target.value)}
-          disabled={!canManage || isClosed || usersQuery.isFetching}
-        >
-          <MenuItem value="">Unassigned</MenuItem>
-          {users.map((user) => {
-            const fullName = [user.name, user.surname].filter(Boolean).join(' ');
-            return (
-              <MenuItem key={user.id} value={user.id}>
-                {fullName || user.userName || user.email || user.id}
-              </MenuItem>
-            );
-          })}
-        </TextField>
-        <LoadingButton
-          variant="outlined"
-          size="small"
-          startIcon={<Iconify icon="mdi:account-check-outline" width={18} />}
-          disabled={
-            !canManage ||
-            isClosed ||
-            assignOwnerState.isLoading ||
-            ownerId === (student.assignedToUserId ?? '')
-          }
-          loading={assignOwnerState.isLoading}
-          onClick={saveOwner}
-        >
-          Save owner
-        </LoadingButton>
-      </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+                <CustomSelect
+                  label="Admission route"
+                  size="small"
+                  value={route}
+                  options={routeOptions}
+                  disabled={!canManage || isClosed || routeState.isLoading}
+                  onChange={(value) => setRouteDraft(String(value))}
+                />
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:content-save-outline" />}
+                  disabled={
+                    !canManage ||
+                    isClosed ||
+                    routeState.isLoading ||
+                    route === student.admissionRoute
+                  }
+                  onClick={async () => {
+                    try {
+                      await setRoute({
+                        id: student.id,
+                        admissionRoute: route,
+                        concurrencyStamp: student.concurrencyStamp,
+                      }).unwrap();
+                      shikshaMitraToast.success({
+                        message: 'Admission route saved and readiness rules refreshed.',
+                      });
+                    } catch {
+                      shikshaMitraToast.error({
+                        message: 'Admission route could not be saved. Refresh the case and retry.',
+                      });
+                    }
+                  }}
+                >
+                  Save route
+                </Button>
+              </Stack>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                alignItems={{ sm: 'flex-start' }}
+              >
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Case owner"
+                  value={ownerId}
+                  onChange={(event) => setOwnerId(event.target.value)}
+                  disabled={!canManage || isClosed || usersQuery.isFetching}
+                >
+                  <MenuItem value="">Unassigned</MenuItem>
+                  {users.map((user) => {
+                    const fullName = [user.name, user.surname].filter(Boolean).join(' ');
+                    return (
+                      <MenuItem key={user.id} value={user.id}>
+                        {fullName || user.userName || user.email || user.id}
+                      </MenuItem>
+                    );
+                  })}
+                </TextField>
+                <LoadingButton
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:account-check-outline" width={18} />}
+                  disabled={
+                    !canManage ||
+                    isClosed ||
+                    assignOwnerState.isLoading ||
+                    ownerId === (student.assignedToUserId ?? '')
+                  }
+                  loading={assignOwnerState.isLoading}
+                  onClick={saveOwner}
+                >
+                  Save owner
+                </LoadingButton>
+              </Stack>
 
-      {usersQuery.isError ? (
-        <Alert severity="warning" variant="outlined">
-          Staff options could not be loaded. The current owner is unchanged.
-        </Alert>
-      ) : null}
+              {usersQuery.isError ? (
+                <Alert severity="warning" variant="outlined">
+                  Staff options could not be loaded. The current owner is unchanged.
+                </Alert>
+              ) : null}
 
-      {canCancel && !isClosed && (
-        <Stack direction="row" justifyContent="flex-end">
-          <Button
-            color="error"
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon="mdi:cancel" width={18} />}
-            onClick={() => setCancelOpen(true)}
-          >
-            Cancel onboarding
-          </Button>
-        </Stack>
-      )}
+              {canCancel && !isClosed && (
+                <Stack direction="row" justifyContent="flex-end">
+                  <Button
+                    color="error"
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="mdi:cancel" width={18} />}
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    Cancel onboarding
+                  </Button>
+                </Stack>
+              )}
             </Stack>
           </AccordionDetails>
         </Accordion>
       )}
 
       {handoffsQuery.isError && !handoffsQuery.data ? (
-        <Alert severity="error" sx={{ order: 1 }} action={
-          <Button size="small" onClick={() => handoffsQuery.refetch()}>Retry</Button>
-        }>Service handoffs could not be loaded.</Alert>
+        <Alert
+          severity="error"
+          sx={{ order: 1 }}
+          action={
+            <Button size="small" onClick={() => handoffsQuery.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Service handoffs could not be loaded.
+        </Alert>
       ) : handoffsQuery.isFetching && !handoffsQuery.data ? (
         <Stack spacing={1} sx={{ order: 1 }}>
           <Skeleton variant="text" width={150} height={24} />
@@ -296,13 +372,24 @@ export default function StudentOnboardingCaseOperations({
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Label color={meta.color}>{meta.label}</Label>
-                  {handoff.serviceKey === 'service-consent' && handoff.status !== 2 && handoff.status !== 4 && consentEditable ? (
-                    <Button size="small" variant="outlined" disabled={consentState.isLoading || !student.concurrencyStamp}
-                      onClick={() => setConsentOpen(true)}>
+                  {handoff.serviceKey === 'service-consent' &&
+                  handoff.status !== 2 &&
+                  handoff.status !== 4 &&
+                  consentEditable ? (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={consentState.isLoading || !student.concurrencyStamp}
+                      onClick={() => setConsentOpen(true)}
+                    >
                       Confirm consent
                     </Button>
                   ) : null}
-                  {handoff.status === 3 && canManage && ['finance-first-payment', 'student-account', 'guardian-account'].includes(handoff.serviceKey) ? (
+                  {handoff.status === 3 &&
+                  canManage &&
+                  ['finance-first-payment', 'student-account', 'guardian-account'].includes(
+                    handoff.serviceKey
+                  ) ? (
                     <Button
                       size="small"
                       variant="outlined"
@@ -311,7 +398,9 @@ export default function StudentOnboardingCaseOperations({
                       onClick={async () => {
                         try {
                           await retryHandoff({ id: student.id, handoffId: handoff.id }).unwrap();
-                          shikshaMitraToast.success({ message: 'Service handoff checked. Review its updated status.' });
+                          shikshaMitraToast.success({
+                            message: 'Service handoff checked. Review its updated status.',
+                          });
                         } catch {
                           shikshaMitraToast.error({
                             message: 'The service handoff could not be checked.',
@@ -331,7 +420,9 @@ export default function StudentOnboardingCaseOperations({
 
       <CustomDialog
         open={consentOpen}
-        handleClose={() => { if (!consentState.isLoading) setConsentOpen(false); }}
+        handleClose={() => {
+          if (!consentState.isLoading) setConsentOpen(false);
+        }}
         title="Confirm Service Consent"
         maxWidth="sm"
       >
@@ -340,17 +431,31 @@ export default function StudentOnboardingCaseOperations({
             <Typography variant="body2" color="text.secondary">
               Use an existing consent record. This does not collect consent.
             </Typography>
-            <TextField fullWidth required size="small" label="Consent record reference"
-              value={consentReference} onChange={(event) => setConsentReference(event.target.value)}
-              disabled={consentState.isLoading} inputProps={{ maxLength: 200 }} />
+            <TextField
+              fullWidth
+              required
+              size="small"
+              label="Consent record reference"
+              value={consentReference}
+              onChange={(event) => setConsentReference(event.target.value)}
+              disabled={consentState.isLoading}
+              inputProps={{ maxLength: 200 }}
+            />
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ px: 2, pb: 2 }}>
-          <Button color="inherit" disabled={consentState.isLoading} onClick={() => setConsentOpen(false)}>
+          <Button
+            color="inherit"
+            disabled={consentState.isLoading}
+            onClick={() => setConsentOpen(false)}
+          >
             Cancel
           </Button>
-          <Button variant="contained" disabled={consentState.isLoading || consentReference.trim().length < 3}
-            onClick={saveConsent}>
+          <Button
+            variant="contained"
+            disabled={consentState.isLoading || consentReference.trim().length < 3}
+            onClick={saveConsent}
+          >
             {consentState.isLoading ? 'Recording…' : 'Record confirmation'}
           </Button>
         </DialogActions>

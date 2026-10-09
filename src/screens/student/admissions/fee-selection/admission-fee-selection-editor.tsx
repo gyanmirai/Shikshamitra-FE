@@ -22,6 +22,7 @@ type Props = {
   disabled?: boolean;
   onClose: () => void;
   onEditorStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
+  compact?: boolean;
 };
 
 export function AdmissionFeeSelectionEditor({
@@ -29,6 +30,7 @@ export function AdmissionFeeSelectionEditor({
   disabled = false,
   onClose,
   onEditorStateChange,
+  compact = false,
 }: Props) {
   const candidates = useGetAdmissionFeeSelectionCandidatesQuery(state.applicationId, {
     refetchOnMountOrArgChange: true,
@@ -75,7 +77,7 @@ export function AdmissionFeeSelectionEditor({
       }
       try {
         await save({ applicationId: state.applicationId, ...values }).unwrap();
-        shikshaMitraToast.success({ message: 'Fee structure saved with the application.' });
+        shikshaMitraToast.success({ message: 'Fee structure confirmed with the application.' });
         onClose();
       } catch (error) {
         setSaveError(
@@ -86,6 +88,13 @@ export function AdmissionFeeSelectionEditor({
     },
   });
   useAdmissionUnsavedChanges(true, formik.dirty);
+  const { setFieldValue } = formik;
+  const currentStructureId = formik.values.structureId;
+  useEffect(() => {
+    if (!currentStructureId && candidates.currentData?.length === 1) {
+      setFieldValue('structureId', candidates.currentData[0].structureId);
+    }
+  }, [candidates.currentData, currentStructureId, setFieldValue]);
   const chosen = candidates.currentData?.find(
     (item) => item.structureId === formik.values.structureId
   );
@@ -108,7 +117,7 @@ export function AdmissionFeeSelectionEditor({
       sx={{ position: 'relative' }}
       aria-busy={busy}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={compact ? 1 : 1.5}>
         {candidates.isLoading && <Skeleton height={80} />}
         {candidates.isError && (
           <Alert
@@ -219,7 +228,7 @@ export function AdmissionFeeSelectionEditor({
               !candidates.currentData?.length
             }
           >
-            {busy ? 'Saving…' : 'Save fee structure'}
+            {busy ? 'Saving…' : 'Confirm fee structure'}
           </Button>
         </Stack>
       </Stack>

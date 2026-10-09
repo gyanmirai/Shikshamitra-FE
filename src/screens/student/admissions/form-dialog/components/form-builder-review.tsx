@@ -68,7 +68,7 @@ export function FormBuilderReview({ formik }: Props) {
         flex: 1,
         minHeight: 0,
         minWidth: 0,
-        maxWidth: 1120,
+        maxWidth: 1440,
         mx: 'auto',
         p: { xs: 1.5, sm: 2 },
         overflow: 'hidden',

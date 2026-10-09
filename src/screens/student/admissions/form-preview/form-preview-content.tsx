@@ -12,6 +12,7 @@ import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
+import { AdmissionSectionFields } from '../components/admission-section-fields';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
 import { getDynamicAdmissionValidationErrors } from '../admission-form-validation';
 import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
@@ -87,47 +88,44 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
           <Alert severity="info">No fields are configured for this section yet.</Alert>
         </Grid>
       );
-    return visibleFields.map((field) => {
-      const value =
-        entryIndex === undefined
-          ? (values[field.code] ?? '')
-          : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
-      return (
-        <Grid
-          key={field.code}
-          size={{
-            xs: 12,
-            sm: field.fieldType === 1 ? 12 : 12 / Math.min(fieldsPerRow, 2),
-            lg: field.fieldType === 1 ? 12 : 12 / fieldsPerRow,
-          }}
-        >
-          <AdmissionRuntimeField
-            field={{
-              ...field,
-              optionsJson: resolvedOptions[field.code] ?? field.optionsJson,
-            }}
-            value={value}
-            disabled={field.readOnly || readingPhoto}
-            error={
-              formik.touched[field.code] && typeof formik.errors[field.code] === 'string'
-                ? field.translations?.[language]?.validationMessage || formik.errors[field.code]
-                : undefined
-            }
-            onBlur={() => formik.setFieldTouched(field.code, true).catch(() => undefined)}
-            onBusyChange={(busy) => onPhotoReading(`${field.code}[${entryIndex ?? 0}]`, busy)}
-            formValues={rowValues}
-            onChange={(nextValue) =>
-              entryIndex === undefined
-                ? updateField(field.code, nextValue)
-                : updateField(
-                    field.code,
-                    writeRepeatableValue(values[field.code], entryIndex, nextValue)
-                  )
-            }
-          />
-        </Grid>
-      );
-    });
+    return (
+      <AdmissionSectionFields
+        fields={visibleFields}
+        columns={fieldsPerRow}
+        renderField={(field) => {
+          const value =
+            entryIndex === undefined
+              ? (values[field.code] ?? '')
+              : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
+          return (
+            <AdmissionRuntimeField
+              field={{
+                ...field,
+                optionsJson: resolvedOptions[field.code] ?? field.optionsJson,
+              }}
+              value={value}
+              disabled={field.readOnly || readingPhoto}
+              error={
+                formik.touched[field.code] && typeof formik.errors[field.code] === 'string'
+                  ? field.translations?.[language]?.validationMessage || formik.errors[field.code]
+                  : undefined
+              }
+              onBlur={() => formik.setFieldTouched(field.code, true).catch(() => undefined)}
+              onBusyChange={(busy) => onPhotoReading(`${field.code}[${entryIndex ?? 0}]`, busy)}
+              formValues={rowValues}
+              onChange={(nextValue) =>
+                entryIndex === undefined
+                  ? updateField(field.code, nextValue)
+                  : updateField(
+                      field.code,
+                      writeRepeatableValue(values[field.code], entryIndex, nextValue)
+                    )
+              }
+            />
+          );
+        }}
+      />
+    );
   };
   const renderSection = (section: (typeof localizedSections)[number]) => {
     if (!section.isRepeatable)

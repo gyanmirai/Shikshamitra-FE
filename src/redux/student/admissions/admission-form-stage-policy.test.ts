@@ -34,16 +34,19 @@ describe('managed Form stage policy', () => {
     expect(getAdmissionFormStageConfigurationError(legacy, [form])).toBeUndefined();
     expect(JSON.parse(upgraded ?? '')).toEqual({
       formDefinitionId: form.id,
-      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: true },
     });
   });
 
   it('preserves unrelated settings when selecting a form and editing its policy', () => {
-    const selected = writeAdmissionFormDefinitionId(JSON.stringify({ custom: { kept: true } }), form.id);
+    const selected = writeAdmissionFormDefinitionId(
+      JSON.stringify({ custom: { kept: true } }),
+      form.id
+    );
     expect(JSON.parse(selected)).toEqual({
       custom: { kept: true },
       formDefinitionId: form.id,
-      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: true },
     });
     const managed = writeAdmissionFormStagePolicy(selected, DEFAULT_FORM_STAGE_POLICY);
     expect(JSON.parse(managed)).toMatchObject({
@@ -70,8 +73,9 @@ describe('managed Form stage policy', () => {
       formDefinitionId: nextFormId,
       form: { requireSectionVerification: true, verificationSectionCodes: [] },
     });
-    expect(JSON.parse(writeAdmissionFormDefinitionId(previous, form.id)).form.verificationSectionCodes)
-      .toEqual(['STUDENT']);
+    expect(
+      JSON.parse(writeAdmissionFormDefinitionId(previous, form.id)).form.verificationSectionCodes
+    ).toEqual(['STUDENT']);
   });
 
   it('supports ownership, deadlines, corrections, and selected verification sections', () => {
@@ -98,7 +102,9 @@ describe('managed Form stage policy', () => {
       form: { ...DEFAULT_FORM_STAGE_POLICY, maxSubmissionAttempts: 1 },
     });
     expect(getAdmissionFormStageConfigurationError(noVerifier, [form])).toContain('one section');
-    expect(getAdmissionFormStageConfigurationError(noResubmission, [form])).toContain('two attempts');
+    expect(getAdmissionFormStageConfigurationError(noResubmission, [form])).toContain(
+      'two attempts'
+    );
   });
 
   it('rejects a verification section from another form version', () => {

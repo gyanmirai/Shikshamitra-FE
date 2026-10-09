@@ -89,14 +89,12 @@ export function ensureAdmissionFormStageConfiguration(json?: string): string | u
   const configuration = readStageConfiguration(json);
   if (!configuration || configuration.form !== undefined) return json;
   const formDefinitionId =
-    typeof configuration.formDefinitionId === 'string'
-      ? configuration.formDefinitionId.trim()
-      : '';
+    typeof configuration.formDefinitionId === 'string' ? configuration.formDefinitionId.trim() : '';
   if (!formDefinitionId) return json;
   return JSON.stringify({
     ...configuration,
     formDefinitionId,
-    form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+    form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: true },
   });
 }
 

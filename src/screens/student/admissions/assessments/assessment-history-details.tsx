@@ -8,9 +8,11 @@ import { useAssessmentPermissions } from './use-assessment-permissions';
 export function AssessmentHistoryDetails({
   applicationId,
   stageInstanceId,
+  compact = false,
 }: {
   applicationId: string;
   stageInstanceId: string;
+  compact?: boolean;
 }) {
   const permissions = useAssessmentPermissions();
   const query = useGetApplicationAssessmentQuery(
@@ -22,7 +24,7 @@ export function AssessmentHistoryDetails({
   if (query.isLoading) return <Skeleton variant="rounded" height={100} />;
   if (query.isError || !query.currentData) return <AdmissionQueryError onRetry={query.refetch} />;
   return query.currentData.attempts.length ? (
-    <AssessmentAttemptHistory attempts={query.currentData.attempts} />
+    <AssessmentAttemptHistory attempts={query.currentData.attempts} compact={compact} />
   ) : (
     <Alert severity="info">No assessment attempts were recorded for this step.</Alert>
   );

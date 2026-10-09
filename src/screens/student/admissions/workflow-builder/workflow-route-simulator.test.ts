@@ -16,7 +16,7 @@ const stages: AdmissionWorkflowStage[] = [
     id: 'review',
     code: 'REVIEW',
     name: 'Review',
-    stageType: 6,
+    stageType: 1,
     displayOrder: 0,
     isRequired: true,
     allowManualSkip: false,
@@ -55,9 +55,9 @@ const transitions: AdmissionWorkflowTransition[] = [
     priority: 0,
     isDefault: false,
     conditionRuleJson: JSON.stringify({
-      field: 'review.decision',
+      field: 'application.status',
       operator: 'Equals',
-      value: 'reject',
+      value: 'Rejected',
     }),
   },
   {
@@ -75,28 +75,21 @@ describe('workflow route simulator', () => {
       'happy',
       'assessment-failed',
       'documents-missing',
-      'eligibility-failed',
-      'eligibility-exception',
-      'payment-pending',
-      'payment-waived',
-      'review-correction',
+      'fee-unconfirmed',
       'rejected',
       'waitlisted',
-      'offer-declined',
-      'offer-expired',
-      'seat-expired',
     ]);
   });
 
   it('uses the same first-matching-condition then default behavior as runtime routing', () => {
     expect(
-      simulateWorkflowRoute(stages, transitions, { 'review.decision': 'reject' })
+      simulateWorkflowRoute(stages, transitions, { 'application.status': 'Rejected' })
     ).toMatchObject({
       status: 'completed',
       steps: [{ stageId: 'review', transitionId: 'reject-route' }, { stageId: 'rejected' }],
     });
     expect(
-      simulateWorkflowRoute(stages, transitions, { 'review.decision': 'approve' })
+      simulateWorkflowRoute(stages, transitions, { 'application.status': 'Approved' })
     ).toMatchObject({
       status: 'completed',
       steps: [{ stageId: 'review', transitionId: 'approve-route' }, { stageId: 'approved' }],

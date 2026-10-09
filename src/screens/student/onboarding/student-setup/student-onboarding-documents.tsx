@@ -11,7 +11,6 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { StudentSetupLoadingRows } from './student-setup-loading';
-import StudentOnboardingDocumentOverrideDialog from './student-onboarding-document-override-dialog';
 
 type StudentOnboardingDocumentsProps = {
   caseId: string;
@@ -27,9 +26,6 @@ export default function StudentOnboardingDocuments({
   const documentsQuery = useGetStudentOnboardingDocumentsQuery(caseId, { skip: !caseId });
   const [uploadDocument, uploadState] = useUploadStudentOnboardingDocumentMutation();
   const [documentTypeId, setDocumentTypeId] = useState('');
-  const [overrideTarget, setOverrideTarget] = useState<
-    { documentTypeId: string; name: string } | 'all' | null
-  >(null);
   const documents = useMemo(() => documentsQuery.data?.documents ?? [], [documentsQuery.data]);
   const selectedDocument = documents.find((item) => item.documentTypeId === documentTypeId);
 
@@ -70,8 +66,7 @@ export default function StudentOnboardingDocuments({
     <Stack spacing={1}>
       {!enabled && (
         <Typography variant="body2" color="text.secondary">
-          Document uploads are disabled for this case. Required evidence and authorized overrides
-          can still be reviewed.
+          Document uploads are disabled for this case. Required evidence can still be reviewed.
         </Typography>
       )}
       {documents.length ? (
@@ -115,16 +110,6 @@ export default function StudentOnboardingDocuments({
                         ? 'Required'
                         : 'Optional'}
               </Label>
-              {documentsQuery.data?.canOverride && document.isRequired && !satisfied && (
-                <Button
-                  size="small"
-                  color="warning"
-                  disabled={uploadState.isLoading || documentsQuery.isFetching}
-                  onClick={() => setOverrideTarget(document)}
-                >
-                  Override {document.name}
-                </Button>
-              )}
             </Stack>
           );
         })
@@ -194,33 +179,6 @@ export default function StudentOnboardingDocuments({
           </Button>
         </Stack>
       ) : null}
-      {documentsQuery.data?.canOverride &&
-        documents.some(
-          (item) =>
-            item.isRequired &&
-            !item.isValidated &&
-            !item.hasAcceptedAdmissionEvidence &&
-            !item.isOverridden
-        ) && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="warning"
-            sx={{ alignSelf: 'flex-start' }}
-            disabled={uploadState.isLoading || documentsQuery.isFetching}
-            onClick={() => setOverrideTarget('all')}
-          >
-            Override all required documents
-          </Button>
-        )}
-      {overrideTarget && documentsQuery.data?.canOverride && (
-        <StudentOnboardingDocumentOverrideDialog
-          caseId={caseId}
-          concurrencyStamp={documentsQuery.data.concurrencyStamp}
-          document={overrideTarget === 'all' ? undefined : overrideTarget}
-          onClose={() => setOverrideTarget(null)}
-        />
-      )}
     </Stack>
   );
 }

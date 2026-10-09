@@ -70,12 +70,12 @@ describe('assessment workbench URL and action safety', () => {
     expect(
       readAssessmentWorkbench(
         new URLSearchParams(
-          'assessmentTab=applicants&assessmentQueue=review&assessmentSession=s1&assessmentPage=2&assessmentSize=100&assessmentSort=applicantName&assessmentDirection=asc&assessmentSearch=Sam'
+          'assessmentTab=applicants&assessmentQueue=result&assessmentSession=s1&assessmentPage=2&assessmentSize=100&assessmentSort=applicantName&assessmentDirection=asc&assessmentSearch=Sam'
         )
       )
     ).toMatchObject({
       tab: 'applicants',
-      queue: 'review',
+      queue: 'result',
       sessionId: 's1',
       page: 2,
       size: 100,
@@ -87,7 +87,7 @@ describe('assessment workbench URL and action safety', () => {
   it('intersects capabilities and grants rather than trusting queue labels', () => {
     expect(getAssessmentRowActions(row, all)).toEqual(['book']);
     expect(getAssessmentRowActions(row, getAssessmentPermissions([]))).toEqual([]);
-    expect(getAssessmentRowActions({ ...row, queue: 'review' }, all)).toEqual(['book']);
+    expect(getAssessmentRowActions({ ...row, queue: 'result' }, all)).toEqual(['book']);
   });
   it('never offers mutations for historical or disabled stages', () => {
     expect(getAssessmentRowActions({ ...row, isActive: false }, all)).toEqual([]);
@@ -95,4 +95,14 @@ describe('assessment workbench URL and action safety', () => {
       getAssessmentRowActions({ ...row, assessment: { ...assessmentResponse, policy: null } }, all)
     ).toEqual([]);
   });
+});
+
+it('rejects the retired review queue URL and never exposes result review actions', () => {
+  expect(readAssessmentWorkbench(new URLSearchParams('assessmentQueue=review')).queue).toBe('all');
+  expect(
+    getAssessmentRowActions(
+      { ...row, assessment: { ...row.assessment, canBook: false, canReview: true } },
+      all
+    )
+  ).not.toContain('review');
 });

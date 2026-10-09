@@ -3,18 +3,12 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 
 import { MenuItem, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
-import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
-import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
-import { readAdmissionPaymentPolicy } from 'src/redux/student/admissions/admission-payment-policy';
 import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
-import { readAdmissionEligibilityPolicy } from 'src/redux/student/admissions/admission-eligibility-policy';
 
-import { isReviewOutcomeCondition } from './workflow-review-route';
 import { isDocumentOutcomeCondition } from './workflow-document-route';
+import { isApplicationStageType } from '../workflow-stage-configuration';
 import { isAssessmentOutcomeCondition } from './workflow-assessment-route';
-import { isEligibilityOutcomeCondition } from './workflow-eligibility-route';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -51,41 +45,19 @@ export function WorkflowTransitionStageSelect({
           const supportsDocuments =
             selectedStage?.stageType === 5 &&
             readAdmissionDocumentPolicy(selectedStage.configurationJson)?.enabled === true;
-          const supportsEligibility =
-            selectedStage?.stageType === 3 &&
-            readAdmissionEligibilityPolicy(selectedStage.configurationJson)?.enabled === true;
-          const supportsReview =
-            selectedStage?.stageType === 6 &&
-            readAdmissionReviewPolicy(selectedStage.configurationJson)?.enabled === true;
-          const guidedFieldByType: Partial<Record<number, string>> = {
-            4: 'payment.status',
-            8: 'offer.status',
-            9: 'seat.status',
-          };
-          const selectedGuidedField = selectedStage
-            ? guidedFieldByType[selectedStage.stageType]
-            : undefined;
-          const supportsGuidedOutcome =
-            (selectedStage?.stageType === 4 &&
-              readAdmissionPaymentPolicy(selectedStage.configurationJson)?.enabled === true) ||
-            (selectedStage?.stageType === 8 &&
-              readAdmissionOfferPolicy(selectedStage.configurationJson)?.enabled === true) ||
-            (selectedStage?.stageType === 9 &&
-              readAdmissionSeatPolicy(selectedStage.configurationJson)?.enabled === true);
           const guidedOutcomeChanged =
             [
               'inquiry.management.outcome',
-              'payment.status',
+              'eligibility.outcome',
+              'review.decision',
               'offer.status',
               'seat.status',
-            ].includes(formik.values.conditionField) &&
-            (!supportsGuidedOutcome || formik.values.conditionField !== selectedGuidedField);
+            ].includes(formik.values.conditionField) ||
+            (formik.values.conditionField === 'payment.status' && selectedStage?.stageType !== 4);
           if (
             field === 'fromStageId' &&
             ((!supportsAssessment && isAssessmentOutcomeCondition(formik.values)) ||
               (!supportsDocuments && isDocumentOutcomeCondition(formik.values)) ||
-              (!supportsEligibility && isEligibilityOutcomeCondition(formik.values)) ||
-              (!supportsReview && isReviewOutcomeCondition(formik.values)) ||
               guidedOutcomeChanged)
           ) {
             formik.setValues({
@@ -105,7 +77,11 @@ export function WorkflowTransitionStageSelect({
         helperText={touched && error}
       >
         {stages
-          .filter((stage) => field !== 'toStageId' || stage.id !== formik.values.fromStageId)
+          .filter(
+            (stage) =>
+              (isApplicationStageType(stage.stageType) || stage.id === formik.values[field]) &&
+              (field !== 'toStageId' || stage.id !== formik.values.fromStageId)
+          )
           .map((stage) => (
             <MenuItem key={stage.id} value={stage.id}>
               {stage.name}

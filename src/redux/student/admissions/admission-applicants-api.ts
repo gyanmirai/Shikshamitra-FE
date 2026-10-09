@@ -75,7 +75,10 @@ export const admissionApplicantsApi = api.injectEndpoints({
       query: (id) => `/student/enrollment/admissions/applicants/${id}`,
       transformResponse: (response: Result<AdmissionApplicant360> | AdmissionApplicant360) =>
         unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionApplicant],
+      providesTags: [
+        studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionApplication,
+      ],
     }),
     updateAdmissionApplicantProfile: builder.mutation<
       AdmissionApplicantProfile,

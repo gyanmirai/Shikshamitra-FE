@@ -17,10 +17,19 @@ export type StudentRecordProfile = {
   dateOfBirth: string | null;
   gender: number | null;
   recordsAccess?: 'Full' | 'Summary';
-  entrySource?: 'CompletedOnboarding' | 'LegacyOverride' | 'Provisioning';
+  entrySource?: 'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'Provisioning';
   placementEditable?: boolean;
   maskedFields?: string[];
-  enrollmentHistory?: { id: string; academicYearId: string; academicYearName?: string | null; standardName?: string | null; divisionName?: string | null; rollNumber?: number | null; isActive: boolean; onboardingCaseId?: string | null }[];
+  enrollmentHistory?: {
+    id: string;
+    academicYearId: string;
+    academicYearName?: string | null;
+    standardName?: string | null;
+    divisionName?: string | null;
+    rollNumber?: number | null;
+    isActive: boolean;
+    onboardingCaseId?: string | null;
+  }[];
 };
 
 const studentGuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;

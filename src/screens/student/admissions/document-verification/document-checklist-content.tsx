@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { DocumentRequirementCard } from './document-requirement-card';
+import { DocumentRequirementTable } from './document-requirement-table';
 
 import type { DocumentAction } from './document-action-model';
 import type { useDocumentPermissions } from './use-document-permissions';
@@ -17,12 +18,14 @@ export function DocumentChecklistContent({
   disabled,
   readOnly,
   onAction,
+  layout = 'cards',
 }: {
   summary: ApplicationDocumentVerification;
   permissions: ReturnType<typeof useDocumentPermissions>;
   disabled: boolean;
   readOnly: boolean;
   onAction: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
+  layout?: 'cards' | 'table';
 }) {
   const [showNotApplicable, setShowNotApplicable] = useState(false);
   const notApplicable = summary.requirements.filter((item) => item.status === 'notRequired');
@@ -70,6 +73,15 @@ export function DocumentChecklistContent({
       )}
       {summary.requirements.length === 0 ? (
         <Alert severity="info">No document requirements are configured for this step.</Alert>
+      ) : layout === 'table' ? (
+        <DocumentRequirementTable
+          summary={summary}
+          requirements={visible}
+          permissions={permissions}
+          disabled={disabled}
+          readOnly={readOnly}
+          onAction={onAction}
+        />
       ) : (
         visible.map((requirement) => (
           <DocumentRequirementCard

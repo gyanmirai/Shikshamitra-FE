@@ -1,42 +1,19 @@
-import { it, expect, describe } from 'vitest';
-import userEvent from '@testing-library/user-event';
-import { screen, waitFor } from '@testing-library/react';
+import { it, vi, expect } from 'vitest';
+import { screen } from '@testing-library/react';
 
-import { eligibilityRouteJson, renderEligibilityRoute } from './eligibility-route-test-fixture';
+import { renderRetiredRoute } from './stage-retirement-test-fixture';
 
-function setup(conditionRuleJson?: string) {
-  return { user: userEvent.setup(), ...renderEligibilityRoute(conditionRuleJson) };
-}
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-describe('eligibility route source ownership', { timeout: 15000 }, () => {
-  it.each([
-    [eligibilityRouteJson('ineligible')],
-    [eligibilityRouteJson('needsInformation')],
-    ['{"field":"application.CATEGORY","operator":"Equals","value":"transfer"}'],
-    ['{"field":"eligibility.status","operator":"NotEquals","value":"eligible"}'],
-  ] as const)('keeps the path attached to the stage that owns it: %s', async (condition) => {
-    const { user, onSave } = setup(condition);
-    expect(screen.getByRole('heading', { name: 'Eligibility check' })).toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    const saved = onSave.mock.calls[0][0];
-    expect(saved.fromStageId).toBe('eligibility-1');
-    expect(saved.isDefault).toBe(false);
-    expect(JSON.parse(saved.conditionRuleJson)).toEqual(JSON.parse(condition));
-  });
-
-  it('retains a compatible eligibility outcome preset', async () => {
-    const condition = eligibilityRouteJson('exceptionApproved');
-    const { user, onSave } = setup(condition);
-    expect(
-      screen.getByRole('combobox', { name: 'Continue after eligibility check' })
-    ).toHaveTextContent('Exception approved');
-    await user.click(screen.getByRole('button', { name: 'Save path' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    const saved = onSave.mock.calls[0][0];
-    expect(saved.fromStageId).toBe('eligibility-1');
-    expect(saved.isDefault).toBe(false);
-    expect(JSON.parse(saved.conditionRuleJson)).toEqual(JSON.parse(condition));
-  });
+// Retired stage presets must not remain an alternate entry point into removed functionality.
+it('removes Eligibility outcome presets and blocks configuring a retired-stage route', () => {
+  const { onSave } = renderRetiredRoute(3, 'Eligibility');
+  expect(
+    screen.queryByRole('combobox', { name: 'Continue after eligibility check' })
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText('Replace retired stage types before configuring their next steps.')
+  ).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save path' })).toBeDisabled();
+  expect(onSave).not.toHaveBeenCalled();
 });

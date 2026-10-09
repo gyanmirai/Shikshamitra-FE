@@ -1,5 +1,12 @@
+import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
+import type { ApplicationDocumentVerification } from 'src/redux/student/admissions/admission-document-types';
+import type {
+  AdmissionFeeSelection,
+  AdmissionFeeStructureCandidate,
+} from 'src/redux/student/admissions/admission-fee-selection-types';
+
 import { api } from 'src/redux/service';
-import { studentOnboardingType } from 'src/redux/tagTypes';
+import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import type {
   StudentOnboardingCase,
@@ -24,12 +31,22 @@ import type {
 type Result<T> = { data?: T };
 
 export type StudentPortalAccount = {
-  studentId: string; studentName: string; userId: string;
-  accountType: 'student' | 'guardian'; relationship: string;
-  email: string; emailConfirmed: boolean; isActive: boolean;
+  studentId: string;
+  studentName: string;
+  userId: string;
+  accountType: 'student' | 'guardian';
+  relationship: string;
+  email: string;
+  emailConfirmed: boolean;
+  isActive: boolean;
 };
 
 export type StudentOnboardingCampus = { id: string; code: string; name: string };
+
+export type OnboardingAvailableOffering = AdmissionOfferingListItem & {
+  academicYearId: string;
+  workflowDefinitionId?: string | null;
+};
 
 export type StudentOnboardingRollPreview = {
   schoolAssignmentMode: 'manual' | 'automatic' | 'both';
@@ -52,32 +69,256 @@ const caseTags = (id: string) => [
 
 export const studentOnboardingApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getStudentCredentialEmails: builder.query<StudentCredentialEmail[], string>({
-      query: id => `/student/onboarding/${id}/credential-emails`,
-      transformResponse: (response: Result<StudentCredentialEmail[]> | StudentCredentialEmail[]) => unwrap(response),
-      providesTags: (_result, _error, id) => [{ type: studentOnboardingType.onboardingCaseDetail, id }],
+    getAvailableOnboardingOfferings: builder.query<OnboardingAvailableOffering[], string | void>({
+      query: (academicYearId) => ({
+        url: '/student/onboarding/settings/offerings',
+        params: { academicYearId },
+      }),
+      transformResponse: (
+        response: Result<OnboardingAvailableOffering[]> | OnboardingAvailableOffering[]
+      ) => unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'OFFERINGS' }],
     }),
-    sendStudentCredentialEmail: builder.mutation<StudentCredentialEmail, { id: string; accountType: 'student' | 'guardian'; concurrencyStamp?: string | null }>({
-      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/credential-emails`, method: 'POST', body }),
-      transformResponse: (response: Result<StudentCredentialEmail> | StudentCredentialEmail) => unwrap(response),
+    reviewStudentOnboardingRequirements: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/onboarding/${id}/requirements/review`,
+        method: 'POST',
+        params: { concurrencyStamp },
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
       invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
-    overrideStudentOnboardingDocuments: builder.mutation<StudentOnboardingDocuments, { caseId: string; documentTypeIds: string[]; overrideAll: boolean; reason: string; concurrencyStamp?: string | null }>({
-      query: ({ caseId, ...body }) => ({ url: `/student/onboarding/${caseId}/documents/override`, method: 'POST', body }),
-      transformResponse: (response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments) => unwrap(response),
-      invalidatesTags: (_result, _error, { caseId }) => [...caseTags(caseId), { type: studentOnboardingType.onboardingDocuments, id: caseId }],
+    getStudentOnboardingWorkflowDocuments: builder.query<ApplicationDocumentVerification[], string>(
+      {
+        query: (id) => `/student/onboarding/${id}/workflow-documents`,
+        transformResponse: (
+          response: Result<ApplicationDocumentVerification[]> | ApplicationDocumentVerification[]
+        ) => unwrap(response),
+        providesTags: (_result, _error, id) => [
+          { type: studentOnboardingType.onboardingCaseDetail, id },
+        ],
+      }
+    ),
+    uploadStudentOnboardingWorkflowDocument: builder.mutation<
+      ApplicationDocumentVerification,
+      {
+        id: string;
+        stageId: string;
+        code: string;
+        concurrencyStamp: string;
+        file: File;
+        notes?: string;
+      }
+    >({
+      query: ({ id, stageId, code, concurrencyStamp, file, notes }) => {
+        const body = new FormData();
+        body.append('file', file);
+        body.append('concurrencyStamp', concurrencyStamp);
+        if (notes) body.append('notes', notes);
+        return {
+          url: `/student/onboarding/${id}/workflow-documents/${stageId}/${encodeURIComponent(code)}/upload`,
+          method: 'POST',
+          body,
+        };
+      },
+      transformResponse: (
+        response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    recordStudentOnboardingWorkflowOriginal: builder.mutation<
+      ApplicationDocumentVerification,
+      { id: string; stageId: string; code: string; concurrencyStamp: string; notes: string }
+    >({
+      query: ({ id, stageId, code, ...body }) => ({
+        url: `/student/onboarding/${id}/workflow-documents/${stageId}/${encodeURIComponent(code)}/original`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    reviewStudentOnboardingWorkflowDocument: builder.mutation<
+      ApplicationDocumentVerification,
+      {
+        id: string;
+        evidenceId: string;
+        concurrencyStamp: string;
+        decision: 'accepted' | 'rejected';
+        reason?: string;
+      }
+    >({
+      query: ({ id, evidenceId, ...body }) => ({
+        url: `/student/onboarding/${id}/workflow-documents/evidence/${evidenceId}/review`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    assignStudentOnboardingGr: builder.mutation<
+      StudentOnboardingCase,
+      {
+        id: string;
+        concurrencyStamp?: string | null;
+        numberSeriesId: string;
+        manualValue?: string;
+        reason?: string;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/gr-number`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => [
+        ...caseTags(id),
+        { type: studentOnboardingType.onboardingIdentifierSeries, id },
+      ],
+    }),
+    assignStudentOnboardingRoll: builder.mutation<
+      StudentOnboardingCase,
+      {
+        id: string;
+        concurrencyStamp?: string | null;
+        rollNumber: number;
+        rollAssignmentMode?: 'manual' | 'automatic';
+        reason?: string;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/roll-number`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    setStudentOnboardingIdentifierLock: builder.mutation<
+      void,
+      {
+        academicYearId: string;
+        divisionId: string;
+        identifierType: 'gr' | 'roll';
+        isLocked: boolean;
+        reason?: string;
+      }
+    >({
+      query: (body) => ({ url: '/student/onboarding/identifier-locks', method: 'POST', body }),
+      invalidatesTags: [
+        studentOnboardingType.onboardingCaseDetail,
+        studentOnboardingType.onboardingCaseList,
+      ],
+    }),
+    getStudentOnboardingFeeStructure: builder.query<AdmissionFeeSelection, string>({
+      query: (id) => `/student/onboarding/${id}/fee-structure`,
+      transformResponse: (response: Result<AdmissionFeeSelection> | AdmissionFeeSelection) =>
+        unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    getStudentOnboardingFeeCandidates: builder.query<AdmissionFeeStructureCandidate[], string>({
+      query: (id) => `/student/onboarding/${id}/fee-structure/candidates`,
+      transformResponse: (
+        response: Result<AdmissionFeeStructureCandidate[]> | AdmissionFeeStructureCandidate[]
+      ) => unwrap(response),
+    }),
+    confirmStudentOnboardingFeeStructure: builder.mutation<
+      AdmissionFeeSelection,
+      { id: string; concurrencyStamp: string; structureId: string; optionalHeadIds: string[] }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/fee-structure`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: Result<AdmissionFeeSelection> | AdmissionFeeSelection) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    getStudentCredentialEmails: builder.query<StudentCredentialEmail[], string>({
+      query: (id) => `/student/onboarding/${id}/credential-emails`,
+      transformResponse: (response: Result<StudentCredentialEmail[]> | StudentCredentialEmail[]) =>
+        unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    sendStudentCredentialEmail: builder.mutation<
+      StudentCredentialEmail,
+      { id: string; accountType: 'student' | 'guardian'; concurrencyStamp?: string | null }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/credential-emails`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentCredentialEmail> | StudentCredentialEmail) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    overrideStudentOnboardingDocuments: builder.mutation<
+      StudentOnboardingDocuments,
+      {
+        caseId: string;
+        documentTypeIds: string[];
+        overrideAll: boolean;
+        reason: string;
+        concurrencyStamp?: string | null;
+      }
+    >({
+      query: ({ caseId, ...body }) => ({
+        url: `/student/onboarding/${caseId}/documents/override`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { caseId }) => [
+        ...caseTags(caseId),
+        { type: studentOnboardingType.onboardingDocuments, id: caseId },
+      ],
     }),
     getStudentPortalAccounts: builder.query<StudentPortalAccount[], string>({
-      query: id => `/student/onboarding/${id}/portal-accounts`,
-      transformResponse: (response: Result<StudentPortalAccount[]> | StudentPortalAccount[]) => unwrap(response),
-      providesTags: (_result, _error, id) => [{ type: studentOnboardingType.onboardingCaseDetail, id }],
+      query: (id) => `/student/onboarding/${id}/portal-accounts`,
+      transformResponse: (response: Result<StudentPortalAccount[]> | StudentPortalAccount[]) =>
+        unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
     }),
-    provisionStudentPortalAccount: builder.mutation<StudentPortalAccount, {
-      id: string; accountType: 'student' | 'guardian'; relationship: string; email: string;
-      relationshipVerified: boolean; linkExistingGuardian: boolean; concurrencyStamp?: string | null;
-    }>({
-      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/portal-accounts`, method: 'POST', body }),
-      transformResponse: (response: Result<StudentPortalAccount> | StudentPortalAccount) => unwrap(response),
+    provisionStudentPortalAccount: builder.mutation<
+      StudentPortalAccount,
+      {
+        id: string;
+        accountType: 'student' | 'guardian';
+        relationship: string;
+        email: string;
+        relationshipVerified: boolean;
+        linkExistingGuardian: boolean;
+        concurrencyStamp?: string | null;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/portal-accounts`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentPortalAccount> | StudentPortalAccount) =>
+        unwrap(response),
       invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
     getStudentOnboardingCases: builder.query<
@@ -97,7 +338,10 @@ export const studentOnboardingApi = api.injectEndpoints({
       ],
     }),
     getStudentOnboardingFilterOptions: builder.query<StudentOnboardingFilterOptions, string>({
-      query: (academicYearId) => ({ url: '/student/onboarding/filter-options', params: { academicYearId } }),
+      query: (academicYearId) => ({
+        url: '/student/onboarding/filter-options',
+        params: { academicYearId },
+      }),
       transformResponse: (
         response: Result<StudentOnboardingFilterOptions> | StudentOnboardingFilterOptions
       ) => unwrap(response),
@@ -105,8 +349,9 @@ export const studentOnboardingApi = api.injectEndpoints({
     }),
     getAvailableOnboardingCampuses: builder.query<StudentOnboardingCampus[], void>({
       query: () => '/student/onboarding/settings/campuses',
-      transformResponse: (response: Result<StudentOnboardingCampus[]> | StudentOnboardingCampus[]) =>
-        unwrap(response),
+      transformResponse: (
+        response: Result<StudentOnboardingCampus[]> | StudentOnboardingCampus[]
+      ) => unwrap(response),
       providesTags: [{ type: studentOnboardingType.onboardingFilterOptions, id: 'CAMPUSES' }],
     }),
     getStudentOnboardingAnalytics: builder.query<StudentOnboardingAnalytics, void>({
@@ -171,9 +416,17 @@ export const studentOnboardingApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
-    setStudentOnboardingRoute: builder.mutation<StudentOnboardingCase, { id: string; admissionRoute: string; concurrencyStamp?: string | null }>({
-      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/admission-route`, method: 'PUT', body }),
-      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) => unwrap(response),
+    setStudentOnboardingRoute: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; admissionRoute: string; concurrencyStamp?: string | null }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/admission-route`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
       invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
     updateStudentOnboardingStep: builder.mutation<
@@ -214,10 +467,21 @@ export const studentOnboardingApi = api.injectEndpoints({
     }),
     previewStudentOnboardingRoll: builder.mutation<
       StudentOnboardingRollPreview,
-      { id: string; rollNumber?: number; rollAssignmentMode?: 'manual' | 'automatic'; reason?: string }
+      {
+        id: string;
+        rollNumber?: number;
+        rollAssignmentMode?: 'manual' | 'automatic';
+        reason?: string;
+      }
     >({
-      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/roll-preview`, method: 'POST', body }),
-      transformResponse: (response: Result<StudentOnboardingRollPreview> | StudentOnboardingRollPreview) => unwrap(response),
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/roll-preview`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentOnboardingRollPreview> | StudentOnboardingRollPreview
+      ) => unwrap(response),
     }),
     allocateStudentOnboardingIdentifier: builder.mutation<
       StudentOnboardingCase,
@@ -265,6 +529,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => [
         ...caseTags(id),
+        { type: studentType.student, id: 'RECORDS-DIRECTORY' },
         { type: studentOnboardingType.onboardingServiceHandoffs, id },
       ],
     }),
@@ -370,9 +635,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         params: params ?? undefined,
       }),
       transformResponse: (
-        response:
-          | Result<StudentOnboardingSettingsRecord[]>
-          | StudentOnboardingSettingsRecord[]
+        response: Result<StudentOnboardingSettingsRecord[]> | StudentOnboardingSettingsRecord[]
       ) => unwrap(response),
       providesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
     }),
@@ -505,6 +768,18 @@ export const studentOnboardingApi = api.injectEndpoints({
 });
 
 export const {
+  useGetAvailableOnboardingOfferingsQuery,
+  useReviewStudentOnboardingRequirementsMutation,
+  useGetStudentOnboardingWorkflowDocumentsQuery,
+  useUploadStudentOnboardingWorkflowDocumentMutation,
+  useRecordStudentOnboardingWorkflowOriginalMutation,
+  useReviewStudentOnboardingWorkflowDocumentMutation,
+  useAssignStudentOnboardingGrMutation,
+  useAssignStudentOnboardingRollMutation,
+  useSetStudentOnboardingIdentifierLockMutation,
+  useGetStudentOnboardingFeeStructureQuery,
+  useGetStudentOnboardingFeeCandidatesQuery,
+  useConfirmStudentOnboardingFeeStructureMutation,
   useGetStudentCredentialEmailsQuery,
   useSendStudentCredentialEmailMutation,
   useOverrideStudentOnboardingDocumentsMutation,

@@ -2,8 +2,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { usePathname } from 'src/routes/hooks';
-import { useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { hasNavigationPermission } from 'src/utils/permissions';
 
 import { NavItem } from './nav-item';
@@ -52,9 +53,19 @@ export function NavList({
   // Route ancestry is independent of manually expanded groups. Finance's menu
   // hierarchy does not mirror its URL hierarchy (Settings even has no path).
   const hasActiveDescendant = Boolean(data.children && recur(data.children));
+  const { value: activeMenuCollapsed, onToggle, onFalse } = useBoolean();
+
+  // Manual collapse applies to the current page only; a new route reveals its ancestry.
+  useEffect(() => {
+    onFalse();
+  }, [removeTrailingSlash, onFalse]);
 
   const handleToggleMenu = () => {
-    if (!data.children || !setCurrentOpenMenu || hasActiveDescendant) return;
+    if (!data.children || !setCurrentOpenMenu) return;
+    if (hasActiveDescendant) {
+      onToggle();
+      return;
+    }
     const isOpen = (currentOpenMenu || []).some((m) => m.action === data._action);
     if (isOpen) {
       setCurrentOpenMenu((prev) => prev.filter((m) => m.action !== data._action));
@@ -70,8 +81,9 @@ export function NavList({
   //   setOpenMenu(false);
   // }, []);
 
-  const isOpen =
-    hasActiveDescendant || (currentOpenMenu || []).some((m) => m.action === data._action);
+  const isOpen = hasActiveDescendant
+    ? !activeMenuCollapsed
+    : (currentOpenMenu || []).some((m) => m.action === data._action);
   const renderNavItem = (
     <NavItem
       render={render}
@@ -81,10 +93,11 @@ export function NavList({
       title={data.title}
       caption={data.caption}
       depth={depth}
-      active={active || isOpen}
+      active={active || hasActiveDescendant || isOpen}
       disabled={data.disabled}
       hasChild={!!data.children}
       open={isOpen}
+      aria-expanded={data.children ? isOpen : undefined}
       externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
       preserveQueryParams={data.preserveQueryParams}

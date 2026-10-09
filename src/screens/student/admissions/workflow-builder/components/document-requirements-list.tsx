@@ -1,11 +1,10 @@
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/admission-document-settings-api';
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Stack, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import { createDocumentRequirement } from 'src/redux/student/admissions/admission-document-policy';
 
 import { DocumentRequirementItem } from './document-requirement-item';
@@ -22,20 +21,19 @@ type Props = {
   requirements: AdmissionDocumentRequirementPolicy[];
   onChange: (requirements: AdmissionDocumentRequirementPolicy[]) => void;
   readOnly: boolean;
-  forms: AdmissionForm[];
   documentTypes: AdmissionDocumentTypeOption[];
 };
 export function DocumentRequirementsList({ requirements, onChange, readOnly, ...props }: Props) {
+  const standardDocumentAnchor = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<{
     index: number;
     value: AdmissionDocumentRequirementPolicy;
   } | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [removing, setRemoving] = useState<number | null>(null);
-  const addCustom = () => {
-    const codes = new Set(requirements.map((item) => item.code));
-    let next = 1;
-    while (codes.has(`DOCUMENT_${next}`)) next += 1;
-    setEditing({ index: -1, value: createDocumentRequirement(`DOCUMENT_${next}`) });
+  const addCustom = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+    setEditing({ index: -1, value: createDocumentRequirement('') });
   };
   return (
     <Stack spacing={1}>
@@ -51,32 +49,39 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
       )}
       {requirements.map((item, index) => (
         <DocumentRequirementItem
-          key={item.code}
+          key={`${item.code}-${index}`}
           item={item}
           readOnly={readOnly}
-          onEdit={() => setEditing({ index, value: item })}
+          onEdit={(event) => {
+            setAnchorEl(event.currentTarget);
+            setEditing({ index, value: item });
+          }}
           onRemove={() => setRemoving(index)}
         />
       ))}
       {!readOnly && (
         <>
-          <CustomSelect
-            size="small"
-            fullWidth
-            label="Add a standard document"
-            value=""
-            options={presets}
-            disabled={requirements.length >= 30}
-            disabledValues={requirements.map((item) => item.code)}
-            onChange={(code) => {
-              const preset = presets.find((item) => item.value === code);
-              if (preset)
-                setEditing({
-                  index: -1,
-                  value: createDocumentRequirement(preset.value, preset.label),
-                });
-            }}
-          />
+          <Box ref={standardDocumentAnchor}>
+            <CustomSelect
+              size="small"
+              fullWidth
+              label="Add a standard document"
+              value=""
+              options={presets}
+              disabled={requirements.length >= 30}
+              disabledValues={requirements.map((item) => item.code)}
+              onChange={(code) => {
+                const preset = presets.find((item) => item.value === code);
+                if (preset) {
+                  setAnchorEl(standardDocumentAnchor.current);
+                  setEditing({
+                    index: -1,
+                    value: createDocumentRequirement(preset.value, preset.label),
+                  });
+                }
+              }}
+            />
+          </Box>
           <Button
             size="small"
             variant="outlined"
@@ -91,6 +96,7 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
         <DocumentRequirementDialog
           {...props}
           initial={editing.value}
+          anchorEl={anchorEl}
           existingCodes={requirements
             .filter((_, index) => index !== editing.index)
             .map((item) => item.code)}

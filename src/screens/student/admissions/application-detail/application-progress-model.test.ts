@@ -12,8 +12,8 @@ import {
   hasManagedStageWorkspace,
   canRetrySubmittedFormHandoff,
   canRequestNormalStageAdvance,
-  canStageTypeCompleteForStatus,
   canCompleteStageFromProgress,
+  canStageTypeCompleteForStatus,
 } from './application-progress-model';
 
 const stage = (overrides: Partial<AdmissionApplicationStage>): AdmissionApplicationStage => ({
@@ -61,27 +61,28 @@ describe('application progress model', () => {
     expect(canCompleteStageFromProgress(stage({ stageType: 1 }), 0, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 1, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 6, true)).toBe(true);
-    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 7, true)).toBe(true);
-    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 8, true)).toBe(true);
-    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 5, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 7, true)).toBe(false);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 8, true)).toBe(false);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 5, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 3, true)).toBe(true);
     expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 0, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 1, true)).toBe(true);
-    expect(getStageGuidance(stage({ stageType: 7 }), 1)).toContain('approve or reject');
+    expect(getStageGuidance(stage({ stageType: 7 }), 1)).toContain('approve, waitlist, or reject');
+    expect(getStageGuidance(stage({ stageType: 7 }), 5)).toContain('waitlisted');
   });
 
-  it('keeps assessment and custom-stage exceptions aligned with the backend', () => {
+  it('preserves assessment entry and existing custom-stage completion', () => {
     expect(canStageTypeCompleteForStatus(stage({ stageType: 2 }), 0)).toBe(true);
     expect(canStageTypeCompleteForStatus(stage({ stageType: 2 }), 3)).toBe(false);
     expect(canStageTypeCompleteForStatus(stage({ stageType: 11 }), 0)).toBe(true);
   });
 
-  it('leaves status ownership with managed payment, review, offer, and seat runtimes', () => {
+  it('supports fee confirmation while rejecting retired review stage completion', () => {
     expect(
       canRequestNormalStageAdvance(stage({ stageType: 4, paymentStageEnabled: true }), 0)
     ).toBe(true);
     expect(canRequestNormalStageAdvance(stage({ stageType: 6, reviewEnabled: true }), 3)).toBe(
-      true
+      false
     );
     expect(canRequestNormalStageAdvance(stage({ stageType: 5 }), 0)).toBe(false);
   });
@@ -104,8 +105,14 @@ describe('application progress model', () => {
     ).toBe(true);
     expect(isAdmissionDecisionStage(stage({ stageType: 5 }))).toBe(false);
     expect(isAdmissionDecisionStage(stage({ stageType: 6 }))).toBe(false);
-    expect(isAdmissionDecisionStage(stage({ stageType: 6, reviewEnabled: true }))).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 6, reviewEnabled: true }))).toBe(false);
     expect(isAdmissionDecisionStage(stage({ stageType: 7 }))).toBe(true);
+    expect(hasManagedStageWorkspace(stage({ stageType: 4, paymentStageEnabled: false }))).toBe(
+      true
+    );
+    expect(
+      canCompleteStageFromProgress(stage({ stageType: 4, paymentStageEnabled: false }), 1, true)
+    ).toBe(false);
     expect(isAdmissionDecisionStage(stage({ stageType: 10 }))).toBe(true);
   });
 });

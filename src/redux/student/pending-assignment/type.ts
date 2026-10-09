@@ -14,6 +14,7 @@ export interface PendingAssignmentStudent {
   admissionDate: string | null;
   formNo: string;
   grNo: number | null;
+  grNumber?: string | null;
   rollNo: number | null;
   academicYearName: string;
   academicMediumName: string;

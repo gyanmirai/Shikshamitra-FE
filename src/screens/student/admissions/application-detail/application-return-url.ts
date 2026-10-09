@@ -10,7 +10,11 @@ export function getApplicationReturnUrl(value: string | null): string {
   ) {
     return fallback;
   }
-  if (![pipeline, assessments].some((path) => value === path || value.startsWith(`${path}?`)))
+  if (
+    ![fallback, pipeline, assessments].some(
+      (path) => value === path || value.startsWith(`${path}?`)
+    )
+  )
     return fallback;
   return value;
 }

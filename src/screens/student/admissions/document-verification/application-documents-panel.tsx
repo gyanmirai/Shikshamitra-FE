@@ -23,6 +23,7 @@ export function ApplicationDocumentsPanel({
   onComplete,
   historical = false,
   disabled = false,
+  layout = 'cards',
 }: {
   applicationId: string;
   stage: AdmissionApplicationStage;
@@ -31,6 +32,7 @@ export function ApplicationDocumentsPanel({
   onComplete?: () => void;
   historical?: boolean;
   disabled?: boolean;
+  layout?: 'cards' | 'table';
 }) {
   const permissions = useDocumentPermissions();
   const query = useGetApplicationDocumentsQuery(
@@ -71,6 +73,7 @@ export function ApplicationDocumentsPanel({
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing document checklist" />}
             <DocumentChecklistContent
+              layout={layout}
               summary={summary}
               permissions={permissions}
               disabled={disabled || query.isFetching || advancing}
@@ -80,6 +83,7 @@ export function ApplicationDocumentsPanel({
             {!historical && summary.isActive && canAdvance && (
               <Stack direction="row">
                 <Button
+                  size="small"
                   variant="contained"
                   disabled={!summary.canComplete || query.isFetching || advancing}
                   onClick={() => onComplete?.()}

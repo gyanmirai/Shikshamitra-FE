@@ -33,7 +33,8 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
   const canCreate = canManage && hasGrantedPermission(permissions, 'AbpIdentity.Users.Create');
   const canLink = hasGrantedPermission(permissions, 'AbpIdentity.Users.Update');
   const required = (handoffs.data ?? []).filter(item => ['student-account', 'guardian-account'].includes(item.serviceKey));
-  const nextAccount = required.find(item => !accounts.data?.some(account => `${account.accountType}-account` === item.serviceKey)) ?? required[0];
+  const missingAccounts = required.filter(item => !accounts.data?.some(account => `${account.accountType}-account` === item.serviceKey));
+  const nextAccount = missingAccounts[0] ?? required[0];
   const initialAccountType = nextAccount?.serviceKey === 'guardian-account' ? 'guardian' : 'student';
   const formik = useFormik({
     enableReinitialize: true,
@@ -70,7 +71,7 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
         {!account.emailConfirmed && ' Owner email verification is pending.'}
       </Alert>)}
       {!required.length && !handoffs.isFetching && <Typography variant="body2">No portal accounts are required by this case’s saved settings.</Typography>}
-      {!!required.length && !closed && <>
+      {!!missingAccounts.length && !closed && <>
         <Alert severity="info" variant="outlined">Use the selected person’s saved profile email. Confirm it belongs to them. Credential emails follow the saved school settings and readiness checks.</Alert>
         {!canCreate && <Alert severity="warning">An authorized identity administrator must create the required accounts.</Alert>}
         <Stack component="form" spacing={1} onSubmit={formik.handleSubmit}>

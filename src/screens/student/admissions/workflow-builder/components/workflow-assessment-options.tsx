@@ -1,7 +1,5 @@
 import type { AdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomAccordion from 'src/components/custom-accordian';
 import { Grid, Stack, Switch, TextField, FormControlLabel } from '@mui/material';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
@@ -13,10 +11,14 @@ type Props = {
 };
 
 export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props) {
-  const attempts = useBoolean();
   const invalidAttempts =
     !Number.isInteger(policy.maxAttempts) || policy.maxAttempts < 1 || policy.maxAttempts > 10;
   const options = [
+    {
+      field: 'schedulingEnabled',
+      label: 'Schedule an entrance exam',
+      help: 'Book an exam session before recording the assessment result. Turn off to record a result directly.',
+    },
     {
       field: 'attendanceRequired',
       label: 'Require attendance',
@@ -26,11 +28,6 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
       field: 'scoringEnabled',
       label: 'Calculate the result from marks',
       help: 'Turn off to let authorized staff record the assessment outcome directly.',
-    },
-    {
-      field: 'reviewRequired',
-      label: 'Require result review',
-      help: 'Another staff member with assessment review access must approve the recorded result.',
     },
   ] as const;
 
@@ -104,41 +101,24 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
           </Grid>
         </Grid>
       )}
-      <CustomAccordion
-        title="Attempt limits"
-        expanded={attempts.value || invalidAttempts}
-        onChange={attempts.onToggle}
-        content={
-          <TextField
-            fullWidth
-            size="small"
-            type="number"
-            label={
-              <WorkflowSettingLabel
-                label="Maximum attempts *"
-                help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
-              />
-            }
-            disabled={readOnly}
-            value={policy.maxAttempts}
-            onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
-            slotProps={{
-              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
-            }}
-            error={
-              !Number.isInteger(policy.maxAttempts) ||
-              policy.maxAttempts < 1 ||
-              policy.maxAttempts > 10
-            }
-            helperText={
-              !Number.isInteger(policy.maxAttempts) ||
-              policy.maxAttempts < 1 ||
-              policy.maxAttempts > 10
-                ? 'Enter a whole number from 1 to 10.'
-                : undefined
-            }
+      <TextField
+        fullWidth
+        size="small"
+        type="number"
+        label={
+          <WorkflowSettingLabel
+            label="Maximum attempts *"
+            help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
           />
         }
+        disabled={readOnly}
+        value={policy.maxAttempts}
+        onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
+        slotProps={{
+          htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
+        }}
+        error={invalidAttempts}
+        helperText={invalidAttempts ? 'Enter a whole number from 1 to 10.' : undefined}
       />
     </Stack>
   );
