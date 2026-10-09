@@ -171,11 +171,16 @@ beforeEach(() => {
 });
 
 describe('Run Payroll preview feedback', () => {
-  it('keeps refresh in the page header and readiness beside the register actions', async () => {
+  it('keeps refresh and readiness together in the register action row', async () => {
     render(view());
     expect(
-      within(screen.getByRole('banner')).getByRole('button', { name: 'Refresh preview' })
+      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
+        name: 'Refresh preview',
+      })
     ).toBeVisible();
+    expect(
+      within(screen.getByRole('banner')).queryByRole('button', { name: 'Refresh preview' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open attendance' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument();
     expect(screen.queryByText('Academic year')).not.toBeInTheDocument();
@@ -384,7 +389,11 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isPreparing = true;
     mocks.preview.isCurrent = false;
     render(view());
-    expect(screen.getByRole('button', { name: 'Generating…' })).toBeDisabled();
+    expect(
+      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('button', {
+        name: 'Generating…',
+      })
+    ).toBeDisabled();
     expect(screen.getByRole('region', { name: 'Payroll rows' })).toHaveAttribute(
       'data-loading',
       'true'
@@ -405,7 +414,9 @@ describe('Run Payroll preview feedback', () => {
     mocks.preview.isStale = true;
     mocks.preview.isCurrent = false;
     render(view());
-    expect(screen.getByRole('status')).toHaveTextContent('Preview needs refresh');
+    expect(
+      within(screen.getByRole('region', { name: 'Payroll Register' })).getByRole('status')
+    ).toHaveTextContent('Preview needs refresh');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

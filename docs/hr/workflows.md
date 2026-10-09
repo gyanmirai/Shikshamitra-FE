@@ -91,7 +91,8 @@ Percentage-based earning components list only valid earning-component dependenci
 
 ### Run Payroll preview feedback
 
-Generate preview and Refresh preview use the page-header action while payroll month stays in the context row.
+Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
+Payroll month stays in the context row.
 Academic year comes from the global header selector without a duplicate page label.
 View readiness uses an outlined button beside the register review, audit, and lock actions.
 Readiness status and attention details appear inside the drawer instead of a page-level badge.

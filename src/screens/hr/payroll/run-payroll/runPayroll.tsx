@@ -1037,40 +1037,6 @@ const RunPayroll = () => {
           { name: 'Run Payroll' },
         ]}
         description="Generate, review, and lock monthly payroll from one workbench."
-        action={
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            flexWrap="wrap"
-            useFlexGap
-            justifyContent="flex-end"
-          >
-            {preview.isStale ? (
-              <Typography variant="caption" color="warning.main" role="status">
-                Preview needs refresh
-              </Typography>
-            ) : null}
-            <LoadingButton
-              variant="contained"
-              loading={previewBusy}
-              size="small"
-              disabled={!month.isValid() || !academicYearId}
-              startIcon={
-                <Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />
-              }
-              onClick={requestPreview}
-            >
-              {previewButtonLabel}
-            </LoadingButton>
-          </Stack>
-        }
-        slotProps={{
-          action: { alignSelf: { xs: 'flex-end', md: 'center' }, maxWidth: '100%' },
-          heading: {},
-          moreLink: {},
-          breadcrumbs: {},
-        }}
         sx={{ flexWrap: 'wrap', mb: 1 }}
       />
 
@@ -1167,6 +1133,25 @@ const RunPayroll = () => {
                 </Typography>
               </Box>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                  {preview.isStale ? (
+                    <Typography variant="caption" color="warning.main" role="status">
+                      Preview needs refresh
+                    </Typography>
+                  ) : null}
+                  <LoadingButton
+                    variant="contained"
+                    loading={previewBusy}
+                    size="small"
+                    disabled={!month.isValid() || !academicYearId}
+                    startIcon={
+                      <Iconify icon={isDataForSelectedMonth ? 'mdi:refresh' : 'mdi:calculator'} />
+                    }
+                    onClick={requestPreview}
+                  >
+                    {previewButtonLabel}
+                  </LoadingButton>
+                </Stack>
                 <Button
                   size="small"
                   variant="outlined"
