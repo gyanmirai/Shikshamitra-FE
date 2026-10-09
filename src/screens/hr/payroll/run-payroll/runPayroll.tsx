@@ -874,7 +874,16 @@ const RunPayroll = () => {
               ? { label: 'Needs attention', color: 'warning' as const }
               : previewReadiness
                 ? { label: 'Ready to review', color: 'success' as const }
-                : { label: 'Select month', color: 'default' as const };
+                : {
+                    label: !month
+                      ? 'Select month'
+                      : !academicYearId
+                        ? 'Select academic year'
+                        : readinessBusy
+                          ? 'Loading readiness'
+                          : 'Not loaded',
+                    color: 'default' as const,
+                  };
   const totalForProgress = stats.total || Number(previewReadiness?.employeeCount || 0);
   const readinessMetrics = [
     {
@@ -1235,7 +1244,7 @@ const RunPayroll = () => {
               noDataText={
                 !isDataForSelectedMonth && selectedMonthKey ? (
                   <>
-                    This month is not loaded yet. Use <strong>Load preview</strong> above.
+                    This month is not loaded yet. Use <strong>Generate preview</strong> above.
                   </>
                 ) : (
                   <>No payroll preview rows found for this month. Refresh preview to recompute.</>

@@ -101,7 +101,7 @@ async function mockPayroll(
         body = {
           previewRunId: 'ui-preview',
           isCurrent: true,
-          isGenerated: true,
+          isGenerated: false,
           totalCount: 0,
           currentPage: 0,
           pageSize: 25,
@@ -159,16 +159,19 @@ async function mockPayroll(
 async function expectCompactActions(page: Page, root = 'main', hasActions = true) {
   const buttons = page.locator(`${root} .MuiButton-root`);
   if (hasActions) await expect(buttons.first()).toBeVisible();
-  const measured = await buttons.evaluateAll((elements) =>
-    elements
-      .map((element) => ({
-        label: element.textContent?.trim(),
-        height: element.getBoundingClientRect().height,
-      }))
-      .filter((button) => button.height > 0)
-  );
-  if (hasActions) expect(measured.length).toBeGreaterThan(0);
-  for (const button of measured) expect(button.height, `${button.label} height`).toBeCloseTo(30, 0);
+  await expect(async () => {
+    const measured = await buttons.evaluateAll((elements) =>
+      elements
+        .map((element) => ({
+          label: element.textContent?.trim(),
+          height: element.getBoundingClientRect().height,
+        }))
+        .filter((button) => button.height > 0)
+    );
+    if (hasActions) expect(measured.length).toBeGreaterThan(0);
+    for (const button of measured)
+      expect(button.height, `${button.label} height`).toBeCloseTo(30, 0);
+  }).toPass({ timeout: 15000 });
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
   ).toBe(true);

@@ -26,6 +26,14 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+  usePreviewEarningComponentDeleteImpactQuery,
+  usePreviewEarningComponentUpdateImpactMutation,
+} from 'src/redux/hr/employee-payroll-api';
+import {
   Box,
   Grid,
   Alert,
@@ -45,14 +53,6 @@ import {
   DialogContentText,
   ToggleButtonGroup,
 } from '@mui/material';
-import {
-  useGetEarningComponentsQuery,
-  useAddEarningComponentMutation,
-  useDeleteEarningComponentMutation,
-  useUpdateEarningComponentMutation,
-  usePreviewEarningComponentDeleteImpactQuery,
-  usePreviewEarningComponentUpdateImpactMutation,
-} from 'src/redux/hr/employee-payroll-api';
 
 import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
