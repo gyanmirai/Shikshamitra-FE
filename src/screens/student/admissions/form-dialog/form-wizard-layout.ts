@@ -51,9 +51,6 @@ export const getFormWizardLayout = (activeStep: number): SxProps<Theme> => ({
   [stepperHorizontalTrack]: { display: 'none' },
   [stepperContent]: { width: 1, minWidth: 0 },
   ...(activeStep !== 0 && {
-    '& .MuiInputBase-root:not(.MuiInputBase-multiline)': { minHeight: 44 },
-  }),
-  ...(activeStep !== 0 && {
     pt: 0,
     '& > div > form > [data-simplebar]': { overflow: 'hidden', minWidth: 0 },
     '& > div > form > div:last-child:not([data-simplebar])': { py: 1 },

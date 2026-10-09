@@ -14,7 +14,8 @@ export type StudentOnboardingListInput = {
   rollNumberMin?: number;
   rollNumberMax?: number;
   rollNumberOperator?: 'equals' | 'greaterThan' | 'lessThan' | 'between';
-  pendingTask?: 'gr-number' | 'roll-number' | 'division';
+  pendingTask?: 'gr-number' | 'roll-number' | 'division' | 'fees' | 'credentials';
+  enteredToday?: boolean;
   placementDivisionId?: string;
   academicYearId?: string;
   boardId?: string;
@@ -36,6 +37,7 @@ export type StudentOnboardingFilterOption = {
 };
 
 export type StudentOnboardingFilterOptions = {
+  canUnlockIdentifiers?: boolean;
   academicYears: StudentOnboardingFilterOption[];
   boards: StudentOnboardingFilterOption[];
   mediums: StudentOnboardingFilterOption[];
@@ -81,6 +83,16 @@ export type StudentOnboardingCase = {
   capturedStudentFields?: Array<{ key: string; label: string; value: string }>;
 
   feeAssignmentConfirmed?: boolean | null;
+  feeStructureConfirmed?: boolean;
+  selectedFeeStructureId?: string | null;
+  grNumberLocked?: boolean;
+  grManualEntryAllowed?: boolean;
+  requirementsNeedReview?: boolean;
+  hasDocumentRequirementsSnapshot?: boolean;
+  admissionConfirmed?: boolean;
+  credentialsPending?: boolean;
+  rollNumberLocked?: boolean;
+  rollChangeReasonRequired?: boolean;
   firstPaymentConfirmed?: boolean | null;
   financeReadinessDetail?: string | null;
   studentAccountRequired?: boolean;

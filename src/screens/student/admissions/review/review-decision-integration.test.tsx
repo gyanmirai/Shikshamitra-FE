@@ -5,7 +5,6 @@ import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
 import userEvent from '@testing-library/user-event';
 import { screen, within, waitFor } from '@testing-library/react';
-import { reviewSummary } from 'src/redux/student/admissions/review-test-fixture';
 
 import { renderReviewUi } from './review-ui-test-fixture';
 import { ApplicationDecisionCard } from '../application-detail/application-decision-card';
@@ -22,11 +21,10 @@ const application: AdmissionApplication = {
   admissionOfferingId: 'offering-1',
   status: 1,
   concurrencyStamp: 'stamp',
-  reviewDecision: reviewSummary.decision,
 };
 const path = '*/api/student/enrollment/admissions/applications/application-1';
 
-it('blocks managed approval while permitting a server-authorized rejection through the existing decision endpoint', async () => {
+it('records a reasoned rejection with the application concurrency token and no Review/Offer actions', async () => {
   let body: unknown;
   mswServer.use(
     http.get(`${path}/decision-history`, () => HttpResponse.json([])),
@@ -36,17 +34,11 @@ it('blocks managed approval while permitting a server-authorized rejection throu
     })
   );
   const user = userEvent.setup();
-  renderReviewUi(
-    <ApplicationDecisionCard
-      application={{
-        ...application,
-        reviewDecision: { ...reviewSummary.decision, canReject: true },
-      }}
-    />,
-    ['Students.Admissions.Applications.Add']
-  );
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
-  expect(screen.getByText('Submit a fresh recommendation.')).toBeInTheDocument();
+  renderReviewUi(<ApplicationDecisionCard application={application} journeyCompleted={false} />, [
+    'Students.Admissions.Applications.Add',
+  ]);
+  expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: /review|offer/i })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Reject' }));
   const dialog = within(screen.getByRole('dialog'));
   await user.type(
@@ -61,44 +53,35 @@ it('blocks managed approval while permitting a server-authorized rejection throu
   });
 });
 
-it('exposes authorized reaffirmation after an accepted offer and keeps finalization blocked until Review is satisfied', async () => {
-  let approvals = 0;
-  mswServer.use(
-    http.get(`${path}/decision-history`, () => HttpResponse.json([])),
-    http.get(`${path}/finalization-preview`, () =>
-      HttpResponse.json({ canFinalize: false, blockers: ['Refresh Review.'], possibleMatches: [] })
-    ),
-    http.post(`${path}/decision/approve`, () => {
-      approvals += 1;
-      return HttpResponse.json(application);
-    })
-  );
-  const user = userEvent.setup();
-  renderReviewUi(
-    <ApplicationDecisionCard
-      application={{
-        ...application,
-        status: 8,
-        reviewDecision: { ...reviewSummary.decision, canApprove: true },
-      }}
-    />,
-    ['Students.Admissions.Applications.Add']
-  );
-  expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Reaffirm approval' }));
-  expect(approvals).toBe(0);
-  await user.click(
-    within(screen.getByRole('dialog')).getByRole('button', { name: 'Approve application' })
-  );
-  await waitFor(() => expect(approvals).toBe(1));
-});
+it.each([true, false])(
+  'offers finalization only for an approved completed journey (completed=%s)',
+  (journeyCompleted) => {
+    mswServer.use(
+      http.get(`${path}/decision-history`, () => HttpResponse.json([])),
+      http.get(`${path}/finalization-preview`, () =>
+        HttpResponse.json({ canFinalize: true, items: [], possibleMatches: [] })
+      )
+    );
+    renderReviewUi(
+      <ApplicationDecisionCard
+        application={{ ...application, status: 6 }}
+        journeyCompleted={journeyCompleted}
+      />,
+      ['Students.Admissions.Applications.Add']
+    );
+    if (journeyCompleted)
+      expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+    else
+      expect(screen.queryByRole('button', { name: 'Finalize admission' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /offer/i })).not.toBeInTheDocument();
+  }
+);
 
-it('preserves basic approval for legacy applications without a managed Review flag', () => {
+it('does not expose decisions or finalization without application manage permission', () => {
   mswServer.use(http.get(`${path}/decision-history`, () => HttpResponse.json([])));
-  renderReviewUi(
-    <ApplicationDecisionCard application={{ ...application, reviewDecision: undefined }} />,
-    ['Students.Admissions.Applications.Add']
-  );
-  expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
-  expect(screen.queryByText('Submit a fresh recommendation.')).not.toBeInTheDocument();
+  renderReviewUi(<ApplicationDecisionCard application={application} journeyCompleted />, [
+    'Students.Admissions.Applications.View',
+  ]);
+  expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Finalize admission' })).not.toBeInTheDocument();
 });

@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { Tab, Paper } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { Tab, Paper } from '@mui/material';
 
 import { studentSetupViews, type StudentSetupView } from './student-setup-view';
 

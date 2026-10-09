@@ -112,7 +112,8 @@ export type StudentDirectoryItem = {
   divisionName?: string | null;
   academicMediumId?: string | null;
   academicMediumName?: string | null;
-  entrySource: 'CompletedOnboarding' | 'LegacyOverride' | 'LegacyNeedsApproval';
+  entrySource:
+    'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'LegacyNeedsApproval';
   hasPhoto: boolean;
   maskedFields: string[];
 };

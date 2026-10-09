@@ -60,11 +60,6 @@ export function DocumentRequirementActions({
           Request replacement
         </Button>
       )}
-      {requirement.canWaive && permissions.waive && (
-        <Button size="small" disabled={disabled} onClick={() => onAction('waive')}>
-          Waive requirement
-        </Button>
-      )}
     </Stack>
   );
 }

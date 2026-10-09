@@ -13,6 +13,7 @@ type Props = {
   canAdvance: boolean;
   onAction: (action: AssessmentAction) => void;
   onComplete: () => void;
+  compact?: boolean;
 };
 
 export function AssessmentPanelActions({
@@ -21,13 +22,13 @@ export function AssessmentPanelActions({
   canAdvance,
   onAction,
   onComplete,
+  compact = false,
 }: Props) {
   const permissions = useAssessmentPermissions();
   const actions: { action: AssessmentAction; allowed: boolean }[] = [
     { action: 'book', allowed: assessment.canBook && permissions.book },
     { action: 'attendance', allowed: assessment.canRecordAttendance && permissions.attendance },
     { action: 'result', allowed: assessment.canRecordResult && permissions.results },
-    { action: 'review', allowed: assessment.canReview && permissions.review },
     { action: 'retake', allowed: assessment.canRetake && permissions.book },
     { action: 'cancel', allowed: assessment.canCancel && permissions.book },
     { action: 'waive', allowed: assessment.canWaive && permissions.waive },
@@ -40,13 +41,15 @@ export function AssessmentPanelActions({
           <Button
             key={action}
             size="small"
-            variant="outlined"
+            variant={compact && action === 'book' ? 'contained' : 'outlined'}
             disabled={disabled}
             onClick={() => onAction(action)}
           >
-            {action === 'book' && assessment.policy.schedulingEnabled
-              ? 'Book session'
-              : assessmentActionLabels[action]}
+            {compact && action === 'waive'
+              ? 'Waive'
+              : action === 'book' && assessment.policy.schedulingEnabled && !compact
+                ? 'Book session'
+                : assessmentActionLabels[action]}
           </Button>
         ))}
       {canAdvance && (

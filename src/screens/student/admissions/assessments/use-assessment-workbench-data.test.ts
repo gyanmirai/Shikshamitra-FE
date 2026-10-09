@@ -77,11 +77,11 @@ it('never substitutes all-session data for an unavailable selected session', () 
   expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
 });
 it('sends restored queue/search/session and zero-based page offsets', () => {
-  Object.assign(mocks.state, { sessionId: 'session-1', queue: 'review', search: 'QA', page: 2 });
+  Object.assign(mocks.state, { sessionId: 'session-1', queue: 'result', search: 'QA', page: 2 });
   renderHook(() => useAssessmentWorkbenchData(true, false));
   expect(mocks.applicants.mock.lastCall?.[0]).toMatchObject({
     sessionId: 'session-1',
-    queue: 'review',
+    queue: 'result',
     search: 'QA',
     skipCount: 50,
     maxResultCount: 25,

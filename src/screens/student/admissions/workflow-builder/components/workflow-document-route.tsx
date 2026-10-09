@@ -13,13 +13,6 @@ const routes = [
     operator: 'Equals',
     expected: 'verified',
   },
-  {
-    value: 'waiver',
-    label: 'A document waiver was used',
-    field: 'documents.waivedCount',
-    operator: 'GreaterThan',
-    expected: '0',
-  },
 ] as const;
 export function getDocumentRoute(values: WorkflowTransitionFormValues) {
   if (!values.hasCondition && values.isDefault) return 'default';
@@ -71,8 +64,8 @@ export function WorkflowDocumentRoute({
         onChange={(value) => selectRoute(String(value))}
       />
       <Alert severity="info">
-        Every required document must be resolved before any route can continue. A waiver route can
-        send permitted exceptions to an additional review stage.
+        Every required document must be accepted before any route can continue. Rejected documents
+        need replacement and fresh verification.
       </Alert>
     </Stack>
   );

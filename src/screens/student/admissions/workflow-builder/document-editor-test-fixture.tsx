@@ -14,7 +14,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 
@@ -84,7 +84,6 @@ export async function renderDocumentEditor(
       </ThemeProvider>
     </Provider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
   return { onSave, onClose, store };
 }

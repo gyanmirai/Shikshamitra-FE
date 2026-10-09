@@ -24,7 +24,6 @@ export const studentPaths = {
     pipeline: '/student/admissions/pipeline',
     applications: '/student/admissions/applications',
     assessments: '/student/admissions/assessments',
-    reviews: '/student/admissions/reviews',
     settings: {
       root: '/student/admissions/settings/cycles',
       cycles: '/student/admissions/settings/cycles',
@@ -99,7 +98,6 @@ export const studentPermissions = {
     inquiries: `${defaultStudentPermissionName}Admissions.Inquiries.View`,
     applications: `${defaultStudentPermissionName}Admissions.Applications.View`,
     assessments: `${defaultStudentPermissionName}Admissions.Assessments.View`,
-    reviews: `${defaultStudentPermissionName}Admissions.Reviews.View`,
     settings: {
       root: [
         `${defaultStudentPermissionName}Admissions.View`,
@@ -216,12 +214,6 @@ const studentModule = (isDdvs: boolean) => ({
               path: studentPaths.enrollment.applications,
               _action: 'student-admissions-applications-all',
               permissionName: studentPermissions.enrollment.applications,
-              permissionChildren: [
-                {
-                  title: 'Application Reviews',
-                  permissionName: studentPermissions.enrollment.reviews,
-                },
-              ],
               icon: menuIconView('mdi:application-edit-outline'),
             },
             {

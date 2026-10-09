@@ -1,53 +1,62 @@
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/admission-document-settings-api';
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Alert, Stack, Button, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { emptyCondition } from 'src/redux/student/admissions/admission-condition-rule';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomPopover } from 'src/components/custom-popover';
 import { documentRequirementSchema } from 'src/redux/student/admissions/admission-document-policy-validation';
+import {
+  Box,
+  Grid,
+  Alert,
+  Stack,
+  Button,
+  Switch,
+  Divider,
+  Typography,
+  IconButton,
+  FormControlLabel,
+} from '@mui/material';
 
 import { DocumentRequirementBasics } from './document-requirement-basics';
 import { DocumentRequirementClasses } from './document-requirement-classes';
-import { DocumentConditionFormPicker } from './document-condition-form-picker';
 import { DocumentRequirementCollection } from './document-requirement-collection';
-import {
-  hasInquiryCondition,
-  INQUIRY_RULE_REPLACEMENT_MESSAGE,
-} from '../workflow-inquiry-retirement';
 
 type Props = {
   initial: AdmissionDocumentRequirementPolicy;
   documentTypes: AdmissionDocumentTypeOption[];
-  forms: AdmissionForm[];
   existingCodes: string[];
+  anchorEl?: HTMLElement | null;
   onClose: () => void;
   onSave: (value: AdmissionDocumentRequirementPolicy) => void;
 };
+
 export function DocumentRequirementDialog({
   initial,
   documentTypes,
-  forms,
   existingCodes,
+  anchorEl,
   onClose,
   onSave,
 }: Props) {
+  const desktop = useResponsive('up', 'sm');
+  const discard = useBoolean();
   const formik = useFormik<AdmissionDocumentRequirementPolicy>({
     initialValues: initial,
     validationSchema: documentRequirementSchema,
     validate: (values) => {
-      const errors: { code?: string; documentTypeId?: string; conditionJson?: string } = {};
-      if (values.requirement === 'conditional' && hasInquiryCondition(values.conditionJson)) {
-        errors.conditionJson = INQUIRY_RULE_REPLACEMENT_MESSAGE;
-      }
-      if (existingCodes.includes(values.code)) errors.code = 'This document code is already in use';
+      const errors: { code?: string; documentTypeId?: string; requirement?: string } = {};
+      if (values.requirement === 'conditional')
+        errors.requirement = 'Choose required or optional for this document.';
+      if (values.code && existingCodes.includes(values.code))
+        errors.code = 'This document reference is already in use';
       const mapped = documentTypes.find((item) => item.id === values.documentTypeId);
       if (
-        values.collectionMode !== 'original' &&
         mapped &&
         !values.allowedExtensions.some((extension) => mapped.allowedExtensions.includes(extension))
       ) {
@@ -57,100 +66,144 @@ export function DocumentRequirementDialog({
       return errors;
     },
     onSubmit: (values) => {
-      onSave({ ...values, name: values.name.trim(), description: values.description?.trim() });
+      onSave({
+        ...values,
+        name: values.name.trim(),
+        description: values.description?.trim(),
+        collectionMode: 'upload',
+        conditionJson: undefined,
+      });
       onClose();
     },
   });
-  const error = (key: keyof AdmissionDocumentRequirementPolicy) =>
-    Boolean(formik.touched[key] && formik.errors[key]);
   const requestClose = () => {
-    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
-      onClose();
+    if (formik.dirty) discard.onTrue();
+    else onClose();
   };
-  return (
-    <CustomDialog
-      open
-      hasForm={false}
-      title="Configure document requirement"
-      handleClose={onClose}
-      maxWidth="sm"
-      guardUnsavedChanges={formik.dirty}
+  const body = (
+    <Box
+      component="form"
+      noValidate
+      onSubmit={(event) => {
+        event.stopPropagation();
+        formik.handleSubmit(event);
+      }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        maxHeight: 'calc(100dvh - 48px)',
+      }}
     >
-      <Box
-        component="form"
-        onSubmit={(event) => {
-          event.stopPropagation();
-          formik.handleSubmit(event);
-        }}
-      >
-        <DialogScrollContent>
-          <Stack spacing={2}>
-            <DocumentRequirementBasics formik={formik} />
-            <DocumentRequirementClasses formik={formik} />
-            <CustomSelect
-              size="small"
-              fullWidth
-              label="When is it required?"
-              value={formik.values.requirement}
-              options={[
-                {
-                  value: 'required',
-                  label: formik.values.standardIds
-                    ? 'Required in selected classes'
-                    : 'Required for every applicant',
-                },
-                { value: 'optional', label: 'Optional' },
-                { value: 'conditional', label: 'Required when conditions match' },
-              ]}
-              onChange={(value) =>
-                formik.setValues({
-                  ...formik.values,
-                  requirement: value as AdmissionDocumentRequirementPolicy['requirement'],
-                  conditionJson:
-                    value === 'conditional'
-                      ? formik.values.conditionJson || JSON.stringify(emptyCondition())
-                      : undefined,
-                })
-              }
-            />
-            {formik.values.requirement === 'conditional' && (
-              <ShakingTextField error={error('conditionJson')}>
-                <Stack spacing={1} onBlur={() => formik.setFieldTouched('conditionJson')}>
-                  <DocumentConditionFormPicker
-                    json={formik.values.conditionJson}
-                    forms={forms}
-                    onChange={(json) => formik.setFieldValue('conditionJson', json)}
-                  />
-                  {error('conditionJson') && (
-                    <Alert severity="error">{formik.errors.conditionJson}</Alert>
-                  )}
-                </Stack>
-              </ShakingTextField>
-            )}
-            <DocumentRequirementCollection formik={formik} documentTypes={documentTypes} />
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions
-          sx={{ p: 2, boxShadow: 'var(--shadows-10)', '& .MuiButton-root': { minHeight: 44 } }}
+      {desktop && anchorEl && (
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ px: 2, py: 1.5 }}
         >
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={requestClose}
-            startIcon={<Iconify icon="mdi:close" />}
-          >
-            Cancel
+          <Typography id="document-requirement-title" variant="subtitle1">
+            Configure document requirement
+          </Typography>
+          <IconButton size="small" aria-label="Close document requirement" onClick={requestClose}>
+            <Iconify icon="mdi:close" />
+          </IconButton>
+        </Stack>
+      )}
+      {desktop && anchorEl && <Divider />}
+      <Scrollbar sx={{ minHeight: 0 }}>
+        <Stack spacing={1.5} sx={{ p: 2 }}>
+          <DocumentRequirementBasics formik={formik} />
+          {formik.values.requirement === 'conditional' && (
+            <Alert severity="warning">Choose required or optional for this document.</Alert>
+          )}
+          <Grid container spacing={1.5}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DocumentRequirementClasses formik={formik} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControlLabel
+                label="Required document"
+                sx={{
+                  m: 0,
+                  width: 1,
+                  justifyContent: 'space-between',
+                  flexDirection: 'row-reverse',
+                }}
+                control={
+                  <Switch
+                    size="small"
+                    slotProps={{ input: { 'aria-label': 'Required document' } }}
+                    checked={formik.values.requirement === 'required'}
+                    onChange={(_, checked) =>
+                      formik.setValues({
+                        ...formik.values,
+                        requirement: checked ? 'required' : 'optional',
+                        conditionJson: undefined,
+                      })
+                    }
+                  />
+                }
+              />
+            </Grid>
+          </Grid>
+          <DocumentRequirementCollection formik={formik} documentTypes={documentTypes} />
+        </Stack>
+      </Scrollbar>
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="flex-end"
+        sx={{ p: 1.5, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
+      >
+        <Button size="small" variant="outlined" onClick={requestClose}>
+          Cancel
+        </Button>
+        <Button size="small" variant="contained" type="submit">
+          Save requirement
+        </Button>
+      </Stack>
+    </Box>
+  );
+  return (
+    <>
+      {desktop && anchorEl ? (
+        <CustomPopover
+          open
+          anchorEl={anchorEl}
+          onClose={requestClose}
+          slotProps={{
+            arrow: { hide: true },
+            paper: { sx: { width: 560, maxWidth: 'calc(100vw - 32px)', overflow: 'hidden' } },
+          }}
+        >
+          <Box role="dialog" aria-modal="true" aria-labelledby="document-requirement-title">
+            {body}
+          </Box>
+        </CustomPopover>
+      ) : (
+        <CustomDialog
+          open
+          hasForm={false}
+          title="Configure document requirement"
+          handleClose={requestClose}
+          maxWidth="sm"
+          guardUnsavedChanges={false}
+        >
+          {body}
+        </CustomDialog>
+      )}
+      <ConfirmDialog
+        open={discard.value}
+        onClose={discard.onFalse}
+        title="Discard document changes?"
+        content="Your changes to this requirement have not been saved."
+        action={
+          <Button size="small" color="error" variant="contained" onClick={onClose}>
+            Discard changes
           </Button>
-          <Button
-            size="small"
-            variant="contained"
-            type="submit"
-            startIcon={<Iconify icon="mdi:content-save-outline" />}
-          >
-            Save requirement
-          </Button>
-        </DialogActions>
-      </Box>
-    </CustomDialog>
+        }
+      />
+    </>
   );
 }

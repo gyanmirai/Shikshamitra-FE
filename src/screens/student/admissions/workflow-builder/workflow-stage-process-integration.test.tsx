@@ -1,314 +1,167 @@
-import type { FormikProps } from 'formik';
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useFormik } from 'formik';
-import { http, HttpResponse } from 'msw';
-import { mswServer } from 'src/test/mswServer';
-import { it, vi, expect, describe } from 'vitest';
-import userEvent from '@testing-library/user-event';
-import { screen, waitFor, fireEvent } from '@testing-library/react';
-import { DEFAULT_SEAT_POLICY } from 'src/redux/student/admissions/admission-seat-policy';
-import { DEFAULT_OFFER_POLICY } from 'src/redux/student/admissions/admission-offer-policy';
-import { DEFAULT_REVIEW_POLICY } from 'src/redux/student/admissions/admission-review-policy';
-import { DEFAULT_PAYMENT_POLICY } from 'src/redux/student/admissions/admission-payment-policy';
-import { DEFAULT_DOCUMENT_POLICY } from 'src/redux/student/admissions/admission-document-policy';
+import { it, expect, describe } from 'vitest';
 import { DEFAULT_FORM_STAGE_POLICY } from 'src/redux/student/admissions/admission-form-stage-policy';
 import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admission-assessment-policy';
-import { DEFAULT_ELIGIBILITY_POLICY } from 'src/redux/student/admissions/admission-eligibility-policy';
+import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
+import {
+  DEFAULT_DOCUMENT_POLICY,
+  createDocumentRequirement,
+} from 'src/redux/student/admissions/admission-document-policy';
 
-import { WorkflowFormSettings } from './components/workflow-form-settings';
-import { WorkflowSeatSettings } from './components/workflow-seat-settings';
-import { WorkflowOfferSettings } from './components/workflow-offer-settings';
-import { WorkflowReviewSettings } from './components/workflow-review-settings';
-import { WorkflowPaymentSettings } from './components/workflow-payment-settings';
-import { WorkflowDocumentSettings } from './components/workflow-document-settings';
-import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
-import { WorkflowAssessmentSettings } from './components/workflow-assessment-settings';
-import { WorkflowEligibilitySettings } from './components/workflow-eligibility-settings';
+import { ADMISSION_WORKFLOW_TEMPLATES, getAdmissionWorkflowTemplate } from '../workflow-template';
+import {
+  isApplicationStageType,
+  normalizeStageConfiguration,
+} from './workflow-stage-configuration';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-
-type StageCase = {
-  name: string;
-  stageType: AdmissionWorkflowStage['stageType'];
-  key: string;
-  policy: object;
-  basicLabel: string;
-  managedLabel: string;
-};
-
-const cases: StageCase[] = [
-  {
-    name: 'Form',
-    stageType: 1,
-    key: 'form',
-    policy: DEFAULT_FORM_STAGE_POLICY,
-    basicLabel: 'Submission only',
-    managedLabel: 'Submission with rules',
-  },
-  {
-    name: 'Assessment',
-    stageType: 2,
-    key: 'assessment',
-    policy: DEFAULT_ASSESSMENT_POLICY,
-    basicLabel: 'Complete manually',
-    managedLabel: 'Record an assessment result',
-  },
-  {
-    name: 'Eligibility',
-    stageType: 3,
-    key: 'eligibility',
-    policy: DEFAULT_ELIGIBILITY_POLICY,
-    basicLabel: 'Complete manually',
-    managedLabel: 'Check eligibility rules',
-  },
-  {
-    name: 'Documents',
-    stageType: 5,
-    key: 'documentVerification',
-    policy: DEFAULT_DOCUMENT_POLICY,
-    basicLabel: 'Complete manually',
-    managedLabel: 'Collect and verify documents',
-  },
-  {
-    name: 'Review',
-    stageType: 6,
-    key: 'review',
-    policy: DEFAULT_REVIEW_POLICY,
-    basicLabel: 'Complete manually',
-    managedLabel: 'Collect a staff review and recommendation',
-  },
-  {
-    name: 'Payment',
-    stageType: 4,
-    key: 'payment',
-    policy: DEFAULT_PAYMENT_POLICY,
-    basicLabel: 'Complete manually',
-    managedLabel: 'Collect and verify payment',
-  },
-  {
-    name: 'Offer',
-    stageType: 8,
-    key: 'offer',
-    policy: DEFAULT_OFFER_POLICY,
-    basicLabel: 'Use existing offer actions',
-    managedLabel: 'Manage offer validity and responses',
-  },
-  {
-    name: 'Seat',
-    stageType: 9,
-    key: 'seat',
-    policy: DEFAULT_SEAT_POLICY,
-    basicLabel: 'Basic seat step (existing process)',
-    managedLabel: 'Managed capacity, reservation, and waitlist',
-  },
-];
-
-const form: AdmissionForm = {
-  id: 'published-form',
-  name: 'Application form',
-  code: 'APPLICATION',
-  version: 1,
-  status: 1,
-  layoutType: 0,
-  sectionCount: 1,
-  sections: [
-    { id: 'section-1', code: 'APPLICANT', name: 'Applicant details', displayOrder: 0, fields: [] },
-  ],
-};
-
-const stageFor = (scenario: StageCase, configurationJson: string): AdmissionWorkflowStage => ({
-  id: 'saved-stage',
-  stageType: scenario.stageType,
-  code: 'SAVED_OPERATIONAL_CODE',
-  name: scenario.name,
-  displayOrder: 2,
+const stage = (
+  stageType: AdmissionWorkflowStage['stageType'],
+  configuration: object = {}
+): AdmissionWorkflowStage => ({
+  id: 'stage',
+  code: 'STAGE',
+  name: 'Stage',
+  stageType,
+  displayOrder: 0,
   isRequired: true,
   allowManualSkip: false,
-  isEntryStage: true,
-  isTerminalStage: true,
-  description: 'Keep the saved instructions',
-  configurationJson,
+  isEntryStage: false,
+  isTerminalStage: false,
+  configurationJson: JSON.stringify(configuration),
 });
+const configuration = (value: AdmissionWorkflowStage) =>
+  JSON.parse(value.configurationJson ?? '{}');
 
-function StagePolicyFields({
-  scenario,
-  formik,
-  readOnly,
-  available,
-}: {
-  scenario: StageCase;
-  formik: FormikProps<AdmissionWorkflowStage>;
-  readOnly: boolean;
-  available: boolean;
-}) {
-  const common = { formik, readOnly, available };
-  switch (scenario.stageType) {
-    case 1:
-      return (
-        <WorkflowFormSettings
-          {...common}
-          forms={[form]}
-          formDefinitionId={form.id}
-          onGoToBasics={vi.fn()}
-        />
-      );
-    case 2:
-      return <WorkflowAssessmentSettings {...common} />;
-    case 3:
-      return <WorkflowEligibilitySettings {...common} forms={[form]} stages={[]} />;
-    case 5:
-      return <WorkflowDocumentSettings {...common} forms={[form]} stages={[]} />;
-    case 6:
-      return <WorkflowReviewSettings {...common} stages={[]} />;
-    case 4:
-      return <WorkflowPaymentSettings {...common} />;
-    case 8:
-      return <WorkflowOfferSettings {...common} />;
-    case 9:
-      return <WorkflowSeatSettings {...common} />;
-    default:
-      throw new Error(`Missing test renderer for ${scenario.name}`);
-  }
-}
-
-function Harness({
-  scenario,
-  initialValues,
-  readOnly,
-  available,
-}: {
-  scenario: StageCase;
-  initialValues: AdmissionWorkflowStage;
-  readOnly: boolean;
-  available: boolean;
-}) {
-  const formik = useFormik({ initialValues, onSubmit: vi.fn() });
-  return (
-    <>
-      <StagePolicyFields
-        scenario={scenario}
-        formik={formik}
-        readOnly={readOnly}
-        available={available}
-      />
-      <output data-testid="stage-state">{JSON.stringify(formik.values)}</output>
-    </>
-  );
-}
-
-function setup(
-  scenario: StageCase,
-  options: { readOnly?: boolean; available?: boolean; version?: number } = {}
-) {
-  mswServer.use(
-    http.get('*/student/enrollment/admissions/document-verification/document-types', () =>
-      HttpResponse.json([])
-    ),
-    http.get('*/student/enrollment/admissions/reviews/reviewer-roles', () => HttpResponse.json([])),
-    http.get('*/student/enrollment/admissions/reviews/reviewers', () => HttpResponse.json([]))
-  );
-  const initialPolicy = {
-    ...scenario.policy,
-    enabled: false,
-    savedNote: 'Keep this policy extension',
-    ...(options.version ? { version: options.version } : {}),
-  };
-  const configuration = {
-    extension: { source: 'Existing integration' },
-    formDefinitionId: form.id,
-    [scenario.key]: initialPolicy,
-  };
-  const initialValues = stageFor(scenario, JSON.stringify(configuration));
-  renderDocumentUi(
-    <Harness
-      scenario={scenario}
-      initialValues={initialValues}
-      readOnly={options.readOnly ?? false}
-      available={options.available ?? true}
-    />
-  );
-  const values = (): AdmissionWorkflowStage =>
-    JSON.parse(screen.getByTestId('stage-state').textContent!);
-  const savedConfiguration = () => JSON.parse(values().configurationJson!);
-  return {
-    initialValues,
-    initialPolicy,
-    configuration,
-    values,
-    savedConfiguration,
-    user: userEvent.setup(),
-  };
-}
-
-describe('stage process cards preserve policy contracts', { timeout: 15000 }, () => {
-  it.each(cases)(
-    '$name toggles process without changing saved fields, defaults or sibling configuration',
-    async (scenario) => {
-      const { user, initialValues, initialPolicy, configuration, values, savedConfiguration } =
-        setup(scenario);
-      expect(screen.getByRole('radio', { name: scenario.basicLabel })).toBeChecked();
-      await user.click(screen.getByRole('radio', { name: scenario.basicLabel }));
-      expect(values()).toEqual(initialValues);
-      await user.click(screen.getByRole('radio', { name: scenario.managedLabel }));
-      const expectedPolicy = {
-        ...initialPolicy,
-        enabled: true,
-        ...(scenario.key === 'assessment' ? { schedulingEnabled: false } : {}),
-      };
-      await waitFor(() =>
-        expect(savedConfiguration()).toEqual({ ...configuration, [scenario.key]: expectedPolicy })
-      );
-      expect(values()).toEqual({ ...initialValues, configurationJson: values().configurationJson });
-      if (scenario.key === 'assessment') {
-        expect(screen.getAllByRole('radio')).toHaveLength(3);
-        await user.click(screen.getByRole('radio', { name: 'Schedule an entrance exam' }));
-        await waitFor(() =>
-          expect(savedConfiguration()).toEqual({
-            ...configuration,
-            assessment: { ...expectedPolicy, schedulingEnabled: true },
-          })
-        );
-      }
-      await user.click(screen.getByRole('radio', { name: scenario.basicLabel }));
-      await waitFor(() =>
-        expect(savedConfiguration()).toEqual({
-          ...configuration,
-          [scenario.key]: { ...expectedPolicy, enabled: false },
+describe('five-stage configuration boundaries', () => {
+  it('offers only the five application stage types in every starter template', () => {
+    expect([0, 3, 6, 8, 9, 10, 11].filter(isApplicationStageType)).toEqual([]);
+    expect([1, 2, 4, 5, 7].every(isApplicationStageType)).toBe(true);
+    ADMISSION_WORKFLOW_TEMPLATES.forEach((template) => {
+      const journey = getAdmissionWorkflowTemplate(template.id, 'published-form');
+      expect(journey.stages.every((item) => isApplicationStageType(item.stageType))).toBe(true);
+      expect(journey.stages.filter((item) => item.isEntryStage)).toHaveLength(1);
+      expect(journey.stages.at(-1)).toMatchObject({ stageType: 7, isTerminalStage: true });
+      expect(journey.transitions).toHaveLength(journey.stages.length - 1);
+    });
+  });
+  it('prevents ordinary manual skip for optional managed stages while preserving other stage behavior', () => {
+    [1, 2, 4, 5].forEach((type) => {
+      expect(
+        normalizeStageConfiguration({
+          ...stage(type as AdmissionWorkflowStage['stageType']),
+          isRequired: false,
+          allowManualSkip: true,
+        }).allowManualSkip
+      ).toBe(false);
+    });
+    const decision = { ...stage(7), isRequired: false, allowManualSkip: true };
+    expect(normalizeStageConfiguration(decision)).toBe(decision);
+  });
+  it('retains form resubmission and verification contracts while always allowing save and resume', () => {
+    const result = configuration(
+      normalizeStageConfiguration(
+        stage(1, {
+          formDefinitionId: 'form',
+          form: {
+            ...DEFAULT_FORM_STAGE_POLICY,
+            enabled: false,
+            allowSaveAndResume: false,
+            maxSubmissionAttempts: 7,
+            requireSectionVerification: true,
+            autoAdvanceOnSubmit: false,
+            verificationSectionCodes: ['CONTACT'],
+          },
+          extension: 'keep',
         })
-      );
-      expect(values()).toEqual({ ...initialValues, configurationJson: values().configurationJson });
-    }
-  );
-
-  it.each(cases)('$name does not allow mode changes in read-only views', (scenario) => {
-    const { values, initialValues } = setup(scenario, { readOnly: true });
-    screen.getAllByRole('radio').forEach((choice) => {
-      expect(choice).toBeDisabled();
-      fireEvent.click(choice);
+      )
+    );
+    expect(result).toMatchObject({
+      extension: 'keep',
+      form: {
+        enabled: true,
+        allowSaveAndResume: true,
+        maxSubmissionAttempts: 7,
+        autoAdvanceOnSubmit: true,
+        verificationSectionCodes: ['CONTACT'],
+      },
     });
-    expect(values()).toEqual(initialValues);
   });
-
-  it.each(cases)('$name does not enable unavailable environment capabilities', (scenario) => {
-    const { values, initialValues } = setup(scenario, { available: false });
-    screen.getAllByRole('radio').forEach((choice) => {
-      expect(choice).toBeDisabled();
-      fireEvent.click(choice);
+  it('keeps assessment scoring and scheduling while removing the second-review gate', () => {
+    const result = configuration(
+      normalizeStageConfiguration(
+        stage(2, {
+          assessment: {
+            ...DEFAULT_ASSESSMENT_POLICY,
+            enabled: false,
+            reviewRequired: true,
+            schedulingEnabled: true,
+            maxAttempts: 4,
+          },
+          extension: 'keep',
+        })
+      )
+    );
+    expect(result).toMatchObject({
+      extension: 'keep',
+      assessment: { enabled: true, reviewRequired: false, schedulingEnabled: true, maxAttempts: 4 },
     });
-    expect(values()).toEqual(initialValues);
   });
-
-  it.each(cases)(
-    '$name preserves future policy versions instead of overwriting them',
-    (scenario) => {
-      const { values, initialValues } = setup(scenario, { version: 2 });
-      screen.getAllByRole('radio').forEach((choice) => {
-        expect(choice).toBeDisabled();
-        fireEvent.click(choice);
-      });
-      expect(values()).toEqual(initialValues);
-    }
-  );
+  it('preserves document categories and class mappings while clearing early collection, waivers and independent review', () => {
+    const requirement = {
+      ...createDocumentRequirement('BIRTH', 'Birth certificate'),
+      documentTypeId: 'category',
+      standardIds: ['class'],
+    };
+    const result = configuration(
+      normalizeStageConfiguration(
+        stage(5, {
+          documentVerification: {
+            ...DEFAULT_DOCUMENT_POLICY,
+            allowWaivers: true,
+            requireIndependentReview: true,
+            collectionFormStageCode: 'FORM',
+            requirements: [requirement],
+          },
+        })
+      )
+    );
+    expect(result.documentVerification).toMatchObject({
+      enabled: true,
+      allowWaivers: false,
+      requireIndependentReview: false,
+      collectionFormStageCode: null,
+      requirements: [requirement],
+    });
+  });
+  it('removes the legacy Payment collection configuration without changing sibling settings', () => {
+    expect(
+      configuration(
+        normalizeStageConfiguration(
+          stage(4, { payment: { requiredAmount: 500 }, extension: 'keep' })
+        )
+      )
+    ).toEqual({ extension: 'keep' });
+  });
+  it('preserves unsupported saved policies for actionable validation', () => {
+    const unsupported = stage(2, { assessment: { ...DEFAULT_ASSESSMENT_POLICY, version: 9 } });
+    expect(normalizeStageConfiguration(unsupported)).toBe(unsupported);
+  });
+  it('allows multiple unnamed server references but rejects duplicate persisted document codes', () => {
+    const json = (requirements: ReturnType<typeof createDocumentRequirement>[]) =>
+      JSON.stringify({ documentVerification: { ...DEFAULT_DOCUMENT_POLICY, requirements } });
+    expect(
+      getDocumentConfigurationError(
+        json([createDocumentRequirement('', 'First'), createDocumentRequirement('', 'Second')])
+      )
+    ).toBeUndefined();
+    expect(
+      getDocumentConfigurationError(
+        json([
+          createDocumentRequirement('DUPLICATE', 'First'),
+          createDocumentRequirement('DUPLICATE', 'Second'),
+        ])
+      )
+    ).toBe('Each document must have a unique code.');
+  });
 });

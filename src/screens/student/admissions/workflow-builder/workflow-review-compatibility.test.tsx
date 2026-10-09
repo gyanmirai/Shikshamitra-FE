@@ -1,103 +1,32 @@
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
-import { DEFAULT_REVIEW_POLICY } from 'src/redux/student/admissions/admission-review-policy';
 
-import { setupReviewEditor } from './review-editor-test-fixture';
+import { renderRetiredStage } from './stage-retirement-test-fixture';
 
-describe('review configuration compatibility', { timeout: 15000 }, () => {
-  it('disallows a legacy skip setting when the stage is required', async () => {
-    const user = userEvent.setup();
-    const { onSave } = await setupReviewEditor(
-      JSON.stringify({ review: DEFAULT_REVIEW_POLICY }),
-      false,
-      true,
-      [],
-      { allowManualSkip: true }
-    );
-    expect(screen.getByRole('switch', { name: 'Required stage' })).toBeChecked();
-    expect(screen.queryByRole('switch', { name: 'Allow authorized skip' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: 'Complete manually' }));
-    expect(screen.getByRole('switch', { name: 'Required stage' })).toBeChecked();
-    expect(screen.queryByRole('switch', { name: 'Allow authorized skip' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(onSave.mock.calls[0][0].allowManualSkip).toBe(false);
-    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).review.enabled).toBe(false);
-  });
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
-  it('keeps an unsupported environment basic without adding a policy on save', async () => {
-    const user = userEvent.setup();
-    const { onSave } = await setupReviewEditor(undefined, false, false);
-    expect(screen.getByRole('radio', { name: 'Complete manually' })).toBeChecked();
-    expect(
-      screen.getByRole('radio', { name: 'Collect a staff review and recommendation' })
-    ).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(onSave.mock.calls[0][0].configurationJson).toBeUndefined();
-  });
-
-  it('preserves future settings and blocks silently replacing them', async () => {
-    const user = userEvent.setup();
-    const { onSave } = await setupReviewEditor(
-      JSON.stringify({ review: { ...DEFAULT_REVIEW_POLICY, version: 2 } })
-    );
-    expect(screen.getByRole('alert')).toHaveTextContent('preserved');
-    expect(
-      screen.getByRole('radio', { name: 'Collect a staff review and recommendation' })
-    ).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    expect(onSave).not.toHaveBeenCalled();
-  });
-
-  it('shows published settings without exposing editing actions', async () => {
-    const user = userEvent.setup();
-    await setupReviewEditor(
-      JSON.stringify({
-        review: {
-          ...DEFAULT_REVIEW_POLICY,
-          checklist: [{ code: 'CHECK', name: 'Identity confirmed', required: true }],
-        },
-      }),
-      true
-    );
-    expect(screen.getByText('Identity confirmed')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Review timing' }));
-    expect(screen.getByRole('switch', { name: 'Set a review due date' })).toBeDisabled();
-    expect(
-      screen.queryByRole('button', { name: 'Add review checklist item' })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'Reviewer role (optional)' })).toHaveAttribute(
-        'aria-disabled',
-        'true'
-      )
-    );
-    expect(screen.getByRole('switch', { name: 'Required stage' })).toBeDisabled();
-    expect(screen.queryByRole('switch', { name: 'Allow authorized skip' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Stage behavior' })).toBeVisible();
-  });
-
-  it('does not offer later or basic source stages and blocks an unavailable saved prerequisite', async () => {
-    const user = userEvent.setup();
-    const { onSave } = await setupReviewEditor(
-      JSON.stringify({
-        review: {
-          ...DEFAULT_REVIEW_POLICY,
-          prerequisites: [{ kind: 'assessment', sourceStageCode: 'REMOVED_EXAM' }],
-        },
-      }),
-      false,
-      true,
-      []
-    );
-    expect(screen.getByText(/is no longer an earlier configured/)).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Remove' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+// The five-stage model retires this editor; replacement must be explicit and preserve the draft until confirmed.
+it('retires Review settings and requires explicit replacement', async () => {
+  const { onSave, stage } = renderRetiredStage(6, 'Review');
+  expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
+  expect(screen.queryByRole('radio', { name: 'Review timing' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Review timing' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Apply changes' })).toBeDisabled();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+  await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByRole('textbox', { name: 'Stage name *' })).toHaveValue(stage.name);
+  expect(onSave).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+  await user.click(screen.getByRole('option', { name: 'Admission Decision' }));
+  await user.click(screen.getByRole('button', { name: 'Change type' }));
+  await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+  expect(onSave.mock.calls[0][0]).toMatchObject({
+    stageType: 7,
+    configurationJson: undefined,
+    code: stage.code,
   });
 });

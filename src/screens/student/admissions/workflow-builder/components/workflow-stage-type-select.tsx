@@ -10,6 +10,11 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
+import {
+  isApplicationStageType,
+  normalizeStageConfiguration,
+} from '../workflow-stage-configuration';
+
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
@@ -21,20 +26,22 @@ export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly
   const [pending, setPending] = useState<AdmissionWorkflowStageTypeMetadata | null>(null);
   const applyType = (next: AdmissionWorkflowStageTypeMetadata) => {
     if (readOnly) return;
-    formik.setValues({
-      ...formik.values,
-      stageType: next.type,
-      name:
-        !formik.values.name.trim() || formik.values.name === metadata?.displayName
-          ? next.displayName
-          : formik.values.name,
-      description:
-        !formik.values.description?.trim() || formik.values.description === metadata?.description
-          ? next.description
-          : formik.values.description,
-      configurationJson: undefined,
-      isEntryStage: next.canBeEntryStage && formik.values.isEntryStage,
-    });
+    formik.setValues(
+      normalizeStageConfiguration({
+        ...formik.values,
+        stageType: next.type,
+        name:
+          !formik.values.name.trim() || formik.values.name === metadata?.displayName
+            ? next.displayName
+            : formik.values.name,
+        description:
+          !formik.values.description?.trim() || formik.values.description === metadata?.description
+            ? next.description
+            : formik.values.description,
+        configurationJson: undefined,
+        isEntryStage: next.canBeEntryStage && formik.values.isEntryStage,
+      })
+    );
     setPending(null);
   };
 
@@ -49,7 +56,9 @@ export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly
         options={stageTypes
           .filter(
             (item) =>
-              (item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false) ||
+              (isApplicationStageType(item.type) &&
+                item.isRuntimeReady &&
+                item.isSelectable !== false) ||
               item.type === formik.values.stageType
           )
           .map((item) => ({ value: item.type, label: item.displayName }))}

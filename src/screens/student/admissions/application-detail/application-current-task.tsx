@@ -1,3 +1,4 @@
+import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 import type {
   AdmissionApplicationStage,
   AdmissionApplicationStatus,
@@ -18,9 +19,14 @@ import {
 } from './application-progress-model';
 
 type Props = {
+  compact?: boolean;
   stage: AdmissionApplicationStage;
   applicationStatus: AdmissionApplicationStatus;
   nextRequiredAction?: string | null;
+  formPolicy?: Pick<
+    AdmissionFormStagePolicy,
+    'autoAdvanceOnSubmit' | 'requireSectionVerification'
+  > | null;
   active: boolean;
   awaitingDecision: boolean;
   canComplete: boolean;
@@ -35,9 +41,11 @@ type Props = {
 };
 
 export function ApplicationCurrentTask({
+  compact = false,
   stage,
   applicationStatus,
   nextRequiredAction,
+  formPolicy,
   active,
   awaitingDecision,
   canComplete,
@@ -54,49 +62,51 @@ export function ApplicationCurrentTask({
 
   return (
     <Box component="section" aria-labelledby="current-application-step-heading">
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ md: 'flex-start' }}
-        spacing={1.5}
-      >
-        <Box sx={{ minWidth: 0 }}>
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-            <Typography
-              id="current-application-step-heading"
-              variant="h4"
-              sx={{ overflowWrap: 'anywhere' }}
-            >
-              {stage.name}
-            </Typography>
-            <Label color={getStageStatusColor(stage.status)}>
-              {getStageStatusLabel(stage.status)}
-            </Label>
-          </Stack>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75 }}>
-            {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
-          </Typography>
-        </Box>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:file-document-outline" />}
-          onClick={onReviewForm}
-          sx={{
-            display: { xs: 'none', md: 'inline-flex' },
-            flexShrink: 0,
-          }}
+      {!compact && (
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ md: 'flex-start' }}
+          spacing={1.5}
         >
-          Review application form
-        </Button>
-      </Stack>
+          <Box sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+              <Typography
+                id="current-application-step-heading"
+                variant="h4"
+                sx={{ overflowWrap: 'anywhere' }}
+              >
+                {stage.name}
+              </Typography>
+              <Label color={getStageStatusColor(stage.status)}>
+                {getStageStatusLabel(stage.status)}
+              </Label>
+            </Stack>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75 }}>
+              {getStageGuidance(stage, applicationStatus, nextRequiredAction, formPolicy)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:file-document-outline" />}
+            onClick={onReviewForm}
+            sx={{
+              display: { xs: 'none', md: 'inline-flex' },
+              flexShrink: 0,
+            }}
+          >
+            Review application form
+          </Button>
+        </Stack>
+      )}
 
       {active && showActions && (
         <>
-          <Divider sx={{ my: 2 }} />
+          {!compact && <Divider sx={{ my: 2 }} />}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
             {canComplete && (
               <LoadingButton
@@ -122,7 +132,7 @@ export function ApplicationCurrentTask({
                 Continue admission
               </LoadingButton>
             )}
-            {awaitingDecision && (
+            {!compact && awaitingDecision && (
               <Button
                 size="small"
                 variant="outlined"
@@ -148,9 +158,13 @@ export function ApplicationCurrentTask({
         </>
       )}
 
-      {isFormStage(stage) && !canRetryFormHandoff && (
+      {!compact && isFormStage(stage) && !canRetryFormHandoff && formPolicy && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-          The form automatically advances this journey after a successful submission.
+          {formPolicy.requireSectionVerification
+            ? 'This step continues after the required sections are verified.'
+            : formPolicy.autoAdvanceOnSubmit
+              ? 'The form automatically advances this journey after a successful submission.'
+              : 'After successful submission, use Continue to finish this step.'}
         </Typography>
       )}
     </Box>

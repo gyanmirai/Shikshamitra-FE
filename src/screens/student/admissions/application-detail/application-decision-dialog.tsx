@@ -5,8 +5,6 @@ import type {
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-import dayjs from 'dayjs';
-import { DateTimePicker } from '@mui/x-date-pickers';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
@@ -14,7 +12,6 @@ import { Alert, Stack, TextField, Typography } from '@mui/material';
 import { ReviewDialog } from '../review/review-dialog';
 import { formatAdmissionReference } from '../admission-reference';
 import { ReviewRecoveryAlert } from '../review/review-recovery-alert';
-import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { useApplicationDecisionForm } from './use-application-decision-form';
 import { ApplicationDecisionDialogActions } from './application-decision-dialog-actions';
 import {
@@ -43,7 +40,7 @@ export function ApplicationDecisionDialog({
   onSubmit,
   onReload,
 }: Props) {
-  const { formik, current, recovery, canRecord, requiresReason, requiresExpiry, reload } =
+  const { formik, current, recovery, canRecord, requiresReason, reload } =
     useApplicationDecisionForm({ action, application, onSubmit, onClose, onReload });
   const isBusy = busy || formik.isSubmitting || recovery.reloading;
 
@@ -88,49 +85,20 @@ export function ApplicationDecisionDialog({
             {concurrencyUnavailable && (
               <Alert severity="warning">
                 This decision is not available in the current application state. Reload after a
-                failed request to check the latest permissions and review requirements.
+                failed request to check the latest permissions and decision state.
               </Alert>
             )}
-            {requiresExpiry && (
-              <DateTimePicker
-                label="Offer expires at *"
-                disabled={isBusy}
-                format={ADMISSION_DATE_TIME_FORMAT}
-                value={formik.values.offerExpiresAt ? dayjs(formik.values.offerExpiresAt) : null}
-                minDateTime={dayjs()}
-                onChange={(value) =>
-                  formik.setFieldValue(
-                    'offerExpiresAt',
-                    value?.isValid() ? value.toISOString() : ''
-                  )
-                }
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    size: 'small',
-                    onBlur: () => formik.setFieldTouched('offerExpiresAt', true),
-                    error: Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt),
-                    helperText:
-                      (formik.touched.offerExpiresAt && formik.errors.offerExpiresAt) ||
-                      'Enter date and time in your local timezone (DD-MM-YYYY hh:mm AM/PM).',
-                  },
-                }}
-              />
-            )}
-            {action !== 'accept' && (
-              <TextField
-                fullWidth
-                disabled={isBusy}
-                multiline
-                minRows={3}
-                size="small"
-                label={requiresReason ? 'Reason *' : 'Reason (optional)'}
-                {...formik.getFieldProps('reason')}
-                error={Boolean(formik.touched.reason && formik.errors.reason)}
-                helperText={formik.touched.reason && formik.errors.reason}
-              />
-            )}
+            <TextField
+              fullWidth
+              disabled={isBusy}
+              multiline
+              minRows={3}
+              size="small"
+              label={requiresReason ? 'Reason *' : 'Reason (optional)'}
+              {...formik.getFieldProps('reason')}
+              error={Boolean(formik.touched.reason && formik.errors.reason)}
+              helperText={formik.touched.reason && formik.errors.reason}
+            />
           </Stack>
         </FormBusyRegion>
       </DialogScrollContent>

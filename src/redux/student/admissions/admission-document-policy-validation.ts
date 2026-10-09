@@ -12,12 +12,11 @@ const documentReferenceId = (message: string) =>
 
 export const documentRequirementSchema = Yup.object({
   code: Yup.string()
-    .required('Document code is required')
     .max(64, 'Use at most 64 characters for the document code')
-    .matches(
-      /^[A-Z][A-Z0-9_]*$/,
-      'Use uppercase letters, numbers, and underscores for the document code'
-    ),
+    .matches(/^[A-Z][A-Z0-9_]*$/, {
+      message: 'Use uppercase letters, numbers, and underscores for the document code',
+      excludeEmptyString: true,
+    }),
   name: Yup.string()
     .trim()
     .required('Document name is required')
@@ -82,11 +81,14 @@ export function getDocumentConfigurationError(json?: string): string | undefined
     return 'Choose a valid Form stage for early document collection.';
   if (!policy.requirements.length || policy.requirements.length > 30)
     return 'Add between 1 and 30 document requirements.';
-  if (new Set(policy.requirements.map((item) => item.code)).size !== policy.requirements.length) {
+  const savedCodes = policy.requirements.map((item) => item.code).filter(Boolean);
+  if (new Set(savedCodes).size !== savedCodes.length) {
     return 'Each document must have a unique code.';
   }
   return policy.requirements
     .map((item, index) => {
+      if (item.requirement === 'conditional')
+        return `Document ${index + 1}: Choose required or optional for this document.`;
       try {
         documentRequirementSchema.validateSync(item);
         return undefined;

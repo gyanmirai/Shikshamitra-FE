@@ -65,10 +65,10 @@ const candidate: AdmissionFeeStructureCandidate = {
 const base: AdmissionFeeSelection = {
   applicationId: 'application-1',
   concurrencyStamp: 'stamp-1',
-  ownerStageId: 'offer',
-  ownerStageName: 'Offer',
-  ownerStageType: 8,
-  currentStageId: 'offer',
+  ownerStageId: 'payment',
+  ownerStageName: 'Payment',
+  ownerStageType: 4,
+  currentStageId: 'payment',
   currency: 'INR',
   available: true,
   isRequired: false,
@@ -129,7 +129,42 @@ describe('AdmissionFeeSelectionPanel', () => {
     mocks.confirm.mockReturnValue({ unwrap: mocks.confirmationUnwrap });
     mocks.confirmationUnwrap.mockResolvedValue(selected);
   });
-  it('skips inaccessible data and hides selection before an Offer or Payment stage is entered', () => {
+  it('keeps compact selection and stage guards visible while disclosing saved published heads', async () => {
+    setRead(selected);
+    const onContinue = vi.fn();
+    renderPanel({
+      compact: true,
+      canContinue: true,
+      completionStageId: 'another-stage',
+      onContinue,
+    });
+    expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    const details = screen.getByRole('button', { name: 'Published fee heads' });
+    expect(details).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByLabelText('Selected fee heads')).not.toBeVisible();
+    fireEvent.click(details);
+    await waitFor(() => expect(screen.getByLabelText('Selected fee heads')).toBeVisible());
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('keeps paid compact selections locked and never exposes new money commands', () => {
+    setRead({ ...selected, isLocked: true, canEdit: false });
+    renderPanel({ compact: true });
+    expect(screen.getByText(/Payment has been recorded/)).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /collect|waive|refund/i })).not.toBeInTheDocument();
+  });
+  it('shows completed fee review without selection or workflow writes even with management access', () => {
+    setRead(selected);
+    renderPanel({ compact: true, readOnly: true, canContinue: true, onContinue: vi.fn() });
+    expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+    expect(mocks.candidates).not.toHaveBeenCalled();
+  });
+  it('skips inaccessible data and hides selection before its Payment stage is entered', () => {
     permissions = [];
     const { unmount } = renderPanel();
     expect(mocks.read).toHaveBeenCalledWith('application-1', { skip: true });
@@ -164,7 +199,7 @@ describe('AdmissionFeeSelectionPanel', () => {
       refetchOnMountOrArgChange: true,
     });
     expect(screen.getByText(/No published fee structure matches/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
   });
   it('saves selected optional heads with the application concurrency token and preserves errors for retry', async () => {
     mocks.unwrap.mockRejectedValue({
@@ -177,7 +212,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
     fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
-    fireEvent.click(screen.getByRole('button', { name: 'Save fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -193,9 +228,11 @@ describe('AdmissionFeeSelectionPanel', () => {
       'Class one fees'
     );
     mocks.unwrap.mockResolvedValue(selected);
-    fireEvent.click(screen.getByRole('button', { name: 'Save fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Save fee structure' })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Confirm fee structure' })
+      ).not.toBeInTheDocument()
     );
   });
   it('keeps paid and subsequent-stage selections read only with their saved revision', () => {
@@ -241,7 +278,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     mocks.candidates.mockReturnValue({ isLoading: true, isFetching: true });
     const { unmount } = renderPanel();
     fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
-    expect(screen.getByRole('button', { name: 'Save fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
     unmount();
     mocks.candidates.mockReturnValue({ isError: true, refetch: mocks.refetch });
     renderPanel();
@@ -281,7 +318,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Fee structure *' }));
     fireEvent.click(screen.getByRole('option', { name: 'Class one fees · Revision 2' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Save fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
     expect(
       await screen.findByText(
         'Select at least one optional fee head. This structure has no mandatory heads.'
@@ -312,12 +349,12 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByRole('combobox', { name: 'Optional fee heads' })).toHaveTextContent(
       'Transport'
     );
-    expect(screen.getByRole('button', { name: 'Save fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
     setRead(base);
     refresh();
-    fireEvent.click(screen.getByRole('button', { name: 'Save fee structure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
     await waitFor(() =>
       expect(mocks.save).toHaveBeenCalledWith({
         applicationId: 'application-1',
@@ -340,4 +377,47 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByText('Class one fees · Revision 2')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirm admission fee selection' })).toBeEnabled();
   });
+});
+
+describe('Payment fee structure confirmation', () => {
+  beforeEach(() => {
+    permissions = [
+      { name: 'Students.Admissions.Applications.Add', isGranted: true },
+      { name: 'Students.Admissions.Applications.View', isGranted: true },
+    ];
+    mocks.refetch.mockReset();
+  });
+  it('requires a saved selection before allowing Continue and does not expose collection actions', () => {
+    const onContinue = vi.fn();
+    setRead({ ...base, isRequired: true });
+    const view = renderPanel({ canContinue: true, onContinue });
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Record payment' })).not.toBeInTheDocument();
+    view.unmount();
+    setRead(selected);
+    renderPanel({ canContinue: true, onContinue });
+    expect(screen.getByText('Fee structure confirmed.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(onContinue).toHaveBeenCalledOnce();
+  });
+  it.each([{ isError: true }, { isFetching: true }])(
+    'blocks continuation on stale/error fee selection state: %j',
+    (extra) => {
+      setRead(selected, extra);
+      renderPanel({ canContinue: true, onContinue: vi.fn() });
+      expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    }
+  );
+  it('does not continue when the authoritative current stage differs from the displayed Payment stage', () => {
+    setRead({ ...selected, currentStageId: 'documents' });
+    renderPanel({ canContinue: true, completionStageId: 'payment', onContinue: vi.fn() });
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+  });
+});
+
+it('reuses the saved structure in a later Payment stage without requiring another owner snapshot', () => {
+  permissions = [{ name: 'Students.Admissions.Applications.View', isGranted: true }];
+  setRead({ ...selected, currentStageId: 'payment-2' });
+  renderPanel({ canContinue: true, completionStageId: 'payment-2', onContinue: vi.fn() });
+  expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
 });

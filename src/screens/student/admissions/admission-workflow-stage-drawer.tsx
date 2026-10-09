@@ -7,14 +7,14 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Box, Stack, Alert, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 import { readAdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
+import { isApplicationStageType } from './workflow-builder/workflow-stage-configuration';
 import { WorkflowStageFields } from './workflow-builder/components/workflow-stage-fields';
 import { useWorkflowStageEditor } from './workflow-builder/hooks/use-workflow-stage-editor';
 
@@ -33,7 +33,6 @@ type Props = {
 };
 
 export function AdmissionWorkflowStageDrawer(props: Props) {
-  const [activeStep, setActiveStep] = useState(0);
   const {
     open,
     stage,
@@ -49,7 +48,6 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
   } = props;
   const {
     formik,
-    validationSchema,
     metadata,
     formDefinitionId,
     forms: resolvedForms,
@@ -64,25 +62,6 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
   const verificationRequired =
     formik.values.stageType === 1 &&
     readAdmissionFormStagePolicy(formik.values.configurationJson)?.requireSectionVerification;
-
-  useEffect(() => {
-    if (open) setActiveStep(0);
-  }, [open, stage?.id]);
-
-  const validateCurrentStep = async () => {
-    if (readOnly) return {};
-    const errors = await formik.validateForm();
-    const basicErrors = Object.fromEntries(
-      Object.entries(errors).filter(
-        ([field]) =>
-          ['name', 'code', 'description', 'stageType'].includes(field) ||
-          (field === 'configurationJson' && metadata?.supportsFormAttachment && !formDefinitionId)
-      )
-    );
-    if (activeStep === 0) return basicErrors;
-    if (Object.keys(basicErrors).length > 0) setActiveStep(0);
-    return errors;
-  };
 
   return (
     <>
@@ -123,93 +102,70 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
             </IconButton>
           </Stack>
           <Divider />
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomStepperWithFormik
-              steps={['Stage details', 'Completion rules']}
-              activeStep={activeStep}
-              initialValues={formik.initialValues}
-              formikInstance={{ ...formik, validateForm: validateCurrentStep }}
-              validationSchema={validationSchema}
-              showSaveButton={false}
-              nextButtonLabel="Next"
-              finalButtonLabel={readOnly ? 'Close' : 'Apply changes'}
-              completedSteps={activeStep === 1 ? [0] : []}
-              isStepClickable={(index) => index <= activeStep}
-              onStepClick={(index) => setActiveStep(index)}
-              onCancel={requestClose}
-              handleBack={() => setActiveStep(0)}
-              disableSubmit={
-                !readOnly &&
-                (formik.values.stageType === 0 ||
-                  Boolean(verificationRequired && formDetailsUnavailable))
-              }
-              errors={[
-                Boolean(
-                  (formik.touched.name && formik.errors.name) ||
-                  (formik.touched.code && formik.errors.code) ||
-                  (formik.touched.description && formik.errors.description) ||
-                  (formik.touched.configurationJson &&
-                    formik.errors.configurationJson &&
-                    !formDefinitionId &&
-                    metadata?.supportsFormAttachment)
-                ),
-                Boolean(
-                  formik.touched.configurationJson &&
-                  formik.errors.configurationJson &&
-                  (!metadata?.supportsFormAttachment || formDefinitionId)
-                ),
-              ]}
-              backButtonProps={{
-                size: 'small',
-                sx: { ml: 'auto', mr: 1 },
-                startIcon: <Iconify icon={activeStep === 0 ? 'mdi:close' : 'mdi:arrow-left'} />,
-              }}
-              saveAndNextButtonProps={{
-                size: 'small',
-                startIcon:
-                  activeStep === 1 ? (
-                    <Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />
-                  ) : null,
-              }}
-              handleNext={(isLastStep) => {
-                if (!isLastStep) setActiveStep(1);
-                else if (readOnly) requestClose();
-                else formik.submitForm();
-              }}
-              renderItem={() => (
-                <>
-                  {Boolean(
-                    (formik.touched.code && formik.errors.code) ||
-                    (formik.touched.description && formik.errors.description)
-                  ) && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                      This stage has invalid saved details. Restore a valid workflow version or
-                      replace this stage before applying changes.
-                    </Alert>
-                  )}
-                  <WorkflowStageFields
-                    formik={formik}
-                    activeStep={activeStep}
-                    onGoToBasics={() => setActiveStep(0)}
-                    metadata={metadata}
-                    stageTypes={stageTypes}
-                    forms={resolvedForms}
-                    formDetailsLoading={formDetailsLoading}
-                    formDetailsError={formDetailsError}
-                    onRetryFormDetails={retryFormDetails}
-                    stages={stages}
-                    transitions={transitions}
-                    formDefinitionId={formDefinitionId}
-                    readOnly={readOnly}
-                    onAddPath={onAddPath}
-                    onEditPath={onEditPath}
-                    routeEditingDisabled={
-                      formik.dirty || !stages.some((item) => item.id === formik.values.id)
-                    }
-                  />
-                </>
+          <Box
+            component="form"
+            noValidate
+            onSubmit={formik.handleSubmit}
+            sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+          >
+            <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+              {Boolean(
+                (formik.touched.code && formik.errors.code) ||
+                (formik.touched.description && formik.errors.description)
+              ) && (
+                <Alert severity="error" sx={{ mx: 2, mt: 2 }}>
+                  This stage has invalid saved details. Restore a valid workflow version or replace
+                  this stage before applying changes.
+                </Alert>
               )}
-            />
+              {formik.touched.stageType && formik.errors.stageType && (
+                <Alert severity="error" sx={{ mx: 2, mt: 2 }}>
+                  {formik.errors.stageType}
+                </Alert>
+              )}
+              <WorkflowStageFields
+                formik={formik}
+                metadata={metadata}
+                stageTypes={stageTypes}
+                forms={resolvedForms}
+                formDetailsLoading={formDetailsLoading}
+                formDetailsError={formDetailsError}
+                onRetryFormDetails={retryFormDetails}
+                stages={stages}
+                transitions={transitions}
+                formDefinitionId={formDefinitionId}
+                readOnly={readOnly}
+                onAddPath={onAddPath}
+                onEditPath={onEditPath}
+                routeEditingDisabled={
+                  formik.dirty || !stages.some((item) => item.id === formik.values.id)
+                }
+              />
+            </Scrollbar>
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="flex-end"
+              sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
+            >
+              <Button size="small" variant="outlined" onClick={requestClose}>
+                Back
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                type={readOnly ? 'button' : 'submit'}
+                onClick={readOnly ? requestClose : undefined}
+                disabled={
+                  !readOnly &&
+                  (!isApplicationStageType(formik.values.stageType) ||
+                    Boolean(verificationRequired && formDetailsUnavailable))
+                }
+                startIcon={<Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />}
+              >
+                {readOnly ? 'Close' : 'Apply changes'}
+              </Button>
+            </Stack>
           </Box>
         </Box>
       </Drawer>

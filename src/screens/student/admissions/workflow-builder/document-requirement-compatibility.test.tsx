@@ -10,34 +10,33 @@ import { renderDocumentUi } from '../document-verification/document-ui-test-fixt
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
-describe('document requirement compatibility', { timeout: 15000 }, () => {
-  it.each(['Required for every applicant', 'Optional'])(
-    'clears a condition when staff explicitly choose %s',
-    async (choice) => {
-      const save = vi.fn();
-      const user = userEvent.setup();
-      renderDocumentUi(
-        <DocumentRequirementDialog
-          initial={{
-            ...createDocumentRequirement('TRANSFER', 'Transfer certificate'),
-            requirement: 'conditional',
-            conditionJson: '{"field":"application.PREVIOUS_SCHOOL","operator":"IsEmpty"}',
-          }}
-          forms={[]}
-          documentTypes={[]}
-          existingCodes={[]}
-          onClose={vi.fn()}
-          onSave={save}
-        />
-      );
-      await chooseDocumentOption(user, 'When is it required?', choice);
-      await user.click(screen.getByRole('button', { name: 'Save requirement' }));
-      await waitFor(() => expect(save).toHaveBeenCalledOnce());
-      expect(save.mock.calls[0][0].conditionJson).toBeUndefined();
-    }
-  );
-
-  it('blocks incompatible upload mapping but allows switching to an original-only requirement', async () => {
+describe('document requirement validation', { timeout: 15000 }, () => {
+  it('clears a saved condition only when staff explicitly choose required or optional', async () => {
+    const save = vi.fn();
+    const user = userEvent.setup();
+    renderDocumentUi(
+      <DocumentRequirementDialog
+        initial={{
+          ...createDocumentRequirement('TRANSFER', 'Transfer certificate'),
+          requirement: 'conditional',
+          conditionJson: '{"field":"application.PREVIOUS_SCHOOL","operator":"IsEmpty"}',
+        }}
+        documentTypes={[]}
+        existingCodes={[]}
+        onClose={vi.fn()}
+        onSave={save}
+      />
+    );
+    await user.click(screen.getByRole('switch', { name: 'Required document' }));
+    await user.click(screen.getByRole('button', { name: 'Save requirement' }));
+    await waitFor(() => expect(save).toHaveBeenCalledOnce());
+    expect(save.mock.calls[0][0]).toMatchObject({
+      requirement: 'required',
+      conditionJson: undefined,
+      collectionMode: 'upload',
+    });
+  });
+  it('blocks incompatible categories and provides no original-inspection bypass', async () => {
     const save = vi.fn();
     const user = userEvent.setup();
     renderDocumentUi(
@@ -52,7 +51,6 @@ describe('document requirement compatibility', { timeout: 15000 }, () => {
             maxFileSizeMb: 5,
           },
         ]}
-        forms={[]}
         existingCodes={[]}
         onClose={vi.fn()}
         onSave={save}
@@ -60,14 +58,22 @@ describe('document requirement compatibility', { timeout: 15000 }, () => {
     );
     await chooseDocumentOption(user, 'Student document category (optional)', 'Word template');
     expect(screen.getByText(/no format in common/)).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Evidence to collect' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Save requirement' }));
     expect(save).not.toHaveBeenCalled();
-    await chooseDocumentOption(user, 'Evidence to collect', 'Inspect the physical original');
+    await chooseDocumentOption(
+      user,
+      'Student document category (optional)',
+      'Keep as admission evidence'
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Allowed file formats' }));
+    await user.click(screen.getByRole('option', { name: 'PDF' }));
+    await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'Save requirement' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
-      collectionMode: 'original',
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      collectionMode: 'upload',
+      allowedExtensions: ['pdf'],
     });
   });
 });

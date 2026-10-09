@@ -2,6 +2,7 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
+
 import { getStageRouteBlocker } from './workflow-runtime-route-rules';
 
 type ConditionNode = {
@@ -34,22 +35,17 @@ export type WorkflowSimulationScenario = {
 };
 
 const happyPathFacts: Record<string, string> = {
-  'inquiry.management.outcome': 'Qualified',
   'assessment.outcome': 'passed',
   'documents.status': 'verified',
-  'documents.waivedCount': '0',
-  'eligibility.status': 'eligible',
-  'payment.status': 'settled',
-  'review.decision': 'approve',
-  'offer.status': 'accepted',
-  'seat.status': 'confirmed',
+  'payment.status': 'feeStructureConfirmed',
+  'application.status': 'Approved',
 };
 
 export const WORKFLOW_SIMULATION_SCENARIOS: WorkflowSimulationScenario[] = [
   {
     id: 'happy',
     label: 'Happy path',
-    description: 'Qualified applicant with successful checks, payment, offer, and seat.',
+    description: 'Completed form, assessment and documents with a confirmed Finance fee structure.',
     facts: happyPathFacts,
   },
   {
@@ -61,75 +57,26 @@ export const WORKFLOW_SIMULATION_SCENARIOS: WorkflowSimulationScenario[] = [
   {
     id: 'documents-missing',
     label: 'Documents unresolved',
-    description: 'Checks the route selected while required document evidence is unresolved.',
+    description: 'Required documents must be accepted before continuing.',
     facts: { ...happyPathFacts, 'documents.status': 'pending' },
   },
   {
-    id: 'eligibility-failed',
-    label: 'Eligibility failed',
-    description: 'Checks that an ineligible applicant reaches review or a controlled outcome.',
-    facts: { ...happyPathFacts, 'eligibility.status': 'ineligible' },
-  },
-  {
-    id: 'eligibility-exception',
-    label: 'Eligibility exception',
-    description: 'Checks the authorized exception route for an otherwise ineligible applicant.',
-    facts: {
-      ...happyPathFacts,
-      'eligibility.status': 'exceptionApproved',
-    },
-  },
-  {
-    id: 'payment-pending',
-    label: 'Payment pending',
-    description: 'Checks that an unsettled payment does not silently take the success route.',
-    facts: { ...happyPathFacts, 'payment.status': 'pendingVerification' },
-  },
-  {
-    id: 'payment-waived',
-    label: 'Payment waived',
-    description: 'Checks the authorized payment-waiver route.',
-    facts: { ...happyPathFacts, 'payment.status': 'waived' },
-  },
-  {
-    id: 'review-correction',
-    label: 'Review correction',
-    description: 'Checks the controlled return route when staff requests a correction.',
-    facts: { ...happyPathFacts, 'review.decision': 'correctionRequired' },
+    id: 'fee-unconfirmed',
+    label: 'Fee structure unconfirmed',
+    description: 'A published Finance fee structure must be confirmed before continuing.',
+    facts: { ...happyPathFacts, 'payment.status': 'pending' },
   },
   {
     id: 'rejected',
     label: 'Application rejected',
-    description: 'Checks that a rejection reaches an explicit terminal outcome.',
-    facts: { ...happyPathFacts, 'review.decision': 'reject' },
+    description: 'Checks the route for a rejected admission decision.',
+    facts: { ...happyPathFacts, 'application.status': 'Rejected' },
   },
   {
     id: 'waitlisted',
     label: 'Applicant waitlisted',
-    description: 'Checks the configured review and seat waitlist routes.',
-    facts: {
-      ...happyPathFacts,
-      'review.decision': 'waitlist',
-      'seat.status': 'waitlisted',
-    },
-  },
-  {
-    id: 'offer-declined',
-    label: 'Offer declined',
-    description: 'Checks the controlled route for an applicant who declines an offer.',
-    facts: { ...happyPathFacts, 'offer.status': 'declined' },
-  },
-  {
-    id: 'offer-expired',
-    label: 'Offer expired',
-    description: 'Checks the controlled route after the offer response window expires.',
-    facts: { ...happyPathFacts, 'offer.status': 'expired' },
-  },
-  {
-    id: 'seat-expired',
-    label: 'Seat hold expired',
-    description: 'Checks the controlled route when a reserved seat expires.',
-    facts: { ...happyPathFacts, 'seat.status': 'expired' },
+    description: 'Checks the route for a waitlisted admission decision.',
+    facts: { ...happyPathFacts, 'application.status': 'Waitlisted' },
   },
 ];
 
@@ -144,7 +91,11 @@ const compareNumbers = (
   const leftNumber = Number(left);
   const rightNumber = Number(right);
   return (
-    left.trim() !== '' && right.trim() !== '' && Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && compare(leftNumber, rightNumber)
+    left.trim() !== '' &&
+    right.trim() !== '' &&
+    Number.isFinite(leftNumber) &&
+    Number.isFinite(rightNumber) &&
+    compare(leftNumber, rightNumber)
   );
 };
 

@@ -11,16 +11,13 @@ import { FormSectionCard } from 'src/components/form-section-card';
 
 import { WorkflowStageForm } from './workflow-stage-form';
 import { WorkflowStageBasics } from './workflow-stage-basics';
-import { WorkflowSeatSettings } from './workflow-seat-settings';
 import { WorkflowStageBehavior } from './workflow-stage-behavior';
-import { WorkflowOfferSettings } from './workflow-offer-settings';
-import { WorkflowReviewSettings } from './workflow-review-settings';
 import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
 import { WorkflowPaymentSettings } from './workflow-payment-settings';
 import { WorkflowFormStageFields } from './workflow-form-stage-fields';
 import { WorkflowDocumentSettings } from './workflow-document-settings';
+import { isApplicationStageType } from '../workflow-stage-configuration';
 import { WorkflowAssessmentSettings } from './workflow-assessment-settings';
-import { WorkflowEligibilitySettings } from './workflow-eligibility-settings';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
@@ -34,8 +31,6 @@ type Props = {
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
-  activeStep: number;
-  onGoToBasics: () => void;
   onAddPath?: (stage: AdmissionWorkflowStage) => void;
   onEditPath?: (transition: AdmissionWorkflowTransition) => void;
   routeEditingDisabled?: boolean;
@@ -46,8 +41,6 @@ export function WorkflowStageFields(props: Props) {
     formik,
     metadata,
     readOnly,
-    activeStep,
-    forms,
     stages,
     transitions,
     routeEditingDisabled,
@@ -66,54 +59,15 @@ export function WorkflowStageFields(props: Props) {
             available={available('assessment')}
           />
         );
-      case 3:
-        return (
-          <WorkflowEligibilitySettings
-            formik={formik}
-            forms={forms}
-            stages={stages}
-            readOnly={readOnly}
-            available={available('eligibility')}
-          />
-        );
       case 4:
-        return (
-          <WorkflowPaymentSettings
-            formik={formik}
-            readOnly={readOnly}
-            available={available('payment')}
-          />
-        );
+        return <WorkflowPaymentSettings available={metadata?.isRuntimeReady === true} />;
       case 5:
         return (
           <WorkflowDocumentSettings
             formik={formik}
-            forms={forms}
-            stages={stages}
             readOnly={readOnly}
             available={available('documentVerification')}
           />
-        );
-      case 6:
-        return (
-          <WorkflowReviewSettings
-            formik={formik}
-            stages={stages}
-            readOnly={readOnly}
-            available={available('review')}
-          />
-        );
-      case 8:
-        return (
-          <WorkflowOfferSettings
-            formik={formik}
-            readOnly={readOnly}
-            available={available('offer')}
-          />
-        );
-      case 9:
-        return (
-          <WorkflowSeatSettings formik={formik} readOnly={readOnly} available={available('seat')} />
         );
       default:
         return null;
@@ -121,39 +75,37 @@ export function WorkflowStageFields(props: Props) {
   };
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      {formik.values.stageType === 0 && (
+      {!isApplicationStageType(formik.values.stageType) && (
         <Alert severity="warning">
-          This saved Inquiry stage is retained for existing applications. Replace it with an
-          application stage type before saving a new workflow draft.
+          This saved stage type is no longer available. Replace it with Form, Assessment, Payment,
+          Document verification or Admission Decision.
         </Alert>
       )}
-      {activeStep === 0 ? (
+      <>
         <FormSectionCard
           title="Stage details"
           icon="mdi:file-document-outline"
-          descriptionTooltip={`${metadata?.description ?? 'Choose the stage type and name.'} Any selected form version is frozen with the workflow.`}
+          descriptionTooltip={metadata?.description ?? 'Choose the stage type and name.'}
         >
           <WorkflowStageBasics {...props} />
           {metadata?.supportsFormAttachment && <WorkflowStageForm {...props} />}
         </FormSectionCard>
-      ) : (
-        <>
-          {policy()}
-          <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
-          <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
-            <WorkflowStageNextSteps
-              stage={formik.values}
-              stages={stages}
-              transitions={transitions}
-              readOnly={readOnly}
-              routeEditingDisabled={routeEditingDisabled}
-              onAddPath={onAddPath}
-              onEditPath={onEditPath}
-            />
-          </FormSectionCard>
-          <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} advanced />
-        </>
-      )}
+
+        {policy()}
+        <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
+        <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
+          <WorkflowStageNextSteps
+            stage={formik.values}
+            stages={stages}
+            transitions={transitions}
+            readOnly={readOnly}
+            routeEditingDisabled={routeEditingDisabled}
+            onAddPath={onAddPath}
+            onEditPath={onEditPath}
+          />
+        </FormSectionCard>
+        <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} advanced />
+      </>
     </Stack>
   );
 }
