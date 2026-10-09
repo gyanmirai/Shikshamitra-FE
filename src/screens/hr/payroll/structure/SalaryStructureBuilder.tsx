@@ -500,7 +500,7 @@ export function SalaryStructureBuilder({
   const employeeName =
     formik.values.fullName ||
     [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ');
-  let footerStatus = 'Calculate to review changes';
+  let footerStatus = '';
   if (busy) {
     footerStatus = operation === 'calculate' ? 'Calculating salary…' : 'Refreshing salary…';
     if (operation === 'save') footerStatus = 'Saving salary…';

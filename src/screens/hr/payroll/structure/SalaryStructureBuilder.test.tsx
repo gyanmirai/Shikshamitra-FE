@@ -231,7 +231,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.clear(amount);
     await user.type(amount, '74200.50');
     expect(amount).toHaveValue('₹ 74,200.50');
-    expect(screen.getByRole('status')).toHaveTextContent('Calculate to review changes');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
 
