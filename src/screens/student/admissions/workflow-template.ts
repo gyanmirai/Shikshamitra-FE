@@ -6,6 +6,8 @@ import type {
 
 import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
 
+import { normalizeStageConfiguration } from './workflow-builder/workflow-stage-configuration';
+
 export const WORKFLOW_TEMPLATE_IDS = ['standard', 'simple', 'assessment', 'selective'] as const;
 
 export type WorkflowTemplateId = (typeof WORKFLOW_TEMPLATE_IDS)[number];
@@ -54,10 +56,10 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Collect and verify only the documents required by the school.',
       },
       {
-        code: 'APPLICATION_REVIEW',
-        name: 'Application reviewed',
-        stageType: 6,
-        description: 'Review the application, evidence, and staff recommendation.',
+        code: 'FEE_STRUCTURE_CONFIRMATION',
+        name: 'Fee structure confirmed',
+        stageType: 4,
+        description: 'Confirm the applicable Finance class fee structure before continuing.',
       },
       {
         code: 'ADMISSION_DECISION',
@@ -67,12 +69,11 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
       },
     ],
     description: '',
-    bestFor: ''
+    bestFor: '',
   },
   {
     id: 'simple',
     name: 'Simple admission',
-
 
     icon: 'mdi:lightning-bolt-outline',
     stages: [
@@ -96,7 +97,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
       },
     ],
     description: '',
-    bestFor: ''
+    bestFor: '',
   },
   {
     id: 'assessment',
@@ -111,12 +112,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Collect and submit the school-defined applicant and guardian information.',
       },
       {
-        code: 'ELIGIBILITY_CHECK',
-        name: 'Eligibility checked',
-        stageType: 3,
-        description: 'Evaluate age, prior study, residency, or other configured admission rules.',
-      },
-      {
         code: 'ENTRANCE_ASSESSMENT',
         name: 'Entrance assessment completed',
         stageType: 2,
@@ -127,12 +122,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         name: 'Documents verified',
         stageType: 5,
         description: 'Collect and verify only the documents required by the school.',
-      },
-      {
-        code: 'APPLICATION_REVIEW',
-        name: 'Application reviewed',
-        stageType: 6,
-        description: 'Review the application, evidence, assessment, and staff recommendation.',
       },
       {
         code: 'ADMISSION_DECISION',
@@ -145,7 +134,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   },
   {
     id: 'selective',
-    name: 'Selective admission with offer',
+    name: 'Full admission journey',
 
     bestFor: 'Large, private, residential, or highly selective schools',
     icon: 'mdi:email-seal-outline',
@@ -155,18 +144,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         name: 'Application form submitted',
         stageType: 1,
         description: 'Collect and submit the school-defined applicant and guardian information.',
-      },
-      {
-        code: 'APPLICATION_FEE',
-        name: 'Application fee verified',
-        stageType: 4,
-        description: 'Collect, verify, or formally waive the configured application fee.',
-      },
-      {
-        code: 'ELIGIBILITY_CHECK',
-        name: 'Eligibility checked',
-        stageType: 3,
-        description: 'Evaluate age, prior study, residency, or other configured admission rules.',
       },
       {
         code: 'ENTRANCE_ASSESSMENT',
@@ -181,22 +158,16 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Collect and verify only the documents required by the school.',
       },
       {
-        code: 'APPLICATION_REVIEW',
-        name: 'Application reviewed',
-        stageType: 6,
-        description: 'Review the complete application and record the staff recommendation.',
+        code: 'APPLICATION_FEE',
+        name: 'Fee structure confirmed',
+        stageType: 4,
+        description: 'Confirm the applicable Finance class fee structure before continuing.',
       },
       {
         code: 'ADMISSION_DECISION',
         name: 'Admission decision recorded',
         stageType: 7,
         description: 'Authorize an approval, waitlist, or rejection decision.',
-      },
-      {
-        code: 'ADMISSION_OFFER',
-        name: 'Admission offer completed',
-        stageType: 8,
-        description: 'Issue the approved offer and record the family response.',
       },
     ],
     description: '',
@@ -286,12 +257,14 @@ export function getAdmissionWorkflowTemplate(
     ? ensureAdmissionFormStageConfiguration(JSON.stringify({ formDefinitionId }))
     : undefined;
   const stages = definition.stages.map((item, index) =>
-    stage(item.code, item.name, item.stageType, index, {
-      description: item.description,
-      isEntryStage: index === 0,
-      isTerminalStage: index === definition.stages.length - 1,
-      configurationJson: item.stageType === 1 ? formConfiguration : undefined,
-    })
+    normalizeStageConfiguration(
+      stage(item.code, item.name, item.stageType, index, {
+        description: item.description,
+        isEntryStage: index === 0,
+        isTerminalStage: index === definition.stages.length - 1,
+        configurationJson: item.stageType === 1 ? formConfiguration : undefined,
+      })
+    )
   );
 
   return {

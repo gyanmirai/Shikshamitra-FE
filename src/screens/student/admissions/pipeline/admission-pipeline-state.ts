@@ -60,6 +60,6 @@ export function admissionPipelineUrl(
 
 export function admissionPipelineApplicationUrl(id: string, params: URLSearchParams) {
   return `${studentPaths.enrollment.applications}/${encodeURIComponent(id)}?${new URLSearchParams({
-    returnTo: admissionPipelineUrl(params, {}, false),
+    returnTo: admissionPipelineUrl(params, { application: undefined }, false),
   })}`;
 }

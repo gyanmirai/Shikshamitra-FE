@@ -4,7 +4,6 @@ import {
   useBookAssessmentAttemptMutation,
   useAllowAssessmentRetakeMutation,
   useRecordAssessmentResultMutation,
-  useReviewAssessmentResultMutation,
   useCancelAssessmentAttemptMutation,
   useRecordAssessmentAttendanceMutation,
   useWaiveApplicationAssessmentMutation,
@@ -18,7 +17,6 @@ export function useAssessmentActions(assessment: ManagedApplicationAssessment) {
   const [book] = useBookAssessmentAttemptMutation();
   const [attendance] = useRecordAssessmentAttendanceMutation();
   const [result] = useRecordAssessmentResultMutation();
-  const [review] = useReviewAssessmentResultMutation();
   const [retake] = useAllowAssessmentRetakeMutation();
   const [cancel] = useCancelAssessmentAttemptMutation();
   const [waive] = useWaiveApplicationAssessmentMutation();
@@ -45,8 +43,6 @@ export function useAssessmentActions(assessment: ManagedApplicationAssessment) {
             ? { marks: Number(values.marks) }
             : { outcome: values.outcome || undefined }),
         }).unwrap();
-      case 'review':
-        return review({ ...attempt, approved: values.approved }).unwrap();
       case 'retake':
         return retake(attempt).unwrap();
       case 'cancel':

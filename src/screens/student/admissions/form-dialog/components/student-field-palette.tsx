@@ -12,6 +12,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
 import InputAdornment from '@mui/material/InputAdornment';
+import CustomAccordion from 'src/components/custom-accordian';
 
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
@@ -48,6 +49,7 @@ export function StudentFieldPalette({
   const paletteId = useId();
   const [search, setSearch] = useState('');
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [contextExpanded, setContextExpanded] = useState(true);
   const normalizedSearch = search.trim().toLowerCase();
   const groupedFields = groupStudentFields(fields);
   const visibleGroups = groupedFields
@@ -60,10 +62,6 @@ export function StudentFieldPalette({
     }))
     .filter((group) => group.fields.length > 0);
   const used = new Set(usedBindings.map((key) => key.toLowerCase()));
-  const availableCount = fields.filter(
-    (field) => !used.has(field.key.toLowerCase()) && !usesAdmissionContext(field)
-  ).length;
-  const visibleCount = visibleGroups.reduce((count, group) => count + group.fields.length, 0);
   const addressPacks = [
     {
       name: 'Current address',
@@ -110,18 +108,9 @@ export function StudentFieldPalette({
           ),
         }}
       />
-      <Typography variant="caption" color="text.secondary">
-        {loading
-          ? 'Loading student fields…'
-          : error
-            ? 'Student fields unavailable'
-            : normalizedSearch
-              ? `${visibleCount} matching fields`
-              : `${availableCount} available of ${fields.length} student fields`}
-      </Typography>
-      {visibleGroups.some((group) => group.fields.some(usesAdmissionContext)) && (
-        <Typography variant="caption" color="text.secondary" role="note">
-          {admissionContextMessage}
+      {(loading || error) && (
+        <Typography variant="caption" color="text.secondary" role="status">
+          {loading ? 'Loading student fields…' : 'Student fields unavailable'}
         </Typography>
       )}
       <Scrollbar
@@ -135,6 +124,18 @@ export function StudentFieldPalette({
         }}
       >
         <Stack spacing={0.75} sx={{ pr: 1, pb: 1 }}>
+          {!loading && !error && fields.some(usesAdmissionContext) && (
+            <CustomAccordion
+              title="Board, medium and class"
+              expanded={contextExpanded}
+              onChange={() => setContextExpanded((value) => !value)}
+              content={
+                <Typography variant="caption" color="text.secondary" role="note">
+                  {admissionContextMessage}
+                </Typography>
+              }
+            />
+          )}
           {loading &&
             Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} variant="rounded" height={48} />

@@ -1,4 +1,5 @@
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFollowUps } from './application-follow-ups';
@@ -11,14 +12,16 @@ const mocks = vi.hoisted(() => ({
   refetch: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
+  scheduling: { isLoading: false },
 }));
 vi.mock('src/redux/student/admissions/admission-application-follow-ups-api', () => ({
   useGetAdmissionApplicationFollowUpsQuery: mocks.query,
-  useScheduleAdmissionApplicationFollowUpMutation: () => [mocks.schedule, { isLoading: false }],
+  useScheduleAdmissionApplicationFollowUpMutation: () => [mocks.schedule, mocks.scheduling],
   useCompleteAdmissionApplicationFollowUpMutation: () => [mocks.complete, { isLoading: false }],
   useCancelAdmissionApplicationFollowUpMutation: () => [mocks.cancel, { isLoading: false }],
 }));
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({}));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: mocks.success, error: mocks.error },
 }));
@@ -48,6 +51,7 @@ const query = (extra = {}) => ({
 describe('application follow-ups', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.scheduling.isLoading = false;
     mocks.query.mockReturnValue(query());
     [mocks.schedule, mocks.complete, mocks.cancel].forEach((mutation) =>
       mutation.mockReturnValue({ unwrap: () => Promise.resolve(value) })
@@ -175,5 +179,90 @@ describe('application follow-ups', () => {
       expect(mocks.error).toHaveBeenCalledWith({ message: 'The inquiry changed.' })
     );
     expect(screen.getByLabelText('Purpose *')).toHaveValue('Retry call');
+  });
+
+  it('keeps the compact scheduler visible and reveals existing cancel commands through history', async () => {
+    render(
+      <ThemeProvider theme={createTheme()}>
+        <ApplicationFollowUps applicationId="application-1" compact />
+      </ThemeProvider>
+    );
+    expect(screen.getByLabelText('Purpose *')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Schedule follow-up' })).toBeVisible();
+    expect(screen.getByText('Call parent')).not.toBeVisible();
+    const history = screen.getByRole('button', { name: 'Follow-ups / History · 1 open' });
+    expect(history).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(history);
+    await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
+    expect(history).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.change(screen.getByLabelText('Completion or cancellation note *'), {
+      target: { value: 'Parent requested a new date' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() =>
+      expect(mocks.cancel).toHaveBeenCalledWith({
+        applicationId: 'application-1',
+        followUpId: 'follow-up-1',
+        concurrencyStamp: 'inquiry-stamp',
+        followUpConcurrencyStamp: 'follow-up-stamp',
+        note: 'Parent requested a new date',
+      })
+    );
+  });
+
+  it('keeps compact history read-only when backend management capability is false', async () => {
+    mocks.query.mockReturnValue(query({ currentData: { ...value, canManageFollowUps: false } }));
+    render(
+      <ThemeProvider theme={createTheme()}>
+        <ApplicationFollowUps applicationId="application-1" compact />
+      </ThemeProvider>
+    );
+    expect(screen.queryByLabelText('Purpose *')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups / History · 1 open' }));
+    await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
+    expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+  });
+
+  it('reports pending follow-up work and lets its initiating request finish through the workspace lock', async () => {
+    let finish: () => void = () => undefined;
+    const pending = new Promise((resolve) => {
+      finish = () => resolve(value);
+    });
+    mocks.schedule.mockReturnValue({ unwrap: () => pending });
+    const onBusyChange = vi.fn();
+    const content = (disabled = false) => (
+      <ThemeProvider theme={createTheme()}>
+        <ApplicationFollowUps
+          applicationId="application-1"
+          compact
+          disabled={disabled}
+          onBusyChange={onBusyChange}
+        />
+      </ThemeProvider>
+    );
+    const view = render(content());
+    fireEvent.change(screen.getByLabelText('Next follow-up *'), {
+      target: { value: '2026-10-10T10:00' },
+    });
+    fireEvent.change(screen.getByLabelText('Purpose *'), {
+      target: { value: 'Documents reminder' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+    expect(mocks.schedule).toHaveBeenCalledOnce();
+    mocks.scheduling.isLoading = true;
+    view.rerender(content(true));
+    expect(onBusyChange).toHaveBeenLastCalledWith(true);
+    expect(screen.getByLabelText('Purpose *')).toBeDisabled();
+    finish();
+    await waitFor(() =>
+      expect(mocks.success).toHaveBeenCalledWith({ message: 'Follow-up scheduled' })
+    );
+    expect(screen.getByLabelText('Purpose *')).toHaveValue('');
+    mocks.scheduling.isLoading = false;
+    view.rerender(content());
+    expect(onBusyChange).toHaveBeenLastCalledWith(false);
+    view.unmount();
+    expect(onBusyChange).toHaveBeenLastCalledWith(false);
   });
 });

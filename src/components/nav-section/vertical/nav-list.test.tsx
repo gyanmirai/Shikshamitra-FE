@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { it, vi, expect, describe, afterEach } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { NavList } from './nav-list';
 
@@ -60,10 +60,24 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
-  it('opens every ancestor on direct access and keeps them open when clicked', () => {
+  it('opens every ancestor on direct access and allows active groups to collapse and reopen', () => {
     route.pathname = '/finance/settings/fee-category/';
     render(<Navigation />);
+    expect(screen.getByRole('button', { name: 'Fee Category' })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.queryByRole('button', { name: 'Fee Category' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Fees' }));
+    expect(screen.getByRole('button', { name: 'Fees' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('button', { name: 'Fees' })).toHaveAttribute('data-active', 'true');
+    expect(screen.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Fees' }));
     expect(screen.getByRole('button', { name: 'Fees' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute(
@@ -111,7 +125,44 @@ describe('active navigation ancestors', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Curriculum' }));
+    expect(screen.queryByRole('button', { name: 'Lesson Plan' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Curriculum' }));
     expect(screen.getByRole('button', { name: 'Lesson Plan' })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
+  });
+
+  it('keeps Admissions collapsed on rerender but reveals it again when navigating', () => {
+    const admissions: NavItemBaseProps = {
+      title: 'Admissions',
+      path: '/student/admissions',
+      _action: 'student-admissions',
+      children: [
+        { title: 'Inquiries', path: '/student/admissions/inquiries' },
+        { title: 'Applications', path: '/student/admissions/applications' },
+      ],
+    };
+    route.pathname = '/student/admissions/inquiries';
+    const view = render(<Navigation data={admissions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
+    view.rerender(<Navigation data={admissions} />);
+    expect(screen.getByRole('button', { name: 'Admissions' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.queryByRole('button', { name: 'Inquiries' })).not.toBeInTheDocument();
+
+    route.pathname = '/student/admissions/applications';
+    view.rerender(<Navigation data={admissions} />);
+    expect(screen.getByRole('button', { name: 'Applications' })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
+
+    route.pathname = '/student/admissions/inquiries';
+    view.rerender(<Navigation data={admissions} />);
+    expect(screen.getByRole('button', { name: 'Inquiries' })).toHaveAttribute(
       'data-active',
       'true'
     );

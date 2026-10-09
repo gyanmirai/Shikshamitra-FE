@@ -15,6 +15,7 @@ import { FormTemplateChooser, type AdmissionFormStarter } from './form-template-
 type Props = { formik: FormikProps<CreateUpdateAdmissionForm>; editing: boolean };
 
 export function FormBuilderDetails({ formik, editing }: Props) {
+  const [purpose] = useState(formik.values.purpose ?? 1);
   const [selectedStarter, setSelectedStarter] = useState<AdmissionFormStarter | null>('blank');
   const [pendingStarter, setPendingStarter] = useState<{
     label: string;
@@ -23,10 +24,10 @@ export function FormBuilderDetails({ formik, editing }: Props) {
   } | null>(null);
   const createStarter = (starter: AdmissionFormStarter) =>
     starter === 'blank'
-      ? getBlankAdmissionFormInitialValues(formik.values.purpose)
+      ? getBlankAdmissionFormInitialValues(purpose)
       : getSystemAdmissionFormTemplate(starter);
   const applyStarter = (values: CreateUpdateAdmissionForm, starter: AdmissionFormStarter) => {
-    formik.setValues({ ...values, code: '' });
+    formik.setValues({ ...values, purpose, code: '' });
     formik.setTouched({});
     setSelectedStarter(starter);
     setPendingStarter(null);
@@ -44,7 +45,11 @@ export function FormBuilderDetails({ formik, editing }: Props) {
     >
       {!editing && (
         <Box component="section" aria-label="Form templates">
-          <FormTemplateChooser selectedStarter={selectedStarter} onSelect={selectStarter} />
+          <FormTemplateChooser
+            purpose={purpose}
+            selectedStarter={selectedStarter}
+            onSelect={selectStarter}
+          />
         </Box>
       )}
       <SectionCard gridProps={{ spacing: 0 }} paperProps={{ sx: { mb: 0, p: { xs: 2, sm: 2 } } }}>

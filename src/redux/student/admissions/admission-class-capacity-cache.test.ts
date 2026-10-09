@@ -26,7 +26,7 @@ afterEach(() => {
   clearCachedAuthSession();
 });
 
-it('refreshes class seats after offer acceptance and direct admission finalization', async () => {
+it('refreshes class seats after general and direct admission finalization', async () => {
   let occupied = 0;
   const capacityPath = '*/api/student/enrollment/admissions/offerings/offering-1/class-capacity';
   mswServer.use(
@@ -45,9 +45,16 @@ it('refreshes class seats after offer acceptance and direct admission finalizati
         },
       })
     ),
-    http.post('*/api/student/enrollment/admissions/applications/general-1/offer/accept', () => {
+    http.post('*/api/student/enrollment/admissions/applications/general-1/finalize', () => {
       occupied += 1;
-      return HttpResponse.json({ data: { id: 'general-1', status: 7 } });
+      return HttpResponse.json({
+        data: {
+          application: { id: 'general-1', status: 11 },
+          studentId: 'student-general',
+          onboardingCaseId: 'case-general',
+          reusedExistingStudent: false,
+        },
+      });
     }),
     http.post('*/api/student/enrollment/admissions/applications/rte-1/finalize', () => {
       occupied += 1;
@@ -69,9 +76,14 @@ it('refreshes class seats after offer acceptance and direct admission finalizati
 
   await store
     .dispatch(
-      admissionApplicationsApi.endpoints.acceptAdmissionOffer.initiate({
+      admissionApplicationsApi.endpoints.finalizeAdmissionApplication.initiate({
         id: 'general-1',
-        input: { concurrencyStamp: 'general-stamp' },
+        input: {
+          concurrencyStamp: 'general-stamp',
+          idempotencyKey: 'general-finalize',
+          confirmCreateNew: true,
+          confirmGuardianContactVerified: true,
+        },
       })
     )
     .unwrap();

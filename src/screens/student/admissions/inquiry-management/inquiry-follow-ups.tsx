@@ -4,11 +4,14 @@ import type {
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { useRef, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomAccordion from 'src/components/custom-accordian';
 import { LoadingButton } from 'src/components/loading-button';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Chip, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
+import { Box, Chip, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
 import {
   useCancelAdmissionInquiryFollowUpMutation,
   useScheduleAdmissionInquiryFollowUpMutation,
@@ -63,18 +66,25 @@ export function InquiryFollowUpsPanel({
   readOnly = false,
   busy = false,
   actions,
+  compact = false,
+  disabled = false,
 }: {
   value: AdmissionInquiryManagement;
   readOnly?: boolean;
   busy?: boolean;
   actions: InquiryFollowUpActions;
+  compact?: boolean;
+  disabled?: boolean;
 }) {
   const [purpose, setPurpose] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [scheduling, setScheduling] = useState(false);
   const submitting = useRef(false);
+  const history = useBoolean();
+  const interactionBlocked = busy || disabled;
   const schedule = async () => {
-    if (readOnly || busy || submitting.current || !purpose.trim() || !scheduledAt) return;
+    if (readOnly || interactionBlocked || submitting.current || !purpose.trim() || !scheduledAt)
+      return;
     const scheduledDate = new Date(scheduledAt);
     if (Number.isNaN(scheduledDate.getTime())) return;
     submitting.current = true;
@@ -99,18 +109,40 @@ export function InquiryFollowUpsPanel({
   };
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">
-        Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
-      </Typography>
+      {compact && !readOnly && (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Iconify icon="mdi:calendar-clock-outline" width={20} />
+          <Typography variant="subtitle2">Schedule follow-up</Typography>
+        </Stack>
+      )}
+      {!compact && (
+        <Typography variant="subtitle2">
+          Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
+        </Typography>
+      )}
       {!readOnly && (
-        <>
+        <Box
+          sx={
+            compact
+              ? {
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'minmax(0, 1fr) minmax(0, 1.5fr) auto',
+                  },
+                  gap: 1,
+                  alignItems: 'start',
+                }
+              : { display: 'flex', flexDirection: 'column', gap: 1.5 }
+          }
+        >
           <TextField
             fullWidth
             size="small"
             type="datetime-local"
             label="Next follow-up *"
             value={scheduledAt}
-            disabled={busy}
+            disabled={interactionBlocked}
             onChange={(event) => setScheduledAt(event.target.value)}
             slotProps={{ inputLabel: { shrink: true } }}
           />
@@ -119,27 +151,67 @@ export function InquiryFollowUpsPanel({
             size="small"
             label="Purpose *"
             value={purpose}
-            disabled={busy}
-            multiline
-            minRows={2}
+            disabled={interactionBlocked}
+            multiline={!compact}
+            minRows={compact ? undefined : 2}
             slotProps={{ htmlInput: { maxLength: 512 } }}
             onChange={(event) => setPurpose(event.target.value)}
           />
           <LoadingButton
             variant="outlined"
+            size={compact ? 'small' : undefined}
             loading={scheduling}
-            disabled={busy || !purpose.trim() || !scheduledAt}
+            disabled={interactionBlocked || !purpose.trim() || !scheduledAt}
             onClick={schedule}
-            sx={{ minHeight: 44 }}
+            sx={compact ? { alignSelf: 'start', justifySelf: 'start' } : { minHeight: 44 }}
           >
             Schedule follow-up
           </LoadingButton>
+        </Box>
+      )}
+      {compact ? (
+        <CustomAccordion
+          title={`Follow-ups / History · ${value.followUps.filter((item) => item.status === 0).length} open`}
+          expanded={history.value}
+          onChange={() => {
+            if (!interactionBlocked) history.onToggle();
+          }}
+          content={
+            <Stack spacing={1} divider={<Box sx={{ borderBottom: 1, borderColor: 'divider' }} />}>
+              {value.followUps.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  No follow-ups recorded yet.
+                </Typography>
+              )}
+              {value.followUps.map((item) => (
+                <FollowUpCard
+                  key={item.id}
+                  compact
+                  item={item}
+                  readOnly={readOnly}
+                  busy={interactionBlocked}
+                  actions={actions}
+                />
+              ))}
+            </Stack>
+          }
+        />
+      ) : (
+        <>
+          {value.followUps.length === 0 && (
+            <Alert severity="info">No follow-ups recorded yet.</Alert>
+          )}
+          {value.followUps.map((item) => (
+            <FollowUpCard
+              key={item.id}
+              item={item}
+              readOnly={readOnly}
+              busy={interactionBlocked}
+              actions={actions}
+            />
+          ))}
         </>
       )}
-      {value.followUps.length === 0 && <Alert severity="info">No follow-ups recorded yet.</Alert>}
-      {value.followUps.map((item) => (
-        <FollowUpCard key={item.id} item={item} readOnly={readOnly} busy={busy} actions={actions} />
-      ))}
     </Stack>
   );
 }
@@ -149,11 +221,13 @@ function FollowUpCard({
   readOnly,
   busy,
   actions,
+  compact = false,
 }: {
   item: InquiryFollowUp;
   readOnly: boolean;
   busy: boolean;
   actions: InquiryFollowUpActions;
+  compact?: boolean;
 }) {
   const [note, setNote] = useState('');
   const [finishing, setFinishing] = useState<'complete' | 'cancel' | null>(null);
@@ -182,7 +256,7 @@ function FollowUpCard({
     }
   };
   return (
-    <Paper variant="outlined" sx={{ p: 1.25 }}>
+    <Paper variant="outlined" sx={compact ? { py: 0.5, border: 0, borderRadius: 0 } : { p: 1.25 }}>
       <Stack spacing={1}>
         <Stack direction="row" spacing={1} alignItems="center">
           <Typography
@@ -218,7 +292,7 @@ function FollowUpCard({
                 loading={finishing === 'complete'}
                 disabled={busy || !note.trim()}
                 onClick={() => finish(false)}
-                sx={{ minHeight: 44 }}
+                sx={compact ? undefined : { minHeight: 44 }}
               >
                 Complete
               </LoadingButton>
@@ -227,7 +301,7 @@ function FollowUpCard({
                 color="error"
                 disabled={busy || !note.trim()}
                 onClick={() => finish(true)}
-                sx={{ minHeight: 44 }}
+                sx={compact ? undefined : { minHeight: 44 }}
               >
                 Cancel
               </Button>

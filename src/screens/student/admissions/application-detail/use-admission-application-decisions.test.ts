@@ -2,26 +2,21 @@ import { it, expect, describe } from 'vitest';
 
 import { canPerformAdmissionDecision } from './use-admission-application-decisions';
 
-describe('canPerformAdmissionDecision', () => {
-  it('allows the standard review to admission-finalization sequence', () => {
-    expect(canPerformAdmissionDecision(1, 'review')).toBe(true);
+describe('five-stage admission decisions', () => {
+  it('allows approval after submission and waitlist without an intermediate review action', () => {
+    expect(canPerformAdmissionDecision(1, 'approve')).toBe(true);
     expect(canPerformAdmissionDecision(4, 'approve')).toBe(true);
-    expect(canPerformAdmissionDecision(6, 'offer')).toBe(true);
-    expect(canPerformAdmissionDecision(7, 'accept')).toBe(true);
-  });
-
-  it('does not expose actions from terminal or incompatible states', () => {
-    expect(canPerformAdmissionDecision(0, 'approve')).toBe(false);
-    expect(canPerformAdmissionDecision(3, 'offer')).toBe(false);
-    expect(canPerformAdmissionDecision(8, 'offer')).toBe(false);
-    expect(canPerformAdmissionDecision(10, 'accept')).toBe(false);
-    expect(canPerformAdmissionDecision(11, 'accept')).toBe(false);
-  });
-
-  it('requires a reason-capable decision state for waitlisting and rejection', () => {
+    expect(canPerformAdmissionDecision(5, 'approve')).toBe(true);
     expect(canPerformAdmissionDecision(1, 'waitlist')).toBe(true);
     expect(canPerformAdmissionDecision(5, 'waitlist')).toBe(false);
     expect(canPerformAdmissionDecision(6, 'reject')).toBe(true);
-    expect(canPerformAdmissionDecision(7, 'reject')).toBe(false);
   });
+  it.each([0, 3, 7, 8, 9, 10, 11] as const)(
+    'does not expose decisions for draft, terminal or retired offer status %s',
+    (status) => {
+      expect(canPerformAdmissionDecision(status, 'approve')).toBe(false);
+      expect(canPerformAdmissionDecision(status, 'reject')).toBe(false);
+      expect(canPerformAdmissionDecision(status, 'waitlist')).toBe(false);
+    }
+  );
 });

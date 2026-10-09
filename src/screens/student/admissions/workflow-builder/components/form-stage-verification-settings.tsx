@@ -57,7 +57,7 @@ export function FormStageVerificationSettings({
             onChange({
               requireSectionVerification: checked,
               verificationSectionCodes: checked ? policy.verificationSectionCodes : [],
-              autoAdvanceOnSubmit: checked ? false : policy.autoAdvanceOnSubmit,
+              autoAdvanceOnSubmit: true,
             })
           }
         />

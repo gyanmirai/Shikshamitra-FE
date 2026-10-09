@@ -10,9 +10,16 @@ type Props = {
   isError: boolean;
   data?: AdmissionApplicationDecisionHistory[];
   onRetry: () => void;
+  compact?: boolean;
 };
 
-export function ApplicationDecisionHistory({ isLoading, isError, data, onRetry }: Props) {
+export function ApplicationDecisionHistory({
+  isLoading,
+  isError,
+  data,
+  onRetry,
+  compact = false,
+}: Props) {
   if (isLoading) return <Skeleton variant="rounded" height={40} sx={{ mt: 2 }} />;
 
   if (isError) {
@@ -34,11 +41,12 @@ export function ApplicationDecisionHistory({ isLoading, isError, data, onRetry }
   if (!data?.length) return null;
 
   return (
-    <Stack spacing={0.75} sx={{ mt: 2 }}>
-      <Typography variant="subtitle2">Decision history</Typography>
+    <Stack spacing={0.75} sx={{ mt: compact ? 0 : 2, overflowWrap: 'anywhere' }}>
+      {!compact && <Typography variant="subtitle2">Decision history</Typography>}
       {data.slice(0, 5).map((item) => (
         <Typography key={item.id} variant="caption" color="text.secondary">
-          {getAdmissionApplicationStatusLabel(item.status)} · {formatWorkflowDateTime(item.occurredAt)}
+          {getAdmissionApplicationStatusLabel(item.status)} ·{' '}
+          {formatWorkflowDateTime(item.occurredAt)}
           {item.reason ? ` · ${item.reason}` : ''}
         </Typography>
       ))}

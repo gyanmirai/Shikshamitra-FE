@@ -96,7 +96,6 @@ export function AdmissionProfilePhotoField({
                 onBlur?.();
               }
         }
-        sx={{ width: 128, height: 128 }}
       />
       <Typography
         id={helperId}

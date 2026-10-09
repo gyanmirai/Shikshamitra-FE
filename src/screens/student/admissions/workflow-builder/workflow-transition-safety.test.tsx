@@ -16,7 +16,7 @@ const stages: AdmissionWorkflowStage[] = [
     id: 'source',
     code: 'SOURCE',
     name: 'Source',
-    stageType: 11,
+    stageType: 7,
     displayOrder: 0,
     isRequired: true,
     allowManualSkip: false,
@@ -27,7 +27,7 @@ const stages: AdmissionWorkflowStage[] = [
     id: 'approved',
     code: 'APPROVED',
     name: 'Approved',
-    stageType: 11,
+    stageType: 7,
     displayOrder: 1,
     isRequired: true,
     allowManualSkip: false,
@@ -38,7 +38,7 @@ const stages: AdmissionWorkflowStage[] = [
     id: 'rejected',
     code: 'REJECTED',
     name: 'Rejected',
-    stageType: 11,
+    stageType: 7,
     displayOrder: 2,
     isRequired: true,
     allowManualSkip: false,
@@ -55,13 +55,14 @@ const condition = JSON.stringify({
 
 const renderDrawer = (
   transition: AdmissionWorkflowTransition | null,
-  transitions: AdmissionWorkflowTransition[] = []
+  transitions: AdmissionWorkflowTransition[] = [],
+  availableStages: AdmissionWorkflowStage[] = stages
 ) => {
   const onSave = vi.fn();
   render(
     <AdmissionWorkflowTransitionDrawer
       open
-      stages={stages}
+      stages={availableStages}
       readOnly={false}
       transition={transition}
       transitions={transitions}
@@ -73,6 +74,17 @@ const renderDrawer = (
 };
 
 describe('workflow transition safety', () => {
+  it('excludes retired types when selecting a new route destination', async () => {
+    const user = userEvent.setup();
+    renderDrawer(
+      null,
+      [],
+      [...stages, { ...stages[2], id: 'retired', name: 'Offer', stageType: 8 }]
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Continue to *' }));
+    expect(screen.queryByRole('option', { name: 'Offer' })).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+  });
   it('always saves a route without a condition as the default route', async () => {
     const user = userEvent.setup();
     const onSave = renderDrawer(null);

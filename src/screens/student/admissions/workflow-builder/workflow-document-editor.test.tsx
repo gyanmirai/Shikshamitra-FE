@@ -47,29 +47,10 @@ const json = (change = {}) =>
     extension: { source: 'existing' },
   });
 
-describe('document verification stage editor', { timeout: 15000 }, () => {
-  it('preserves basic completion and unrelated settings when saving stage details', async () => {
-    const original = '{"extension":{"source":"existing"}}';
-    const { user, onSave } = await setupDocumentEditor(original);
-    expect(screen.getByRole('radio', { name: 'Complete manually' })).toBeChecked();
-    await user.click(screen.getByRole('button', { name: 'Back' }));
-    const name = screen.getByRole('textbox', { name: 'Stage name *' });
-    await user.clear(name);
-    await user.type(name, 'Documents checked at reception');
-    await user.click(screen.getByRole('button', { name: 'Next' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith(
-        expect.objectContaining({
-          configurationJson: original,
-          name: 'Documents checked at reception',
-        })
-      )
-    );
-  });
-  it('adds a standard requirement, enables independent review, and saves the stage only after the requirement', async () => {
+describe('single managed document checklist', { timeout: 15000 }, () => {
+  it('adds a standard requirement and keeps retired review and waiver settings off', async () => {
     const { user, onSave } = await setupDocumentEditor('{"extension":{"source":"existing"}}');
-    await user.click(screen.getByRole('radio', { name: 'Collect and verify documents' }));
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     await chooseDocumentOption(user, 'Add a standard document', 'Birth certificate');
     const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
     await user.click(within(dialog).getByRole('button', { name: 'Save requirement' }));
@@ -79,56 +60,52 @@ describe('document verification stage editor', { timeout: 15000 }, () => {
       ).not.toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(
-      screen.getByRole('switch', { name: 'Require a different staff member to review' })
-    );
+    expect(
+      screen.queryByRole('switch', { name: 'Require a different staff member to review' })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       extension: { source: 'existing' },
       documentVerification: {
         enabled: true,
-        requireIndependentReview: true,
+        requireIndependentReview: false,
+        allowWaivers: false,
+        collectionFormStageCode: null,
         requirements: [policy.requirements[0]],
       },
     });
   });
-  it('blocks empty enabled checklists and preserves requirements when returning to basic completion', async () => {
+  it('requires at least one document and provides no manual completion bypass', async () => {
     const { user, onSave } = await setupDocumentEditor(json({ requirements: [] }));
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText('Add between 1 and 30 document requirements.')).toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: 'Complete manually' }));
-    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(
-      JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
-    ).toMatchObject({ enabled: false, requirements: [] });
+    expect(screen.queryByRole('radio', { name: 'Complete manually' })).not.toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
   });
-  it('requires confirmation before removing a configured document', async () => {
+  it('requires confirmation before removing a document', async () => {
     const { user } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Remove Birth certificate' }));
-    const dialog = screen.getByRole('dialog', { name: 'Remove document requirement?' });
-    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Remove document requirement?' })).getByRole(
+        'button',
+        { name: 'Cancel' }
+      )
+    );
     expect(screen.getByText('Birth certificate')).toBeInTheDocument();
   });
-  it('prevents unsupported policy versions from being silently overwritten', async () => {
+  it('blocks unsupported policies without overwriting them', async () => {
     const { user, onSave } = await setupDocumentEditor(json({ version: 2 }));
-    expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
+    expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
   });
-  it('keeps published settings read-only', async () => {
+  it('locks published settings and explains unavailable features', async () => {
     await setupDocumentEditor(json(), true);
-    expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
     expect(
       screen.queryByRole('button', { name: 'Edit Birth certificate' })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
-  });
-  it('explains unavailable document features before enabling them', async () => {
-    await setupDocumentEditor(undefined, false, false);
-    expect(screen.getByText(/not available in this environment/)).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Collect and verify documents' })).toBeDisabled();
+    screen.getAllByRole('switch').forEach((option) => expect(option).toBeDisabled());
   });
 });

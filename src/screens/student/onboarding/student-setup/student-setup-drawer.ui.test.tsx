@@ -43,8 +43,9 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
     isError: false,
   }),
   useUpdateStudentOnboardingStepMutation: () => [vi.fn(), { isLoading: false }],
+  useReviewStudentOnboardingRequirementsMutation: () => [vi.fn(), { isLoading: false }],
 }));
-vi.mock('./student-onboarding-documents', () => ({ default: () => null }));
+vi.mock('./student-onboarding-workflow-documents', () => ({ default: () => null }));
 vi.mock('./student-onboarding-fees', () => ({ default: () => null }));
 vi.mock('./student-onboarding-portal-accounts', () => ({ default: () => null }));
 vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }));
@@ -52,6 +53,15 @@ vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }))
 const student = studentOnboardingTestData[0];
 
 describe('Student Setup drawer readiness UI', () => {
+  it('shows only GR requirements and actions from the GR tab', () => {
+    render(<StudentSetupDrawer open taskView="gr-number" canManage student={{ ...student, source: 'onboarding-case', backendStatus: 1 }} onClose={vi.fn()} onAssignGrNumber={vi.fn()} />);
+    expect(screen.getByRole('heading', { name: 'GR number' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign / Change GR' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Documents' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate Student' })).not.toBeInTheDocument();
+  });
   it('shows the focused onboarding sections and keeps unlinked record actions disabled', () => {
     const onAssignDivision = vi.fn();
     const onAssignGrNumber = vi.fn();
@@ -136,7 +146,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByText('O+')).toBeInTheDocument();
     expect(screen.getByText('Sample School')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Tasks' }));
-    expect(screen.getByRole('heading', { name: 'Finance' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Fee structure' })).toBeInTheDocument();
     expect(screen.getByText('Portal & Emails')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Case Actions' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));

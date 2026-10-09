@@ -10,6 +10,13 @@ const nameOf = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
   'Restricted identity';
 
+const entrySourceLabels: Record<string, string> = {
+  ActivatedOnboarding: 'Enrollment activated',
+  CompletedOnboarding: 'Onboarding completed',
+  LegacyOverride: 'Approved historical entry',
+  LegacyNeedsApproval: 'Historical entry pending approval',
+};
+
 export const directoryColumns: IColumn[] = [
   {
     id: 'name',
@@ -53,8 +60,7 @@ export const directoryColumns: IColumn[] = [
     id: 'entrySource',
     label: 'Record entry',
     minWidth: 150,
-    render: (value) =>
-      value === 'LegacyOverride' ? 'Approved historical entry' : 'Onboarding completed',
+    render: (value) => entrySourceLabels[String(value)] ?? '—',
   },
   {
     id: 'actions',

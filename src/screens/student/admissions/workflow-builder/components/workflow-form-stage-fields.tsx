@@ -26,8 +26,6 @@ type Props = {
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
-  activeStep: number;
-  onGoToBasics: () => void;
   onAddPath?: (stage: AdmissionWorkflowStage) => void;
   onEditPath?: (transition: AdmissionWorkflowTransition) => void;
   routeEditingDisabled?: boolean;
@@ -45,8 +43,6 @@ export function WorkflowFormStageFields(props: Props) {
     readOnly,
     stages,
     transitions,
-    activeStep,
-    onGoToBasics,
     onAddPath,
     onEditPath,
     routeEditingDisabled,
@@ -54,7 +50,7 @@ export function WorkflowFormStageFields(props: Props) {
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      {activeStep === 0 ? (
+      <>
         <FormSectionCard
           title="Stage details"
           icon="mdi:file-document-outline"
@@ -62,36 +58,33 @@ export function WorkflowFormStageFields(props: Props) {
         >
           <WorkflowFormStageBasics {...props} />
         </FormSectionCard>
-      ) : (
-        <>
-          <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
-            <WorkflowFormSettings
-              formik={formik}
-              forms={forms}
-              formDefinitionId={formDefinitionId}
-              formDetailsLoading={formDetailsLoading}
-              formDetailsError={formDetailsError}
-              onRetryFormDetails={onRetryFormDetails}
-              readOnly={readOnly}
-              available={metadata?.supportedConfiguration?.includes('form') === true}
-              onGoToBasics={onGoToBasics}
-            />
-          </FormSectionCard>
-          <WorkflowFormStageSettings {...props} />
-          <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
-            <WorkflowStageNextSteps
-              stage={formik.values}
-              stages={stages}
-              transitions={transitions}
-              readOnly={readOnly}
-              onAddPath={onAddPath}
-              onEditPath={onEditPath}
-              routeEditingDisabled={routeEditingDisabled}
-            />
-          </FormSectionCard>
-          <WorkflowFormStageSettings {...props} advanced />
-        </>
-      )}
+
+        <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
+          <WorkflowFormSettings
+            formik={formik}
+            forms={forms}
+            formDefinitionId={formDefinitionId}
+            formDetailsLoading={formDetailsLoading}
+            formDetailsError={formDetailsError}
+            onRetryFormDetails={onRetryFormDetails}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('form') === true}
+          />
+        </FormSectionCard>
+        <WorkflowFormStageSettings {...props} />
+        <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
+          <WorkflowStageNextSteps
+            stage={formik.values}
+            stages={stages}
+            transitions={transitions}
+            readOnly={readOnly}
+            onAddPath={onAddPath}
+            onEditPath={onEditPath}
+            routeEditingDisabled={routeEditingDisabled}
+          />
+        </FormSectionCard>
+        <WorkflowFormStageSettings {...props} advanced />
+      </>
     </Stack>
   );
 }

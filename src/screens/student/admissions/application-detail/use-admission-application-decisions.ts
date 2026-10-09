@@ -13,37 +13,32 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
-  useIssueAdmissionOfferMutation,
-  useAcceptAdmissionOfferMutation,
-  useDeclineAdmissionOfferMutation,
   useRejectAdmissionApplicationMutation,
   useApproveAdmissionApplicationMutation,
   useFinalizeAdmissionApplicationMutation,
   useGetAdmissionFinalizationPreviewQuery,
   useWaitlistAdmissionApplicationMutation,
-  useMarkAdmissionApplicationInReviewMutation,
   useGetAdmissionApplicationDecisionHistoryQuery,
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 
-export type AdmissionDecisionAction =
-  'review' | 'approve' | 'reject' | 'waitlist' | 'offer' | 'accept' | 'decline';
+export type AdmissionDecisionAction = 'approve' | 'reject' | 'waitlist';
 
-export function useAdmissionApplicationDecisions(id: string, status?: AdmissionApplicationStatus) {
+export function useAdmissionApplicationDecisions(
+  id: string,
+  status?: AdmissionApplicationStatus,
+  journeyCompleted = false
+) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const historyQuery = useGetAdmissionApplicationDecisionHistoryQuery(id);
   const canFinalize = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const finalizationPreviewQuery = useGetAdmissionFinalizationPreviewQuery(id, {
-    skip: !canFinalize || status !== 8,
+    skip: !canFinalize || status !== 6 || !journeyCompleted,
   });
-  const [markInReview, reviewState] = useMarkAdmissionApplicationInReviewMutation();
   const [approve, approveState] = useApproveAdmissionApplicationMutation();
   const [reject, rejectState] = useRejectAdmissionApplicationMutation();
   const [waitlist, waitlistState] = useWaitlistAdmissionApplicationMutation();
-  const [issueOffer, offerState] = useIssueAdmissionOfferMutation();
-  const [acceptOffer, acceptState] = useAcceptAdmissionOfferMutation();
-  const [declineOffer, declineState] = useDeclineAdmissionOfferMutation();
   const [finalizeAdmission, finalizeState] = useFinalizeAdmissionApplicationMutation();
   const finalizationKey = useRef<string | null>(null);
 
@@ -62,13 +57,9 @@ export function useAdmissionApplicationDecisions(id: string, status?: AdmissionA
         id,
         input,
       };
-      if (action === 'review') await markInReview(request).unwrap();
       if (action === 'approve') await approve(request).unwrap();
       if (action === 'reject') await reject(request).unwrap();
       if (action === 'waitlist') await waitlist(request).unwrap();
-      if (action === 'offer') await issueOffer(request).unwrap();
-      if (action === 'accept') await acceptOffer(request).unwrap();
-      if (action === 'decline') await declineOffer(request).unwrap();
       shikshaMitraToast.success({ message: getSuccessMessage(action) });
       return true;
     } catch (error) {
@@ -112,16 +103,11 @@ export function useAdmissionApplicationDecisions(id: string, status?: AdmissionA
     runDecision,
     runFinalization,
     isBusy:
-      reviewState.isLoading ||
       approveState.isLoading ||
       rejectState.isLoading ||
       waitlistState.isLoading ||
-      offerState.isLoading ||
-      acceptState.isLoading ||
-      declineState.isLoading ||
       finalizeState.isLoading,
     canDecide: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
-    canOffer: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
     canFinalize,
   };
 }
@@ -130,23 +116,16 @@ export function canPerformAdmissionDecision(
   status: AdmissionApplicationStatus,
   action: AdmissionDecisionAction
 ): boolean {
-  if (action === 'review') return status === 1;
   if (action === 'approve') return status === 1 || status === 4 || status === 5;
   if (action === 'reject') return status === 1 || status === 4 || status === 5 || status === 6;
-  if (action === 'waitlist') return status === 1 || status === 4;
-  if (action === 'offer') return status === 6;
-  return status === 7;
+  return action === 'waitlist' && (status === 1 || status === 4);
 }
 
 function getSuccessMessage(action: AdmissionDecisionAction): string {
   const labels: Record<AdmissionDecisionAction, string> = {
-    review: 'Application moved to review',
     approve: 'Application approved',
     reject: 'Application rejected',
     waitlist: 'Application waitlisted',
-    offer: 'Admission offer issued',
-    accept: 'Admission offer accepted',
-    decline: 'Admission offer declined',
   };
   return labels[action];
 }

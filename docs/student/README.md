@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-10-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,8 +12,14 @@ audience: humans-and-agents
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
 Admissions starts from qualified inquiries, and Pipeline projects active application progress from the existing workflow.
+Pipeline and Applications open the shared Applicant 360 drawer, with compact text-only stage tabs, counsellor assignment in the header, horizontal form sections and a document verification table. The former applicant overview page is replaced by compatibility navigation; identity repair reuses the existing editor. Finalization presents real admission context and compact readiness checks with title help, while preserving workflow rules, permission checks and Finance/Onboarding ownership.
 Finalization creates an Onboarding case; Onboarding owns enrollment activation.
-Student Onboarding uses a persisted Student Setup worklist with readiness, placement, identifiers, Finance and portal-account actions. Settings are consolidated into Readiness & Access and Numbering & Placement; obsolete saved-default menus and production workflow preview are removed. The Student header selects only the academic year. Rule editors use dependent Board/Medium selectors and checkbox School Level/Standard selections from the school's configured hierarchy; DDVS currently enables Secondary and Higher Secondary. The backend resolves scoped configuration and enforces activation, numbering, permissions, capacity and completion. Activation creates enrollment and enters Provisioning; completion requires Finance assignment, confirmed first-installment settlement, required account links, and recorded service consent when an existing policy requires it. See [workflows.md](./workflows.md) and [testing.md](./testing.md).
+Student Onboarding uses a persisted Student Setup worklist with Readiness, GR Number, Roll Number, Division, Fees, and Credentials tabs.
+Readiness & Access links Admission Offerings to activation requirements and login-email choices; Numbering & Placement contains GR and Roll settings.
+Fees selects and confirms an existing published fee structure through Onboarding without assigning dues, collecting money, or requiring payment settlement.
+Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.
+Division-wide GR and Roll locks protect those identifiers without locking placement, and task drawers display only the selected task.
+See [workflows.md](./workflows.md) and [testing.md](./testing.md) for the current flow and verification limits.
 
 Assessments provides scoped Sessions and Applicants workspaces with explicit booking, attendance, result, review and workflow continuation actions. See [workflows.md](./workflows.md) for the staff journey and [testing.md](./testing.md) for acceptance evidence.
 
@@ -79,6 +85,7 @@ git diff --check
 
 Frontend docs own route, screen, client, cache, and browser behavior.
 Backend Admissions rules, contracts, permissions, errors, and data integrity remain owned by the backend source paths linked above.
+
 ## Student dashboard
 
 The shared `/student/dashboard` follows academic section-card spacing, server-confirmed role priorities, permitted shortcuts and independently loaded year summaries. Use [workflows.md](./workflows.md#student-dashboard), [clients.md](./clients.md#student-dashboard-client) and [testing.md](./testing.md#student-dashboard-validation). Metric definitions remain in the [backend product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#student-dashboard).

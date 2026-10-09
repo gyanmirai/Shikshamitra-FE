@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -13,16 +13,43 @@ import {
 } from 'src/redux/student/admissions/admission-applicants-api';
 
 type Note = { id: string; text: string; creationTime: string; lastEditedAt?: string | null };
-type Props = { applicantId: string; notes: Note[]; embedded?: boolean };
+type Props = {
+  applicantId: string;
+  notes: Note[];
+  embedded?: boolean;
+  readOnly?: boolean;
+  disabled?: boolean;
+  compact?: boolean;
+  onBusyChange?: (busy: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
+};
 
-export default function AdmissionApplicantNotes({ applicantId, notes, embedded = false }: Props) {
+export default function AdmissionApplicantNotes({
+  applicantId,
+  notes,
+  embedded = false,
+  readOnly = false,
+  disabled = false,
+  compact = false,
+  onBusyChange,
+  onDirtyChange,
+}: Props) {
   const [text, setText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createNote, createState] = useCreateAdmissionApplicantNoteMutation();
   const [updateNote, updateState] = useUpdateAdmissionApplicantNoteMutation();
   const isSaving = createState.isLoading || updateState.isLoading;
+  const busy = disabled || isSaving;
+  useEffect(() => {
+    onBusyChange?.(isSaving);
+  }, [isSaving, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+  useEffect(() => {
+    onDirtyChange?.(Boolean(text));
+  }, [text, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
   const save = async () => {
-    if (!text.trim()) return;
+    if (readOnly || busy || !text.trim()) return;
     try {
       if (editingId)
         await updateNote({ applicantId, noteId: editingId, text: text.trim() }).unwrap();
@@ -46,47 +73,53 @@ export default function AdmissionApplicantNotes({ applicantId, notes, embedded =
           </Typography>
         </Box>
       )}
-      <TextField
-        size="small"
-        multiline
-        minRows={2}
-        maxRows={6}
-        label={editingId ? 'Edit note' : 'Add note'}
-        placeholder="Add useful family context, preferences, or an agreed follow-up…"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        fullWidth
-        inputProps={{ maxLength: 2000 }}
-        helperText={`${text.length}/2000 characters`}
-      />
-      <Stack direction="row" spacing={1}>
-        <LoadingButton
+      {!readOnly && (
+        <TextField
           size="small"
-          loading={isSaving}
-          variant="contained"
-          onClick={save}
-          disabled={!text.trim()}
-          startIcon={
-            <Iconify icon={editingId ? 'mdi:content-save-outline' : 'mdi:note-plus-outline'} />
-          }
-          sx={{ minHeight: 44 }}
-        >
-          {editingId ? 'Update note' : 'Add note'}
-        </LoadingButton>
-        {editingId && (
-          <Button
+          multiline
+          minRows={2}
+          maxRows={6}
+          label={editingId ? 'Edit note' : 'Add note'}
+          placeholder="Add useful family context, preferences, or an agreed follow-up…"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          fullWidth
+          disabled={busy}
+          inputProps={{ maxLength: 2000 }}
+          helperText={`${text.length}/2000 characters`}
+        />
+      )}
+      {!readOnly && (
+        <Stack direction="row" spacing={1}>
+          <LoadingButton
             size="small"
-            variant="outlined"
-            onClick={() => {
-              setEditingId(null);
-              setText('');
-            }}
-            sx={{ minHeight: 44 }}
+            loading={isSaving}
+            variant="contained"
+            onClick={save}
+            disabled={busy || !text.trim()}
+            startIcon={
+              <Iconify icon={editingId ? 'mdi:content-save-outline' : 'mdi:note-plus-outline'} />
+            }
+            sx={compact ? undefined : { minHeight: 44 }}
           >
-            Cancel
-          </Button>
-        )}
-      </Stack>
+            {editingId ? 'Update note' : 'Add note'}
+          </LoadingButton>
+          {editingId && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                setEditingId(null);
+                setText('');
+              }}
+              disabled={busy}
+              sx={compact ? undefined : { minHeight: 44 }}
+            >
+              Cancel
+            </Button>
+          )}
+        </Stack>
+      )}
       {notes.length ? (
         <Stack spacing={1.5}>
           {notes.map((note) => (
@@ -105,18 +138,21 @@ export default function AdmissionApplicantNotes({ applicantId, notes, embedded =
                   {fDateTime(note.creationTime) || 'Time not recorded'}
                   {note.lastEditedAt ? ` · edited ${fDateTime(note.lastEditedAt)}` : ''}
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon="mdi:pencil-outline" />}
-                  onClick={() => {
-                    setEditingId(note.id);
-                    setText(note.text);
-                  }}
-                  sx={{ minHeight: 44 }}
-                >
-                  Edit
-                </Button>
+                {!readOnly && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:pencil-outline" />}
+                    onClick={() => {
+                      setEditingId(note.id);
+                      setText(note.text);
+                    }}
+                    disabled={busy}
+                    sx={compact ? undefined : { minHeight: 44 }}
+                  >
+                    Edit
+                  </Button>
+                )}
               </Stack>
             </Paper>
           ))}
@@ -126,7 +162,7 @@ export default function AdmissionApplicantNotes({ applicantId, notes, embedded =
           filled
           title="No team notes yet"
           description="Add only context that helps staff support this family’s admission journey."
-          sx={{ minHeight: 190 }}
+          sx={{ minHeight: compact ? 96 : 190 }}
           slotProps={{ img: { maxWidth: 80 } }}
         />
       )}

@@ -2,6 +2,7 @@
 
 import type { InquiryFollowUp } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
+import { useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 import {
@@ -13,7 +14,17 @@ import {
 
 import { InquiryFollowUpsPanel } from '../inquiry-management/inquiry-follow-ups';
 
-export function ApplicationFollowUps({ applicationId }: { applicationId: string }) {
+export function ApplicationFollowUps({
+  applicationId,
+  compact = false,
+  disabled = false,
+  onBusyChange,
+}: {
+  applicationId: string;
+  compact?: boolean;
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
+}) {
   const query = useGetAdmissionApplicationFollowUpsQuery(applicationId, {
     skip: !applicationId,
     refetchOnMountOrArgChange: true,
@@ -21,6 +32,11 @@ export function ApplicationFollowUps({ applicationId }: { applicationId: string 
   const [schedule, scheduling] = useScheduleAdmissionApplicationFollowUpMutation();
   const [complete, completing] = useCompleteAdmissionApplicationFollowUpMutation();
   const [cancel, cancelling] = useCancelAdmissionApplicationFollowUpMutation();
+  const saving = scheduling.isLoading || completing.isLoading || cancelling.isLoading;
+  useEffect(() => {
+    onBusyChange?.(saving);
+  }, [saving, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const value = query.currentData;
   const problem = query.isError ? parseApiProblemDetail(query.error) : undefined;
   const sourceUnavailable = Boolean(
@@ -36,7 +52,11 @@ export function ApplicationFollowUps({ applicationId }: { applicationId: string 
   });
 
   return (
-    <Paper component="section" variant="outlined" sx={{ p: 2, minWidth: 0 }}>
+    <Paper
+      component="section"
+      variant="outlined"
+      sx={{ p: compact ? 1.5 : 2, minWidth: 0, ...(compact && { borderRadius: 1 }) }}
+    >
       {query.isLoading && (
         <Stack spacing={1} role="status" aria-label="Loading application follow-ups">
           <Skeleton width="40%" />
@@ -48,7 +68,12 @@ export function ApplicationFollowUps({ applicationId }: { applicationId: string 
           severity="error"
           action={
             !sourceUnavailable && (
-              <Button size="small" color="inherit" onClick={() => query.refetch()}>
+              <Button
+                size="small"
+                color="inherit"
+                disabled={disabled}
+                onClick={() => query.refetch()}
+              >
                 Retry
               </Button>
             )
@@ -71,13 +96,10 @@ export function ApplicationFollowUps({ applicationId }: { applicationId: string 
           )}
           <InquiryFollowUpsPanel
             value={value}
+            compact={compact}
+            disabled={disabled}
             readOnly={!value.canManageFollowUps}
-            busy={
-              query.isFetching ||
-              scheduling.isLoading ||
-              completing.isLoading ||
-              cancelling.isLoading
-            }
+            busy={query.isFetching || saving}
             actions={{
               schedule: (body) =>
                 schedule({

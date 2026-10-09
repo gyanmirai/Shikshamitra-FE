@@ -1,6 +1,9 @@
+import type { AssessmentAttempt } from 'src/redux/student/admissions/admission-assessment-types';
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useState } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomAccordion from 'src/components/custom-accordian';
 import { Card, Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 
@@ -19,6 +22,7 @@ type Props = {
   canAdvance: boolean;
   advancing: boolean;
   onComplete: () => void;
+  compact?: boolean;
 };
 
 export function ApplicationAssessmentPanel({
@@ -28,6 +32,7 @@ export function ApplicationAssessmentPanel({
   canAdvance,
   advancing,
   onComplete,
+  compact = false,
 }: Props) {
   const permissions = useAssessmentPermissions();
   const query = useGetApplicationAssessmentQuery(
@@ -36,11 +41,19 @@ export function ApplicationAssessmentPanel({
   );
   const [action, setAction] = useState<AssessmentAction | null>(null);
   const assessment = query.currentData;
+  const history = useBoolean();
+  const latestAttempt = assessment?.attempts.reduce<AssessmentAttempt | undefined>(
+    (latest, attempt) =>
+      !latest || attempt.attemptNumber > latest.attemptNumber ? attempt : latest,
+    undefined
+  );
+  const previousAttempts =
+    assessment?.attempts.filter((attempt) => attempt.id !== latestAttempt?.id) ?? [];
   return (
-    <Card sx={{ p: 2 }}>
-      <Stack spacing={2}>
+    <Card sx={compact ? { p: 0, boxShadow: 'none', borderRadius: 0 } : { p: 2 }}>
+      <Stack spacing={compact ? 1 : 2}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">{stage.name}</Typography>
+          <Typography variant={compact ? 'subtitle2' : 'h6'}>{stage.name}</Typography>
           {permissions.view && (
             <Button size="small" disabled={query.isFetching || advancing} onClick={query.refetch}>
               Refresh
@@ -71,9 +84,6 @@ export function ApplicationAssessmentPanel({
               {assessment.policy.scoringEnabled
                 ? ` Pass mark: ${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}.`
                 : ' Record a pass or fail result.'}
-              {assessment.policy.reviewRequired
-                ? ' A different reviewer must approve the result.'
-                : ''}
               {` Maximum attempts: ${assessment.policy.maxAttempts}.`}
             </Typography>
             {assessment.blockers.length > 0 && (
@@ -94,7 +104,21 @@ export function ApplicationAssessmentPanel({
               </Alert>
             )}
             {assessment.attempts.length ? (
-              <AssessmentAttemptHistory attempts={assessment.attempts} />
+              compact && latestAttempt ? (
+                <>
+                  <AssessmentAttemptHistory compact attempts={[latestAttempt]} />
+                  {previousAttempts.length > 0 && (
+                    <CustomAccordion
+                      title={`Previous attempts (${previousAttempts.length})`}
+                      expanded={history.value}
+                      onChange={history.onToggle}
+                      content={<AssessmentAttemptHistory compact attempts={previousAttempts} />}
+                    />
+                  )}
+                </>
+              ) : (
+                <AssessmentAttemptHistory attempts={assessment.attempts} />
+              )
             ) : (
               <Typography variant="body2" color="text.secondary">
                 No assessment attempt has started.
@@ -106,6 +130,7 @@ export function ApplicationAssessmentPanel({
               canAdvance={canAdvance}
               onAction={setAction}
               onComplete={onComplete}
+              compact={compact}
             />
             {action && (
               <AssessmentActionDialog

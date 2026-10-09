@@ -13,7 +13,7 @@ export function FormBuilderDetailFields({
 }) {
   return (
     <Grid container spacing={1.5}>
-      <Grid size={{ xs: 12 }}>
+      <Grid size={{ xs: 12, sm: 6 }}>
         <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
           <TextField
             fullWidth
@@ -24,19 +24,6 @@ export function FormBuilderDetailFields({
             helperText={formik.touched.name && formik.errors.name}
           />
         </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Form purpose *"
-          value={formik.values.purpose ?? 1}
-          onChange={(event) => formik.setFieldValue('purpose', Number(event.target.value))}
-        >
-          <MenuItem value={0}>Inquiry</MenuItem>
-          <MenuItem value={1}>Registration</MenuItem>
-        </TextField>
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <TextField

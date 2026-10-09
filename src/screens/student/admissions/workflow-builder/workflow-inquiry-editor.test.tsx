@@ -59,17 +59,14 @@ it('requires explicit replacement of a saved inquiry stage and offers no inquiry
       onClose={vi.fn()}
     />
   );
-  expect(screen.getByText(/retained for existing applications/)).toBeInTheDocument();
+  expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
   expect(screen.queryByRole('radio', { name: /Managed inquiry/ })).not.toBeInTheDocument();
   expect(screen.queryByRole('combobox', { name: 'Assignment method' })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Next' }));
   expect(await screen.findByRole('button', { name: 'Apply changes' })).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Back' }));
   await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
   await user.click(screen.getByRole('option', { name: 'Admission decision' }));
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Change type' }));
-  await user.click(screen.getByRole('button', { name: 'Next' }));
   await user.click(screen.getByRole('button', { name: 'Apply changes' }));
   await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
   expect(onSave.mock.calls[0][0]).toMatchObject({ stageType: 7, configurationJson: undefined });
@@ -92,7 +89,7 @@ it('keeps a published inquiry stage readable without editable controls', () => {
       onClose={vi.fn()}
     />
   );
-  expect(screen.getByText(/retained for existing applications/)).toBeInTheDocument();
+  expect(screen.getByText(/This saved stage type is no longer available/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
   expect(onSave).not.toHaveBeenCalled();
 });

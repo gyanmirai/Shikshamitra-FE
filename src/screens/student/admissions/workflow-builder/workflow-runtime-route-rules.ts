@@ -3,24 +3,20 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
-import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
+
+import { isApplicationStageType } from './workflow-stage-configuration';
 
 type OutcomeRule = { field: string; allowed: string[]; explicitExcept?: string[] };
 type Node = { field?: string; operator?: string; value?: unknown; conditions?: Node[] };
 
 export function getStageOutcomeRule(stage: AdmissionWorkflowStage): OutcomeRule | undefined {
+  if (stage.stageType === 4) return { field: 'payment.status', allowed: ['feeStructureConfirmed'] };
   const config = readStageConfiguration(stage.configurationJson);
   const key = (
     {
       2: 'assessment',
-      3: 'eligibility',
-      4: 'payment',
       5: 'documentVerification',
-      6: 'review',
-      8: 'offer',
-      9: 'seat',
     } as Record<number, string>
   )[stage.stageType];
   const policy = config?.[key] as
@@ -33,34 +29,8 @@ export function getStageOutcomeRule(stage: AdmissionWorkflowStage): OutcomeRule 
         allowed: ['passed', 'waived', 'failed', 'absent', 'retake'],
         explicitExcept: ['passed', 'waived'],
       };
-    case 3:
-      return {
-        field: 'eligibility.status',
-        allowed: ['eligible', 'exceptionApproved', 'ineligible', 'needsInformation'],
-        explicitExcept: ['eligible', 'exceptionApproved'],
-      };
-    case 4:
-      return { field: 'payment.status', allowed: ['settled', 'waived'] };
     case 5:
       return { field: 'documents.status', allowed: ['verified'] };
-    case 6:
-      return {
-        field: 'review.decision',
-        allowed: ['approve', 'waitlist', 'reject'],
-        explicitExcept: ['approve'],
-      };
-    case 8:
-      return {
-        field: 'offer.status',
-        allowed: readAdmissionOfferPolicy(stage.configurationJson)?.allowedCompletionOutcomes ?? [],
-        explicitExcept: ['accepted'],
-      };
-    case 9:
-      return {
-        field: 'seat.status',
-        allowed: readAdmissionSeatPolicy(stage.configurationJson)?.allowedCompletionOutcomes ?? [],
-        explicitExcept: ['confirmed'],
-      };
     default:
       return undefined;
   }
@@ -72,6 +42,8 @@ export function getStageRouteBlocker(
   route?: AdmissionWorkflowTransition,
   evaluate?: (json: string, values: Readonly<Record<string, string>>) => boolean
 ): string | undefined {
+  if (!isApplicationStageType(stage.stageType))
+    return `${stage.name}: replace this retired stage type before testing the journey.`;
   const rule = getStageOutcomeRule(stage);
   if (!rule) return undefined;
   const value = facts[rule.field];
