@@ -259,34 +259,6 @@ const RoomAvailabilityScreen = () => {
             { name: 'Timetable' },
             { name: 'Room Availability' },
           ]}
-          action={
-            <Stack direction="row" spacing={1}>
-              <Tooltip title="Audit Trail">
-                <Button
-                  size="small"
-                  variant={showAudit ? 'contained' : 'outlined'}
-                  color="inherit"
-                  startIcon={<Iconify icon={GlobalIcons.history} />}
-                  onClick={() => setShowAudit((v) => !v)}
-                >
-                  Audit Log
-                </Button>
-              </Tooltip>
-              <Tooltip title="Refresh Data">
-                <IconButton size="small" onClick={handleRefresh}>
-                  <Iconify icon={GlobalIcons.refresh} />
-                </IconButton>
-              </Tooltip>
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                onClick={() => handleOpenReservation()}
-              >
-                Reserve Room
-              </Button>
-            </Stack>
-          }
         />
       </Box>
 
@@ -298,7 +270,8 @@ const RoomAvailabilityScreen = () => {
           zIndex: 10,
           flexShrink: 0,
           borderRadius: '12px',
-          p: 0.25,
+          px: 1,
+          py: 0.25,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
@@ -307,7 +280,8 @@ const RoomAvailabilityScreen = () => {
           alignItems="center"
           justifyContent="space-between"
           flexWrap="wrap"
-          sx={{ p: 0 }}
+          gap={1}
+          sx={{ minWidth: 0 }}
         >
           <CustomTabs
             value={activeTab}
@@ -346,56 +320,97 @@ const RoomAvailabilityScreen = () => {
             )}
           </CustomTabs>
 
-          {/* Right side: View Switcher & Filters — only for availability tab */}
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 'auto' }}>
+            <Tooltip title="Refresh Data">
+              <IconButton
+                size="small"
+                aria-label="Refresh data"
+                onClick={handleRefresh}
+                sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}
+              >
+                <Iconify icon={GlobalIcons.refresh} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Audit Trail">
+              <Button
+                size="small"
+                variant={showAudit ? 'contained' : 'outlined'}
+                color="inherit"
+                startIcon={<Iconify icon={GlobalIcons.history} />}
+                onClick={() => setShowAudit((v) => !v)}
+              >
+                Audit Log
+              </Button>
+            </Tooltip>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              onClick={() => handleOpenReservation()}
+            >
+              Reserve Room
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <Paper sx={{ flexShrink: 0, borderRadius: '12px', px: 1, py: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
           {(activeTab === 'reservations' || activeTab === 'approvals') && (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.5 }}>
+            <Box sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <AcademicDatePicker
-                label="Filter by Created Date"
+                label="Created date (DD/MM/YYYY)"
                 value={reservationDateFilter ? dayjs(reservationDateFilter) : null}
                 onChange={(value) => {
                   setReservationDateFilter(value ? value.format('YYYY-MM-DD') : '');
                 }}
-                slotProps={{ textField: { size: 'small', sx: { minWidth: 200 } } }}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
-            </Stack>
+            </Box>
           )}
 
           {activeTab === 'availability' && (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1, py: 0.25 }}>
-              <AcademicDatePicker
-                label="Date"
-                value={dayjs(filters.date)}
-                onChange={(value) => {
-                  if (value) {
-                    patchFilters({ date: value.format('YYYY-MM-DD') });
-                  }
-                }}
-                slotProps={{ textField: { size: 'small', sx: { minWidth: 150 } } }}
-              />
+            <>
+              <Box sx={{ width: { xs: '100%', sm: 200 } }}>
+                <AcademicDatePicker
+                  label="Date (DD/MM/YYYY)"
+                  value={dayjs(filters.date)}
+                  onChange={(value) => {
+                    if (value) {
+                      patchFilters({ date: value.format('YYYY-MM-DD') });
+                    }
+                  }}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                />
+              </Box>
 
-              <CustomSelect
-                label="Building"
-                options={buildingOptions}
-                value={filters.building}
-                onChange={(v) => {
-                  patchFilters({ building: v as string, floor: 'all' });
-                }}
-                formControlProps={{ size: 'small', sx: { minWidth: 150 } }}
-              />
+              <Box sx={{ width: { xs: '100%', sm: 160 } }}>
+                <CustomSelect
+                  label="Building"
+                  options={buildingOptions}
+                  value={filters.building}
+                  onChange={(v) => {
+                    patchFilters({ building: v as string, floor: 'all' });
+                  }}
+                  formControlProps={{ size: 'small', fullWidth: true }}
+                />
+              </Box>
 
-              <CustomSelect
-                label="Floor"
-                options={floorOptions}
-                value={filters.floor}
-                onChange={(v) => {
-                  patchFilters({ floor: v as string });
-                }}
-                formControlProps={{ size: 'small', sx: { minWidth: 120 } }}
-                disabled={filters.building === 'all'}
-              />
-            </Stack>
+              <Box sx={{ width: { xs: '100%', sm: 140 } }}>
+                <CustomSelect
+                  label="Floor"
+                  options={floorOptions}
+                  value={filters.floor}
+                  onChange={(v) => {
+                    patchFilters({ floor: v as string });
+                  }}
+                  formControlProps={{ size: 'small', fullWidth: true }}
+                  disabled={filters.building === 'all'}
+                />
+              </Box>
+            </>
           )}
-        </Stack>
+        </Box>
       </Paper>
 
       {/* ── Tab Content Container with Scrollbar ──────────────────── */}
