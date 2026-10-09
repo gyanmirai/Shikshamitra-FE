@@ -3,7 +3,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { getLearningTaskTableActions } from './learningTaskTableActions';
 
 describe('getLearningTaskTableActions', () => {
-  it('keeps edit and publish first and sends later actions to overflow', () => {
+  it('places publish first when available and sends later actions to overflow', () => {
     const actions = getLearningTaskTableActions({
       canEdit: true,
       canPublish: true,
@@ -20,12 +20,29 @@ describe('getLearningTaskTableActions', () => {
     });
 
     expect(actions.map((action) => action.id)).toEqual([
-      'edit',
       'publish',
+      'edit',
       'close',
       'submissions',
       'reminder',
       'delete',
     ]);
+  });
+
+  it('keeps edit first when publish is unavailable', () => {
+    const actions = getLearningTaskTableActions({
+      canEdit: true,
+      canPublish: false,
+      canViewSubmissions: false,
+      canDelete: false,
+      deleteDisabled: true,
+      deleteTooltip: '',
+      onEdit: vi.fn(),
+      onPublish: vi.fn(),
+      onViewSubmissions: vi.fn(),
+      onDelete: vi.fn(),
+    });
+
+    expect(actions[0].id).toBe('edit');
   });
 });

@@ -57,6 +57,25 @@ export const RoomAvailabilityTable = ({
       tableTitle="Room Availability"
       data={data}
       isLoading={isLoading}
+      handleRowClick={(row) => onViewRoom?.((row as RoomAvailabilityItem).roomId)}
+      rowProps={(row) => ({
+        tabIndex: onViewRoom ? 0 : -1,
+        'aria-label': `View details for ${(row as RoomAvailabilityItem).roomName}`,
+        onKeyDown: (event) => {
+          if (event.target !== event.currentTarget || !onViewRoom) return;
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onViewRoom((row as RoomAvailabilityItem).roomId);
+          }
+        },
+        sx: {
+          cursor: onViewRoom ? 'pointer' : 'default',
+          '&:focus-visible': {
+            outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+            outlineOffset: -2,
+          },
+        },
+      })}
       columns={[
         {
           id: 'roomName',
@@ -147,12 +166,6 @@ export const RoomAvailabilityTable = ({
             const item = row as RoomAvailabilityItem;
             const underMaintenance = item.status === 'maintenance';
             const actions = [
-              {
-                id: 'view',
-                label: 'View room details',
-                icon: 'solar:eye-bold',
-                onClick: () => onViewRoom?.(item.roomId),
-              },
               ...(onViewSchedule
                 ? [
                     {
