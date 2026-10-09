@@ -38,7 +38,8 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NODE_OPTIONS: --max-old-space-size=3072
+          # Leave runner memory available for native allocations and other processes.
+          NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Validate full TypeScript after Next route generation
         run: npm run ts
