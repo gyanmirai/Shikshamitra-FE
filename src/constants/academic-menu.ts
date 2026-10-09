@@ -194,6 +194,15 @@ export const academicPermissions = {
   audits: `${defaultAcademicPermissionName}Audits.View`,
 };
 
+// Action grants and navigation visibility are separate server capabilities.
+// Academic 360 intentionally shares Dashboard.View with its backend endpoints.
+export const academicActionPermissions = {
+  dashboard: 'Academics.Dashboard.View',
+  classTeacherAssignment: 'ClassManagement.ClassTeacherAssignment.View',
+  studentAcademic360: 'Academics.Dashboard.View',
+  notification: 'Academics.Notification.View',
+};
+
 const academicModule = (isDdvs: boolean) => ({
   [academicPath]: [
     {
@@ -205,7 +214,8 @@ const academicModule = (isDdvs: boolean) => ({
           _action: 'dashboard',
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
-          permissionName: academicPermissions.dashboard,
+          permissionName: academicActionPermissions.dashboard,
+          visibilityPermissionName: academicPermissions.dashboard,
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
@@ -214,7 +224,8 @@ const academicModule = (isDdvs: boolean) => ({
           _action: 'assign-teacher',
           shortcutKey: 'Alt+A+Z',
           shortcutKeyName: 'Alt+A+Z',
-          permissionName: academicPermissions.classTeacherAssignment,
+          permissionName: academicActionPermissions.classTeacherAssignment,
+          visibilityPermissionName: academicPermissions.classTeacherAssignment,
           icon: menuIconView('mdi:account-supervisor-outline'),
         },
         {
@@ -223,7 +234,8 @@ const academicModule = (isDdvs: boolean) => ({
           _action: 'student-academic-360',
           shortcutKey: 'Alt+A+2',
           shortcutKeyName: 'Alt+A+2',
-          permissionName: academicPermissions.studentAcademic360,
+          permissionName: academicActionPermissions.studentAcademic360,
+          visibilityPermissionName: academicPermissions.studentAcademic360,
           icon: menuIconView('mdi:account-school-outline'),
         },
         {
@@ -830,7 +842,8 @@ const academicModule = (isDdvs: boolean) => ({
           _action: 'notification',
           shortcutKey: 'Alt+N',
           shortcutKeyName: 'Alt+N',
-          permissionName: academicPermissions.notification,
+          permissionName: academicActionPermissions.notification,
+          visibilityPermissionName: academicPermissions.notification,
           icon: menuIconView('mdi:bell-outline'),
         },
       ],

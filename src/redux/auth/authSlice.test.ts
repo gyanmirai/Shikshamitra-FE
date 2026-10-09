@@ -1,39 +1,63 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { it, vi, expect, describe, afterEach } from 'vitest';
 
-import authReducer, { loadUser } from './authSlice';
+import authReducer, { loadUser, clearUser } from './authSlice';
 
 const createStore = () => configureStore({ reducer: { auth: authReducer } });
+const hostContext = {
+  accountMode: 'host',
+  tenantId: null,
+  canViewTenants: true,
+  canCreateTenants: false,
+  canUpdateTenants: false,
+  canManageTenantStatus: false,
+};
+const tenantContext = {
+  ...hostContext,
+  accountMode: 'tenant',
+  tenantId: 'tenant-1',
+  setupCompleted: true,
+  canViewTenants: false,
+};
+const response = (value: unknown) => ({ ok: true, json: async () => value });
+const session = { profile: { sub: 'user-1' }, accessToken: 'valid-token' };
 
 describe('loadUser authentication bootstrap', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('does not restore an old identity after clearing initialization', async () => {
+    let resolveContext!: (value: unknown) => void;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveContext = resolve;
+        })
+      )
+    );
+    const store = createStore();
+    const pending = store.dispatch(loadUser(session));
+    store.dispatch(clearUser());
+    resolveContext(response(hostContext));
+    await pending;
+    expect(store.getState().auth.isAuthenticated).toBe(false);
+    expect(store.getState().auth.sessionContext).toBeNull();
   });
 
-  it('does not call the permission API without a usable access token', async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+  it('does not fetch without a usable access token', async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal('fetch', fetch);
     const store = createStore();
-
-    const result = await store.dispatch(
-      loadUser({ profile: { sub: 'user-1' }, accessToken: undefined }) as any
-    );
-
+    const result = await store.dispatch(loadUser({ profile: { sub: 'user-1' } }));
     expect(result.type).toBe('auth/loadUser/rejected');
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
     expect(store.getState().auth.isAuthenticated).toBe(false);
   });
 
-  it('does not mark the user authenticated when the permission API returns 401', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401 });
-    vi.stubGlobal('fetch', fetchMock);
+  it('fails closed when server account verification returns 401', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401 }));
     const store = createStore();
-
-    const result = await store.dispatch(
-      loadUser({ profile: { sub: 'user-1' }, accessToken: 'invalid-token' }) as any
-    );
-
-    expect(result.type).toBe('auth/loadUser/rejected');
+    await store.dispatch(loadUser(session));
     expect(store.getState().auth).toMatchObject({
       user: null,
       isAuthenticated: false,
@@ -42,26 +66,39 @@ describe('loadUser authentication bootstrap', () => {
     });
   });
 
-  it('uses the access token and initializes permissions after a successful response', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        groups: [
-          {
-            permissions: [{ name: 'ShikshaMitra.Module.Students', isGranted: true }],
-          },
-        ],
-      }),
-    });
-    vi.stubGlobal('fetch', fetchMock);
+  it('uses only server-verified tenant capabilities for host initialization', async () => {
+    const fetch = vi.fn().mockResolvedValue(response(hostContext));
+    vi.stubGlobal('fetch', fetch);
     const store = createStore();
-
-    const result = await store.dispatch(
-      loadUser({ profile: { sub: 'user-1' }, accessToken: 'valid-token' }) as any
+    await store.dispatch(loadUser(session));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/host/session-context'),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer valid-token' }),
+      })
     );
+    expect(store.getState().auth.permissions).toContainEqual({
+      name: 'AbpTenantManagement.Tenants.ManageStatus',
+      isGranted: false,
+    });
+    expect(store.getState().auth.mainModuleVisibility.every((value) => !value)).toBe(true);
+    expect(store.getState().auth.isAuthenticated).toBe(true);
+  });
 
-    expect(result.type).toBe('auth/loadUser/fulfilled');
-    expect(fetchMock).toHaveBeenCalledWith(
+  it('preserves school effective-permission initialization', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(response(tenantContext))
+      .mockResolvedValueOnce(
+        response({
+          groups: [{ permissions: [{ name: 'ShikshaMitra.Module.Students', isGranted: true }] }],
+        })
+      );
+    vi.stubGlobal('fetch', fetch);
+    const store = createStore();
+    await store.dispatch(loadUser(session));
+    expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('providerKey=user-1'),
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: 'Bearer valid-token' }),
@@ -69,8 +106,20 @@ describe('loadUser authentication bootstrap', () => {
     );
     expect(store.getState().auth).toMatchObject({
       isAuthenticated: true,
-      permissionsInitialized: true,
       permissions: [{ name: 'ShikshaMitra.Module.Students', isGranted: true }],
     });
+  });
+
+  it('keeps school authentication denied when its permission API fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(response(tenantContext))
+        .mockResolvedValueOnce({ ok: false, status: 401 })
+    );
+    const store = createStore();
+    await store.dispatch(loadUser(session));
+    expect(store.getState().auth.isAuthenticated).toBe(false);
   });
 });

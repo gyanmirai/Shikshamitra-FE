@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Landing
 status: canonical
-updated_on: 2026-09-17
+updated_on: 2026-10-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,9 +12,8 @@ audience: humans-and-agents
 
 ## TL;DR
 
-TL;DR: this release preserves the old Role and User UI, including separate permission and visibility dialogs.
-Backend authorization and frontend action guards remain hardened.
-The September 17 staging reference includes the three-panel layout, expandable groups, compact grouped action switches, and separate dialogs.
+TL;DR: role and user permissions use the approved themed matrix with direct, single-click choices and a review step.
+Permission and visibility remain separate dialogs. Backend authorization and frontend action guards remain unchanged.
 
 ## Read order
 
@@ -27,7 +26,7 @@ The September 17 staging reference includes the three-panel layout, expandable g
 ## Source of truth
 
 - Screens: `src/screens/security/role/index.tsx` and `src/screens/security/user/index.tsx`.
-- Retained panels: `src/screens/security/role/permission.tsx`, `permission-node.tsx`, and `visibility.tsx`.
+- Permission workspace: `src/screens/security/role/permission-workspace.tsx`, `permission-matrix.tsx`, and `permission-inline-editor.tsx`.
 - Catalogue organization and verified drafts: `src/screens/security/role/permission-catalogue.ts`, `use-permission-draft.ts`, and `permission-access-form.tsx`.
 - API client: `src/redux/permission/permissionApi.ts`.
 - Action helper: `src/utils/permissions.ts`.
@@ -36,9 +35,9 @@ The September 17 staging reference includes the three-panel layout, expandable g
 ## For agents
 
 Read the backend standard before changing actions, route gates, identity, scope, or security seeders.
-Do not reintroduce the withdrawn catalogue-editor redesign without explicit approval.
+The October 9 matrix redesign has explicit user approval. Further behavior changes still require a concrete product requirement.
 Preserve staging's grouped controls and existing action mappings, including Student bundles and Accounts Settings exceptions.
-The approved Statutory Schemes exception uses View/Edit/Delete controls and complete direct-feature revocation as described in [Workflows](workflows.md).
+Statutory Schemes keeps independent View and grouped Edit actions, with unavailable Delete disabled as described in [Workflows](workflows.md).
 Server catalogue entries remain authoritative for valid API names and provider eligibility.
 Do not add granular action tiles or let expanding a group edit grants.
 Keep inherited grants and unsaved drafts separate from direct-grant edits.

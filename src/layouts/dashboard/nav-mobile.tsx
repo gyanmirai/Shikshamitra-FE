@@ -13,13 +13,24 @@ import { NavSectionVertical } from 'src/components/nav-section';
 type NavMobileProps = NavSectionProps & {
   open: boolean;
   onClose: () => void;
+  closeOnLinkSelection?: boolean;
+  homePath?: string;
   slots?: {
     topArea?: React.ReactNode;
     bottomArea?: React.ReactNode;
   };
 };
 
-export function NavMobile({ data, open, onClose, slots, sx, ...other }: NavMobileProps) {
+export function NavMobile({
+  data,
+  open,
+  onClose,
+  closeOnLinkSelection = false,
+  homePath,
+  slots,
+  sx,
+  ...other
+}: NavMobileProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -33,6 +44,14 @@ export function NavMobile({ data, open, onClose, slots, sx, ...other }: NavMobil
     <Drawer
       open={open}
       onClose={onClose}
+      onClick={(event) => {
+        if (
+          closeOnLinkSelection &&
+          event.target instanceof Element &&
+          event.target.closest('a[href]')
+        )
+          onClose();
+      }}
       sx={{
         [`& .${drawerClasses.paper}`]: {
           overflow: 'unset',
@@ -44,7 +63,7 @@ export function NavMobile({ data, open, onClose, slots, sx, ...other }: NavMobil
     >
       {slots?.topArea ?? (
         <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
-          <LogoWithText />
+          <LogoWithText href={homePath} />
         </Box>
       )}
 

@@ -17,8 +17,8 @@ import type { AcademicYearRecord } from './academic-setup-model';
 
 const EMPTY_COUNTS = { boards: 0, mediums: 0, stages: 0, standards: 0, divisions: 0 };
 
-const YearSetup = () => {
-  const workspace = useAcademicSetupWorkspace();
+const YearSetup = ({ initialYearId }: { initialYearId?: string } = {}) => {
+  const workspace = useAcademicSetupWorkspace(initialYearId);
   const yearDialog = useBoolean();
   const boardDialog = useBoolean();
   const [editYear, setEditYear] = useState<AcademicYearRecord | null>(null);
@@ -47,9 +47,7 @@ const YearSetup = () => {
         overflow: { xs: 'visible', md: 'hidden' },
         display: 'flex',
         flexDirection: 'column',
-        gap: { xs: 1.5, md: 1 },
-        px: { xs: 1.5, md: 2 },
-        py: { xs: 1.5, md: 1.25 },
+        gap: 1,
       }}
     >
       <AcademicSetupHeader
@@ -71,9 +69,9 @@ const YearSetup = () => {
         ) : workspace.isLoading && !workspace.currentYear ? (
           <AcademicSetupStatus kind="loading" />
         ) : (
-          <Grid container spacing={2} sx={{ height: { xs: 'auto', md: '100%' }, minHeight: 0 }}>
+          <Grid container spacing={1} sx={{ height: { xs: 'auto', md: '100%' }, minHeight: 0 }}>
             <Grid
-              size={{ xs: 12, md: 5, lg: 3.5 }}
+              size={{ xs: 12, md: 4, lg: 3 }}
               sx={{
                 minHeight: 0,
                 height: { xs: 'auto', md: '100%' },
@@ -94,7 +92,7 @@ const YearSetup = () => {
               />
             </Grid>
             <Grid
-              size={{ xs: 12, md: 7, lg: 8.5 }}
+              size={{ xs: 12, md: 8, lg: 9 }}
               sx={{
                 minHeight: 0,
                 height: { xs: 'auto', md: '100%' },

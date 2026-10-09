@@ -1,3 +1,4 @@
+import type { RootState } from 'src/redux/store';
 import type { Breakpoint } from '@mui/material/styles';
 import type { NavSectionProps } from 'src/components/nav-section';
 
@@ -8,6 +9,7 @@ import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Logo, LogoWithText } from 'src/components/logo';
 import { varAlpha, hideScrollY } from 'src/theme/styles';
+import { hostTenantPath } from 'src/constants/host-tenant-menu';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
 import { settingMenu } from '../config-nav-dashboard';
@@ -35,7 +37,8 @@ export function NavVertical({
   ...other
 }: NavVerticalProps) {
   const theme = useTheme();
-  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
+  const { mainModuleVisibility, sessionContext } = useSelector((state: RootState) => state.auth);
+  const isHost = sessionContext?.accountMode === 'host';
 
   const filteredData = useMemo(
     () =>
@@ -51,7 +54,7 @@ export function NavVertical({
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {slots?.topArea ?? (
         <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
-          <LogoWithText />
+          <LogoWithText href={isHost ? hostTenantPath : '/'} />
         </Box>
       )}
       <Box sx={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -67,7 +70,7 @@ export function NavVertical({
     <>
       {slots?.topArea ?? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5 }}>
-          <Logo href="/dashboard" />
+          <Logo href={isHost ? hostTenantPath : '/dashboard'} />
         </Box>
       )}
 
@@ -105,45 +108,49 @@ export function NavVertical({
         ...sx,
       }}
     >
-      <NavToggleButton
-        isNavMini={isNavMini}
-        onClick={onToggleNav}
-        sx={{
-          display: 'none',
-          [theme.breakpoints.up(layoutQuery)]: {
-            display: 'inline-flex',
-          },
-        }}
-      />
+      {!isHost && (
+        <NavToggleButton
+          isNavMini={isNavMini}
+          onClick={onToggleNav}
+          sx={{
+            display: 'none',
+            [theme.breakpoints.up(layoutQuery)]: {
+              display: 'inline-flex',
+            },
+          }}
+        />
+      )}
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, minHeight: 0 }}>
         {isNavMini ? renderNavMini : renderNavVertical}
         {/* Bottom section (Institute Setup) pinned to bottom */}
-        <Box sx={{ width: '100%' }}>
-          {isNavMini ? (
-            <NavSectionMini
-              data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
-              sx={{
-                pb: 2,
-                px: 0.5,
-                ...hideScrollY,
-                overflowY: 'hidden',
-                borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
-                '& ul': {
-                  justifyContent: 'end',
-                },
-              }}
-            />
-          ) : (
-            <NavSectionVertical
-              data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
-              sx={{
-                px: 2,
-                borderTop: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
-              }}
-              {...other}
-            />
-          )}
-        </Box>
+        {!isHost && (
+          <Box sx={{ width: '100%' }}>
+            {isNavMini ? (
+              <NavSectionMini
+                data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
+                sx={{
+                  pb: 2,
+                  px: 0.5,
+                  ...hideScrollY,
+                  overflowY: 'hidden',
+                  borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
+                  '& ul': {
+                    justifyContent: 'end',
+                  },
+                }}
+              />
+            ) : (
+              <NavSectionVertical
+                data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
+                sx={{
+                  px: 2,
+                  borderTop: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
+                }}
+                {...other}
+              />
+            )}
+          </Box>
+        )}
       </Box>
     </Box>
   );

@@ -18,7 +18,7 @@ import type {
 
 type Selection = { id: string; type: AcademicSetupNodeType };
 
-export const useAcademicSetupWorkspace = () => {
+export const useAcademicSetupWorkspace = (initialYearId = '') => {
   const yearQuery = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
@@ -32,7 +32,7 @@ export const useAcademicSetupWorkspace = () => {
   });
   const years = (yearQuery.data?.items ?? []) as AcademicYearRecord[];
   const allBoards = (boardQuery.data?.items ?? []) as Board[];
-  const [selectedYearId, setSelectedYearId] = useState('');
+  const [selectedYearId, setSelectedYearId] = useState(initialYearId);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
 

@@ -1,5 +1,5 @@
+import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Box, Button, Tooltip, IconButton } from '@mui/material';
 
 import type { AcademicYearContextProps } from './academic-year-context';
 
@@ -27,25 +27,28 @@ export const AcademicYearActions = ({
   >
     {currentYear ? (
       <>
-        <Tooltip title={`Edit ${currentYear.name}`}>
-          <IconButton
-            size="small"
-            aria-label={`Edit academic year ${currentYear.name}`}
-            onClick={onEditYear}
-            sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
-          >
-            <Iconify icon="solar:pen-bold" width={18} aria-hidden />
-          </IconButton>
-        </Tooltip>
         <Button
           type="button"
           size="small"
           variant="outlined"
-          startIcon={<Iconify icon="solar:calendar-add-bold-duotone" aria-hidden />}
-          onClick={onCreateYear}
-          sx={{ minHeight: { xs: 44, sm: 36 }, whiteSpace: 'nowrap' }}
+          color="inherit"
+          aria-label={`Edit academic year ${currentYear.name}`}
+          onClick={onEditYear}
+          startIcon={<Iconify icon="solar:pen-bold" width={16} aria-hidden />}
         >
-          Create academic year
+          Edit year
+        </Button>
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          color="inherit"
+          aria-label="Create academic year"
+          startIcon={<Iconify icon="mingcute:add-line" width={16} aria-hidden />}
+          onClick={onCreateYear}
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          Academic year
         </Button>
       </>
     ) : null}
@@ -53,12 +56,13 @@ export const AcademicYearActions = ({
       type="button"
       size="small"
       variant="contained"
-      startIcon={<Iconify icon="mingcute:add-line" aria-hidden />}
+      aria-label={currentYear ? 'Add board' : 'Create academic year'}
+      startIcon={<Iconify icon="mingcute:add-line" width={16} aria-hidden />}
       disabled={isLoading}
       onClick={currentYear ? onAddBoard : onCreateYear}
-      sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.5, whiteSpace: 'nowrap' }}
+      sx={{ whiteSpace: 'nowrap' }}
     >
-      {currentYear ? 'Add board' : 'Create academic year'}
+      {currentYear ? 'Board' : 'Academic year'}
     </Button>
   </Box>
 );

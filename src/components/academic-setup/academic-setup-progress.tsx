@@ -24,9 +24,9 @@ export const AcademicSetupProgress = ({
       aria-labelledby="hierarchy-progress-title"
       aria-busy={isLoading}
       variant="outlined"
-      sx={{ p: 1.25, borderRadius: 2, bgcolor: 'background.paper', flexShrink: 0 }}
+      sx={{ p: 1, borderRadius: 2, bgcolor: 'background.paper', flexShrink: 0 }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 0.75, mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 1, mb: 1 }}>
         <Typography id="hierarchy-progress-title" variant="subtitle2" sx={{ fontWeight: 700 }}>
           Setup progress
         </Typography>
@@ -67,25 +67,31 @@ export const AcademicSetupProgress = ({
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mt: 1, minWidth: 0 }}>
-        <Iconify
-          icon="solar:lightbulb-bolt-bold-duotone"
-          width={18}
-          color="warning.main"
-          sx={{ flexShrink: 0 }}
-          aria-hidden
-        />
-        <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4, minWidth: 0 }}>
-          <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
-            Next:{' '}
-          </Box>
-          {isLoading ? (
-            <Skeleton component="span" width={220} sx={{ maxWidth: '100%' }} />
-          ) : (
-            getHierarchyNextStep(counts)
-          )}
-        </Typography>
-      </Box>
+      {coverage.completedLevels < HIERARCHY_LEVELS.length && (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mt: 1, minWidth: 0 }}>
+          <Iconify
+            icon="solar:lightbulb-bolt-bold-duotone"
+            width={16}
+            color="text.secondary"
+            sx={{ flexShrink: 0 }}
+            aria-hidden
+          />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ lineHeight: 1.4, minWidth: 0 }}
+          >
+            <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+              Next:{' '}
+            </Box>
+            {isLoading ? (
+              <Skeleton component="span" width={220} sx={{ maxWidth: '100%' }} />
+            ) : (
+              getHierarchyNextStep(counts)
+            )}
+          </Typography>
+        </Box>
+      )}
     </Paper>
   );
 };

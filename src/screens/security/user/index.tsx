@@ -10,16 +10,11 @@ import CustomDialog from 'src/components/customDialog';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  Box,
-  Avatar,
-  MenuList,
-  MenuItem,
-} from '@mui/material';
 
 import { PermissionForm } from '../role';
 import { AccessControlForm } from '../accessControl';
@@ -27,7 +22,10 @@ import PermissionAccessForm from '../role/permission-access-form';
 
 const UserManagementScreen = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canManagePermissions = hasGrantedPermission(permissions, 'AbpIdentity.Users.ManagePermissions');
+  const canManagePermissions = hasGrantedPermission(
+    permissions,
+    'AbpIdentity.Users.ManagePermissions'
+  );
   const canManageScope = hasGrantedPermission(permissions, 'ShikshaMitra.UserScope.Manage');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const yearSuffix = currentYear?.name ? ` - ${currentYear.name}` : '';
@@ -107,40 +105,42 @@ const UserManagementScreen = () => {
                 placement="right-center"
                 actions={({ popover }) => (
                   <MenuList>
-                    {canManagePermissions && <>
-                    <MenuItem
-                      onClick={() => {
-                        setUser(data as any);
-                        popover.onClose();
-                        visibilityDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="material-symbols:beenhere-outline" />
-                      Set Module Visibility
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        dialog.onTrue();
-                        setUser(data as any);
-                      }}
-                    >
-                      <Iconify icon="mdi:account-lock" />
-                      Module Permission
-                    </MenuItem>
-                    </>}
-                    {canManageScope &&
-                    <MenuItem
-                      onClick={() => {
-                        setUser(data as any);
-                        popover.onClose();
-                        academicDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="material-symbols:beenhere-outline" />
-                      Academic Permission
-                    </MenuItem>
-                    }
+                    {canManagePermissions && [
+                      <MenuItem
+                        key="visibility"
+                        onClick={() => {
+                          setUser(data as any);
+                          popover.onClose();
+                          visibilityDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="material-symbols:beenhere-outline" />
+                        Set Module Visibility
+                      </MenuItem>,
+                      <MenuItem
+                        key="permissions"
+                        onClick={() => {
+                          popover.onClose();
+                          dialog.onTrue();
+                          setUser(data as any);
+                        }}
+                      >
+                        <Iconify icon="mdi:account-lock" />
+                        Module Permission
+                      </MenuItem>,
+                    ]}
+                    {canManageScope && (
+                      <MenuItem
+                        onClick={() => {
+                          setUser(data as any);
+                          popover.onClose();
+                          academicDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="material-symbols:beenhere-outline" />
+                        Academic Permission
+                      </MenuItem>
+                    )}
                   </MenuList>
                 )}
               />
@@ -159,7 +159,12 @@ const UserManagementScreen = () => {
           setUser(null);
         }}
       >
-        <PermissionForm editData={user} handleClose={dialog.onFalse} providerName="U" onBusyChange={setPermissionBusy} />
+        <PermissionForm
+          editData={user}
+          handleClose={dialog.onFalse}
+          providerName="U"
+          onBusyChange={setPermissionBusy}
+        />
       </CustomDialog>
       <CustomDialog
         fullScreen
@@ -177,13 +182,17 @@ const UserManagementScreen = () => {
         paperProps={{ sx: { '& [aria-label="close"]': { minWidth: 44, minHeight: 44 } } }}
         handleClose={visibilityDialog.onFalse}
       >
-        <VisibilityForm editData={user} handleClose={visibilityDialog.onFalse} onBusyChange={setPermissionBusy} />
+        <VisibilityForm
+          editData={user}
+          handleClose={visibilityDialog.onFalse}
+          onBusyChange={setPermissionBusy}
+        />
       </CustomDialog>
     </Box>
   );
 };
 export default UserManagementScreen;
 
-const VisibilityForm = (props: Omit<React.ComponentProps<typeof PermissionAccessForm>, 'providerName' | 'mode'>) => (
-  <PermissionAccessForm {...props} providerName="U" mode="visibility" />
-);
+const VisibilityForm = (
+  props: Omit<React.ComponentProps<typeof PermissionAccessForm>, 'providerName' | 'mode'>
+) => <PermissionAccessForm {...props} providerName="U" mode="visibility" />;

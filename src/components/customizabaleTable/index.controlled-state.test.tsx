@@ -22,6 +22,25 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('shows all rows without pagination and preserves opt-in expanded content', () => {
+    const data = Array.from({ length: 35 }, (_, index) => ({
+      id: String(index),
+      name: `Feature ${index}`,
+    }));
+    renderTable(
+      <CustomizableTable
+        tableId="permission-unpaginated"
+        columns={columns}
+        data={data}
+        isPagination={false}
+        showToolbar={false}
+        renderExpandedRow={(row) => (row.id === '34' ? <div>Editable detail</div> : null)}
+      />
+    );
+    expect(screen.getByText('Feature 34')).toBeVisible();
+    expect(screen.getByText('Editable detail').closest('td')).toHaveAttribute('colspan', '1');
+    expect(screen.queryByRole('textbox', { name: /search/i })).not.toBeInTheDocument();
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

@@ -1,4 +1,7 @@
+import { Provider } from 'react-redux';
 import { vi, it, expect, describe } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from 'src/redux/auth/authSlice';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
@@ -9,8 +12,25 @@ import { AcademicYearContext } from './academic-year-context';
 import { AcademicSetupProgress } from './academic-setup-progress';
 import { AcademicActionButtons } from './node-actions/academic-action-buttons';
 
-const renderWithTheme = (node: React.ReactNode) =>
-  render(<ThemeProvider theme={createTheme(defaultSettings)}>{node}</ThemeProvider>);
+const renderWithTheme = (node: React.ReactNode, grants = ['Add', 'Edit', 'Delete']) => {
+  const store = configureStore({
+    reducer: { auth: authReducer },
+    preloadedState: {
+      auth: {
+        ...authReducer(undefined, { type: 'init' }),
+        permissions: grants.map((action) => ({
+          name: `InstituteSetup.AcademicSetup.${action}`,
+          isGranted: true,
+        })),
+      },
+    },
+  });
+  return render(
+    <Provider store={store}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>{node}</ThemeProvider>
+    </Provider>
+  );
+};
 
 describe('academic setup states and actions', () => {
   it('shows readable progress and the next best action', () => {
@@ -84,6 +104,23 @@ describe('academic setup states and actions', () => {
     expect(screen.getByRole('button', { name: 'Delete stage Primary' })).toBeVisible();
   });
 
+  it('does not expose editing or deletion with only an academic Add grant', () => {
+    renderWithTheme(
+      <AcademicActionButtons
+        recordName="Primary"
+        recordType="stage"
+        addLabel="Add standard"
+        onAdd={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+      ['Add']
+    );
+    expect(screen.getByRole('button', { name: 'Add standard' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Edit stage Primary' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete stage Primary' })).not.toBeInTheDocument();
+  });
+
   it('visibly distinguishes creating a year from adding a board and routes each action correctly', () => {
     const createYear = vi.fn();
     const addBoard = vi.fn();
@@ -102,7 +139,7 @@ describe('academic setup states and actions', () => {
       />
     );
     const create = screen.getByRole('button', { name: 'Create academic year' });
-    expect(create).toHaveTextContent('Create academic year');
+    expect(create).toHaveTextContent('Academic year');
     fireEvent.click(create);
     expect(createYear).toHaveBeenCalledOnce();
     expect(addBoard).not.toHaveBeenCalled();

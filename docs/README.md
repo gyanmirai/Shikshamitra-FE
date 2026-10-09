@@ -3,7 +3,7 @@ module: frontend-docs
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-31
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -23,6 +23,8 @@ Use this table before searching older docs.
 | Examination | [docs/examination/README.md](./examination/README.md) |
 | Finance   | [docs/finance/README.md](./finance/README.md)     |
 | HR        | [docs/hr/README.md](./hr/README.md)               |
+| Host tenants | [docs/host-tenants/README.md](./host-tenants/README.md) |
+| Initial setup | [docs/initial-setup/README.md](./initial-setup/README.md) |
 | Library   | [docs/library/README.md](./library/README.md)     |
 | Security | [docs/security/README.md](./security/README.md) |
 | Student   | [docs/student/README.md](./student/README.md)     |

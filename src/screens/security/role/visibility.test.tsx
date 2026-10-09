@@ -30,7 +30,7 @@ const initial = [
   { name: 'ShikshaMitra.Module.HR.Leave', isGranted: false },
   { name: 'HR.ESI.Activate', isGranted: true },
 ];
-it('selects a hidden module without granting, then toggles exactly one submodule', () => {
+it('shows inherited visibility without creating a direct grant and toggles an unrelated submodule', () => {
   const setVisibility = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -41,14 +41,24 @@ it('selects a hidden module without granting, then toggles exactly one submodule
       />
     </ThemeProvider>
   );
-  fireEvent.click(screen.getByRole('button', { name: 'HR' }));
+  expect(screen.getByText('Select a module')).toBeInTheDocument();
+  const moduleButton = screen.getByRole('button', { name: 'HR' });
+  fireEvent.click(moduleButton);
+  const payroll = screen.getByRole('switch', { name: 'Payroll visibility' });
+  fireEvent.click(moduleButton);
+  fireEvent.click(moduleButton);
+  expect(moduleButton).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByText('Select a module')).not.toBeInTheDocument();
+  expect(screen.getByRole('switch', { name: 'Payroll visibility' })).toBe(payroll);
+  expect(payroll).toBeChecked();
+  expect(payroll).toBeDisabled();
   expect(setVisibility).not.toHaveBeenCalled();
-  expect(screen.getByText('Inherited from role HR Manager remains')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('switch', { name: 'Payroll visibility' }));
+  expect(screen.getByText('Inherited from role HR Manager')).toBeInTheDocument();
+  fireEvent.click(payroll);
+  expect(setVisibility).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('switch', { name: 'Leave visibility' }));
   expect(setVisibility).toHaveBeenCalledExactlyOnceWith(
-    initial.map((entry) =>
-      entry.name.endsWith('.Payroll') ? { ...entry, isGranted: true } : entry
-    )
+    initial.map((entry) => (entry.name.endsWith('.Leave') ? { ...entry, isGranted: true } : entry))
   );
 });
 

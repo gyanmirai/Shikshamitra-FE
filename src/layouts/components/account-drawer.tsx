@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IconButtonProps } from '@mui/material/IconButton';
 
 import * as Yup from 'yup';
@@ -62,7 +63,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   // const pathname = usePathname();
 
-  const { employee } = useSelector((state: any) => state.auth);
+  const { employee, sessionContext } = useSelector((state: RootState) => state.auth);
 
   const session: any = useSession();
   const { data: user } = session;
@@ -70,7 +71,8 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   const { profile } = user;
   const isAdminUser = hasRole(profile?.role, 'admin');
   const isStudentUser = hasRole(profile?.role, 'student');
-  const canUseSelfLeaveCenter = !isAdminUser && !isStudentUser;
+  const canUseSelfLeaveCenter =
+    sessionContext?.accountMode === 'tenant' && !isAdminUser && !isStudentUser;
 
   const [open, setOpen] = useState(false);
 

@@ -14,6 +14,8 @@ vi.mock('react-redux', () => ({ useDispatch: () => mocks.dispatch }));
 vi.mock('src/redux/permission/permissionApi', () => ({
   useGetPermissionsQuery: () => mocks.query,
   useUpdatePermissionMutation: () => [mocks.update],
+  useGetUserPermissionOverridesQuery: () => mocks.query,
+  useUpdateUserPermissionOverridesMutation: () => [mocks.update],
 }));
 const role = { providerName: 'R', providerKey: 'synthetic-role' };
 const user = { providerName: 'U', providerKey: 'synthetic-user' };
@@ -57,6 +59,38 @@ beforeEach(() => {
 });
 
 describe('permission drafts and verified changed-only writes', () => {
+  it('discards an unsaved rule without reloading or writing permissions', () => {
+    mocks.query.currentData = { ...catalogue([], user, true), overrides: { Edit: 'deny' as const } };
+    const { result } = start(user);
+    act(() => result.current.setStates(['Edit', 'View'], 'allow'));
+    expect(result.current.dirty).toBe(true);
+    act(() => result.current.discard());
+    expect(result.current.states.Edit).toBe('deny');
+    expect(result.current.states.View).toBe('inherit');
+    expect(result.current.dirty).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.query.refetch).not.toHaveBeenCalled();
+  });
+  it('saves a deny despite a role-default change during the draft', async () => {
+    mocks.query.currentData = catalogue([], user, true);
+    const { result, saved } = start(user);
+    act(() => result.current.setStates(['Edit'], 'deny'));
+    const persisted = { ...catalogue([], user), overrides: { Edit: 'deny' as const } };
+    mocks.query.refetch.mockReturnValueOnce(resolve(catalogue([], user)))
+      .mockReturnValueOnce(resolve(persisted));
+    await act(() => result.current.submit());
+    expect(mocks.update).toHaveBeenCalledExactlyOnceWith({ ...user, data: { permissions: [{ name: 'Edit', state: 'deny' }] } });
+    expect(saved).toHaveBeenCalledOnce();
+  });
+  it('distinguishes persisted deny from follow role even when both lack a direct grant', async () => {
+    mocks.query.currentData = { ...catalogue([], user, true), overrides: { Edit: 'deny' } };
+    const { result, saved } = start(user);
+    act(() => result.current.setStates(['Edit'], 'inherit'));
+    await act(() => result.current.submit());
+    expect(result.current.error).toContain('could not be verified');
+    expect(result.current.states.Edit).toBe('inherit');
+    expect(saved).not.toHaveBeenCalled();
+  });
   it('blocks edits while an explicit reload is pending', async () => {
     const { result } = start();
     let release!: (value: PermissionCatalogue) => void;
@@ -97,7 +131,7 @@ describe('permission drafts and verified changed-only writes', () => {
       await act(() => result.current.submit());
       expect(mocks.update).toHaveBeenCalledExactlyOnceWith({
         ...provider,
-        data: { permissions: [{ name: 'Edit', isGranted: true }] },
+        data: { permissions: [provider === user ? { name: 'Edit', state: 'allow' } : { name: 'Edit', isGranted: true }] },
       });
       expect(saved).toHaveBeenCalledOnce();
       expect(mocks.query.refetch).toHaveBeenCalledTimes(2);
@@ -107,14 +141,14 @@ describe('permission drafts and verified changed-only writes', () => {
   it('removes a direct user grant without trying to revoke inherited grants', async () => {
     mocks.query.currentData = catalogue(['Edit'], user, true);
     const { result, saved } = start(user);
-    act(() => result.current.setGrants(['Edit'], false));
+    act(() => result.current.setStates(['Edit'], 'inherit'));
     mocks.query.refetch
       .mockReturnValueOnce(resolve(catalogue(['Edit'], user, true)))
       .mockReturnValueOnce(resolve(catalogue([], user, true)));
     await act(() => result.current.submit());
     expect(mocks.update).toHaveBeenCalledExactlyOnceWith({
       ...user,
-      data: { permissions: [{ name: 'Edit', isGranted: false }] },
+      data: { permissions: [{ name: 'Edit', state: 'inherit' }] },
     });
     expect(saved).toHaveBeenCalledOnce();
   });

@@ -79,7 +79,7 @@ describe('Student rows with unavailable actions', () => {
     </ThemeProvider>);
 
     expect(screen.getByRole('button', { name: 'Grant All' })).toBeDisabled();
-    expect(screen.getByText(/permissions are missing from the server/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/Permissions for this sub-module are unavailable\. Contact support\. Reference: PERM-/);
   });
 });
 
@@ -123,7 +123,7 @@ describe('Accounts permission controls', () => {
 
   it('explains an outdated server catalog and prevents granting nonexistent permissions', () => {
     renderNode([]);
-    expect(screen.getByText(/permissions are missing from the server/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/Permissions for this sub-module are unavailable\. Contact support\. Reference: PERM-/);
     expect(screen.getByRole('button', { name: 'Grant All' })).toBeDisabled();
     expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
   });

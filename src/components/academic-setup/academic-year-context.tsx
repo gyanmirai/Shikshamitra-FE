@@ -32,7 +32,7 @@ export const AcademicYearContext = ({
     aria-label="Academic year context"
     variant="outlined"
     sx={{
-      p: 1.25,
+      p: 1,
       borderRadius: 2,
       bgcolor: 'background.paper',
       display: 'flex',
@@ -47,17 +47,17 @@ export const AcademicYearContext = ({
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
       <Box
         sx={{
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
           flexShrink: 0,
-          borderRadius: 1.5,
-          bgcolor: 'primary.lighter',
-          color: 'primary.main',
+          borderRadius: 1,
+          bgcolor: 'background.neutral',
+          color: 'text.secondary',
           display: { xs: 'none', sm: 'grid' },
           placeItems: 'center',
         }}
       >
-        <Iconify icon="solar:calendar-bold-duotone" width={22} aria-hidden />
+        <Iconify icon="solar:calendar-bold-duotone" width={16} aria-hidden />
       </Box>
       <Box
         sx={{
@@ -66,17 +66,15 @@ export const AcademicYearContext = ({
           alignItems: { xs: 'stretch', sm: 'center' },
           flexDirection: { xs: 'column', sm: 'row' },
           flexWrap: 'wrap',
-          gap: { xs: 0.5, sm: 1 },
+          gap: 1,
         }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-          Working academic year
-        </Typography>
         <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 220 } }}>
           <InputLabel id="academic-year-select-label">Academic year</InputLabel>
           <Select
             labelId="academic-year-select-label"
             label="Academic year"
+            sx={{ '& .MuiSelect-icon': { width: 16, height: 16 } }}
             value={selectedYearId}
             disabled={isLoading || years.length === 0}
             onChange={(event) => onSelectYear(event.target.value)}
@@ -89,7 +87,7 @@ export const AcademicYearContext = ({
           </Select>
         </FormControl>
         {currentYear?.startDate && currentYear.endDate ? (
-          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+          <Typography variant="caption" color="text.secondary">
             {dayjs(currentYear.startDate).format('DD MMM YYYY')} –{' '}
             {dayjs(currentYear.endDate).format('DD MMM YYYY')}
           </Typography>

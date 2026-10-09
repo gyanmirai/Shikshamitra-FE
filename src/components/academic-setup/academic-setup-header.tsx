@@ -20,7 +20,7 @@ export const AcademicSetupHeader = (props: AcademicYearContextProps) => (
       sx={{
         flexDirection: { xs: 'column', sm: 'row' },
         alignItems: { xs: 'flex-start', sm: 'center' },
-        gap: { xs: 0.5, sm: 2 },
+        // gap: 1,
       }}
     />
     <AcademicYearContext {...props} />

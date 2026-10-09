@@ -24,8 +24,8 @@ export const AcademicSetupChildCard = ({
       onClick={() => onSelect(node)}
       sx={{
         width: '100%',
-        minHeight: 88,
-        p: 1.5,
+        minHeight: 64,
+        p: 1,
         textAlign: 'left',
         border: '1px solid',
         borderColor: 'divider',
@@ -43,31 +43,28 @@ export const AcademicSetupChildCard = ({
     >
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          mr: 1.25,
+          width: 36,
+          height: 36,
+          mr: 1,
           flexShrink: 0,
-          borderRadius: 1.25,
-          bgcolor: 'action.hover',
-          color: 'primary.main',
+          borderRadius: 1,
+          bgcolor: 'background.neutral',
+          color: 'text.secondary',
           display: 'grid',
           placeItems: 'center',
         }}
       >
-        <Iconify icon={meta.icon} width={22} aria-hidden />
+        <Iconify icon={meta.icon} width={16} aria-hidden />
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="caption" color="text.secondary">
-          {meta.label}
-        </Typography>
-        <Typography variant="subtitle2" noWrap>
+        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
           {node.name}
         </Typography>
         <Typography variant="caption" color="text.secondary">
           {detail}
         </Typography>
       </Box>
-      <Iconify icon="eva:arrow-ios-forward-fill" width={16} color="text.disabled" aria-hidden />
+      <Iconify icon="eva:arrow-ios-forward-fill" width={16} color="text.secondary" aria-hidden />
     </ButtonBase>
   );
 };

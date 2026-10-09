@@ -1,9 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { useSelector } from 'react-redux';
 import { Logo } from 'src/components/logo';
 import { useSession } from 'next-auth/react';
 import { dashboardPath } from 'src/routes/paths';
@@ -19,7 +21,7 @@ import { MenuButton } from '../components/menu-button';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
-import GlobalAcademicSearch from '../components/global-academic-search';
+import GlobalAcademicSearch from '../components/global-academic-search/route-aware-search';
 import { type WorkspacesPopoverProps } from '../components/workspaces-popover';
 import {
   NotificationsDrawer,
@@ -116,6 +118,9 @@ export function HeaderBase({
   const theme = useTheme();
   const session: any = useSession();
   const { data: user } = session;
+  const isHost = useSelector(
+    (state: RootState) => state.auth.sessionContext?.accountMode === 'host'
+  );
 
   const { data: tenantData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -125,7 +130,7 @@ export function HeaderBase({
       skip: !user?.profile?.tenantid,
     },
   });
-  const schoolName = tenantData?.extraProperties?.InstituteName;
+  const schoolName = isHost ? 'Platform administrator' : tenantData?.extraProperties?.InstituteName;
 
   return (
     <HeaderSection
@@ -195,7 +200,7 @@ export function HeaderBase({
                 </Link>
               )}
 
-              {workspaces && (
+              {workspaces && !isHost && (
                 // <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
                 <GlobalAcademicSearch />
                 // </Box>

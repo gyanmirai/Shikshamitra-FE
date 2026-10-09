@@ -11,6 +11,14 @@ const token = {
 };
 
 describe('refreshAccessToken', () => {
+  it('omits the tenant resolver header when refreshing the host account', async () => {
+    const fetchToken = vi.fn().mockResolvedValue({ ok: false });
+    await refreshAccessToken(
+      { ...token, refreshToken: 'host-refresh-token', user: { organizationName: '' } },
+      fetchToken
+    );
+    expect(fetchToken.mock.calls[0][1].headers).not.toHaveProperty('__tenant');
+  });
   afterEach(() => {
     vi.restoreAllMocks();
   });

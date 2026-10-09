@@ -4,6 +4,13 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Volo.Abp.Identity:PasswordRequiresNonAlphanumeric': 'Password must include a special character.',
+  'Volo.Abp.Identity:PasswordRequiresLower': 'Password must include a lowercase letter.',
+  'Volo.Abp.Identity:PasswordRequiresUpper': 'Password must include an uppercase letter.',
+  'Volo.Abp.Identity:PasswordRequiresDigit': 'Password must include a digit.',
+  'Volo.Abp.Identity:PasswordTooShort': 'Password is too short. Check the password requirements.',
+  'Volo.Abp.Identity:PasswordRequiresUniqueChars':
+    'Password must include more different characters. Check the password requirements.',
   'Admissions.CycleCodeAlreadyExists':
     'An admission cycle already uses this code. Choose a different cycle code and try again.',
   'Admissions:ApplicationStageCannotAdvance':
