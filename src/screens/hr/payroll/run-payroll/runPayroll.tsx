@@ -1122,6 +1122,8 @@ const RunPayroll = () => {
               alignItems={{ xs: 'flex-start', md: 'center' }}
               justifyContent="space-between"
               spacing={1}
+              flexWrap="wrap"
+              useFlexGap
               sx={{ px: 1, py: 0.75 }}
             >
               <Box>
@@ -1132,8 +1134,36 @@ const RunPayroll = () => {
                   {month?.format('MMMM YYYY')} • {selectedEmployeeIds.length} selected
                 </Typography>
               </Box>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1.25}
+                alignItems="center"
+                flexWrap={{ xs: 'wrap', lg: 'nowrap' }}
+                useFlexGap
+                divider={
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    aria-hidden="true"
+                    sx={{
+                      display: { xs: 'none', lg: 'block' },
+                      height: 20,
+                      alignSelf: 'center',
+                      borderColor: 'text.disabled',
+                    }}
+                  />
+                }
+                sx={{ maxWidth: '100%' }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                  role="group"
+                  aria-label="Payroll preview"
+                >
                   {preview.isStale ? (
                     <Typography variant="caption" color="warning.main" role="status">
                       Preview needs refresh
@@ -1152,24 +1182,43 @@ const RunPayroll = () => {
                     {previewButtonLabel}
                   </LoadingButton>
                 </Stack>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  aria-haspopup="dialog"
-                  aria-expanded={readinessOpen}
-                  aria-controls="payroll-readiness-drawer"
-                  startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
-                  onClick={() => setReadinessDrawerContext(previewContextKey)}
-                >
-                  View readiness
-                </Button>
                 <Stack
                   direction="row"
                   spacing={1}
                   flexWrap="wrap"
                   useFlexGap
                   role="group"
-                  aria-label="Review selected payroll rows"
+                  aria-label="Payroll readiness and audit"
+                >
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    aria-haspopup="dialog"
+                    aria-expanded={readinessOpen}
+                    aria-controls="payroll-readiness-drawer"
+                    startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
+                    onClick={() => setReadinessDrawerContext(previewContextKey)}
+                  >
+                    View readiness
+                  </Button>
+                  {canViewPayrollAudit ? (
+                    <LoadingButton
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Iconify icon="solar:history-linear" />}
+                      onClick={() => setAuditOpen(true)}
+                    >
+                      Audit
+                    </LoadingButton>
+                  ) : null}
+                </Stack>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  useFlexGap
+                  role="group"
+                  aria-label="Review and lock selected payroll rows"
                 >
                   <LoadingButton
                     size="small"
@@ -1204,29 +1253,19 @@ const RunPayroll = () => {
                   >
                     Unmark
                   </LoadingButton>
-                </Stack>
-                {canViewPayrollAudit ? (
                   <LoadingButton
                     size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="solar:history-linear" />}
-                    onClick={() => setAuditOpen(true)}
+                    variant="contained"
+                    color="success"
+                    disabled={!preview.isCurrent || !canLockPayroll || !lockableIds.length}
+                    startIcon={<Iconify icon="solar:lock-bold" />}
+                    onClick={() => {
+                      if (preview.isCurrent) setLockConfirmOpen(true);
+                    }}
                   >
-                    Audit
+                    Lock Reviewed
                   </LoadingButton>
-                ) : null}
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  disabled={!preview.isCurrent || !canLockPayroll || !lockableIds.length}
-                  startIcon={<Iconify icon="solar:lock-bold" />}
-                  onClick={() => {
-                    if (preview.isCurrent) setLockConfirmOpen(true);
-                  }}
-                >
-                  Lock Reviewed
-                </LoadingButton>
+                </Stack>
               </Stack>
             </Stack>
 

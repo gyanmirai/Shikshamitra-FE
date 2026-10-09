@@ -181,6 +181,22 @@ describe('Run Payroll preview feedback', () => {
     expect(
       within(screen.getByRole('banner')).queryByRole('button', { name: 'Refresh preview' })
     ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Payroll preview' })).getByRole('button', {
+        name: 'Refresh preview',
+      })
+    ).toBeVisible();
+    const inspectionActions = within(
+      screen.getByRole('group', { name: 'Payroll readiness and audit' })
+    );
+    expect(inspectionActions.getByRole('button', { name: 'View readiness' })).toBeVisible();
+    expect(inspectionActions.getByRole('button', { name: 'Audit' })).toBeVisible();
+    const reviewActions = within(
+      screen.getByRole('group', { name: 'Review and lock selected payroll rows' })
+    );
+    expect(reviewActions.getByRole('button', { name: 'Mark Reviewed' })).toBeDisabled();
+    expect(reviewActions.getByRole('button', { name: 'Unmark' })).toBeDisabled();
+    expect(reviewActions.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
     expect(screen.queryByRole('link', { name: 'Open attendance' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Payroll Readiness' })).not.toBeInTheDocument();
     expect(screen.queryByText('Academic year')).not.toBeInTheDocument();
