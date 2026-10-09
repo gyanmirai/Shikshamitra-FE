@@ -1,6 +1,8 @@
 import { hostTenantType } from '../tagTypes';
+import { readTenantPasswordPolicy } from './password-policy';
 import { hostTenantModuleApi } from './host-tenant-module-api';
 
+import type { TenantPasswordPolicy } from './password-policy';
 import type {
   HostTenant,
   TenantPage,
@@ -11,6 +13,13 @@ import type {
 
 export const hostTenantApi = hostTenantModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getTenantPasswordPolicy: builder.query<TenantPasswordPolicy, void>({
+      query: () => ({
+        url: '/abp/application-configuration',
+        params: { includeLocalizationResources: false },
+      }),
+      transformResponse: readTenantPasswordPolicy,
+    }),
     getHostTenants: builder.query<TenantPage, TenantListQuery>({
       query: (params) => ({ url: '/host/tenants', params }),
       providesTags: [hostTenantType.tenants],
@@ -42,6 +51,7 @@ export const hostTenantApi = hostTenantModuleApi.injectEndpoints({
   }),
 });
 export const {
+  useGetTenantPasswordPolicyQuery,
   useGetHostTenantsQuery,
   useGetHostTenantQuery,
   useLazyGetHostTenantQuery,

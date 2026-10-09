@@ -1,5 +1,6 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Tooltip, IconButton } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card';
 
 export const AcademicSetupSidebarHeader = ({
   hasExpandedNodes,
@@ -13,34 +14,38 @@ export const AcademicSetupSidebarHeader = ({
       position: 'sticky',
       top: 0,
       zIndex: 1,
-      p: 1.25,
+      p: 1,
       borderBottom: '1px solid',
       borderColor: 'divider',
       bgcolor: 'background.paper',
     }}
   >
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minHeight: 44 }}>
-      <Iconify icon="solar:tree-bold-duotone" width={22} color="primary.main" aria-hidden />
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          Hierarchy navigator
-        </Typography>
-      </Box>
-      {hasExpandedNodes ? (
-        <Button
-          type="button"
-          size="small"
-          color="inherit"
-          onClick={onCollapseAll}
-          startIcon={<Iconify icon="eva:arrow-ios-upward-fill" aria-hidden />}
-          sx={{ minHeight: 32, px: 1, flexShrink: 0 }}
-        >
-          Collapse
-        </Button>
-      ) : null}
-    </Box>
-    <Typography variant="caption" color="text.secondary">
-      Open a branch to move from board to division
-    </Typography>
+    <FormSectionHeader
+      icon="mdi:file-tree-outline"
+      iconSize={16}
+      title="Hierarchy"
+      descriptionTooltip="Open a branch to move from board to division. Select a record to view its details."
+      action={
+        hasExpandedNodes ? (
+          <Tooltip title="Collapse all branches">
+            <IconButton
+              type="button"
+              size="small"
+              aria-label="Collapse all branches"
+              onClick={onCollapseAll}
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 1,
+                color: 'text.secondary',
+                bgcolor: 'background.neutral',
+              }}
+            >
+              <Iconify icon="mdi:unfold-less-horizontal" width={16} aria-hidden />
+            </IconButton>
+          </Tooltip>
+        ) : null
+      }
+    />
   </Box>
 );

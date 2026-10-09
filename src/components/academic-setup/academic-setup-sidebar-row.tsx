@@ -33,21 +33,21 @@ export const AcademicSetupSidebarRow = ({
         minHeight: 48,
         px: 1,
         py: 0.5,
-        mx: 0.75,
-        mb: 0.5,
+        mx: 1,
+        mb: 1,
         width: 'auto',
         border: '1px solid',
-        borderColor: isSelected ? 'primary.main' : 'transparent',
+        borderColor: isSelected ? 'text.secondary' : 'transparent',
         borderRadius: 1.5,
-        color: isSelected ? 'primary.main' : 'text.primary',
-        bgcolor: isSelected ? 'primary.lighter' : 'transparent',
+        color: 'text.primary',
+        bgcolor: isSelected ? 'background.neutral' : 'transparent',
         touchAction: 'manipulation',
         transition: 'background-color 150ms ease, border-color 150ms ease',
         '&:hover': {
-          bgcolor: isSelected ? 'primary.lighter' : 'action.hover',
-          borderColor: isSelected ? 'primary.main' : 'divider',
+          bgcolor: isSelected ? 'background.neutral' : 'action.hover',
+          borderColor: isSelected ? 'text.secondary' : 'divider',
         },
-        '&.Mui-selected': { bgcolor: 'primary.lighter' },
+        '&.Mui-selected': { bgcolor: 'background.neutral' },
         '&.Mui-focusVisible': {
           outline: '2px solid',
           outlineColor: 'primary.main',
@@ -64,11 +64,11 @@ export const AcademicSetupSidebarRow = ({
           borderRadius: 1.25,
           display: 'grid',
           placeItems: 'center',
-          bgcolor: isSelected ? 'background.paper' : 'action.hover',
-          color: isSelected ? 'primary.main' : 'text.secondary',
+          bgcolor: isSelected ? 'background.paper' : 'background.neutral',
+          color: 'text.secondary',
         }}
       >
-        <Iconify icon={meta.icon} width={18} aria-hidden />
+        <Iconify icon={meta.icon} width={16} aria-hidden />
       </Box>
 
       <Tooltip title={node.name} placement="right" enterDelay={700}>

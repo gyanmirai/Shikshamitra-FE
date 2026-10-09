@@ -16,6 +16,7 @@ const tenantContext = {
   ...hostContext,
   accountMode: 'tenant',
   tenantId: 'tenant-1',
+  setupCompleted: true,
   canViewTenants: false,
 };
 const response = (value: unknown) => ({ ok: true, json: async () => value });

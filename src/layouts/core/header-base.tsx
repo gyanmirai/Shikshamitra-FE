@@ -21,7 +21,7 @@ import { MenuButton } from '../components/menu-button';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
-import GlobalAcademicSearch from '../components/global-academic-search';
+import GlobalAcademicSearch from '../components/global-academic-search/route-aware-search';
 import { type WorkspacesPopoverProps } from '../components/workspaces-popover';
 import {
   NotificationsDrawer,

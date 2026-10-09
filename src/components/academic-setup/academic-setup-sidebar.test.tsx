@@ -76,7 +76,7 @@ describe('AcademicSetupSidebar', () => {
     expect(screen.getByText('Level 5 · Division')).toBeVisible();
     expect(screen.getAllByRole('group')).toHaveLength(4);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all branches' }));
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'View Medium English' })).not.toBeInTheDocument();
     });

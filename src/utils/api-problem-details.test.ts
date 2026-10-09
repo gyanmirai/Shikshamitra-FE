@@ -3,6 +3,34 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it.each([
+    ['PasswordRequiresNonAlphanumeric', 'a special character'],
+    ['PasswordRequiresLower', 'a lowercase letter'],
+    ['PasswordRequiresUpper', 'an uppercase letter'],
+    ['PasswordRequiresDigit', 'a digit'],
+    ['PasswordTooShort', 'too short'],
+    ['PasswordRequiresUniqueChars', 'different characters'],
+  ])('explains ABP identity %s in RFC and nested error responses', (code, message) => {
+    const errorCode = `Volo.Abp.Identity:${code}`;
+    expect(
+      parseApiProblemDetail({
+        data: {
+          detail: 'One or more business rules were violated.',
+          errorCode,
+        },
+      }).detail
+    ).toContain(message);
+    expect(
+      parseApiProblemDetail({
+        data: {
+          error: {
+            message: 'One or more business rules were violated.',
+            code: errorCode,
+          },
+        },
+      }).detail
+    ).toContain(message);
+  });
   it('identifies an unassigned refund policy from the eligibility error code', () => {
     const parsed = parseApiProblemDetail({
       status: 400,

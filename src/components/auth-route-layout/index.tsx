@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { hostTenantPath } from 'src/constants/host-tenant-menu';
+import { isWrongWorkspace, workspaceLanding } from 'src/redux/host-tenants/workspace-landing';
 
 import { SplashScreen } from '../loading-screen';
 
@@ -38,15 +38,12 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
     user?.sub === sessionData?.profile?.sub &&
     Boolean(sessionData?.accessToken) &&
     !sessionData?.error;
-  const wrongWorkspace =
-    sessionContext?.accountMode === 'host'
-      ? pathname.replace(/\/+$/, '') !== hostTenantPath
-      : sessionContext?.accountMode === 'tenant' && pathname.startsWith('/host/');
+  const wrongWorkspace = sessionContext ? isWrongWorkspace(sessionContext, pathname) : false;
 
   useEffect(() => {
-    if (verifiedIdentity && wrongWorkspace)
-      router.replace(sessionContext?.accountMode === 'host' ? hostTenantPath : '/dashboard');
-  }, [verifiedIdentity, wrongWorkspace, router, sessionContext?.accountMode]);
+    if (verifiedIdentity && wrongWorkspace && sessionContext)
+      router.replace(workspaceLanding(sessionContext));
+  }, [verifiedIdentity, wrongWorkspace, router, sessionContext]);
 
   useEffect(() => {
     const hasUsableSession =

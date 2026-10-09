@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-09-17
+updated_on: 2026-10-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,40 +11,45 @@ audience: humans-and-agents
 # Edit role and user permissions
 
 1. Open Role Management or User Management as an authorized permission administrator.
-2. Select the existing Module Permission or Set Module Visibility menu item.
-3. In Module Permission, use the original module and sub-module panels.
-   Expand familiar navigation groups to see staging's compact action controls.
-4. In Set Module Visibility, use the original separate module visibility controls.
-   Nested settings and previously unmapped server flags are included there, not in action permissions.
-5. Use the existing action switches or Grant All and Revoke All controls.
-   Sub-module action controls include mapped descendants even when their groups are collapsed.
-6. Submit the changes.
-   Saving succeeds only after the persisted direct grants have been refetched and verified.
-   Cancel or navigation away requires confirmation when changes are unsaved.
+2. Select Module Permission or Set Module Visibility. These remain separate dialogs.
+3. Choose a module and sub-module from the unified navigation list. Clicking the current selection keeps the editor open.
+4. Select Role, Allow, or Deny directly in a permission cell. Role follows the assigned roles and is announced as Follow role to assistive technology. Every action shows its choices immediately; no editor-opening click is required. Role screens show Allow and Revoke. Arrow keys move between choices.
+5. For users, choose Follow role, Allow, or Deny. For roles, choose Allow or Revoke.
+6. Select Review changes to inspect all changed permissions and resulting access, including grouped action dependencies.
+7. Save changes. Success is shown only after a fresh read verifies the stored state.
 
-The original Role/User screens, separate dialogs, three-panel organization, cards, switches, and Submit/Cancel footer are retained.
-Expanding a group only changes presentation state.
-The form preserves unsaved drafts and verifies stored changes without adding granular action tiles, search, or a review panel.
+Back to editing keeps the draft. Discard changes resets it to the last loaded state without a write.
+Cancel prompts before discarding an unsaved draft.
+Search filters features without changing permissions. Overrides only shows user-specific exceptions.
+Collapsing groups only changes presentation.
 
-## Grant meaning and conflicts
+The user approved the themed permission matrix on October 9, replacing the earlier three-panel switch layout.
+The screen uses the existing theme and shared table, dialog, scroll, and confirmation components.
+Prominent bulk grant/revoke controls are omitted; each action applies the existing grouped mapping.
 
-A switch applies the staging mapping to direct grants using exact server permission names.
-Student controls retain grouped operations and View dependencies; Accounts Settings retain independent View, Add, Edit, Change Status, and Delete controls.
-Set Module Visibility is separate from action permissions.
-The selected role or user need not already have visibility to be configured.
-Revoke All removes the direct grants represented by the selected control; inherited role access remains effective.
-For Statutory Schemes, the user-approved View/Edit/Delete controls retain the same card and switch layout.
-Edit groups settings edits, scheme activation, enrollment management, and override approval using the four existing backend permission IDs.
-View and Edit are independent controls.
-Delete is visible but disabled when the server has no Delete permission; it does not introduce a deletion operation.
-Revoke All is available whenever any eligible direct Statutory Schemes grant exists, including a partial or undisplayed grant.
-It clears every eligible direct grant at or beneath that exact feature namespace and preserves unrelated grants and role inheritance.
-The Payroll Management header includes Edit so grouped write permissions can also be changed while Settings is collapsed.
-Control tooltips identify remaining inherited providers.
-Provider-ineligible entries cannot be submitted by the editor.
-Reload after a conflict requires explicit confirmation before discarding a dirty draft.
+## Role defaults and user overrides
 
-Backend validation cannot infer an administrator's intention from a batch of otherwise valid permission names.
-Do not use a successful API response alone as evidence of effective access removal.
-Verify exact effective access and grant sources using authorized API reads.
-Access repairs still require the exact approval and audit process in the [backend standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md).
+Follow role is the default and combines current assigned-role grants.
+Allow and Deny apply only to the selected user and persist through later role-permission updates.
+Follow role removes the explicit override. User saves do not change role permissions or assignments.
+Role defaults, their contributing role names, the selected rule, and effective access are shown separately.
+Provider-ineligible controls remain unavailable.
+Opening either dialog does not copy inherited role grants into user grants or make the form dirty.
+
+Student controls preserve grouped operations and View dependencies.
+Accounts Settings preserve independent View, Add, Edit, Change Status, and Delete actions.
+Statutory Schemes Edit groups edits, activation, enrollment management, and override approval using the four existing backend permission IDs.
+View and Edit remain independent; Delete is disabled when the server has no matching permission.
+Unmapped and unrelated action permissions are retained without being rewritten.
+Set Module Visibility preserves nested settings and unmapped server flags, including Additional visibility.
+Visibility edits do not mutate action permissions.
+
+The selected role or user need not already have module visibility to be configured.
+Provider-ineligible entries cannot be submitted.
+Pre-save reads detect changed-entry drift; post-save reads verify persisted direct grants or user override states.
+The API has no compare-and-swap token, so these checks cannot eliminate simultaneous-write races.
+Reload after a conflict requires confirmation before discarding a dirty draft.
+
+Backend validation cannot infer administrator intent from otherwise valid permission names.
+Verify exact effective access and sources with authorized API reads when diagnosing access.
+Access repairs still require the approval and audit process in the [backend standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md).

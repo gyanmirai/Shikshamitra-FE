@@ -22,6 +22,16 @@ node scripts/docs/validate-docs.mjs --module host-tenants
 git diff --check
 ```
 
+Password regression checks:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/host-tenants/services/tenant-form.test.ts src/screens/host-tenants/services/tenant-password.test.ts --pool=threads
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/utils/api-problem-details.test.ts --pool=threads -t 'ABP identity'
+node node_modules/@playwright/test/cli.js test --config e2e/host-tenants/playwright.config.mjs --grep 'password'
+```
+
+The password checks cover configurable character/length/uniqueness rules, rejection before POST, actionable server field errors, correction/resubmission and settings retry with draft preservation.
+
 ## Local evidence (2026-10-08)
 
 - All seven focused unit files passed: 33 tests, no skipped tests. Coverage includes verified host/school route isolation, trailing slashes, stale account results, session-cache invalidation and typed form serialization.
@@ -32,6 +42,10 @@ git diff --check
 - Focused module docs, TypeScript source checks and zero-warning lint for touched feature/shell files were run. The global TypeScript command still reports four unchanged errors in concession-type-form, fee-category-readonly and custom-select/descriptions.test fixtures.
 - Full docs validation retains 27 existing testing-document issues. Focused host-tenant docs pass.
 - Screenshot evidence is retained at `.artifacts/host-tenant-proof/tenant-workspace.png`; it shows the actual application with synthetic school data.
+
+Password follow-up: 17 focused unit checks and three browser regressions pass; the create/edit/status workflow also passes with settings loading enabled.
+Full TypeScript retains five unrelated errors, including `src/screens/student/dashboard/dashboard-test-fixture.ts` missing sessionContext.
+The full shared error-parser suite retains an existing Admissions.FormMakerCheckerRequired message failure, reproduced using the unchanged HEAD parser.
 
 ## Limits
 

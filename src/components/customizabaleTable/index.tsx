@@ -64,6 +64,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   tableContainerProps = {},
   isShowedDense = true,
   rowProps = () => ({}),
+  renderExpandedRow,
+  showToolbar = true,
   tableId,
   defaultSearchTerm = '',
   defaultRowsPerPage = 10,
@@ -116,7 +118,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSideFilter: shouldUseServerFilter,
     serverSideSearch,
     serverSideSort,
-    serverSidePagination,
+    serverSidePagination: serverSidePagination || !isPagination,
   });
 
   const rowsPerPageOptions = useMemo(() => {
@@ -384,7 +386,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             border: `1px solid ${theme.palette.divider}`,
           }}
         >
-          <TableToolbar
+          {showToolbar && <TableToolbar
             exportLabel={exportLabel}
             isSearch={isSearch}
             isFilter={isFilter}
@@ -413,7 +415,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             searchFieldProps={searchFieldProps}
             isFullScreen={fullScreenDialog.value}
             onToggleFullScreen={fullScreenDialog.onToggle}
-          />
+          />}
 
           <FilterChips
             filters={filters}
@@ -496,6 +498,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   dense={dense}
                   onRowClick={handleRowClick}
                   rowProps={rowProps}
+                  renderExpandedRow={renderExpandedRow}
                   expandedRows={expandedRows}
                   onExpandRow={handleExpandRow}
                   noDataText={noDataText}
@@ -596,6 +599,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       paginatedData,
       handleRowClick,
       rowProps,
+      renderExpandedRow,
+      showToolbar,
       expandedRows,
       handleExpandRow,
       noDataText,

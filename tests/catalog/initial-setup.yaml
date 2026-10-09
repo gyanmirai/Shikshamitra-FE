@@ -1,0 +1,87 @@
+module: InstituteSetup
+generatedAt: 2026-10-09
+scenarios:
+  - id: IST-INIT-001
+    module: InstituteSetup
+    submodule: Initial setup
+    title: New institute resumes its saved step and drafts after reload and direct dashboard navigation
+    risk: critical
+    priority: P0
+    type: [functional, e2e, validation]
+    roles: [institute-administrator]
+    tenants: [school]
+    routes: [/initial-setup, /dashboard]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@critical', '@positive']
+  - id: IST-INIT-002
+    module: InstituteSetup
+    submodule: Initial setup
+    title: Completed institutes use the dashboard and users without setup permission receive a pending screen
+    risk: critical
+    priority: P0
+    type: [permission, e2e]
+    roles: [institute-administrator, staff]
+    tenants: [school]
+    routes: [/initial-setup, /dashboard]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@critical', '@permission']
+  - id: IST-INIT-003
+    module: InstituteSetup
+    submodule: Initial setup
+    title: Profile year hierarchy additional class and division and staff creation finish setup with the working year
+    risk: critical
+    priority: P0
+    type: [functional, e2e, validation]
+    roles: [institute-administrator]
+    tenants: [school]
+    routes: [/initial-setup, /dashboard]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@critical', '@positive']
+  - id: IST-INIT-004
+    module: InstituteSetup
+    submodule: Initial setup
+    title: Mobile save and exit resumes on the next login and concurrent edits preserve local entries
+    risk: high
+    priority: P1
+    type: [functional, e2e, validation]
+    roles: [institute-administrator]
+    tenants: [school]
+    routes: [/initial-setup, /login]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@high', '@negative']
+  - id: IST-INIT-005
+    module: InstituteSetup
+    submodule: Initial setup
+    title: Setup body scrolls independently and day-first dates support direct month and year selection
+    risk: high
+    priority: P1
+    type: [functional, e2e, accessibility]
+    roles: [institute-administrator]
+    tenants: [school]
+    routes: [/initial-setup]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@high', '@positive']
+  - id: IST-INIT-006
+    module: InstituteSetup
+    submodule: Initial setup
+    title: Setup transitions preserve focused inputs and saved drafts and honor reduced motion
+    risk: high
+    priority: P1
+    type: [functional, e2e, accessibility]
+    roles: [institute-administrator]
+    tenants: [school]
+    routes: [/initial-setup]
+    automated: true
+    automationFile: e2e/host-tenants/initial-setup.spec.ts
+    status: automated
+    tags: ['@high', '@accessibility']

@@ -281,7 +281,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
     validationSchema: Yup.object().shape({
       division: Yup.string().required('Division is required'),
       strength: Yup.number().required('Strength is required'),
-      roomId: Yup.string().required('Room No is required'),
+      roomId: Yup.string(),
     }),
     onSubmit: async (values) => {
       confirm.onTrue();
@@ -383,7 +383,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             size="small"
           />
           <PaginatedSearchSelect<RoomOption>
-            label="Room No *"
+            label="Room (optional)"
             placeholder="Search or scroll to select a room"
             fetchOptions={fetchRoomOptions}
             minChars={0}

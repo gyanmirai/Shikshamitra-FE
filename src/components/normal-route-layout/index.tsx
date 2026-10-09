@@ -6,7 +6,7 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { hostTenantPath } from 'src/constants/host-tenant-menu';
+import { workspaceLanding } from 'src/redux/host-tenants/workspace-landing';
 
 import { SplashScreen } from '../loading-screen';
 
@@ -28,7 +28,7 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
       permissionsInitialized &&
       sessionContext
     ) {
-      router.replace(sessionContext.accountMode === 'host' ? hostTenantPath : '/dashboard');
+      router.replace(workspaceLanding(sessionContext));
     }
   }, [
     status,

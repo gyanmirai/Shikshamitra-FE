@@ -26,6 +26,7 @@ interface TableBodyProps {
   dense: boolean;
   onRowClick: (row: IData, index: number) => void;
   rowProps: (row: IData, index: number) => any;
+  renderExpandedRow?: (row: IData, index: number) => React.ReactNode;
   expandedRows: Record<number, boolean>;
   onExpandRow: (index: number) => void;
   noDataText?: React.ReactNode;
@@ -46,6 +47,7 @@ export const TableBody = ({
   dense,
   onRowClick,
   rowProps,
+  renderExpandedRow,
   expandedRows,
   onExpandRow,
   noDataText = 'No data available',
@@ -176,6 +178,10 @@ export const TableBody = ({
                 )
             )}
           </TableRow>
+          {renderExpandedRow && (
+            <ExpandedRow content={renderExpandedRow(row, index)}
+              colSpan={columns.filter((column) => columnVisibility[column.id]).length + Number(columns.some((column) => column.children))} />
+          )}
           {columns.some((column) => column.children) && (
             <TableRow>
               <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={columns.length + 1}>
@@ -192,3 +198,7 @@ export const TableBody = ({
     </MuiTableBody>
   );
 };
+
+function ExpandedRow({ content, colSpan }: { content: React.ReactNode; colSpan: number }) {
+  return content ? <TableRow><TableCell colSpan={colSpan} sx={{ p: 0 }}>{content}</TableCell></TableRow> : null;
+}

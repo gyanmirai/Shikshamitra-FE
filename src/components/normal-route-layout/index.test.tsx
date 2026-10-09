@@ -53,8 +53,13 @@ describe('verified login landing', () => {
     expect(replace).not.toHaveBeenCalledWith('/dashboard');
   });
   it('keeps the school dashboard landing', () => {
-    renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id' });
+    renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id', setupCompleted: true });
     expect(replace).toHaveBeenCalledWith('/dashboard');
+  });
+  it('sends an incomplete school to its setup route', () => {
+    renderLogin({ ...host, accountMode: 'tenant', tenantId: 'school-id', setupCompleted: false });
+    expect(replace).toHaveBeenCalledWith('/initial-setup');
+    expect(replace).not.toHaveBeenCalledWith('/dashboard');
   });
   it('waits for server verification instead of guessing an account mode', () => {
     renderLogin(null);

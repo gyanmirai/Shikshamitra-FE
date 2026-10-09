@@ -26,7 +26,12 @@ const caps = {
   canManageTenantStatus: true,
 };
 const host: HostSessionContext = { accountMode: 'host', tenantId: null, ...caps };
-const school: HostSessionContext = { accountMode: 'tenant', tenantId: 'school-id', ...caps };
+const school: HostSessionContext = {
+  accountMode: 'tenant',
+  tenantId: 'school-id',
+  setupCompleted: true,
+  ...caps,
+};
 function renderProtected(context: HostSessionContext | null, initialized = true) {
   const state = {
     ...authReducer(undefined, { type: '@@INIT' }),
@@ -63,6 +68,11 @@ describe('AuthRouteLayout workspace boundary', () => {
   it('renders school content with a verified school context', () => {
     renderProtected(school);
     expect(screen.getByText('Protected content')).toBeInTheDocument();
+  });
+  it('redirects incomplete schools to setup before dashboard content renders', async () => {
+    renderProtected({ ...school, setupCompleted: false });
+    expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/initial-setup'));
   });
   it('redirects host users from school routes before their children render', async () => {
     renderProtected(host);

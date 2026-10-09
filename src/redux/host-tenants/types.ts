@@ -1,4 +1,6 @@
 export interface HostSessionContext {
+  setupCompleted?: boolean;
+  canManageSetup?: boolean;
   accountMode: 'host' | 'tenant';
   tenantId: string | null;
   canViewTenants: boolean;

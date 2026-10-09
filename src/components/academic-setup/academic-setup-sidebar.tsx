@@ -55,7 +55,7 @@ export const AcademicSetupSidebar = ({
       onKeyDown={handleHierarchyScrollKeyDown}
       sx={{
         flex: { xs: '0 0 auto', md: '1 1 0' },
-        height: { xs: 440, md: 'auto' },
+        height: { xs: 240, md: 'auto' },
         minHeight: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
@@ -83,7 +83,7 @@ export const AcademicSetupSidebar = ({
       />
 
       {isLoading ? (
-        <Box sx={{ px: 1.5, py: 1 }}>
+        <Box sx={{ p: 1 }}>
           {[0, 1, 2, 3].map((item) => (
             <Skeleton key={item} height={52} sx={{ mb: 0.5 }} />
           ))}
@@ -120,11 +120,12 @@ export const AcademicSetupSidebar = ({
               type="button"
               size="small"
               variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" aria-hidden />}
+              aria-label={hasAcademicYear ? 'Add first board' : 'Create academic year'}
+              startIcon={<Iconify icon="mingcute:add-line" width={16} aria-hidden />}
               onClick={hasAcademicYear ? onAddBoard : onCreateYear}
-              sx={{ mt: 2, minHeight: 36 }}
+              sx={{ mt: 1 }}
             >
-              {hasAcademicYear ? 'Add first board' : 'Create academic year'}
+              {hasAcademicYear ? 'Board' : 'Academic year'}
             </Button>
           }
         />

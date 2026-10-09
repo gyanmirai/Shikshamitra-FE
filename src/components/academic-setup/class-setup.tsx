@@ -249,7 +249,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
         .integer('Limit of Age must be an integer')
         .positive('Limit of Age must be positive')
         .required('Limit of Age is required'),
-      shift: Yup.string().required('Shift is required'),
+      shift: Yup.string().nullable(),
     }),
     onSubmit: async (values) => {
       confirm.onTrue();
@@ -265,7 +265,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
             name: formik.values.class,
             ageLowerLimit: formik.values.limit,
             educationMediumStageId: organizationId,
-            shiftId: formik.values.shift,
+            shiftId: formik.values.shift || null,
           },
         }).unwrap();
       } else {
@@ -273,7 +273,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           name: formik.values.class,
           ageLowerLimit: formik.values.limit,
           educationMediumStageId: organizationId,
-          shiftId: formik.values.shift,
+          shiftId: formik.values.shift || null,
         }).unwrap();
       }
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
@@ -383,8 +383,8 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Shift *"
-                placeholder="Search Shift *"
+                label="Shift (optional)"
+                placeholder="Search shift"
                 size="small"
                 fullWidth
                 sx={{ width: '100%', minWidth: '200px' }}
@@ -393,7 +393,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
               />
             )}
             onChange={(e, value) => {
-              formik.setFieldValue('shift', value?.id);
+              formik.setFieldValue('shift', value?.id ?? '');
             }}
           />
         </Stack>

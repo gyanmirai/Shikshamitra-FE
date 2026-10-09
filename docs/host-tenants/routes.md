@@ -23,6 +23,7 @@ TL;DR: host sessions land on Tenant and cannot render school workspace routes.
 | Header | `src/layouts/core/header-base.tsx`; host title and no school context controls |
 
 Host users visiting a school route are redirected to Tenant before its children render.
-School users visiting /host/ routes return to their school dashboard.
+School users visiting /host/ routes return to their dashboard when setup is complete, or to their saved initial setup when incomplete.
+See [initial setup routing](../initial-setup/routes.md).
 Host accounts with no View grant retain the Tenant entry and see an access message.
 Actions use the backend-confirmed capabilities, while backend checks remain authoritative.

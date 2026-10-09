@@ -1,6 +1,10 @@
+import type { TenantPasswordPolicy } from 'src/redux/host-tenants/password-policy';
 import type { HostTenant, TenantDetails, CreateTenantInput } from 'src/redux/host-tenants/types';
 
 import * as Yup from 'yup';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+
+import { tenantPasswordSchema } from './tenant-password';
 
 export type TenantFormValues = Required<CreateTenantInput>;
 export const emptyTenant: TenantFormValues = {
@@ -41,7 +45,7 @@ export const tenantDetails = (values: TenantFormValues): TenantDetails => ({
 });
 const requiredText = (label: string, max: number) =>
   Yup.string().trim().max(max, `${label} is too long`).required(`${label} is required`);
-export const tenantSchema = (creating: boolean) =>
+export const tenantSchema = (creating: boolean, policy?: TenantPasswordPolicy) =>
   Yup.object({
     name: requiredText('School code', 64).matches(
       /^[A-Za-z0-9][A-Za-z0-9_-]*$/,
@@ -60,27 +64,17 @@ export const tenantSchema = (creating: boolean) =>
     adminEmailAddress: creating
       ? requiredText('Administrator email', 256).email('Enter a valid administrator email')
       : Yup.string(),
-    adminPassword: creating
-      ? Yup.string()
-          .min(8, 'Use at least 8 characters')
-          .max(128)
-          .required('Initial password is required')
-      : Yup.string(),
+    adminPassword: creating ? tenantPasswordSchema(policy) : Yup.string(),
   });
 
 export function tenantError(error: unknown): string {
   if (!error || typeof error !== 'object') return 'Unable to save the tenant. Please retry.';
   const failure = error as {
     status?: number;
-    data?: { detail?: string; title?: string; error?: { message?: string } };
   };
   if (failure.status === 409)
     return 'The tenant changed since you opened it. Reload the latest details and try again.';
   if (failure.status === 403) return 'You do not have permission to perform this action.';
-  return (
-    failure.data?.detail ||
-    failure.data?.error?.message ||
-    failure.data?.title ||
-    'Unable to save the tenant. Please retry.'
-  );
+  const { detail } = parseApiProblemDetail(error);
+  return detail === 'Something went wrong' ? 'Unable to save the tenant. Please retry.' : detail;
 }

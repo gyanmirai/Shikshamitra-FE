@@ -21,7 +21,10 @@ School academic selectors, onboarding, notifications and school profile shortcut
 ## Add and edit
 
 Use Add tenant to enter institute/contact/address details plus the initial school administrator credentials.
-The form uses Formik/Yup, CustomDialog and DialogScrollContent.
+The form uses Formik/Yup, CustomDialog, DialogScrollContent and FormSectionCard for its three sections.
+Password guidance and validation follow the loaded server settings.
+If settings cannot be loaded, Submit remains disabled and Retry preserves the draft.
+An identity password rejection appears below Initial password and focuses that field after saving finishes.
 Editing keeps school code read-only and omits initial credentials.
 Submit locks controls and dialog closing until the request finishes.
 A failure preserves entered values and displays a message.
@@ -30,6 +33,7 @@ Cancel or close confirms discarding dirty values.
 ## Status
 
 Choose Activate or Deactivate on the selected school.
+Table row actions use the shared AdaptiveThreeDotsActions component.
 Deactivation requests a reason and explains that records remain intact.
 Status is updated only after the backend succeeds and the table refetches.
 Search and status filtering reset to the first page.

@@ -11,7 +11,9 @@ export type CataloguePermission = {
 };
 export type PermissionCatalogue = {
   groups: { name: string; displayName: string; permissions: CataloguePermission[] }[];
+  overrides?: Record<string, PermissionOverrideState>;
 };
+export type PermissionOverrideState = 'inherit' | 'allow' | 'deny';
 export type PermissionBranch = (
   | { permission: CataloguePermission; group?: never }
   | { permission?: never; group: { name: string; title: string } }

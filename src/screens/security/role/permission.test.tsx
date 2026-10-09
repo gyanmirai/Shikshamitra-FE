@@ -1,120 +1,200 @@
 import React from 'react';
-import { it, vi, expect } from 'vitest';
+import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
+import { screen, within, fireEvent } from '@testing-library/react';
 
 import Permission from './permission';
 
 import type { CataloguePermission } from './permission-catalogue';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+beforeEach(() => {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+});
 const base = 'Students.Admissions.Forms';
 vi.mock('src/layouts/config-nav-dashboard', () => ({
-  fullSecurityNavData: () => [{ items: [{
-    title: 'Student', permissionName: 'ShikshaMitra.Module.Students',
-    submodule: [{ title: 'Admissions', children: [{
-      title: 'Applications', permissionName: 'Students.Admissions.Applications',
-      children: [{ title: 'All Applications', permissionName: 'Students.Admissions.Forms.View' }],
-    }] }],
-  }, {
-    title: 'HR/Staff', permissionName: 'ShikshaMitra.Module.HR',
-    submodule: [{ title: 'Payroll Management', children: [{
-      title: 'Statutory Schemes', permissionName: 'HR.PayrollManagement.Settings.StatutorySchemes.View',
-    }, {
-      title: 'Salary Templates', permissionName: 'HR.PayrollManagement.Settings.SalaryTemplates.View',
-    }] }],
-  }] }],
+  fullSecurityNavData: () => [
+    {
+      items: [
+        {
+          title: 'Student',
+          permissionName: 'ShikshaMitra.Module.Students',
+          submodule: [
+            {
+              title: 'Admissions',
+              children: [
+                {
+                  title: 'Applications',
+                  permissionName: 'Students.Admissions.Applications',
+                  children: [
+                    { title: 'All Applications', permissionName: 'Students.Admissions.Forms.View' },
+                  ],
+                },
+              ],
+            },
+            {
+              title: 'Student Records',
+              children: [
+                {
+                  title: 'Profiles',
+                  permissionName: 'Students.Records.View',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          title: 'HR/Staff',
+          permissionName: 'ShikshaMitra.Module.HR',
+          submodule: [
+            {
+              title: 'Payroll Management',
+              children: [
+                {
+                  title: 'Statutory Schemes',
+                  permissionName: 'HR.PayrollManagement.Settings.StatutorySchemes.View',
+                },
+                {
+                  title: 'Salary Templates',
+                  permissionName: 'HR.PayrollManagement.Settings.SalaryTemplates.View',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }));
 const entry = (name: string): CataloguePermission => ({
-  name, displayName: name, isGranted: true, allowedProviders: [], grantedProviders: [],
+  name,
+  displayName: name,
+  isGranted: true,
+  allowedProviders: [],
+  grantedProviders: [],
 });
-function renderPermissions(granted = true, disabled = false) {
-  const names = ['View', 'Create', 'Edit', 'Withdraw'].map((action) => `${base  }.${  action}`);
+function renderPermissions(granted = true, disabled = false, providerName = 'R') {
+  const names = ['View', 'Create', 'Edit', 'Withdraw'].map((action) => `${base}.${action}`);
   const setGrants = vi.fn();
-  render(<ThemeProvider theme={createTheme(defaultSettings)}>
-    <Permission
-      catalogue={{ groups: [{ name: 'Students', displayName: 'Students', permissions: names.map(entry) }] }}
-      provider={{ providerName: 'R', providerKey: 'test-role' }}
-      grants={Object.fromEntries(names.map((name) => [name, granted]))}
-      setGrants={setGrants} disabled={disabled}
-    />
-  </ThemeProvider>);
+  renderWithProviders(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <Permission
+        catalogue={{
+          groups: [{ name: 'Students', displayName: 'Students', permissions: names.map(entry) }],
+        }}
+        provider={{ providerName, providerKey: 'test-provider' }}
+        grants={Object.fromEntries(names.map((name) => [name, granted]))}
+        setGrants={setGrants}
+        disabled={disabled}
+      />
+    </ThemeProvider>
+  );
+  if (!disabled) fireEvent.click(screen.getByRole('button', { name: 'Student' }));
   return { names, setGrants };
 }
-it('restores staging groups and three switches, with no individual backend action tiles', () => {
+
+const editor = (action: string, feature = 'All Applications') =>
+  within(screen.getByRole('group', { name: `${feature} ${action} editor` }));
+it.each(['R', 'U'])(
+  'keeps %s navigation selected and preserves expansion on repeat clicks',
+  (providerName) => {
+    const { setGrants } = renderPermissions(true, false, providerName);
+    expect(screen.getByText('Select a Sub-module')).toBeInTheDocument();
+    const admissions = screen.getByRole('button', { name: 'Admissions' });
+    fireEvent.click(admissions);
+    const row = screen.getByTestId('permission-All Applications');
+    fireEvent.click(admissions);
+    fireEvent.click(screen.getByRole('button', { name: 'Student' }));
+    expect(admissions).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('permission-All Applications')).toBe(row);
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse Applications' }));
+    expect(screen.queryByTestId('permission-All Applications')).not.toBeInTheDocument();
+    fireEvent.click(admissions);
+    expect(screen.getByRole('button', { name: 'Expand Applications' })).toBeInTheDocument();
+    expect(setGrants).not.toHaveBeenCalled();
+  }
+);
+it('switches submodules and clears stale selection on a different module', () => {
+  const { setGrants } = renderPermissions();
+  fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Student Records' }));
+  expect(screen.getByTestId('permission-Profiles')).toBeInTheDocument();
+  expect(screen.queryByTestId('permission-All Applications')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'HR/Staff' }));
+  expect(screen.getByText('Select a Sub-module')).toBeInTheDocument();
+  expect(setGrants).not.toHaveBeenCalled();
+});
+it('maps grouped Student actions and their dependencies without individual backend tiles', () => {
   const { names, setGrants } = renderPermissions();
   fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Expand Applications' }));
-  expect(setGrants).not.toHaveBeenCalled();
-  expect(screen.getByRole('switch', { name: 'View' })).toBeChecked();
-  expect(screen.getByRole('switch', { name: 'Add' })).toBeChecked();
-  expect(screen.getByRole('switch', { name: 'Delete' })).toBeChecked();
-  expect(screen.queryByRole('switch', { name: /Create|Edit|Withdraw/ })).not.toBeInTheDocument();
-  expect(screen.queryByLabelText('Search permissions')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Revoke All' }));
-  expect(setGrants).toHaveBeenCalledExactlyOnceWith(names, false);
+  ['View', 'Add', 'Delete'].forEach((action) => {
+    expect(editor(action).getByRole('radio', { name: 'Allow' })).toBeChecked();
+  });
+  expect(
+    screen.queryByRole('group', { name: /All Applications Create editor/ })
+  ).not.toBeInTheDocument();
+  fireEvent.click(editor('View').getByRole('radio', { name: 'Revoke' }));
+  expect(new Set(setGrants.mock.calls[0][0])).toEqual(new Set(names));
+  expect(setGrants.mock.calls[0][1]).toBe(false);
 });
-it('row View removal clears grouped actions without bulk switches or expansion side effects', () => {
-  const { names, setGrants } = renderPermissions();
-  fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
-  expect(screen.queryByText('All Applications')).not.toBeInTheDocument();
-  expect(screen.queryByRole('switch', { name: /^All / })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Expand Applications' }));
-  expect(setGrants).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('switch', { name: 'View' }));
-  expect(setGrants).toHaveBeenCalledExactlyOnceWith(names, false);
-});
-it('keeps staging Add behavior and only changes the mapped group plus View', () => {
+it('granting grouped Add includes mapped edits and View', () => {
   const { setGrants } = renderPermissions(false);
   fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Expand Applications' }));
-  fireEvent.click(screen.getByRole('switch', { name: 'Add' }));
-  expect(setGrants).toHaveBeenCalledExactlyOnceWith(
-    ['View', 'Create', 'Edit'].map((action) => `${base  }.${  action}`), true
+  fireEvent.click(editor('Add').getByRole('radio', { name: 'Allow' }));
+  expect(new Set(setGrants.mock.calls[0][0])).toEqual(
+    new Set(['View', 'Create', 'Edit'].map((action) => `${base}.${action}`))
   );
+  expect(setGrants.mock.calls[0][1]).toBe(true);
 });
-it('blocks permission changes while saving', () => {
-  const { setGrants } = renderPermissions(true, true);
-  expect(screen.getByRole('button', { name: 'Admissions' })).toBeDisabled();
+it('search reveals matching descendants of collapsed groups without changing grants', () => {
+  const { setGrants } = renderPermissions();
+  fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Collapse Applications' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Search permissions' }), {
+    target: { value: 'All Applications' },
+  });
+  expect(screen.getByTestId('permission-All Applications')).toBeInTheDocument();
   expect(setGrants).not.toHaveBeenCalled();
 });
-
-it('revokes all eligible direct statutory grants while preserving provider-ineligible and unrelated entries', () => {
-  const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
-  const eligible = ['View', 'Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride', 'Future.Action'].map((action) => `${root}.${action}`);
-  const restricted = { ...entry(`${root}.RoleOnly`), allowedProviders: ['R'] };
-  const unrelated = entry('Finance.Settings.FeeStructure.View');
-  const permissions = [...eligible.map(entry), restricted, unrelated];
-  const setGrants = vi.fn();
-  render(<ThemeProvider theme={createTheme(defaultSettings)}>
-    <Permission catalogue={{ groups: [{ name: 'HR', displayName: 'HR', permissions }] }}
-      provider={{ providerName: 'U', providerKey: 'test-user' }}
-      grants={Object.fromEntries(permissions.map(({ name }) => [name, true]))} setGrants={setGrants} />
-  </ThemeProvider>);
-  fireEvent.click(screen.getByRole('button', { name: 'HR/Staff' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Payroll Management' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Revoke All' }));
-  expect(setGrants).toHaveBeenCalledExactlyOnceWith(eligible, false);
+it('blocks interaction during a save', () => {
+  const { setGrants } = renderPermissions(true, true);
+  expect(screen.getByRole('button', { name: 'Student' })).toBeDisabled();
+  expect(setGrants).not.toHaveBeenCalled();
 });
-
-it('limits statutory Edit to its mapped actions without changing salary template grants', () => {
+it('keeps statutory Edit independent and leaves unavailable Delete disabled', () => {
   const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
-  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map((action) => `${root}.${action}`);
-  const otherRoot = 'HR.PayrollManagement.Settings.SalaryTemplates';
-  const names = [`${root}.View`, ...edits, ...['View', 'Add', 'Edit'].map((action) => `${otherRoot}.${action}`)];
+  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map(
+    (action) => `${root}.${action}`
+  );
+  const names = [`${root}.View`, ...edits, 'HR.PayrollManagement.Settings.SalaryTemplates.View'];
   const setGrants = vi.fn();
-  render(<ThemeProvider theme={createTheme(defaultSettings)}>
-    <Permission catalogue={{ groups: [{ name: 'HR', displayName: 'HR', permissions: names.map(entry) }] }}
-      provider={{ providerName: 'R', providerKey: 'test-role' }}
-      grants={Object.fromEntries(names.map((name) => [name, edits.includes(name)]))} setGrants={setGrants} />
-  </ThemeProvider>);
+  renderWithProviders(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <Permission
+        catalogue={{ groups: [{ name: 'HR', displayName: 'HR', permissions: names.map(entry) }] }}
+        provider={{ providerName: 'R', providerKey: 'test-role' }}
+        grants={Object.fromEntries(names.map((name) => [name, edits.includes(name)]))}
+        setGrants={setGrants}
+      />
+    </ThemeProvider>
+  );
   fireEvent.click(screen.getByRole('button', { name: 'HR/Staff' }));
   fireEvent.click(screen.getByRole('button', { name: 'Payroll Management' }));
-  expect(screen.queryByRole('switch', { name: /^All / })).not.toBeInTheDocument();
-  const statutoryEdit = within(screen.getByTestId('permission-Statutory Schemes')).getByRole('switch', { name: 'Edit' });
-  expect(statutoryEdit).toBeChecked();
-  fireEvent.click(statutoryEdit);
+  fireEvent.click(editor('Edit', 'Statutory Schemes').getByRole('radio', { name: 'Revoke' }));
   expect(setGrants).toHaveBeenCalledExactlyOnceWith(edits, false);
+  expect(
+    editor('Delete', 'Statutory Schemes').getByRole('radio', { name: 'Allow' })
+  ).toBeDisabled();
 });

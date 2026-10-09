@@ -1,8 +1,10 @@
 import http from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { createInitialSetupFixture } from './initial-setup.mjs';
 
 // Loopback-only synthetic network fixture. Production components and auth remain unchanged.
 const origin = 'http://127.0.0.1:4398';
+const allowedOrigins = new Set([origin, 'http://localhost:4398']);
 const permissions = [
   'AbpTenantManagement.Tenants',
   'AbpTenantManagement.Tenants.Create',
@@ -22,6 +24,7 @@ const defaults = {
   postalCode: '395001',
 };
 let rows, canWrite, failNext, delay;
+let setup;
 const reset = (options = {}) => {
   rows = Array.from({ length: 32 }, (_, index) => ({
     ...defaults,
@@ -35,13 +38,15 @@ const reset = (options = {}) => {
   canWrite = options.canWrite !== false;
   failNext = options.failNext;
   delay = options.delay ?? 0;
+  setup = createInitialSetupFixture(defaults, options);
 };
 reset();
 const token = (tenantId) =>
   `eyJhbGciOiJub25lIn0.${Buffer.from(JSON.stringify({ sub: 'synthetic-host-user', name: 'Synthetic administrator', email: 'admin@example.test', role: 'admin', exp: Math.floor(Date.now() / 1000) + 3600, ...(tenantId ? { tenantid: tenantId } : {}) })).toString('base64url')}.signature`;
 
 const server = http.createServer(async (request, response) => {
-  response.setHeader('Access-Control-Allow-Origin', origin);
+  response.setHeader('Access-Control-Allow-Origin', allowedOrigins.has(request.headers.origin) ? request.headers.origin : origin);
+  response.setHeader('Vary', 'Origin');
   response.setHeader('Access-Control-Allow-Credentials', 'true');
   response.setHeader('Access-Control-Allow-Headers', 'authorization,content-type,__tenant');
   response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
@@ -71,6 +76,7 @@ const server = http.createServer(async (request, response) => {
     send(200, { ready: true });
     return;
   }
+  if (url.pathname.startsWith('/fixture/setup-') && await setup.handle(url, request.method, body, send)) return;
   if (url.pathname === '/connect/token') {
     if (request.headers.__tenant === 'INACTIVE') {
       send(400, { error: 'invalid_grant', errorCode: 'TENANT_INACTIVE' });
@@ -94,11 +100,14 @@ const server = http.createServer(async (request, response) => {
     send(401, { title: 'Authentication required' });
     return;
   }
+  const claims = JSON.parse(Buffer.from(request.headers.authorization.split('.')[1], 'base64url').toString());
+  const isSchool = Boolean(claims.tenantid);
+  if (isSchool && await setup.handle(url, request.method, body, send)) return;
   if (url.pathname === '/api/permission-management/permissions') {
     send(200, {
       groups: [
         {
-          permissions: permissions.map((name) => ({
+          permissions: (isSchool ? ['InstituteSetup.BasicInformation.Edit', 'InstituteSetup.AcademicSetup.View', 'InstituteSetup.AcademicSetup.Add', 'InstituteSetup.AcademicSetup.Edit', 'AbpIdentity.Users.Create', 'AbpIdentity.Roles', 'ShikshaMitra.Module.Dashboard'] : permissions).map((name) => ({
             name,
             isGranted: canWrite || name === permissions[0],
           })),
@@ -108,6 +117,7 @@ const server = http.createServer(async (request, response) => {
     return;
   }
   if (url.pathname === '/api/host/session-context') {
+    if (isSchool) { send(200, { accountMode: 'tenant', tenantId: claims.tenantid, canViewTenants: false, canCreateTenants: false, canUpdateTenants: false, canManageTenantStatus: false, setupCompleted: setup.state.isCompleted, canManageSetup: setup.state.canManageSetup }); return; }
     send(200, {
       accountMode: 'host',
       tenantId: null,
@@ -115,6 +125,21 @@ const server = http.createServer(async (request, response) => {
       canCreateTenants: canWrite,
       canUpdateTenants: canWrite,
       canManageTenantStatus: canWrite,
+    });
+    return;
+  }
+  if (url.pathname === '/api/abp/application-configuration') {
+    send(200, {
+      setting: {
+        values: {
+          'Abp.Identity.Password.RequiredLength': '6',
+          'Abp.Identity.Password.RequiredUniqueChars': '1',
+          'Abp.Identity.Password.RequireNonAlphanumeric': 'True',
+          'Abp.Identity.Password.RequireLowercase': 'True',
+          'Abp.Identity.Password.RequireUppercase': 'True',
+          'Abp.Identity.Password.RequireDigit': 'True',
+        },
+      },
     });
     return;
   }

@@ -3,12 +3,15 @@ import type { HostTenant } from 'src/redux/host-tenants/types';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useLazyGetHostTenantQuery,
   useCreateHostTenantMutation,
   useUpdateHostTenantMutation,
+  useGetTenantPasswordPolicyQuery,
 } from 'src/redux/host-tenants/host-tenant-api';
 
+import { tenantPasswordHelp } from '../services/tenant-password';
 import {
   tenantError,
   tenantSchema,
@@ -22,10 +25,17 @@ export function useTenantForm(tenant: HostTenant | undefined, onClose: () => voi
   const [reload, reloadState] = useLazyGetHostTenantQuery();
   const [latest, setLatest] = useState(tenant);
   const [error, setError] = useState('');
+  const policy = useGetTenantPasswordPolicyQuery(undefined, {
+    skip: Boolean(tenant),
+    refetchOnMountOrArgChange: true,
+  });
+  const canSubmit =
+    Boolean(tenant) || Boolean(policy.data && !policy.isFetching && !policy.isError);
   const formik = useFormik({
     initialValues: tenantFormValues(tenant),
-    validationSchema: tenantSchema(!tenant),
+    validationSchema: tenantSchema(!tenant, policy.data),
     onSubmit: async (values) => {
+      if (!canSubmit) return;
       setError('');
       try {
         if (latest)
@@ -44,7 +54,11 @@ export function useTenantForm(tenant: HostTenant | undefined, onClose: () => voi
         formik.resetForm();
         onClose();
       } catch (failure) {
-        setError(tenantError(failure));
+        const problem = parseApiProblemDetail(failure);
+        if (!latest && problem.errorCode?.startsWith('Volo.Abp.Identity:Password')) {
+          await formik.setFieldTouched('adminPassword', true, false);
+          formik.setFieldError('adminPassword', problem.detail);
+        } else setError(tenantError(failure));
       }
     },
   });
@@ -64,5 +78,16 @@ export function useTenantForm(tenant: HostTenant | undefined, onClose: () => voi
       setError(tenantError(failure));
     }
   };
-  return { formik, error, reloadLatest, isLoading: formik.isSubmitting || reloadState.isFetching };
+  return {
+    formik,
+    error,
+    reloadLatest,
+    canSubmit,
+    passwordHelp: policy.isError
+      ? 'Password requirements are unavailable. Retry below.'
+      : tenantPasswordHelp(policy.data),
+    policyFailed: !tenant && policy.isError,
+    retryPolicy: policy.refetch,
+    isLoading: formik.isSubmitting || reloadState.isFetching,
+  };
 }

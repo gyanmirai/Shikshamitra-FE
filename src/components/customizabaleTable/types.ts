@@ -84,6 +84,8 @@ export interface ICustomizableTableProps {
   isScrollbar?: boolean;
   isShowedDense?: boolean;
   rowProps?: (row: IData, index: number) => CustomizableTableRowProps;
+  renderExpandedRow?: (row: IData, index: number) => ReactNode;
+  showToolbar?: boolean;
   tableId: string;
   defaultSearchTerm?: string;
   defaultRowsPerPage?: number;

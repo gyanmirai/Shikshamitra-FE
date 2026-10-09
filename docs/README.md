@@ -24,6 +24,7 @@ Use this table before searching older docs.
 | Finance   | [docs/finance/README.md](./finance/README.md)     |
 | HR        | [docs/hr/README.md](./hr/README.md)               |
 | Host tenants | [docs/host-tenants/README.md](./host-tenants/README.md) |
+| Initial setup | [docs/initial-setup/README.md](./initial-setup/README.md) |
 | Library   | [docs/library/README.md](./library/README.md)     |
 | Security | [docs/security/README.md](./security/README.md) |
 | Student   | [docs/student/README.md](./student/README.md)     |

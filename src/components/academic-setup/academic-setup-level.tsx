@@ -15,7 +15,7 @@ export const AcademicSetupLevel = ({ level, count, isLoading }: Props) => (
       px: 1,
       display: 'flex',
       alignItems: 'center',
-      gap: 0.75,
+      gap: 1,
       bgcolor: 'background.paper',
       '&:last-child': { gridColumn: { xs: '1 / -1', sm: 'auto' } },
     }}
@@ -28,13 +28,13 @@ export const AcademicSetupLevel = ({ level, count, isLoading }: Props) => (
         flexShrink: 0,
         display: 'grid',
         placeItems: 'center',
-        bgcolor: count > 0 ? 'primary.lighter' : 'action.hover',
-        color: count > 0 ? 'primary.main' : 'text.secondary',
+        bgcolor: 'background.neutral',
+        color: 'text.secondary',
       }}
     >
-      <Iconify icon={level.icon} width={17} aria-hidden />
+      <Iconify icon={level.icon} width={16} aria-hidden />
     </Box>
-    <Box sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0, display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 1 }}>
       {isLoading ? (
         <Skeleton width={24} aria-label={`Loading ${level.label.toLowerCase()} count`} />
       ) : (

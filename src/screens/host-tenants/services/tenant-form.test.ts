@@ -38,4 +38,15 @@ describe('tenant form contract', () => {
     expect(tenantFormValues().address2).toBe('');
     expect(tenantError({ status: 409 })).toContain('Reload the latest details');
   });
+  it('explains the password error returned by the tenant creation endpoint', () => {
+    expect(
+      tenantError({
+        status: 400,
+        data: {
+          detail: 'One or more business rules were violated.',
+          errorCode: 'Volo.Abp.Identity:PasswordRequiresNonAlphanumeric',
+        },
+      })
+    ).toBe('Password must include a special character.');
+  });
 });

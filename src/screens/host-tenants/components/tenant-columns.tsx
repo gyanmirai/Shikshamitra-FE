@@ -1,9 +1,9 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { HostTenant, HostSessionContext } from 'src/redux/host-tenants/types';
 
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import { Label } from 'src/components/label';
+import Typography from '@mui/material/Typography';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 export function tenantColumns(
   context: HostSessionContext,
@@ -18,6 +18,11 @@ export function tenantColumns(
       isFilter: false,
       isSort: true,
       minWidth: 160,
+      render: (code: string) => (
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {code}
+        </Typography>
+      ),
     },
     {
       id: 'instituteName',
@@ -26,15 +31,32 @@ export function tenantColumns(
       isFilter: false,
       isSort: true,
       minWidth: 220,
+      render: (name: string) => name || '—',
     },
-    { id: 'email', label: 'Email', isFilter: false, isSort: false, minWidth: 200 },
-    { id: 'contactNumber', label: 'Contact', isFilter: false, isSort: false, minWidth: 140 },
+    {
+      id: 'email',
+      label: 'Email',
+      isFilter: false,
+      isSort: false,
+      minWidth: 200,
+      render: (email: string) => email || '—',
+    },
+    {
+      id: 'contactNumber',
+      label: 'Contact',
+      isFilter: false,
+      isSort: false,
+      minWidth: 140,
+      render: (contact: string) => contact || '—',
+    },
     {
       id: 'isActive',
       label: 'Status',
       isFilter: false,
       isSort: true,
       sticky: true,
+      stickyPosition: 'right',
+      width: 110,
       minWidth: 100,
       render: (active: boolean) => (
         <Label color={active ? 'success' : 'warning'}>{active ? 'Active' : 'Inactive'}</Label>
@@ -46,28 +68,44 @@ export function tenantColumns(
       isFilter: false,
       isSort: false,
       sticky: true,
+      stickyPosition: 'right',
+      align: 'right',
       excludeFromExport: true,
-      minWidth: 170,
-      render: (_value, row) => (
-        <Stack direction="row" gap={0.5}>
-          <Button
-            size="small"
-            disabled={!context.canUpdateTenants}
-            aria-label={`Edit ${row.instituteName}`}
-            onClick={() => edit(row as HostTenant)}
-          >
-            Edit
-          </Button>
-          <Button
-            size="small"
-            disabled={!context.canManageTenantStatus}
-            onClick={() => changeStatus(row as HostTenant)}
-            aria-label={`${row.isActive ? 'Deactivate' : 'Activate'} ${row.instituteName}`}
-          >
-            {row.isActive ? 'Deactivate' : 'Activate'}
-          </Button>
-        </Stack>
-      ),
+      width: 124,
+      minWidth: 124,
+      render: (_value, row) => {
+        const tenant = row as HostTenant;
+        const statusAction = tenant.isActive ? 'Deactivate' : 'Activate';
+        return (
+          <AdaptiveThreeDotsActions
+            moreLabel={`More actions for ${tenant.instituteName}`}
+            sx={{ justifyContent: 'flex-end' }}
+            actions={[
+              {
+                id: 'edit',
+                label: `Edit ${tenant.instituteName}`,
+                icon: 'mdi:pencil-outline',
+                disabled: !context.canUpdateTenants,
+                tooltip: context.canUpdateTenants
+                  ? 'Edit'
+                  : 'You do not have permission to edit tenants.',
+                onClick: () => edit(tenant),
+              },
+              {
+                id: 'status',
+                label: `${statusAction} ${tenant.instituteName}`,
+                icon: 'mdi:power',
+                color: tenant.isActive ? 'warning.main' : 'success.main',
+                disabled: !context.canManageTenantStatus,
+                tooltip: context.canManageTenantStatus
+                  ? statusAction
+                  : 'You do not have permission to change tenant status.',
+                onClick: () => changeStatus(tenant),
+              },
+            ]}
+          />
+        );
+      },
     },
   ];
 }
