@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-10-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,38 @@ audience: humans-and-agents
 # Validate Student Enrollment Admissions changes
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
+
+## Applicant overview removal and finalization refinement (2026-10-09)
+
+The obsolete applicant overview is replaced with saved-bookmark recovery into the application drawer. Identity repair and internal notes retain focused dialogs and their existing permissions. Journey tabs are text-only, and counsellor assignment sits in the drawer header. Finalize Admission uses real application context, semantic status colors, compact readiness rows and heading help; its identity, guardian, profile-review and workflow gates remain intact.
+
+Focused runs passed 98 unique tests across ten files: 49 route/link/identity/notes/return-context cases, 14 stage-tab/counsellor cases, 16 drawer cases and 19 finalization/decision-card cases. The final application-link and finalization rerun passed all 20 cases in those two suites. Coverage includes exact denied permissions, lazy reads, read-only notes, dirty close, failed-save value retention, loading/error/empty recovery, expired identity editing, explicit duplicate selection, guardian verification, successful repair refreshing readiness, and finalization closing only after success. Affected-file TypeScript and typed ESLint cover 24 files; formatting, Student documentation validation and scoped diff checks pass.
+
+Authenticated in-app browser checks used the existing synthetic `APP-2026-000003` at 1440 × 900, 768 × 1024 and 390 × 844. The legacy applicant bookmark resolves into the Applications drawer, both name/reference links open the same application, notes remain accessible from the header menu, and the header counsellor editor loads eligible choices. Stage tabs contain no icons; the desktop form still expands from 840 to 1200 px. No document horizontal overflow was observed, and mobile finalization footer actions remain reachable at the theme's 30 px height. Heading help describes the Admissions/Onboarding boundary. Identity repair opens the existing focused editor; Cancel retains guardian confirmation, while the actual missing-gender gate keeps Finalize disabled. Browser checks made no profile, note, counsellor or finalization writes. Multiple/no-application recovery, denied grants and successful mutation paths are covered by focused tests; full-project, staging and production acceptance are separate gates.
+
+## Applicant 360 drawer and compact stage panels (2026-10-09)
+
+Applications and Pipeline open the application inside a right-side drawer while retaining their list context. Configured journey stages use one horizontal tab row; completed stages are readable and future stages are disabled. Application form sections use horizontal navigation with one Formik owner and optional desktop drawer expansion. Document verification uses the shared embedded table with separate Upload, View and Download controls and permission-gated row actions. Standard labelled buttons retain the theme's small size.
+
+The final drawer/table rerun passed 28 tests across `admission-application-detail.test.tsx` and `document-requirement-table.test.tsx`. Companion focused runs passed 13 form/runtime tests, 22 counsellor/decision/follow-up tests, 13 managed-stage/current-task/Pipeline-state tests, and four document-history/authenticated-download tests. Coverage includes failed saves retaining the active form section, view-only and completed-stage write protection, coordinated mutation locks, dirty-close confirmation, future-stage navigation, table search/pagination, loading/error recovery, and document action permissions. Scoped TypeScript checking of 69 affected files reported zero diagnostics. These focused checks are separate from full-project or deployment acceptance.
+
+Authenticated local browser verification used the existing synthetic `APP-2026-000003` record at 1440 × 900, 768 × 1024 and 390 × 844. Checks covered compact controls, contained horizontal scrolling, completed-stage review, 840 px desktop drawer/1200 px form expansion, drawer close, browser Back/Forward, retained Pipeline search, and an actual authenticated evidence download. Browser checks reviewed existing saved data; writable stage operations are covered by the focused tests and the earlier five-stage acceptance below, rather than a new complete write journey through this drawer.
+
+The legacy card-layout permission test still expects a Waive requirement button removed by separate stage-retirement work. That existing expectation remains outside this drawer/table change. A live account without effective Applications.View and staging/production acceptance remain outstanding; Admin DDVS has feature access.
+
+## Five-stage admission simplification (2026-10-08)
+
+Current application workflows expose Form, Assessment, Payment, Document verification, and Admission Decision. Eligibility, Review, and Offer are retired. Stage settings use one continuous form; earlier Basics/Settings wizard notes below describe historical iterations. Payment confirms a published scoped Finance fee structure; it never creates an admission receipt or Paid state.
+
+Focused builder/configuration verification passed 192 tests across 49 files; application/Applicant 360 verification passed 96 tests across 19 files. Subsequent affected Form copy, fee-panel hook, editor validation, and current-task reruns passed. A scoped TypeScript check of 113 changed Admission files had zero diagnostics; typed ESLint on those files had zero errors or warnings. These checks do not certify the full repository TypeScript or E2E suites.
+
+Authenticated local DDVS acceptance used persisted synthetic application `APP-2026-000001`, applicant **QA FiveStage Journey**, and a published five-stage workflow. Actual UI actions covered invalid Form submission, draft save/reload, required section verification, Assessment attendance, invalid marks and persisted passing result, Finance fee confirmation/reload, missing/rejected document guards, replacement upload/download/acceptance/reload, Waitlist remaining pending, Approval, and completion of all five stages. Backend requests independently verified incomplete-stage and early-decision guards. Actual UI finalization created Student `3a242eb1-43e9-34f6-8b9e-ac328c6a9c19` and Onboarding case `3a242ecd-7c87-f241-29a4-e0bfedee099f`; two repeated finalization requests returned the same identities.
+
+Onboarding refreshed real profile/document checks, confirmed the Admission fee snapshot, reserved Class 1 / A, prepared GR `QA5-000001` and roll `4`, and activated enrollment `3a242ed1-a50a-4d98-e012-3c34d14ae88a` through the normal UI. Activation persisted and Student Records profile became readable with the existing Provisioning access policy. The existing Finance API then assigned the exact selected published structure through its signed preview, and recorded the synthetic local QA first installment of ₹291 (₹83 + ₹208) as Cash receipt `FIN-2026-000001`. Replaying the same idempotent command returned the same receipt and left the two first-installment dues at zero. Finance handoff retry moved Onboarding to Completed; Directory returned the student with `CompletedOnboarding` entry and full profile access. This was persisted test ledger data, with no real money or external transaction. No Paid flag, account provisioning, waiver, or readiness override was fabricated. Applicant 360 showed five completed stages and the finalized application without retired workspaces.
+
+A separate saved QA draft covered optional Assessment scheduling, the five-type chooser, backend-generated custom document codes, retained Student document category, dirty-close protection and category lookup retry. Desktop, 768px tablet, and 390px mobile settings had no horizontal overflow; the custom document editor used the existing desktop popover/mobile dialog pattern. The completed application also had a 390px document and dialog at the 390px mobile viewport, with no horizontal overflow. Decision settings and custom information tooltip behavior were inspected; removal of unrelated Form-version tooltip copy passed the final affected 12-test rerun. The category catalog was empty locally, so actual uploaded QA evidence was uncategorized; category selection/handoff coverage is automated rather than a populated live-category walkthrough.
+
+QA setup created a separate published Finance structure using existing fee heads/terms, a QA collection policy, and a Class1/year-scoped GR series through ordinary APIs. The first active collection policy became the year's default through existing Finance behavior; no existing Finance configuration was overwritten. A pre-existing incorrect local-clock-as-UTC write was fixed for future fee confirmations and covered with UTC/Local/Unspecified clock regressions; the earlier saved QA snapshot was not rewritten. The later Onboarding confirmation persisted true UTC. One transient authentication refresh failure after local API restart recovered on a warm direct navigation; repeated later reloads passed. Directory was verified in the browser using unique GR `QA5-000001`; its existing search matches individual name fields or GR, so the concatenated full-name query did not match. Student Profile showed the active Class1/A enrollment and identifiers. The package's optional enrollment-modularity check could not run because its referenced script is absent. No deployment or complete production acceptance is claimed.
 
 ## Admission Stage builder simplification (2026-10-07)
 
@@ -60,9 +92,19 @@ A follow-up on 2026-10-03 searched the signed-in DDVS Student Directory with For
 
 ## Onboarding integration checks
 
-Run focused academic-applicability, policy-settings UI and student-drawer tests with one worker, then TypeScript and changed-file lint. Browser acceptance must verify the year-only header, dependent checkboxes in all four settings editors, absent saved-default/preview menus, live fee assignment/collection navigation, portal-account permissions and responsive drawers. Unit tests do not replace those browser checks.
+Run focused task-drawer, operation, model and API tests with one worker, then TypeScript and changed-file lint.
+Browser acceptance for the current flow must verify six tabs, Offering-linked rule save/reload, Today filtering, pending-task navigation, focused drawers, independent GR/Roll operations, group identifier locks, fee-structure confirmation and postactivation Credentials.
+Check desktop/tablet/mobile layouts, the active student's Student Records visibility after reload, and appropriate View/Edit/Repair behavior.
+Unit tests do not replace those browser checks.
 
-Persisted local QA is recorded in `C:\Repo\2026\ONBOARDING_QA_2026-09-29.md`: fictional Jay completed admission and onboarding after two partial receipts fully settled the first installment. No production payment or external email was tested.
+The 2026-10-09 current-flow focused run passed 134 Onboarding/API/GR-helper tests across 21 files. The seven Student menu checks also passed after correcting two stale expectations to the existing `Onboarding` label; menu permissions were unchanged. Coverage includes Offering-linked rules, Draft/Publish numbering, legacy history preservation, empty-school draft defaults, focused task drawers, pending-task navigation, fee-structure confirmation, required-document evidence and credential retry states.
+The final credential suite passed 10/10 cases, including linked accounts with a failed email: account-creation fields stay hidden while email retry remains available. A missing required guardian account still exposes its creation form.
+Full-project `npm run ts`, affected-source ESLint, Student documentation validation and whitespace checks passed after the final changes. Temporary isolated Next output references were removed, preserving the pre-existing generated declaration paths and unrelated configuration changes.
+
+Authenticated localhost QA passed the fictional `QA Onboarding09Oct Flow` student through Admissions, finalization, Onboarding and activation into Student Records. Staff accepted the required document, confirmed an existing fee structure, reserved Class 1-A, assigned `QA09-001001` and Roll 5 through separate dialogs, and recorded approval. All eight readiness checks passed. Student Directory showed Active, and Directory/profile reload preserved the GR, Roll and placement after renewing the existing QA sign-in. No Finance mutation, payment or external email was performed. Mobile/tablet readiness drawers and the desktop workspace had no document-level horizontal overflow at 390×844, 768×1024 and 1440×900; Today filtering, click-accessible pending details and reachable drawer footers were checked. Identifier-lock/new-entrant behavior and credential failure recovery have automated service/UI coverage; live credential inbox delivery and staging acceptance remain unverified.
+
+Historical pre-redesign local QA is recorded in `C:\Repo\2026\ONBOARDING_QA_2026-09-29.md`: fictional Jay completed the former flow after two partial receipts settled the first installment.
+That historical check does not validate the current fee-structure-only activation flow, and no production payment or external email was tested.
 
 ## Admission Cycle checks
 
@@ -151,7 +193,14 @@ npx eslint src/redux/student/onboarding/student-onboarding-api.ts src/screens/st
 npm run ts
 ```
 
-Verify that the Settings menu exposes only Readiness & Access and Numbering & Placement; old Operational Policies links redirect. Rule drawers must load configured Board, related Medium, enabled School Levels, related Standards and optional Divisions without silently choosing descendants. Check persisted save/reload and a rejected cross-board selection. Verify Student Setup uses backend cases rather than preview fixtures; after enrollment, the service-consent action appears only for a required pending handoff and an authorized editor. It must send the case stamp and saved-record reference, then refresh case and handoff state. Finance assignment and first payment remain separate mandatory checks; consent confirmation cannot mark payment complete. Browser acceptance covers 390 × 844, 768 × 1024 and 1440 × 900, plus a live case when suitable authorized school data exists.
+Verify that Settings exposes Readiness & Access and Numbering & Placement, with only GR/Roll tabs in Numbering and no Division Changes menu.
+Readiness rules require selected Admission Offerings and show derived Board/Medium/Class and requirement summaries without School Level controls.
+Check failed Offering lookup/retry, unavailable Offering IDs, duplicate linked rules, Onboarding permission-denied lookup and save/reload.
+Verify an authorized Onboarding settings user can select available Offerings without an Admissions Offering configuration grant.
+GR's CBSE form contains Board/Medium/Class; GSEB retains School Level, and Roll contains Board/Medium/Class.
+Check Draft/Publish version handling, conditional manual-entry controls and the absence of removed scope/reset/format/effective-date controls.
+Student Setup must use backend cases and fee confirmation without Finance assignment, collection or first-payment gating.
+Browser acceptance covers 390 × 844, 768 × 1024 and 1440 × 900, plus a live case when suitable authorized school data exists.
 
 The onboarding API contract and model suites cover `Result<T>` unwrapping, server worklist filters and paging parameters, route-owned identifiers, concurrency-safe command bodies, academic-year settings scope, exact lifecycle mapping, blockers, and audit events. The existing configuration suites cover option construction, single-path normalization, applicability specificity and conflicts, Readiness fallback/override resolution, context cloning, settings-drawer behavior, and local bulk-assignment previews. Backend tests remain authoritative for atomic allocation, capacity locking, permission enforcement, activation transactions, audit history, and concurrent administrator changes; frontend tests verify that the UI sends the backend contract without inventing operational state.
 
@@ -160,6 +209,40 @@ The matching backend onboarding run passed 30 focused tests: 10 domain lifecycle
 The local in-app browser smoke test reached the application but redirected to `/login`; no authenticated browser session or alternate connected browser was available, so the live settings drawers remain browser-blocked rather than visually confirmed.
 
 The 2026-09-21 Student Onboarding implementation pass reached `/student/onboarding/setup` in the Codex in-app browser but was redirected to the sign-in screen. No authenticated external browser was connected. The live worklist, operational dialog, document upload, and activation confirmation therefore remain browser-blocked; focused contract, model, settings, permission, lint, and TypeScript checks are the recorded evidence for this pass.
+
+### Current Student Setup focused evidence
+
+The 2026-10-09 Student Setup run passed **9 files / 60 tests** with `--maxWorkers=1` in 41.88 seconds.
+The following command reproduces that focused scope from the frontend repository root:
+
+```powershell
+$onboardingTests = @(
+  'src/screens/student/onboarding/student-setup/student-onboarding-operation-dialog.ui.test.tsx',
+  'src/screens/student/onboarding/student-setup/student-onboarding-fees.ui.test.tsx',
+  'src/screens/student/onboarding/student-setup/student-setup-view.test.ts',
+  'src/screens/student/onboarding/student-setup/student-setup-drawer.ui.test.tsx',
+  'src/screens/student/onboarding/student-setup/student-identifier-lock-controls.ui.test.tsx',
+  'src/screens/student/onboarding/student-setup/student-pending-tasks.ui.test.tsx',
+  'src/screens/student/onboarding/student-setup/student-onboarding-model.test.ts',
+  'src/screens/student/onboarding/student-setup/student-onboarding-workflow-documents.ui.test.tsx',
+  'src/redux/student/onboarding/student-onboarding-api.test.ts'
+)
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run @onboardingTests --maxWorkers=1
+```
+
+These tests verify separate GR/Roll payloads and forms, reason validation, lock/unlock controls, locked-group automatic first assignment, six task tabs, pending-task URL destinations and focused drawers, fee confirmation, requirement review and canonical document adapters.
+Model coverage includes separate GR/Roll readiness, required email work after account linking and activated students with pending credentials.
+Focused source ESLint, formatting and scoped `git diff --check` passed in this implementation pass.
+The subsequent header/authorization audit passed **2 files / 11 tests** across `src/screens/student/onboarding/persisted-onboarding-settings-provider.ui.test.tsx` and `src/screens/student/onboarding/student-setup/student-identifier-lock-controls.ui.test.tsx`.
+Those checks verify retained route headings and breadcrumb links during loading/error, working Retry without mounting editable defaults, and available Lock with hidden Unlock when the server administrator capability is false.
+The Offering document-snapshot follow-up passed **3 files / 26 tests** across workflow-document UI, the case mapper and the setup drawer.
+It distinguishes a frozen Offering with no required documents from a legacy no-snapshot case, preventing the empty Offering checklist from introducing unrelated global requirements.
+The readiness-count audit passed **16 model tests**, covering the excluded final-readiness aggregate, explicit server admission confirmation and preserved legacy imported-case checks.
+The live-observation follow-up passed **2 files / 11 tests** across case operations and workflow-document UI, checking preserved owner selection during lookup loading and selected filename feedback before upload submission through shared Admission fields.
+Final repository-wide TypeScript and authenticated live/browser acceptance for the redesigned flow are pending this documentation update.
+The earlier local journeys and earlier TypeScript results elsewhere on this page are historical evidence, not verification of this redesign.
+Required live cases include an off-page focused case after filtering, a new student entering a locked division, denied/non-admin unlock, document replacement/review, fee confirmation/reload, activation/Records reload and failed credential send/retry.
+No current staging, production, actual inbox-delivery or deployment verification is claimed.
 
 ## Managed assessment checks
 
@@ -176,7 +259,7 @@ Desktop 1440×900, tablet 768×1024 and mobile 390×844 checks found no document
 Run the admissions regression suite, including policy and request contracts, stage configuration, outcome routes, scheduling, history, local dialog guards, and legacy compatibility:
 
 ```bash
-npm run test:admissions
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/redux/student/admissions src/screens/student/admissions --maxWorkers=2 --no-file-parallelism
 ```
 
 This command uses the existing Windows Vite startup helper to bypass local network-drive discovery and limits the runner to two workers.
@@ -335,6 +418,8 @@ Communication coverage verifies the inquiry-scoped POST payload, language-aware 
 Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry.
 Pipeline menu and route now require Applications View.
 Focused Pipeline tests live in `src/screens/student/admissions/pipeline/`, with application follow-up and safe-return coverage in `src/screens/student/admissions/application-detail/` and the follow-up client contract test in `src/redux/student/admissions/admission-application-follow-ups-api.test.ts`.
+Compact-drawer regressions cover configured stage selection, disabled future steps, read-only completed-form review, expansion, saved/dirty fee selection, loading/error recovery, close/save locks and preserved list query. Shared `use-unsaved-navigation.test.tsx` covers page-leave and browser-traversal guards. Document table tests cover actual download authorization, missing-file state, independent review, original/waiver/history access, all configured requirements and selected historical stages. Compact form, fee, assessment, counsellor, decision and follow-up tests preserve their real mutations and defaults.
+Browser acceptance checks use 390×844, 768×1024 and 1440×900: open over the list, switch completed stages without writes, expand/restore the form, confirm standard action buttons remain 30 px, retain internal scrolling, and close/reload/back without losing list context. Keep current writable-stage save/validation verification separate from historical read-only evidence checks.
 Browser acceptance must cover active-only results, My/All defaults, complete scoped owner/stage filters, current counsellor, actual workflow guidance, retained original follow-ups, schedule/complete/cancel save-and-reload, URL/context return, permission denial and loading/empty/error states at 390×844, 768×1024 and 1440×900.
 Successful finalization must remove the case from Pipeline while preserving its Application and Onboarding handoff; failed finalization must retain it.
 
@@ -386,6 +471,10 @@ npx vitest run src/screens/student/admissions/admission-inquiry-edit-page.test.t
 ```
 
 ## Managed Form checks
+
+The 2026-10-09 stage-editor cleanup passed 21 cases across `workflow-form-stage-drawer.test.tsx`, `workflow-document-requirement-editor.test.tsx`, `document-requirement-compatibility.test.tsx`, and `workflow-document-editor.test.tsx`. Tests cover hidden Completed by/Due after controls with saved responsibility/deadline preservation, standard/custom popover entry points, preset-code preservation, edit/remove cancellation, validation, category compatibility and read-only controls. Run these with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run` followed by their paths and `--pool=threads --maxWorkers=1 --no-file-parallelism`.
+
+Authenticated localhost browser checks verified Form-field removal, compact checklist cards, standard-document selection/save/edit, duplicate-preset disabling and dirty-stage discard. At 1440×900 and 768×1024, requirements use the anchored popover; 390×844 retains the shared mobile dialog with reachable small footer actions. No document-level horizontal overflow was observed. Browser QA checklist additions were discarded, preserving the saved test workflow. Changed-file ESLint, scoped TypeScript (five files) and the Student documentation gate passed; this is not a full-project build or deployment check.
 
 ```powershell
 npx vitest run src/redux/student/admissions/admission-form-stage-policy.test.ts src/redux/student/admissions/admission-form-stage-api.test.ts
@@ -463,9 +552,12 @@ Strict affected-source TypeScript validation passed with the project's theme and
 
 Authenticated localhost browser checks verified missing-Offering guidance and disabled creation, compatible form/setup selections, successful link creation, and Active status after reload. The temporary QA link was then revoked. The drawer was checked at 390×844, 768×1024, and 1440×900; mobile and tablet had no horizontal drawer overflow. Staging acceptance remains unverified because the browser has no signed-in staging session; this local change has not been deployed.
 
-## Credential-email and document-override checks
+## Credential-email and document-evidence checks
 
-Focused cases in `student-onboarding-credential-emails.ui.test.tsx`, the onboarding settings UI/context tests, and `student-onboarding-api.test.ts` cover safe legacy defaults, serialized school choices, email/account validation, readiness/permission-denied requests, pending duplicate prevention, retry/error/loading states, and required notes for individual/all-document overrides. Browser acceptance additionally checks saved school settings after reload, authorized account requests, actual mailbox sending, mobile login, sibling preservation, exit revocation, and responsive drawer actions.
+Credential-email UI, settings and API suites cover safe legacy defaults, serialized school choices, email/account validation, readiness/permission-denied requests, pending duplicate prevention, retry/error/loading states and case invalidation.
+The current document checklist tests verify Offering workflow evidence actions and legacy fallback; staff override and waiver actions are absent from the current UI.
+Browser acceptance additionally checks saved school settings after reload, authorized account requests, actual mailbox sending, mobile login, sibling preservation, exit revocation and responsive drawer actions.
+
 ## Student dashboard validation
 
 Run from the frontend repository:

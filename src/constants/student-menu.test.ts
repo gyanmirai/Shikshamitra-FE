@@ -72,7 +72,7 @@ describe('student navigation', () => {
       Dashboard: studentVisibilityPermissions.dashboard,
       'Student Records': studentVisibilityPermissions.records,
       Admissions: studentVisibilityPermissions.admissions,
-      'Student Onboarding': studentVisibilityPermissions.onboarding,
+      Onboarding: studentVisibilityPermissions.onboarding,
       Attendance: studentVisibilityPermissions.attendance,
       Notification: studentVisibilityPermissions.notification,
     });
@@ -81,7 +81,7 @@ describe('student navigation', () => {
   it('exposes the Student Onboarding setup and settings hierarchy', () => {
     const sections = Object.values(studentModule(true));
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));
-    const onboarding = items.find((item) => item.title === 'Student Onboarding') as
+    const onboarding = items.find((item) => item.title === 'Onboarding') as
       NestedMenuItem | undefined;
 
     expect(onboarding?.path).toBe('/student/onboarding');
@@ -147,12 +147,7 @@ describe('student navigation', () => {
     const applications = admissions?.children?.find((item) => item.title === 'Applications');
     expect(applications?.path).toBe('/student/admissions/applications');
     expect(applications?.permissionName).toBe(studentPermissions.enrollment.applications);
-    expect(applications?.permissionChildren).toEqual([
-      {
-        title: 'Application Reviews',
-        permissionName: studentPermissions.enrollment.reviews,
-      },
-    ]);
+    expect(applications?.permissionChildren).toBeUndefined();
 
     const settings = admissions?.children?.find((item) => item.title === 'Settings');
     expect(settings?.children?.map((item) => item.title)).toEqual([

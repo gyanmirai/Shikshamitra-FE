@@ -4,31 +4,21 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import CustomAccordion from 'src/components/custom-accordian';
 import { Stack, Switch, FormControlLabel } from '@mui/material';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
-import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
-import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
-import { readAdmissionPaymentPolicy } from 'src/redux/student/admissions/admission-payment-policy';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
+  stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
-  advanced?: boolean;
 };
 
-export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = false }: Props) {
-  const managed =
-    (formik.values.stageType === 6 &&
-      readAdmissionReviewPolicy(formik.values.configurationJson)?.enabled === true) ||
-    (formik.values.stageType === 4 &&
-      readAdmissionPaymentPolicy(formik.values.configurationJson)?.enabled === true) ||
-    (formik.values.stageType === 8 &&
-      readAdmissionOfferPolicy(formik.values.configurationJson)?.enabled === true) ||
-    (formik.values.stageType === 9 &&
-      readAdmissionSeatPolicy(formik.values.configurationJson)?.enabled === true);
+export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly }: Props) {
+  const managed = [1, 2, 4, 5].includes(formik.values.stageType);
+  const showEntryStage =
+    formik.values.isEntryStage ||
+    !stages.some((stage) => stage.id !== formik.values.id && stage.isEntryStage);
   const setting = (
     field: 'isRequired' | 'allowManualSkip' | 'isEntryStage' | 'isTerminalStage',
     label: string,
@@ -57,26 +47,7 @@ export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = f
     />
   );
 
-  return advanced ? (
-    <CustomAccordion
-      title="Advanced settings"
-      content={
-        <Stack spacing={1}>
-          {setting(
-            'isEntryStage',
-            'Entry stage',
-            'Applicants begin at this stage. The journey must have exactly one starting stage.',
-            !metadata?.canBeEntryStage
-          )}
-          {setting(
-            'isTerminalStage',
-            'End of journey',
-            'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
-          )}
-        </Stack>
-      }
-    />
-  ) : (
+  return (
     <FormSectionCard title="Stage behavior" icon="mdi:cog-outline">
       <Stack spacing={1}>
         {setting(
@@ -93,6 +64,18 @@ export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = f
               : 'Authorized staff can skip this optional stage using the existing workflow action.',
             managed
           )}
+        {showEntryStage &&
+          setting(
+            'isEntryStage',
+            'Entry stage',
+            'Applicants begin at this stage. The journey must have exactly one starting stage.',
+            !metadata?.canBeEntryStage
+          )}
+        {setting(
+          'isTerminalStage',
+          'End of journey',
+          'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
+        )}
       </Stack>
     </FormSectionCard>
   );

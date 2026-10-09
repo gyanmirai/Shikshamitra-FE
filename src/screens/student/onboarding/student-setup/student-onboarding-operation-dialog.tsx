@@ -5,501 +5,386 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  useAssignStudentOnboardingGrMutation,
+  useAssignStudentOnboardingRollMutation,
   usePreviewStudentOnboardingRollMutation,
   useSetStudentOnboardingPlacementMutation,
   useGetAvailableStudentIdentifierSeriesQuery,
   useGetStudentOnboardingPlacementOptionsQuery,
-  useAllocateStudentOnboardingIdentifierMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
 
 export type StudentAssignmentType = 'division' | 'gr-number' | 'roll-number';
-
-type StudentOnboardingOperationDialogProps = {
-  assignmentType: StudentAssignmentType | null;
-  student: StudentOnboardingItem | null;
-  onClose: () => void;
-};
-
-type OperationFormValues = {
+type OperationValues = {
   divisionId: string;
   numberSeriesId: string;
-  rollNumber: string;
   manualValue: string;
-  overrideReason: string;
-  rollAssignmentMode: '' | 'manual' | 'automatic';
+  reason: string;
+  rollNumber: string;
+  rollAssignmentMode: string;
 };
-
 export default function StudentOnboardingOperationDialog({
   assignmentType,
   student,
   onClose,
-}: StudentOnboardingOperationDialogProps) {
+}: {
+  assignmentType: StudentAssignmentType | null;
+  student: StudentOnboardingItem | null;
+  onClose: () => void;
+}) {
   const open = Boolean(assignmentType && student);
   const isPlacement = assignmentType === 'division';
+  const isGr = assignmentType === 'gr-number';
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canAllocate = hasGrantedPermission(permissions, 'Students.Onboarding.Add');
-  const placementQuery = useGetStudentOnboardingPlacementOptionsQuery(student?.id ?? '', {
+  const canManage = hasGrantedPermission(permissions, 'Students.Onboarding.Add');
+  const placement = useGetStudentOnboardingPlacementOptionsQuery(student?.id ?? '', {
     skip: !open || !isPlacement,
   });
-  const seriesQuery = useGetAvailableStudentIdentifierSeriesQuery(student?.id ?? '', {
-    skip: !open || isPlacement || !canAllocate,
+  const series = useGetAvailableStudentIdentifierSeriesQuery(student?.id ?? '', {
+    skip: !open || !isGr || !canManage,
   });
   const [setPlacement, placementState] = useSetStudentOnboardingPlacementMutation();
-  const [allocateIdentifier, identifierState] = useAllocateStudentOnboardingIdentifierMutation();
+  const [assignGr, grState] = useAssignStudentOnboardingGrMutation();
+  const [assignRoll, rollState] = useAssignStudentOnboardingRollMutation();
   const [previewRoll, previewState] = usePreviewStudentOnboardingRollMutation();
-  const schoolMode = student?.rollAssignmentMode ?? 'manual';
-  const [preview, setPreview] = useState<{
-    signature: string;
-    proposedRollNumber: number;
-    concurrencyStamp: string;
-    rollAssignmentMode: 'manual' | 'automatic';
-  } | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
-  const form = useFormik<OperationFormValues>({
+  const [failure, setFailure] = useState<string>();
+  const [preview, setPreview] = useState<{ signature: string; proposedRollNumber: number }>();
+  const mode =
+    student?.rollNumberLocked && !student.rollNo
+      ? 'automatic'
+      : (student?.rollAssignmentMode ?? 'automatic');
+  const locked = isGr
+    ? student?.grNumberLocked && Boolean(student.grNo)
+    : !isPlacement && student?.rollNumberLocked && Boolean(student.rollNo);
+  const requiresReason = isGr
+    ? Boolean(student?.grNo)
+    : !isPlacement && Boolean(student?.rollNo && student.rollChangeReasonRequired);
+  const busy =
+    placementState.isLoading || grState.isLoading || rollState.isLoading || previewState.isLoading;
+  const form = useFormik<OperationValues>({
     initialValues: {
-      divisionId: '',
+      divisionId: student?.divisionId ?? '',
       numberSeriesId: '',
-      rollNumber: '',
       manualValue: '',
-      overrideReason: '',
-      rollAssignmentMode: '' as '' | 'manual' | 'automatic',
+      reason: '',
+      rollNumber: '',
+      rollAssignmentMode: mode === 'both' ? '' : mode,
     },
     validationSchema: Yup.object({
-      numberSeriesId: isPlacement
-        ? Yup.string()
-        : Yup.string().required('Choose an identifier series.'),
-      rollAssignmentMode: isPlacement
-        ? Yup.string()
-        : Yup.string()
-            .oneOf(['manual', 'automatic'])
-            .required('Choose manual or automatic numbering.'),
-      rollNumber: isPlacement
-        ? Yup.string()
-        : Yup.string().when('rollAssignmentMode', {
-            is: 'manual',
-            then: (field) =>
-              field
-                .required('Enter a roll number.')
+      divisionId: isPlacement ? Yup.string().required('Choose a division.') : Yup.string(),
+      numberSeriesId: isGr ? Yup.string().required('Choose a GR series.') : Yup.string(),
+      reason: requiresReason
+        ? Yup.string().trim().required('Enter a reason for changing the number.').max(1000)
+        : Yup.string().max(1000),
+      rollAssignmentMode:
+        !isPlacement && !isGr
+          ? Yup.string().oneOf(['automatic', 'manual']).required('Choose a numbering method.')
+          : Yup.string(),
+      rollNumber: Yup.string().when('rollAssignmentMode', {
+        is: 'manual',
+        then: (field) =>
+          isPlacement || isGr
+            ? field
+            : field
+                .required('Enter a Roll number.')
                 .test(
-                  'positive-integer',
+                  'positive',
                   'Enter a positive whole number.',
                   (value) => Number.isInteger(Number(value)) && Number(value) > 0
                 ),
-          }),
-      overrideReason: Yup.string().max(1000),
+      }),
     }),
-    onSubmit: async (): Promise<void> => handleSubmit(),
+    onSubmit: async (values): Promise<void> => {
+      if (!student || !canManage || locked || busy) return;
+      setFailure(undefined);
+      try {
+        const common = {
+          id: student.id,
+          concurrencyStamp: student.concurrencyStamp,
+          reason: values.reason.trim() || undefined,
+        };
+        if (isPlacement) {
+          const option = placement.data?.find((item) => item.id === values.divisionId);
+          if (!option || option.isFull) {
+            setFailure('Choose a division with available capacity.');
+            return;
+          }
+          await setPlacement({ ...common, divisionId: values.divisionId }).unwrap();
+        } else if (isGr) {
+          if (!series.data?.some((item) => item.id === values.numberSeriesId)) {
+            setFailure('Choose an available published GR series.');
+            return;
+          }
+          await assignGr({
+            ...common,
+            numberSeriesId: values.numberSeriesId,
+            manualValue: values.manualValue.trim() || undefined,
+          }).unwrap();
+        } else {
+          if (!currentPreview) {
+            setFailure('Preview the current Roll number before assigning.');
+            return;
+          }
+          await assignRoll({
+            ...common,
+            rollNumber: currentPreview.proposedRollNumber,
+            rollAssignmentMode: values.rollAssignmentMode as 'manual' | 'automatic',
+          }).unwrap();
+        }
+        shikshaMitraToast.success({
+          message: `${isPlacement ? 'Division' : isGr ? 'GR number' : 'Roll number'} saved for ${student.studentName}.`,
+        });
+        onClose();
+      } catch (error) {
+        setPreview(undefined);
+        setFailure(
+          parseApiProblemDetail(error).detail ||
+            'The assignment could not be saved. Refresh the case and retry.'
+        );
+      }
+    },
   });
-  const {
-    divisionId,
-    numberSeriesId,
-    rollNumber,
-    manualValue,
-    overrideReason,
-    rollAssignmentMode,
-  } = form.values;
-  const setDivisionId = (value: string) => form.setFieldValue('divisionId', value);
-  const setNumberSeriesId = (value: string) => form.setFieldValue('numberSeriesId', value);
-  const setRollNumber = (value: string) => form.setFieldValue('rollNumber', value);
-  const setManualValue = (value: string) => form.setFieldValue('manualValue', value);
-  const setOverrideReason = (value: string) => form.setFieldValue('overrideReason', value);
-  const {resetForm} = form;
-
+  const signature = JSON.stringify({ values: form.values, stamp: student?.concurrencyStamp, mode });
+  const currentPreview = preview?.signature === signature ? preview : undefined;
+  const { resetForm } = form;
   useEffect(() => {
-    if (!open) return;
-
     resetForm({
       values: {
         divisionId: student?.divisionId ?? '',
         numberSeriesId: '',
-        rollNumber: student?.rollNo ? String(student.rollNo) : '',
         manualValue: '',
-        overrideReason: '',
-        rollAssignmentMode: schoolMode === 'both' ? '' : schoolMode,
+        reason: '',
+        rollNumber: student?.rollNo ? String(student.rollNo) : '',
+        rollAssignmentMode: mode === 'both' ? '' : mode,
       },
     });
-    setPreview(null);
-    setFailure(null);
-    // Source refresh invalidates the bound preview without discarding entered details.
+    setFailure(undefined);
+    setPreview(undefined);
+    // Preserve entered values during background refresh; the preview signature invalidates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, student?.id, resetForm]);
-
-  const selectedPlacement = useMemo(
-    () => placementQuery.data?.find((option) => option.id === divisionId),
-    [divisionId, placementQuery.data]
-  );
-  const selectedSeries = useMemo(
-    () => seriesQuery.data?.find((series) => series.id === numberSeriesId),
-    [numberSeriesId, seriesQuery.data]
-  );
-  const parsedRollNumber = Number(rollNumber);
-  const signature = JSON.stringify({
-    values: form.values,
-    stamp: student?.concurrencyStamp,
-    schoolMode,
-  });
-  const currentPreview = preview?.signature === signature ? preview : null;
-  const selectedModeMatchesSchool = schoolMode === 'both' || rollAssignmentMode === schoolMode;
+  }, [open, student?.id, assignmentType, resetForm]);
   const canPreview =
-    canAllocate &&
+    canManage &&
+    !locked &&
+    !busy &&
     Boolean(student?.divisionId) &&
-    selectedModeMatchesSchool &&
-    Boolean(rollAssignmentMode) &&
-    (rollAssignmentMode === 'automatic' ||
-      (Number.isInteger(parsedRollNumber) && parsedRollNumber > 0));
-  const canSubmit = isPlacement
-    ? Boolean(divisionId && selectedPlacement && !selectedPlacement.isFull)
-    : Boolean(
-        numberSeriesId &&
-        canAllocate &&
-        selectedModeMatchesSchool &&
-        currentPreview &&
-        Number.isInteger(currentPreview.proposedRollNumber) &&
-        currentPreview.proposedRollNumber > 0 &&
-        (!manualValue.trim() || overrideReason.trim())
-      );
-  const isSaving = placementState.isLoading || identifierState.isLoading || previewState.isLoading;
-
-  const handlePreview = async () => {
-    if (!student || !canPreview || isSaving) return;
-    setFailure(null);
-    try {
-      const result = await previewRoll({
-        id: student.id,
-        rollAssignmentMode: rollAssignmentMode || undefined,
-        rollNumber: rollAssignmentMode === 'manual' ? parsedRollNumber : undefined,
-        reason: overrideReason.trim() || undefined,
-      }).unwrap();
-      if (
-        result.concurrencyStamp !== student.concurrencyStamp ||
-        result.schoolAssignmentMode !== schoolMode
-      ) {
-        setPreview(null);
-        setFailure(
-          'The onboarding case or school numbering rule changed. Close this dialog, refresh the case, and review again.'
-        );
-        return;
-      }
-      setPreview({ ...result, signature });
-    } catch {
-      setPreview(null);
-      setFailure(
-        'The roll number preview could not be prepared. Check the reserved division and numbering rules, then retry.'
-      );
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!student || !assignmentType || !canSubmit) return;
-    setFailure(null);
-    try {
-      if (isPlacement) {
-        await setPlacement({
-          id: student.id,
-          concurrencyStamp: student.concurrencyStamp,
-          divisionId,
-          reason: overrideReason.trim() || undefined,
-        }).unwrap();
-        shikshaMitraToast.success({
-          message: `Division reserved for ${student.studentName}.`,
-        });
-      } else if (currentPreview) {
-        await allocateIdentifier({
-          id: student.id,
-          concurrencyStamp: student.concurrencyStamp,
-          numberSeriesId,
-          rollNumber: currentPreview.proposedRollNumber,
-          rollAssignmentMode: currentPreview.rollAssignmentMode,
-          manualValue: manualValue.trim() || undefined,
-          overrideReason: overrideReason.trim() || undefined,
-        }).unwrap();
-        shikshaMitraToast.success({
-          message: `Identifiers prepared for ${student.studentName}.`,
-        });
-      }
-      onClose();
-    } catch (error) {
-      if (!isPlacement) {
-        setPreview(null);
-        setFailure(
-          'Identifiers could not be prepared. Refresh the case and review the series and roll number before retrying. Your entered details remain available.'
-        );
-      }
-      if (
-        (error as { data?: { error?: { code?: string } } })?.data?.error?.code ===
-        'Students:Records:RollProposalChanged'
-      ) {
-        setPreview(null);
-        setFailure('The proposed roll number changed. Preview again before preparing identifiers.');
-      }
-      shikshaMitraToast.error({
-        message: isPlacement
-          ? 'Division placement could not be reserved. Refresh the case and check live capacity.'
-          : 'Identifiers could not be prepared. Refresh the case and verify the series and roll number.',
-      });
-    }
-  };
-
+    ['manual', 'automatic'].includes(form.values.rollAssignmentMode) &&
+    (mode === 'both' || mode === form.values.rollAssignmentMode) &&
+    (!requiresReason || Boolean(form.values.reason.trim())) &&
+    (form.values.rollAssignmentMode === 'automatic' ||
+      (Number.isInteger(Number(form.values.rollNumber)) && Number(form.values.rollNumber) > 0));
   return (
     <CustomDialog
       open={open}
-      handleClose={() => {
-        if (!isSaving) onClose();
-      }}
-      title={isPlacement ? 'Assign division' : 'Prepare identifiers'}
+      handleClose={onClose}
+      title={isPlacement ? 'Assign Division' : isGr ? 'Assign GR Number' : 'Assign Roll Number'}
       maxWidth="sm"
       fullWidth
       hasUnsavedChanges={form.dirty}
-      disableClose={isSaving}
+      disableClose={busy}
     >
-      <DialogScrollContent dividers onSubmit={() => form.submitForm()}>
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="subtitle2">{student?.studentName}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {student?.applicationNumber} · {student?.standardName}
-            </Typography>
-          </Box>
+      <DialogScrollContent dividers>
+        <Stack spacing={1.5}>
+          <Typography variant="subtitle2">
+            {student?.studentName} · {student?.standardName} / {student?.divisionName}
+          </Typography>
           {failure && <Alert severity="error">{failure}</Alert>}
-
+          {!canManage && (
+            <Alert severity="info">
+              Your role can view this task. Assignment requires onboarding permission.
+            </Alert>
+          )}
+          {locked && (
+            <Alert severity="info">
+              This number is locked. An administrator must unlock it before a correction.
+            </Alert>
+          )}
           {isPlacement ? (
             <>
-              <Alert severity="info" variant="outlined">
-                Available seats are calculated from active enrollments and live reservations. Saving
-                reserves the selected seat until activation.
-              </Alert>
               <CustomSelect
-                fullWidth
-                size="small"
                 label="Division"
-                value={divisionId}
-                onChange={(value) => setDivisionId(String(value))}
-                options={(placementQuery.data ?? []).map((option) => ({
+                size="small"
+                required
+                fullWidth
+                value={form.values.divisionId}
+                options={(placement.data ?? []).map((option) => ({
                   value: option.id,
-                  label: `${option.name} · ${option.availableSeats} available`,
+                  label: `${option.name} · ${option.availableSeats} seats available`,
                 }))}
-                disabledValues={(placementQuery.data ?? [])
+                disabledValues={(placement.data ?? [])
                   .filter((option) => option.isFull)
                   .map((option) => option.id)}
-                disabledLabel="Full"
-                disabled={placementQuery.isFetching || isSaving}
-                helperText={
-                  selectedPlacement
-                    ? `${selectedPlacement.availableSeats} of ${selectedPlacement.capacity} seats available`
-                    : 'Select a division with live capacity.'
-                }
+                onChange={(value) => form.setFieldValue('divisionId', String(value))}
+                disabled={busy || !canManage || placement.isFetching || placement.isError}
               />
-              {student?.divisionId && divisionId !== student.divisionId && (
+              {placement.isError ? (
+                <Alert severity="error">
+                  Division capacity could not be loaded. Close and retry.
+                </Alert>
+              ) : (
+                !placement.isFetching &&
+                !placement.data?.length && (
+                  <Alert severity="info">No divisions are available.</Alert>
+                )
+              )}
+            </>
+          ) : isGr ? (
+            <>
+              <CustomSelect
+                label="GR series"
+                size="small"
+                required
+                fullWidth
+                value={form.values.numberSeriesId}
+                options={(series.data ?? []).map((item) => ({
+                  value: item.id,
+                  label: `${item.name} · Next ${item.nextPreview}`,
+                }))}
+                onChange={(value) => form.setFieldValue('numberSeriesId', String(value))}
+                disabled={busy || !canManage || !!locked || series.isFetching || series.isError}
+                error={Boolean(form.touched.numberSeriesId && form.errors.numberSeriesId)}
+                helperText={form.touched.numberSeriesId ? form.errors.numberSeriesId : undefined}
+              />
+              {series.isError ? (
+                <Alert severity="error">GR series could not be loaded. Close and retry.</Alert>
+              ) : (
+                !series.isFetching &&
+                !series.data?.length && (
+                  <Alert severity="info">No published GR series matches this student.</Alert>
+                )
+              )}
+              {student?.grManualEntryAllowed && !(student.grNumberLocked && !student.grNo) && (
                 <TextField
-                  fullWidth
+                  label="Manual GR number"
                   size="small"
-                  label="Placement change reason"
-                  value={overrideReason}
-                  disabled={isSaving}
-                  onChange={(event) => setOverrideReason(event.target.value)}
-                  inputProps={{ maxLength: 1000 }}
-                  helperText="Required when the saved placement rule requires a reason. Approval may also be required."
+                  fullWidth
+                  name="manualValue"
+                  value={form.values.manualValue}
+                  onChange={form.handleChange}
+                  disabled={busy || !canManage || !!locked}
+                  helperText="Leave empty to use the next number."
                 />
               )}
-              {placementQuery.isError ? (
-                <Alert severity="error">Division capacity could not be loaded.</Alert>
-              ) : null}
             </>
           ) : (
             <>
-              <Alert severity="info" variant="outlined">
-                The selected series reserves the next GR number together with the roll number. Both
-                values are committed only when onboarding is activated.
-              </Alert>
               {!student?.divisionId && (
-                <Alert severity="info">
-                  Reserve a division before previewing and preparing identifiers.
-                </Alert>
+                <Alert severity="info">Assign a Division before preparing a Roll number.</Alert>
               )}
-              <CustomSelect
-                fullWidth
-                size="small"
-                label="Identifier series"
-                required
-                value={numberSeriesId}
-                onChange={(value) => setNumberSeriesId(String(value))}
-                options={(seriesQuery.data ?? []).map((series) => ({
-                  value: series.id,
-                  label: `${series.name} · ${series.nextPreview}`,
-                }))}
-                disabled={seriesQuery.isFetching || isSaving || !canAllocate}
-                helperText={
-                  selectedSeries
-                    ? `Next value: ${selectedSeries.nextPreview}`
-                    : form.touched.numberSeriesId && form.errors.numberSeriesId
-                      ? form.errors.numberSeriesId
-                      : 'Select an active series for this academic context.'
-                }
-                error={Boolean(form.touched.numberSeriesId && form.errors.numberSeriesId)}
-              />
-              {!canAllocate && (
-                <Alert severity="info">
-                  Your role can view this case. Preparing identifiers requires the onboarding
-                  identifier permission.
-                </Alert>
-              )}
-              <Typography variant="body2">
-                School roll numbering:{' '}
-                {schoolMode === 'both'
-                  ? 'Manual or automatic'
-                  : schoolMode === 'automatic'
-                    ? 'Automatic'
-                    : 'Manual'}
-                .
-              </Typography>
-              {!selectedModeMatchesSchool && (
-                <Alert
-                  severity="warning"
-                  action={
-                    <Button
-                      disabled={isSaving || !canAllocate}
-                      onClick={() => {
-                        form.setFieldValue('rollAssignmentMode', schoolMode);
-                        setRollNumber('');
-                      }}
-                    >
-                      Use school numbering
-                    </Button>
-                  }
-                >
-                  School numbering changed. Review the assignment choice before previewing.
-                </Alert>
-              )}
-              {schoolMode === 'both' && (
+              {mode === 'both' && (
                 <CustomSelect
-                  fullWidth
+                  label="Numbering method"
                   size="small"
                   required
-                  label="Roll number assignment"
-                  value={rollAssignmentMode}
+                  value={form.values.rollAssignmentMode}
                   options={[
-                    { value: 'manual', label: 'Manual — enter a roll number' },
-                    { value: 'automatic', label: 'Automatic — use school numbering' },
+                    { value: 'automatic', label: 'Automatic' },
+                    { value: 'manual', label: 'Manual' },
                   ]}
-                  disabled={isSaving || !canAllocate}
-                  onChange={(value) => {
-                    form.setFieldValue('rollAssignmentMode', value);
-                    setRollNumber('');
-                  }}
-                  error={Boolean(form.touched.rollAssignmentMode && form.errors.rollAssignmentMode)}
-                  helperText={
-                    form.touched.rollAssignmentMode ? form.errors.rollAssignmentMode : undefined
-                  }
+                  onChange={(value) => form.setFieldValue('rollAssignmentMode', String(value))}
+                  disabled={busy || !canManage || !!locked}
                 />
               )}
-              {rollAssignmentMode === 'automatic' ? (
+              {form.values.rollAssignmentMode === 'manual' && (
                 <TextField
-                  fullWidth
-                  size="small"
-                  label="Proposed roll number"
-                  value={currentPreview?.proposedRollNumber ?? ''}
-                  slotProps={{ input: { readOnly: true } }}
-                  helperText="Preview to review the number reserved by school numbering. It is checked again before saving."
-                />
-              ) : rollAssignmentMode === 'manual' ? (
-                <NumericFormatCustom
-                  fullWidth
+                  label="Roll number"
                   required
                   size="small"
-                  prefix=""
-                  thousandSeparator={false}
-                  decimalScale={0}
-                  label="Roll number"
-                  disabled={isSaving || !canAllocate}
-                  value={rollNumber}
-                  onValueChange={(values) => setRollNumber(values.value)}
-                  inputProps={{ min: 1 }}
+                  type="number"
+                  name="rollNumber"
+                  value={form.values.rollNumber}
+                  onChange={form.handleChange}
+                  disabled={busy || !canManage || !!locked}
                   error={Boolean(form.touched.rollNumber && form.errors.rollNumber)}
                   helperText={form.touched.rollNumber ? form.errors.rollNumber : undefined}
                 />
-              ) : (
-                <Typography variant="body2">
-                  Choose manual or automatic numbering before previewing.
-                </Typography>
               )}
+              <Typography variant="caption" color="text.secondary">
+                Numbers start at 1 and are unique within this Class and Division.
+              </Typography>
               <Button
+                size="small"
                 variant="outlined"
-                disabled={!canPreview || isSaving || seriesQuery.isError}
+                disabled={!canPreview}
                 loading={previewState.isLoading}
-                onClick={handlePreview}
+                onClick={async () => {
+                  if (!student || !canPreview) return;
+                  try {
+                    const result = await previewRoll({
+                      id: student.id,
+                      rollAssignmentMode: form.values.rollAssignmentMode as 'automatic' | 'manual',
+                      rollNumber:
+                        form.values.rollAssignmentMode === 'manual'
+                          ? Number(form.values.rollNumber)
+                          : undefined,
+                      reason: form.values.reason.trim() || undefined,
+                    }).unwrap();
+                    if (
+                      result.concurrencyStamp !== student.concurrencyStamp ||
+                      result.schoolAssignmentMode !== mode
+                    ) {
+                      setFailure('The case or numbering rule changed. Refresh and preview again.');
+                      return;
+                    }
+                    setPreview({ signature, proposedRollNumber: result.proposedRollNumber });
+                    setFailure(undefined);
+                  } catch (error) {
+                    setFailure(
+                      parseApiProblemDetail(error).detail ||
+                        'Roll preview failed. Review the Division and retry.'
+                    );
+                  }
+                }}
               >
-                Preview roll number
+                Preview Roll number
               </Button>
-              {preview && !currentPreview && (
+              {currentPreview && (
                 <Alert severity="info">
-                  The identifier details changed. Preview again before saving.
+                  Proposed Roll number: {currentPreview.proposedRollNumber}
                 </Alert>
               )}
-              <TextField
-                fullWidth
-                size="small"
-                label="Manual identifier override"
-                disabled={isSaving || !canAllocate}
-                value={manualValue}
-                onChange={(event) => setManualValue(event.target.value)}
-                helperText="Optional. Leave blank to use the series preview. Backend permission and audit rules still apply."
-              />
-              {manualValue.trim() || student?.rollNo ? (
-                <TextField
-                  fullWidth
-                  required
-                  multiline
-                  minRows={2}
-                  size="small"
-                  label="Override reason"
-                  disabled={isSaving || !canAllocate}
-                  value={overrideReason}
-                  onChange={(event) => setOverrideReason(event.target.value)}
-                  helperText="Required for the identifier allocation audit history."
-                  inputProps={{ maxLength: 1000 }}
-                />
-              ) : null}
-              {seriesQuery.isError ? (
-                <Alert severity="error">Identifier series could not be loaded.</Alert>
-              ) : null}
             </>
+          )}
+          {requiresReason && (
+            <TextField
+              label="Change reason"
+              required
+              multiline
+              minRows={2}
+              size="small"
+              name="reason"
+              value={form.values.reason}
+              onChange={form.handleChange}
+              onBlur={form.handleBlur}
+              disabled={busy || !!locked}
+              error={Boolean(form.touched.reason && form.errors.reason)}
+              helperText={form.touched.reason ? form.errors.reason : undefined}
+              inputProps={{ maxLength: 1000 }}
+            />
           )}
         </Stack>
       </DialogScrollContent>
-      <DialogActions sx={{ px: 2, pb: 2 }}>
-        <Button
-          size="small"
-          color="inherit"
-          disabled={isSaving}
-          onClick={() => {
-            if (
-              !form.dirty ||
-              window.confirm('Discard the entered identifier or placement details?')
-            )
-              onClose();
-          }}
-        >
+      <DialogActions sx={{ p: 2 }}>
+        <Button variant="outlined" size="small" onClick={onClose} disabled={busy}>
           Cancel
         </Button>
         <Button
-          size="small"
           variant="contained"
-          startIcon={<Iconify icon={isPlacement ? 'mdi:seat' : 'mdi:identifier'} width={18} />}
-          disabled={!canSubmit || isSaving}
+          size="small"
+          loading={busy}
+          disabled={!canManage || !!locked || (!isPlacement && !isGr && !currentPreview)}
           onClick={() => form.submitForm()}
         >
-          {isSaving ? 'Saving...' : isPlacement ? 'Reserve division' : 'Prepare identifiers'}
+          Submit
         </Button>
       </DialogActions>
     </CustomDialog>

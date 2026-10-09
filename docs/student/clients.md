@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-10-09
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,10 @@ audience: humans-and-agents
 # Find Student Enrollment Admissions clients
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
+
+## Academic filter requests
+
+`src/utils/student-academic-filter-query.ts` preserves scalar `standardId`/`divisionId` requests for a single selection and serializes multiple selections as repeated `standardIds`/`divisionIds` query keys. Admissions queues, Offering lists and Student Setup apply collections server-side before counting and paging. Board and Medium stay scalar; requests wait for their selection and an academic year. Assessments filters its authorized scopes by the same selected Board, Medium and classes before requesting a roster.
 
 ## Admission Cycle client
 
@@ -35,37 +39,52 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 
 ### Student Onboarding
 
-`src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist contract. It covers server-paged cases, filter options, analytics, detail, live placement capacity, identifier series, readiness refresh, owner and step updates, placement reservation, identifier preparation, activation preview and activation, cancellation, service handoffs and consent confirmation, policies, identifier-series settings, historical reconciliation, and onboarding documents. The client unwraps the shared `Result<T>` response at the API boundary and invalidates case, list, analytics, and related operational tags after commands.
+`src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist, detail, capacity, readiness, placement, identifiers, activation, accounts, documents and settings clients.
+The client unwraps the shared `Result<T>` response and invalidates case/list/analytics or related operational tags after commands.
+The list sends `enteredToday` and task filters to the server before pagination, including Fees and Credentials.
+Activation also invalidates the Student Records directory tag so the newly activated student becomes discoverable without stale cached rows.
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 
 `persisted-onboarding-settings-provider.tsx` loads and saves versioned configuration through `/api/student/onboarding/settings/configurations`, preserving school/year scope and concurrency stamps. Load or schema failures block editing with Retry; they do not silently substitute defaults. The backend resolves the matching readiness and numbering rules. The obsolete operational editor has been removed.
 
-The case client also owns GET/POST portal-account links. Finance assignment reuses the canonical assignment drawer for the exact student and academic year. Collection navigation carries `studentId`, `academicYearId`, `boardId` and `mediumId`; the Finance summary query filters by Student ID and waits for the matching year. Readiness refresh reads Finance evidence and portal links without creating duplicate dues, receipts or identities.
+The provider keeps a route-specific shared breadcrumb/header visible during initial load, a year change, request failure or invalid saved configuration, while keeping editable child settings unmounted.
+Identifier Unlock visibility additionally requires the filter-options response's server-derived `canUnlockIdentifiers` capability; absent/false capability or a failed scope lookup hides Unlock.
+The backend computes this capability from the current administrator scope and Repair permission, and the frontend does not infer it from role names.
+
+The case client owns GET/POST portal-account links and credential-email status/request operations.
+`src/screens/student/onboarding/student-setup/student-onboarding-model.ts` projects backend locks, fee confirmation, credentials pending and requirement-review flags, and splits the legacy combined identifier check into independent GR/Roll tasks.
+It excludes the system-owned final-readiness aggregate from staff task counts and uses the explicit `admissionConfirmed` server flag for an Offering case's Admission confirmed check, while preserving legacy imported-case identity projection.
+
+| Client operation                                                                      | Screen wiring                                                                            | Concurrency and cache behavior                                                                                                            |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Available Offering GET at `/student/onboarding/settings/offerings?academicYearId=...` | `src/screens/student/onboarding/setting/onboarding-policy-settings.tsx`                  | Onboarding-owned read-only choices include academic year and workflow identity without requiring Admissions Offering configuration access |
+| Separate case GR and Roll POSTs                                                       | `src/screens/student/onboarding/student-setup/student-onboarding-operation-dialog.tsx`   | Each task sends only its identifier inputs and current case stamp; assignment invalidates worklist/detail                                 |
+| Identifier-lock POST                                                                  | `src/screens/student/onboarding/student-setup/student-identifier-lock-controls.tsx`      | Selected academic year, division and identifier type; refreshes case/list state                                                           |
+| Fee-structure GET, candidate GET and confirmation PUT                                 | `src/screens/student/onboarding/student-setup/student-onboarding-fees.tsx`               | Reuses Admission fee DTOs; confirmation sends the case stamp and optional head IDs; no Finance mutation                                   |
+| Workflow-document GET, upload, original recording and review                          | `src/screens/student/onboarding/student-setup/student-onboarding-workflow-documents.tsx` | Reuses Admission checklist/actions and application evidence stamps; refreshes documents and readiness                                     |
+| Offering-requirement review POST                                                      | `src/screens/student/onboarding/student-setup/student-setup-drawer.tsx`                  | Explicitly reviews an existing unactivated case using its current stamp                                                                   |
+
+The case's `hasDocumentRequirementsSnapshot` flag distinguishes a frozen empty Offering checklist from a legacy case without a snapshot.
+An empty frozen checklist shows no required documents; only a legacy no-snapshot case falls back to the school-wide Student document panel when the workflow response is empty.
+The current UI exposes no document-override or waiver action.
+Endpoint contracts and domain enforcement remain owned by the [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
 
 ## Endpoint ownership
 
 Assessment sessions and offering/stage choices use `src/redux/student/admissions/admission-assessment-sessions-api.ts`.
-Applicant bookings, attendance, results, review, cancellation, retakes, and waivers use `src/redux/student/admissions/admission-assessments-api.ts`.
+Applicant bookings, attendance, results, cancellation, retakes, and waivers use `src/redux/student/admissions/admission-assessments-api.ts`.
 The shared response types are in `src/redux/student/admissions/admission-assessment-types.ts`.
-Assessment stage configuration uses `src/redux/student/admissions/admission-assessment-policy.ts`, preserving unrelated stage configuration and keeping legacy workflows opted out by default.
+Assessment stage configuration uses `src/redux/student/admissions/admission-assessment-policy.ts`, preserving unrelated stage configuration and defaulting Assessment to managed result collection without independent review.
 Document stage configuration uses `admission-document-policy.ts`, `admission-document-policy-validation.ts`, and `admission-condition-rule.ts`. The editor preserves unrelated settings and rejects unsupported policy versions. `admission-document-settings-api.ts` loads optional student document categories and class options using workflow-view access.
 Document requirements retain selected class IDs in `standardIds`; omitted/null means All classes, while an empty selection is invalid.
-`collectionFormStageCode` links early uploads to a Form stage; `documentCollectionAvailable` and `canCollectDuringForm` are server-owned runtime flags.
-Document action guards match the canonical backend bundles: `Students.Admissions.Documents.View` permits viewing/downloading, `.Add` permits upload/original/review actions, and `.Delete` permits waiver. Server capabilities still restrict each action by stage and evidence state; retired granular permission names are not accepted as grants.
-Both clients use the existing global RTK Query API and refresh assessment/application data after mutations; workflow or offering changes also invalidate assessment scope choices.
-Server-provided assessment capabilities determine available applicant actions, while the existing workflow-advance client remains responsible for progression.
-The paginated applicant workbench uses `admission-assessment-roster-api.ts` and the existing authenticated API. Its counts come from the same offering/stage/session/search context before the queue filter; export is explicitly limited to the current page. Assessment actions invalidate roster, application, session capacity and Applicant 360 caches. Workbench polling is bounded to one minute while focused, with explicit applicant refresh. Invalid session filters require explicit clearing rather than silently showing all applicants. Active session rosters follow the latest attempt; completed stage history can show the selected earlier session. Continue refetches application, workflow and assessment evidence before sending the current stamp, expected stage and idempotency key.
+Document settings normalize collection to uploads at the active stage; early Form collection, physical-original checks, independent review and waivers are unavailable. Documents View and Add retain existing backend permission identifiers for reads, uploads and acceptance/replacement decisions.
 
-Eligibility summaries, explicit evaluation, exception requests and review, and lazy evaluation history use `admission-eligibility-api.ts` with `admission-eligibility-types.ts`.
-The optional `eligibilityEnabled` workflow-stage flag mounts this runtime only when the backend enables it.
-The client uses the existing authenticated RTK Query API and captures the application stamp and evaluation when an action dialog opens.
-Every mutation invalidates the application tag, refreshing subscribed summaries and history after successful commands or concurrency rejection.
-Evaluation is an explicit POST; summary and history reads never record a new check.
+Eligibility, Review, and Offer are retired Admission Stage types. New drafts cannot select them, publication rejects them, application workspaces do not mount their working panels, and their direct admission operations reject unsupported stages. Existing enum numbers and stored audit records remain intact. Inquiry qualification, Student Records reviews, class capacity, and Finance ownership are separate contracts.
 
-Review summary, draft, recommendation submission, assignment, correction, history and queue use `admission-review-api.ts` and `admission-review-types.ts`. The client targets `/student/enrollment/admissions/reviews` through the global authenticated API. All Review commands invalidate the application tag so subscribed summaries, existing decision capabilities, history and queues refresh, including after a rejected concurrent write. GET does not create review history. The stage editor shares `admission-review-policy.ts` and `admission-review-settings-api.ts` for versioned optional settings, role choices and bounded reviewer lookup; saved choices survive lookup errors or filtered results.
+The application decision client owns Approve, Reject, Waitlist and Finalize. Actions require the active Admission decision stage and current server state; Waitlist remains pending. Offer mutations and the Application Reviews route are removed. Backend permissions, scope, evidence, concurrency and finalization rules remain authoritative.
 
-The existing application decision client continues to own approval, rejection, waitlist, offers and finalization. Optional `reviewDecision` capabilities on the main application response control these existing actions; absent managed-review metadata preserves legacy behavior. Detailed policy, source freshness, role rules and transition gates belong to the [backend student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
+Focused applicant identity and notes dialogs reuse `admission-applicants-api.ts`. Reads require exact Applicants View access and are lazy until their dialog opens; identity edits additionally require Applicants Add and remain locked for enrolled/finalized applications. Notes use the existing create/update mutations, with View-only access retaining a read-only history. Successful identity repair refreshes finalization readiness. Header counsellor assignment keeps the existing offering-scoped eligible-pool query and assignment mutation; opening the editor loads the pool rather than fetching it for every drawer view. These presentation changes introduce no endpoint or permission identifier.
 
 Historical Inquiry stage configuration uses `admission-inquiry-policy.ts`; Inquiry is no longer selectable in new Admission Stage workflows, while disabled or missing settings preserve the Basic inquiry process.
 `admission-inquiry-settings-api.ts` loads offering-scoped active counsellors for workflow setup.
@@ -76,6 +95,8 @@ The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting 
 Inquiries uses the server-paged inquiry list with `isTransferred: false`.
 Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
 Both application and inquiry tags refresh the Pipeline projection after mutations; returning from detail refetches the worklist.
+The compact application drawer reuses these clients; opening it retains the existing list queries. The URL-selected application and local stage review are presentation state, not a second server-state cache. Selecting a completed assessment or document stage requests that stage's existing read-only evidence contract. Fee selection and runtime form review keep their existing APIs and concurrency guards; no new endpoint is introduced.
+The identity editor lazily reuses the applicant 360 read and profile-update endpoints, gated by exact Applicants View/Add access and finalized-record locks. Finalization repair returns to the same dialog and refreshes its existing readiness preview. Header counsellor assignment keeps the existing application assignment mutation and concurrency contract; text-only stage tabs do not change runtime commands.
 The table exporter explicitly labels its loaded-row scope as **Export current page**.
 Inquiry status remains projected to Pending, Interested, or Not interested without removing legacy status/history.
 The Update client saves optional status/reason, academic context, and original raw form values with concurrency.
@@ -86,9 +107,9 @@ Inquiry creation can invoke the same contract for an automatic acknowledgement; 
 
 Managed Form stages use `admission-form-stage-api.ts` for the scoped stage summary, section verification, verification revocation, and correction requests. The client keeps application, stage, and section identifiers in the route and sends only command data plus the application concurrency stamp. Both mutations invalidate the stage-specific and application tags so blockers, attempts, form state, and workflow controls refresh together. `admission-form-stage-policy.ts` owns the versioned editor shape and preserves unrelated stage configuration. The stage editor uses the published-form list for selection, then reads the selected form detail when staff verification is enabled because list records contain section counts but omit section details.
 
-Managed Payment stages use `admission-payment-policy.ts`, `admission-payment-types.ts`, and `admission-payment-api.ts`. The client sends application and transaction concurrency stamps plus one idempotency key per financial action. Mutations invalidate the application tag so balances, blockers, transaction stamps, and workflow state refresh together. Server capabilities decide which record, verify, reject, waive, reverse, and continue actions are shown.
+Payment uses the existing `admission-fee-selection-api.ts` and shared FeeSelectionPanel. Candidate reads enforce the Offering class/year/Board/Medium scope; saved snapshots include the selected structure version and chosen optional heads. Confirm fee structure uses the existing save mutation and application concurrency stamp, invalidates application/selection state, and remains separate from the workflow advance command. Payment summary reports feeStructureRequired or feeStructureConfirmed; no admission money-recording actions are mounted.
 
-Managed Offer stages use `admission-offer-policy.ts`, `admission-offer-types.ts`, and `admission-offer-api.ts`. Application and stage identifiers stay in scoped routes; every command sends the captured application stamp and a unique idempotency key. Mutations invalidate the application tag so status, blockers, capabilities, history, and workflow state refresh. The application detail mounts the managed card only when `offerStageEnabled` is present and hides the legacy offer actions for that stage; missing metadata preserves release compatibility.
+Eligibility, Review, and Offer are retired Admission Stage types. New drafts cannot select them, publication rejects them, application workspaces do not mount their working panels, and their direct admission operations reject unsupported stages. Existing enum numbers and stored audit records remain intact. Inquiry qualification, Student Records reviews, class capacity, and Finance ownership are separate contracts.
 
 Legacy managed Seat stages use `admission-seat-policy.ts`, `admission-seat-types.ts`, and `admission-seat-api.ts`. They remain supported for immutable published versions and applications already pinned to them, but Seat is not selectable in new workflow drafts. New capacity and waitlist setup requires a separate persisted Admission Offering contract and must not be represented by UI-only fields. Legacy commands continue to send pool and allocation concurrency stamps plus an idempotency key, and they invalidate the application tag so existing journeys remain operational.
 
@@ -98,7 +119,7 @@ Product rules and persistence are owned by `../../../Shikshamitra-BE/src/Shiksha
 
 ## Cache behavior
 
-The managed document checklist uses `admission-document-verification-api.ts` and `admission-document-types.ts`. Uploads send `FormData` through the global authenticated API, while original checks, reviewer decisions, and waivers use typed mutations. All document commands invalidate the application tag, including rejected stale writes, so the current checklist and concurrency stamp refresh. The application-level stamp is captured when the action dialog opens.
+The managed document checklist uses `admission-document-verification-api.ts` and `admission-document-types.ts`. Uploads send `FormData` through the global authenticated API, while acceptance and replacement decisions use typed mutations. Original-check and waiver actions are not exposed in the supported checklist. All document commands invalidate the application tag, including rejected stale writes, so the current checklist and concurrency stamp refresh. The application-level stamp is captured when the action dialog opens.
 
 `admission-document-download-api.ts` downloads authorized attachments through the global API, keeps file bytes outside the Redux cache, and revokes temporary browser URLs after initiating the download. `student-admission-evidence-api.ts` reads retained evidence for the student Documents tab; its downloads use the student-scoped endpoint. No public storage URL is exposed by these clients.
 
@@ -114,19 +135,23 @@ Inquiry creation invalidates inquiry and applicant tags because it creates the C
 
 Use the existing Admissions RTK Query client for a new screen or mutation instead of adding a direct fetch helper.
 
-## Onboarding credential emails and document overrides
+## Onboarding credentials and requirement evidence
 
-`student-onboarding-api.ts` owns credential-email status/request and document override endpoints under the existing onboarding case boundary. Email request mutations invalidate that case's detail and handoff tags; document overrides additionally invalidate its document requirements. No credential/password is returned to the staff interface.
+Credential-email request mutations invalidate case detail and handoff tags.
+The Credentials pending state uses the backend `credentialsPending` flag, including missing required account links and enabled email recipients whose delivery request is not Sent.
+No credential/password is returned to the staff interface.
 
-The readiness profile persists separate student/guardian email switches (default OFF), activation/completion timing, manual/automatic provisioning, and the selected guardian relationship for automatic provisioning. Legacy configurations receive safe email-OFF defaults without changing their account requirements.
+Readiness profiles link Offering IDs and persist student/guardian login-email choices and automatic/manual provisioning; the simplified rule editor fixes release timing to activation.
+Existing active/completed cases retain their historical requirement snapshot, and existing unactivated cases requiring migration expose explicit requirement review.
+
 ## Student dashboard client
 
-| Source | Responsibility |
-|---|---|
-| `src/redux/student/dashboard/student-module-dashboard-api.ts` | Context and section GETs; raw or `{data}` response adaptation |
-| `src/redux/student/dashboard/student-module-dashboard-types.ts` | Modes, links, metrics, bounded class strength and query inputs |
-| `src/screens/student/dashboard/hooks/use-student-dashboard.ts` | Session/grant initialization, permission guard, year and refresh |
-| `src/screens/student/dashboard/hooks/use-student-dashboard-sections.ts` | One subscription per permitted section, shared by metrics, priorities and graphs |
+| Source                                                                              | Responsibility                                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `src/redux/student/dashboard/student-module-dashboard-api.ts`                       | Context and section GETs; raw or `{data}` response adaptation                         |
+| `src/redux/student/dashboard/student-module-dashboard-types.ts`                     | Modes, links, metrics, bounded class strength and query inputs                        |
+| `src/screens/student/dashboard/hooks/use-student-dashboard.ts`                      | Session/grant initialization, permission guard, year and refresh                      |
+| `src/screens/student/dashboard/hooks/use-student-dashboard-sections.ts`             | One subscription per permitted section, shared by metrics, priorities and graphs      |
 | `src/screens/student/dashboard/dashboard-insights.ts` and `dashboard-graph-data.ts` | Permission-filtered presentation of existing scoped totals; no independent data fetch |
 
 Context reads `/api/students/dashboard/context`; sections read `/api/students/dashboard/sections/{section}?academicYearId={guid}`, with section `records`, `admissions` or `attendance`. Permitted sections load independently after context resolves. Cache arguments include subject, tenant and granted permission names; section arguments also include year. Identity keys partition cache entries and are not sent as API authority. `currentData` clears previous identity/year results, errors withhold data, and unused dashboard entries expire immediately. The `Student/MODULE-DASHBOARD` tag supports manual GET refresh. There is no polling, Reporting preview refresh mutation or snapshot job. Destination mutations remain owned by their clients; returning to the dashboard refetches sections.

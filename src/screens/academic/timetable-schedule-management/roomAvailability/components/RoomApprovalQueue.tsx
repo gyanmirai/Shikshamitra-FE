@@ -15,7 +15,6 @@ import DialogActions from '@mui/material/DialogActions';
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -80,44 +79,16 @@ export const RoomApprovalQueue = ({
     }
   };
 
-  if (pending.length === 0) {
-    return (
-      <Alert severity="success" icon={<Iconify icon="mdi:check-circle" />}>
-        No pending approval requests. All reservations have been processed.
-      </Alert>
-    );
-  }
-
   return (
     <>
-      <Stack spacing={1} sx={{ height: '100%' }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Iconify icon="mdi:clock-outline" width={20} color="warning.main" />
-          <Typography variant="h6" fontWeight={700}>
-            Approval Queue
-          </Typography>
-          <CustomTooltip
-            title="Review and process pending room reservation requests requiring administrator approval."
-            arrow
-            placement="right"
-          >
-            <Iconify
-              icon={GlobalIcons.info}
-              color="info.main"
-              width={18}
-              height={18}
-              sx={{ cursor: 'pointer', mt: 0.25 }}
-            />
-          </CustomTooltip>
-          <Label color="warning">{pending.length}</Label>
-        </Stack>
-
+      <Stack sx={{ height: '100%' }}>
         <CustomizableTable
           tableContainerProps={{ sx: { height: '100%' } }}
           tableId="room-approval-queue"
           tableTitle="Pending Approvals"
           data={pending}
           isLoading={isLoading}
+          noDataText="No pending room approval requests"
           columns={[
             {
               id: 'requestedBy',

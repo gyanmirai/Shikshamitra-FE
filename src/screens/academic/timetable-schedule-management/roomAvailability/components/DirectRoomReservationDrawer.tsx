@@ -409,22 +409,15 @@ export const DirectRoomReservationDrawer = ({
                 Direct Reservation: {room?.roomName}
               </Typography>
               <CustomTooltip
-                title="Select a specific time slot and confirm booking details directly for this room."
+                title="Choose an available time slot, then enter the booking details to reserve this room."
                 arrow
                 placement="right"
               >
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={18}
-                  height={18}
-                  sx={{ cursor: 'pointer', mt: 0.25 }}
-                />
+                <IconButton size="small" aria-label="About direct reservation">
+                  <Iconify icon={GlobalIcons.info} color="info.main" width={18} height={18} />
+                </IconButton>
               </CustomTooltip>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-              Pick a time slot and confirm the booking details
-            </Typography>
           </Box>
         </Stack>
         <IconButton
@@ -470,35 +463,41 @@ export const DirectRoomReservationDrawer = ({
                 </Box>
               </Stack>
 
-              <DatePicker
-                label="Timeline Date"
-                format="DD/MM/YYYY"
-                value={dayjs(requirements.date)}
-                onChange={(v: Dayjs | null) => {
-                  if (v) patchRequirements({ date: v.format('YYYY-MM-DD') });
-                }}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
+                <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+                  <DatePicker
+                    label="Timeline Date"
+                    format="DD/MM/YYYY"
+                    value={dayjs(requirements.date)}
+                    onChange={(v: Dayjs | null) => {
+                      if (v) patchRequirements({ date: v.format('YYYY-MM-DD') });
+                    }}
+                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                  />
+                </Box>
 
-              <TextField
-                size="small"
-                type="number"
-                label="Slot duration minutes"
-                value={slotDurationMinutes}
-                onChange={(event) => {
-                  const nextValue = Number(event.target.value);
-                  setSlotDurationMinutes(
-                    Number.isNaN(nextValue) ? MIN_SLOT_DURATION_MINUTES : nextValue
-                  );
-                }}
-                onBlur={() => setSlotDurationMinutes((value) => clampSlotDuration(value))}
-                inputProps={{
-                  min: MIN_SLOT_DURATION_MINUTES,
-                  max: MAX_SLOT_DURATION_MINUTES,
-                }}
-                helperText={`Min ${MIN_SLOT_DURATION_MINUTES} min, max ${MAX_SLOT_DURATION_MINUTES} min`}
-                fullWidth
-              />
+                <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Slot duration minutes"
+                    value={slotDurationMinutes}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      setSlotDurationMinutes(
+                        Number.isNaN(nextValue) ? MIN_SLOT_DURATION_MINUTES : nextValue
+                      );
+                    }}
+                    onBlur={() => setSlotDurationMinutes((value) => clampSlotDuration(value))}
+                    inputProps={{
+                      min: MIN_SLOT_DURATION_MINUTES,
+                      max: MAX_SLOT_DURATION_MINUTES,
+                    }}
+                    helperText={`Min ${MIN_SLOT_DURATION_MINUTES} min, max ${MAX_SLOT_DURATION_MINUTES} min`}
+                    fullWidth
+                  />
+                </Box>
+              </Stack>
 
               {/* Legend */}
               <Stack direction="row" spacing={1}>
@@ -751,7 +750,7 @@ export const DirectRoomReservationDrawer = ({
             }}
           >
             {/* Scrollable Form Body */}
-            <Box sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', pr: 0.5 }}>
               <Stack spacing={1}>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <StepBadge number={2} />
@@ -761,9 +760,9 @@ export const DirectRoomReservationDrawer = ({
                 </Stack>
 
                 <Stack
-                  spacing={3}
+                  spacing={2}
                   sx={{
-                    p: 2.5,
+                    p: 2,
                     borderRadius: 2,
                     border: 1,
                     borderColor: 'divider',
@@ -804,11 +803,9 @@ export const DirectRoomReservationDrawer = ({
                     value={requirements.purpose}
                     onChange={(e) => patchRequirements({ purpose: e.target.value })}
                     fullWidth
-                    placeholder="e.g. Grade 9 Chemistry Lab"
+                    placeholder="e.g. Class 9 chemistry practical"
                     error={!!fieldErrors.purpose}
-                    helperText={
-                      fieldErrors.purpose || 'Briefly describe why this room is being reserved'
-                    }
+                    helperText={fieldErrors.purpose}
                   />
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -837,7 +834,7 @@ export const DirectRoomReservationDrawer = ({
                             !!fieldErrors.startTime || isStartTimeOutOfRange || isTimeRangeInvalid,
                           helperText:
                             fieldErrors.startTime ||
-                            (isStartTimeOutOfRange ? 'Must be between 06:00 AM and 12:00 AM' : ' '),
+                            (isStartTimeOutOfRange ? 'Must be between 06:00 AM and 12:00 AM' : undefined),
                         },
                       }}
                     />
@@ -867,7 +864,7 @@ export const DirectRoomReservationDrawer = ({
                               ? 'Must be between 06:00 AM and 12:00 AM'
                               : isTimeRangeInvalid
                                 ? 'End time must be after start time'
-                                : ' '),
+                                : undefined),
                         },
                       }}
                     />

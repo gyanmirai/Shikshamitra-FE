@@ -43,6 +43,8 @@ export const hrPaths = {
     runPayroll: '/hr/payroll/run-payroll',
     payslipGeneration: '/hr/payroll/payslip-generation',
     structure: '/hr/payroll/structure',
+    salaryEditor: (employeeId: string) =>
+      `/hr/payroll/structure/${encodeURIComponent(employeeId)}/edit`,
     settings: {
       root: '/hr/payroll/setting/earning-component',
       earningComponents: '/hr/payroll/setting/earning-component',

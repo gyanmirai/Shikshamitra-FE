@@ -44,12 +44,13 @@ import { FormTemplateChooser } from './form-template-chooser';
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
 
-function renderChooser() {
+function renderChooser(purpose: 0 | 1) {
   const store = configureStore({
     reducer: { [api.reducerPath]: api.reducer, confirmPopup },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
   });
   const props = {
+    purpose,
     selectedStarter: 'blank' as const,
     onSelect: vi.fn(),
   };
@@ -64,9 +65,9 @@ function renderChooser() {
 }
 
 describe('FormTemplateChooser', () => {
-  it('shows three clear quick starts and applies the recommended template', async () => {
+  it('offers only blank and application starters for registration', async () => {
     const user = userEvent.setup();
-    const props = renderChooser();
+    const props = renderChooser(1);
 
     expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
       'aria-pressed',
@@ -76,8 +77,9 @@ describe('FormTemplateChooser', () => {
       screen.getByRole('button', { name: 'Use recommended: Admission application' })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' })
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Use inquiry form: Inquiry form' })
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /Browse all templates/i })).not.toBeInTheDocument();
 
     await user.click(
@@ -86,9 +88,15 @@ describe('FormTemplateChooser', () => {
     expect(props.onSelect).toHaveBeenCalledWith('admission-application');
   });
 
-  it('selects the inquiry form directly', async () => {
+  it('offers only blank and inquiry starters for inquiry', async () => {
     const user = userEvent.setup();
-    const props = renderChooser();
+    const props = renderChooser(0);
+
+    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Use recommended: Admission application' })
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
 
     await user.click(screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' }));
     expect(props.onSelect).toHaveBeenCalledWith('admission-inquiry');

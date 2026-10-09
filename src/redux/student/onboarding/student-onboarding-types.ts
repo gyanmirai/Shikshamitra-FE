@@ -6,11 +6,24 @@ export type StudentOnboardingServiceHandoffStatus = 0 | 1 | 2 | 3 | 4;
 export type StudentOnboardingListInput = {
   search?: string;
   status?: StudentOnboardingStatus;
+  studentNameFilter?: string;
+  studentNameOperator?: 'contains' | 'equals' | 'startsWith' | 'endsWith';
+  ownerNameFilter?: string;
+  ownerNameOperator?: 'contains' | 'equals' | 'startsWith' | 'endsWith';
+  rollNumberFilter?: number;
+  rollNumberMin?: number;
+  rollNumberMax?: number;
+  rollNumberOperator?: 'equals' | 'greaterThan' | 'lessThan' | 'between';
+  pendingTask?: 'gr-number' | 'roll-number' | 'division' | 'fees' | 'credentials';
+  enteredToday?: boolean;
+  placementDivisionId?: string;
   academicYearId?: string;
   boardId?: string;
   mediumId?: string;
   divisionId?: string;
   standardId?: string;
+  standardIds?: string[];
+  divisionIds?: string[];
   assignedToUserId?: string;
   overdueOnly?: boolean;
   unassignedOnly?: boolean;
@@ -26,6 +39,7 @@ export type StudentOnboardingFilterOption = {
 };
 
 export type StudentOnboardingFilterOptions = {
+  canUnlockIdentifiers?: boolean;
   academicYears: StudentOnboardingFilterOption[];
   boards: StudentOnboardingFilterOption[];
   mediums: StudentOnboardingFilterOption[];
@@ -71,6 +85,16 @@ export type StudentOnboardingCase = {
   capturedStudentFields?: Array<{ key: string; label: string; value: string }>;
 
   feeAssignmentConfirmed?: boolean | null;
+  feeStructureConfirmed?: boolean;
+  selectedFeeStructureId?: string | null;
+  grNumberLocked?: boolean;
+  grManualEntryAllowed?: boolean;
+  requirementsNeedReview?: boolean;
+  hasDocumentRequirementsSnapshot?: boolean;
+  admissionConfirmed?: boolean;
+  credentialsPending?: boolean;
+  rollNumberLocked?: boolean;
+  rollChangeReasonRequired?: boolean;
   firstPaymentConfirmed?: boolean | null;
   financeReadinessDetail?: string | null;
   studentAccountRequired?: boolean;

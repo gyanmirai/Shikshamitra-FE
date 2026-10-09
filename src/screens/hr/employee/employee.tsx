@@ -19,6 +19,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
 import UserHoverProfile from 'src/components/student-popover';
+import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -58,7 +59,7 @@ import EmployeeView from './employee-view';
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
-import { SalaryEditorDialog } from '../payroll/structure/salary-editor-dialog';
+import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
 
 const HrEmployee = () => {
   const router = useRouter();
@@ -128,7 +129,7 @@ const HrEmployee = () => {
     }
   }, [employeeParams.mediumStageId, organizationOptions, organizationOptionsLoading]);
 
-  const payrollDialog = useBoolean();
+  const salaryReturnHref = `${hrPaths.employee.list}?${new URLSearchParams(searchParams)}`;
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -136,11 +137,9 @@ const HrEmployee = () => {
         {' '}
         <MenuList>
           <MenuItem
-            onClick={() => {
-              payrollDialog.onTrue();
-              setEditData(row);
-              pop.onClose();
-            }}
+            component={RouterLink}
+            href={salaryEditorHref(row.id, salaryReturnHref)}
+            onClick={() => pop.onClose()}
           >
             <Iconify
               icon="material-symbols:payments-outline-sharp"
@@ -162,7 +161,7 @@ const HrEmployee = () => {
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [payrollDialog.onTrue, statusDialog.onTrue]
+    [salaryReturnHref, statusDialog.onTrue]
   );
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
@@ -221,10 +220,6 @@ const HrEmployee = () => {
     statusDialog.onFalse();
     setEditData(null);
     refetch();
-  };
-  const handleClosePayroll = () => {
-    payrollDialog.onFalse();
-    setEditData(null);
   };
 
   const tableData = useMemo(
@@ -653,9 +648,6 @@ const HrEmployee = () => {
           {/* <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee"> */}
           {/*  <EmployeeFrom editData={editData} handleClose={handleClose} /> */}
           {/* </CustomDialog> */}
-          {payrollDialog.value && editData?.id && (
-            <SalaryEditorDialog employeeId={editData.id} handleClose={handleClosePayroll} />
-          )}
         </>
       ) : (
         <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />
@@ -690,10 +682,14 @@ const HrEmployee = () => {
             View staff
           </Button>
           <Button
+            component={RouterLink}
             href={
               createdEmployee
-                ? `${hrPaths.payroll.structure}?employeeId=${createdEmployee.id}&setup=salary`
-                : undefined
+                ? salaryEditorHref(
+                    createdEmployee.id,
+                    `${hrPaths.employee.list}?employee=${createdEmployee.id}`
+                  )
+                : hrPaths.employee.list
             }
             variant="contained"
             sx={{ minHeight: 44 }}

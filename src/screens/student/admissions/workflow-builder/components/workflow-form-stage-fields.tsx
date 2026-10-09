@@ -7,7 +7,10 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Stack } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomAccordion from 'src/components/custom-accordian';
 import { FormSectionCard } from 'src/components/form-section-card';
+import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { WorkflowFormSettings } from './workflow-form-settings';
 import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
@@ -26,8 +29,6 @@ type Props = {
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
-  activeStep: number;
-  onGoToBasics: () => void;
   onAddPath?: (stage: AdmissionWorkflowStage) => void;
   onEditPath?: (transition: AdmissionWorkflowTransition) => void;
   routeEditingDisabled?: boolean;
@@ -45,16 +46,21 @@ export function WorkflowFormStageFields(props: Props) {
     readOnly,
     stages,
     transitions,
-    activeStep,
-    onGoToBasics,
     onAddPath,
     onEditPath,
     routeEditingDisabled,
   } = props;
+  const completion = useBoolean(true);
+  const completionNeedsAttention = Boolean(
+    formDetailsLoading ||
+      formDetailsError ||
+      !formDefinitionId ||
+      getAdmissionFormStageConfigurationError(formik.values.configurationJson, forms)
+  );
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      {activeStep === 0 ? (
+      <>
         <FormSectionCard
           title="Stage details"
           icon="mdi:file-document-outline"
@@ -62,36 +68,39 @@ export function WorkflowFormStageFields(props: Props) {
         >
           <WorkflowFormStageBasics {...props} />
         </FormSectionCard>
-      ) : (
-        <>
-          <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
-            <WorkflowFormSettings
-              formik={formik}
-              forms={forms}
-              formDefinitionId={formDefinitionId}
-              formDetailsLoading={formDetailsLoading}
-              formDetailsError={formDetailsError}
-              onRetryFormDetails={onRetryFormDetails}
-              readOnly={readOnly}
-              available={metadata?.supportedConfiguration?.includes('form') === true}
-              onGoToBasics={onGoToBasics}
-            />
-          </FormSectionCard>
-          <WorkflowFormStageSettings {...props} />
-          <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
-            <WorkflowStageNextSteps
-              stage={formik.values}
-              stages={stages}
-              transitions={transitions}
-              readOnly={readOnly}
-              onAddPath={onAddPath}
-              onEditPath={onEditPath}
-              routeEditingDisabled={routeEditingDisabled}
-            />
-          </FormSectionCard>
-          <WorkflowFormStageSettings {...props} advanced />
-        </>
-      )}
+
+        <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
+          <CustomAccordion
+            title="Submission and verification"
+            expanded={completion.value || completionNeedsAttention}
+            onChange={completion.onToggle}
+            content={
+              <WorkflowFormSettings
+                formik={formik}
+                forms={forms}
+                formDefinitionId={formDefinitionId}
+                formDetailsLoading={formDetailsLoading}
+                formDetailsError={formDetailsError}
+                onRetryFormDetails={onRetryFormDetails}
+                readOnly={readOnly}
+                available={metadata?.supportedConfiguration?.includes('form') === true}
+              />
+            }
+          />
+        </FormSectionCard>
+        <WorkflowFormStageSettings {...props} />
+        <FormSectionCard title="Special outcomes" icon="mdi:source-branch-plus">
+          <WorkflowStageNextSteps
+            stage={formik.values}
+            stages={stages}
+            transitions={transitions}
+            readOnly={readOnly}
+            onAddPath={onAddPath}
+            onEditPath={onEditPath}
+            routeEditingDisabled={routeEditingDisabled}
+          />
+        </FormSectionCard>
+      </>
     </Stack>
   );
 }

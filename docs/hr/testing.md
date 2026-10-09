@@ -74,15 +74,16 @@ The payroll full-cycle spec uses a future non-current month so the background cu
 The spec aggregates every payroll preview page before selecting its fixture employee.
 Employee E2E helpers select only an explicitly onboarding-approved Employee-audience role that supports the requested employee group.
 
-## Deployment regression gate
+## Local regression checks before deployment
 
-The frontend deployment workflow runs the HR documentation validator and the complete HR Vitest surface before the production build.
-Keep these commands aligned with `.github/workflows/deploy.yml`:
+Run the complete HR Vitest surface locally before merging.
+The frontend deployment workflow runs HR documentation validation, the production build, and TypeScript validation on `main`; it does not run tests.
 
 ```bash
 npm run docs:hr:check
 npx vitest run src/redux/hr src/screens/hr src/utils/hr-audit-format.test.ts
 npm run build
+npm run ts
 ```
 
 ## Coverage map
@@ -623,7 +624,16 @@ Verify Save versus Save & Next, unchanged continuation, group-only requests, fai
 
 ## Recurring salary editor acceptance
 
-Run SalaryStructureBuilder and salary-editor-dialog tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
+Run the structure screen and salary-editor-prefetch tests for parallel loading, employee switching, deep links, and permission-gated preloading.
+Verify the staff payroll salary link and return link do not reload the document, and that hover/focus followed by opening the editor reuses requests.
+
+Run SalaryStructureBuilder, salary-editor-screen, and salary-editor-navigation tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
+
 Check both Staff Directory and Payroll Structure entry points at desktop, tablet, and mobile widths.
 Verify sticky footer access, keyboard history expansion, draft retention, and return to staff edit.
 Assert compensation requests contain no temporary component collections and monthly payroll restrictions remain unchanged.
+
+Run `e2e/hr/employee/employee-salary-structure.spec.ts` for page entry, draft preservation, ESIC drawer focus, legacy redirects, and return navigation.
+The salary editor tests cover denied access, unavailable staff reads, persistent footer actions, guarded navigation, and validated return destinations.
+They also cover formatted decimal and large amounts with unchanged numeric payloads, inline amount errors, missing-reason focus, and calculation/save feedback through the history refresh.
+Verify the compact employee/ESIC header, readable history months, annual equivalent labels, and footer wrapping in the authenticated browser at desktop and narrow widths.

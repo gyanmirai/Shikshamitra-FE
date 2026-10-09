@@ -1,6 +1,5 @@
 'use client';
 
-
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -146,9 +145,8 @@ const DeductionComponent = () => {
             startIcon={<Add />}
             size="small"
             onClick={isDeductionComponentOpen.onTrue}
-            sx={{ px: '32px' }}
           >
-            Deduction
+            Add deduction
           </Button>
         }
       />
@@ -179,9 +177,9 @@ const DeductionComponent = () => {
           ) : deleteImpactPreview?.previewHash ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff
-                payroll profiles. It will be removed from staff payroll profiles going forward.
-                Finalized salary slips will not change. Draft salary slips will update only after
+                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff payroll
+                profiles. It will be removed from staff payroll profiles going forward. Finalized
+                salary slips will not change. Draft salary slips will update only after
                 regeneration.
               </DialogContentText>
               <Box
@@ -219,7 +217,9 @@ const DeductionComponent = () => {
         </DialogContent>
         <DialogActions>
           <Button
+            size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
             onClick={() => {
               confirm.onFalse();
               setDeleteInformation(null);
@@ -509,11 +509,13 @@ const DeductionComponentForm = ({
           editData.calculationType.slice(1).toLowerCase()
         : '',
       selectedDeductionComponent:
-        editData?.calculationBase === 'GROSS' ? grossSalaryOption.id : (editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null),
+        editData?.calculationBase === 'GROSS'
+          ? grossSalaryOption.id
+          : editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null,
       amount:
         editData?.calculationType?.toUpperCase() === 'PERCENTAGE'
-          ? editData?.percentage ?? ''
-          : editData?.amount ?? '',
+          ? (editData?.percentage ?? '')
+          : (editData?.amount ?? ''),
       showOnPayslip: editData?.visibleInPayslip ?? editData?.showOnPayslip ?? true,
     },
     enableReinitialize: true,
@@ -533,8 +535,14 @@ const DeductionComponentForm = ({
             values.deductionType === 'Fixed' && values.calculationType === 'Percentage'
               ? Number(values.amount) || 0
               : 0,
-          calculationBase: getCalculationBase(values.calculationType, values.selectedDeductionComponent).calculationBase,
-          selectedDeductionComponentId: getCalculationBase(values.calculationType, values.selectedDeductionComponent).componentId,
+          calculationBase: getCalculationBase(
+            values.calculationType,
+            values.selectedDeductionComponent
+          ).calculationBase,
+          selectedDeductionComponentId: getCalculationBase(
+            values.calculationType,
+            values.selectedDeductionComponent
+          ).componentId,
           visibleInPayslip: values.showOnPayslip,
         };
 
@@ -980,8 +988,7 @@ const DeductionComponentForm = ({
                       This deduction will be added as a fixed amount.
                       <strong>{formik.values.amount || 'X'}</strong>
                       <br />
-                      Example: If amount is ₹2,000, the same deduction will be applied to all
-                      staff.
+                      Example: If amount is ₹2,000, the same deduction will be applied to all staff.
                     </>
                   )}
                 </Typography>
@@ -1049,9 +1056,7 @@ const DeductionComponentForm = ({
               my: 1,
             }}
           >
-            <Alert severity="info">
-              Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}
-            </Alert>
+            <Alert severity="info">Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}</Alert>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
             </Alert>
@@ -1061,23 +1066,33 @@ const DeductionComponentForm = ({
             </Alert>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff
-            still following the master value. Force apply overwrites manual staff overrides for
-            this component and makes them follow the master again.
+            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff still
+            following the master value. Force apply overwrites manual staff overrides for this
+            component and makes them follow the master again.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={() => setImpactPreview(null)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:arrow-left" />}
+            onClick={() => setImpactPreview(null)}
+          >
             Review
           </Button>
           <LoadingButton
+            size="small"
             loading={updateDeductionComponentLoading}
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => confirmUpdate('SyncedOnly')}
           >
             Save synced only
           </LoadingButton>
           <LoadingButton
+            size="small"
             color="warning"
+            startIcon={<Iconify icon="mdi:content-save-all-outline" />}
             variant="contained"
             loading={updateDeductionComponentLoading}
             onClick={() => confirmUpdate('ForceApply')}

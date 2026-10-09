@@ -39,7 +39,7 @@ const destination: AdmissionWorkflowStage = {
   id: 'offer-1',
   code: 'OFFER',
   name: 'Offer',
-  stageType: 11,
+  stageType: 7,
   displayOrder: 1,
   isEntryStage: false,
   configurationJson: undefined,
@@ -70,22 +70,16 @@ function setup(conditionRuleJson?: string) {
 }
 
 describe('document outcome route interactions', { timeout: 15000 }, () => {
-  it('serializes a waiver route using authoritative document facts', async () => {
+  it('excludes waiver routes and serializes verified documents instead', async () => {
     const { user, onSave } = setup();
     await user.click(screen.getByRole('combobox', { name: 'Continue after document review' }));
-    await user.click(screen.getByRole('option', { name: 'A document waiver was used' }));
-    await waitFor(() =>
-      expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
-    );
-    expect(screen.queryByRole('textbox', { name: 'Application field *' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'A document waiver was used' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Required documents resolved' }));
+    await waitFor(() => expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isDefault).toBe(false);
-    expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual({
-      field: 'documents.waivedCount',
-      operator: 'GreaterThan',
-      value: '0',
-    });
+    expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual({ field: 'documents.status', operator: 'Equals', value: 'verified' });
   });
   it('reopens a verified route and restores the ordinary default route', async () => {
     const { user, onSave } = setup(

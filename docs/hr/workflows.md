@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Trace HR frontend workflows
 
 TL;DR: use this page to connect HR screens, clients, and browser tests.
-Backend workflow rules are canonical in `../../../Shikshamitra-BE/docs/modules/hr/workflows.md`.
+Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md`.
 
 ## Core workflows
 
@@ -88,6 +88,29 @@ The device attendance screen starts with the current month and keeps the empty-s
 Payslip content is keyed by both employee and payroll month, and a previous response is not rendered while a new selection is loading.
 Only a 404 response is shown as a missing payslip, while access, server, and network failures provide a retry action.
 Percentage-based earning components list only valid earning-component dependencies and surface backend dependency errors on the component field.
+
+### Run Payroll preview feedback
+
+Generate preview and Refresh preview sit in the register action row alongside readiness, review, audit, and lock controls.
+Vertical dividers separate preview, readiness/audit, and review/lock action groups on desktop.
+On smaller screens, dividers are hidden and action groups wrap.
+Payroll month stays in the context row.
+Academic year comes from the global header selector without a duplicate page label.
+View readiness uses an outlined button beside the register review, audit, and lock actions.
+Readiness status and attention details appear inside the drawer instead of a page-level badge.
+The read-only drawer starts closed, opens from the right on desktop, and fills the screen on mobile.
+Its checks cover attendance, salary setup, payroll policies, and additional server-reported blockers.
+The attendance check links to manual attendance.
+Preview summary values come from the run-level readiness aggregate, including when search returns no employees.
+Unavailable checks are not shown as ready, and genuine zero totals remain visible.
+Closing the drawer restores focus without changing table selection, search, or pagination.
+Changing month or academic year closes the drawer and discards the previous context.
+Initial preparation uses table skeletons, while recalculation retains completed rows with localized progress.
+Search and pagination show table progress without labelling payroll outdated.
+Only server-confirmed stale or superseded results show Preview needs refresh.
+Review, adjustment mutations, and locking require a current loaded preview.
+An explicit generate, refresh, or retry shows one completion toast after the requested run and its rows are ready, including empty results.
+Failures retain a Retry action, and navigation or changing month/year clears pending notifications.
 
 ## Policy, dashboard, and report behavior
 
@@ -243,7 +266,7 @@ A successful save remains successful if the subsequent refresh fails.
 Employee salary setup uses form-shaped skeletons while preserving the surrounding navigation and action layout.
 Background refreshes retain the existing form.
 Superseded payroll previews remain non-actionable and require recalculation and review through the existing payroll workflow.
-Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Needs recalculation for stale results.
+Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Preview needs refresh for stale results.
 Readiness labels and monetary totals wrap without truncation on narrow screens.
 The disclosure uses a labelled keyboard-accessible button with its expanded state exposed.
 
@@ -370,9 +393,28 @@ Dirty navigation is confirmed, navigation and duplicate actions are blocked whil
 
 ## Recurring salary editor
 
-Payroll Structure and Staff Directory share the recurring salary dialog.
-The footer owns Calculate salary and Save salary; saving retains the dialog, refreshes history, and clears the draft baseline.
+Payroll Structure and Staff Directory share the recurring Edit Salary sub-page.
+The staff payroll salary link and return link use client-side navigation to preserve the application shell.
+Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
+Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
+The footer owns Calculate salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+Footer feedback explains calculation readiness, active operations, and completed saves without changing action permissions or enabled states.
+The compact employee header includes ESIC access, and the quoted monthly amount uses the shared currency input without rounding its numeric request value.
+Invalid amounts show inline errors after blur; saving with a missing customization reason focuses the reason field and preserves the draft.
+
 History starts collapsed, and employee deductions remain separate from employer contributions.
+History dates use readable month names, and monthly preview totals remain prominent above their annual equivalents.
+Preview and history amounts use the shared payroll formatter to preserve recorded paise without changing calculation rules.
 Input changes require recalculation, failures retain the draft, and leaving with unsaved changes requires confirmation.
 One-time additions use the monthly payroll link and its existing employee and month selection.
 The editor never calls the legacy component-update API or removes existing temporary components.
+
+## Salary editor navigation
+
+Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
+Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
+Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.
+The editor keeps Calculate salary and Save salary in its persistent footer and preserves current compensation behavior.
+ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
+Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
+One-time adjustments remain in monthly payroll.

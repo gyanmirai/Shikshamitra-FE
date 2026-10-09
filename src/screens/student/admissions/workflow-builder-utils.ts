@@ -4,9 +4,8 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
-
 import { ROUTE_OPERATOR_LABELS } from './workflow-builder/workflow-condition-catalog';
+import { normalizeStageConfiguration } from './workflow-builder/workflow-stage-configuration';
 
 export type SimpleTransitionCondition = {
   field: string;
@@ -34,7 +33,7 @@ export const createStage = (
   const existingCodes = new Set(existingStages.map((stage) => stage.code.trim().toUpperCase()));
   let number = displayOrder + 1;
   while (existingCodes.has(`STAGE_${number}`)) number += 1;
-  return {
+  return normalizeStageConfiguration({
     id: crypto.randomUUID(),
     code: `STAGE_${number}`,
     name: metadata.displayName,
@@ -45,17 +44,12 @@ export const createStage = (
     allowManualSkip: false,
     isEntryStage,
     isTerminalStage: false,
-  };
+  });
 };
 
-export const normalizeAdmissionWorkflowFormStages = (
+export const normalizeAdmissionWorkflowStages = (
   stages: AdmissionWorkflowStage[]
-): AdmissionWorkflowStage[] =>
-  stages.map((stage) => {
-    if (stage.stageType !== 1) return stage;
-    const configurationJson = ensureAdmissionFormStageConfiguration(stage.configurationJson);
-    return configurationJson === stage.configurationJson ? stage : { ...stage, configurationJson };
-  });
+): AdmissionWorkflowStage[] => stages.map(normalizeStageConfiguration);
 
 export const reorderStages = (
   stages: AdmissionWorkflowStage[],

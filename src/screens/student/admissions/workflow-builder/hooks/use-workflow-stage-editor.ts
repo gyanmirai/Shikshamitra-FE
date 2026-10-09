@@ -9,11 +9,6 @@ import { useFormik } from 'formik';
 import { useRef, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
-import { getReviewConfigurationError } from 'src/redux/student/admissions/admission-review-validation';
-import { getAdmissionSeatConfigurationError } from 'src/redux/student/admissions/admission-seat-policy';
-import { getAdmissionOfferConfigurationError } from 'src/redux/student/admissions/admission-offer-policy';
-import { getAdmissionPaymentConfigurationError } from 'src/redux/student/admissions/admission-payment-policy';
-import { getEligibilityConfigurationError } from 'src/redux/student/admissions/admission-eligibility-validation';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
 import {
   readStageConfiguration,
@@ -24,7 +19,10 @@ import {
   getAdmissionFormStageConfigurationError,
 } from 'src/redux/student/admissions/admission-form-stage-policy';
 
-import { getReviewStageError } from '../review-stage-prerequisites';
+import {
+  isApplicationStageType,
+  normalizeStageConfiguration,
+} from '../workflow-stage-configuration';
 
 type Props = {
   open: boolean;
@@ -74,18 +72,21 @@ export function useWorkflowStageEditor({
   const validationForms = useRef(forms);
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
-    initialValues: stage ?? emptyStage,
+    initialValues: normalizeStageConfiguration(stage ?? emptyStage),
     validationSchema: schema,
     validate: (values) =>
       validateConfiguration(values, stageTypes, stages, validationForms.current),
     onSubmit: (values, helpers) => {
-      if (readOnly || values.stageType === 0) return;
+      if (readOnly || !isApplicationStageType(values.stageType)) return;
       onSave({
-        ...values,
+        ...normalizeStageConfiguration(values),
         name: values.name.trim(),
         code: values.code.trim().toUpperCase(),
         description: values.description?.trim() || undefined,
-        allowManualSkip: values.isRequired ? false : values.allowManualSkip,
+        allowManualSkip:
+          values.isRequired || [1, 2, 4, 5].includes(values.stageType)
+            ? false
+            : values.allowManualSkip,
       });
       helpers.resetForm({ values });
       onClose();
@@ -169,13 +170,10 @@ function validateConfiguration(
   ) {
     return { code: 'Another stage already uses this code' };
   }
-  if (values.stageType === 0) {
-    return { stageType: 'Replace this saved Inquiry stage with an application stage type.' };
-  }
-  if (values.stageType === 6) {
-    const error =
-      getReviewConfigurationError(values.configurationJson) || getReviewStageError(values, stages);
-    return error ? { configurationJson: error } : {};
+  if (!isApplicationStageType(values.stageType)) {
+    return {
+      stageType: 'Choose Form, Assessment, Payment, Document verification or Admission Decision.',
+    };
   }
   if (values.stageType === 2) {
     const error = getAssessmentConfigurationError(values.configurationJson);
@@ -183,22 +181,6 @@ function validateConfiguration(
   }
   if (values.stageType === 5) {
     const error = getDocumentConfigurationError(values.configurationJson);
-    return error ? { configurationJson: error } : {};
-  }
-  if (values.stageType === 3) {
-    const error = getEligibilityConfigurationError(values.configurationJson);
-    return error ? { configurationJson: error } : {};
-  }
-  if (values.stageType === 4) {
-    const error = getAdmissionPaymentConfigurationError(values.configurationJson);
-    return error ? { configurationJson: error } : {};
-  }
-  if (values.stageType === 8) {
-    const error = getAdmissionOfferConfigurationError(values.configurationJson);
-    return error ? { configurationJson: error } : {};
-  }
-  if (values.stageType === 9) {
-    const error = getAdmissionSeatConfigurationError(values.configurationJson);
     return error ? { configurationJson: error } : {};
   }
   if (values.stageType === 1) {

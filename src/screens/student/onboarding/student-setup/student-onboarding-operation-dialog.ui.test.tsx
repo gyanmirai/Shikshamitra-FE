@@ -1,319 +1,85 @@
-import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { it, vi, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
 
-const operationMocks = vi.hoisted(() => ({
-  place: vi.fn(),
-  allocate: vi.fn(),
-  preview: vi.fn(),
-  permissions: [] as any[],
-  previewData: {} as any,
-}));
-
-beforeEach(() => {
-  operationMocks.permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
-  operationMocks.previewData = {
-    schoolAssignmentMode: 'manual',
-    rollAssignmentMode: 'manual',
-    proposedRollNumber: 11,
-    concurrencyStamp: 'case-stamp',
-  };
-  operationMocks.preview.mockImplementation(() => ({
-    unwrap: () => Promise.resolve(operationMocks.previewData),
-  }));
-});
-
-vi.mock('react-redux', () => ({
-  useSelector: (select: any) => select({ auth: { permissions: operationMocks.permissions } }),
-}));
-
-afterEach(() => {
-  operationMocks.place.mockReset();
-  operationMocks.allocate.mockReset();
-  operationMocks.preview.mockReset();
-});
-
-vi.mock('src/components/iconify', () => ({
-  Iconify: () => <span />,
-}));
-
-vi.mock('src/components/customDialog', () => ({
-  default: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
-    open ? <div role="dialog">{children}</div> : null,
-  DialogScrollContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-vi.mock('src/components/custom-select', () => ({
-  default: ({
-    label,
-    value,
-    options,
-    onChange,
-  }: {
-    label: string;
-    value: string;
-    options: Array<{ value: string; label: string }>;
-    onChange: (value: string) => void;
-  }) => (
-    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
-      <option value="">Select</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  ),
-}));
-
-vi.mock('src/components/custom-numeric-format', () => ({
-  default: ({
-    label,
-    value,
-    onValueChange,
-  }: {
-    label: string;
-    value: string;
-    onValueChange: (value: { value: string }) => void;
-  }) => (
-    <input
-      aria-label={label}
-      value={value}
-      onChange={(event) => onValueChange({ value: event.target.value })}
-    />
-  ),
-}));
-
+const mocks = vi.hoisted(() => ({ gr: vi.fn(), roll: vi.fn(), place: vi.fn(), preview: vi.fn(), permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }], seriesQuery: vi.fn() }));
+vi.mock('react-redux', () => ({ useSelector: (select: (state: unknown) => unknown) => select({ auth: { permissions: mocks.permissions } }) }));
+vi.mock('src/components/customDialog', () => ({ default: ({ open, title, children }: { open: boolean; title: string; children: React.ReactNode }) => open ? <div role="dialog"><h2>{title}</h2>{children}</div> : null, DialogScrollContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+vi.mock('src/components/custom-select', () => ({ default: ({ label, value, options, onChange, disabled }: { label: string; value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void; disabled: boolean }) => <select aria-label={label} disabled={disabled} value={value} onChange={event => onChange(event.target.value)}><option value="">Select</option>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
-  useGetStudentOnboardingPlacementOptionsQuery: () => ({
-    data: [{ id: 'division-b', name: 'B', capacity: 30, availableSeats: 4, isFull: false }],
-    isFetching: false,
-    isError: false,
-  }),
-  useGetAvailableStudentIdentifierSeriesQuery: () => ({
-    data: [{ id: 'series-1', name: 'GR 2026', nextPreview: 'GR-2026-001' }],
-    isFetching: false,
-    isError: false,
-  }),
-  useSetStudentOnboardingPlacementMutation: () => [operationMocks.place, { isLoading: false }],
-  useAllocateStudentOnboardingIdentifierMutation: () => [
-    operationMocks.allocate,
-    { isLoading: false },
-  ],
-  usePreviewStudentOnboardingRollMutation: () => [operationMocks.preview, { isLoading: false }],
+  useGetStudentOnboardingPlacementOptionsQuery: () => ({ data: [{ id: 'division-b', name: 'B', availableSeats: 3, isFull: false }] }),
+  useGetAvailableStudentIdentifierSeriesQuery: (...args: unknown[]) => { mocks.seriesQuery(...args); return { data: [{ id: 'series-1', name: 'GR', nextPreview: '1001' }] }; },
+  useSetStudentOnboardingPlacementMutation: () => [mocks.place, { isLoading: false }],
+  useAssignStudentOnboardingGrMutation: () => [mocks.gr, { isLoading: false }],
+  useAssignStudentOnboardingRollMutation: () => [mocks.roll, { isLoading: false }],
+  usePreviewStudentOnboardingRollMutation: () => [mocks.preview, { isLoading: false }],
 }));
-
-const student = {
-  ...studentOnboardingTestData[0],
-  id: 'case-1',
-  source: 'onboarding-case' as const,
-  divisionId: 'division-a',
-  concurrencyStamp: 'case-stamp',
-};
-
-it('saves a division through the onboarding API instead of confirming a preview', async () => {
-  operationMocks.place.mockReturnValue({ unwrap: () => Promise.resolve({}) });
-  const onClose = vi.fn();
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="division"
-      student={{ ...student, divisionId: null }}
-      onClose={onClose}
-    />
-  );
-
-  fireEvent.change(screen.getByRole('combobox', { name: 'Division' }), {
-    target: { value: 'division-b' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Reserve division' }));
-
-  await waitFor(() =>
-    expect(operationMocks.place).toHaveBeenCalledWith({
-      id: 'case-1',
-      concurrencyStamp: 'case-stamp',
-      divisionId: 'division-b',
-      reason: undefined,
-    })
-  );
-  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+const student = { ...studentOnboardingTestData[0], id: 'case-1', source: 'onboarding-case' as const, divisionId: 'division-a', concurrencyStamp: 'stamp', rollAssignmentMode: 'automatic' as const, grNo: null, rollNo: null };
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
+  mocks.gr.mockReturnValue({ unwrap: () => Promise.resolve() }); mocks.roll.mockReturnValue({ unwrap: () => Promise.resolve() }); mocks.place.mockReturnValue({ unwrap: () => Promise.resolve() });
+  mocks.preview.mockReturnValue({ unwrap: () => Promise.resolve({ schoolAssignmentMode: 'automatic', rollAssignmentMode: 'automatic', proposedRollNumber: 1, concurrencyStamp: 'stamp' }) });
 });
-
-it('saves GR and roll allocation through the onboarding API', async () => {
-  operationMocks.allocate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={student}
-      onClose={vi.fn()}
-    />
-  );
-
-  fireEvent.change(screen.getByRole('combobox', { name: 'Identifier series' }), {
-    target: { value: 'series-1' },
-  });
-  fireEvent.change(screen.getByRole('textbox', { name: 'Roll number' }), {
-    target: { value: '11' },
-  });
-  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeEnabled()
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Prepare identifiers' }));
-
-  await waitFor(() =>
-    expect(operationMocks.allocate).toHaveBeenCalledWith({
-      id: 'case-1',
-      concurrencyStamp: 'case-stamp',
-      numberSeriesId: 'series-1',
-      rollNumber: 11,
-      rollAssignmentMode: 'manual',
-      manualValue: undefined,
-      overrideReason: undefined,
-    })
-  );
+it('opens GR-only assignment and does not require Division or Roll', async () => {
+  render(<StudentOnboardingOperationDialog assignmentType="gr-number" student={{ ...student, divisionId: null }} onClose={vi.fn()} />);
+  expect(screen.getByRole('heading', { name: 'Assign GR Number' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Preview Roll number' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('GR series'), { target: { value: 'series-1' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.gr).toHaveBeenCalledWith({ id: 'case-1', concurrencyStamp: 'stamp', numberSeriesId: 'series-1', manualValue: undefined, reason: undefined }));
+  expect(mocks.roll).not.toHaveBeenCalled();
 });
-
-it('uses a read-only automatic proposal and sends the accepted owner number', async () => {
-  operationMocks.previewData = {
-    ...operationMocks.previewData,
-    schoolAssignmentMode: 'automatic',
-    rollAssignmentMode: 'automatic',
-    proposedRollNumber: 28,
-  };
-  operationMocks.allocate.mockReturnValue({ unwrap: () => Promise.resolve({}) });
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="roll-number"
-      student={{ ...student, rollAssignmentMode: 'automatic' }}
-      onClose={vi.fn()}
-    />
-  );
-  expect(screen.queryByRole('textbox', { name: 'Roll number' })).not.toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Proposed roll number' })).toHaveAttribute('readonly');
-  fireEvent.change(screen.getByLabelText('Identifier series'), { target: { value: 'series-1' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeEnabled()
-  );
-  expect(operationMocks.preview).toHaveBeenCalledWith({
-    id: 'case-1',
-    rollAssignmentMode: 'automatic',
-    rollNumber: undefined,
-    reason: undefined,
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Prepare identifiers' }));
-  await waitFor(() =>
-    expect(operationMocks.allocate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        rollNumber: 28,
-        rollAssignmentMode: 'automatic',
-        concurrencyStamp: 'case-stamp',
-      })
-    )
-  );
+it('opens Roll-only assignment, skips GR series and requires preview', async () => {
+  render(<StudentOnboardingOperationDialog assignmentType="roll-number" student={student} onClose={vi.fn()} />);
+  expect(screen.queryByLabelText('GR series')).not.toBeInTheDocument();
+  expect(mocks.seriesQuery).toHaveBeenCalledWith('case-1', { skip: true });
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Roll number' }));
+  await screen.findByText('Proposed Roll number: 1');
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.roll).toHaveBeenCalledWith({ id: 'case-1', concurrencyStamp: 'stamp', rollNumber: 1, rollAssignmentMode: 'automatic', reason: undefined }));
+  expect(mocks.gr).not.toHaveBeenCalled();
 });
-
-it('requires an explicit numbering choice when the school allows both', async () => {
-  operationMocks.previewData = {
-    ...operationMocks.previewData,
-    schoolAssignmentMode: 'both',
-    rollAssignmentMode: 'automatic',
-  };
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={{ ...student, rollAssignmentMode: 'both' }}
-      onClose={vi.fn()}
-    />
-  );
-  expect(screen.getByLabelText('Roll number assignment')).toHaveValue('');
-  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText('Roll number assignment'), {
-    target: { value: 'automatic' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
-  await waitFor(() => expect(operationMocks.preview).toHaveBeenCalledOnce());
-  expect(operationMocks.preview.mock.calls[0][0].rollAssignmentMode).toBe('automatic');
+it('requires a reason only for correcting an assigned GR', async () => {
+  render(<StudentOnboardingOperationDialog assignmentType="gr-number" student={{ ...student, grNo: '1000' }} onClose={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText('GR series'), { target: { value: 'series-1' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await screen.findByText('Enter a reason for changing the number.');
+  expect(mocks.gr).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText(/Change reason/), { target: { value: 'Correct registration entry' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.gr).toHaveBeenCalledWith(expect.objectContaining({ reason: 'Correct registration entry' })));
 });
-
-it('does not silently rebase the preview onto a newer case stamp', async () => {
-  operationMocks.previewData = { ...operationMocks.previewData, concurrencyStamp: 'newer-stamp' };
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={student}
-      onClose={vi.fn()}
-    />
-  );
-  fireEvent.change(screen.getByLabelText('Identifier series'), { target: { value: 'series-1' } });
-  fireEvent.change(screen.getByLabelText('Roll number'), { target: { value: '11' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
-  expect(await screen.findByText(/Close this dialog, refresh the case/)).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
-  expect(screen.getByLabelText('Roll number')).toHaveValue('11');
+it('blocks changes to a locked GR but permits first assignment for a new student', () => {
+  const view = render(<StudentOnboardingOperationDialog assignmentType="gr-number" student={{ ...student, grNumberLocked: true, grNo: '1001' }} onClose={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  view.rerender(<StudentOnboardingOperationDialog assignmentType="gr-number" student={{ ...student, grNumberLocked: true, grNo: null }} onClose={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'Submit' })).not.toBeDisabled();
 });
-
-it('requires the exact registered owner grant instead of the navigation parent', () => {
-  operationMocks.permissions = [{ name: 'Students.Onboarding', isGranted: true }];
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={student}
-      onClose={vi.fn()}
-    />
-  );
-  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
-  expect(operationMocks.preview).not.toHaveBeenCalled();
+it('does not allow Roll preview without Division', () => {
+  render(<StudentOnboardingOperationDialog assignmentType="roll-number" student={{ ...student, divisionId: null }} onClose={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'Preview Roll number' })).toBeDisabled();
 });
-
-it('keeps identifier preparation blocked until the case has a reserved division', () => {
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={{ ...student, divisionId: null, rollAssignmentMode: 'automatic' }}
-      onClose={vi.fn()}
-    />
-  );
-  expect(
-    screen.getByText('Reserve a division before previewing and preparing identifiers.')
-  ).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
-  expect(operationMocks.preview).not.toHaveBeenCalled();
+it('automatically prepares the next Roll for a new student in a locked Division despite a manual rule', async () => {
+  render(<StudentOnboardingOperationDialog assignmentType="roll-number" student={{ ...student, rollAssignmentMode: 'manual', rollNumberLocked: true, rollNo: null }} onClose={vi.fn()} />);
+  expect(screen.queryByLabelText(/Roll number/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Roll number' }));
+  await waitFor(() => expect(mocks.preview).toHaveBeenCalledWith({ id: 'case-1', rollAssignmentMode: 'automatic', rollNumber: undefined, reason: undefined }));
+  await screen.findByText('Proposed Roll number: 1');
 });
-
-it('discards a changed automatic proposal while keeping the entered series', async () => {
-  operationMocks.previewData = {
-    ...operationMocks.previewData,
-    schoolAssignmentMode: 'automatic',
-    rollAssignmentMode: 'automatic',
-  };
-  operationMocks.allocate.mockReturnValue({
-    unwrap: () =>
-      Promise.reject(
-        Object.assign(new Error('Changed proposal'), {
-          data: { error: { code: 'Students:Records:RollProposalChanged' } },
-        })
-      ),
-  });
-  render(
-    <StudentOnboardingOperationDialog
-      assignmentType="gr-number"
-      student={{ ...student, rollAssignmentMode: 'automatic' }}
-      onClose={vi.fn()}
-    />
-  );
-  fireEvent.change(screen.getByLabelText('Identifier series'), { target: { value: 'series-1' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeEnabled()
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Prepare identifiers' }));
-  expect(await screen.findByText(/proposed roll number changed/)).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
-  expect(screen.getByLabelText('Identifier series')).toHaveValue('series-1');
+it('rejects a stale Roll preview', async () => {
+  mocks.preview.mockReturnValue({ unwrap: () => Promise.resolve({ schoolAssignmentMode: 'automatic', proposedRollNumber: 1, concurrencyStamp: 'changed' }) });
+  render(<StudentOnboardingOperationDialog assignmentType="roll-number" student={student} onClose={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Roll number' }));
+  await screen.findByText('The case or numbering rule changed. Refresh and preview again.');
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+});
+it('keeps assignment disabled for a viewer', () => {
+  mocks.permissions = [];
+  render(<StudentOnboardingOperationDialog assignmentType="gr-number" student={student} onClose={vi.fn()} />);
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
 });

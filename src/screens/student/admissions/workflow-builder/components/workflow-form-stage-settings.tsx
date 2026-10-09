@@ -9,8 +9,8 @@ import { WorkflowStageBehavior } from './workflow-stage-behavior';
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
+  stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
-  advanced?: boolean;
 };
 
 export function WorkflowFormStageSettings(props: Props) {

@@ -12,14 +12,17 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
+import { Iconify } from 'src/components/iconify';
+import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
-import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
-import { Tune, Calculate, RestartAlt, ExpandMore } from '@mui/icons-material';
 import {
   useGetActiveSalaryTemplatesQuery,
   useCalculateSalaryTemplateMutation,
@@ -38,20 +41,22 @@ import {
   Button,
   Select,
   Switch,
+  Tooltip,
   Divider,
   MenuItem,
   Skeleton,
   TextField,
   Accordion,
+  IconButton,
   Typography,
   InputLabel,
   FormControl,
-  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
 import { getLocalMonthKey } from './salary-structure-builder-utils';
+import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 import { EmployeeEsiDetails } from '../setting/employee-esi-details';
 
 type Props = {
@@ -77,11 +82,11 @@ function Summary({ label, amount }: { label: string; amount: number }) {
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="subtitle1" fontWeight={700}>
-        {formatCurrency(amount)}
+      <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        {formatPayrollCurrency(amount)}
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        {formatCurrency(amount * 12)} yearly
+        Annual equivalent: {formatPayrollCurrency(amount * 12)}
       </Typography>
     </Paper>
   );
@@ -109,17 +114,20 @@ export function SalaryStructureBuilder({
   const {
     data: templateData,
     isLoading: templatesLoading,
+    isFetching: templatesFetching,
     isError: templatesError,
     refetch: refetchTemplates,
-  } = useGetActiveSalaryTemplatesQuery();
+  } = useGetActiveSalaryTemplatesQuery(undefined, { refetchOnMountOrArgChange: 30 });
   const { data: pfData, isError: pfRulesError } = useGetPFQuery({});
   const {
     data: revisionData,
     isLoading: revisionsLoading,
+    isFetching: revisionsFetching,
     isError: revisionsError,
     refetch: refetchRevisions,
   } = useGetCompensationRevisionsQuery(employeeId || '', {
     skip: !employeeId || !canReadCompensation,
+    refetchOnMountOrArgChange: 30,
   });
   const { data: readiness, refetch: refetchReadiness } = useGetEmployeeActivationReadinessQuery(
     employeeId || '',
@@ -144,10 +152,15 @@ export function SalaryStructureBuilder({
   const [activationCompleted, setActivationCompleted] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [baseline, setBaseline] = useState<string | null>(null);
+  const [esiEditorState, setEsiEditorState] = useState({ dirty: false, busy: false });
   const [savedSignature, setSavedSignature] = useState('');
   const [operationError, setOperationError] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
+  const [operation, setOperation] = useState<'calculate' | 'save' | null>(null);
+  const [amountTouched, setAmountTouched] = useState(false);
+  const [reasonTouched, setReasonTouched] = useState(false);
+  const reasonInput = useRef<HTMLInputElement>(null);
   const operationPending = useRef(false);
   const initializedRef = useRef('');
   const operationKeyRef = useRef('');
@@ -155,6 +168,7 @@ export function SalaryStructureBuilder({
   const salaryTemplateLabelId = useId();
   const salaryBasisLabelId = useId();
   const pfRuleLabelId = useId();
+  const pfApplicableId = useId();
 
   const templates = templateData?.items || [];
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
@@ -176,7 +190,13 @@ export function SalaryStructureBuilder({
 
   useEffect(() => {
     const initializationKey = employeeId || 'unsaved-employee';
-    if (revisionsLoading || !selectedTemplate || initializedRef.current === initializationKey) {
+    if (
+      revisionsLoading ||
+      revisionsFetching ||
+      templatesFetching ||
+      !selectedTemplate ||
+      initializedRef.current === initializationKey
+    ) {
       return;
     }
     const source =
@@ -201,7 +221,15 @@ export function SalaryStructureBuilder({
     }
     initializedRef.current = initializationKey;
     setInitialized(true);
-  }, [dateOfJoining, employeeId, revisionData?.items, revisionsLoading, selectedTemplate]);
+  }, [
+    dateOfJoining,
+    employeeId,
+    revisionData?.items,
+    revisionsLoading,
+    revisionsFetching,
+    templatesFetching,
+    selectedTemplate,
+  ]);
 
   useEffect(() => setActivationCompleted(false), [employeeId]);
 
@@ -221,8 +249,11 @@ export function SalaryStructureBuilder({
     if (initialized && baseline === null) setBaseline(signature);
   }, [initialized, baseline, signature]);
   useEffect(() => {
-    onEditorStateChange?.({ dirty: baseline !== null && baseline !== signature, busy });
-  }, [baseline, signature, busy, onEditorStateChange]);
+    onEditorStateChange?.({
+      dirty: (baseline !== null && baseline !== signature) || esiEditorState.dirty,
+      busy: busy || esiEditorState.busy,
+    });
+  }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
   const calculationCurrent = Boolean(calculation && calculatedSignature === signature);
 
   useEffect(() => {
@@ -257,6 +288,7 @@ export function SalaryStructureBuilder({
     )
       return;
     operationPending.current = true;
+    setOperation('calculate');
     setLocalBusy(true);
     setOperationError('');
     try {
@@ -278,6 +310,7 @@ export function SalaryStructureBuilder({
       setCalculation(null);
     } finally {
       operationPending.current = false;
+      setOperation(null);
       setLocalBusy(false);
     }
   };
@@ -296,10 +329,12 @@ export function SalaryStructureBuilder({
     )
       return;
     if (customizing && overrides.length > 0 && !customizationReason.trim()) {
-      toast.error('Add a reason for the staff-specific salary customization.');
+      setReasonTouched(true);
+      reasonInput.current?.focus();
       return;
     }
     operationPending.current = true;
+    setOperation('save');
     setLocalBusy(true);
     setOperationError('');
     operationKeyRef.current ||= newKey();
@@ -343,6 +378,7 @@ export function SalaryStructureBuilder({
       );
     } finally {
       operationPending.current = false;
+      setOperation(null);
       setLocalBusy(false);
     }
   };
@@ -380,10 +416,15 @@ export function SalaryStructureBuilder({
     setOverrides([]);
     setCustomizationReason('');
     setCustomizing(false);
+    setReasonTouched(false);
     setCalculation(null);
   };
 
-  if (templatesLoading || revisionsLoading) {
+  if (
+    templatesLoading ||
+    revisionsLoading ||
+    (!initialized && (templatesFetching || revisionsFetching))
+  ) {
     return (
       <Box aria-busy="true" aria-label="Loading staff salary" display="grid" gap={2.5}>
         <Grid container spacing={2}>
@@ -453,14 +494,66 @@ export function SalaryStructureBuilder({
           !calculation.employeeStateInsurance.registrationPending
       )
     : false;
+  const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
+  const reasonInvalid = customizing && overrides.length > 0 && !customizationReason.trim();
+  const currentRevision = revisionData?.items.find((item) => item.isCurrent);
+  const employeeName =
+    formik.values.fullName ||
+    [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ');
+  let footerStatus = '';
+  if (busy) {
+    footerStatus = operation === 'calculate' ? 'Calculating salary…' : 'Refreshing salary…';
+    if (operation === 'save') footerStatus = 'Saving salary…';
+    if (activationState.isLoading) footerStatus = 'Activating staff…';
+  } else if (!canManage) footerStatus = 'View-only salary';
+  else if (hasConflict || revisionsError) footerStatus = 'Review salary history before saving';
+  else if (!selectedVersion) footerStatus = 'Choose a salary template';
+  else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
+  else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
+  else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
+  else if (statutoryBlocked) footerStatus = 'Resolve ESIC details before saving';
+  else if (savedSignature === signature && calculationCurrent) footerStatus = 'Saved';
+  else if (calculationCurrent) {
+    footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Ready to save';
+  }
 
   const actions = (
     <>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        role="status"
+        aria-live="polite"
+        sx={
+          actionContainer
+            ? {
+                gridColumn: { xs: '1 / -1', sm: 2 },
+                gridRow: 1,
+                justifySelf: 'end',
+                maxWidth: { xs: 'calc(100% - 72px)', sm: '100%' },
+              }
+            : { alignSelf: 'center', flexBasis: { xs: '100%', sm: 'auto' } }
+        }
+      >
+        {footerStatus}
+      </Typography>
       <Button
         size="small"
-        variant="outlined"
-        startIcon={<Calculate />}
+        variant="contained"
+        color="primary"
+        startIcon={<Iconify icon="mdi:calculator" />}
         onClick={calculateSalary}
+        loading={operation === 'calculate'}
+        loadingPosition="start"
+        sx={{
+          '&:not(.Mui-disabled)': {
+            bgcolor: 'primary.dark',
+            '&:hover': { bgcolor: 'primary.darker' },
+          },
+          ...(actionContainer
+            ? { gridColumn: { xs: 1, sm: 3 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+            : {}),
+        }}
         disabled={
           !canManage ||
           busy ||
@@ -477,6 +570,12 @@ export function SalaryStructureBuilder({
         size="small"
         variant="contained"
         onClick={save}
+        loading={operation === 'save'}
+        sx={
+          actionContainer
+            ? { gridColumn: { xs: 2, sm: 4 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
+            : undefined
+        }
         disabled={
           !canManage ||
           busy ||
@@ -505,12 +604,14 @@ export function SalaryStructureBuilder({
           gap={1}
           flexWrap="wrap"
         >
-          {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
-            <Typography variant="body2" color="error.main">
-              Enter the staff’s ESIC insurance number before activation.
+          {employeeName && (
+            <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>
+              {employeeName}
+              {formik.values.employeeIdentifier ? ` · ${formik.values.employeeIdentifier}` : ''}
             </Typography>
           )}
           <EmployeeEsiDetails
+            onEditorStateChange={setEsiEditorState}
             employeeId={employeeId}
             employeeName={
               [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
@@ -523,9 +624,14 @@ export function SalaryStructureBuilder({
             }}
           />
         </Box>
+        {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
+          <Typography variant="body2" color="error.main">
+            Enter the staff’s ESIC insurance number before activation.
+          </Typography>
+        )}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth disabled={!canManage || busy}>
+            <FormControl fullWidth size="small" disabled={!canManage || busy}>
               <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
               <Select
                 labelId={salaryTemplateLabelId}
@@ -542,10 +648,13 @@ export function SalaryStructureBuilder({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
+              size="small"
               label="Effective month"
+              name="effectiveMonth"
+              autoComplete="off"
               type="month"
               value={effectiveMonth}
               disabled={!canManage || busy}
@@ -556,24 +665,35 @@ export function SalaryStructureBuilder({
               slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <TextField
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <NumericFormatCustom
               fullWidth
+              size="small"
+              roundToWholeRupees={false}
+              name="monthlyAmount"
+              autoComplete="off"
               label={
                 salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
               }
-              type="number"
               value={monthlyAmount || ''}
+              allowNegative
+              isAllowed={() => true}
               disabled={!canManage || busy}
-              onChange={(event) => {
-                setMonthlyAmount(Number(event.target.value));
+              onValueChange={({ floatValue }, { source }) => {
+                if (source !== 'event') return;
+                setMonthlyAmount(floatValue ?? 0);
                 setCalculation(null);
               }}
-              slotProps={{ htmlInput: { min: 1, step: 100 } }}
+              onBlur={() => setAmountTouched(true)}
+              error={amountTouched && amountInvalid}
+              helperText={
+                amountTouched && amountInvalid ? 'Enter an amount greater than zero.' : ''
+              }
+              slotProps={{ htmlInput: { inputMode: 'decimal' } }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth disabled={!canManage || busy}>
+            <FormControl fullWidth size="small" disabled={!canManage || busy}>
               <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
               <Select
                 labelId={salaryBasisLabelId}
@@ -589,9 +709,23 @@ export function SalaryStructureBuilder({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <FormControlLabel
-              control={
+          <Grid size={{ xs: 12 }}>
+            <Box
+              role="group"
+              aria-label="Provident fund"
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                alignItems: 'center',
+                gap: { xs: 1.5, sm: 2 },
+                p: 1.25,
+                border: 1,
+                borderRadius: 1,
+                borderColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.24),
+                bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                 <Switch
                   checked={pfApplicable}
                   disabled={!canManage || busy}
@@ -602,31 +736,62 @@ export function SalaryStructureBuilder({
                       setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
                     setCalculation(null);
                   }}
-                  inputProps={{ 'aria-label': 'PF applicable for staff' }}
+                  slotProps={{
+                    input: {
+                      id: pfApplicableId,
+                      'aria-describedby': `${pfApplicableId}-description`,
+                    },
+                  }}
                 />
-              }
-              label="PF applicable"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 7 }}>
-            <FormControl fullWidth disabled={!canManage || busy || !pfApplicable || pfRulesError}>
-              <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-              <Select
-                labelId={pfRuleLabelId}
-                label="PF rule"
-                value={pfRuleId}
-                onChange={(event) => {
-                  setPfRuleId(event.target.value);
-                  setCalculation(null);
-                }}
+                <Box sx={{ minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <Typography
+                      component="label"
+                      htmlFor={pfApplicableId}
+                      variant="body2"
+                      sx={{ fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      PF applicable
+                    </Typography>
+                    <Tooltip title="The selected PF rule determines the provident fund contributions in the salary calculation.">
+                      <IconButton size="small" aria-label="About PF applicability">
+                        <Iconify icon="eva:info-outline" width={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                  <Typography
+                    id={`${pfApplicableId}-description`}
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block' }}
+                  >
+                    Deduct Provident Fund for this employee
+                  </Typography>
+                </Box>
+              </Box>
+              <FormControl
+                fullWidth
+                size="small"
+                disabled={!canManage || busy || !pfApplicable || pfRulesError}
               >
-                {pfRules.map((rule: any) => (
-                  <MenuItem key={rule.id} value={rule.id}>
-                    {rule.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+                <Select
+                  labelId={pfRuleLabelId}
+                  label="PF rule"
+                  value={pfRuleId}
+                  onChange={(event) => {
+                    setPfRuleId(event.target.value);
+                    setCalculation(null);
+                  }}
+                >
+                  {pfRules.map((rule: any) => (
+                    <MenuItem key={rule.id} value={rule.id}>
+                      {rule.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
           </Grid>
         </Grid>
 
@@ -639,27 +804,37 @@ export function SalaryStructureBuilder({
           flexWrap="wrap"
         >
           <Box>
-            <Box display="flex" gap={1} alignItems="center">
+            <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="subtitle1">Staff-specific customization</Typography>
+              <Tooltip title="Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay locked.">
+                <IconButton
+                  size="small"
+                  aria-label="About staff-specific customization"
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                >
+                  <Iconify icon="mdi:information-outline" />
+                </IconButton>
+              </Tooltip>
               {customizing && overrides.length ? (
                 <Chip size="small" color="warning" label="Customized" />
               ) : null}
             </Box>
-            <Typography variant="body2" color="text.secondary">
-              Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay
-              locked.
-            </Typography>
           </Box>
           {canManage ? (
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} flexWrap="wrap" sx={{ ml: 'auto' }}>
               {customizing ? (
-                <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="mdi:restore" />}
+                  onClick={resetToTemplate}
+                >
                   Reset to template
                 </Button>
               ) : null}
               <Button
+                size="small"
                 variant="outlined"
-                startIcon={<Tune />}
+                startIcon={<Iconify icon="mdi:tune-variant" />}
                 onClick={() => setCustomizing(true)}
                 disabled={customizing}
               >
@@ -680,7 +855,7 @@ export function SalaryStructureBuilder({
                       Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
                     </Typography>
                     <Grid container spacing={1} mt={0.5}>
-                      <Grid size={{ xs: 7 }}>
+                      <Grid size={{ xs: 12, sm: 7 }}>
                         <FormControl fullWidth size="small" disabled={busy}>
                           <InputLabel id={`calculation-${rule.componentId}-label`}>
                             Calculation
@@ -703,7 +878,7 @@ export function SalaryStructureBuilder({
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid size={{ xs: 5 }}>
+                      <Grid size={{ xs: 12, sm: 5 }}>
                         <TextField
                           fullWidth
                           size="small"
@@ -727,14 +902,24 @@ export function SalaryStructureBuilder({
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
+                size="small"
                 required={overrides.length > 0}
                 label="Customization reason"
+                name="customizationReason"
+                autoComplete="off"
+                inputRef={reasonInput}
+                onBlur={() => setReasonTouched(true)}
+                error={reasonTouched && reasonInvalid}
                 value={customizationReason}
                 onChange={(event) => {
                   setCustomizationReason(event.target.value);
                   setCalculation(null);
                 }}
-                helperText="Required when any row differs from the source template."
+                helperText={
+                  reasonTouched && reasonInvalid
+                    ? 'Add a reason for the staff-specific salary customization.'
+                    : 'Required when any row differs from the source template.'
+                }
               />
             </Grid>
           </Grid>
@@ -746,6 +931,7 @@ export function SalaryStructureBuilder({
             action={
               hasConflict ? (
                 <Button
+                  size="small"
                   disabled={busy}
                   onClick={async () => {
                     setLocalBusy(true);
@@ -811,7 +997,7 @@ export function SalaryStructureBuilder({
                           <Chip size="small" label="Customized" />
                         ) : null}
                       </Box>
-                      <Typography>{formatCurrency(line.amount)}</Typography>
+                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
                     </Box>
                   ))}
                 </Paper>
@@ -834,7 +1020,7 @@ export function SalaryStructureBuilder({
                           <Chip size="small" label="Customized" />
                         ) : null}
                       </Box>
-                      <Typography>{formatCurrency(line.amount)}</Typography>
+                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
                     </Box>
                   ))}
                 </Paper>
@@ -846,7 +1032,7 @@ export function SalaryStructureBuilder({
                 {calculation.employerContributions.map((line) => (
                   <Box key={line.code} display="flex" justifyContent="space-between" gap={2}>
                     <Typography variant="body2">{line.name}</Typography>
-                    <Typography variant="body2">{formatCurrency(line.amount)}</Typography>
+                    <Typography variant="body2">{formatPayrollCurrency(line.amount)}</Typography>
                   </Box>
                 ))}
               </Box>
@@ -909,10 +1095,8 @@ export function SalaryStructureBuilder({
               <Box>
                 <Typography variant="subtitle1">Salary history</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {revisionData.items.find((item) => item.isCurrent)?.effectiveMonth.slice(0, 7)
-                    ? `Current from ${revisionData.items
-                        .find((item) => item.isCurrent)
-                        ?.effectiveMonth.slice(0, 7)}`
+                  {currentRevision
+                    ? `Current from ${formatPayrollMonth(currentRevision.effectiveMonth.slice(0, 7))}`
                     : 'No effective salary'}{' '}
                   · {revisionData.items.filter((item) => item.isScheduled).length} scheduled
                 </Typography>
@@ -934,7 +1118,8 @@ export function SalaryStructureBuilder({
                   >
                     <Box>
                       <Typography variant="subtitle2">
-                        Revision {revision.revisionNumber} - {revision.effectiveMonth.slice(0, 7)}
+                        Revision {revision.revisionNumber} -{' '}
+                        {formatPayrollMonth(revision.effectiveMonth.slice(0, 7))}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
                         Template version {revision.sourceSalaryTemplateVersion || 'Legacy'}
@@ -951,7 +1136,9 @@ export function SalaryStructureBuilder({
                         <Chip size="small" color="warning" label="Customized" />
                       ) : null}
                       <Chip size="small" label={contractLabel(revision.status)} />
-                      <Typography fontWeight={700}>{formatCurrency(revision.netSalary)}</Typography>
+                      <Typography fontWeight={700}>
+                        {formatPayrollCurrency(revision.netSalary)}
+                      </Typography>
                     </Box>
                   </Paper>
                 ))}
@@ -963,7 +1150,7 @@ export function SalaryStructureBuilder({
       {actionContainer ? (
         createPortal(actions, actionContainer)
       ) : (
-        <Box display="flex" justifyContent="flex-end" gap={1}>
+        <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap={1}>
           {actions}
         </Box>
       )}

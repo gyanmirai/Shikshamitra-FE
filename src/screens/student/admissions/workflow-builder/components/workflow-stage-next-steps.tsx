@@ -31,13 +31,19 @@ export function WorkflowStageNextSteps({
   const paths = transitions
     .filter((route) => route.fromStageId === stage.id)
     .sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.priority - b.priority);
-  const routeAction = (label: string, onClick: () => void) => (
+  const routeAction = (label: string, onClick: () => void, icon?: string) => (
     <CustomTooltip
       title={routeEditingDisabled ? 'Apply the stage changes before editing its paths.' : label}
       arrow
     >
       <Box component="span" sx={{ flexShrink: 0 }}>
-        <Button size="small" variant="outlined" disabled={routeEditingDisabled} onClick={onClick}>
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={routeEditingDisabled}
+          onClick={onClick}
+          startIcon={icon ? <Iconify icon={icon} width={17} /> : undefined}
+        >
           {label}
         </Button>
       </Box>
@@ -81,8 +87,9 @@ export function WorkflowStageNextSteps({
       {!readOnly &&
         onAddPath &&
         routeAction(
-          paths.some((path) => path.isDefault) ? 'Add special outcome' : 'Choose next step',
-          () => onAddPath(stage)
+          'Add special outcome',
+          () => onAddPath(stage),
+          'mdi:source-branch-plus'
         )}
     </Stack>
   );

@@ -1145,7 +1145,7 @@ Use `DialogScrollContent` from the same module for scrollable dialog bodies, esp
 | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `CustomDialog` | Always use the shared `CustomDialog` component for feature dialogs.                                                     |
 | `title`        | Always provide a clear, task-specific `title`; never leave the title empty or replace it with placeholder text.         |
-| Description    | Always include a concise description in the dialog body that explains the purpose, action, or expected outcome.        |
+| Description    | Use brief task context when needed; Student Onboarding shows only record context or a material consequence.           |
 | `open`         | Control visibility from the owning screen or workflow state.                                                            |
 | `handleClose`  | Pass the owning close handler so the dialog can reset state, clear selected data, and handle unsaved changes correctly. |
 | `maxWidth`     | Choose the smallest width that supports the content; use a larger width only when the form or content needs it.         |
@@ -1195,7 +1195,10 @@ const formik = useFormik({
 
 - Always use `CustomDialog` from `src/components/customDialog` for feature dialogs.
 - Always pass the `title` prop with a specific description of the current action, such as `Add Employee`, `Edit Vehicle`, or `Change Status`.
-- Always add a meaningful, concise description inside the dialog body that explains what the dialog is for and what will happen after the user completes or confirms the action.
+- Write every visible dialog and drawer title in Title Case, capitalizing the main words while preserving record names as entered. For example, use `Review Readiness Rule` and `Add Academic Override`; keep body copy, field labels, and button text in sentence case. Code identifiers may use camelCase, but visible titles must remain readable words.
+- Outside Student Onboarding, put one accessible info icon immediately after the title of each data-entry or review dialog with concise task guidance. Pass the guidance through `CustomDialog`'s `titleInfo` prop so the shared header keeps the title, icon, and close action aligned. Make the tooltip useful on hover, keyboard focus, and touch; do not repeat the body description. Simple confirmations may omit the icon when there is no additional guidance.
+- Include a meaningful, concise description inside the dialog body when the task or outcome is not clear from the title and controls.
+- In Student Onboarding dialogs, keep only essential record context, material consequences, validation, and actionable errors. Omit generic descriptions, title info icons, and instructional helper text when the title, labels, and controls already explain the action.
 - Keep the dialog title stable and update it only when the dialog’s task changes, such as add versus edit.
 - Always pass the real `handleClose` callback from the owning workflow; do not use an empty inline close handler that leaves selected records, form state, or dirty state behind.
 - Use `DialogScrollContent` as the body wrapper whenever the dialog contains a form or content that can exceed the available height.
@@ -1219,7 +1222,7 @@ const formik = useFormik({
 **Validation**
 
 - Verify every `CustomDialog` has a meaningful `title`.
-- Verify every dialog includes a meaningful description in its body, including confirmation and read-only dialogs.
+- Verify the dialog makes its task and consequence clear. For Student Onboarding, essential record context or a material consequence is sufficient without additional helper copy.
 - Verify form dialogs use `DialogScrollContent` and keep `DialogActions` outside the scrolling body.
 - Verify every dialog form uses Formik and a Yup `validationSchema`.
 - Verify required, invalid, and server-error states prevent invalid submission and show actionable messages.
@@ -1497,6 +1500,7 @@ The established shared implementation is exported from `src/screens/hr/employee/
 **Rules**
 
 - Use the shared MUI/theme drawer configuration and the existing feature drawer pattern; do not create a second drawer primitive.
+- Use Title Case for every visible drawer title, following the dialog title rule above. Preserve user-entered record names inside dynamic titles.
 - Keep the drawer width, responsive behavior, close behavior, and paper styling consistent with the theme configuration.
 - Keep the drawer body independently scrollable when content can exceed the viewport; keep primary actions visible and keyboard accessible.
 - Keep data fetching and form state in the owning screen or hook. The drawer should coordinate presentation and callbacks, not own unrelated business logic.

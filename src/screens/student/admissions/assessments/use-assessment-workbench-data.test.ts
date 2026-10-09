@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react';
 import { useAssessmentWorkbenchData } from './use-assessment-workbench-data';
 
 const mocks = vi.hoisted(() => ({
-  academic: { academicYearId: 'year-1', boardId: '', mediumId: '', standardId: '' },
+  academic: { academicYearId: 'year-1', boardId: 'board-1', mediumId: 'medium-1', standardId: '' },
   scopes: vi.fn(),
   sessions: vi.fn(),
   applicants: vi.fn(),
@@ -39,6 +39,7 @@ vi.mock('src/redux/student/admissions/admission-assessment-roster-api', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.academic.academicYearId = 'year-1';
+  Object.assign(mocks.academic, { boardId: 'board-1', mediumId: 'medium-1', standardId: '' });
   Object.assign(mocks.state, {
     tab: 'applicants',
     queue: 'all',
@@ -55,6 +56,9 @@ beforeEach(() => {
         admissionOfferingId: 'offering',
         workflowStageDefinitionId: 'definition',
         academicYearId: 'year-1',
+        boardId: 'board-1',
+        mediumId: 'medium-1',
+        standardId: 'class-1',
         schedulingEnabled: true,
       },
     ],
@@ -76,12 +80,36 @@ it('never substitutes all-session data for an unavailable selected session', () 
   expect(result.current.invalidSession).toBe(true);
   expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
 });
+it('waits for a single Board and Medium before choosing a scope', () => {
+  mocks.academic.boardId = '';
+  const { result } = renderHook(() => useAssessmentWorkbenchData(true, false));
+  expect(result.current.visibleScopes).toHaveLength(0);
+  expect(mocks.sessions.mock.lastCall?.[1]).toMatchObject({ skip: true });
+  expect(mocks.applicants.mock.lastCall?.[1]).toMatchObject({ skip: true });
+});
+it('includes both selected classes and excludes other academic contexts', () => {
+  mocks.academic.standardId = 'class-1,class-10';
+  const scope = mocks.scopes().currentData[0];
+  mocks.scopes.mockReturnValue({
+    currentData: [
+      scope,
+      { ...scope, admissionOfferingId: 'second', standardId: 'class-10' },
+      { ...scope, admissionOfferingId: 'excluded-class', standardId: 'class-2' },
+      { ...scope, admissionOfferingId: 'excluded-medium', mediumId: 'other-medium' },
+    ],
+  });
+  const { result } = renderHook(() => useAssessmentWorkbenchData(true, false));
+  expect(result.current.visibleScopes.map((item) => item.admissionOfferingId)).toEqual([
+    'offering',
+    'second',
+  ]);
+});
 it('sends restored queue/search/session and zero-based page offsets', () => {
-  Object.assign(mocks.state, { sessionId: 'session-1', queue: 'review', search: 'QA', page: 2 });
+  Object.assign(mocks.state, { sessionId: 'session-1', queue: 'result', search: 'QA', page: 2 });
   renderHook(() => useAssessmentWorkbenchData(true, false));
   expect(mocks.applicants.mock.lastCall?.[0]).toMatchObject({
     sessionId: 'session-1',
-    queue: 'review',
+    queue: 'result',
     search: 'QA',
     skipCount: 50,
     maxResultCount: 25,

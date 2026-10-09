@@ -17,28 +17,47 @@ type BrowserNavigation = EventTarget & {
 export function useEsiUnsavedNavigation(isDirty: boolean, push: (href: string) => void) {
   const [pending, setPending] = useState<NavigationIntent | null>(null);
   const permittedTraversal = useRef<string | null>(null);
-  const requestNavigation = useCallback((proceed: () => void) => {
-    if (!isDirty) {
-      proceed();
-      return;
-    }
-    setPending((current) => current ?? { proceed });
-  }, [isDirty]);
+  const requestNavigation = useCallback(
+    (proceed: () => void) => {
+      if (!isDirty) {
+        proceed();
+        return;
+      }
+      setPending((current) => current ?? { proceed });
+    },
+    [isDirty]
+  );
 
   useEffect(() => {
     if (!isDirty) return undefined;
 
     const guardLink = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
-        event.shiftKey || event.altKey || !(event.target instanceof Element)) return;
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        !(event.target instanceof Element)
+      )
+        return;
       const anchor = event.target.closest<HTMLAnchorElement>('a[href]');
-      if (!anchor || anchor.hasAttribute('download') ||
-        (anchor.target && anchor.target !== '_self')) return;
+      if (
+        !anchor ||
+        anchor.hasAttribute('download') ||
+        (anchor.target && anchor.target !== '_self')
+      )
+        return;
       const destination = new URL(anchor.href, window.location.href);
       if (!['http:', 'https:'].includes(destination.protocol)) return;
       const current = new URL(window.location.href);
-      if (destination.origin === current.origin && destination.pathname === current.pathname &&
-        destination.search === current.search) return;
+      if (
+        destination.origin === current.origin &&
+        destination.pathname === current.pathname &&
+        destination.search === current.search
+      )
+        return;
 
       // Capture before Next links and the application's legacy anchor listeners navigate.
       event.preventDefault();
@@ -54,7 +73,7 @@ export function useEsiUnsavedNavigation(isDirty: boolean, push: (href: string) =
 
     // Modern browsers can cancel traversal before the URL and React tree change.
     // Do not add synthetic history entries, which would break back/forward behavior.
-    const {navigation} = (window as Window & { navigation?: BrowserNavigation });
+    const { navigation } = window as Window & { navigation?: BrowserNavigation };
     const guardTraversal = (event: Event) => {
       const traversal = event as TraversalEvent;
       if (traversal.navigationType !== 'traverse' || !event.cancelable) return;
@@ -99,14 +118,14 @@ export function useEsiUnsavedNavigation(isDirty: boolean, push: (href: string) =
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1, flexWrap: 'wrap' }}>
-        <Button autoFocus onClick={cancel} startIcon={<Close />} sx={{ minHeight: 44 }}>
+        <Button size="small" autoFocus variant="outlined" onClick={cancel} startIcon={<Close />}>
           Keep editing
         </Button>
         <Button
+          size="small"
           color="error"
           variant="contained"
           startIcon={<DeleteOutline />}
-          sx={{ minHeight: 44 }}
           onClick={() => {
             setPending(null);
             pending.proceed();

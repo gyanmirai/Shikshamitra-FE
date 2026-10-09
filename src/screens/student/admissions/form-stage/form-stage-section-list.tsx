@@ -8,23 +8,34 @@ export function FormStageSectionList({
   disabled,
   onVerify,
   onRevoke,
+  compact = false,
 }: {
   sections: AdmissionFormSectionVerification[];
   disabled: boolean;
   onVerify: (section: AdmissionFormSectionVerification) => void;
   onRevoke: (section: AdmissionFormSectionVerification) => void;
+  compact?: boolean;
 }) {
   const required = sections.filter((section) => section.required);
   if (!required.length) return null;
   return (
     <>
-      <Typography variant="subtitle2">Section verification</Typography>
+      {!compact && <Typography variant="subtitle2">Section verification</Typography>}
       <List disablePadding>
         {required.map((section) => (
           <ListItem
             key={section.sectionId}
             disableGutters
             divider
+            sx={
+              compact
+                ? {
+                    py: 1,
+                    '& .MuiListItemText-primary': { typography: 'body2' },
+                    '& .MuiListItemText-secondary': { typography: 'caption' },
+                  }
+                : undefined
+            }
             secondaryAction={
               section.verified ? (
                 <Button size="small" disabled={disabled} onClick={() => onRevoke(section)}>

@@ -1,98 +1,186 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import Link from 'next/link';
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+import * as Yup from 'yup';
+import { useEffect } from 'react';
+import { useFormik } from 'formik';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { Alert, Stack, Button, Typography } from '@mui/material';
-import { financePaths, financePermissions } from 'src/constants/finance-menu';
-import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
-import AdmissionFeeSelectionPanel from 'src/screens/student/admissions/fee-selection/admission-fee-selection-panel';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 import {
   useGetStudentOnboardingCaseQuery,
-  useRefreshStudentOnboardingReadinessMutation,
+  useGetStudentOnboardingFeeStructureQuery,
+  useGetStudentOnboardingFeeCandidatesQuery,
+  useConfirmStudentOnboardingFeeStructureMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
-export default function StudentOnboardingFees({ caseId, canManage }: { caseId: string; canManage: boolean }) {
-  const [assigning, setAssigning] = useState(false);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const query = useGetStudentOnboardingCaseQuery(caseId, { refetchOnMountOrArgChange: true });
-  const [refreshReadiness, refreshState] = useRefreshStudentOnboardingReadinessMutation();
-  const item = query.data;
-  if (query.isError) return <Alert severity="error" action={
-    <Button size="small" onClick={() => query.refetch()}>Retry</Button>
-  }>Fee readiness could not be verified.</Alert>;
-  if (!item) return <Typography variant="body2">Loading fee readiness…</Typography>;
-  const canAssign = hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.Add`);
-  const canCollect = hasGrantedPermission(permissions, `${financePermissions.fees.collections}.Add`);
-  return (
-    <Stack spacing={1}>
-      {item.applicationId && (
-        <AdmissionFeeSelectionPanel
-          applicationId={item.applicationId}
-          mode="onboarding"
-          canConfirm={canManage}
-        />
-      )}
-      <Alert severity={item.firstPaymentConfirmed ? 'success' : 'info'}>
-        {item.financeReadinessDetail ?? 'Fee assignment and the first installment must be verified in Finance.'}
+export default function StudentOnboardingFees({
+  caseId,
+  canManage,
+}: {
+  caseId: string;
+  canManage: boolean;
+}) {
+  const item = useGetStudentOnboardingCaseQuery(caseId);
+  const selection = useGetStudentOnboardingFeeStructureQuery(caseId);
+  const candidates = useGetStudentOnboardingFeeCandidatesQuery(caseId);
+  const [confirm, saving] = useConfirmStudentOnboardingFeeStructureMutation();
+  const form = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      structureId: selection.data?.selection?.structureId ?? '',
+      optionalHeadIds:
+        selection.data?.selection?.heads
+          .filter((head) => head.isOptional)
+          .map((head) => head.feeHeadId) ?? ([] as string[]),
+    },
+    validationSchema: Yup.object({
+      structureId: Yup.string().required('Choose a published fee structure.'),
+    }),
+    onSubmit: async (values) => {
+      if (!canManage || !item.data || saving.isLoading) return;
+      const selected = candidates.data?.find(
+        (candidate) => candidate.structureId === values.structureId
+      );
+      if (!selected) {
+        form.setStatus('The selected structure is unavailable. Refresh the list and choose again.');
+        return;
+      }
+      if (
+        !selected.heads.some(
+          (head) => !head.isOptional || values.optionalHeadIds.includes(head.feeHeadId)
+        )
+      ) {
+        form.setStatus('Select at least one fee head.');
+        return;
+      }
+      try {
+        await confirm({
+          id: caseId,
+          concurrencyStamp: item.data.concurrencyStamp,
+          ...values,
+        }).unwrap();
+        form.setStatus(undefined);
+        shikshaMitraToast.success({ message: 'Fee structure confirmed for onboarding.' });
+      } catch (error) {
+        form.setStatus(
+          parseApiProblemDetail(error).detail ||
+            'The fee structure could not be confirmed. Refresh and retry.'
+        );
+      }
+    },
+  });
+  const { setFieldValue } = form;
+  useEffect(() => {
+    if (!form.values.structureId && candidates.data?.length === 1)
+      setFieldValue('structureId', candidates.data[0].structureId);
+  }, [candidates.data, form.values.structureId, setFieldValue]);
+  if (item.isError || selection.isError || candidates.isError)
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            size="small"
+            onClick={() => {
+              item.refetch();
+              selection.refetch();
+              candidates.refetch();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
+        Fee structures could not be loaded.
       </Alert>
-      <Typography variant="body2">
-        {item.status === 4
-          ? 'Onboarding is complete. Later installments remain managed in Finance; review the fee account for the current balance.'
-          : item.studentEnrollmentId
-          ? 'Assign the fee structure, collect the first installment, then refresh readiness to complete onboarding. Later installments can remain outstanding.'
-          : 'Prepare and activate the enrollment first. Then assign fees and collect the first installment before completing onboarding.'}
-      </Typography>
-      {canCollect && item.feeAssignmentConfirmed && (
-        <Typography variant="body2">
-          In Finance, select academic year {item.academicYearName}, then find {item.studentName}
-          {item.grNumber ? ` (GR ${item.grNumber})` : ''}. Confirm the student before collecting;
-          the existing Finance screen does not preselect this onboarding case.
-        </Typography>
-      )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
-        {canAssign && !item.feeAssignmentConfirmed && (
-          <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:receipt-text-plus-outline" />}
-            disabled={!item.studentEnrollmentId} onClick={() => setAssigning(true)}>
-            Assign fee structure
-          </Button>
-        )}
-        {canCollect && item.feeAssignmentConfirmed && (
-          <Button size="small" variant="outlined" component={Link}
-            href={financePaths.fees.collections}
-            startIcon={<Iconify icon="mdi:cash-check" />}>
-            Open Finance collections
-          </Button>
-        )}
-        {item.studentEnrollmentId && item.status !== 4 && item.status !== 5 && (
-          <Button size="small" startIcon={<Iconify icon="mdi:refresh" />}
-            disabled={!canManage || query.isFetching || refreshState.isLoading}
-            onClick={async () => {
-              try {
-                await refreshReadiness({ id: caseId, concurrencyStamp: item.concurrencyStamp }).unwrap();
-                shikshaMitraToast.success({ message: 'Payment and onboarding readiness checked.' });
-              } catch {
-                shikshaMitraToast.error({ message: 'Readiness could not be refreshed. Reload this case and retry.' });
-              }
-            }}>
-            {refreshState.isLoading ? 'Checking readiness…' : 'Recheck payment and onboarding'}
-          </Button>
-        )}
+    );
+  if (!item.data || !selection.data || candidates.isLoading)
+    return (
+      <Stack role="status" aria-label="Loading fee structures">
+        <Skeleton height={64} />
+        <Skeleton height={40} />
       </Stack>
-      {item.studentEnrollmentId && item.status !== 4 && item.status !== 5 && !canManage && (
-        <Typography variant="body2" color="text.secondary">
-          An authorized Student Onboarding user must recheck readiness after payment.
-        </Typography>
+    );
+  const chosen = candidates.data?.find(
+    (candidate) => candidate.structureId === form.values.structureId
+  );
+  const disabled =
+    !canManage ||
+    saving.isLoading ||
+    selection.isFetching ||
+    candidates.isFetching ||
+    Boolean(item.data.studentEnrollmentId) ||
+    item.data.status === 5;
+  return (
+    <Stack spacing={1.5} component="form" onSubmit={form.handleSubmit}>
+      {selection.data.onboardingConfirmed && (
+        <Alert severity="success">
+          Fee structure confirmed: {selection.data.selection?.structureName}
+        </Alert>
       )}
-      {assigning && <AssignmentDrawer
-        students={[{ id: item.studentId, studentId: item.studentId, studentName: item.studentName }]}
-        academicYearId={item.academicYearId} academicYearName={item.academicYearName}
-        onClose={() => { setAssigning(false); query.refetch(); }} />}
+      {!candidates.data?.length && (
+        <Alert severity="info">
+          No published fee structure matches this student&apos;s academic year and Class. Ask
+          Finance to publish the matching structure.
+        </Alert>
+      )}
+      <CustomSelect
+        label="Fee structure"
+        size="small"
+        required
+        fullWidth
+        isSearch
+        value={form.values.structureId}
+        options={(candidates.data ?? []).map((candidate) => ({
+          value: candidate.structureId,
+          label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
+        }))}
+        disabled={disabled || !candidates.data?.length}
+        onChange={(value) => {
+          setFieldValue('structureId', String(value));
+          setFieldValue('optionalHeadIds', []);
+        }}
+        error={Boolean(form.touched.structureId && form.errors.structureId)}
+        helperText={form.touched.structureId ? form.errors.structureId : undefined}
+      />
+      {chosen && (
+        <>
+          <Typography variant="subtitle2">Included fee heads</Typography>
+          {chosen.heads
+            .filter((head) => !head.isOptional)
+            .map((head) => (
+              <Typography variant="body2" key={head.feeHeadId}>
+                {head.feeHeadName}
+              </Typography>
+            ))}
+          {chosen.heads.some((head) => head.isOptional) && (
+            <CustomSelect
+              label="Optional fee heads"
+              size="small"
+              multiple
+              fullWidth
+              value={form.values.optionalHeadIds}
+              options={chosen.heads
+                .filter((head) => head.isOptional)
+                .map((head) => ({ value: head.feeHeadId, label: head.feeHeadName }))}
+              disabled={disabled}
+              onChange={(value) => setFieldValue('optionalHeadIds', value)}
+            />
+          )}
+        </>
+      )}
+      {form.status && <Alert severity="error">{form.status}</Alert>}
+      <Button
+        type="submit"
+        size="small"
+        variant="contained"
+        loading={saving.isLoading}
+        disabled={disabled || !chosen}
+        sx={{ alignSelf: 'flex-end' }}
+      >
+        Confirm fee structure
+      </Button>
     </Stack>
   );
 }

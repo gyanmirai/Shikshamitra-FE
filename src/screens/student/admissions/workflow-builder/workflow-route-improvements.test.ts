@@ -41,7 +41,7 @@ const done: AdmissionWorkflowStage = {
   id: 'done',
   code: 'DONE',
   name: 'Done',
-  stageType: 11,
+  stageType: 7,
   displayOrder: 2,
   isEntryStage: false,
   isTerminalStage: true,
@@ -84,39 +84,10 @@ describe('admission next-step safety and form fields', () => {
       )
     ).toBeUndefined();
   });
-  it('uses Offer policy defaults and requires explicit declined routing', () => {
-    const offer: AdmissionWorkflowStage = {
-      ...assessment,
-      stageType: 8,
-      isEntryStage: true,
-      configurationJson: JSON.stringify({ offer: { enabled: true, version: 1 } }),
-    };
-    const declined = {
-      ...completion,
-      isDefault: false,
-      conditionRuleJson: JSON.stringify({
-        field: 'offer.status',
-        operator: 'Equals',
-        value: 'declined',
-      }),
-    };
-    expect(
-      simulateWorkflowRoute([offer, done], [declined], { 'offer.status': 'declined' }).status
-    ).toBe('completed');
-    expect(
-      simulateWorkflowRoute([offer, done], [completion], { 'offer.status': 'declined' }).status
-    ).toBe('blocked');
-    expect(
-      simulateWorkflowRoute([offer, done], [completion], { 'offer.status': 'ACCEPTED' }).status
-    ).toBe('completed');
-    const declinedOnly = {
-      ...offer,
-      configurationJson: JSON.stringify({
-        offer: { enabled: true, version: 1, allowedCompletionOutcomes: ['declined'] },
-      }),
-    };
-    expect(getRouteSaveError(completion, [declinedOnly, done], [])).toMatch(/no outcome/);
-    expect(getRouteSaveError(declined, [declinedOnly, done], [])).toBeUndefined();
+  it('rejects configuring routes from retired stages', () => {
+    const offer: AdmissionWorkflowStage = { ...assessment, stageType: 8, isEntryStage: true };
+    expect(getRouteSaveError(completion, [offer, done], [])).toMatch(/retired stage/);
+    expect(simulateWorkflowRoute([offer, done], [completion], {}).status).toBe('blocked');
   });
   it('offers fields only from published ancestor forms and excludes display-only fields', () => {
     const fields = getRouteConditionFields(
@@ -197,7 +168,7 @@ describe('admission next-step safety and form fields', () => {
       ).toBe('completed');
     }
   );
-  it('blocks pending payment even when a matching route exists', () => {
+  it('requires fee structure confirmation instead of settlement before continuing', () => {
     const payment: AdmissionWorkflowStage = {
       ...assessment,
       stageType: 4,
@@ -206,9 +177,14 @@ describe('admission next-step safety and form fields', () => {
     };
     expect(
       simulateWorkflowRoute([payment, done], [completion], {
-        'payment.status': 'pendingVerification',
+        'payment.status': 'pending',
       }).status
     ).toBe('blocked');
+    expect(
+      simulateWorkflowRoute([payment, done], [completion], {
+        'payment.status': 'feeStructureConfirmed',
+      }).status
+    ).toBe('completed');
   });
   it('does not treat a blank number as zero in route tests', () => {
     const paths = [
@@ -223,7 +199,7 @@ describe('admission next-step safety and form fields', () => {
       },
     ];
     expect(
-      simulateWorkflowRoute([{ ...assessment, stageType: 11, isEntryStage: true }, done], paths, {
+      simulateWorkflowRoute([{ ...assessment, stageType: 7, isEntryStage: true }, done], paths, {
         'application.MARKS': '',
       }).status
     ).toBe('blocked');

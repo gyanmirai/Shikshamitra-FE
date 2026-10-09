@@ -48,13 +48,13 @@ describe('admission academic filters', () => {
     );
   });
 
-  it('clears academic scope without removing the table search', () => {
+  it('clears classes while keeping a single Board and Medium and the table search', () => {
     const { result } = renderHook(() => useAdmissionAcademicFilters());
 
     act(() => result.current.clear());
 
     expect(mocks.replace).toHaveBeenCalledWith(
-      '/student/admissions/pipeline?search=ada',
+      '/student/admissions/pipeline?board=board-1&medium=medium-1&search=ada',
       { scroll: false }
     );
   });

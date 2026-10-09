@@ -51,6 +51,20 @@ describe('admission filter navigation', () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
+  it('treats legacy All parent links as unselected and reads only one Board and Medium', () => {
+    mocks.query = 'board=__all__&medium=__all__';
+    const all = renderHook(() => useAdmissionOfferingFilters());
+    expect(all.result.current.filters.boardId).toBe('');
+    expect(all.result.current.filters.mediumId).toBe('');
+    all.unmount();
+
+    mocks.query = 'board=board-1,board-2&medium=medium-1,medium-2&standard=class-1,class-10';
+    const selected = renderHook(() => useAdmissionOfferingFilters());
+    expect(selected.result.current.filters.boardId).toBe('board-1');
+    expect(selected.result.current.filters.mediumId).toBe('medium-1');
+    expect(selected.result.current.filters.standardId).toBe('class-1,class-10');
+  });
+
   it('replaces the offering route when a filter actually changes', () => {
     mocks.pathname = '/student/admissions/settings/offerings';
     const { result } = renderHook(() => useAdmissionOfferingFilters());
@@ -73,7 +87,7 @@ describe('admission filter navigation', () => {
     act(() => result.current.clearFilters());
 
     expect(mocks.replace).toHaveBeenCalledWith(
-      '/student/admissions/settings/offerings?cycle=cycle-1&sort=code+asc&size=25',
+      '/student/admissions/settings/offerings?cycle=cycle-1&board=board-1&sort=code+asc&size=25',
       { scroll: false }
     );
   });

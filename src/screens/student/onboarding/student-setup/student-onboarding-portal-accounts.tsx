@@ -4,7 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -16,6 +18,7 @@ import {
   useGetStudentOnboardingServiceHandoffsQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import { StudentSetupLoadingRows } from './student-setup-loading';
 import StudentOnboardingCredentialEmails from './student-onboarding-credential-emails';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
@@ -30,7 +33,8 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
   const canCreate = canManage && hasGrantedPermission(permissions, 'AbpIdentity.Users.Create');
   const canLink = hasGrantedPermission(permissions, 'AbpIdentity.Users.Update');
   const required = (handoffs.data ?? []).filter(item => ['student-account', 'guardian-account'].includes(item.serviceKey));
-  const nextAccount = required.find(item => !accounts.data?.some(account => `${account.accountType}-account` === item.serviceKey)) ?? required[0];
+  const missingAccounts = required.filter(item => !accounts.data?.some(account => `${account.accountType}-account` === item.serviceKey));
+  const nextAccount = missingAccounts[0] ?? required[0];
   const initialAccountType = nextAccount?.serviceKey === 'guardian-account' ? 'guardian' : 'student';
   const formik = useFormik({
     enableReinitialize: true,
@@ -57,15 +61,18 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
   const disabled = !canCreate || closed || mutation.isLoading || accounts.isFetching || handoffs.isFetching;
   if (accounts.isError || handoffs.isError) return <Alert severity="error" action={<Button size="small" onClick={() => { accounts.refetch(); handoffs.refetch(); }}>Retry</Button>}>Portal account status could not be loaded.</Alert>;
   if (!student.studentEnrollmentId) return <Typography variant="body2">Required portal accounts can be created after enrollment activation.</Typography>;
+  if ((accounts.isFetching && !accounts.data) || (handoffs.isFetching && !handoffs.data)) {
+    return <StudentSetupLoadingRows label="Loading portal accounts" count={2} />;
+  }
   return (
     <Stack spacing={1}>
-      {(accounts.data ?? []).map(account => <Alert key={account.accountType} severity={account.isActive ? 'info' : 'warning'}>
+      {(accounts.data ?? []).map(account => <Alert key={account.accountType} severity={account.isActive ? 'info' : 'warning'} variant="outlined">
         {account.accountType === 'student' ? 'Student' : 'Guardian'}: {account.email} — {account.isActive ? 'Linked' : 'Inactive'}.
         {!account.emailConfirmed && ' Owner email verification is pending.'}
       </Alert>)}
       {!required.length && !handoffs.isFetching && <Typography variant="body2">No portal accounts are required by this case’s saved settings.</Typography>}
-      {!!required.length && !closed && <>
-        <Alert severity="info">Use the selected person’s saved profile email. Confirm it belongs to them. Credential emails follow the saved school settings and readiness checks.</Alert>
+      {!!missingAccounts.length && !closed && <>
+        <Alert severity="info" variant="outlined">Use the selected person’s saved profile email. Confirm it belongs to them. Credential emails follow the saved school settings and readiness checks.</Alert>
         {!canCreate && <Alert severity="warning">An authorized identity administrator must create the required accounts.</Alert>}
         <Stack component="form" spacing={1} onSubmit={formik.handleSubmit}>
           <CustomSelect label="Account type" size="small" value={formik.values.accountType}
@@ -86,9 +93,12 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
             label="Link a verified existing guardian portal account for a sibling, if this email already exists." />}
           {formik.status && <Alert severity="error">{formik.status}</Alert>}
           {selectedLinked && <Typography variant="body2">This account is already linked. Identity changes require an administrator’s review.</Typography>}
-          <Button size="small" type="submit" variant="outlined" disabled={disabled || !selectedRequired || selectedLinked}>
-            {mutation.isLoading ? 'Creating and linking…' : 'Create and link account'}
-          </Button>
+          <LoadingButton size="small" type="submit" variant="outlined"
+            startIcon={<Iconify icon="mdi:account-plus-outline" width={18} />}
+            loading={mutation.isLoading} disabled={disabled || !selectedRequired || selectedLinked}
+            sx={{ alignSelf: 'flex-start' }}>
+            Create and link account
+          </LoadingButton>
         </Stack>
       </>}
       <StudentOnboardingCredentialEmails caseId={student.id} concurrencyStamp={student.concurrencyStamp} />

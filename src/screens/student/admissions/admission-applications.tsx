@@ -1,18 +1,17 @@
 'use client';
 
+import type { MouseEvent } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import NextLink from 'next/link';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Stack, MenuItem, TextField } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   type AdmissionApplication,
   useGetAdmissionApplicationsQuery,
@@ -22,9 +21,8 @@ import {
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { getAdmissionApplicationStatusLabel } from './application-status';
+import AdmissionApplicationDetailScreen from './admission-application-detail';
 import { withAdmissionCounsellorFilter } from './admission-application-filters';
-import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
-import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
@@ -45,6 +43,25 @@ export default function AdmissionApplicationsScreen({
   const router = useRouter();
   const searchParams = useSearchParams();
   const counsellorId = searchParams.get('counsellor') ?? '';
+  const drawerUrl = (id?: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (id) next.set('application', id);
+    else next.delete('application');
+    return next.size ? `${pathname}?${next}` : pathname;
+  };
+  const openApplication = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    event.stopPropagation();
+    if (
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      event.button === 0
+    ) {
+      event.preventDefault();
+      router.push(drawerUrl(id), { scroll: false });
+    }
+  };
   const counsellors = useGetAdmissionApplicationCounsellorsQuery({});
   const {
     currentData: data,
@@ -56,7 +73,7 @@ export default function AdmissionApplicationsScreen({
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
-      standardId: academic.standardId || undefined,
+      ...academicClassFilterInput(academic.standardId),
       maxResultCount: 100,
       skipCount: 0,
       search: search || undefined,
@@ -64,7 +81,7 @@ export default function AdmissionApplicationsScreen({
       currentStageSearch: stageSearch || undefined,
       assignedCounsellorId: counsellorId || undefined,
     },
-    { skip: !academic.academicYearId }
+    { skip: !academic.academicYearId || !academic.boardId || !academic.mediumId }
   );
   const columns: IColumn[] = [
     {
@@ -72,7 +89,10 @@ export default function AdmissionApplicationsScreen({
       label: 'Application',
       minWidth: 180,
       render: (value, row) => (
-        <NextLink href={`/student/admissions/applications/${(row as AdmissionApplication).id}`}>
+        <NextLink
+          href={drawerUrl((row as AdmissionApplication).id)}
+          onClick={(event) => openApplication(event, (row as AdmissionApplication).id)}
+        >
           {formatAdmissionReference(String(value))}
         </NextLink>
       ),
@@ -83,7 +103,8 @@ export default function AdmissionApplicationsScreen({
       minWidth: 220,
       render: (value, row) => (
         <NextLink
-          href={`/student/admissions/applicants/${(row as AdmissionApplication).applicantId}`}
+          href={drawerUrl((row as AdmissionApplication).id)}
+          onClick={(event) => openApplication(event, (row as AdmissionApplication).id)}
         >
           {String(value || (row as AdmissionApplication).applicantId)}
         </NextLink>
@@ -214,6 +235,13 @@ export default function AdmissionApplicationsScreen({
           isSearch={false}
         />
       </Box>
+      {searchParams.get('application') && (
+        <AdmissionApplicationDetailScreen
+          key={searchParams.get('application')}
+          applicationId={searchParams.get('application')!}
+          onClose={() => router.replace(drawerUrl(), { scroll: false })}
+        />
+      )}
     </Box>
   );
 }

@@ -169,7 +169,13 @@ describe('inline staff payroll details', () => {
       editEmployee: 'staff',
       step: 'payroll',
     });
-    expect(staffSalaryEditorHref('staff', 'staff-edit')).toContain('from=staff-edit');
-    expect(staffSalaryEditorHref('staff')).toContain('from=staff-profile');
+    expect(
+      new URL(staffSalaryEditorHref('staff', 'staff-edit'), 'http://localhost').searchParams.get(
+        'returnTo'
+      )
+    ).toBe(staffPayrollEditHref('staff'));
+    expect(
+      new URL(staffSalaryEditorHref('staff'), 'http://localhost').searchParams.get('returnTo')
+    ).toBe('/hr/employee?employee=staff&tab=personalInformation&infoTab=payroll');
   });
 });

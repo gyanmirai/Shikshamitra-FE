@@ -6,9 +6,11 @@ import type { AdmissionFeeHead } from 'src/redux/student/admissions/admission-fe
 import { useSelector } from 'react-redux';
 import { useState, useCallback } from 'react';
 import { fDateTime } from 'src/utils/format-time';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { fNumber, fCurrency } from 'src/utils/format-number';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import CustomAccordion from 'src/components/custom-accordian';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
@@ -26,7 +28,13 @@ type Props = {
   mode?: 'admissions' | 'onboarding';
   canConfirm?: boolean;
   outlined?: boolean;
+  canContinue?: boolean;
+  completionStageId?: string;
+  continuing?: boolean;
+  onContinue?: () => void;
   onEditorStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
+  compact?: boolean;
+  readOnly?: boolean;
 };
 const readPermissions = [
   'Students.Admissions.Applicants.View',
@@ -56,7 +64,13 @@ export default function AdmissionFeeSelectionPanel({
   mode = 'admissions',
   canConfirm = true,
   outlined = false,
+  canContinue = false,
+  completionStageId,
+  continuing = false,
+  onContinue,
   onEditorStateChange,
+  compact = false,
+  readOnly = false,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canRead = hasGrantedPermission(permissions, readPermissions);
@@ -67,10 +81,18 @@ export default function AdmissionFeeSelectionPanel({
   const [confirm, confirmState] = useConfirmAdmissionFeeSelectionOnboardingMutation();
   const [confirmationError, setConfirmationError] = useState<string>();
   const state = query.currentData;
+  const feeDetails = useBoolean();
 
   if (!canRead || !applicationId) return null;
   if (query.isLoading || (!state && query.isFetching))
-    return (
+    return mode === 'onboarding' ? (
+      <Stack role="status" aria-label="Loading fee structure" spacing={0.5}>
+        <Skeleton variant="text" width={148} height={28} />
+        <Skeleton variant="text" width="60%" height={22} />
+        <Skeleton variant="text" width="42%" height={18} />
+        <Skeleton variant="rounded" height={44} sx={{ mt: 1 }} />
+      </Stack>
+    ) : (
       <Box aria-label="Loading fee structure">
         <Skeleton height={90} />
       </Box>
@@ -92,10 +114,12 @@ export default function AdmissionFeeSelectionPanel({
     return null;
 
   const canEdit =
+    !readOnly &&
     mode === 'admissions' &&
     state.canEdit &&
     hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const canConfirmSelection =
+    !readOnly &&
     mode === 'onboarding' &&
     canConfirm &&
     state.canConfirmOnboarding &&
@@ -108,19 +132,21 @@ export default function AdmissionFeeSelectionPanel({
       aria-label="Fee structure"
       sx={{
         minWidth: 0,
-        ...(outlined && { p: 2.5, mb: 2, border: 1, borderColor: 'divider', borderRadius: 2 }),
+        ...(outlined &&
+          !compact && { p: 2.5, mb: 2, border: 1, borderColor: 'divider', borderRadius: 2 }),
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={compact ? 1 : 1.5}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-          <Typography variant="subtitle1">
+          <Typography variant={compact ? 'subtitle2' : 'subtitle1'}>
             Fee structure{state.isRequired && !selection ? ' *' : ''}
           </Typography>
           {canEdit && !editing && (
             <Button
               size="small"
-              variant="outlined"
-              disabled={query.isFetching || query.isError}
+              variant={compact && !selection ? 'contained' : 'outlined'}
+              sx={compact ? { alignSelf: 'flex-start' } : undefined}
+              disabled={query.isFetching || query.isError || continuing}
               onClick={() => setEditing(true)}
             >
               {selection ? 'Change fee structure' : 'Select fee structure'}
@@ -145,9 +171,10 @@ export default function AdmissionFeeSelectionPanel({
           <AdmissionFeeSelectionEditor
             key={applicationId}
             state={state}
-            disabled={query.isError || query.isFetching}
+            disabled={query.isError || query.isFetching || continuing}
             onClose={() => setEditing(false)}
             onEditorStateChange={onEditorStateChange}
+            compact={compact}
           />
         ) : selection ? (
           <>
@@ -155,10 +182,21 @@ export default function AdmissionFeeSelectionPanel({
               {selection.structureName} · Revision {selection.revisionNumber}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Saved {fDateTime(selection.savedAt)}
+              Fee structure confirmed {fDateTime(selection.savedAt)}
               {state.ownerStageName ? ` in ${state.ownerStageName}` : ''}
             </Typography>
-            <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+            {compact ? (
+              <CustomAccordion
+                title="Published fee heads"
+                expanded={feeDetails.value}
+                onChange={feeDetails.onToggle}
+                content={
+                  <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+                }
+              />
+            ) : (
+              <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+            )}
             <Typography variant="caption" color="text.secondary">
               Published amounts are shown for reference. Fee assignment and payment readiness remain
               managed in Finance.
@@ -167,9 +205,33 @@ export default function AdmissionFeeSelectionPanel({
         ) : (
           <Typography variant="body2" color="text.secondary">
             {state.isRequired
-              ? 'Select a fee structure before collecting the configured fee or completing this step.'
+              ? 'Confirm the applicable Finance fee structure before completing this step.'
               : 'No fee structure selected. Selection is optional for this application.'}
           </Typography>
+        )}
+        {onContinue && !readOnly && mode === 'admissions' && (
+          <Stack spacing={1}>
+            {selection && <Alert severity="success">Fee structure confirmed.</Alert>}
+            <Button
+              size="small"
+              variant="contained"
+              sx={{
+                alignSelf: 'flex-end',
+              }}
+              disabled={
+                !canContinue ||
+                continuing ||
+                editing ||
+                !selection ||
+                query.isFetching ||
+                query.isError ||
+                (Boolean(completionStageId) && state.currentStageId !== completionStageId)
+              }
+              onClick={onContinue}
+            >
+              {continuing ? 'Continuing...' : 'Continue'}
+            </Button>
+          </Stack>
         )}
         {state.isLocked && (
           <Alert severity="info">

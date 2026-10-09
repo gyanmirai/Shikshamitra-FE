@@ -16,7 +16,7 @@ describe('admissions workflow templates', () => {
       'Standard admission',
       'Simple admission',
       'Assessment-based admission',
-      'Selective admission with offer',
+      'Full admission journey',
     ]);
     expect(ADMISSION_WORKFLOW_TEMPLATES.filter((template) => template.recommended)).toHaveLength(1);
   });
@@ -54,7 +54,7 @@ describe('admissions workflow templates', () => {
 
       expect(JSON.parse(applicationForm?.configurationJson ?? '')).toEqual({
         formDefinitionId: 'form-1',
-        form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+        form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: true },
       });
     });
   });
@@ -65,13 +65,13 @@ describe('admissions workflow templates', () => {
     expect(template.stages.map((stage) => stage.code)).toEqual([
       'APPLICATION_FORM',
       'DOCUMENT_VERIFICATION',
-      'APPLICATION_REVIEW',
+      'FEE_STRUCTURE_CONFIRMATION',
       'ADMISSION_DECISION',
     ]);
   });
 
   it('recognizes the saved template shape without mistaking a custom journey for one', () => {
-    const {stages} = getAdmissionWorkflowTemplate('assessment', 'form-1');
+    const { stages } = getAdmissionWorkflowTemplate('assessment', 'form-1');
 
     expect(findMatchingWorkflowTemplate(stages)).toBe('assessment');
     expect(findMatchingWorkflowTemplate(stages.slice(0, -1))).toBeUndefined();

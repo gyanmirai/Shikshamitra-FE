@@ -4,12 +4,14 @@ import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material'
 import { CONFIG } from 'src/config-global';
 import Close from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
+import CustomTooltip from '../custom-tooltip';
 import { shouldBlockCustomDialogClose } from './close-guard';
 
 import type { ScrollbarProps } from '../scrollbar';
@@ -17,6 +19,7 @@ import type { ScrollbarProps } from '../scrollbar';
 type CustomDialogProps = Omit<DialogProps, 'title'> & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
   title: React.ReactNode | string;
+  titleInfo?: string;
   children: React.ReactNode;
   paperProps?: PaperProps;
   hasForm?: boolean;
@@ -31,6 +34,7 @@ const CustomDialog = ({
   open,
   handleClose,
   title,
+  titleInfo,
   children,
   paperProps,
   hasForm = true,
@@ -123,9 +127,22 @@ const CustomDialog = ({
             boxShadow: 'var(--shadows-3)',
           }} // Increased padding for header
         >
-          <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+            <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
+              {title}
+            </Typography>
+            {titleInfo && (
+              <CustomTooltip arrow placement="bottom" title={titleInfo}>
+                <IconButton
+                  size="small"
+                  aria-label={typeof title === 'string' ? `${title} information` : 'Dialog information'}
+                  sx={{ color: 'info.main', flexShrink: 0 }}
+                >
+                  <InfoOutlined sx={{ fontSize: 18 }} />
+                </IconButton>
+              </CustomTooltip>
+            )}
+          </Box>
           <IconButton
             aria-label="close"
             disabled={disableClose}

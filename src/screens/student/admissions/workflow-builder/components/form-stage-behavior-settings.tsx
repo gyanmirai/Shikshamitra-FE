@@ -1,17 +1,13 @@
 import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
-import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomAccordion from 'src/components/custom-accordian';
-import { Grid, Stack, Switch, TextField, Typography } from '@mui/material';
-
-import { WorkflowSettingLabel } from './workflow-setting-label';
+import { Stack, Switch, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 type Props = {
   policy: AdmissionFormStagePolicy;
   disabled: boolean;
   onChange: (change: Partial<AdmissionFormStagePolicy>) => void;
-  expandAdvanced?: boolean;
 };
 
 type SwitchRowProps = {
@@ -41,109 +37,27 @@ function SwitchRow({ label, description, checked, disabled, onChange }: SwitchRo
   );
 }
 
-export function FormStageBehaviorSettings({
-  policy,
-  disabled,
-  onChange,
-  expandAdvanced = false,
-}: Props) {
-  const advanced = useBoolean();
-
+export function FormStageBehaviorSettings({ policy, disabled, onChange }: Props) {
   return (
     <Stack spacing={2}>
-      <Grid container spacing={1.5}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Completed by"
-            value={policy.responsibility}
+      <FormSectionCard title="Advanced submission settings" icon="mdi:tune">
+        <Stack spacing={1.5}>
+          <SwitchRow
+            label="Allow late submission"
+            description="Let applicants submit after a configured deadline. Without a deadline, submissions remain open."
+            checked={policy.allowLateSubmission}
             disabled={disabled}
-            SelectProps={{ native: true }}
-            onChange={(event) =>
-              onChange({
-                responsibility: event.target.value as AdmissionFormStagePolicy['responsibility'],
-              })
-            }
-          >
-            <option value="applicant">Applicant</option>
-            <option value="guardian">Parent or guardian</option>
-            <option value="staff">Admission staff</option>
-            <option value="shared">Applicant and staff</option>
-          </TextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            fullWidth
-            size="small"
-            type="number"
-            label="Due after (days)"
-            placeholder="No deadline"
-            value={policy.dueInDays ?? ''}
-            disabled={disabled}
-            slotProps={{ htmlInput: { min: 1, max: 365, 'aria-label': 'Due after in days' } }}
-            onChange={(event) => {
-              const dueInDays = event.target.value ? Number(event.target.value) : null;
-              onChange({
-                dueInDays,
-                ...(policy.dueInDays == null || dueInDays == null
-                  ? { allowLateSubmission: false }
-                  : {}),
-              });
-            }}
+            onChange={(checked) => onChange({ allowLateSubmission: checked })}
           />
-        </Grid>
-      </Grid>
-      <CustomAccordion
-        title="Advanced submission settings"
-        expanded={advanced.value || expandAdvanced}
-        onChange={advanced.onToggle}
-        content={
-          <Stack spacing={1.5}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label={
-                <WorkflowSettingLabel
-                  label="Submission limit"
-                  help="The limit includes the first submission."
-                />
-              }
-              value={policy.maxSubmissionAttempts}
-              disabled={disabled}
-              slotProps={{ htmlInput: { min: 1, max: 20, 'aria-label': 'Submission limit' } }}
-              onChange={(event) => onChange({ maxSubmissionAttempts: Number(event.target.value) })}
-            />
-            <SwitchRow
-              label="Show Save draft"
-              description="Allow applicants to save a draft and continue later."
-              checked={policy.allowSaveAndResume}
-              disabled={disabled}
-              onChange={(checked) => onChange({ allowSaveAndResume: checked })}
-            />
-            <SwitchRow
-              label="Allow late submission"
-              description={
-                policy.dueInDays == null
-                  ? 'Set a deadline before allowing late submission.'
-                  : 'Let applicants submit after the deadline.'
-              }
-              checked={policy.dueInDays != null && policy.allowLateSubmission}
-              disabled={disabled || policy.dueInDays == null}
-              onChange={(checked) => onChange({ allowLateSubmission: checked })}
-            />
-            <SwitchRow
-              label="Allow corrections"
-              description="Let applicants make corrections after review."
-              checked={policy.allowCorrectionRequests}
-              disabled={disabled}
-              onChange={(checked) => onChange({ allowCorrectionRequests: checked })}
-            />
-          </Stack>
-        }
-      />
+          <SwitchRow
+            label="Allow corrections"
+            description="Let applicants make corrections after review."
+            checked={policy.allowCorrectionRequests}
+            disabled={disabled}
+            onChange={(checked) => onChange({ allowCorrectionRequests: checked })}
+          />
+        </Stack>
+      </FormSectionCard>
     </Stack>
   );
 }

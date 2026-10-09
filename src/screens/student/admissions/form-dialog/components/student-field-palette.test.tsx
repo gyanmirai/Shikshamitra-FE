@@ -59,13 +59,26 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
     expect(screen.getByRole('note')).toHaveTextContent('No need to add them again');
+    const context = screen.getByRole('button', { name: 'Board, medium and class' });
+    expect(context).toHaveAttribute('aria-expanded', 'true');
+    await user.click(context);
+    expect(context).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('note', { hidden: true })).not.toBeVisible();
+    context.focus();
+    await user.keyboard('{Enter}');
+    expect(context).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('note')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Admission preferences (4)' }));
-    expect(
-      screen.getByRole('button', { name: 'Preference.Class captured in inquiry' })
-    ).toBeDisabled();
+    catalogue.slice(0, 3).forEach((field) => {
+      expect(
+        screen.getByRole('button', { name: `${field.displayName} captured in inquiry` })
+      ).toBeDisabled();
+    });
     await user.click(screen.getByRole('button', { name: 'Add Admission preferences section' }));
     expect(onAddSection).toHaveBeenCalledWith('Admission preferences', [catalogue[3]]);
     await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'lastclass');
+    expect(screen.getByRole('note')).toBeVisible();
+    expect(context).toHaveAttribute('aria-expanded', 'true');
     await user.click(screen.getByRole('button', { name: 'Add PreviousSchool.LastClass' }));
     expect(onAdd).toHaveBeenCalledWith(catalogue[4]);
   });
@@ -112,7 +125,7 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('2 available of 3 student fields')).toBeVisible();
+    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Health and support (1)' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add Health and support section' }));
@@ -133,12 +146,12 @@ describe('StudentFieldPalette', () => {
     expect(label).toHaveAttribute('data-shrink', 'false');
     await user.type(search, 'previous school');
     expect(label).toHaveAttribute('data-shrink', 'true');
-    expect(screen.getByText('1 matching fields')).toBeVisible();
+    expect(screen.queryByText(/\d+ matching fields/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add Previous school name' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
     await user.clear(search);
     expect(label).toHaveAttribute('data-shrink', 'false');
-    expect(screen.getByText('2 available of 3 student fields')).toBeVisible();
+    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
   });
 
   it('keeps the last option searchable when the catalogue has 100 fields', async () => {
@@ -157,11 +170,11 @@ describe('StudentFieldPalette', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText('100 available of 100 student fields')).toBeVisible();
+    expect(screen.queryByText(/available of .* student fields/)).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('textbox', { name: 'Search student fields' }), {
       target: { value: 'record 100' },
     });
-    expect(screen.getByText('1 matching fields')).toBeVisible();
+    expect(screen.queryByText(/\d+ matching fields/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Add Student record 100' }));
     expect(onAdd).toHaveBeenCalledWith(fullCatalogue[99]);
   });

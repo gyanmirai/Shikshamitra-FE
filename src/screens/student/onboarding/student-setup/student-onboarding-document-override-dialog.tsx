@@ -70,7 +70,7 @@ export default function StudentOnboardingDocumentOverrideDialog({
   return (
     <CustomDialog
       open
-      title={document ? 'Override document requirement' : 'Override all required documents'}
+      title={document ? 'Override Document Requirement' : 'Override All Required Documents'}
       maxWidth="sm"
       handleClose={onClose}
       disableClose={busy}
@@ -92,9 +92,7 @@ export default function StudentOnboardingDocumentOverrideDialog({
               {document?.name || 'All required documents for this student'}
             </Typography>
             <Alert severity="warning">
-              This allows the selected document requirements to be satisfied without verified
-              evidence. Your note is retained in the audit history; other readiness checks still
-              apply.
+              This bypasses document verification and records the note in the audit history.
             </Alert>
             <ShakingTextField error={Boolean(formik.touched.reason && formik.errors.reason)}>
               <TextField

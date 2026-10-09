@@ -255,6 +255,7 @@ export interface IInquiryData {
   // village: string;
   tempGrNo: number;
   grNo: number | null;
+  grNumber?: string | null;
   rollNo: number | null;
   pinCode: number | null;
   address: string;

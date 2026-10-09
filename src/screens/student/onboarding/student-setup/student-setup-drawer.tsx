@@ -1,44 +1,55 @@
 'use client';
 
 import Link from 'next/link';
+import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { studentPaths } from 'src/constants/student-menu';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { FormSectionCard as SectionCard } from 'src/components/form-section-card';
 import {
   useGetStudentOnboardingCaseQuery,
   usePreviewStudentOnboardingActivationQuery,
+  useReviewStudentOnboardingRequirementsMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Box,
-  Card,
+  Tab,
   Stack,
   Alert,
   Avatar,
   Button,
   Drawer,
   Divider,
+  Accordion,
   IconButton,
   Typography,
   DialogActions,
   LinearProgress,
+  AccordionDetails,
+  AccordionSummary,
 } from '@mui/material';
 
 import StudentOnboardingFees from './student-onboarding-fees';
-import StudentOnboardingDocuments from './student-onboarding-documents';
+import { StudentSetupLoadingFields } from './student-setup-loading';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
 import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
+import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
 import {
   onboardingCheckMeta,
   onboardingStageMeta,
   getReadinessSummary,
 } from './student-onboarding-model';
 
+import type { StudentSetupView } from './student-setup-view';
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 type StudentSetupDrawerProps = {
@@ -56,6 +67,7 @@ type StudentSetupDrawerProps = {
   primaryActionLoading?: boolean;
   canManage?: boolean;
   canCancel?: boolean;
+  taskView?: StudentSetupView;
 };
 
 const displayValue = (value?: string | number | null) =>
@@ -71,24 +83,62 @@ const primaryActions = {
   cancelled: { label: 'Cancelled', icon: 'mdi:cancel' },
 } as const;
 
+type DrawerView = 'tasks' | 'details' | 'checks' | 'history';
+
+function SectionCard({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <FormSectionCard
+      icon={icon}
+      title={title}
+      titleTypographyProps={{ component: 'h3' }}
+      descriptionTooltip={description}
+    >
+      {children}
+    </FormSectionCard>
+  );
+}
+
 function KeyValueGrid({ items }: { items: Array<[string, ReactNode]> }) {
   return (
     <Box
+      component="dl"
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-        gap: 1,
+        columnGap: 2,
+        rowGap: 0.5,
+        m: 0,
       }}
     >
       {items.map(([label, value]) => (
         <Box
           key={label}
-          sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+          sx={{
+            minWidth: 0,
+            py: 1,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" component="dt">
             {label}
           </Typography>
-          <Typography variant="body2" fontWeight={600} sx={{ mt: 0.25 }}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            component="dd"
+            sx={{ m: 0, mt: 0.25, overflowWrap: 'anywhere' }}
+          >
             {value}
           </Typography>
         </Box>
@@ -108,18 +158,29 @@ export default function StudentSetupDrawer({
   primaryActionLoading = false,
   canManage = false,
   canCancel = false,
+  taskView = 'readiness',
 }: StudentSetupDrawerProps) {
   const lastStudentRef = useRef(student);
+  const scrollRef = useRef<HTMLDivElement>(null);
   if (student) {
     lastStudentRef.current = student;
   }
   const activeStudent = student || lastStudentRef.current;
-  const [showAlert, setShowAlert] = useState(true);
   const [confirmActivation, setConfirmActivation] = useState(false);
   const [waiverCheck, setWaiverCheck] = useState<OnboardingChecklistItem | null>(null);
+  const [showPassedChecks, setShowPassedChecks] = useState(false);
+  const defaultView: DrawerView =
+    student?.source === 'onboarding-case' &&
+    student.backendStatus !== 4 &&
+    student.backendStatus !== 5
+      ? 'tasks'
+      : 'details';
+  const [view, setView] = useState<DrawerView>(defaultView);
   const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
     skip: !open || activeStudent?.source !== 'onboarding-case',
   });
+  const [reviewRequirements, reviewState] = useReviewStudentOnboardingRequirementsMutation();
+  const [reviewFailure, setReviewFailure] = useState<string>();
   const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
     activeStudent?.id ?? '',
     {
@@ -135,11 +196,23 @@ export default function StudentSetupDrawer({
 
   useEffect(() => {
     if (student) {
-      setShowAlert(true);
       setConfirmActivation(false);
       setWaiverCheck(null);
+      setShowPassedChecks(false);
     }
   }, [student]);
+
+  useEffect(() => {
+    setView(defaultView);
+  }, [student?.id, defaultView, open]);
+
+  useEffect(() => {
+    if (view === 'history' && !activeStudent?.activity.length) setView('details');
+  }, [view, activeStudent?.activity.length]);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [view]);
 
   if (!activeStudent) return null;
 
@@ -163,16 +236,25 @@ export default function StudentSetupDrawer({
     activeStudent.backendStatus !== 5 &&
     canManage &&
     Boolean(onPrimaryAction);
+  const firstBlocker = activeStudent.readinessItems.find(
+    (check) => check.blocking && check.status !== 'passed'
+  );
+  const readinessChecks = activeStudent.readinessItems.filter(
+    (check) => check.status !== 'not-required'
+  );
+  const passedChecks = readinessChecks.filter((check) => check.status === 'passed');
+  const checksNeedingAttention = readinessChecks.filter((check) => check.status !== 'passed');
 
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={primaryActionLoading ? undefined : onClose}
       transitionDuration={{ enter: 300, exit: 250 }}
       PaperProps={{
+        'aria-labelledby': 'student-setup-drawer-title',
         sx: {
-          width: { xs: '100%', sm: 'min(760px, 95vw)' },
+          width: { xs: '100%', sm: 'min(800px, 96vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -184,10 +266,11 @@ export default function StudentSetupDrawer({
         component="header"
         direction="row"
         justifyContent="space-between"
-        alignItems="flex-start"
+        alignItems="center"
         spacing={2}
         sx={{
-          p: { xs: 1.5, sm: 2 },
+          px: { xs: 1.5, sm: 2 },
+          py: 1.5,
           flexShrink: 0,
           bgcolor: 'background.paper',
           borderBottom: '1px solid',
@@ -201,7 +284,13 @@ export default function StudentSetupDrawer({
             {activeStudent.studentName.charAt(0).toUpperCase()}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography component="h2" variant="subtitle1" fontWeight={700} noWrap>
+            <Typography
+              id="student-setup-drawer-title"
+              component="h2"
+              variant="subtitle1"
+              fontWeight={700}
+              noWrap
+            >
               {activeStudent.studentName}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
@@ -210,18 +299,26 @@ export default function StudentSetupDrawer({
             </Typography>
           </Box>
         </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
           <Label color={status.color} variant="outlined">
             {status.label}
           </Label>
-          <CustomTooltip title="Review the required checks and resolve visible blockers before activating the student.">
-            <IconButton aria-label="Student setup information" sx={{ minWidth: 44, minHeight: 44 }}>
-              <Iconify icon="mdi:information-outline" />
+          <CustomTooltip
+            title={
+              activeStudent.source === 'onboarding-case'
+                ? 'This live case saves readiness and activation changes to the onboarding service. Actions require the appropriate permission.'
+                : 'This Student Records view cannot change admission readiness, approvals, or account state.'
+            }
+            arrow
+          >
+            <IconButton size="small" aria-label="Student onboarding case information">
+              <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} />
             </IconButton>
           </CustomTooltip>
           <IconButton
             aria-label="Close Student Setup"
             onClick={onClose}
+            disabled={primaryActionLoading}
             sx={{ minWidth: 44, minHeight: 44 }}
           >
             <Iconify icon="mdi:close" width={20} />
@@ -229,366 +326,671 @@ export default function StudentSetupDrawer({
         </Stack>
       </Stack>
 
-      <Scrollbar sx={{ p: { xs: 1.5, sm: 2 }, flex: 1, minHeight: 0 }}>
-        <Stack spacing={1.5}>
-          {showAlert && activeStudent.source === 'student-records' ? (
-            <Alert severity="warning" variant="outlined" onClose={() => setShowAlert(false)}>
-              This student has limited onboarding details. Refresh readiness to check the available
-              preparation actions.
-            </Alert>
-          ) : null}
-
-          <Card variant="outlined" sx={{ p: 1.5 }}>
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
-                <Box>
-                  <Typography variant="subtitle2">Onboarding readiness</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {readiness.passedCount} of {readiness.requiredCount} required checks passed
-                  </Typography>
-                </Box>
-                <Label color={readiness.blockingCount ? 'warning' : 'success'}>
-                  {readiness.blockingCount
-                    ? `${readiness.blockingCount} blocker${readiness.blockingCount === 1 ? '' : 's'}`
-                    : 'Ready'}
-                </Label>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={readiness.progress}
-                aria-label={`Student readiness ${readiness.progress} percent`}
-                sx={{ height: 6, borderRadius: 1 }}
-              />
-            </Stack>
-          </Card>
-
-          <SectionCard
-            icon="mdi:file-check-outline"
-            title="Admission handoff"
-            descriptionTooltip="Read-only admission details for this student."
-          >
-            <KeyValueGrid
-              items={[
-                ['Application number', activeStudent.applicationNumber],
-                ['Admission reference', displayValue(activeStudent.admissionReference)],
-                ['Admission route', activeStudent.admissionRoute],
-                [
-                  'Admission date',
-                  activeStudent.admissionDate ? fDateTime(activeStudent.admissionDate) : '—',
-                ],
-                ['Owner', activeStudent.ownerName],
-                [
-                  'Source',
-                  activeStudent.source === 'onboarding-case'
-                    ? 'Student Onboarding service'
-                    : 'Student Records',
-                ],
-              ]}
+      {taskView === 'readiness' && (
+        <CustomTabs
+          value={view}
+          onChange={(_event, nextView: DrawerView) => setView(nextView)}
+          guardUnsavedChanges={false}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          aria-label="Student onboarding case sections"
+          sx={{ px: { xs: 0.5, sm: 1 }, borderBottom: '1px solid', borderColor: 'divider' }}
+        >
+          {activeStudent.source === 'onboarding-case' && (
+            <Tab
+              id="student-case-tasks-tab"
+              aria-controls="student-case-tasks-panel"
+              value="tasks"
+              label="Tasks"
             />
-          </SectionCard>
+          )}
+          <Tab
+            id="student-case-details-tab"
+            aria-controls="student-case-details-panel"
+            value="details"
+            label="Details"
+          />
+          <Tab
+            id="student-case-checks-tab"
+            aria-controls="student-case-checks-panel"
+            value="checks"
+            label="Checks"
+          />
+          {activeStudent.activity.length > 0 && (
+            <Tab
+              id="student-case-history-tab"
+              aria-controls="student-case-history-panel"
+              value="history"
+              label="History"
+            />
+          )}
+        </CustomTabs>
+      )}
 
-          {activeStudent.source === 'onboarding-case' &&
-            Boolean(capturedFieldsQuery.data?.capturedStudentFields?.length) && (
+      <Scrollbar
+        ref={scrollRef}
+        sx={{ p: { xs: 1.5, sm: 2 }, flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}
+      >
+        {taskView === 'readiness' && capturedFieldsQuery.data?.requirementsNeedReview && (
+          <Stack spacing={1} sx={{ mb: 1.5 }}>
+            <Alert severity="info">
+              Review this Offering&apos;s current requirements before preparing this existing
+              onboarding case.
+            </Alert>
+            {reviewFailure && <Alert severity="error">{reviewFailure}</Alert>}
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!canManage || !capturedFieldsQuery.data.concurrencyStamp}
+              loading={reviewState.isLoading}
+              onClick={async () => {
+                const item = capturedFieldsQuery.data;
+                if (!item || !canManage) return;
+                try {
+                  await reviewRequirements({
+                    id: activeStudent.id,
+                    concurrencyStamp: item.concurrencyStamp,
+                  }).unwrap();
+                  setReviewFailure(undefined);
+                  shikshaMitraToast.success({
+                    message: 'Offering requirements reviewed and saved for this case.',
+                  });
+                } catch (error) {
+                  setReviewFailure(
+                    parseApiProblemDetail(error).detail ||
+                      'Requirements could not be reviewed. Refresh and retry.'
+                  );
+                }
+              }}
+            >
+              Review Offering requirements
+            </Button>
+          </Stack>
+        )}
+        {taskView !== 'readiness' ? (
+          <Stack spacing={1.5}>
+            {taskView === 'fees' ? (
               <SectionCard
-                icon="mdi:card-account-details-outline"
-                title="Captured admission details"
-                descriptionTooltip="Answers carried into this Student record. Review them before using them as verified student details."
+                icon="mdi:receipt-text-outline"
+                title="Fee structure"
+                description="Confirm the existing published structure required for activation."
               >
-                <KeyValueGrid
-                  items={capturedFieldsQuery.data!.capturedStudentFields!.map((field) => [
-                    field.label,
-                    field.value,
-                  ])}
+                <StudentOnboardingFees caseId={activeStudent.id} canManage={canManage} />
+              </SectionCard>
+            ) : taskView === 'credentials' ? (
+              <SectionCard
+                icon="mdi:account-key-outline"
+                title="Credentials"
+                description="Create or link app access and send login details after activation."
+              >
+                <StudentOnboardingPortalAccounts
+                  student={{
+                    ...activeStudent,
+                    concurrencyStamp:
+                      capturedFieldsQuery.data?.concurrencyStamp ?? activeStudent.concurrencyStamp,
+                  }}
+                  canManage={canManage}
                 />
               </SectionCard>
-            )}
-
-          {activeStudent.source === 'onboarding-case' ? (
-            <SectionCard
-              icon="mdi:account-cog-outline"
-              title="Case ownership & operations"
-              descriptionTooltip="Assign accountability, inspect downstream handoffs, or cancel the case with an audit reason."
-            >
-              <StudentOnboardingCaseOperations
-                student={activeStudent}
-                canManage={canManage}
-                canCancel={canCancel}
-                onCancelled={onClose}
-              />
-            </SectionCard>
-          ) : null}
-
-          {activeStudent.source === 'onboarding-case' && (
-            <SectionCard
-              icon="mdi:cash-check"
-              title="Fee assignment & first payment"
-              descriptionTooltip="Review the saved fee assignment and first installment before completing onboarding."
-            >
-              <StudentOnboardingFees caseId={activeStudent.id} canManage={canManage} />
-            </SectionCard>
-          )}
-
-          {activeStudent.source === 'onboarding-case' && (
-            <SectionCard
-              icon="mdi:account-key-outline"
-              title="Portal accounts"
-              descriptionTooltip="Create and link the required student and guardian identities securely."
-            >
-              <StudentOnboardingPortalAccounts
-                key={activeStudent.id}
-                student={{
-                  ...activeStudent,
-                  concurrencyStamp:
-                    capturedFieldsQuery.data?.concurrencyStamp ?? activeStudent.concurrencyStamp,
-                }}
-                canManage={canManage}
-              />
-            </SectionCard>
-          )}
-
-          <SectionCard
-            icon="mdi:account-school-outline"
-            title="Placement"
-            descriptionTooltip="Review the academic placement that will become active after activation."
-          >
-            <KeyValueGrid
-              items={[
-                ['Board', activeStudent.boardName],
-                ['Medium', activeStudent.mediumName],
-                ['Class', activeStudent.standardName],
-                ['Division', activeStudent.divisionName],
-              ]}
-            />
-            <Stack direction="row" justifyContent="flex-end">
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
-                onClick={onAssignDivision}
-                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
-              >
-                {activeStudent.divisionName && activeStudent.divisionName !== '—'
-                  ? 'Change Division'
-                  : 'Assign Division'}
-              </Button>
-            </Stack>
-          </SectionCard>
-
-          <SectionCard
-            icon="mdi:identifier"
-            title="Identifiers"
-            descriptionTooltip="Review the saved GR and Roll number assignments."
-          >
-            <KeyValueGrid
-              items={[
-                ['GR number', displayValue(activeStudent.grNo)],
-                ['Roll number', displayValue(activeStudent.rollNo)],
-                ['Assignment', activeStudent.grNo ? 'Assigned' : 'Pending activation'],
-              ]}
-            />
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end" spacing={1}>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon="mdi:identifier" width={18} />}
-                onClick={onAssignGrNumber}
-                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
-              >
-                {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
-                onClick={onAssignRollNumber}
-                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
-              >
-                {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
-                  ? 'Change Roll No.'
-                  : 'Assign Roll No.'}
-              </Button>
-            </Stack>
-          </SectionCard>
-
-          <SectionCard
-            icon="mdi:file-document-check-outline"
-            title="Documents"
-            descriptionTooltip="Review accepted admission evidence and Student document uploads."
-          >
-            {activeStudent.source === 'onboarding-case' ? (
-              <StudentOnboardingDocuments
-                caseId={activeStudent.id}
-                enabled={activeStudent.documentUploadsEnabled !== false}
-                canManage={canManage}
-              />
             ) : (
-              <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
-                    {activeStudent.documentsRequired
-                      ? `${activeStudent.documentsPassed} of ${activeStudent.documentsRequired} verified`
-                      : 'Document summary unavailable'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Corrections and uploads require a live onboarding case.
-                  </Typography>
-                </Box>
-                <Label
-                  color={
-                    activeStudent.documentsRequired &&
-                    activeStudent.documentsPassed === activeStudent.documentsRequired
-                      ? 'success'
-                      : activeStudent.documentsRequired
-                        ? 'warning'
-                        : 'default'
+              <SectionCard
+                icon={
+                  taskView === 'gr-number'
+                    ? 'mdi:identifier'
+                    : taskView === 'roll-number'
+                      ? 'mdi:format-list-numbered'
+                      : 'mdi:google-classroom'
+                }
+                title={
+                  taskView === 'gr-number'
+                    ? 'GR number'
+                    : taskView === 'roll-number'
+                      ? 'Roll number'
+                      : 'Division'
+                }
+                description="Review and complete this student's selected assignment task."
+              >
+                {activeStudent.studentEnrollmentId && (
+                  <Alert
+                    severity="info"
+                    action={
+                      <Button size="small" component={Link} href={studentPaths.records.directory}>
+                        Open Student Records
+                      </Button>
+                    }
+                  >
+                    This student is active. Review identifier corrections in Student Records.
+                  </Alert>
+                )}
+                <KeyValueGrid
+                  items={[
+                    [
+                      taskView === 'gr-number'
+                        ? 'GR number'
+                        : taskView === 'roll-number'
+                          ? 'Roll number'
+                          : 'Division',
+                      displayValue(
+                        taskView === 'gr-number'
+                          ? activeStudent.grNo
+                          : taskView === 'roll-number'
+                            ? activeStudent.rollNo
+                            : activeStudent.divisionName
+                      ),
+                    ],
+                  ]}
+                />
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={
+                    !canManage ||
+                    Boolean(activeStudent.studentEnrollmentId) ||
+                    activeStudent.backendStatus === 5 ||
+                    (taskView === 'gr-number'
+                      ? Boolean(activeStudent.grNumberLocked && activeStudent.grNo)
+                      : taskView === 'roll-number'
+                        ? Boolean(activeStudent.rollNumberLocked && activeStudent.rollNo)
+                        : false)
                   }
+                  onClick={
+                    taskView === 'gr-number'
+                      ? onAssignGrNumber
+                      : taskView === 'roll-number'
+                        ? onAssignRollNumber
+                        : onAssignDivision
+                  }
+                  sx={{ alignSelf: 'flex-end' }}
                 >
-                  {activeStudent.documentsRequired &&
-                  activeStudent.documentsPassed === activeStudent.documentsRequired
-                    ? 'Verified'
-                    : activeStudent.documentsRequired
-                      ? 'Pending'
-                      : 'Not connected'}
-                </Label>
-              </Stack>
+                  {taskView === 'gr-number'
+                    ? 'Assign / Change GR'
+                    : taskView === 'roll-number'
+                      ? 'Assign / Change Roll'
+                      : 'Assign / Change Division'}
+                </Button>
+              </SectionCard>
             )}
-          </SectionCard>
+          </Stack>
+        ) : (
+          <>
+            <Box
+              id="student-case-tasks-panel"
+              role="tabpanel"
+              aria-labelledby="student-case-tasks-tab"
+              hidden={view !== 'tasks'}
+              sx={{ display: view === 'tasks' ? 'block' : 'none' }}
+            >
+              <Stack spacing={1.5}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  alignItems={{ sm: 'center' }}
+                  justifyContent="space-between"
+                  gap={1}
+                  sx={{ px: 0.5 }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2">
+                      {firstBlocker
+                        ? `Next: ${firstBlocker.label}`
+                        : activeStudent.status === 'action-required'
+                          ? 'Complete service handoffs'
+                          : canOpenActivation
+                            ? 'Ready to activate'
+                            : activeStudent.studentEnrollmentId
+                              ? 'Complete enrollment handoffs'
+                              : 'No open tasks'}
+                    </Typography>
+                    {firstBlocker && (
+                      <Typography variant="caption" color="text.secondary">
+                        {firstBlocker.detail}
+                      </Typography>
+                    )}
+                  </Box>
+                  {readiness.requiredCount > 0 && (
+                    <Button size="small" variant="text" onClick={() => setView('checks')}>
+                      {readiness.passedCount} of {readiness.requiredCount} checks passed
+                    </Button>
+                  )}
+                </Stack>
 
-          <SectionCard
-            icon="mdi:clipboard-check-outline"
-            title="Readiness & activation"
-            descriptionTooltip="Blocking checks must pass before the activation action becomes available."
-          >
-            <Stack spacing={1}>
-              {activeStudent.readinessItems
-                .filter(
-                  (check) =>
-                    !(
-                      activeStudent.source === 'onboarding-case' &&
-                      check.key === 'finance_accounts_services' &&
-                      check.status === 'not-required'
-                    )
-                )
-                .map((check) => {
-                  const meta = onboardingCheckMeta[check.status];
-                  return (
-                    <Stack
-                      key={check.key}
-                      direction={{ xs: 'column', sm: 'row' }}
-                      justifyContent="space-between"
-                      alignItems={{ sm: 'center' }}
-                      gap={1}
-                      sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+                {activeStudent.source === 'onboarding-case' &&
+                activeStudent.backendStatus !== 4 &&
+                activeStudent.backendStatus !== 5 ? (
+                  <SectionCard
+                    icon="mdi:account-cog-outline"
+                    title="Case Actions"
+                    description="Review service handoffs and, while the case is open, update its route or owner."
+                  >
+                    <StudentOnboardingCaseOperations
+                      student={activeStudent}
+                      canManage={canManage}
+                      canCancel={canCancel}
+                      onCancelled={onClose}
+                    />
+                  </SectionCard>
+                ) : null}
+
+                {view === 'tasks' && activeStudent.source === 'onboarding-case' && (
+                  <SectionCard
+                    icon="mdi:file-document-check-outline"
+                    title="Required documents"
+                    description="Complete the Offering's required evidence before activation."
+                  >
+                    <StudentOnboardingWorkflowDocuments
+                      caseId={activeStudent.id}
+                      canManage={canManage}
+                      hasDocumentRequirementsSnapshot={
+                        capturedFieldsQuery.data?.hasDocumentRequirementsSnapshot ??
+                        activeStudent.hasDocumentRequirementsSnapshot
+                      }
+                    />
+                  </SectionCard>
+                )}
+                {activeStudent.source === 'onboarding-case' && (
+                  <SectionCard
+                    icon="mdi:receipt-text-outline"
+                    title="Fee structure"
+                    description="Confirm the existing published fee structure required for activation."
+                  >
+                    <StudentOnboardingFees caseId={activeStudent.id} canManage={canManage} />
+                  </SectionCard>
+                )}
+
+                {activeStudent.source === 'onboarding-case' &&
+                  activeStudent.studentEnrollmentId && (
+                    <Accordion
+                      variant="outlined"
+                      disableGutters
+                      sx={{ borderRadius: 2, boxShadow: 'none', '&:before': { display: 'none' } }}
                     >
+                      <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Iconify
+                            icon="mdi:account-key-outline"
+                            width={20}
+                            sx={{ color: 'text.secondary' }}
+                          />
+                          <Typography variant="subtitle2">Portal & Emails</Typography>
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <StudentOnboardingPortalAccounts
+                          key={activeStudent.id}
+                          student={{
+                            ...activeStudent,
+                            concurrencyStamp:
+                              capturedFieldsQuery.data?.concurrencyStamp ??
+                              activeStudent.concurrencyStamp,
+                          }}
+                          canManage={canManage}
+                        />
+                      </AccordionDetails>
+                    </Accordion>
+                  )}
+              </Stack>
+            </Box>
+
+            <Box
+              id="student-case-details-panel"
+              role="tabpanel"
+              aria-labelledby="student-case-details-tab"
+              hidden={view !== 'details'}
+              sx={{ display: view === 'details' ? 'block' : 'none' }}
+            >
+              <Stack spacing={1.5}>
+                <SectionCard
+                  icon="mdi:file-check-outline"
+                  title="Admission"
+                  description="Admission details supplied by Enrollment and captured from the application."
+                >
+                  <KeyValueGrid
+                    items={[
+                      ['Admission reference', displayValue(activeStudent.admissionReference)],
+                      ['Admission route', activeStudent.admissionRoute],
+                      [
+                        'Admission date',
+                        activeStudent.admissionDate ? fDateTime(activeStudent.admissionDate) : '—',
+                      ],
+                      ['Owner', activeStudent.ownerName],
+                      ...(activeStudent.source === 'onboarding-case'
+                        ? (capturedFieldsQuery.data?.capturedStudentFields ?? []).map(
+                            (field): [string, ReactNode] => [field.label, field.value]
+                          )
+                        : []),
+                    ]}
+                  />
+                  {activeStudent.source === 'onboarding-case' &&
+                    capturedFieldsQuery.isFetching &&
+                    !capturedFieldsQuery.isError &&
+                    !capturedFieldsQuery.data && (
+                      <StudentSetupLoadingFields label="Loading additional admission details" />
+                    )}
+                  {activeStudent.source === 'onboarding-case' &&
+                    capturedFieldsQuery.isError &&
+                    !capturedFieldsQuery.data && (
+                      <Alert
+                        severity="error"
+                        action={
+                          <Button size="small" onClick={() => capturedFieldsQuery.refetch()}>
+                            Retry
+                          </Button>
+                        }
+                      >
+                        Additional admission details could not be loaded.
+                      </Alert>
+                    )}
+                </SectionCard>
+
+                <SectionCard
+                  icon="mdi:account-school-outline"
+                  title="Placement & Identifiers"
+                  description="Academic placement and assigned GR and roll numbers."
+                >
+                  <KeyValueGrid
+                    items={[
+                      ['Board', activeStudent.boardName],
+                      ['Medium', activeStudent.mediumName],
+                      ['Class', activeStudent.standardName],
+                      ['Division', activeStudent.divisionName],
+                      ['GR number', displayValue(activeStudent.grNo)],
+                      ['Roll number', displayValue(activeStudent.rollNo)],
+                    ]}
+                  />
+                  {canManage && !activeStudent.studentEnrollmentId && (
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      justifyContent="flex-end"
+                      spacing={1}
+                    >
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
+                        onClick={onAssignDivision}
+                      >
+                        {activeStudent.divisionName && activeStudent.divisionName !== '—'
+                          ? 'Change Division'
+                          : 'Assign Division'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Iconify icon="mdi:identifier" width={18} />}
+                        onClick={onAssignGrNumber}
+                      >
+                        {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
+                        onClick={onAssignRollNumber}
+                      >
+                        {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
+                          ? 'Change Roll No.'
+                          : 'Assign Roll No.'}
+                      </Button>
+                    </Stack>
+                  )}
+                </SectionCard>
+
+                <Accordion
+                  key={`documents-${activeStudent.id}`}
+                  variant="outlined"
+                  disableGutters
+                  defaultExpanded={Boolean(activeStudent.documentsRequired)}
+                  sx={{ borderRadius: 2, boxShadow: 'none', '&:before': { display: 'none' } }}
+                >
+                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, pr: 1 }}>
+                      <Iconify
+                        icon="mdi:file-document-check-outline"
+                        width={20}
+                        sx={{ color: 'text.secondary' }}
+                      />
+                      <Typography component="span" variant="subtitle2" sx={{ flex: 1 }}>
+                        Documents
+                      </Typography>
+                      {!activeStudent.documentsRequired && (
+                        <Label color="default">None required</Label>
+                      )}
+                    </Stack>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {activeStudent.source === 'onboarding-case' ? (
+                      view === 'details' ? (
+                        <StudentOnboardingWorkflowDocuments
+                          caseId={activeStudent.id}
+                          canManage={canManage}
+                          hasDocumentRequirementsSnapshot={
+                            capturedFieldsQuery.data?.hasDocumentRequirementsSnapshot ??
+                            activeStudent.hasDocumentRequirementsSnapshot
+                          }
+                        />
+                      ) : null
+                    ) : (
                       <Stack
                         direction="row"
-                        spacing={1}
-                        alignItems="flex-start"
-                        sx={{ minWidth: 0 }}
+                        justifyContent="space-between"
+                        alignItems="center"
+                        gap={1}
                       >
-                        <Iconify
-                          icon={meta.icon}
-                          width={18}
-                          sx={{ mt: 0.25, color: 'text.secondary' }}
-                        />
-                        <Box sx={{ minWidth: 0 }}>
+                        <Box>
                           <Typography variant="body2" fontWeight={600}>
-                            {check.label}
+                            {activeStudent.documentsRequired
+                              ? `${activeStudent.documentsPassed} of ${activeStudent.documentsRequired} verified`
+                              : 'Document summary unavailable'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {check.detail} · Owner: {check.owner}
+                            Corrections and uploads require a live onboarding case.
                           </Typography>
                         </Box>
+                        <Label
+                          color={
+                            activeStudent.documentsRequired &&
+                            activeStudent.documentsPassed === activeStudent.documentsRequired
+                              ? 'success'
+                              : activeStudent.documentsRequired
+                                ? 'warning'
+                                : 'default'
+                          }
+                        >
+                          {activeStudent.documentsRequired &&
+                          activeStudent.documentsPassed === activeStudent.documentsRequired
+                            ? 'Verified'
+                            : activeStudent.documentsRequired
+                              ? 'Pending'
+                              : 'Not connected'}
+                        </Label>
                       </Stack>
-                      <Stack
-                        direction={{ xs: 'row', sm: 'column' }}
-                        alignItems={{ xs: 'center', sm: 'flex-end' }}
-                        spacing={0.5}
-                        sx={{ flexShrink: 0 }}
-                      >
-                        <Label color={meta.color}>{meta.label}</Label>
-                        {activeStudent.source === 'onboarding-case' &&
-                        activeStudent.studentId &&
-                        canManage &&
-                        check.key === 'communication' &&
-                        check.status === 'failed' ? (
-                          <Button
-                            component={Link}
-                            href={`/student/profile?student=${encodeURIComponent(activeStudent.studentId)}&tab=general`}
-                            variant="text"
-                            size="small"
-                          >
-                            Open student record
-                          </Button>
-                        ) : activeStudent.source === 'onboarding-case' &&
-                          canManage &&
-                          check.key === 'approval_review' &&
-                          check.status === 'pending' ? (
-                          <Button
-                            variant="text"
-                            color="primary"
-                            size="small"
-                            aria-label={`Record approval for ${check.label}`}
-                            onClick={() => setWaiverCheck(check)}
-                          >
-                            Record approval
-                          </Button>
-                        ) : activeStudent.source === 'onboarding-case' &&
-                          canManage &&
-                          check.blocking &&
-                          check.status === 'failed' &&
-                          check.key !== 'final_readiness' ? (
-                          <Button
-                            variant="text"
-                            color="warning"
-                            size="small"
-                            aria-label={`Review exception for ${check.label}`}
-                            onClick={() => setWaiverCheck(check)}
-                          >
-                            Review exception
-                          </Button>
-                        ) : null}
-                      </Stack>
-                    </Stack>
-                  );
-                })}
-            </Stack>
-          </SectionCard>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+              </Stack>
+            </Box>
 
-          <SectionCard
-            icon="mdi:history"
-            title="Activity & audit"
-            descriptionTooltip="A chronological record of preparation, approval and activation events."
-          >
-            <Stack spacing={1}>
-              {activeStudent.activity.map((event) => (
-                <Stack key={event.id} direction="row" spacing={1} alignItems="flex-start">
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      mt: 0.75,
-                      borderRadius: '50%',
-                      bgcolor: 'text.disabled',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {event.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {event.detail}
-                    </Typography>
-                  </Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
-                    {event.occurredAt}
-                  </Typography>
-                </Stack>
-              ))}
-            </Stack>
-          </SectionCard>
-        </Stack>
+            <Box
+              id="student-case-checks-panel"
+              role="tabpanel"
+              aria-labelledby="student-case-checks-tab"
+              hidden={view !== 'checks'}
+              sx={{ display: view === 'checks' ? 'block' : 'none' }}
+            >
+              <Stack spacing={1.5}>
+                <SectionCard
+                  icon="mdi:clipboard-check-outline"
+                  title="Readiness & Activation"
+                  description="Blocking checks must pass before the activation action becomes available."
+                >
+                  <Stack spacing={1}>
+                    {checksNeedingAttention.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No readiness checks need attention.
+                      </Typography>
+                    )}
+                    {[...checksNeedingAttention, ...(showPassedChecks ? passedChecks : [])].map(
+                      (check) => {
+                        const meta = onboardingCheckMeta[check.status];
+                        return (
+                          <Stack
+                            key={check.key}
+                            direction={{ xs: 'column', sm: 'row' }}
+                            justifyContent="space-between"
+                            alignItems={{ sm: 'center' }}
+                            gap={1}
+                            sx={{
+                              py: 1.25,
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                              '&:last-child': { borderBottom: 0 },
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="flex-start"
+                              sx={{ minWidth: 0 }}
+                            >
+                              <Iconify
+                                icon={meta.icon}
+                                width={18}
+                                sx={{ mt: 0.25, color: 'text.secondary' }}
+                              />
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {check.label}
+                                </Typography>
+                                {(check.detail || (check.status !== 'passed' && check.owner)) && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {check.detail}
+                                    {check.status !== 'passed' && check.owner
+                                      ? `${check.detail ? ' · ' : ''}Owner: ${check.owner}`
+                                      : ''}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
+                            <Stack
+                              direction={{ xs: 'row', sm: 'column' }}
+                              alignItems={{ xs: 'center', sm: 'flex-end' }}
+                              spacing={0.5}
+                              sx={{ flexShrink: 0 }}
+                            >
+                              <Label color={meta.color}>{meta.label}</Label>
+                              {activeStudent.source === 'onboarding-case' &&
+                              activeStudent.studentId &&
+                              canManage &&
+                              check.key === 'communication' &&
+                              check.status === 'failed' ? (
+                                <Button
+                                  component={Link}
+                                  href={`/student/profile?student=${encodeURIComponent(activeStudent.studentId)}&tab=general`}
+                                  variant="text"
+                                  size="small"
+                                >
+                                  Open student record
+                                </Button>
+                              ) : activeStudent.source === 'onboarding-case' &&
+                                canManage &&
+                                check.key === 'approval_review' &&
+                                check.status === 'pending' ? (
+                                <Button
+                                  variant="text"
+                                  color="primary"
+                                  size="small"
+                                  aria-label={`Record approval for ${check.label}`}
+                                  onClick={() => setWaiverCheck(check)}
+                                >
+                                  Record approval
+                                </Button>
+                              ) : activeStudent.source === 'onboarding-case' &&
+                                canManage &&
+                                check.blocking &&
+                                check.status === 'failed' &&
+                                check.key !== 'final_readiness' ? (
+                                <Button
+                                  variant="text"
+                                  color="warning"
+                                  size="small"
+                                  aria-label={`Review exception for ${check.label}`}
+                                  onClick={() => setWaiverCheck(check)}
+                                >
+                                  Review exception
+                                </Button>
+                              ) : null}
+                            </Stack>
+                          </Stack>
+                        );
+                      }
+                    )}
+                    {passedChecks.length > 0 && (
+                      <Button
+                        variant="text"
+                        size="small"
+                        onClick={() => setShowPassedChecks((current) => !current)}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        {showPassedChecks ? 'Hide' : 'Show'} {passedChecks.length} passed check
+                        {passedChecks.length === 1 ? '' : 's'}
+                      </Button>
+                    )}
+                  </Stack>
+                </SectionCard>
+              </Stack>
+            </Box>
+
+            <Box
+              id="student-case-history-panel"
+              role="tabpanel"
+              aria-labelledby="student-case-history-tab"
+              hidden={view !== 'history'}
+              sx={{ display: view === 'history' ? 'block' : 'none' }}
+            >
+              <Stack spacing={1.5}>
+                {activeStudent.activity.length > 0 && (
+                  <SectionCard
+                    icon="mdi:history"
+                    title="Activity & Audit"
+                    description="A chronological record of preparation, approval and activation events."
+                  >
+                    <Stack spacing={1}>
+                      {activeStudent.activity.map((event) => (
+                        <Stack key={event.id} direction="row" spacing={1} alignItems="flex-start">
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              mt: 0.75,
+                              borderRadius: '50%',
+                              bgcolor: 'text.disabled',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography variant="body2" fontWeight={600}>
+                              {event.title}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {event.detail}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ flexShrink: 0 }}
+                          >
+                            {event.occurredAt}
+                          </Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  </SectionCard>
+                )}
+              </Stack>
+            </Box>
+          </>
+        )}
       </Scrollbar>
 
       <Divider />
@@ -598,64 +1000,60 @@ export default function StudentSetupDrawer({
         alignItems={{ sm: 'center' }}
         justifyContent="space-between"
         gap={1}
-        sx={{ px: 2, py: 1.25, flexShrink: 0, bgcolor: 'background.paper' }}
+        sx={{ px: 2, py: 1.5, flexShrink: 0, bgcolor: 'background.paper' }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          {activeStudent.source === 'onboarding-case'
-            ? activeStudent.backendStatus === 4
-              ? 'Onboarding is complete. Open Student Records for the operational profile.'
-              : activeStudent.backendStatus === 5
-                ? 'Cancelled cases are retained for audit and cannot be activated.'
-                : 'Refresh readiness to check the latest requirements before activating this student.'
-            : 'This record has no onboarding case, so activation is unavailable.'}
-        </Typography>
-        <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0 }}>
-          <Button variant="outlined" size="small" onClick={onClose}>
+        {activeStudent.source !== 'onboarding-case' && (
+          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+            This record has no onboarding case, so activation is unavailable.
+          </Typography>
+        )}
+        <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0, ml: 'auto' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="basil:cross-solid" width={18} />}
+            onClick={onClose}
+            disabled={primaryActionLoading}
+          >
             Close
           </Button>
-          {activeStudent.backendStatus !== 4 && activeStudent.backendStatus !== 5 && (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon={primaryAction.icon} />}
-              disabled={!canRunPrimaryAction || primaryActionLoading}
-              onClick={() => {
-                if (canOpenActivation) {
-                  setConfirmActivation(true);
-                  return;
-                }
-                onPrimaryAction?.(activeStudent, undefined, 'refresh');
-              }}
-            >
-              {primaryActionLoading ? 'Saving...' : primaryAction.label}
-            </Button>
-          )}
+          {taskView === 'readiness' &&
+            activeStudent.backendStatus !== 4 &&
+            activeStudent.backendStatus !== 5 && (
+              <LoadingButton
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon={primaryAction.icon} width={18} />}
+                loading={primaryActionLoading}
+                disabled={!canRunPrimaryAction}
+                onClick={() => {
+                  if (canOpenActivation) {
+                    setConfirmActivation(true);
+                    return;
+                  }
+                  onPrimaryAction?.(activeStudent, undefined, 'refresh');
+                }}
+              >
+                {primaryAction.label}
+              </LoadingButton>
+            )}
         </Stack>
       </Stack>
 
       <CustomDialog
         open={confirmActivation}
         handleClose={() => setConfirmActivation(false)}
-        title="Activate student?"
+        title="Activate Student"
         maxWidth="sm"
       >
         <DialogScrollContent dividers>
           <Stack spacing={1.5}>
-            <Typography variant="body2">
-              This will commit the reserved placement and identifiers, create the operational
-              enrollment, and start required service handoffs for {activeStudent.studentName}.
+            <Typography variant="body2" color="text.secondary">
+              Activation commits placement and identifiers and creates enrollment for{' '}
+              {activeStudent.studentName}.
             </Typography>
-            <Alert severity="warning" variant="outlined">
-              Confirm only after reviewing every required readiness step. The backend will reject
-              activation if the case changed or a blocker is still active.
-            </Alert>
             {activationPreviewQuery.isFetching ? (
-              <Stack spacing={0.75}>
-                <LinearProgress />
-                <Typography variant="caption" color="text.secondary">
-                  Rechecking placement, identifiers, documents, and readiness…
-                </Typography>
-              </Stack>
+              <LinearProgress aria-label="Checking activation readiness" />
             ) : null}
             {activationPreviewQuery.isError ? (
               <Alert severity="error" variant="outlined">
@@ -663,22 +1061,27 @@ export default function StudentSetupDrawer({
                 case, and retry.
               </Alert>
             ) : null}
-            {activationPreview ? (
-              <Alert severity={activationPreviewReady ? 'success' : 'error'} variant="outlined">
-                {activationPreviewReady
-                  ? `Backend readiness confirmed at ${activationPreview.progressPercent}%.`
-                  : activationPreview.primaryBlocker ||
-                    'This case is no longer ready to activate. Refresh the case before continuing.'}
+            {activationPreview && !activationPreviewReady ? (
+              <Alert severity="error" variant="outlined">
+                {activationPreview.primaryBlocker ||
+                  'This case is no longer ready to activate. Refresh the case before continuing.'}
               </Alert>
             ) : null}
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ px: 2, pb: 2 }}>
-          <Button color="inherit" onClick={() => setConfirmActivation(false)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" width={16} />}
+            onClick={() => setConfirmActivation(false)}
+          >
             Cancel
           </Button>
           <Button
+            size="small"
             variant="contained"
+            startIcon={<Iconify icon="mdi:check" width={16} />}
             disabled={
               primaryActionLoading ||
               activationPreviewQuery.isFetching ||
@@ -694,7 +1097,7 @@ export default function StudentSetupDrawer({
               setConfirmActivation(false);
             }}
           >
-            {primaryActionLoading ? 'Activating...' : 'Confirm activation'}
+            {primaryActionLoading ? 'Activating...' : 'Activate student'}
           </Button>
         </DialogActions>
       </CustomDialog>

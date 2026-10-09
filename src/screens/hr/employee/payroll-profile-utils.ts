@@ -5,6 +5,8 @@ import type {
 
 import { hrPaths } from 'src/constants/hr-menus';
 
+import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
+
 export function staffPayrollProfileHref(employeeId: string) {
   return `${hrPaths.employee.list}?${new URLSearchParams({ employee: employeeId, tab: 'personalInformation', infoTab: 'payroll' })}`;
 }
@@ -17,7 +19,10 @@ export function staffSalaryEditorHref(
   employeeId: string,
   origin: 'staff-profile' | 'staff-edit' = 'staff-profile'
 ) {
-  return `${hrPaths.payroll.structure}?${new URLSearchParams({ employeeId, setup: 'salary', from: origin })}`;
+  return salaryEditorHref(
+    employeeId,
+    origin === 'staff-edit' ? staffPayrollEditHref(employeeId) : staffPayrollProfileHref(employeeId)
+  );
 }
 
 export function changedPayrollProfileGroups(

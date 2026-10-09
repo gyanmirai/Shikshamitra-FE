@@ -1,29 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
+import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Tab, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Drawer,
+  MenuItem,
+  Skeleton,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { FormHistoryCard } from './application-detail/form-history-card';
 import { ApplicationFollowUps } from './application-detail/application-follow-ups';
 import { useApplicationDetail } from './application-detail/use-application-detail';
+import { ApplicationStageTabs } from './application-detail/application-stage-tabs';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { getApplicationReturnUrl } from './application-detail/application-return-url';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationCurrentTask } from './application-detail/application-current-task';
-import { ApplicationProgressCard } from './application-detail/application-progress-card';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
 import { ApplicationCounsellorCard } from './application-detail/application-counsellor-card';
@@ -32,6 +47,7 @@ import { requiresStageCompletionDetails } from './application-detail/admission-s
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
 import { isAdmissionApplicationNotFound } from './application-detail/application-detail-query-state';
 import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
+import { ApplicationApplicantNotesDialog } from './application-detail/application-applicant-notes-dialog';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -39,6 +55,9 @@ import {
 import {
   isFormStage,
   isApprovalStage,
+  getStageGuidance,
+  getStageStatusColor,
+  getStageStatusLabel,
   isAdmissionDecisionStage,
   hasManagedStageWorkspace,
   canRetrySubmittedFormHandoff,
@@ -48,438 +67,502 @@ import {
 
 import type { AdmissionFeeSelectionEditorState } from './fee-selection/admission-fee-selection-editor';
 
-type DetailTab = 'current' | 'form' | 'history';
+type WorkspaceView = { view: 'journey'; stageId?: string } | { view: 'form' | 'history' };
+type Navigation = WorkspaceView | { view: 'close' };
 
-export default function AdmissionApplicationDetailScreen() {
+export default function AdmissionApplicationDetailScreen({
+  applicationId,
+  onClose,
+}: { applicationId?: string; onClose?: () => void } = {}) {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const returnUrl = getApplicationReturnUrl(searchParams.get('returnTo'));
-  const detail = useApplicationDetail(id);
+  const detail = useApplicationDetail(applicationId ?? params.id);
   const completionDialog = useBoolean();
-  const [activeTab, setActiveTab] = useState<DetailTab>('current');
-  const [requestedTab, setRequestedTab] = useState<DetailTab>();
+  const expanded = useBoolean();
+  const notesDialog = useBoolean();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canViewApplicantNotes = hasGrantedPermission(
+    permissions,
+    'Students.Admissions.Applicants.View'
+  );
+  const [workspace, setWorkspace] = useState<WorkspaceView>({ view: 'journey' });
   const [feeEditorState, setFeeEditorState] = useState<AdmissionFeeSelectionEditorState>({
     dirty: false,
     busy: false,
   });
-  const workspaceBusy =
-    feeEditorState.busy ||
-    detail.updateState.isLoading ||
-    detail.submitState.isLoading ||
-    detail.advanceState.isLoading ||
-    detail.reopenState.isLoading;
-  const requestTabChange = (value: DetailTab) => {
-    if (value === activeTab || workspaceBusy) return;
-    if (feeEditorState.dirty) setRequestedTab(value);
-    else setActiveTab(value);
-  };
+  const [panelBusy, setPanelBusy] = useState({
+    counsellor: false,
+    decision: false,
+    followUps: false,
+    notes: false,
+  });
+  const onCounsellorBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) => (state.counsellor === busy ? state : { ...state, counsellor: busy }));
+  }, []);
+  const onDecisionBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) => (state.decision === busy ? state : { ...state, decision: busy }));
+  }, []);
+  const onFollowUpsBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) => (state.followUps === busy ? state : { ...state, followUps: busy }));
+  }, []);
+  const onNotesBusyChange = useCallback((busy: boolean) => {
+    setPanelBusy((state) => (state.notes === busy ? state : { ...state, notes: busy }));
+  }, []);
   const { applicationQuery, formQuery, workflowQuery } = detail;
   const application = applicationQuery.data;
   const form = formQuery.data;
   const workflow = workflowQuery.data;
-  const applicationNotFound = isAdmissionApplicationNotFound(applicationQuery.error);
   const currentStage = workflow?.stages.find(
     (stage) => stage.id === workflow.currentStageInstanceId
   );
+  const selectedStage =
+    workspace.view === 'journey'
+      ? (workflow?.stages.find((stage) => stage.id === workspace.stageId) ??
+        currentStage ??
+        [...(workflow?.stages ?? [])].reverse().find((stage) => stage.status >= 2))
+      : undefined;
+  const historical = Boolean(
+    selectedStage && (selectedStage.id !== currentStage?.id || selectedStage.status >= 2)
+  );
   const isLoading = applicationQuery.isLoading || formQuery.isLoading || workflowQuery.isLoading;
+  const applicationNotFound = isAdmissionApplicationNotFound(applicationQuery.error);
   const isError =
     applicationQuery.isError ||
     formQuery.isError ||
     workflowQuery.isError ||
     (!isLoading && (!application || !form));
+  const workspaceBusy =
+    panelBusy.counsellor ||
+    panelBusy.decision ||
+    panelBusy.followUps ||
+    panelBusy.notes ||
+    feeEditorState.busy ||
+    detail.updateState.isLoading ||
+    detail.submitState.isLoading ||
+    detail.advanceState.isLoading ||
+    detail.reopenState.isLoading;
+  const navigationLocked = workspaceBusy || isLoading;
+  const canLeaveFeeEditor = !feeEditorState.dirty && !workspaceBusy;
+  const active = workflow?.status === 0 && Boolean(currentStage);
+  const canSkip = Boolean(
+    detail.canSkip &&
+    canLeaveFeeEditor &&
+    currentStage?.stageType !== 4 &&
+    !currentStage?.seatStageEnabled
+  );
+  const canOverride = Boolean(
+    detail.canOverride &&
+    canLeaveFeeEditor &&
+    currentStage?.stageType !== 4 &&
+    !currentStage?.seatStageEnabled
+  );
 
-  const closeDetail = () => router.push(returnUrl);
+  const leaveGuard = useUnsavedNavigation(
+    Boolean(feeEditorState.dirty || detail.hasUnsavedAnswers),
+    {
+      push: router.push,
+      blockNavigation: navigationLocked,
+      title: feeEditorState.dirty
+        ? 'Discard Unsaved Fee Selection?'
+        : 'Discard Unsaved Application Changes?',
+      description:
+        'Your unsaved changes will be discarded. Saved application information remains available.',
+    }
+  );
 
-  const renderRuntimeForm = () => {
+  const navigate = (target: Navigation) => {
+    setFeeEditorState({ dirty: false, busy: false });
+    if (target.view === 'close') {
+      if (onClose) onClose();
+      else router.push(returnUrl);
+    } else setWorkspace(target);
+  };
+  const requestNavigation = (target: Navigation) => {
+    if (navigationLocked) return;
+    if (
+      target.view === 'journey' &&
+      workspace.view === 'journey' &&
+      (target.stageId ?? currentStage?.id) === selectedStage?.id
+    )
+      return;
+    leaveGuard.requestNavigation(() => {
+      if (detail.hasUnsavedAnswers) detail.discardUnsavedAnswers();
+      navigate(target);
+    });
+  };
+  const closeDetail = () => requestNavigation({ view: 'close' });
+  const renderRuntimeForm = (historicalReview = false) => {
     if (!application || !form) return null;
+    const readOnly = historicalReview || !detail.canAdvance;
     return (
-      <FormBusyRegion busy={workspaceBusy} label="Saving application…">
-        <ApplicationRuntimeForm
-          application={application}
-          form={form}
-          values={detail.currentValues}
-          errors={detail.errors}
-          fieldErrors={detail.fieldErrors}
-          saving={detail.updateState.isLoading}
-          submitting={detail.submitState.isLoading || detail.updateState.isLoading}
-          onChange={detail.setFieldValue}
-          onBlur={detail.setFieldTouched}
-          onValidateStep={detail.validateStep}
-          onSave={detail.save}
-          onSubmit={detail.submitApplication}
-          showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
-          canSubmitForm={detail.formStageQuery.currentData?.canSubmit ?? application.status === 0}
-          managedFormStage={Boolean(currentStage?.formStageEnabled)}
-          canReopen={detail.canReopen}
-          reopening={detail.reopenState.isLoading}
-          onReopen={detail.reopenApplication}
-          documents={
+      <ApplicationRuntimeForm
+        compact
+        readOnly={readOnly}
+        application={application}
+        form={form}
+        values={detail.currentValues}
+        errors={readOnly ? [] : detail.errors}
+        fieldErrors={readOnly ? {} : detail.fieldErrors}
+        saving={detail.updateState.isLoading}
+        submitting={detail.submitState.isLoading || detail.updateState.isLoading}
+        onChange={detail.setFieldValue}
+        onBlur={detail.setFieldTouched}
+        onValidateStep={detail.validateStep}
+        onSave={detail.save}
+        onSubmit={detail.submitApplication}
+        showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
+        canSubmitForm={detail.formStageQuery.currentData?.canSubmit ?? application.status === 0}
+        managedFormStage={Boolean(currentStage?.formStageEnabled)}
+        canReopen={detail.canReopen}
+        reopening={detail.reopenState.isLoading}
+        onReopen={detail.reopenApplication}
+        documents={
+          !readOnly && (
             <ApplicationFormDocuments
               applicationId={application.id}
               stages={workflow?.stages ?? []}
               unsaved={detail.hasUnsavedAnswers}
               saving={detail.updateState.isLoading || detail.submitState.isLoading}
             />
-          }
-        />
-      </FormBusyRegion>
+          )
+        }
+      />
     );
   };
-
-  const renderLoadedContent = () => {
-    if (!application || !form) return null;
-    const managedCurrentStage = hasManagedStageWorkspace(currentStage);
-    const decisionStage = isAdmissionDecisionStage(currentStage) || workflow?.status === 1;
-    const hasHistory = Boolean(
-      workflow?.history.length || (detail.formHistoryQuery.data?.length ?? 0) > 0
-    );
-    const active = workflow?.status === 0 && Boolean(workflow.currentStageInstanceId);
-    const canLeaveFeeEditor = !feeEditorState.dirty && !workspaceBusy;
-    const canComplete = canCompleteStageFromProgress(
+  const canComplete =
+    application &&
+    canCompleteStageFromProgress(
       currentStage,
       application.status,
-      detail.canAdvance &&
-        canLeaveFeeEditor &&
-        !currentStage?.formStageEnabled &&
-        !currentStage?.paymentStageEnabled &&
-        !currentStage?.offerStageEnabled &&
-        !currentStage?.seatStageEnabled &&
-        !currentStage?.assessmentEnabled &&
-        !currentStage?.documentVerificationEnabled &&
-        !currentStage?.eligibilityEnabled &&
-        !currentStage?.reviewEnabled
+      detail.canAdvance && canLeaveFeeEditor
     );
-    const canRetryFormHandoff = canRetrySubmittedFormHandoff(currentStage, application.status);
-    const awaitingDecision =
-      isApprovalStage(currentStage) &&
-      !canStageTypeCompleteForStatus(currentStage, application.status);
-    const canSkip = Boolean(
-      detail.canSkip &&
-      canLeaveFeeEditor &&
-      !currentStage?.reviewEnabled &&
-      !currentStage?.paymentStageEnabled &&
-      !currentStage?.offerStageEnabled &&
-      !currentStage?.seatStageEnabled
-    );
-    const canOverride = Boolean(
-      detail.canOverride &&
-      canLeaveFeeEditor &&
-      !currentStage?.reviewEnabled &&
-      !currentStage?.paymentStageEnabled &&
-      !currentStage?.offerStageEnabled &&
-      !currentStage?.seatStageEnabled
-    );
-
+  const formVisible =
+    workspace.view === 'form' || (workspace.view === 'journey' && isFormStage(selectedStage));
+  const renderLoadedContent = () => {
+    if (!application || !form) return null;
+    if (workspace.view === 'history') {
+      const hasHistory = Boolean(workflow?.history.length || detail.formHistoryQuery.data?.length);
+      return (
+        <Stack spacing={1.5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6">Application history</Typography>
+            <Button size="small" onClick={() => requestNavigation({ view: 'journey' })}>
+              Current Step
+            </Button>
+          </Stack>
+          {hasHistory ? (
+            <>
+              <TransitionHistoryCard workflow={workflow} />
+              <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
+            </>
+          ) : (
+            <Alert severity="info">No application history has been recorded yet.</Alert>
+          )}
+        </Stack>
+      );
+    }
+    if (workspace.view === 'form')
+      return (
+        <Stack spacing={1.5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6">Application record</Typography>
+            <Button size="small" onClick={() => requestNavigation({ view: 'journey' })}>
+              Current Step
+            </Button>
+          </Stack>
+          {renderRuntimeForm(!isFormStage(currentStage))}
+        </Stack>
+      );
     return (
-      <Box
-        sx={{
-          height: 1,
-          minHeight: 0,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '300px minmax(0, 1fr)' },
-          gridTemplateRows: { xs: 'auto minmax(0, 1fr)', lg: 'minmax(0, 1fr)' },
-          gap: 1.5,
-          overflow: 'hidden',
-        }}
+      <Stack
+        id={selectedStage ? `application-stage-panel-${selectedStage.id}` : undefined}
+        role="tabpanel"
+        aria-labelledby={selectedStage ? `application-stage-tab-${selectedStage.id}` : undefined}
+        spacing={1.5}
       >
-        <ApplicationProgressCard
+        {historical && selectedStage && (
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <Label color={getStageStatusColor(selectedStage.status)}>
+              {getStageStatusLabel(selectedStage.status)}
+            </Label>
+            {selectedStage.completedAt && (
+              <Typography variant="caption" color="text.secondary">
+                {fDateTime(selectedStage.completedAt)}
+              </Typography>
+            )}
+            {selectedStage.completionReason && (
+              <Typography variant="body2" color="text.secondary">
+                {selectedStage.completionReason}
+              </Typography>
+            )}
+          </Stack>
+        )}
+        {isFormStage(selectedStage) && renderRuntimeForm(historical)}
+        {((!historical && isAdmissionDecisionStage(currentStage)) ||
+          (workflow?.status === 1 &&
+            (!selectedStage || isAdmissionDecisionStage(selectedStage)))) && (
+          <ApplicationDecisionCard
+            compact
+            disabled={workspaceBusy}
+            onBusyChange={onDecisionBusyChange}
+            application={application}
+            journeyCompleted={workflow?.status === 1}
+          />
+        )}
+        <ApplicationManagedStages
+          compact
+          application={application}
           workflow={workflow}
-          currentStage={currentStage}
-          canOverride={canOverride}
-          onOverride={() => {
-            if (canLeaveFeeEditor) detail.setRuntimeAction('override');
+          selectedStage={historical ? selectedStage : undefined}
+          canAdvance={detail.canAdvance && canLeaveFeeEditor && !historical}
+          advancing={detail.advanceState.isLoading}
+          onFeeSelectionStateChange={setFeeEditorState}
+          onComplete={(stamp) => {
+            if (canLeaveFeeEditor && !historical)
+              detail.advance(stamp ? { concurrencyStamp: stamp } : undefined);
           }}
         />
-
-        <Paper
-          component="section"
-          variant="outlined"
-          aria-label="Application details workspace"
-          sx={{
-            gridColumn: { xs: 1, lg: 2 },
-            gridRow: { xs: 2, lg: 1 },
-            display: 'flex',
-            flexDirection: 'column',
-            minWidth: 0,
-            minHeight: 0,
-            overflow: 'hidden',
-          }}
-        >
-          <CustomTabs
-            value={activeTab}
-            onChange={(_, value: DetailTab) => requestTabChange(value)}
-            aria-label="Application detail sections"
-            variant="scrollable"
-            scrollButtons="auto"
-            guardUnsavedChanges={false}
-            slotProps={{ tab: { minHeight: 44 } }}
-          >
-            <Tab
-              id="application-tab-current"
-              aria-controls="application-panel-current"
-              value="current"
-              disabled={workspaceBusy}
-              label="Current step"
-              icon={<Iconify icon="mdi:clipboard-check-outline" width={20} />}
-              iconPosition="start"
-            />
-            <Tab
-              id="application-tab-form"
-              aria-controls="application-panel-form"
-              value="form"
-              disabled={workspaceBusy}
-              label="Application form"
-              icon={<Iconify icon="mdi:file-document-outline" width={20} />}
-              iconPosition="start"
-            />
-            <Tab
-              id="application-tab-history"
-              aria-controls="application-panel-history"
-              value="history"
-              disabled={workspaceBusy}
-              label="History"
-              icon={<Iconify icon="mdi:history" width={20} />}
-              iconPosition="start"
-            />
-          </CustomTabs>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }} />
-
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
-              {activeTab === 'current' && (
-                <Stack
-                  id="application-panel-current"
-                  role="tabpanel"
-                  aria-labelledby="application-tab-current"
-                  spacing={2}
-                >
-                  <ApplicationCounsellorCard application={application} />
-                  {currentStage && (
-                    <ApplicationCurrentTask
-                      stage={currentStage}
-                      applicationStatus={application.status}
-                      nextRequiredAction={workflow?.nextRequiredAction}
-                      active={active}
-                      awaitingDecision={awaitingDecision}
-                      canComplete={canComplete}
-                      canRetryFormHandoff={canRetryFormHandoff}
-                      canSkip={canSkip}
-                      advancing={detail.advanceState.isLoading}
-                      retryingFormHandoff={detail.submitState.isLoading}
-                      onAdvance={() => {
-                        if (!canLeaveFeeEditor) return;
-                        if (requiresStageCompletionDetails(currentStage)) completionDialog.onTrue();
-                        else detail.advance();
-                      }}
-                      onRetryFormHandoff={detail.submitApplication}
-                      onSkip={() => {
-                        if (canLeaveFeeEditor) detail.setRuntimeAction('skip');
-                      }}
-                      onReviewForm={() => requestTabChange('form')}
-                    />
-                  )}
-                  <ApplicationManagedStages
-                    application={application}
-                    workflow={workflow}
-                    canAdvance={detail.canAdvance && canLeaveFeeEditor}
-                    advancing={detail.advanceState.isLoading}
-                    onFeeSelectionStateChange={setFeeEditorState}
-                    onComplete={(concurrencyStamp) => {
-                      if (!canLeaveFeeEditor) return;
-                      detail.advance(concurrencyStamp ? { concurrencyStamp } : undefined);
-                    }}
-                  />
-                  {isFormStage(currentStage) && renderRuntimeForm()}
-                  {decisionStage && (
-                    <ApplicationDecisionCard
-                      application={application}
-                      managedOffer={currentStage?.offerStageEnabled}
-                    />
-                  )}
-                  {currentStage &&
-                    !managedCurrentStage &&
-                    !isFormStage(currentStage) &&
-                    !decisionStage && (
-                      <Alert severity="info" icon={<Iconify icon="mdi:clipboard-text-outline" />}>
-                        <Typography variant="subtitle2">Manual workflow step</Typography>
-                        <Typography variant="body2">
-                          No managed checklist was configured for “{currentStage.name}” when this
-                          workflow version was published. Review the required evidence, then use the
-                          available completion action.
-                        </Typography>
-                      </Alert>
+        {selectedStage &&
+          !hasManagedStageWorkspace(selectedStage) &&
+          !isFormStage(selectedStage) &&
+          !isAdmissionDecisionStage(selectedStage) && (
+            <Alert severity="info">
+              <Typography variant="subtitle2">{selectedStage.name}</Typography>
+              <Typography variant="body2">
+                {historical
+                  ? 'The recorded outcome for this step is available in Application History.'
+                  : getStageGuidance(
+                      selectedStage,
+                      application.status,
+                      workflow?.nextRequiredAction
                     )}
-                  {!currentStage && workflow?.status !== 1 && (
-                    <Alert severity="info">No current admission task is available.</Alert>
-                  )}
-                  {workflow?.status === 1 && (
-                    <Alert severity="success">
-                      Admission workflow completed. The decision and full audit history remain
-                      available.
-                    </Alert>
-                  )}
-                  {application.inquiryId && <ApplicationFollowUps applicationId={application.id} />}
-                </Stack>
-              )}
-
-              {activeTab === 'form' && (
-                <Stack
-                  id="application-panel-form"
-                  role="tabpanel"
-                  aria-labelledby="application-tab-form"
-                  spacing={1.5}
-                >
-                  <Alert severity="info" icon={<Iconify icon="mdi:archive-lock-outline" />}>
-                    This is the form version frozen when the application started. It remains
-                    available as the submitted application record and does not represent the current
-                    workflow step.
-                  </Alert>
-                  {renderRuntimeForm()}
-                </Stack>
-              )}
-
-              {activeTab === 'history' && (
-                <Stack
-                  id="application-panel-history"
-                  role="tabpanel"
-                  aria-labelledby="application-tab-history"
-                  spacing={1.5}
-                >
-                  {hasHistory ? (
-                    <>
-                      <TransitionHistoryCard workflow={workflow} />
-                      <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
-                    </>
-                  ) : (
-                    <Alert severity="info">No application history has been recorded yet.</Alert>
-                  )}
-                </Stack>
-              )}
-            </Box>
-          </Scrollbar>
-
-          <Paper
-            square
-            elevation={0}
-            sx={{
-              display: { xs: 'flex', md: 'none' },
-              justifyContent: 'flex-end',
-              flexShrink: 0,
-              p: 1,
-              borderTop: 1,
-              borderColor: 'divider',
-            }}
-          >
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:file-document-outline" />}
-              disabled={workspaceBusy}
-              onClick={() => requestTabChange('form')}
-            >
-              Review application form
-            </Button>
-          </Paper>
-        </Paper>
-      </Box>
+              </Typography>
+            </Alert>
+          )}
+        {!currentStage && workflow?.status !== 1 && (
+          <Alert severity="info">No current admission task is available.</Alert>
+        )}
+        {!historical && workflow?.status === 1 && (
+          <Alert severity="success">
+            Admission workflow completed. The decision and full audit history remain available.
+          </Alert>
+        )}
+        {!historical && application.inquiryId && (
+          <ApplicationFollowUps
+            compact
+            applicationId={application.id}
+            disabled={workspaceBusy}
+            onBusyChange={onFollowUpsBusyChange}
+          />
+        )}
+      </Stack>
     );
   };
-
   return (
     <>
-      <CustomDialog
+      <Drawer
         open
-        fullScreen
-        hasForm={false}
-        disableClose={workspaceBusy}
-        data-testid="admission-application-full-screen-dialog"
-        title={
-          <Box component="span" sx={{ display: 'block', minWidth: 0 }}>
-            <Box component="span" sx={{ display: 'block' }}>
-              Application details
-            </Box>
-            {application && (
-              <Box
-                component="span"
-                sx={{
-                  mt: 0.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  flexWrap: 'wrap',
-                  typography: 'body2',
-                  fontWeight: 400,
-                  color: 'text.secondary',
-                }}
-              >
-                <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
-                  {application.applicantName}
-                </Box>
-                <Box component="span" aria-hidden>
-                  ·
-                </Box>
-                <Box component="span">
-                  {formatAdmissionReference(application.applicationNumber)}
-                </Box>
-                <Label color={getAdmissionApplicationStatusColor(application.status)}>
-                  {getAdmissionApplicationStatusLabel(application.status)}
-                </Label>
-              </Box>
-            )}
-          </Box>
-        }
+        anchor="right"
+        onClose={closeDetail}
         transitionDuration={{ enter: 0, exit: 0 }}
-        handleClose={closeDetail}
-        paperProps={{
+        PaperProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': 'application-drawer-title',
+          'data-testid': 'admission-application-drawer',
           sx: {
-            borderRadius: 0,
+            width: {
+              xs: '100%',
+              sm: expanded.value && formVisible ? 'min(1200px, 96vw)' : 'min(840px, 96vw)',
+            },
+            maxWidth: '100%',
+            bgcolor: 'background.paper',
             backgroundImage: 'none',
-            '& button[aria-label="close"]': { width: 44, height: 44 },
+            display: 'flex',
+            flexDirection: 'column',
+            overscrollBehavior: 'contain',
           },
         }}
       >
-        <DialogScrollContent
-          sx={{ p: 0, height: 1, minHeight: 0, overflow: 'hidden', bgcolor: 'background.neutral' }}
-          scrollBarProps={{
-            fillContent: true,
-            sx: {
-              flex: '1 1 auto',
-              minHeight: 0,
-              '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
-                { height: 1, minHeight: 0, overflow: 'hidden' },
+        <Box
+          component="header"
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr) auto',
+              sm: 'minmax(0, 1fr) minmax(0, auto) auto',
             },
+            alignItems: 'center',
+            gap: 1,
+            p: { xs: 1.5, sm: 2 },
+            borderBottom: 1,
+            borderColor: 'divider',
+            flexShrink: 0,
           }}
         >
-          <Box
-            sx={{
-              height: 1,
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              p: { xs: 1, sm: 2 },
-            }}
+          <Box sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+              <Typography id="application-drawer-title" variant="h6">
+                Applicant 360
+              </Typography>
+              {application && (
+                <Label color={getAdmissionApplicationStatusColor(application.status)}>
+                  {getAdmissionApplicationStatusLabel(application.status)}
+                </Label>
+              )}
+              <CustomTooltip title="Review the current admission step, application record and history.">
+                <IconButton aria-label="About admission application" size="small">
+                  <Iconify icon="mdi:information-outline" width={18} />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
+            {application && (
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                {application.applicantName} ·{' '}
+                {formatAdmissionReference(application.applicationNumber)}
+              </Typography>
+            )}
+          </Box>
+          {!isLoading && !isError && application && (
+            <Box
+              sx={{
+                minWidth: 0,
+                maxWidth: { sm: 260 },
+                gridColumn: { xs: '1 / -1', sm: 2 },
+                gridRow: { xs: 2, sm: 1 },
+              }}
+            >
+              <ApplicationCounsellorCard
+                compact
+                presentation="header"
+                application={application}
+                disabled={workspaceBusy}
+                onBusyChange={onCounsellorBusyChange}
+              />
+            </Box>
+          )}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.5}
+            sx={{ flexShrink: 0, gridColumn: { xs: 2, sm: 3 }, gridRow: 1 }}
           >
-            {isLoading && (
-              <Stack
-                spacing={1.5}
-                aria-label="Loading application details"
-                role="status"
-                sx={{ flex: 1, minHeight: 0 }}
+            {formVisible && (
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={navigationLocked}
+                startIcon={
+                  <Iconify
+                    icon={
+                      expanded.value
+                        ? 'mdi:arrow-collapse-horizontal'
+                        : 'mdi:arrow-expand-horizontal'
+                    }
+                  />
+                }
+                onClick={expanded.onToggle}
+                sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
               >
-                <Skeleton height={32} width="55%" />
-                <Box
-                  sx={{
-                    flex: 1,
-                    minHeight: 0,
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', lg: '300px minmax(0, 1fr)' },
-                    gap: 1.5,
-                  }}
-                >
-                  <Skeleton variant="rounded" height="100%" />
-                  <Skeleton variant="rounded" height="100%" />
-                </Box>
+                {expanded.value ? 'Restore' : 'Expand'}
+              </Button>
+            )}
+            {!isError && application && (
+              <ThreeDotsActions
+                moreLabel="Application actions"
+                actions={({ popover }) => (
+                  <>
+                    <MenuItem
+                      disabled={navigationLocked}
+                      onClick={() => {
+                        popover.onClose();
+                        requestNavigation({ view: 'form' });
+                      }}
+                    >
+                      <Iconify icon="mdi:file-document-outline" />
+                      Review Application Form
+                    </MenuItem>
+                    <MenuItem
+                      disabled={navigationLocked}
+                      onClick={() => {
+                        popover.onClose();
+                        requestNavigation({ view: 'history' });
+                      }}
+                    >
+                      <Iconify icon="mdi:history" />
+                      Application History
+                    </MenuItem>
+                    {canViewApplicantNotes && application.applicantId && (
+                      <MenuItem
+                        disabled={navigationLocked}
+                        onClick={() => {
+                          popover.onClose();
+                          notesDialog.onTrue();
+                        }}
+                      >
+                        <Iconify icon="mdi:note-text-outline" />
+                        Applicant Notes
+                      </MenuItem>
+                    )}
+                    {(workspace.view !== 'journey' || historical) && (
+                      <MenuItem
+                        disabled={navigationLocked}
+                        onClick={() => {
+                          popover.onClose();
+                          requestNavigation({ view: 'journey' });
+                        }}
+                      >
+                        <Iconify icon="mdi:clipboard-check-outline" />
+                        Current Step
+                      </MenuItem>
+                    )}
+                    {active && canOverride && Boolean(workflow?.availableTransitions.length) && (
+                      <MenuItem
+                        onClick={() => {
+                          popover.onClose();
+                          detail.setRuntimeAction('override');
+                        }}
+                      >
+                        <Iconify icon="mdi:routes" />
+                        Override Route
+                      </MenuItem>
+                    )}
+                  </>
+                )}
+              />
+            )}
+            <IconButton
+              aria-label="Close application details"
+              disabled={navigationLocked}
+              onClick={closeDetail}
+            >
+              <Iconify icon="mdi:close" />
+            </IconButton>
+          </Stack>
+        </Box>
+        {!isLoading && !isError && workspace.view === 'journey' && (
+          <ApplicationStageTabs
+            stages={workflow?.stages ?? []}
+            selectedStageId={selectedStage?.id}
+            currentStageId={workflow?.currentStageInstanceId}
+            busy={workspaceBusy}
+            onChange={(stageId) =>
+              requestNavigation({
+                view: 'journey',
+                stageId: stageId === currentStage?.id ? undefined : stageId,
+              })
+            }
+          />
+        )}
+        <Scrollbar sx={{ flex: '1 1 auto', minHeight: 0 }}>
+          <Box sx={{ p: { xs: 1.5, sm: 2 }, minWidth: 0 }}>
+            {isLoading && (
+              <Stack spacing={1.5} role="status" aria-label="Loading application details">
+                <Skeleton height={56} />
+                <Skeleton variant="rounded" height={48} />
+                <Skeleton variant="rounded" height={200} />
               </Stack>
             )}
             {applicationNotFound && (
@@ -487,11 +570,11 @@ export default function AdmissionApplicationDetailScreen() {
                 severity="warning"
                 action={
                   <Button color="inherit" size="small" onClick={closeDetail}>
-                    {returnUrl === studentPaths.enrollment.applications
-                      ? 'Back to applications'
+                    {returnUrl.startsWith(studentPaths.enrollment.pipeline)
+                      ? 'Back to Pipeline'
                       : returnUrl.startsWith(studentPaths.enrollment.assessments)
                         ? 'Back to assessments'
-                        : 'Back to Pipeline'}
+                        : 'Back to applications'}
                   </Button>
                 }
               >
@@ -508,38 +591,73 @@ export default function AdmissionApplicationDetailScreen() {
                 }}
               />
             )}
-            {!isLoading && !isError && !applicationNotFound && renderLoadedContent()}
+            {!isLoading && !isError && !applicationNotFound && (
+              <FormBusyRegion busy={workspaceBusy} label="Updating application…">
+                {renderLoadedContent()}
+              </FormBusyRegion>
+            )}
           </Box>
-        </DialogScrollContent>
-      </CustomDialog>
-
-      <ConfirmDialog
-        open={Boolean(requestedTab)}
-        onClose={() => {
-          if (!workspaceBusy) setRequestedTab(undefined);
-        }}
-        title="Discard unsaved fee selection?"
-        icon="warning"
-        content="Changing sections will discard the unsaved fee selection. Your saved application information remains available."
-        disableCancel={workspaceBusy}
-        disableEscapeKeyDown={workspaceBusy}
-        disableBackdropClick={workspaceBusy}
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            disabled={workspaceBusy}
-            onClick={() => {
-              if (requestedTab) setActiveTab(requestedTab);
-              setRequestedTab(undefined);
-            }}
-          >
-            Discard changes
+        </Scrollbar>
+        <Stack
+          component="footer"
+          direction="row"
+          spacing={1}
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ p: { xs: 1.5, sm: 2 }, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
+        >
+          <Button size="small" variant="outlined" disabled={navigationLocked} onClick={closeDetail}>
+            Close
           </Button>
-        }
-      />
-
+          {!isLoading &&
+            !isError &&
+            application &&
+            currentStage &&
+            workspace.view === 'journey' &&
+            !historical && (
+              <ApplicationCurrentTask
+                compact
+                stage={currentStage}
+                applicationStatus={application.status}
+                formPolicy={detail.formStageQuery.currentData?.policy}
+                nextRequiredAction={workflow?.nextRequiredAction}
+                active={active}
+                awaitingDecision={
+                  isApprovalStage(currentStage) &&
+                  !canStageTypeCompleteForStatus(currentStage, application.status)
+                }
+                canComplete={Boolean(canComplete)}
+                canRetryFormHandoff={
+                  canRetrySubmittedFormHandoff(currentStage, application.status) &&
+                  canLeaveFeeEditor &&
+                  detail.canAdvance
+                }
+                canSkip={canSkip}
+                advancing={detail.advanceState.isLoading}
+                retryingFormHandoff={detail.submitState.isLoading}
+                onAdvance={() => {
+                  if (!canLeaveFeeEditor) return;
+                  if (requiresStageCompletionDetails(currentStage)) completionDialog.onTrue();
+                  else detail.advance();
+                }}
+                onRetryFormHandoff={detail.submitApplication}
+                onSkip={() => {
+                  if (canLeaveFeeEditor) detail.setRuntimeAction('skip');
+                }}
+                onReviewForm={() => requestNavigation({ view: 'form' })}
+              />
+            )}
+        </Stack>
+      </Drawer>
+      {leaveGuard.confirmation}
+      {application?.applicantId && (
+        <ApplicationApplicantNotesDialog
+          open={notesDialog.value}
+          applicantId={application.applicantId}
+          onClose={notesDialog.onFalse}
+          onBusyChange={onNotesBusyChange}
+        />
+      )}
       {completionDialog.value && currentStage && (
         <AdmissionStageCompletionDialog
           open

@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
@@ -95,12 +96,12 @@ export default function AdmissionInquiriesScreen() {
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
-      standardId: academic.standardId || undefined,
+      ...academicClassFilterInput(academic.standardId),
       maxResultCount: rowsPerPage,
       skipCount: page * rowsPerPage,
       sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
     },
-    { skip: !academic.academicYearId }
+    { skip: !academic.academicYearId || !academic.boardId || !academic.mediumId }
   );
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,

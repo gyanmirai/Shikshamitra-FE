@@ -71,6 +71,12 @@ export type StudentOnboardingItem = {
   rollNo?: number | null;
   rollAssignmentMode?: 'manual' | 'automatic' | 'both';
   rollNumberLocked?: boolean;
+  grNumberLocked?: boolean;
+  grManualEntryAllowed?: boolean;
+  rollChangeReasonRequired?: boolean;
+  feeStructureConfirmed?: boolean;
+  credentialsPending?: boolean;
+  hasDocumentRequirementsSnapshot?: boolean;
   preferredDivisionName?: string | null;
   divisionPlacementOptions?: DivisionPlacementOption[];
   status: OnboardingItemStatus;
@@ -228,7 +234,7 @@ const buildCompatibilityChecks = (student: StudentLookupItem): OnboardingCheckli
         : 'GR number is pending.',
     status: student.grNo !== undefined && student.grNo !== null ? 'passed' : 'pending',
     blocking: true,
-    owner: 'Student Onboarding',
+    owner: 'Onboarding',
   },
   {
     key: 'roll-number',
@@ -239,7 +245,7 @@ const buildCompatibilityChecks = (student: StudentLookupItem): OnboardingCheckli
         : 'Roll number is pending.',
     status: student.rollNo !== undefined && student.rollNo !== null ? 'passed' : 'pending',
     blocking: true,
-    owner: 'Student Onboarding',
+    owner: 'Onboarding',
   },
   {
     key: 'documents',
@@ -328,7 +334,8 @@ const onboardingStepStatus: Record<StudentOnboardingStepStatus, OnboardingCheckS
 
 const systemStepFallbackDetails: Record<string, string> = {
   approval_review: 'Review the current requirements and record an approval note.',
-  final_readiness: 'This is completed automatically when activation validates every required check.',
+  final_readiness:
+    'This is completed automatically when activation validates every required check.',
 };
 
 export const mapOnboardingCaseToItem = (
@@ -336,7 +343,10 @@ export const mapOnboardingCaseToItem = (
 ): StudentOnboardingItem => {
   const documentStep = onboardingCase.steps.find((step) => step.key === 'documents');
   const documentPassed = documentStep?.status === 2 || documentStep?.status === 4;
-  const accountStatus = (required: boolean | undefined, status: number | null | undefined): OnboardingAccountStatus => {
+  const accountStatus = (
+    required: boolean | undefined,
+    status: number | null | undefined
+  ): OnboardingAccountStatus => {
     if (required === undefined) return 'not-connected';
     if (!required) return 'not-required';
     return status === 2 ? 'ready' : 'pending';
@@ -350,7 +360,7 @@ export const mapOnboardingCaseToItem = (
     admissionReference: onboardingCase.offeringCode,
     admissionRoute: onboardingCase.isHistoricalBackfill
       ? 'Historical admission backfill'
-      : onboardingCase.admissionRoute ?? 'Fresh admission',
+      : (onboardingCase.admissionRoute ?? 'Fresh admission'),
     admissionDate: onboardingCase.creationTime ?? null,
     ownerName: onboardingCase.assignedToUserName || 'Not assigned',
     assignedToUserId: onboardingCase.assignedToUserId ?? null,
@@ -368,24 +378,78 @@ export const mapOnboardingCaseToItem = (
     grPreview: null,
     rollNo: onboardingCase.rollNumber ?? null,
     rollAssignmentMode: onboardingCase.rollAssignmentMode,
-    rollNumberLocked: onboardingCase.status === 4,
+    rollNumberLocked: onboardingCase.rollNumberLocked ?? false,
+    grNumberLocked: onboardingCase.grNumberLocked ?? false,
+    grManualEntryAllowed: onboardingCase.grManualEntryAllowed ?? false,
+    rollChangeReasonRequired: onboardingCase.rollChangeReasonRequired ?? false,
+    feeStructureConfirmed: onboardingCase.feeStructureConfirmed ?? false,
+    credentialsPending: onboardingCase.credentialsPending,
+    hasDocumentRequirementsSnapshot: onboardingCase.hasDocumentRequirementsSnapshot,
     status: onboardingCaseStage[onboardingCase.status],
     documentsPassed: documentPassed ? 1 : 0,
     documentsRequired: documentStep?.required ? 1 : 0,
-    studentAccountStatus: accountStatus(onboardingCase.studentAccountRequired, onboardingCase.studentAccountStatus),
-    guardianAccountStatus: accountStatus(onboardingCase.guardianAccountRequired, onboardingCase.guardianAccountStatus),
-    readinessItems: onboardingCase.steps.map((step) => ({
-      key: step.key,
-      label: step.label,
-      detail:
-        step.detail ||
-        (step.waiverReason
-          ? `Waived: ${step.waiverReason}`
-          : systemStepFallbackDetails[step.key] || 'No additional detail available.'),
-      status: onboardingStepStatus[step.status],
-      blocking: step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
-      owner: onboardingCase.assignedToUserName || 'Student Onboarding',
-    })),
+    studentAccountStatus: accountStatus(
+      onboardingCase.studentAccountRequired,
+      onboardingCase.studentAccountStatus
+    ),
+    guardianAccountStatus: accountStatus(
+      onboardingCase.guardianAccountRequired,
+      onboardingCase.guardianAccountStatus
+    ),
+    readinessItems: [
+      ...(onboardingCase.hasDocumentRequirementsSnapshot &&
+      onboardingCase.admissionConfirmed !== undefined
+        ? [
+            {
+              key: 'admission_confirmed',
+              label: 'Admission confirmed',
+              detail: onboardingCase.admissionConfirmed
+                ? 'Admission finalization is confirmed.'
+                : 'Admission must be finalized before activation.',
+              status: onboardingCase.admissionConfirmed ? ('passed' as const) : ('failed' as const),
+              blocking: !onboardingCase.admissionConfirmed,
+              owner: 'Admission team',
+            },
+          ]
+        : []),
+      ...onboardingCase.steps.flatMap((step) => {
+        // Final readiness summarizes these tasks and is completed by activation, not by staff.
+        if (step.key === 'final_readiness') return [];
+        const check = {
+          key: step.key,
+          label: step.label,
+          detail:
+            step.detail ||
+            (step.waiverReason
+              ? `Waived: ${step.waiverReason}`
+              : systemStepFallbackDetails[step.key] || 'No additional detail available.'),
+          status: onboardingStepStatus[step.status],
+          blocking:
+            step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
+          owner: onboardingCase.assignedToUserName || 'Onboarding',
+        };
+        if (!step.key.includes('identifiers')) return [check];
+        return [
+          { key: 'gr_number', label: 'GR number', assigned: Boolean(onboardingCase.grNumber) },
+          {
+            key: 'roll_number',
+            label: 'Roll number',
+            assigned: Boolean(onboardingCase.rollNumber),
+          },
+        ].map((identifier) => ({
+          ...check,
+          key: identifier.key,
+          label: identifier.label,
+          status:
+            identifier.assigned && step.status !== 3
+              ? ('passed' as const)
+              : identifier.assigned
+                ? ('failed' as const)
+                : ('pending' as const),
+          blocking: step.required && (!identifier.assigned || step.status === 3),
+        }));
+      }),
+    ],
     activity: onboardingCase.events.map((event) => ({
       id: event.id,
       title: event.eventType,

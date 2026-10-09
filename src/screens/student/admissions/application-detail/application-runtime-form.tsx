@@ -39,7 +39,7 @@ type Props = {
   submitting: boolean;
   onChange: (fieldCode: string, value: string) => void;
   onBlur: (fieldCode: string) => void;
-  onSave: () => Promise<void>;
+  onSave: () => Promise<boolean>;
   onValidateStep: (sectionId: string) => boolean;
   onSubmit: () => void;
   showSaveDraft: boolean;
@@ -49,6 +49,8 @@ type Props = {
   reopening: boolean;
   onReopen: () => void;
   documents?: ReactNode;
+  compact?: boolean;
+  readOnly?: boolean;
 };
 
 export function ApplicationRuntimeForm({
@@ -71,6 +73,8 @@ export function ApplicationRuntimeForm({
   reopening,
   onReopen,
   documents,
+  compact = false,
+  readOnly = false,
 }: Props) {
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
@@ -163,10 +167,17 @@ export function ApplicationRuntimeForm({
   const moveToNextStep = (alreadyValidated = false) => {
     if (
       !currentSections.length ||
-      (!alreadyValidated && !currentSections.every((section) => onValidateStep(section.id)))
+      (!readOnly &&
+        !alreadyValidated &&
+        !currentSections.every((section) => onValidateStep(section.id)))
     )
       return;
     setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
+  };
+  const saveAndContinue = async () => {
+    if (!currentSections.every((section) => onValidateStep(section.id))) return;
+    const saved = await onSave();
+    if (saved) moveToNextStep(true);
   };
 
   const renderSectionFields = (
@@ -213,7 +224,7 @@ export function ApplicationRuntimeForm({
                 }),
               }}
               value={value}
-              disabled={interactionLocked || field.readOnly || application.status !== 0}
+              disabled={interactionLocked || readOnly || field.readOnly || application.status !== 0}
               error={
                 fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code]
                   ? field.translations?.[language]?.validationMessage ||
@@ -255,13 +266,19 @@ export function ApplicationRuntimeForm({
       return (
         <Box key={section.id} sx={{ width: 1 }}>
           {groups.length ? (
-            <Stack spacing={2}>
+            <Stack spacing={compact ? 1.5 : 2}>
               {groups.map((group) => (
                 <SectionCard
                   key={group.name}
                   title={group.name}
-                  gridProps={{ spacing: 2 }}
-                  paperProps={{ sx: { boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }}
+                  gridProps={{ spacing: compact ? 1 : 2 }}
+                  paperProps={{
+                    sx: {
+                      boxShadow: 'none',
+                      '&:hover': { boxShadow: 'none' },
+                      ...(compact && { p: 1.5 }),
+                    },
+                  }}
                 >
                   {renderSectionFields(section, undefined, group.fields)}
                 </SectionCard>
@@ -270,8 +287,14 @@ export function ApplicationRuntimeForm({
           ) : (
             <SectionCard
               title={section.name}
-              gridProps={{ spacing: 2 }}
-              paperProps={{ sx: { boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }}
+              gridProps={{ spacing: compact ? 1 : 2 }}
+              paperProps={{
+                sx: {
+                  boxShadow: 'none',
+                  '&:hover': { boxShadow: 'none' },
+                  ...(compact && { p: 1.5 }),
+                },
+              }}
             >
               {renderSectionFields(section)}
             </SectionCard>
@@ -293,29 +316,36 @@ export function ApplicationRuntimeForm({
           <SectionCard
             key={`${section.id}-${entryIndex}`}
             title={`${entryLabel} ${entryIndex + 1}`}
-            gridProps={{ spacing: 2 }}
+            gridProps={{ spacing: compact ? 1 : 2 }}
+            paperProps={
+              compact
+                ? { sx: { p: 1.5, boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }
+                : undefined
+            }
           >
             {renderSectionFields(section, entryIndex)}
-            {count > Math.max(section.minEntries ?? 0, 1) && application.status === 0 && (
-              <Grid size={{ xs: 12 }}>
-                <Button
-                  size="small"
-                  color="error"
-                  variant="text"
-                  disabled={interactionLocked}
-                  onClick={() =>
-                    section.fields.forEach((field) =>
-                      onChange(field.code, removeRepeatableEntry(values[field.code], entryIndex))
-                    )
-                  }
-                >
-                  Remove {entryLabel.toLowerCase()}
-                </Button>
-              </Grid>
-            )}
+            {count > Math.max(section.minEntries ?? 0, 1) &&
+              application.status === 0 &&
+              !readOnly && (
+                <Grid size={{ xs: 12 }}>
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="text"
+                    disabled={interactionLocked}
+                    onClick={() =>
+                      section.fields.forEach((field) =>
+                        onChange(field.code, removeRepeatableEntry(values[field.code], entryIndex))
+                      )
+                    }
+                  >
+                    Remove {entryLabel.toLowerCase()}
+                  </Button>
+                </Grid>
+              )}
           </SectionCard>
         ))}
-        {count < maxEntries && application.status === 0 && (
+        {count < maxEntries && application.status === 0 && !readOnly && (
           <Button
             size="small"
             variant="outlined"
@@ -343,13 +373,17 @@ export function ApplicationRuntimeForm({
         </Alert>
       ))}
       <Box sx={{ width: 1 }}>
-        <Box sx={{ maxWidth: 1280, mx: 'auto' }}>
-          <Typography variant="h6" sx={{ mb: 0.5 }}>
-            {form.definition.name} · v{form.formVersion}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-            {form.status === 1 ? 'Submitted' : form.status === 2 ? 'Reopened' : 'Draft'}
-          </Typography>
+        <Box sx={compact ? { width: 1 } : { maxWidth: 1280, mx: 'auto' }}>
+          {!compact && (
+            <Typography variant="h6" sx={{ mb: 0.5 }}>
+              {form.definition.name} · v{form.formVersion}
+            </Typography>
+          )}
+          {!compact && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+              {form.status === 1 ? 'Submitted' : form.status === 2 ? 'Reopened' : 'Draft'}
+            </Typography>
+          )}
           {supportedLanguages.length > 1 && (
             <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
               <CustomSelect
@@ -366,17 +400,24 @@ export function ApplicationRuntimeForm({
               />
             </Stack>
           )}
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
+          <Stack
+            direction={compact ? 'column' : { xs: 'column', md: 'row' }}
+            spacing={compact ? 1.5 : 3}
+            alignItems="stretch"
+          >
             {isStepper && visibleSteps.length > 0 && (
-              <Box sx={{ width: { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
+              <Box sx={{ width: compact ? 1 : { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
                 <AdmissionFormStepNavigation
                   activeStep={safeActiveStep}
                   steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
                   disabled={interactionLocked}
+                  orientation={compact ? 'horizontal' : 'responsive'}
+                  compact={compact}
                   completedSteps={form.status === 1 ? visibleSteps.map((_, index) => index) : []}
                   onStepChange={(index) => {
                     if (
                       index <= safeActiveStep ||
+                      readOnly ||
                       application.status !== 0 ||
                       visibleSteps
                         .slice(safeActiveStep, index)
@@ -404,7 +445,7 @@ export function ApplicationRuntimeForm({
           {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
             <Stack sx={{ mt: 2 }}>{documents}</Stack>
           )}
-          {isStepper && visibleSteps.length > 1 && (
+          {!compact && isStepper && visibleSteps.length > 1 && (
             <Stack spacing={1} sx={{ mt: 2 }}>
               <Typography variant="caption" color="text.secondary" textAlign="center">
                 Step {safeActiveStep + 1} of {visibleSteps.length}
@@ -418,17 +459,12 @@ export function ApplicationRuntimeForm({
                   Previous
                 </Button>
                 <Stack direction="row" spacing={1}>
-                  {showSaveDraft && (
+                  {showSaveDraft && !readOnly && (
                     <Button
                       size="small"
                       variant="outlined"
                       disabled={interactionLocked || application.status !== 0}
-                      onClick={async () => {
-                        if (currentSections.every((section) => onValidateStep(section.id))) {
-                          await onSave();
-                          moveToNextStep(true);
-                        }
-                      }}
+                      onClick={saveAndContinue}
                     >
                       Save &amp; continue
                     </Button>
@@ -450,9 +486,36 @@ export function ApplicationRuntimeForm({
             useFlexGap
             flexWrap="wrap"
             justifyContent="flex-end"
-            sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}
+            sx={{
+              mt: compact ? 1.5 : 3,
+              pt: compact ? 1.5 : 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              ...(compact && {
+                position: 'sticky',
+                bottom: 0,
+                bgcolor: 'background.paper',
+                py: 1.5,
+                zIndex: 1,
+              }),
+            }}
           >
-            {showSaveDraft && (
+            {compact && isStepper && visibleSteps.length > 1 && (
+              <>
+                <Button
+                  size="small"
+                  disabled={interactionLocked || safeActiveStep === 0}
+                  onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
+                  sx={{ mr: 'auto' }}
+                >
+                  Previous
+                </Button>
+                <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
+                  Step {safeActiveStep + 1} of {visibleSteps.length}
+                </Typography>
+              </>
+            )}
+            {showSaveDraft && !readOnly && (
               <Button
                 size="small"
                 variant="outlined"
@@ -463,16 +526,42 @@ export function ApplicationRuntimeForm({
                 Save draft
               </Button>
             )}
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon="mdi:send-outline" />}
-              disabled={interactionLocked || application.status !== 0 || !canSubmitForm}
-              onClick={onSubmit}
-            >
-              Submit application
-            </Button>
-            {application.status === 1 && canReopen && !managedFormStage && (
+            {compact && isStepper && visibleSteps.length > 1 && (
+              <>
+                {showSaveDraft &&
+                  !readOnly &&
+                  application.status === 0 &&
+                  safeActiveStep < visibleSteps.length - 1 && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={interactionLocked}
+                      onClick={saveAndContinue}
+                    >
+                      Save &amp; continue
+                    </Button>
+                  )}
+                <Button
+                  size="small"
+                  disabled={interactionLocked || safeActiveStep === visibleSteps.length - 1}
+                  onClick={() => moveToNextStep()}
+                >
+                  Next
+                </Button>
+              </>
+            )}
+            {!readOnly && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:send-outline" />}
+                disabled={interactionLocked || application.status !== 0 || !canSubmitForm}
+                onClick={onSubmit}
+              >
+                Submit application
+              </Button>
+            )}
+            {!readOnly && application.status === 1 && canReopen && !managedFormStage && (
               <Button
                 size="small"
                 variant="outlined"

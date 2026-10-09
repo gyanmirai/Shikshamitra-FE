@@ -1,34 +1,33 @@
-import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
-
 import { Iconify } from 'src/components/iconify';
 import { Button, Divider, Typography } from '@mui/material';
 
-import { managedReviewAllowsDecision } from '../review/review-model';
-
 export function ApplicationFinalizationCallout({
-  application,
   busy,
   onOpen,
+  compact = false,
 }: {
-  application: AdmissionApplication;
   busy: boolean;
   onOpen: () => void;
+  compact?: boolean;
 }) {
   return (
     <>
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ my: compact ? 1 : 2 }} />
       <Typography variant="body2" color="text.secondary">
-        The offer is accepted. Finalize Admissions to create or link the Student identity. Placement
-        and enrollment happen later.
+        The application is approved and its journey is complete. Finalize admission to create or
+        link the Student identity. Placement and enrollment happen later.
       </Typography>
       <Button
         variant="contained"
-        color="success"
+        color={compact ? 'inherit' : 'success'}
         size="small"
-        disabled={busy || !managedReviewAllowsDecision(application.reviewDecision, 'finalize')}
+        disabled={busy}
         startIcon={<Iconify icon="mdi:school-outline" />}
         onClick={onOpen}
-        sx={{ mt: 1, alignSelf: 'flex-start' }}
+        sx={{
+          mt: 1,
+          alignSelf: 'flex-start',
+        }}
       >
         Finalize admission
       </Button>

@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 export type AdmissionOfferingAvailabilityStatus = 0 | 1 | 2 | 3 | 4;
 export type AdmissionOfferingConfigurationStatus = 0 | 1;
@@ -124,6 +125,7 @@ export type AdmissionOfferingListInput = {
   mediumId?: string;
   stageId?: string;
   standardId?: string;
+  standardIds?: string[];
   isActive?: boolean;
   availabilityStatus?: AdmissionOfferingAvailabilityStatus;
   configurationStatus?: AdmissionOfferingConfigurationStatus;
@@ -179,7 +181,10 @@ export const admissionOfferingsApi = api.injectEndpoints({
       PagedResult<AdmissionOfferingListItem>,
       AdmissionOfferingListInput
     >({
-      query: (params) => ({ url: '/student/enrollment/admissions/offerings', params }),
+      query: (params) => ({
+        url: '/student/enrollment/admissions/offerings',
+        params: studentAcademicFilterParams(params),
+      }),
       transformResponse: (
         response:
           | ResultEnvelope<PagedResult<AdmissionOfferingListItem>>

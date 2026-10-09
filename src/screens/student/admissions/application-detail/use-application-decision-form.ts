@@ -7,7 +7,6 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
 import { useReviewRecovery } from '../review/use-review-recovery';
-import { managedReviewAllowsDecision } from '../review/review-model';
 import { admissionDecisionRequiresReason } from './application-decision-model';
 import { canPerformAdmissionDecision } from './use-admission-application-decisions';
 
@@ -29,21 +28,14 @@ export function useApplicationDecisionForm({
   const recovery = useReviewRecovery(application, onReload, 'application');
   const current = recovery.summary;
   const requiresReason = admissionDecisionRequiresReason(action);
-  const requiresExpiry = action === 'offer';
-  const reaffirm =
-    action === 'approve' &&
-    current.reviewDecision?.managedReviewEnabled &&
-    current.reviewDecision.canApprove &&
-    [6, 7, 8].includes(current.status);
   const canRecord = Boolean(
     action &&
     current.concurrencyStamp &&
-    (canPerformAdmissionDecision(current.status, action) || reaffirm) &&
-    managedReviewAllowsDecision(current.reviewDecision, action) &&
+    canPerformAdmissionDecision(current.status, action) &&
     !recovery.error
   );
   const formik = useFormik({
-    initialValues: { reason: '', offerExpiresAt: '' },
+    initialValues: { reason: '' },
     validationSchema: Yup.object({
       reason: Yup.string()
         .trim()
@@ -53,20 +45,12 @@ export function useApplicationDecisionForm({
           'Reason is required for this decision',
           (value) => !requiresReason || Boolean(value?.trim())
         ),
-      offerExpiresAt: Yup.string().test(
-        'future-offer-expiry',
-        'Offer expiry must be in the future',
-        (value) => !requiresExpiry || Boolean(value && new Date(value).getTime() > Date.now())
-      ),
     }),
     onSubmit: async (values, helpers) => {
       if (!canRecord) return;
       try {
         const success = await onSubmit({
           reason: values.reason.trim() || undefined,
-          offerExpiresAt: values.offerExpiresAt
-            ? new Date(values.offerExpiresAt).toISOString()
-            : undefined,
           concurrencyStamp: current.concurrencyStamp,
         });
         if (success) {
@@ -87,7 +71,6 @@ export function useApplicationDecisionForm({
     recovery,
     canRecord,
     requiresReason,
-    requiresExpiry,
     reload: () => recovery.reload(() => formik.resetForm()),
   };
 }

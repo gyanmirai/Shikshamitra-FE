@@ -3,6 +3,7 @@
 import type { EsiEmployeeImpact, EsiStatutoryOverride } from 'src/redux/hr/statutory-scheme-api';
 
 import { useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import {
   useGetEsiOverridesQuery,
@@ -249,10 +250,22 @@ export default function EsiOverrideDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={createState.isLoading}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mdi:close" />}
+          onClick={onClose}
+          disabled={createState.isLoading}
+        >
           Cancel
         </Button>
-        <Button variant="contained" onClick={save} disabled={formInvalid || createState.isLoading}>
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<Iconify icon="mdi:plus" />}
+          onClick={save}
+          disabled={formInvalid || createState.isLoading}
+        >
           {createState.isLoading ? 'Adding…' : 'Add Exception'}
         </Button>
       </DialogActions>

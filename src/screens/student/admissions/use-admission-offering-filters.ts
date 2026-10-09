@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 
 export type AdmissionOfferingFilters = {
   admissionCycleId: string;
@@ -31,8 +32,8 @@ export function useAdmissionOfferingFilters() {
   const [filters, setFilters] = useState<AdmissionOfferingFilters>(() => ({
     admissionCycleId: searchParams.get('cycle') ?? '',
     campusId: searchParams.get('campus') ?? '',
-    boardId: searchParams.get('board') ?? '',
-    mediumId: searchParams.get('medium') ?? '',
+    boardId: readAcademicFilterIds(searchParams.get('board'))[0] ?? '',
+    mediumId: readAcademicFilterIds(searchParams.get('medium'))[0] ?? '',
     stageId: searchParams.get('stage') ?? '',
     standardId: searchParams.get('standard') ?? '',
     isActive: searchParams.get('active') ?? '',
@@ -76,8 +77,8 @@ export function useAdmissionOfferingFilters() {
     commit({
       ...filters,
       campusId: '',
-      boardId: '',
-      mediumId: '',
+      boardId: filters.boardId,
+      mediumId: filters.mediumId,
       stageId: '',
       standardId: '',
       isActive: '',

@@ -60,7 +60,7 @@ export default function StudentOnboardingShell({ children }: StudentOnboardingSh
           '&:focus-visible': { transform: 'translateY(0)' },
         }}
       >
-        Skip to Student Onboarding workspace
+        Skip to Onboarding workspace
       </Box>
       <Box
         id="student-onboarding-content"

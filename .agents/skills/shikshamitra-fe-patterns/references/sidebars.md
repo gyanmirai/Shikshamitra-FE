@@ -42,6 +42,7 @@ confirmations.
 ## 3. Header content and alignment
 
 - The header must identify the record or task immediately.
+- Use Title Case for visible drawer titles, as defined in `DESIGN.md`. Preserve the spelling of record names included in dynamic titles.
 - Use a clear title, concise supporting context, and status only when each
   provides different information.
 - Keep the title, meaningful record icon, status chip, and close action
@@ -70,7 +71,7 @@ confirmations.
   `Schedule timeline`, `Exam overview`, or `Subjects & schedule`.
 - Keep helper text short and useful. Do not repeat the heading or the same
   value in multiple places.
-- Use sentence case and correct singular/plural wording.
+- Use sentence case for body copy and correct singular/plural wording.
 - Use a grid for related values so labels and values align across the drawer.
 - Do not create large empty areas above the first section or between short
   sections merely to fill the viewport.

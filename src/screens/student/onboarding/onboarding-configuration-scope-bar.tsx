@@ -223,7 +223,7 @@ export function OnboardingConfigurationScopeBar({ compact = false }: { compact?:
       <ConfirmDialog
         open={resetConfirm.value}
         onClose={resetConfirm.onFalse}
-        title="Use inherited defaults?"
+        title="Use Inherited Defaults"
         content={`Remove the current ${scope.label} override and restore inherited onboarding rules for this session.`}
         icon="warning"
         action={
