@@ -29,13 +29,15 @@ export const SalaryDetailsTableCard = ({
 
   return (
     <Card
+      variant="outlined"
       data-table-id={tableId}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        border: (theme) => `1px solid ${theme.palette.divider}`,
-        boxShadow: (theme) => theme.customShadows?.z1,
+        boxShadow: 'none',
+        minWidth: 0,
+        fontVariantNumeric: 'tabular-nums',
       }}
     >
       <CardHeader
@@ -56,7 +58,7 @@ export const SalaryDetailsTableCard = ({
         title={
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, overflowWrap: 'anywhere' }}>
                 {title}
               </Typography>
               {subheader ? (
@@ -100,7 +102,11 @@ export const SalaryDetailsTableCard = ({
                 spacing={1.5}
                 sx={{ py: 0.9 }}
               >
-                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+                >
                   {item?.name || '-'}
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>

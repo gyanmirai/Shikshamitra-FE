@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { HrDashboardPreviewShell } from 'src/screens/hr/hr-dashboard/components/HrDashboardPreviewShell';
 import { shouldShowDashboardSnapshotSkeleton } from 'src/screens/hr/hr-dashboard/hr-dashboard-preview-state';
 import { HrDashboardSnapshotEmptyState } from 'src/screens/hr/hr-dashboard/components/HrDashboardSnapshotEmptyState';
@@ -39,9 +38,11 @@ const PayrollMetric = ({
   <Card
     sx={{
       p: 2,
+      height: '100%',
       minHeight: 112,
       boxShadow: 'none',
       border: (theme) => `1px solid ${theme.palette.divider}`,
+      fontVariantNumeric: 'tabular-nums',
     }}
   >
     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -78,26 +79,18 @@ const PayrollDashboard = () => {
     return () => window.clearInterval(id);
   }, [preview?.status, refetch]);
 
-  if (isLoading) {
-    return <Skeleton variant="rounded" height={420} />;
-  }
-
   const reviewedPercent = data?.employeeCount
     ? Math.round(((data.reviewedCount + data.lockedCount) / data.employeeCount) * 100)
     : 0;
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Dashboard"
-        links={[{ name: 'HR' }, { name: 'Payroll' }, { name: 'Dashboard' }]}
-      />
       <HrDashboardPreviewShell
         title="Payroll Dashboard"
         subtitle={
           data
             ? `Stored payroll preview for ${dayjs(`${data.month}-01`).format('MMMM YYYY')}`
-            : undefined
+            : 'Review saved payroll readiness and the staff rows that need attention.'
         }
         preview={preview}
         isFetching={isFetching}
@@ -109,7 +102,6 @@ const PayrollDashboard = () => {
             variant="contained"
             size="small"
             startIcon={<Iconify icon="solar:calculator-linear" />}
-            sx={{ minHeight: 34 }}
           >
             Run payroll
           </Button>
@@ -119,6 +111,7 @@ const PayrollDashboard = () => {
           <Alert severity="error">Payroll dashboard preview could not be loaded.</Alert>
         ) : null}
         {!data ? (
+          isLoading ||
           shouldShowDashboardSnapshotSkeleton({
             status: preview?.status,
             isFetching,
@@ -204,6 +197,7 @@ const PayrollDashboard = () => {
                   </Typography>
                   <LinearProgress
                     variant="determinate"
+                    aria-label="Payroll review progress"
                     value={reviewedPercent}
                     sx={{ mt: 2, height: 8, borderRadius: 1 }}
                   />

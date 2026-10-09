@@ -1030,7 +1030,6 @@ const RunPayroll = () => {
     >
       <CustomBreadcrumbs
         heading="Run Payroll"
-        layout="inline"
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
@@ -1241,6 +1240,7 @@ const RunPayroll = () => {
                     size="small"
                     variant="outlined"
                     color="warning"
+                    startIcon={<Iconify icon="mdi:undo" />}
                     loading={unmarkLoading}
                     disabled={!preview.isCurrent || !selectedReviewedIds.length}
                     onClick={() =>
@@ -2387,6 +2387,7 @@ const RunPayroll = () => {
             }
             action={
               <LoadingButton
+                size="small"
                 variant="contained"
                 color="error"
                 loading={lockLoading}

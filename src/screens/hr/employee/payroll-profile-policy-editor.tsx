@@ -257,6 +257,7 @@ export function PayrollProfilePolicyEditor({
                   severity="error"
                   action={
                     <Button
+                      size="small"
                       onClick={() => {
                         payroll.refetch();
                         attendance.refetch();
@@ -347,16 +348,22 @@ export function PayrollProfilePolicyEditor({
         <Divider />
         <Stack spacing={1} sx={{ p: 2 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={close} disabled={busy}>
+          <Stack direction="row" justifyContent="flex-end" spacing={1} useFlexGap flexWrap="wrap">
+            <Button size="small" variant="outlined" onClick={close} disabled={busy}>
               Cancel
             </Button>
             {impact ? (
               <>
-                <Button onClick={() => setImpact(null)} disabled={busy}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setImpact(null)}
+                  disabled={busy}
+                >
                   Back
                 </Button>
                 <Button
+                  size="small"
                   onClick={save}
                   variant="contained"
                   color="inherit"
@@ -368,6 +375,7 @@ export function PayrollProfilePolicyEditor({
               </>
             ) : (
               <Button
+                size="small"
                 type="submit"
                 variant="contained"
                 color="inherit"
