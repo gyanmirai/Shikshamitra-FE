@@ -160,13 +160,14 @@ const EmployeeSalaryStructureContent = () => {
         description="View and manage staff salary structures."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management' },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Payroll Structure' },
         ]}
       />
       {['staff-profile', 'staff-edit'].includes(searchParams.get('from') || '') &&
         requestedEmployeeId && (
           <Button
+            size="small"
             component={RouterLink}
             href={
               searchParams.get('from') === 'staff-edit'
@@ -181,7 +182,7 @@ const EmployeeSalaryStructureContent = () => {
           </Button>
         )}
 
-      <Card>
+      <Card variant="outlined" sx={{ boxShadow: 'none' }}>
         <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
             label="Staff"
@@ -224,7 +225,11 @@ const EmployeeSalaryStructureContent = () => {
       {employeeError && selectedEmployee?.id === requestedEmployeeId && (
         <Alert
           severity="error"
-          action={<Button onClick={() => refetchEmployee()}>Retry</Button>}
+          action={
+            <Button size="small" onClick={() => refetchEmployee()}>
+              Retry
+            </Button>
+          }
           sx={{ mt: 1 }}
         >
           Unable to load staff details.
@@ -232,7 +237,7 @@ const EmployeeSalaryStructureContent = () => {
       )}
 
       {!employeeId ? (
-        <Paper elevation={3} sx={{ p: 3, mt: 1, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ p: 3, mt: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Select a staff member to view salary structure.
           </Typography>

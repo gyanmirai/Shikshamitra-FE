@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -13,8 +14,18 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Stack, Button, Switch, TextField, Typography, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Button,
+  Switch,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 import {
   useGetProfessionalTaxQuery,
   useAddProfessionalTaxMutation,
@@ -59,7 +70,22 @@ const ProfessionalTax = () => {
 
   const tableData = PFData?.items || [];
   return (
-    <Box>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Professional tax"
+        description="Manage effective-dated professional tax salary ranges."
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
+          { name: 'Settings', href: hrPaths.payroll.settings.root },
+          { name: 'Professional tax' },
+        ]}
+        action={
+          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+            Add tax range
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -70,6 +96,7 @@ const ProfessionalTax = () => {
         content="Are you sure you want to delete?"
         action={
           <LoadingButton
+            size="small"
             variant="contained"
             loading={isPFDeleteLoading}
             color="error"
@@ -79,38 +106,22 @@ const ProfessionalTax = () => {
               setEditData(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          Tax Range
-        </Button>
-      </Box>
       <CustomizableTable
         noDataText={
           <>
             No Tax Range Found{' '}
-            <Box
-              onClick={() => {
-                dialog.onTrue();
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Tax Range
-            </Box>
+            <Button size="small" onClick={dialog.onTrue} startIcon={<Add />}>
+              Add tax range
+            </Button>
           </>
         }
         tableId="professional-table"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, overflow: 'hidden' } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}
         columns={[
           { id: 'jurisdictionCode', label: 'Jurisdiction' },
@@ -118,22 +129,25 @@ const ProfessionalTax = () => {
           {
             id: 'fromSalary',
             label: 'From salary',
+            align: 'right',
             filterType: 'number',
             render(value, row) {
-              return value == null ? 'No upper limit' : formatCurrency(value);
+              return row.fromSalary == null ? '-' : formatCurrency(row.fromSalary);
             },
           },
           {
             id: 'toSalary',
             label: 'To salary',
+            align: 'right',
             filterType: 'number',
             render(value, row) {
-              return formatCurrency(value);
+              return row.toSalary == null ? 'No upper limit' : formatCurrency(row.toSalary);
             },
           },
           {
             id: 'taxAmount',
             label: 'Tax Amount',
+            align: 'right',
             filterType: 'number',
             render(value, row) {
               return formatCurrency(value);
@@ -178,6 +192,7 @@ const ProfessionalTax = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
+        hasForm={false}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Create New Tax Range</Typography>
@@ -238,9 +253,9 @@ const ProfessionalTaxForm = ({
       jurisdictionCode: editData?.jurisdictionCode || 'IN-GJ',
       effectiveFrom: editData?.effectiveFrom?.slice(0, 10) || '2022-04-01',
       effectiveTo: editData?.effectiveTo?.slice(0, 10) || '',
-      fromSalary: editData?.fromSalary || '',
-      toSalary: editData?.toSalary || '',
-      taxAmount: editData?.taxAmount || '',
+      fromSalary: editData?.fromSalary?.toString() ?? '',
+      toSalary: editData?.toSalary?.toString() ?? '',
+      taxAmount: editData?.taxAmount?.toString() ?? '',
       isActive: editData?.isActive ?? true,
       deductInCessationMonth: editData?.deductInCessationMonth ?? true,
     },
@@ -290,7 +305,13 @@ const ProfessionalTaxForm = ({
     <Box component="form" onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
         <Stack spacing={2} sx={{ p: 2 }}>
-          <TextField fullWidth size="small" label="Jurisdiction" value={formik.values.jurisdictionCode} disabled />
+          <TextField
+            fullWidth
+            size="small"
+            label="Jurisdiction"
+            value={formik.values.jurisdictionCode}
+            disabled
+          />
           <TextField
             fullWidth
             size="small"
@@ -323,7 +344,12 @@ const ProfessionalTaxForm = ({
             helperText={formik.touched.fromSalary && formik.errors.fromSalary}
           />
           <FormControlLabel
-            control={<Switch checked={formik.values.isActive} onChange={(_, checked) => formik.setFieldValue('isActive', checked)} />}
+            control={
+              <Switch
+                checked={formik.values.isActive}
+                onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
+              />
+            }
             label="Active rule"
           />
           <FormControlLabel
@@ -356,10 +382,21 @@ const ProfessionalTaxForm = ({
         </Stack>
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mdi:close" />}
+          onClick={handleClose}
+        >
           Cancel
         </Button>
-        <LoadingButton loading={isLoading || isUpdatePFLoading} variant="contained" type="submit">
+        <LoadingButton
+          size="small"
+          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          loading={isLoading || isUpdatePFLoading}
+          variant="contained"
+          type="submit"
+        >
           Save
         </LoadingButton>
       </DialogActions>

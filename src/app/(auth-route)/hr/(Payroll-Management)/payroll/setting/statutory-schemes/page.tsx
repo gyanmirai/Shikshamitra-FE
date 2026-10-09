@@ -1,22 +1,20 @@
 'use client';
 
 import { Box } from '@mui/material';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { hrPaths } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import EsiStatutorySettings from 'src/screens/hr/payroll/setting/esi-statutory-settings';
 
 export default function StatutorySchemesPage() {
-  const isDesktop = useResponsive('up', 'md');
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Statutory Schemes"
-        layout={isDesktop ? 'inline' : 'stacked'}
         description="Configure ESIC and review its effect on payroll."
         links={[
-          { name: 'HR/Staff' },
-          { name: 'Payroll Management' },
-          { name: 'Settings' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.root },
+          { name: 'Settings', href: hrPaths.payroll.settings.root },
           { name: 'Statutory Schemes' },
         ]}
       />

@@ -821,7 +821,7 @@ export function SalaryStructureBuilder({
             </Box>
           </Box>
           {canManage ? (
-            <Box display="flex" gap={1} sx={{ ml: 'auto' }}>
+            <Box display="flex" gap={1} flexWrap="wrap" sx={{ ml: 'auto' }}>
               {customizing ? (
                 <Button
                   size="small"
