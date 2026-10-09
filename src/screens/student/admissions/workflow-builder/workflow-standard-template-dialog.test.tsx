@@ -67,6 +67,25 @@ async function selectForm(user: ReturnType<typeof userEvent.setup>, label: strin
 }
 
 describe('manual workflow template drawer', () => {
+  it('keeps guidance in the header tooltip and previews the selected journey', async () => {
+    const user = userEvent.setup();
+    renderDrawer(true);
+
+    expect(screen.queryByText(/Select the closest process/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Registration is attached to the Form stage/)
+    ).not.toBeInTheDocument();
+    await user.hover(screen.getByRole('button', { name: 'Workflow template information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Replace this draft’s journey and select the published forms it uses.'
+    );
+    await user.unhover(screen.getByRole('button', { name: 'Workflow template information' }));
+    await user.click(screen.getByRole('button', { name: 'Preview selected journey' }));
+    expect(screen.getByText('1. Application form submitted')).toBeVisible();
+    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    expect(screen.getByText('2. Entrance assessment completed')).toBeVisible();
+  });
+
   it('shows the forms already attached to the workflow', async () => {
     renderDrawer(true);
 

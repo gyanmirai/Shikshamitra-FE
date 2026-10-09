@@ -22,6 +22,8 @@ export type StudentOnboardingListInput = {
   mediumId?: string;
   divisionId?: string;
   standardId?: string;
+  standardIds?: string[];
+  divisionIds?: string[];
   assignedToUserId?: string;
   overdueOnly?: boolean;
   unassignedOnly?: boolean;

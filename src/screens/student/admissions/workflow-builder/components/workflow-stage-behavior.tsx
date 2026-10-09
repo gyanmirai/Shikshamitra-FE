@@ -10,12 +10,15 @@ import { FormSectionCard } from 'src/components/form-section-card';
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
+  stages?: AdmissionWorkflowStage[];
   readOnly: boolean;
-  advanced?: boolean;
 };
 
-export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = false }: Props) {
+export function WorkflowStageBehavior({ formik, metadata, stages = [], readOnly }: Props) {
   const managed = [1, 2, 4, 5].includes(formik.values.stageType);
+  const showEntryStage =
+    formik.values.isEntryStage ||
+    !stages.some((stage) => stage.id !== formik.values.id && stage.isEntryStage);
   const setting = (
     field: 'isRequired' | 'allowManualSkip' | 'isEntryStage' | 'isTerminalStage',
     label: string,
@@ -44,23 +47,7 @@ export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = f
     />
   );
 
-  return advanced ? (
-    <FormSectionCard title="Advanced settings" icon="mdi:tune">
-      <Stack spacing={1}>
-        {setting(
-          'isEntryStage',
-          'Entry stage',
-          'Applicants begin at this stage. The journey must have exactly one starting stage.',
-          !metadata?.canBeEntryStage
-        )}
-        {setting(
-          'isTerminalStage',
-          'End of journey',
-          'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
-        )}
-      </Stack>
-    </FormSectionCard>
-  ) : (
+  return (
     <FormSectionCard title="Stage behavior" icon="mdi:cog-outline">
       <Stack spacing={1}>
         {setting(
@@ -77,6 +64,18 @@ export function WorkflowStageBehavior({ formik, metadata, readOnly, advanced = f
               : 'Authorized staff can skip this optional stage using the existing workflow action.',
             managed
           )}
+        {showEntryStage &&
+          setting(
+            'isEntryStage',
+            'Entry stage',
+            'Applicants begin at this stage. The journey must have exactly one starting stage.',
+            !metadata?.canBeEntryStage
+          )}
+        {setting(
+          'isTerminalStage',
+          'End of journey',
+          'Completing this stage ends the configured journey. Admission finalization and Student Onboarding remain separate actions.'
+        )}
       </Stack>
     </FormSectionCard>
   );

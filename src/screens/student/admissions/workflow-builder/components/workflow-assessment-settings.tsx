@@ -3,6 +3,8 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 import type { AdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { Alert, Stack } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomAccordion from 'src/components/custom-accordian';
 import { FormSectionCard } from 'src/components/form-section-card';
 import {
   DEFAULT_ASSESSMENT_POLICY,
@@ -20,6 +22,7 @@ type Props = {
 };
 
 export function WorkflowAssessmentSettings({ formik, available, readOnly }: Props) {
+  const setup = useBoolean(true);
   const json = formik.values.configurationJson;
   const policy = readAdmissionAssessmentPolicy(json);
   const enabled = policy?.enabled === true;
@@ -46,20 +49,27 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
           : 'Staff complete this stage using the existing workflow controls. Choose a result or exam process to use separate assessment records.'
       }
     >
-      <Stack spacing={2}>
-        {!available && (
-          <Alert severity="info">
-            Assessment scheduling and records are not available in this environment yet.
-          </Alert>
-        )}
-        {unreadable && <Alert severity="error">{invalid}</Alert>}
-        {enabled && (
-          <>
-            <WorkflowAssessmentOptions policy={policy} onChange={update} readOnly={disabled} />
-            {invalid && <Alert severity="error">{invalid}</Alert>}
-          </>
-        )}
-      </Stack>
+      <CustomAccordion
+        title="Assessment settings"
+        expanded={setup.value || Boolean(invalid) || !available}
+        onChange={setup.onToggle}
+        content={
+          <Stack spacing={2}>
+            {!available && (
+              <Alert severity="info">
+                Assessment scheduling and records are not available in this environment yet.
+              </Alert>
+            )}
+            {unreadable && <Alert severity="error">{invalid}</Alert>}
+            {enabled && (
+              <>
+                <WorkflowAssessmentOptions policy={policy} onChange={update} readOnly={disabled} />
+                {invalid && <Alert severity="error">{invalid}</Alert>}
+              </>
+            )}
+          </Stack>
+        }
+      />
     </FormSectionCard>
   );
 }

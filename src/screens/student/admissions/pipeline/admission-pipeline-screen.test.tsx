@@ -34,7 +34,7 @@ vi.mock('../admission-academic-filters', () => ({
   useAdmissionAcademicFilters: () => ({
     academicYearId: context.year,
     boardId: 'board-1',
-    mediumId: '',
+    mediumId: 'medium-1',
     standardId: '',
     update: vi.fn(),
     clear: vi.fn(),

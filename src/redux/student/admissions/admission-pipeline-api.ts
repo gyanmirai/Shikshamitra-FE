@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 import type { AdmissionApplicationStatus } from './admission-applications-api';
 
@@ -34,6 +35,7 @@ export type AdmissionPipelineAcademicInput = {
   boardId?: string;
   mediumId?: string;
   standardId?: string;
+  standardIds?: string[];
 };
 export type AdmissionPipelineListInput = AdmissionPipelineAcademicInput & {
   myCases?: boolean;
@@ -65,7 +67,7 @@ export const admissionPipelineApi = api.injectEndpoints({
       { items: AdmissionPipelineItem[]; totalCount: number },
       AdmissionPipelineListInput
     >({
-      query: (params) => ({ url, params }),
+      query: (params) => ({ url, params: studentAcademicFilterParams(params) }),
       transformResponse: unwrap<{ items: AdmissionPipelineItem[]; totalCount: number }>,
       providesTags: tags,
     }),
@@ -73,7 +75,7 @@ export const admissionPipelineApi = api.injectEndpoints({
       AdmissionPipelineOptions,
       AdmissionPipelineAcademicInput
     >({
-      query: (params) => ({ url: `${url}/options`, params }),
+      query: (params) => ({ url: `${url}/options`, params: studentAcademicFilterParams(params) }),
       transformResponse: unwrap<AdmissionPipelineOptions>,
       providesTags: tags,
     }),

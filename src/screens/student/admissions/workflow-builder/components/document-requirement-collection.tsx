@@ -5,16 +5,28 @@ import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admis
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Alert, Stack, Typography, IconButton, InputAdornment } from '@mui/material';
 import { DOCUMENT_FORMATS } from 'src/redux/student/admissions/admission-document-policy';
+import { Alert, Stack, Button, Typography, IconButton, InputAdornment } from '@mui/material';
 
 import { DocumentUploadLimits } from './document-upload-limits';
 
-type Props = {
+export type DocumentCategoryQueryState = {
+  documentTypesLoading?: boolean;
+  documentTypesError?: boolean;
+  onRetryDocumentTypes?: () => void;
+};
+
+type Props = DocumentCategoryQueryState & {
   formik: FormikProps<AdmissionDocumentRequirementPolicy>;
   documentTypes: AdmissionDocumentTypeOption[];
 };
-export function DocumentRequirementCollection({ formik, documentTypes }: Props) {
+export function DocumentRequirementCollection({
+  formik,
+  documentTypes,
+  documentTypesLoading,
+  documentTypesError,
+  onRetryDocumentTypes,
+}: Props) {
   const { values, touched, errors } = formik;
   const uploads = values.collectionMode !== 'original';
   const selectedMapping = documentTypes.find((item) => item.id === values.documentTypeId);
@@ -46,6 +58,9 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
     { value: '', label: 'Keep as admission evidence' },
     ...documentTypes.map((item) => ({ value: item.id, label: item.name })),
   ];
+  const categoriesEmpty = !documentTypes.length && !documentTypesLoading && !documentTypesError;
+  if (categoriesEmpty)
+    mappings.push({ value: '__no_categories__', label: 'No student document categories configured' });
   if (values.documentTypeId && !documentTypes.some((item) => item.id === values.documentTypeId)) {
     mappings.push({
       value: values.documentTypeId,
@@ -60,6 +75,12 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
         size="small"
         fullWidth
         label="Student document category (optional)"
+        isLoading={documentTypesLoading && !documentTypes.length}
+        disabledValues={['__no_categories__']}
+        disabledLabel="Configure categories in Student Records settings"
+        formControlProps={{
+          'aria-busy': Boolean(documentTypesLoading),
+        }}
         endAdornment={
           <InputAdornment position="end" sx={{ mr: 2.5 }}>
             <CustomTooltip
@@ -92,6 +113,20 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
           touched.documentTypeId && errors.documentTypeId ? errors.documentTypeId : undefined
         }
       />
+      {documentTypesError && (
+        <Alert
+          severity="warning"
+          action={
+            onRetryDocumentTypes && (
+              <Button size="small" onClick={onRetryDocumentTypes}>
+                Retry
+              </Button>
+            )
+          }
+        >
+          Student document categories could not load. Retry or keep this as admission evidence.
+        </Alert>
+      )}
       {incompatible && (
         <Alert severity="error">
           This category and the selected upload formats have no format in common. Choose another

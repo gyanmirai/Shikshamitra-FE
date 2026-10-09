@@ -2,13 +2,14 @@
 
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useUpdateAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowMutation,
   useValidateAdmissionWorkflowMutation,
+  useLazyGetAdmissionWorkflowQuery,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { getWorkflowDetailsJourney } from '../workflow-details-journey';
@@ -27,6 +28,9 @@ export function useWorkflowBuilderCommands(
   const [updateWorkflow, updateState] = useUpdateAdmissionWorkflowMutation();
   const [validateWorkflow, validateState] = useValidateAdmissionWorkflowMutation();
   const [publishWorkflow, publishState] = usePublishAdmissionWorkflowMutation();
+  const [loadWorkflow] = useLazyGetAdmissionWorkflowQuery();
+  const publishingRef = useRef(false);
+  const [publishing, setPublishing] = useState(false);
   const savedDetails = useRef<(WorkflowDetails & { workflowId: string }) | null>(null);
   const getCurrentDetails = (): WorkflowDetails | null => {
     if (!workflow) return null;
@@ -110,17 +114,32 @@ export function useWorkflowBuilderCommands(
     }
   };
   const publish = async () => {
-    const result = await validateSavedWorkflow();
-    if (!result?.isValid || !workflow) return;
+    if (publishingRef.current || !workflow) return null;
+    publishingRef.current = true;
+    setPublishing(true);
     try {
-      await publishWorkflow({
+      const result = await validateSavedWorkflow();
+      if (!result?.isValid) {
+        if (result) shikshaMitraToast.warning({ message: 'Fix workflow validation issues before publishing.' });
+        return null;
+      }
+      // Validation may update the server stamp. Publish only the freshly loaded version.
+      const current = await loadWorkflow(workflowId, false).unwrap();
+      draft.setLoadedStamp(current.concurrencyStamp);
+      const published = await publishWorkflow({
         id: workflow.id,
-        concurrencyStamp: draft.loadedStamp || workflow.concurrencyStamp,
+        concurrencyStamp: current.concurrencyStamp,
       }).unwrap();
       shikshaMitraToast.success({ message: 'Workflow published' });
       draft.setSidePanel(null);
+      draft.setDirty(false);
+      return published;
     } catch (error) {
       showError(error, 'Unable to publish the workflow.');
+      return null;
+    } finally {
+      publishingRef.current = false;
+      setPublishing(false);
     }
   };
 
@@ -132,6 +151,6 @@ export function useWorkflowBuilderCommands(
     publish,
     updateState,
     validateState,
-    publishState,
+    publishState: { ...publishState, isLoading: publishing || publishState.isLoading },
   };
 }

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { readAcademicFilterIds } from 'src/utils/student-academic-filter-query';
 import { useGetAssessmentApplicantsQuery } from 'src/redux/student/admissions/admission-assessment-roster-api';
 import {
   useGetAssessmentScopesQuery,
@@ -19,9 +20,12 @@ export function useAssessmentWorkbenchData(canView: boolean, insights: boolean) 
     (item) =>
       !!academic.academicYearId &&
       item.academicYearId === academic.academicYearId &&
-      (!academic.boardId || item.boardId === academic.boardId) &&
-      (!academic.mediumId || item.mediumId === academic.mediumId) &&
-      (!academic.standardId || item.standardId === academic.standardId)
+      !!academic.boardId &&
+      item.boardId === academic.boardId &&
+      !!academic.mediumId &&
+      item.mediumId === academic.mediumId &&
+      (!readAcademicFilterIds(academic.standardId).length ||
+        readAcademicFilterIds(academic.standardId).includes(item.standardId ?? ''))
   );
   const visibleScope = visibleScopes.find((item) => assessmentScopeKey(item) === scopeKey);
   const sessions = useGetAssessmentSessionsQuery(

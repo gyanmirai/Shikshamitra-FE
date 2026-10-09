@@ -11,6 +11,7 @@ import { Box, Stack, MenuItem, TextField } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   type AdmissionApplication,
   useGetAdmissionApplicationsQuery,
@@ -72,7 +73,7 @@ export default function AdmissionApplicationsScreen({
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
-      standardId: academic.standardId || undefined,
+      ...academicClassFilterInput(academic.standardId),
       maxResultCount: 100,
       skipCount: 0,
       search: search || undefined,
@@ -80,7 +81,7 @@ export default function AdmissionApplicationsScreen({
       currentStageSearch: stageSearch || undefined,
       assignedCounsellorId: counsellorId || undefined,
     },
-    { skip: !academic.academicYearId }
+    { skip: !academic.academicYearId || !academic.boardId || !academic.mediumId }
   );
   const columns: IColumn[] = [
     {

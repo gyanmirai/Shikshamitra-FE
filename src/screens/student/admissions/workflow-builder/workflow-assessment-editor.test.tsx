@@ -82,6 +82,20 @@ async function setup(
   return { onSave, onClose, user: userEvent.setup() };
 }
 describe('combined assessment setup', { timeout: 15000 }, () => {
+  it('collapses assessment setup without changing its policy or hiding common stage controls', async () => {
+    const { user, onSave } = await setup();
+    const settings = screen.getByRole('button', { name: 'Assessment settings' });
+    expect(settings).toHaveAttribute('aria-expanded', 'true');
+    await user.click(settings);
+    expect(settings).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Required stage')).toBeVisible();
+    expect(screen.getByText('End of journey')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject(
+      DEFAULT_ASSESSMENT_POLICY
+    );
+  });
   it('uses direct result recording by default and preserves sibling configuration and entry flags', async () => {
     const { user, onSave } = await setup(
       '{"extension":{"source":"intake"}}',
@@ -153,6 +167,12 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
       JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, version: 2 } })
     );
     expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Assessment settings' }));
+    expect(screen.getByRole('button', { name: 'Assessment settings' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(screen.getByText(/unsupported or incomplete/)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
   });

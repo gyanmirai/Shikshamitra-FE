@@ -1,5 +1,6 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType as tags } from 'src/redux/tagTypes';
+import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 import { REVIEW_URL, unwrapReview, reviewStageUrl } from './admission-review-types';
 
@@ -76,7 +77,10 @@ export const admissionReviewApi = api.injectEndpoints({
       { items: ReviewQueueItem[]; totalCount: number },
       ReviewQueueInput
     >({
-      query: (params) => ({ url: `${REVIEW_URL}/queue`, params }),
+      query: (params) => ({
+        url: `${REVIEW_URL}/queue`,
+        params: studentAcademicFilterParams(params),
+      }),
       transformResponse: unwrapReview<{ items: ReviewQueueItem[]; totalCount: number }>,
       providesTags: reviewTags,
     }),

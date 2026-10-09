@@ -1,7 +1,7 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
-import { Grid } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -24,6 +24,11 @@ export function DocumentUploadLimits({
             label="Allowed file formats"
             value={values.allowedExtensions}
             options={DOCUMENT_FORMATS.map((value) => ({ value, label: value.toUpperCase() }))}
+            renderValue={(selected) => (
+              <Typography component="span" variant="body2" noWrap sx={{ display: 'block' }}>
+                {(Array.isArray(selected) ? selected : [selected]).join(', ').toUpperCase()}
+              </Typography>
+            )}
             onBlur={() => formik.setFieldTouched('allowedExtensions')}
             onChange={(value) => formik.setFieldValue('allowedExtensions', value)}
             error={Boolean(touched.allowedExtensions && errors.allowedExtensions)}

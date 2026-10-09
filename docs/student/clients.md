@@ -12,6 +12,10 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## Academic filter requests
+
+`src/utils/student-academic-filter-query.ts` preserves scalar `standardId`/`divisionId` requests for a single selection and serializes multiple selections as repeated `standardIds`/`divisionIds` query keys. Admissions queues, Offering lists and Student Setup apply collections server-side before counting and paging. Board and Medium stay scalar; requests wait for their selection and an academic year. Assessments filters its authorized scopes by the same selected Board, Medium and classes before requesting a roster.
+
 ## Admission Cycle client
 
 Offering writes retain the existing RTK Query client. The backend resolves the Application form from the selected workflow; new UI writes omit a separate Application form choice. Inquiry form selection remains explicit. Bulk input no longer needs a shared school-level ID: each selected class supplies its own academic path at the backend. Existing read DTOs retain historical track, entry-mode and form metadata.

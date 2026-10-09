@@ -5,7 +5,7 @@ import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-w
 
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
-import { Card, Alert, Stack, Button } from '@mui/material';
+import { Card, Alert, Stack } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -22,19 +22,11 @@ export type WorkflowLifecycleActionsProps = {
   dirty: boolean;
   readOnly: boolean;
   canPublish: boolean;
-  canSubmit: boolean;
-  canApprove: boolean;
-  canReject: boolean;
-  canRollback: boolean;
   saving: boolean;
   validating: boolean;
   publishing: boolean;
   onSave: () => void;
   onPublish: () => void;
-  onSubmit: () => void;
-  onApprove: () => void;
-  onReject: () => void;
-  onRollback: () => void;
 };
 
 const primaryActionSx = {
@@ -47,21 +39,13 @@ export function WorkflowLifecycleActions({
   dirty,
   readOnly,
   canPublish,
-  canSubmit,
-  canApprove,
-  canReject,
-  canRollback,
   saving,
   validating,
   publishing,
   onSave,
   onPublish,
-  onSubmit,
-  onApprove,
-  onReject,
-  onRollback,
 }: WorkflowLifecycleActionsProps) {
-  if (readOnly && !canPublish && !canSubmit && !canApprove && !canReject && !canRollback) {
+  if (readOnly && !canPublish) {
     return null;
   }
   const busy = saving || validating || publishing;
@@ -86,56 +70,6 @@ export function WorkflowLifecycleActions({
         >
           Save draft
         </LoadingButton>
-      )}
-      {canSubmit && (
-        <LoadingButton
-          size="small"
-          variant="contained"
-          loading={publishing || validating}
-          disabled={busy}
-          startIcon={<Iconify icon="mdi:send-check-outline" />}
-          onClick={onSubmit}
-          sx={primaryActionSx}
-        >
-          Submit for approval
-        </LoadingButton>
-      )}
-      {canReject && (
-        <Button
-          size="small"
-          color="warning"
-          variant="outlined"
-          disabled={busy}
-          startIcon={<Iconify icon="mdi:undo-variant" />}
-          onClick={onReject}
-        >
-          Request changes
-        </Button>
-      )}
-      {canApprove && (
-        <LoadingButton
-          size="small"
-          variant="contained"
-          loading={publishing}
-          disabled={busy}
-          startIcon={<Iconify icon="mdi:check-decagram" />}
-          onClick={onApprove}
-          sx={primaryActionSx}
-        >
-          Approve
-        </LoadingButton>
-      )}
-      {canRollback && (
-        <Button
-          size="small"
-          color="warning"
-          variant="outlined"
-          disabled={busy}
-          startIcon={<Iconify icon="mdi:restore" />}
-          onClick={onRollback}
-        >
-          Create rollback draft
-        </Button>
       )}
       {canPublish && (
         <LoadingButton
@@ -212,9 +146,8 @@ export function WorkflowBuilderHeader({
           )}
           {readOnlyReason === 'status' && (
             <Alert severity="info" sx={{ flexShrink: 0 }}>
-              Submitted, approved, scheduled, published, superseded, and archived versions are
-              read-only. Governance actions remain available according to status and permission;
-              create a new version or return a submission to Draft to edit it.
+              Published and historical versions are read-only. Create a new version to edit the
+              journey; publishing remains available for eligible existing drafts.
             </Alert>
           )}
           {children}

@@ -1,56 +1,25 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type {
-  AdmissionWorkflow,
-  AdmissionWorkflowNotification,
-} from 'src/redux/student/admissions/admission-workflows-api';
+import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Stack, Button } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  useGetAdmissionWorkflowsQuery,
-  useGetAdmissionWorkflowNotificationsQuery,
-  useGetAdmissionWorkflowGovernanceSettingsQuery,
-  useMarkAdmissionWorkflowNotificationReadMutation,
-  useUpdateAdmissionWorkflowGovernanceSettingsMutation,
-} from 'src/redux/student/admissions/admission-workflows-api';
+import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { getAdmissionWorkflowAccess } from './workflow-access';
 import { createWorkflowColumns } from './workflow-list/workflow-columns';
 import { useWorkflowFilters } from './workflow-list/use-workflow-filters';
 import { WorkflowListFilters } from './workflow-list/workflow-list-filters';
 import { WorkflowListDialogs } from './workflow-list/workflow-list-dialogs';
 import { useWorkflowListActions } from './workflow-list/use-workflow-list-actions';
-import { WorkflowGovernanceSettingsDialog } from './workflow-list/workflow-governance-settings-dialog';
-import { WorkflowGovernanceNotificationsDialog } from './workflow-list/workflow-governance-notifications-dialog';
 
 export default function AdmissionWorkflowsScreen() {
-  const router = useRouter();
   const filterState = useWorkflowFilters();
   const actions = useWorkflowListActions();
-  const governanceDialog = useBoolean();
-  const notificationsDialog = useBoolean();
-  const [markingNotificationId, setMarkingNotificationId] = useState<string | null>(null);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const { canManageGovernance } = getAdmissionWorkflowAccess(permissions);
-  const governanceSettings = useGetAdmissionWorkflowGovernanceSettingsQuery(undefined, {
-    skip: !governanceDialog.value,
-  });
-  const [updateGovernance, updateGovernanceState] =
-    useUpdateAdmissionWorkflowGovernanceSettingsMutation();
-  const notificationsQuery = useGetAdmissionWorkflowNotificationsQuery(false);
-  const [markNotificationRead] = useMarkAdmissionWorkflowNotificationReadMutation();
   const { filters } = filterState;
   const query = useGetAdmissionWorkflowsQuery({
     search: filters.search || undefined,
@@ -156,44 +125,6 @@ export default function AdmissionWorkflowsScreen() {
         </Box>
       )}
       <WorkflowListDialogs actions={actions} />
-      <WorkflowGovernanceSettingsDialog
-        open={governanceDialog.value}
-        settings={governanceSettings.data}
-        loading={governanceSettings.isLoading}
-        saving={updateGovernanceState.isLoading}
-        onClose={governanceDialog.onFalse}
-        onSave={async (values) => {
-          try {
-            await updateGovernance(values).unwrap();
-            shikshaMitraToast.success({ message: 'Workflow governance updated' });
-            governanceDialog.onFalse();
-          } catch {
-            shikshaMitraToast.error({ message: 'Unable to update workflow governance.' });
-          }
-        }}
-      />
-      <WorkflowGovernanceNotificationsDialog
-        open={notificationsDialog.value}
-        notifications={notificationsQuery.data}
-        loading={notificationsQuery.isLoading}
-        markingId={markingNotificationId}
-        onClose={notificationsDialog.onFalse}
-        onOpenWorkflow={(notification: AdmissionWorkflowNotification) => {
-          notificationsDialog.onFalse();
-          router.push(
-            `${studentPaths.enrollment.settings.workflows}/${notification.workflowDefinitionId}`
-          );
-        }}
-        onMarkRead={async (notification) => {
-          setMarkingNotificationId(notification.id);
-          try {
-            await markNotificationRead(notification.id).unwrap();
-            await notificationsQuery.refetch();
-          } finally {
-            setMarkingNotificationId(null);
-          }
-        }}
-      />
     </Box>
   );
 }

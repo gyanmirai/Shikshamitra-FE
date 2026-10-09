@@ -13,8 +13,8 @@ import {
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
   readAdmissionInquiryFormValues,
-  preserveCompatibleInquiryAnswers,
   type AdmissionInquiryFormValues,
+  preserveCompatibleInquiryAnswers,
   getAdmissionInquiryAcademicOptions,
   getAdmissionInquiryPreferredClassError,
 } from './admission-inquiry-model';
@@ -183,6 +183,87 @@ describe('admission inquiry model', () => {
         }),
       ])
     );
+  });
+
+  it.each([
+    ['applicant', fields.filter((item) => item.bindingKey !== 'Applicant.FirstName')],
+    ['guardian', fields.filter((item) => !item.bindingKey?.startsWith('Guardian.'))],
+    ['all identity', [fields[5]]],
+  ])('keeps generated %s identity fields out of published form answers', (_name, publishedFields) => {
+    const form = { sections: [{ fields: publishedFields }] } as AdmissionForm;
+    const runtimeFields = getAdmissionInquiryFields(form);
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          ...values.fields,
+          applicantFirstName: 'Aanya',
+          guardianFirstName: 'Meera',
+          guardianPhone: '9876543210',
+        },
+      },
+      runtimeFields,
+      offering
+    );
+
+    expect(payload).toMatchObject({
+      applicantFirstName: 'Aanya',
+      guardianFirstName: 'Meera',
+      guardianPhone: '9876543210',
+      phone: '9876543210',
+    });
+    expect(payload.formValues?.map((item) => item.fieldCode)).toEqual(
+      publishedFields.map((item) => item.code)
+    );
+  });
+
+  it('keeps published identity fields even when their codes match generated fallback codes', () => {
+    const publishedFields = [
+      field('applicantFirstName', 'Applicant.FirstName', 0, true),
+      field('guardianFirstName', 'Guardian.FirstName', 0, true),
+      field('guardianPhone', 'Guardian.Mobile', 4, true),
+    ];
+    const form = { sections: [{ fields: publishedFields }] } as AdmissionForm;
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          applicantFirstName: 'Aanya',
+          guardianFirstName: 'Meera',
+          guardianPhone: '9876543210',
+        },
+      },
+      getAdmissionInquiryFields(form),
+      offering
+    );
+
+    expect(payload.formValues).toEqual([
+      { fieldCode: 'applicantFirstName', valueJson: '"Aanya"' },
+      { fieldCode: 'guardianFirstName', valueJson: '"Meera"' },
+      { fieldCode: 'guardianPhone', valueJson: '"9876543210"' },
+    ]);
+  });
+
+  it('sends identity without synthetic form answers when the offering has no configured form', () => {
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          applicantFirstName: 'Aanya',
+          guardianFirstName: 'Meera',
+          guardianPhone: '9876543210',
+        },
+      },
+      getAdmissionInquiryFields(),
+      offering
+    );
+
+    expect(payload).toMatchObject({
+      applicantFirstName: 'Aanya',
+      guardianFirstName: 'Meera',
+      guardianPhone: '9876543210',
+      formValues: [],
+    });
   });
 
   it('maps legacy Inquiry field codes into the required applicant and guardian identity', () => {

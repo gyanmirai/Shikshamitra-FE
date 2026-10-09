@@ -27,7 +27,9 @@ import { DocumentRequirementBasics } from './document-requirement-basics';
 import { DocumentRequirementClasses } from './document-requirement-classes';
 import { DocumentRequirementCollection } from './document-requirement-collection';
 
-type Props = {
+import type { DocumentCategoryQueryState } from './document-requirement-collection';
+
+type Props = DocumentCategoryQueryState & {
   initial: AdmissionDocumentRequirementPolicy;
   documentTypes: AdmissionDocumentTypeOption[];
   existingCodes: string[];
@@ -43,6 +45,9 @@ export function DocumentRequirementDialog({
   anchorEl,
   onClose,
   onSave,
+  documentTypesLoading,
+  documentTypesError,
+  onRetryDocumentTypes,
 }: Props) {
   const desktop = useResponsive('up', 'sm');
   const discard = useBoolean();
@@ -147,7 +152,13 @@ export function DocumentRequirementDialog({
               />
             </Grid>
           </Grid>
-          <DocumentRequirementCollection formik={formik} documentTypes={documentTypes} />
+          <DocumentRequirementCollection
+            formik={formik}
+            documentTypes={documentTypes}
+            documentTypesLoading={documentTypesLoading}
+            documentTypesError={documentTypesError}
+            onRetryDocumentTypes={onRetryDocumentTypes}
+          />
         </Stack>
       </Scrollbar>
       <Stack
