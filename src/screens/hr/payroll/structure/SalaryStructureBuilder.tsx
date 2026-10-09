@@ -539,16 +539,21 @@ export function SalaryStructureBuilder({
       </Typography>
       <Button
         size="small"
-        variant="outlined"
+        variant="contained"
+        color="primary"
         startIcon={<Iconify icon="mdi:calculator" />}
         onClick={calculateSalary}
         loading={operation === 'calculate'}
         loadingPosition="start"
-        sx={
-          actionContainer
+        sx={{
+          '&:not(.Mui-disabled)': {
+            bgcolor: 'primary.dark',
+            '&:hover': { bgcolor: 'primary.darker' },
+          },
+          ...(actionContainer
             ? { gridColumn: { xs: 1, sm: 3 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
-            : undefined
-        }
+            : {}),
+        }}
         disabled={
           !canManage ||
           busy ||
