@@ -277,8 +277,9 @@ test.describe('Payroll interface consistency', () => {
     await mockPayroll(page, { zeroTaxRange: true });
     await page.goto('/hr/payroll/setting/professional-tax');
     await page.getByRole('button', { name: 'Edit', exact: true }).click();
-    await expect(page.getByLabel('From Salary', { exact: true })).toHaveValue('0');
-    await expect(page.getByLabel('Tax Amount', { exact: true })).toHaveValue('0');
+    await expect(page.locator('[role="dialog"] form')).toHaveCount(1);
+    await expect(page.getByLabel('From Salary', { exact: true })).toHaveValue('₹ 0');
+    await expect(page.getByLabel('Tax Amount', { exact: true })).toHaveValue('₹ 0');
     const update = page.waitForRequest(
       (request) => request.method() === 'PUT' && request.url().includes('/professional-taxes/')
     );

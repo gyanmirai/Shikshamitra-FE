@@ -192,6 +192,7 @@ const ProfessionalTax = () => {
       <CustomDialog
         open={dialog.value}
         handleClose={handleClose}
+        hasForm={false}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Create New Tax Range</Typography>
