@@ -48,7 +48,7 @@ export default function SalaryTemplatePolicyHelp({ policy }: { policy: Protectio
         aria-expanded={open}
         aria-controls={open ? 'salary-policy-comparison' : undefined}
         onClick={() => setOpen(true)}
-        sx={{ mt: 0.25, minHeight: 32 }}
+        sx={{ mt: 0.25 }}
       >
         Compare policies
       </Button>
@@ -118,7 +118,13 @@ export default function SalaryTemplatePolicyHelp({ policy }: { policy: Protectio
           </Typography>
         </DialogScrollContent>
         <DialogActions>
-          <Button type="button" variant="outlined" onClick={() => setOpen(false)}>
+          <Button
+            size="small"
+            type="button"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={() => setOpen(false)}
+          >
             Close
           </Button>
         </DialogActions>

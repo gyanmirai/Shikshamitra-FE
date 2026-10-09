@@ -1,6 +1,5 @@
 'use client';
 
-
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -150,9 +149,8 @@ const EarningComponent = () => {
             startIcon={<Add />}
             size="small"
             onClick={isEarningComponentOpen.onTrue}
-            sx={{ px: '32px' }}
           >
-            Earning
+            Add earning
           </Button>
         }
       />
@@ -183,9 +181,9 @@ const EarningComponent = () => {
           ) : deleteImpactPreview?.previewHash ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff
-                payroll profiles. It will be removed from staff payroll profiles going forward.
-                Finalized salary slips will not change. Draft salary slips will update only after
+                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff payroll
+                profiles. It will be removed from staff payroll profiles going forward. Finalized
+                salary slips will not change. Draft salary slips will update only after
                 regeneration.
               </DialogContentText>
               <Box
@@ -223,7 +221,9 @@ const EarningComponent = () => {
         </DialogContent>
         <DialogActions>
           <Button
+            size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
             onClick={() => {
               confirm.onFalse();
               setDeleteInformation(null);
@@ -499,13 +499,15 @@ const EarningComponentForm = ({
             ? 'Amount'
             : editData?.calculationType || editData?.componentType || '',
       selectedEarningComponent:
-        editData?.calculationBase === 'GROSS' ? grossSalaryOption.id : ((editData?.selectedEarningComponentId || editData?.customComponentId) === editData?.id
-          ? null
-          : editData?.selectedEarningComponentId || editData?.customComponentId || null),
+        editData?.calculationBase === 'GROSS'
+          ? grossSalaryOption.id
+          : (editData?.selectedEarningComponentId || editData?.customComponentId) === editData?.id
+            ? null
+            : editData?.selectedEarningComponentId || editData?.customComponentId || null,
       amount:
         editData?.calculationType?.toLowerCase() === 'percentage'
-          ? editData?.percentage ?? ''
-          : editData?.amount ?? '',
+          ? (editData?.percentage ?? '')
+          : (editData?.amount ?? ''),
       showOnPayslip: editData?.visibleInPayslip ?? true,
     },
     enableReinitialize: true,
@@ -525,8 +527,14 @@ const EarningComponentForm = ({
             values.earningType === 'Fixed' && values.calculationType === 'Percentage'
               ? Number(values.amount) || 0
               : 0,
-          calculationBase: getCalculationBase(values.calculationType, values.selectedEarningComponent).calculationBase,
-          selectedEarningComponentId: getCalculationBase(values.calculationType, values.selectedEarningComponent).componentId,
+          calculationBase: getCalculationBase(
+            values.calculationType,
+            values.selectedEarningComponent
+          ).calculationBase,
+          selectedEarningComponentId: getCalculationBase(
+            values.calculationType,
+            values.selectedEarningComponent
+          ).componentId,
           visibleInPayslip: values.showOnPayslip,
         };
 
@@ -957,15 +965,15 @@ const EarningComponentForm = ({
                       </strong>
                       .
                       <br />
-                      Gross Salary is the regular monthly gross adjusted for payable days. Additional earnings do not increase this base.
+                      Gross Salary is the regular monthly gross adjusted for payable days.
+                      Additional earnings do not increase this base.
                     </>
                   ) : (
                     <>
                       This earning will be added as a fixed amount.
                       <strong>{formik.values.amount || 'X'}</strong>
                       <br />
-                      Example: If amount is ₹5,000, the same amount will be applied to all
-                      staff.
+                      Example: If amount is ₹5,000, the same amount will be applied to all staff.
                     </>
                   )}
                 </Typography>
@@ -1033,9 +1041,7 @@ const EarningComponentForm = ({
               my: 1,
             }}
           >
-            <Alert severity="info">
-              Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}
-            </Alert>
+            <Alert severity="info">Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}</Alert>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
             </Alert>
@@ -1045,23 +1051,33 @@ const EarningComponentForm = ({
             </Alert>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff
-            still following the master value. Force apply overwrites manual staff overrides for
-            this component and makes them follow the master again.
+            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff still
+            following the master value. Force apply overwrites manual staff overrides for this
+            component and makes them follow the master again.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={() => setImpactPreview(null)}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:arrow-left" />}
+            onClick={() => setImpactPreview(null)}
+          >
             Review
           </Button>
           <LoadingButton
+            size="small"
             loading={updateEarningComponentLoading}
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => confirmUpdate('SyncedOnly')}
           >
             Save synced only
           </LoadingButton>
           <LoadingButton
+            size="small"
             color="warning"
+            startIcon={<Iconify icon="mdi:content-save-all-outline" />}
             variant="contained"
             loading={updateEarningComponentLoading}
             onClick={() => confirmUpdate('ForceApply')}

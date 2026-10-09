@@ -63,7 +63,7 @@ export const HrDashboardPreviewShell = ({
               disabled={refreshing || isFetching}
               startIcon={<Iconify icon="mdi:refresh" aria-hidden />}
               aria-label={refreshing ? 'Refreshing HR dashboard' : 'Refresh HR dashboard'}
-              sx={{ minHeight: 44, px: 3, flexShrink: 0 }}
+              sx={{ flexShrink: 0 }}
             >
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </Button>
