@@ -26,6 +26,7 @@ const permissions = [
   'HR.PayrollManagement.Settings.StatutorySchemes.Activate',
   'HR.PayrollManagement.Settings.SalaryTemplates.Add',
 ].flatMap((name) => [name, `${name}.View`, `${name}.Add`, `${name}.Edit`]);
+permissions.push('HR.PayrollManagement.RunPayroll.Lock');
 const readiness = {
   month: '2026-10',
   employeeCount: 3,
@@ -118,11 +119,24 @@ async function mockPayroll(
           previewRunId: 'ui-preview',
           isCurrent: true,
           isGenerated: false,
-          totalCount: options.missingPfBasis ? 1 : 0,
+          totalCount: options.missingPfBasis ? 2 : 0,
           currentPage: 0,
           pageSize: 25,
           items: options.missingPfBasis
             ? [
+                {
+                  employeeId: 'ready-staff',
+                  employeeName: 'Ready Test Staff',
+                  employeeIdentifier: 'READY001',
+                  totalWorkingDays: 22,
+                  payableDays: 22,
+                  fullGrossSalary: 10000,
+                  grossSalary: 10000,
+                  totalEarnings: 10000,
+                  netPay: 10000,
+                  reviewStatus: 'REVIEWED',
+                  issueCodes: [],
+                },
                 {
                   employeeId: 'pf-staff',
                   employeeName: 'PF Test Staff',
@@ -278,9 +292,17 @@ test.describe('Payroll interface consistency', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockPayroll(page, { missingPfBasis: true });
     await page.goto('/hr/payroll/run-payroll');
+    const lockReviewed = page.getByRole('button', { name: 'Lock Reviewed', exact: true });
+    const readyStaff = page.getByRole('checkbox', { name: 'Select payroll for Ready Test Staff' });
+    await readyStaff.check();
+    await expect(lockReviewed).toBeEnabled();
+    await readyStaff.uncheck();
     await page.getByRole('checkbox', { name: 'Select payroll for PF Test Staff' }).check();
-    await expect(page.getByRole('button', { name: 'Lock Reviewed', exact: true })).toBeDisabled();
-    await page.getByRole('button', { name: 'View', exact: true }).click();
+    await expect(lockReviewed).toBeDisabled();
+    await page
+      .getByRole('row', { name: /PF Test Staff/ })
+      .getByRole('button', { name: 'View', exact: true })
+      .click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByText('CRITICAL', { exact: true })).toBeVisible();
     const warning = dialog.getByText(
