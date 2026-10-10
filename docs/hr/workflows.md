@@ -411,6 +411,11 @@ The editor never calls the legacy component-update API or removes existing tempo
 
 ## Salary editor navigation
 
+Run Payroll displays `PF_WAGE_BASIS_REQUIRED` as a critical readiness issue: "PF wage basis required. Update the salary structure to match the assigned PF rule."
+Use the existing Edit Salary navigation to correct the affected structure, then refresh the payroll preview and review the new generation.
+Existing readiness controls prevent locking affected staff.
+See the [backend calculation release and PF remediation workflow](../../../Shikshamitra-BE/docs/modules/hr/workflows.md#calculation-release-and-pf-remediation) for calculation, release, and historical correction rules.
+
 Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
 Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
 Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.

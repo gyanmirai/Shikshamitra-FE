@@ -2,6 +2,11 @@ export const PAYROLL_ISSUE_LABELS: Record<
   string,
   { label: string; severity: 'CRITICAL' | 'WARNING' | 'INFO'; color: 'warning' | 'error' | 'info' }
 > = {
+  PF_WAGE_BASIS_REQUIRED: {
+    label: 'PF wage basis required. Update the salary structure to match the assigned PF rule.',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
   MISSING_SALARY_STRUCTURE: {
     label: 'Salary structure missing',
     severity: 'CRITICAL',
