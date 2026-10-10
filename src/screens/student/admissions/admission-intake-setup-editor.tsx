@@ -10,11 +10,10 @@ import type {
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import * as Yup from 'yup';
-import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useMemo, useState } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { studentPaths } from 'src/constants/student-menu';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -25,16 +24,14 @@ import { withStandardInquiryBehavior } from 'src/redux/student/admissions/admiss
 import {
   Box,
   Grid,
+  Chip,
   Stack,
   Alert,
   Button,
-  Drawer,
   Divider,
-  MenuItem,
   TextField,
   IconButton,
   Typography,
-  Autocomplete,
 } from '@mui/material';
 import {
   useGetAdmissionIntakeSetupUsageQuery,
@@ -122,10 +119,26 @@ const assignmentSchema = Yup.object({
 
 const completeSchema = inquirySchema.concat(assignmentSchema);
 
-export const getAdmissionIntakeSetupStepSchema = (step: number) => {
+export const getAdmissionIntakeSetupStepSchema = (step: number, activeStaffIds?: string[]) => {
   if (step === 0) return inquirySchema;
-  if (step === 1) return assignmentSchema;
-  return completeSchema;
+  const schema = step === 1 ? assignmentSchema : completeSchema;
+  if (!activeStaffIds) return schema;
+  return schema.test('active-admission-staff', function validateActiveStaff(values) {
+    const rules = values.counsellorAssignmentRules;
+    if (rules?.counsellorUserIds?.some((id) => !id || !activeStaffIds.includes(id))) {
+      return this.createError({
+        path: 'counsellorAssignmentRules.counsellorUserIds',
+        message: 'Remove unavailable counsellors and choose active admission staff',
+      });
+    }
+    if (rules?.fallbackManagerUserId && !activeStaffIds.includes(rules.fallbackManagerUserId)) {
+      return this.createError({
+        path: 'counsellorAssignmentRules.fallbackManagerUserId',
+        message: 'Choose an active fallback manager',
+      });
+    }
+    return true;
+  });
 };
 
 type Props = {
@@ -135,19 +148,18 @@ type Props = {
 };
 
 export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: Props) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [confirmClose, setConfirmClose] = useState(false);
   const [confirmSharedUpdate, setConfirmSharedUpdate] = useState(false);
-  const [savedSetup, setSavedSetup] = useState<AdmissionIntakeSetup | null>(null);
   const [staleConflict, setStaleConflict] = useState(false);
   const [reloadError, setReloadError] = useState('');
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const formikRef = useRef<FormikProps<AdmissionIntakeSetupValues> | null>(null);
   const pendingValues = useRef<AdmissionIntakeSetupValues | null>(null);
-  const counsellors = useGetAdmissionIntakeCounsellorsQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-  });
+  const counsellors = useGetAdmissionIntakeCounsellorsQuery(
+    { counsellorOnly: true },
+    { refetchOnMountOrArgChange: true }
+  );
   const usage = useGetAdmissionIntakeSetupUsageQuery(setup?.id ?? '', { skip: !setup });
   const [createSetup, createState] = useCreateAdmissionIntakeSetupMutation();
   const [updateSetup, updateState] = useUpdateAdmissionIntakeSetupMutation();
@@ -159,7 +171,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
 
   const requestClose = () => {
     if (saving) return;
-    if (formikRef.current?.dirty && !savedSetup) {
+    if (formikRef.current?.dirty) {
       setConfirmClose(true);
       return;
     }
@@ -174,15 +186,13 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
       concurrencyStamp: setup?.concurrencyStamp,
     };
     try {
-      const result = setup
-        ? await updateSetup({ id: setup.id, body }).unwrap()
-        : await createSetup(body).unwrap();
+      if (setup) await updateSetup({ id: setup.id, body }).unwrap();
+      else await createSetup(body).unwrap();
       shikshaMitraToast.success({
         message: setup ? 'Admission intake setup updated.' : 'Admission intake setup created.',
       });
       formikRef.current?.resetForm({ values });
-      if (setup) onClose();
-      else setSavedSetup(result);
+      onClose();
     } catch (error) {
       if (setup && isAdmissionIntakeSetupConcurrencyError(error)) {
         setStaleConflict(true);
@@ -198,6 +208,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   };
 
   const finish = (values: AdmissionIntakeSetupValues) => {
+    if (saving || staleConflict || confirmSharedUpdate) return;
     if (setup && usageCount > 0) {
       pendingValues.current = values;
       setConfirmSharedUpdate(true);
@@ -218,38 +229,21 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
     }
   };
 
-  const openOffering = () => {
-    if (!savedSetup) return;
-    onClose();
-    router.push(
-      `${studentPaths.enrollment.settings.offerings}?intakeSetupId=${encodeURIComponent(savedSetup.id)}`
-    );
-  };
-
-  const openInquiryLink = () => {
-    if (!savedSetup) return;
-    onClose();
-    router.push(
-      `${studentPaths.enrollment.settings.intakeAssignment}?view=links&intakeSetupId=${encodeURIComponent(savedSetup.id)}`
-    );
-  };
-
   return (
     <>
-      <Drawer
-        anchor="right"
-        open
-        onClose={requestClose}
-        PaperProps={{
-          sx: {
-            width: { xs: 1, md: 760 },
-            maxWidth: 1,
-            height: '100dvh',
-            display: 'flex',
-            overflow: 'hidden',
-          },
-          role: 'dialog',
-          'aria-labelledby': 'intake-setup-editor-title',
+      <Box
+        component="section"
+        aria-labelledby="intake-setup-editor-title"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 2,
+          bgcolor: 'background.paper',
         }}
       >
         <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
@@ -279,136 +273,113 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
         </Stack>
         <Divider />
 
-        {savedSetup ? (
-          <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-            <Alert severity="success">
-              <strong>{savedSetup.name}</strong> is ready to use. Choose the next task, or close
-              this drawer and return later.
-            </Alert>
-            <FormSectionCard
-              icon="mdi:school-outline"
-              title="Use in Admission Offering"
-              descriptionTooltip="Connect this setup to classes and an admission period."
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {staleConflict && (
+            <AdmissionIntakeNotice
+              severity="warning"
+              closeDisabled={reloadingLatest}
+              sx={{ m: 2, mb: 0, flexShrink: 0 }}
               action={
-                <Button size="small" variant="contained" onClick={openOffering}>
-                  Use in Offering
+                <Button
+                  size="small"
+                  color="warning"
+                  loading={reloadingLatest}
+                  onClick={reloadLatest}
+                >
+                  Reload latest
                 </Button>
               }
+            >
+              This setup changed in another session. Reload the latest version before editing again.
+              Reloading replaces the values currently entered here.
+              {reloadError && (
+                <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
+                  {reloadError}
+                </Typography>
+              )}
+            </AdmissionIntakeNotice>
+          )}
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <CustomStepperWithFormik
+              initialValues={initialValues}
+              steps={[
+                'Inquiry handling',
+                'Counsellor routing',
+                setup ? 'Review & update' : 'Review & create',
+              ]}
+              activeStep={step}
+              validationSchema={getAdmissionIntakeSetupStepSchema(
+                step,
+                !counsellors.isLoading && !counsellors.isFetching && !counsellors.isError
+                  ? (counsellors.data ?? []).map((person) => person.id)
+                  : undefined
+              )}
+              validateOnChange
+              showSaveButton={false}
+              validateForwardStepClick
+              isStepClickable={(index) => index <= step}
+              completedSteps={Array.from({ length: step }, (_, index) => index)}
+              onStepClick={(index) => setStep(index)}
+              nextButtonLabel="Next"
+              finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
+              disableSubmit={Boolean(
+                staleConflict ||
+                counsellors.isLoading ||
+                counsellors.isFetching ||
+                counsellors.isError ||
+                (setup && (usage.isLoading || usage.isError))
+              )}
+              saveAndNextButtonProps={{ loading: saving }}
+              onCancel={requestClose}
+              handleBack={() => setStep((current) => Math.max(0, current - 1))}
+              handleNext={(isLastStep, values: AdmissionIntakeSetupValues) => {
+                if (isLastStep) finish(values);
+                else setStep((current) => Math.min(2, current + 1));
+              }}
+              renderItem={({ formik, activeStep }) => {
+                const form = formik as FormikProps<AdmissionIntakeSetupValues>;
+                formikRef.current = form;
+                return (
+                  <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
+                    {activeStep === 0 && <InquiryHandlingStep formik={form} saving={saving} />}
+                    {activeStep === 1 && (
+                      <CounsellorRoutingStep
+                        formik={form}
+                        counsellors={counsellors.data ?? []}
+                        loading={counsellors.isLoading || counsellors.isFetching}
+                        loadError={counsellors.isError}
+                        saving={saving}
+                        onRetry={() => counsellors.refetch()}
+                      />
+                    )}
+                    {activeStep === 2 && (
+                      <ReviewStep
+                        values={form.values}
+                        counsellors={counsellors.data ?? []}
+                        editing={Boolean(setup)}
+                        usageCount={usageCount}
+                        usage={usage.data}
+                        usageError={usage.isError}
+                        onRetryUsage={() => usage.refetch()}
+                        onEdit={setStep}
+                        saving={saving}
+                      />
+                    )}
+                  </Stack>
+                );
+              }}
             />
-            <FormSectionCard
-              icon="mdi:link-variant-plus"
-              title="Create public inquiry link"
-              descriptionTooltip="Create a website, QR-code, referral, or school-event link with this routing setup."
-              action={
-                <Button size="small" variant="outlined" onClick={openInquiryLink}>
-                  Create link
-                </Button>
-              }
-            />
-            <Box sx={{ flex: 1 }} />
-            <Box sx={{ pt: 2, borderTop: 1, borderColor: 'divider' }}>
-              <Button variant="outlined" size="small" onClick={onClose}>
-                Done
-              </Button>
-            </Box>
-          </Stack>
-        ) : (
-          <Box
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {staleConflict && (
-              <AdmissionIntakeNotice
-                severity="warning"
-                closeDisabled={reloadingLatest}
-                sx={{ m: 2, mb: 0, flexShrink: 0 }}
-                action={
-                  <Button
-                    size="small"
-                    color="warning"
-                    loading={reloadingLatest}
-                    onClick={reloadLatest}
-                  >
-                    Reload latest
-                  </Button>
-                }
-              >
-                This setup changed in another session. Reload the latest version before editing
-                again. Reloading replaces the values currently entered here.
-                {reloadError && (
-                  <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
-                    {reloadError}
-                  </Typography>
-                )}
-              </AdmissionIntakeNotice>
-            )}
-            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              <CustomStepperWithFormik
-                initialValues={initialValues}
-                steps={['Inquiry handling', 'Counsellor routing', 'Review & create']}
-                activeStep={step}
-                validationSchema={getAdmissionIntakeSetupStepSchema(step)}
-                validateOnChange
-                showSaveButton={false}
-                validateForwardStepClick
-                isStepClickable={(index) => index <= step}
-                completedSteps={Array.from({ length: step }, (_, index) => index)}
-                onStepClick={(index) => setStep(index)}
-                nextButtonLabel="Next"
-                finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
-                disableSubmit={Boolean(
-                  staleConflict ||
-                  counsellors.isLoading ||
-                  counsellors.isFetching ||
-                  counsellors.isError ||
-                  (setup && (usage.isLoading || usage.isError))
-                )}
-                saveAndNextButtonProps={{ loading: saving }}
-                onCancel={requestClose}
-                handleBack={() => setStep((current) => Math.max(0, current - 1))}
-                handleNext={(isLastStep, values: AdmissionIntakeSetupValues) => {
-                  if (isLastStep) finish(values);
-                  else setStep((current) => Math.min(2, current + 1));
-                }}
-                renderItem={({ formik, activeStep }) => {
-                  const form = formik as FormikProps<AdmissionIntakeSetupValues>;
-                  formikRef.current = form;
-                  return (
-                    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                      {activeStep === 0 && <InquiryHandlingStep formik={form} />}
-                      {activeStep === 1 && (
-                        <CounsellorRoutingStep
-                          formik={form}
-                          counsellors={counsellors.data ?? []}
-                          loading={counsellors.isLoading || counsellors.isFetching}
-                          loadError={counsellors.isError}
-                          onRetry={() => counsellors.refetch()}
-                        />
-                      )}
-                      {activeStep === 2 && (
-                        <ReviewStep
-                          values={form.values}
-                          counsellors={counsellors.data ?? []}
-                          editing={Boolean(setup)}
-                          usageCount={usageCount}
-                          usage={usage.data}
-                          usageError={usage.isError}
-                          onRetryUsage={() => usage.refetch()}
-                        />
-                      )}
-                    </Stack>
-                  );
-                }}
-              />
-            </Box>
           </Box>
-        )}
-      </Drawer>
+        </Box>
+      </Box>
 
       <ConfirmDialog
         open={confirmClose}
@@ -458,7 +429,13 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   );
 }
 
-function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSetupValues> }) {
+function InquiryHandlingStep({
+  formik,
+  saving,
+}: {
+  formik: FormikProps<AdmissionIntakeSetupValues>;
+  saving: boolean;
+}) {
   const rules = formik.values.inquiryRules;
   const setRule = <K extends keyof AdmissionIntakeSetupInquiryRules>(
     key: K,
@@ -486,6 +463,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
               fullWidth
               size="small"
               name="name"
+              disabled={saving}
               label="Setup name *"
               placeholder="For example, General admission intake"
               value={formik.values.name}
@@ -502,6 +480,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
                 size="small"
                 type="number"
                 label="First contact within hours"
+                disabled={saving}
                 value={rules.firstContactDueInHours ?? ''}
                 onChange={(event) =>
                   setRule(
@@ -518,6 +497,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
                 size="small"
                 type="number"
                 label="Qualify within days"
+                disabled={saving}
                 value={rules.qualificationDueInDays ?? ''}
                 onChange={(event) =>
                   setRule(
@@ -534,6 +514,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
                 size="small"
                 type="number"
                 label="Follow-up after days"
+                disabled={saving}
                 value={rules.followUpDueInDays}
                 onChange={(event) => setRule('followUpDueInDays', Number(event.target.value))}
                 {...feedback('inquiryRules.followUpDueInDays')}
@@ -545,6 +526,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
                 size="small"
                 type="number"
                 label="Maximum open follow-ups"
+                disabled={saving}
                 value={rules.maxOpenFollowUps}
                 onChange={(event) => setRule('maxOpenFollowUps', Number(event.target.value))}
                 {...feedback('inquiryRules.maxOpenFollowUps')}
@@ -560,29 +542,15 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
         descriptionTooltip="Leave allowed sources empty when every source may create an inquiry."
       >
         <Stack spacing={1}>
-          <Autocomplete
+          <CustomSelect
             multiple
             size="small"
-            slotProps={{ chip: { color: 'default', variant: 'soft', size: 'small' } }}
+            label="Allowed sources"
+            disabled={saving}
             options={INQUIRY_SOURCE_OPTIONS}
-            getOptionLabel={(option) => option.label}
-            value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
-              rules.allowedSources.includes(option.value)
-            )}
-            onChange={(_, selected) =>
-              setRule(
-                'allowedSources',
-                selected.map((option) => option.value)
-              )
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Allowed sources"
-                helperText="Leave empty to accept all sources. Source details are optional."
-              />
-            )}
+            value={rules.allowedSources}
+            onChange={(selected) => setRule('allowedSources', selected as number[])}
+            helperText="Leave empty to accept all sources. Source details are optional."
           />
         </Stack>
       </FormSectionCard>
@@ -596,12 +564,14 @@ function CounsellorRoutingStep({
   loading,
   loadError,
   onRetry,
+  saving,
 }: {
   formik: FormikProps<AdmissionIntakeSetupValues>;
   counsellors: IntakeCounsellorChoice[];
   loading: boolean;
   loadError: boolean;
   onRetry: () => void;
+  saving: boolean;
 }) {
   const rules = formik.values.counsellorAssignmentRules;
   const setRule = <K extends keyof AdmissionIntakeSetupAssignmentRules>(
@@ -638,35 +608,60 @@ function CounsellorRoutingStep({
         )}
         {!loading && !loadError && counsellors.length === 0 && (
           <AdmissionIntakeNotice severity="warning">
-            Add eligible admission staff before creating this setup.
+            Add active staff with the Counsellor role and admission access before creating this
+            setup.
           </AdmissionIntakeNotice>
         )}
-        <Autocomplete
-          multiple
-          size="small"
-          loading={loading}
-          disabled={loading || loadError}
-          options={counsellors}
-          getOptionLabel={(option) => option.name || option.userName}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          noOptionsText="No eligible admission staff found"
-          value={counsellors.filter((option) => rules.counsellorUserIds.includes(option.id))}
-          onChange={(_, selected) =>
-            setRule(
-              'counsellorUserIds',
-              selected.map((option) => option.id)
-            )
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              label="Counsellor pool *"
-              error={Boolean(poolMeta.touched && poolMeta.error)}
-              helperText={poolMeta.touched ? String(poolMeta.error ?? '') : undefined}
-            />
+        <ShakingTextField error={Boolean(poolMeta.touched && poolMeta.error)}>
+          <CustomSelect
+            multiple
+            isSearch
+            size="small"
+            label="Counsellor pool *"
+            options={counsellors.map((person) => ({
+              value: person.id,
+              label: person.name || person.userName,
+            }))}
+            disabled={saving || loading || loadError}
+            isLoading={loading}
+            noOptionsMessage="No active admission staff found"
+            value={rules.counsellorUserIds.filter((id) =>
+              counsellors.some((person) => person.id === id)
+            )}
+            onChange={(selected) => setRule('counsellorUserIds', selected as string[])}
+            onBlur={() =>
+              formik.setFieldTouched('counsellorAssignmentRules.counsellorUserIds', true)
+            }
+            error={Boolean(poolMeta.touched && poolMeta.error)}
+            helperText={poolMeta.touched ? String(poolMeta.error ?? '') : undefined}
+          />
+        </ShakingTextField>
+        {!loading &&
+          !loadError &&
+          rules.counsellorUserIds.some((id) => !counsellors.some((person) => person.id === id)) && (
+            <Alert
+              severity="warning"
+              action={
+                <Button
+                  size="small"
+                  disabled={saving}
+                  onClick={() =>
+                    setRule(
+                      'counsellorUserIds',
+                      rules.counsellorUserIds.filter((id) =>
+                        counsellors.some((person) => person.id === id)
+                      )
+                    )
+                  }
+                >
+                  Remove unavailable
+                </Button>
+              }
+            >
+              Some saved counsellors are no longer available. Remove them and choose active
+              admission staff.
+            </Alert>
           )}
-        />
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
@@ -674,6 +669,7 @@ function CounsellorRoutingStep({
               size="small"
               type="number"
               label="Maximum active cases per counsellor *"
+              disabled={saving}
               value={rules.maxActiveCasesPerCounsellor}
               onChange={(event) =>
                 setRule('maxActiveCasesPerCounsellor', Number(event.target.value))
@@ -683,27 +679,30 @@ function CounsellorRoutingStep({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Fallback manager *"
-              disabled={loading || loadError}
-              value={rules.fallbackManagerUserId ?? ''}
-              onChange={(event) => setRule('fallbackManagerUserId', event.target.value || '')}
-              onBlur={() =>
-                formik.setFieldTouched('counsellorAssignmentRules.fallbackManagerUserId', true)
-              }
-              error={Boolean(fallbackMeta.touched && fallbackMeta.error)}
-              helperText={fallbackMeta.touched ? String(fallbackMeta.error ?? '') : undefined}
-            >
-              <MenuItem value="">Choose fallback manager</MenuItem>
-              {counsellors.map((person) => (
-                <MenuItem key={person.id} value={person.id}>
-                  {person.name || person.userName}
-                </MenuItem>
-              ))}
-            </TextField>
+            <ShakingTextField error={Boolean(fallbackMeta.touched && fallbackMeta.error)}>
+              <CustomSelect
+                size="small"
+                label="Fallback manager *"
+                options={counsellors.map((person) => ({
+                  value: person.id,
+                  label: person.name || person.userName,
+                }))}
+                disabled={saving || loading || loadError}
+                isLoading={loading}
+                noOptionsMessage="No active admission staff found"
+                value={
+                  counsellors.some((person) => person.id === rules.fallbackManagerUserId)
+                    ? (rules.fallbackManagerUserId ?? '')
+                    : ''
+                }
+                onChange={(selected) => setRule('fallbackManagerUserId', String(selected))}
+                onBlur={() =>
+                  formik.setFieldTouched('counsellorAssignmentRules.fallbackManagerUserId', true)
+                }
+                error={Boolean(fallbackMeta.touched && fallbackMeta.error)}
+                helperText={fallbackMeta.touched ? String(fallbackMeta.error ?? '') : undefined}
+              />
+            </ShakingTextField>
           </Grid>
         </Grid>
       </Stack>
@@ -719,6 +718,8 @@ function ReviewStep({
   usage,
   usageError,
   onRetryUsage,
+  onEdit,
+  saving,
 }: {
   values: AdmissionIntakeSetupValues;
   counsellors: IntakeCounsellorChoice[];
@@ -727,6 +728,8 @@ function ReviewStep({
   usage?: AdmissionIntakeSetupUsage;
   usageError: boolean;
   onRetryUsage: () => void;
+  onEdit: (step: number) => void;
+  saving: boolean;
 }) {
   const assignment = values.counsellorAssignmentRules;
   const fallback = counsellors.find((person) => person.id === assignment.fallbackManagerUserId);
@@ -752,59 +755,134 @@ function ReviewStep({
         </AdmissionIntakeNotice>
       )}
       {editing && usage && <UsageNames usage={usage} />}
-      <FormSectionCard
-        icon="mdi:clipboard-text-outline"
-        title="Inquiry handling"
-        titleTypographyProps={sectionTitleProps}
-      >
-        <Stack spacing={0.75}>
-          <SummaryRow label="Setup name" value={values.name} />
-          <SummaryRow
-            label="First contact"
-            value={
-              values.inquiryRules.firstContactDueInHours
-                ? `Within ${values.inquiryRules.firstContactDueInHours} hours`
-                : 'No deadline'
+      <Grid container spacing={1}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <FormSectionCard
+            icon="mdi:clipboard-text-outline"
+            title="Inquiry handling"
+            titleTypographyProps={sectionTitleProps}
+            action={
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={saving}
+                aria-label="Edit inquiry handling"
+                onClick={() => onEdit(0)}
+                startIcon={<Iconify icon="solar:pen-bold" />}
+              >
+                Edit
+              </Button>
             }
-          />
-          <SummaryRow
-            label="Qualification"
-            value={
-              values.inquiryRules.qualificationDueInDays
-                ? `Within ${values.inquiryRules.qualificationDueInDays} days`
-                : 'No deadline'
+          >
+            <Stack spacing={1}>
+              <SummaryRow label="Setup name" value={values.name} />
+              <SummaryRow
+                label="First contact"
+                value={
+                  values.inquiryRules.firstContactDueInHours
+                    ? `Within ${values.inquiryRules.firstContactDueInHours} hours`
+                    : 'No deadline'
+                }
+              />
+              <SummaryRow
+                label="Qualification"
+                value={
+                  values.inquiryRules.qualificationDueInDays
+                    ? `Within ${values.inquiryRules.qualificationDueInDays} days`
+                    : 'No deadline'
+                }
+              />
+              <SummaryRow
+                label="Follow-up"
+                value={`Every ${values.inquiryRules.followUpDueInDays} days · Up to ${
+                  values.inquiryRules.maxOpenFollowUps
+                } open`}
+              />
+              <Divider />
+              <Typography variant="body2" color="text.secondary">
+                Allowed sources
+              </Typography>
+              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                {values.inquiryRules.allowedSources.length ? (
+                  INQUIRY_SOURCE_OPTIONS.filter((source) =>
+                    values.inquiryRules.allowedSources.includes(source.value)
+                  ).map((source) => (
+                    <Chip
+                      key={source.value}
+                      size="small"
+                      variant="soft"
+                      color="default"
+                      label={source.label}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2">All sources</Typography>
+                )}
+              </Stack>
+            </Stack>
+          </FormSectionCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <FormSectionCard
+            icon="mdi:account-switch-outline"
+            title="Counsellor routing"
+            titleTypographyProps={sectionTitleProps}
+            action={
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={saving}
+                aria-label="Edit counsellor routing"
+                onClick={() => onEdit(1)}
+                startIcon={<Iconify icon="solar:pen-bold" />}
+              >
+                Edit
+              </Button>
             }
-          />
-          <SummaryRow
-            label="Follow-up"
-            value={`Every ${values.inquiryRules.followUpDueInDays} days · Up to ${values.inquiryRules.maxOpenFollowUps} open`}
-          />
-        </Stack>
-      </FormSectionCard>
-      <FormSectionCard
-        icon="mdi:account-switch-outline"
-        title="Counsellor routing"
-        titleTypographyProps={sectionTitleProps}
-      >
-        <Stack spacing={0.75}>
-          <SummaryRow
-            label="Counsellor pool"
-            value={`${assignment.counsellorUserIds.length} counsellor${assignment.counsellorUserIds.length === 1 ? '' : 's'}`}
-          />
-          <SummaryRow
-            label="Capacity"
-            value={`${assignment.maxActiveCasesPerCounsellor} active cases each`}
-          />
-          <SummaryRow label="Fallback manager" value={fallback?.name ?? 'Unavailable'} />
-        </Stack>
-      </FormSectionCard>
+          >
+            <Stack spacing={1}>
+              <Typography variant="body2" color="text.secondary">
+                Counsellor pool
+              </Typography>
+              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                {assignment.counsellorUserIds.map((id) => {
+                  const person = counsellors.find((staff) => staff.id === id);
+                  return (
+                    <Chip
+                      key={id}
+                      size="small"
+                      variant="soft"
+                      color="default"
+                      label={person ? person.name || person.userName : 'Unavailable counsellor'}
+                    />
+                  );
+                })}
+              </Stack>
+              <Divider />
+              <SummaryRow
+                label="Capacity"
+                value={`${assignment.maxActiveCasesPerCounsellor} active cases each`}
+              />
+              <SummaryRow
+                label="Fallback manager"
+                value={fallback ? fallback.name || fallback.userName : 'Unavailable'}
+              />
+            </Stack>
+          </FormSectionCard>
+        </Grid>
+      </Grid>
     </>
   );
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5} justifyContent="space-between">
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={0.5}
+      justifyContent="space-between"
+      sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
+    >
       <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>

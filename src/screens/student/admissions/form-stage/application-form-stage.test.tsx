@@ -23,6 +23,11 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({ confirmPopup: { isChanges: false } }),
+  useDispatch: () => vi.fn(),
+}));
 vi.mock('./form-stage-reason-dialog', () => ({
   FormStageReasonDialog: () => <div>Reason dialog</div>,
 }));
@@ -100,11 +105,11 @@ describe('compact form-stage verification', () => {
     expect(screen.queryByText('Owner: staff')).not.toBeInTheDocument();
     const disclosure = screen.getByRole('button', { name: /Section verification/ });
     expect(disclosure).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText('Submit the application before staff verification.')).toBeVisible();
+    expect(screen.getByText(/Submit the application before staff verification./)).toBeVisible();
     await user.click(disclosure);
-    expect(screen.getByText('0 of 3 submission attempts used')).toBeVisible();
+    expect(screen.getByText(/0 of 3 submission attempts used/)).toBeVisible();
     expect(screen.getByText('Submit the form before verification.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
   });
 
@@ -116,7 +121,7 @@ describe('compact form-stage verification', () => {
       'aria-expanded',
       'true'
     );
-    await user.click(screen.getByRole('button', { name: 'Verify' }));
+    await user.click(screen.getByRole('button', { name: 'Verify Student details' }));
     expect(state.verify).toHaveBeenCalledWith(state.summary!.sections[0]);
     await user.click(screen.getByRole('button', { name: 'Request correction' }));
     expect(state.setAction).toHaveBeenCalledWith({ type: 'correction' });
@@ -133,7 +138,7 @@ describe('compact form-stage verification', () => {
     state.canEdit = false;
     state.canReopen = false;
     const complete = renderStage();
-    expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Continue admission' }));
     expect(complete).toHaveBeenCalledOnce();

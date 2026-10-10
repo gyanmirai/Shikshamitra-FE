@@ -18,30 +18,25 @@ const ACTION_LABELS: Record<AdmissionDecisionAction, string> = {
 
 export function ApplicationDecisionActions({ actions, busy, onSelect, compact = false }: Props) {
   return (
-    <Stack
-      direction={compact ? 'row' : { xs: 'column', sm: 'row' }}
-      flexWrap="wrap"
-      gap={1}
-      sx={{ mt: compact ? 1 : 2 }}
-    >
+    <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: compact ? 1 : 2 }}>
       {actions.map((item) => (
         <Button
           key={item}
           size="small"
-          variant={
-            compact
-              ? item === 'approve'
-                ? 'contained'
-                : 'outlined'
-              : item === 'reject'
-                ? 'outlined'
-                : 'contained'
-          }
-          color={
-            item === 'reject' ? (compact ? 'error' : 'warning') : compact ? 'inherit' : 'primary'
-          }
+          variant={item === 'approve' ? 'contained' : 'outlined'}
+          color={item === 'reject' ? 'error' : 'inherit'}
           disabled={busy}
-          startIcon={compact ? undefined : <Iconify icon="mdi:check-circle-outline" />}
+          startIcon={
+            <Iconify
+              icon={
+                item === 'approve'
+                  ? 'mdi:check'
+                  : item === 'waitlist'
+                    ? 'mdi:clock-outline'
+                    : 'mdi:close'
+              }
+            />
+          }
           onClick={() => onSelect(item)}
         >
           {ACTION_LABELS[item]}

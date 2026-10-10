@@ -37,7 +37,8 @@ export function ApplicationDecisionDialogActions({
         variant="contained"
         size="small"
         disabled={busy || concurrencyUnavailable}
-        color={isDangerousAdmissionDecision(action) ? 'warning' : 'primary'}
+        color={isDangerousAdmissionDecision(action) ? 'warning' : 'inherit'}
+        loading={busy}
         startIcon={<Iconify icon="mdi:check-circle-outline" />}
         onClick={onConfirm}
       >

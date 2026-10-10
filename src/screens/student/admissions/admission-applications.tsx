@@ -1,246 +1,229 @@
 'use client';
 
-import type { MouseEvent } from 'react';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { RootState } from 'src/redux/store';
 
-import NextLink from 'next/link';
-import { useState } from 'react';
-import { fDateTime } from 'src/utils/format-time';
+import { useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Stack, MenuItem, TextField } from '@mui/material';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Alert, Button, LinearProgress } from '@mui/material';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
-import {
-  type AdmissionApplication,
-  useGetAdmissionApplicationsQuery,
-  useGetAdmissionApplicationCounsellorsQuery,
-} from 'src/redux/student/admissions/admission-applications-api';
+import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { formatAdmissionReference } from './admission-reference';
-import { getAdmissionApplicationStatusLabel } from './application-status';
-import AdmissionApplicationDetailScreen from './admission-application-detail';
-import { withAdmissionCounsellorFilter } from './admission-application-filters';
+import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
+import { getApplicationWorkspaceUrl } from './application-detail/application-return-url';
+import { buildAdmissionApplicationsColumns } from './applications/admission-applications-columns';
+import { ApplicationWorkspaceRedirect } from './application-detail/application-workspace-redirect';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
 } from './admission-academic-filters';
+import {
+  admissionApplicationsUrl,
+  readAdmissionApplicationsState,
+} from './applications/admission-applications-state';
 
-type AdmissionApplicationsView = 'applications' | 'pipeline';
-
-export default function AdmissionApplicationsScreen({
-  view = 'applications',
-}: {
-  view?: AdmissionApplicationsView;
-}) {
+export default function AdmissionApplicationsScreen() {
   const academic = useAdmissionAcademicFilters();
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [stageSearch, setStageSearch] = useState('');
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const counsellorId = searchParams.get('counsellor') ?? '';
-  const drawerUrl = (id?: string) => {
-    const next = new URLSearchParams(searchParams.toString());
-    if (id) next.set('application', id);
-    else next.delete('application');
-    return next.size ? `${pathname}?${next}` : pathname;
-  };
-  const openApplication = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
-    event.stopPropagation();
-    if (
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.shiftKey &&
-      !event.altKey &&
-      event.button === 0
-    ) {
-      event.preventDefault();
-      router.push(drawerUrl(id), { scroll: false });
-    }
-  };
-  const counsellors = useGetAdmissionApplicationCounsellorsQuery({});
-  const {
-    currentData: data,
-    isLoading,
-    isError,
-    refetch,
-  } = useGetAdmissionApplicationsQuery(
+  const params = useSearchParams();
+  const applicationId = params.get('application');
+  const state = readAdmissionApplicationsState(params);
+  const permissions = useSelector((value: RootState) => value.auth.permissions);
+  const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
+  const queryString = params.toString();
+  const returnTo = admissionApplicationsUrl(
+    pathname,
+    new URLSearchParams(queryString),
+    { application: undefined },
+    false
+  );
+  const update = useCallback(
+    (changes: Record<string, string | undefined>, resetPage = true) => {
+      const url = admissionApplicationsUrl(
+        pathname,
+        new URLSearchParams(queryString),
+        changes,
+        resetPage
+      );
+      const currentUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      if (url !== currentUrl) router.replace(url, { scroll: false });
+    },
+    [pathname, queryString, router]
+  );
+  const previousYear = useRef(academic.academicYearId);
+  const skip =
+    Boolean(applicationId) ||
+    !canView ||
+    !academic.academicYearId ||
+    !academic.boardId ||
+    !academic.mediumId;
+  const listQuery = useGetAdmissionApplicationsQuery(
     {
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
       ...academicClassFilterInput(academic.standardId),
-      maxResultCount: 100,
-      skipCount: 0,
-      search: search || undefined,
-      status: status === '' ? undefined : (Number(status) as AdmissionApplication['status']),
-      currentStageSearch: stageSearch || undefined,
-      assignedCounsellorId: counsellorId || undefined,
+      decisionWorkspaceOnly: true,
+      maxResultCount: state.rowsPerPage,
+      skipCount: state.page * state.rowsPerPage,
+      search: state.search || undefined,
+      sorting: state.sorts[0] ? `${state.sorts[0].column} ${state.sorts[0].direction}` : undefined,
     },
-    { skip: !academic.academicYearId || !academic.boardId || !academic.mediumId }
+    { skip, refetchOnMountOrArgChange: true }
   );
-  const columns: IColumn[] = [
-    {
-      id: 'applicationNumber',
-      label: 'Application',
-      minWidth: 180,
-      render: (value, row) => (
-        <NextLink
-          href={drawerUrl((row as AdmissionApplication).id)}
-          onClick={(event) => openApplication(event, (row as AdmissionApplication).id)}
-        >
-          {formatAdmissionReference(String(value))}
-        </NextLink>
-      ),
+  const data = listQuery.currentData;
+  const applicationUrl = useCallback(
+    (id: string) => getApplicationWorkspaceUrl(id, returnTo, true),
+    [returnTo]
+  );
+  const openApplication = useCallback(
+    (id: string) => {
+      if (canView) router.push(applicationUrl(id), { scroll: false });
     },
-    {
-      id: 'applicantName',
-      label: 'Applicant',
-      minWidth: 220,
-      render: (value, row) => (
-        <NextLink
-          href={drawerUrl((row as AdmissionApplication).id)}
-          onClick={(event) => openApplication(event, (row as AdmissionApplication).id)}
-        >
-          {String(value || (row as AdmissionApplication).applicantId)}
-        </NextLink>
-      ),
-    },
-    { id: 'offeringCode', label: 'Offering', minWidth: 180 },
-    {
-      id: 'assignedCounsellorName',
-      label: 'Journey counsellor',
-      minWidth: 180,
-      render: (value) => String(value || 'Unassigned'),
-    },
-    { id: 'currentStageName', label: 'Current stage', minWidth: 180 },
-    {
-      id: 'status',
-      label: 'Status',
-      minWidth: 120,
-      render: (value) => getAdmissionApplicationStatusLabel(Number(value)),
-    },
-    {
-      id: 'lastSavedAt',
-      label: 'Last saved',
-      minWidth: 180,
-      render: (value) => (value ? fDateTime(value) : '—'),
-    },
-  ];
-  const isPipeline = view === 'pipeline';
+    [applicationUrl, canView, router]
+  );
+  const columns = useMemo(
+    () => buildAdmissionApplicationsColumns({ applicationUrl, onOpen: openApplication }),
+    [applicationUrl, openApplication]
+  );
+
+  useEffect(() => {
+    if (!canView || applicationId) return;
+    if (previousYear.current !== academic.academicYearId) {
+      previousYear.current = academic.academicYearId;
+      update({ board: undefined, medium: undefined, class: undefined });
+      return;
+    }
+    if (
+      data &&
+      !listQuery.isFetching &&
+      state.page > 0 &&
+      state.page * state.rowsPerPage >= data.totalCount
+    ) {
+      update({ page: String(Math.max(1, Math.ceil(data.totalCount / state.rowsPerPage))) }, false);
+      return;
+    }
+    // Old bookmarks must not retain hidden filters removed from this workspace.
+    update({}, false);
+  }, [
+    academic.academicYearId,
+    applicationId,
+    canView,
+    data,
+    listQuery.isFetching,
+    state.page,
+    state.rowsPerPage,
+    update,
+  ]);
+
+  if (canView && applicationId) {
+    return <ApplicationWorkspaceRedirect applicationId={applicationId} returnTo={returnTo} />;
+  }
+
+  const emptyState = !academic.academicYearId
+    ? 'Select an academic year to view Applications'
+    : !academic.boardId || !academic.mediumId
+      ? 'Select a Board and Medium to view Applications'
+      : state.search
+        ? 'No applications match your search'
+        : academic.standardId
+          ? 'No applications match the selected classes'
+          : 'No applications have reached the admission decision phase yet';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading={isPipeline ? 'Pipeline' : 'Applications'}
-        description={
-          isPipeline
-            ? 'Track applicants through their current admission stage and continue applicant work.'
-            : 'Find applications, review their current stage, and continue applicant work.'
-        }
+        heading="Applications"
+        description="Review admission decisions and finalize approved admissions. Earlier admission work continues in Pipeline."
         links={[
-          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: isPipeline ? 'Pipeline' : 'Applications' },
+          { name: 'Applications' },
         ]}
       />
-      <AdmissionAcademicFilters
-        boardId={academic.boardId}
-        mediumId={academic.mediumId}
-        standardId={academic.standardId}
-        onClear={academic.clear}
-        onChange={academic.update}
-      />
-      {isError && (
-        <AdmissionQueryError
-          onRetry={() => {
-            refetch();
-          }}
-        />
-      )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1 }}>
-        <TextField
-          size="small"
-          label="Search application or applicant"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={status}
-          onChange={(event) => setStatus(event.target.value)}
-          sx={{ minWidth: 140 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="0">Draft</MenuItem>
-          <MenuItem value="1">Submitted</MenuItem>
-          <MenuItem value="2">Withdrawn</MenuItem>
-          <MenuItem value="3">Rejected</MenuItem>
-          <MenuItem value="4">In review</MenuItem>
-          <MenuItem value="5">Waitlisted</MenuItem>
-          <MenuItem value="6">Approved</MenuItem>
-          <MenuItem value="7">Offer issued</MenuItem>
-          <MenuItem value="8">Offer accepted</MenuItem>
-          <MenuItem value="9">Offer declined</MenuItem>
-          <MenuItem value="10">Enrolled (legacy)</MenuItem>
-          <MenuItem value="11">Admission finalized</MenuItem>
-        </TextField>
-        <TextField
-          size="small"
-          label="Current stage"
-          value={stageSearch}
-          onChange={(event) => setStageSearch(event.target.value)}
-        />
-        <TextField
-          select
-          size="small"
-          label="Journey counsellor"
-          value={counsellorId}
-          onChange={(event) => {
-            router.replace(
-              `${pathname}${withAdmissionCounsellorFilter(
-                searchParams.toString(),
-                event.target.value
-              )}`
-            );
-          }}
-          sx={{ minWidth: 180 }}
-          disabled={counsellors.isLoading || counsellors.isError}
-          helperText={counsellors.isError ? 'Could not load counsellors.' : undefined}
-        >
-          <MenuItem value="">All counsellors</MenuItem>
-          {(counsellors.data ?? []).map((item) => (
-            <MenuItem key={item.id} value={item.id}>
-              {item.name || item.userName}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Stack>
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <CustomizableTable
-          tableId="admission-applications"
-          tableTitle={isPipeline ? 'Admission pipeline' : 'Admission applications'}
-          wrapperProps={{ sx: { height: 1 } }}
-          tableContainerProps={{ sx: { height: 1 } }}
-          columns={columns}
-          data={(data?.items ?? []) as AdmissionApplication[]}
-          isLoading={isLoading}
-          isPagination
-          isSearch={false}
-        />
-      </Box>
-      {searchParams.get('application') && (
-        <AdmissionApplicationDetailScreen
-          key={searchParams.get('application')}
-          applicationId={searchParams.get('application')!}
-          onClose={() => router.replace(drawerUrl(), { scroll: false })}
-        />
+      {!canView ? (
+        <Alert severity="warning">
+          Application viewing permission is required to access Applications.
+        </Alert>
+      ) : (
+        <>
+          <AdmissionAcademicFilters
+            boardId={academic.boardId}
+            mediumId={academic.mediumId}
+            standardId={academic.standardId}
+            onClear={academic.clear}
+            onChange={academic.update}
+          />
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+            {data && listQuery.isFetching ? (
+              <LinearProgress
+                aria-label="Refreshing applications"
+                sx={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 }}
+              />
+            ) : null}
+            <CustomizableTable
+              tableId="admission-applications"
+              tableTitle="Admission applications"
+              exportLabel="Export current page"
+              wrapperProps={{ sx: { height: 1 } }}
+              tableContainerProps={{ sx: { height: 1 } }}
+              columns={columns}
+              data={skip || listQuery.isError ? [] : (data?.items ?? [])}
+              isLoading={!skip && (listQuery.isLoading || (listQuery.isFetching && !data))}
+              serverSidePagination
+              serverSideSearch
+              serverSideSort
+              serverSideSortMode="single"
+              totalCount={skip || listQuery.isError ? 0 : (data?.totalCount ?? 0)}
+              searchTerm={state.search}
+              sorts={state.sorts}
+              page={state.page}
+              rowsPerPage={state.rowsPerPage}
+              defaultRowsPerPage={25}
+              rowsPerPageOptions={[10, 25, 100]}
+              onServerSearch={(search) => update({ search: search || undefined })}
+              onServerSort={(_, sorts) =>
+                update({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
+              }
+              onServerPagination={(page, size) =>
+                update({ page: String(page), size: String(size) }, size !== state.rowsPerPage)
+              }
+              searchFieldProps={{
+                placeholder: 'Search applicant, application or contact',
+                inputProps: { 'aria-label': 'Search Applications' },
+              }}
+              errorContent={
+                listQuery.isError && !skip ? (
+                  <AdmissionQueryError
+                    onRetry={() => {
+                      listQuery.refetch();
+                    }}
+                  />
+                ) : undefined
+              }
+              noDataText={
+                <Stack spacing={1} alignItems="center">
+                  <Box>{emptyState}</Box>
+                  {state.search ? (
+                    <Button size="small" onClick={() => update({ search: undefined })}>
+                      Clear search
+                    </Button>
+                  ) : academic.standardId ? (
+                    <Button size="small" onClick={academic.clear}>
+                      Clear class filter
+                    </Button>
+                  ) : null}
+                </Stack>
+              }
+            />
+          </Box>
+        </>
       )}
     </Box>
   );

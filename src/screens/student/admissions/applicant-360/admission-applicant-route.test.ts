@@ -7,10 +7,10 @@ describe('applicant compatibility destinations', () => {
     '/student/admissions/applications',
     '/student/admissions/pipeline',
     '/student/admissions/assessments',
-  ])('opens application in the existing list: %s', (list) => {
-    expect(getApplicantApplicationUrl(`${list}?owner=mine&page=2&application=old`, 'next')).toBe(
-      `${list}?owner=mine&page=2&application=next`
-    );
+  ])('opens the full-page Pipeline workspace and retains safe list filters: %s', (list) => {
+    const url = new URL(getApplicantApplicationUrl(`${list}?owner=mine&page=2&application=old`, 'next'), 'https://school.test');
+    expect(url.pathname).toBe('/student/admissions/pipeline/applications/next');
+    expect(url.searchParams.get('returnTo')).toBe(`${list}?owner=mine&page=2`);
   });
   it.each([
     'https://evil.example',
@@ -18,9 +18,7 @@ describe('applicant compatibility destinations', () => {
     '/student/admissions/applications/../inquiries',
     '/student/admissions/applications-other',
   ])('rejects unsafe or unrelated return context: %s', (url) => {
-    expect(getApplicantApplicationUrl(url, 'next')).toBe(
-      '/student/admissions/applications?application=next'
-    );
+    expect(new URL(getApplicantApplicationUrl(url, 'next'), 'https://school.test').searchParams.get('returnTo')).toBe('/student/admissions/applications');
     expect(getApplicantReturnUrl(url, null)).toBe('/student/admissions/applications');
   });
   it('encodes inquiry identity as data without accepting route injection', () => {

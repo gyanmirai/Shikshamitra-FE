@@ -1,6 +1,7 @@
 import type { AdmissionFinalizationPreview } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
@@ -8,6 +9,7 @@ import {
   Stack,
   Radio,
   Button,
+  Divider,
   Skeleton,
   Typography,
   RadioGroup,
@@ -81,15 +83,32 @@ export function ApplicationFinalizationReadiness({
       )}
       {!loading && !hasError && Boolean(preview?.items.length) && (
         <Stack spacing={1}>
-          <Typography variant="subtitle2" component="h3">
+          <Typography variant="subtitle1" component="h3">
             Finalization checks
           </Typography>
-          <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+          <Divider />
+          <Box component="ul" sx={{ m: 0, p: 0, listStyle: 'none', display: 'grid', gap: 1 }}>
             {preview?.items.map((item) => (
               <Box
                 component="li"
                 key={item.key}
-                sx={{ py: 1, '& + li': { borderTop: 1, borderColor: 'divider' } }}
+                sx={(theme) => ({
+                  p: 1,
+                  border: 1,
+                  borderColor: item.passed
+                    ? 'divider'
+                    : item.key === 'duplicate_resolution'
+                      ? 'warning.main'
+                      : 'error.main',
+                  borderRadius: 1,
+                  bgcolor: item.passed
+                    ? 'transparent'
+                    : alpha(
+                        theme.palette[item.key === 'duplicate_resolution' ? 'warning' : 'error']
+                          .main,
+                        0.08
+                      ),
+                })}
               >
                 <Stack
                   direction="row"
@@ -97,8 +116,20 @@ export function ApplicationFinalizationReadiness({
                   justifyContent="space-between"
                   spacing={1}
                 >
-                  <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0 }}>
-                    {item.label}
+                  <Iconify
+                    icon={item.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+                    width={22}
+                    sx={{
+                      flexShrink: 0,
+                      color: item.passed
+                        ? 'success.main'
+                        : item.key === 'duplicate_resolution'
+                          ? 'warning.main'
+                          : 'error.main',
+                    }}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0, flex: 1 }}>
+                    {item.key === 'identity' && !item.passed ? 'Core identity' : item.label}
                   </Typography>
                   <Label
                     color={
@@ -115,9 +146,9 @@ export function ApplicationFinalizationReadiness({
                 </Stack>
                 {(!item.passed || item.detail !== 'Ready') && (
                   <Typography
-                    variant="body2"
+                    variant="caption"
                     color={item.passed ? 'text.secondary' : 'text.primary'}
-                    sx={{ mt: 0.5, overflowWrap: 'anywhere' }}
+                    sx={{ mt: 0.5, ml: 3.75, display: 'block', overflowWrap: 'anywhere' }}
                   >
                     {item.detail}
                   </Typography>
@@ -128,7 +159,9 @@ export function ApplicationFinalizationReadiness({
                     disabled={disabled}
                     onClick={onRepairIdentity}
                     startIcon={<Iconify icon="mdi:account-edit-outline" />}
-                    sx={{ mt: 0.5 }}
+                    variant="outlined"
+                    color="inherit"
+                    sx={{ mt: 0.5, ml: 3.75 }}
                   >
                     Repair applicant identity
                   </Button>

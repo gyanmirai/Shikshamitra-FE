@@ -78,6 +78,28 @@ it('rejects a stale Roll preview', async () => {
   await screen.findByText('The case or numbering rule changed. Refresh and preview again.');
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
 });
+it('explains a duplicate manual Roll and permits an unused number after retry', async () => {
+  const onClose = vi.fn();
+  mocks.preview.mockReturnValueOnce({ unwrap: () => Promise.reject(Object.assign(new Error('Duplicate Roll number'), { status: 400, data: {
+    errorCode: 'Students.Onboarding.RollNumberDuplicate', detail: 'One or more business rules were violated.',
+  } })) });
+  mocks.preview.mockReturnValue({ unwrap: () => Promise.resolve({ schoolAssignmentMode: 'manual', rollAssignmentMode: 'manual', proposedRollNumber: 6, concurrencyStamp: 'stamp' }) });
+  render(<StudentOnboardingOperationDialog assignmentType="roll-number" student={{ ...student, rollAssignmentMode: 'manual' }} onClose={onClose} />);
+  const rollInput = screen.getByRole('spinbutton', { name: /Roll number/ });
+  fireEvent.change(rollInput, { target: { value: '1' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Roll number' }));
+  await screen.findByText('This roll number is already assigned or reserved in the selected class/division for this academic year. Enter an unused number, or use Automatic if available.');
+  expect(rollInput).toHaveValue(1);
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(mocks.roll).not.toHaveBeenCalled();
+  fireEvent.change(rollInput, { target: { value: '6' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Preview Roll number' }));
+  await screen.findByText('Proposed Roll number: 6');
+  expect(screen.queryByText(/This roll number is already assigned/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() => expect(mocks.roll).toHaveBeenCalledWith({ id: 'case-1', concurrencyStamp: 'stamp', rollNumber: 6, rollAssignmentMode: 'manual', reason: undefined }));
+});
 it('keeps assignment disabled for a viewer', () => {
   mocks.permissions = [];
   render(<StudentOnboardingOperationDialog assignmentType="gr-number" student={student} onClose={vi.fn()} />);

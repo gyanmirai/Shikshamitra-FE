@@ -4,6 +4,7 @@ import CustomSelect from 'src/components/custom-select';
 import { useGetAssessmentSessionsQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 
 import { normalizeAssessmentDateTime } from './assessment-date-time';
+import { getAvailableAssessmentSessions } from './assessment-session-availability';
 
 type Props = {
   admissionOfferingId: string;
@@ -26,12 +27,7 @@ export function AssessmentBookingField({
     admissionOfferingId,
     workflowStageDefinitionId,
   });
-  const available = (sessions.currentData ?? []).filter(
-    (session) =>
-      !session.isCancelled &&
-      session.bookedCount < session.capacity &&
-      dayjs(normalizeAssessmentDateTime(session.startsAt)).isAfter(dayjs())
-  );
+  const available = getAvailableAssessmentSessions(sessions.currentData ?? []);
   return (
     <Stack spacing={1}>
       {sessions.isError && (

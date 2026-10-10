@@ -55,4 +55,19 @@ describe('admission intake setup editor', () => {
       firstContactDueInHours: 12,
     });
   });
+
+  it('blocks unavailable saved staff in routing and final review', async () => {
+    const values = getInitialAdmissionIntakeSetupValues(null);
+    values.name = 'Existing setup';
+    values.counsellorAssignmentRules.counsellorUserIds = ['inactive-staff'];
+    values.counsellorAssignmentRules.fallbackManagerUserId = 'manager-1';
+    await expect(
+      getAdmissionIntakeSetupStepSchema(1, ['manager-1']).validate(values)
+    ).rejects.toThrow('Remove unavailable counsellors');
+    values.counsellorAssignmentRules.counsellorUserIds = ['manager-1'];
+    values.counsellorAssignmentRules.fallbackManagerUserId = 'inactive-staff';
+    await expect(
+      getAdmissionIntakeSetupStepSchema(2, ['manager-1']).validate(values)
+    ).rejects.toThrow('Choose an active fallback manager');
+  });
 });

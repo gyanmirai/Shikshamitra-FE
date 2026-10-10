@@ -16,6 +16,30 @@ const classes = [
 ] as Standards[];
 
 describe('bulk offering class selection', () => {
+  it('permits activation without intake profiles while retaining workflow and inquiry form requirements', async () => {
+    const values = {
+      ...bulkOfferingInitialValues,
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardIds: ['class-1'],
+      workflowDefinitionId: 'workflow-1',
+      inquiryFormDefinitionId: 'inquiry-1',
+      isActive: true,
+    };
+    await expect(bulkOfferingSchema.isValid(values)).resolves.toBe(true);
+    expect(toBulkOfferingInput(values, classes, false)).toMatchObject({
+      inquiryIntakeProfileId: null,
+      counsellorAssignmentProfileId: null,
+      isActive: true,
+    });
+    await expect(bulkOfferingSchema.isValid({ ...values, workflowDefinitionId: '' })).resolves.toBe(
+      false
+    );
+    await expect(
+      bulkOfferingSchema.isValid({ ...values, inquiryFormDefinitionId: '' })
+    ).resolves.toBe(false);
+  });
+
   it('retains classes across school levels and removes only missing or duplicate IDs', () => {
     expect(selectBulkClasses(['class-1', 'class-9', 'class-1', 'missing'], classes)).toEqual({
       standardIds: ['class-1', 'class-9'],

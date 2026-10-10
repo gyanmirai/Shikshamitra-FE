@@ -13,7 +13,6 @@ import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
 import { NavSectionVertical } from '../nav-section';
 import { navSectionClasses } from '../nav-section/classes';
-import { isFullWidthSubLayoutRoute } from './full-width-workspace';
 
 // ----------------------------------------------------------------------
 
@@ -24,7 +23,6 @@ const SubLayout = ({ children }: any) => {
   const { data: user } = session;
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
-  const isFullWidthWorkspace = isFullWidthSubLayoutRoute(removeLastSlash);
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
   const navigationLabel = currentModule === 'hr' ? 'HR navigation' : 'Student navigation';
   const currentData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
@@ -116,7 +114,7 @@ const SubLayout = ({ children }: any) => {
         </Scrollbar>
       </Drawer>
 
-      {!isFullWidthWorkspace && currentData?.length > 0 && (
+      {currentData?.length > 0 && (
         <motion.div
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

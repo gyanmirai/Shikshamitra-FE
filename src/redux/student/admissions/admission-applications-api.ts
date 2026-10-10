@@ -47,12 +47,18 @@ export type AdmissionApplication = {
   applicationNumber: string;
   applicantId: string;
   applicantName: string;
+  hasReachedDecision?: boolean | null;
+  decisionEnteredAt?: string | null;
+  standardName?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
   inquiryId?: string | null;
   admissionCycleId: string;
   admissionOfferingId: string;
   assignedCounsellorId?: string | null;
   assignedCounsellorName?: string | null;
   status: AdmissionApplicationStatus;
+  canEndJourney?: boolean;
   offeringCode?: string | null;
   currentStageName?: string | null;
   decisionReason?: string | null;
@@ -70,6 +76,7 @@ export type AdmissionApplication = {
   submittedAt?: string | null;
 };
 export type AdmissionApplicationListInput = {
+  decisionWorkspaceOnly?: boolean;
   academicYearId?: string;
   boardId?: string;
   mediumId?: string;
@@ -79,6 +86,7 @@ export type AdmissionApplicationListInput = {
   search?: string;
   skipCount?: number;
   maxResultCount?: number;
+  sorting?: string;
   admissionCycleId?: string;
   admissionOfferingId?: string;
   assignedCounsellorId?: string;
@@ -218,6 +226,7 @@ export type AdmissionApplicationDecisionHistory = {
   status: AdmissionApplicationStatus;
   reason?: string | null;
   actorId?: string | null;
+  actorName?: string | null;
   occurredAt: string;
 };
 export type AdmissionEnrollmentResult = {
@@ -495,6 +504,29 @@ export const admissionApplicationsApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
+    endAdmissionApplicationJourney: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: { reason: string; concurrencyStamp: string } }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/end-journey`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+              studentAdmissionsCrmType.admissionInquiry,
+              studentAdmissionsCrmType.admissionOffering,
+              studentAdmissionsCrmType.task,
+              studentAdmissionsCrmType.exam,
+            ]
+          : [],
+    }),
     getAdmissionFinalizationPreview: builder.query<AdmissionFinalizationPreview, string>({
       query: (id) => `/student/enrollment/admissions/applications/${id}/finalization-preview`,
       transformResponse: (
@@ -576,6 +608,7 @@ export const {
   useApproveAdmissionApplicationMutation,
   useRejectAdmissionApplicationMutation,
   useWaitlistAdmissionApplicationMutation,
+  useEndAdmissionApplicationJourneyMutation,
   useGetAdmissionFinalizationPreviewQuery,
   useFinalizeAdmissionApplicationMutation,
   useAdvanceAdmissionApplicationWorkflowMutation,

@@ -20,17 +20,21 @@ export function useAssessmentActions(assessment: ManagedApplicationAssessment) {
   const [retake] = useAllowAssessmentRetakeMutation();
   const [cancel] = useCancelAssessmentAttemptMutation();
   const [waive] = useWaiveApplicationAssessmentMutation();
-  return async (action: AssessmentAction, values: AssessmentActionValues) => {
+  return async (
+    action: AssessmentAction,
+    values: AssessmentActionValues,
+    snapshot = assessment
+  ) => {
     const stage = {
-      applicationId: assessment.applicationId,
-      stageInstanceId: assessment.stageInstanceId,
-      concurrencyStamp: assessment.concurrencyStamp,
+      applicationId: snapshot.applicationId,
+      stageInstanceId: snapshot.stageInstanceId,
+      concurrencyStamp: snapshot.concurrencyStamp,
     };
     const notes = values.notes.trim() || undefined;
     if (action === 'book')
       return book({ ...stage, sessionId: values.sessionId || undefined }).unwrap();
     if (action === 'waive') return waive({ ...stage, reason: notes ?? '' }).unwrap();
-    const latest = latestAssessmentAttempt(assessment);
+    const latest = latestAssessmentAttempt(snapshot);
     if (!latest) throw new Error('The assessment attempt has changed. Refresh and try again.');
     const attempt = { attemptId: latest.id, concurrencyStamp: latest.concurrencyStamp, notes };
     switch (action) {
@@ -39,7 +43,7 @@ export function useAssessmentActions(assessment: ManagedApplicationAssessment) {
       case 'result':
         return result({
           ...attempt,
-          ...(assessment.policy.scoringEnabled
+          ...(snapshot.policy.scoringEnabled
             ? { marks: Number(values.marks) }
             : { outcome: values.outcome || undefined }),
         }).unwrap();

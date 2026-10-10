@@ -17,6 +17,35 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 describe('document history and access', { timeout: 15000 }, () => {
+  it('opens future document collection using server capabilities without allowing advancement', async () => {
+    mswServer.use(
+      http.get(documentStagePath, () =>
+        HttpResponse.json({
+          ...documentSummary,
+          isActive: false,
+          canCollectDuringForm: false,
+          requirements: [{ ...documentSummary.requirements[0], canUpload: true }],
+        })
+      )
+    );
+    const future = { ...documentStage, status: 0 as const };
+    renderDocumentUi(
+      <ApplicationDocuments
+        applicationId="application-1"
+        stages={[future]}
+        currentStage={{ ...documentStage, id: 'form-stage', documentVerificationEnabled: false }}
+        selectedStageId={future.id}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    );
+    expect(await screen.findByRole('button', { name: 'Upload document' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Upload document' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
   it('does not fetch protected document evidence without View permission', () => {
     let requests = 0;
     mswServer.use(

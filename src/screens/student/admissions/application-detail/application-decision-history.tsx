@@ -38,7 +38,12 @@ export function ApplicationDecisionHistory({
     );
   }
 
-  if (!data?.length) return null;
+  if (!data?.length)
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No decision recorded yet.
+      </Typography>
+    );
 
   return (
     <Stack spacing={0.75} sx={{ mt: compact ? 0 : 2, overflowWrap: 'anywhere' }}>
@@ -47,6 +52,7 @@ export function ApplicationDecisionHistory({
         <Typography key={item.id} variant="caption" color="text.secondary">
           {getAdmissionApplicationStatusLabel(item.status)} ·{' '}
           {formatWorkflowDateTime(item.occurredAt)}
+          {item.actorName ? ` · ${item.actorName}` : ''}
           {item.reason ? ` · ${item.reason}` : ''}
         </Typography>
       ))}

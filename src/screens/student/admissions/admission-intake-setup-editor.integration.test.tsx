@@ -1,13 +1,19 @@
-import type { IntakeCounsellorChoice } from 'src/redux/student/admissions/admission-intake-profiles-api';
+import type {
+  AdmissionIntakeSetup,
+  IntakeCounsellorChoice,
+} from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import userEvent from '@testing-library/user-event';
 import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
-import { AdmissionIntakeSetupEditor } from './admission-intake-setup-editor';
+import {
+  AdmissionIntakeSetupEditor,
+  getInitialAdmissionIntakeSetupValues,
+} from './admission-intake-setup-editor';
 
 const hooks = vi.hoisted(() => ({
   lookup: {
@@ -42,9 +48,9 @@ const counsellors = [
   { id: 'counsellor-1', name: 'Admissions Counselor', userName: 'counsellor' },
   { id: 'manager-1', name: 'Admissions Manager', userName: 'manager' },
 ];
-const editor = () => (
+const editor = (setup: AdmissionIntakeSetup | null = null) => (
   <ThemeProvider theme={createTheme(defaultSettings)}>
-    <AdmissionIntakeSetupEditor setup={null} onClose={hooks.close} />
+    <AdmissionIntakeSetupEditor setup={setup} onClose={hooks.close} />
   </ThemeProvider>
 );
 
@@ -53,6 +59,9 @@ beforeEach(() => {
   hooks.lookup = { data: counsellors, isLoading: false, isFetching: false, isError: false };
   hooks.create.mockImplementation((input) => ({
     unwrap: async () => ({ ...input, id: 'setup-1' }),
+  }));
+  hooks.update.mockImplementation(({ body }) => ({
+    unwrap: async () => ({ ...body, id: 'setup-1' }),
   }));
 });
 
@@ -74,6 +83,7 @@ it('shows the simplified inquiry controls and saves API-selected pool and fallba
   await user.click(screen.getByRole('button', { name: 'Next' }));
   await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
+  await user.keyboard('{Escape}');
   await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
   await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -99,16 +109,125 @@ it('shows the simplified inquiry controls and saves API-selected pool and fallba
   );
 }, 15000);
 
+it('keeps source and pool checkbox menus open for multiple selections and reviews saved values', async () => {
+  const user = userEvent.setup();
+  render(editor());
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+    target: { value: 'Multiple sources' },
+  });
+  await user.click(screen.getByRole('combobox', { name: 'Allowed sources' }));
+  await user.click(screen.getByRole('option', { name: 'Website' }));
+  expect(
+    within(screen.getByRole('option', { name: 'Website' })).getByRole('checkbox')
+  ).toBeChecked();
+  await user.click(screen.getByRole('option', { name: 'QR code' }));
+  expect(
+    within(screen.getByRole('option', { name: 'QR code' })).getByRole('checkbox')
+  ).toBeChecked();
+  await user.keyboard('{Escape}');
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
+  await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
+  await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
+  expect(
+    within(screen.getByRole('option', { name: 'Admissions Counselor' })).getByRole('checkbox')
+  ).toBeChecked();
+  expect(
+    within(screen.getByRole('option', { name: 'Admissions Manager' })).getByRole('checkbox')
+  ).toBeChecked();
+  await user.keyboard('{Escape}');
+  expect(screen.getByText('Admissions Counselor').closest('.MuiChip-root')).toHaveClass(
+    'MuiChip-colorDefault'
+  );
+  await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
+  await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  expect(screen.getByText('Website')).toBeInTheDocument();
+  expect(screen.getByText('QR code')).toBeInTheDocument();
+  expect(screen.getByText('Admissions Counselor')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Edit inquiry handling' }));
+  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Multiple sources');
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('button', { name: 'Create setup' }));
+  await waitFor(() =>
+    expect(hooks.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inquiryRules: expect.objectContaining({ allowedSources: [0, 10] }),
+        counsellorAssignmentRules: expect.objectContaining({
+          counsellorUserIds: ['counsellor-1', 'manager-1'],
+        }),
+      })
+    )
+  );
+  expect(hooks.close).toHaveBeenCalledOnce();
+}, 15000);
+
+it('reviews edits with an update label and retains the concurrency stamp', async () => {
+  const user = userEvent.setup();
+  const values = getInitialAdmissionIntakeSetupValues(null);
+  const setup = {
+    ...values,
+    id: 'setup-1',
+    name: 'Saved setup',
+    concurrencyStamp: 'stamp-1',
+    activeOfferingCount: 0,
+    activePublicInquiryLinkCount: 0,
+    counsellorAssignmentRules: {
+      ...values.counsellorAssignmentRules,
+      counsellorUserIds: ['counsellor-1'],
+      fallbackManagerUserId: 'manager-1',
+    },
+  } as AdmissionIntakeSetup;
+  render(editor(setup));
+  expect(screen.getByRole('button', { name: 'Step 3: Review & update' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('button', { name: 'Edit counsellor routing' }));
+  expect(screen.getByRole('combobox', { name: 'Counsellor pool *' })).toHaveTextContent(
+    'Admissions Counselor'
+  );
+  await user.click(screen.getByRole('button', { name: 'Next' }));
+  await user.click(screen.getByRole('button', { name: 'Update setup' }));
+  await waitFor(() =>
+    expect(hooks.update).toHaveBeenCalledWith({
+      id: 'setup-1',
+      body: expect.objectContaining({ concurrencyStamp: 'stamp-1' }),
+    })
+  );
+  expect(hooks.create).not.toHaveBeenCalled();
+}, 15000);
+
+it('preserves an inline draft when discarding is cancelled', async () => {
+  const user = userEvent.setup();
+  render(editor());
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+    target: { value: 'Keep draft' },
+  });
+  await user.click(screen.getByRole('button', { name: 'Close admission intake setup editor' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Discard setup changes?');
+  await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Keep draft');
+  expect(hooks.close).not.toHaveBeenCalled();
+});
+
 it('recovers both routing fields after a failed lookup without losing inquiry values', async () => {
   const user = userEvent.setup();
   hooks.lookup = { data: [], isLoading: false, isFetching: false, isError: true };
   const view = render(editor());
-  expect(hooks.query).toHaveBeenCalledWith(undefined, { refetchOnMountOrArgChange: true });
+  expect(hooks.query).toHaveBeenCalledWith(
+    { counsellorOnly: true },
+    { refetchOnMountOrArgChange: true }
+  );
   fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
     target: { value: 'Preserved draft' },
   });
   await user.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByRole('combobox', { name: 'Counsellor pool *' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Counsellor pool *' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
   expect(screen.getByRole('combobox', { name: 'Fallback manager *' })).toHaveAttribute(
     'aria-disabled',
     'true'
@@ -121,6 +240,7 @@ it('recovers both routing fields after a failed lookup without losing inquiry va
   await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
   expect(screen.getByRole('option', { name: 'Admissions Counselor' })).toBeInTheDocument();
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
+  await user.keyboard('{Escape}');
   await user.click(screen.getByRole('combobox', { name: 'Fallback manager *' }));
   expect(screen.getByRole('option', { name: 'Admissions Manager' })).toBeInTheDocument();
   await user.click(screen.getByRole('option', { name: 'Admissions Manager' }));

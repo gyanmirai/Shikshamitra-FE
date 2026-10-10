@@ -335,7 +335,7 @@ function CreateWorkflowDialog({
             size="small"
             disabled={busy || Boolean(replacement)}
             onClick={requestClose}
-            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+            sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2, width: 44, height: 44 }}
           >
             <Iconify icon="mdi:close" />
           </IconButton>
@@ -381,7 +381,7 @@ function CreateWorkflowDialog({
             validateForwardStepClick
             onStepClick={(index, _label, formik) => {
               if (index === 1 && inline) {
-                void continueToJourney(false, formik.values, formik, () => undefined);
+                continueToJourney(false, formik.values, formik, () => undefined);
               }
             }}
             saveAndNextButtonProps={{ loading: busy, size: 'small' }}
@@ -411,6 +411,7 @@ function CreateWorkflowDialog({
                     boxSizing: 'border-box',
                     py: 2,
                     px: { xs: 1, sm: 2 },
+                    bgcolor: 'background.neutral',
                   }}
                 >
                   <Box
@@ -425,7 +426,15 @@ function CreateWorkflowDialog({
                     }}
                   >
                     <WorkflowDetailsDirtyState dirty={formik.dirty && !busy} />
-                    <FormSectionCard icon="mdi:clipboard-text-outline" title="Workflow details">
+                    <FormSectionCard
+                      icon="mdi:clipboard-text-outline"
+                      title="Workflow details"
+                      descriptionTooltip={
+                        inline
+                          ? 'Keep your current journey, or choose a template to replace its stages and routes when saving.'
+                          : 'Choose a starting journey and a published registration form. You can edit each stage in Build journey.'
+                      }
+                    >
                       <Stack spacing={1.5}>
                         <WorkflowTemplateSelector
                           includeBlank
@@ -439,22 +448,16 @@ function CreateWorkflowDialog({
                           }
                           onChange={(value) => formik.setFieldValue('starterJourney', value)}
                         />
-                        {inline &&
-                          (keepingJourney ? (
-                            <Typography variant="body2" color="text.secondary">
-                              Keep your current journey, or choose a template to replace its stages
-                              and routes when saving.
-                            </Typography>
-                          ) : (
-                            <Button
-                              size="small"
-                              variant="text"
-                              startIcon={<Iconify icon="mdi:arrow-left" />}
-                              onClick={() => formik.setFieldValue('starterJourney', undefined)}
-                            >
-                              Keep current journey
-                            </Button>
-                          ))}
+                        {inline && !keepingJourney && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            startIcon={<Iconify icon="mdi:arrow-left" />}
+                            onClick={() => formik.setFieldValue('starterJourney', undefined)}
+                          >
+                            Keep current journey
+                          </Button>
+                        )}
                       </Stack>
                       <Divider />
                       <Stack spacing={1.5}>

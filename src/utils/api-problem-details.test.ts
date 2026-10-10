@@ -31,6 +31,25 @@ describe('parseApiProblemDetail', () => {
       }).detail
     ).toContain(message);
   });
+  it.each(['Students.Onboarding.RollNumberDuplicate', 'Students:Onboarding:RollNumberDuplicate'])(
+    'explains an occupied onboarding Roll number for %s',
+    (errorCode) => {
+      const parsed = parseApiProblemDetail({
+        status: 400,
+        data: {
+          title: 'Business rule violated',
+          detail: 'One or more business rules were violated.',
+          errorCode,
+        },
+      });
+
+      expect(parsed.errorCode).toBe(errorCode);
+      expect(parsed.detail).toBe(
+        'This roll number is already assigned or reserved in the selected class/division for this academic year. Enter an unused number, or use Automatic if available.'
+      );
+    }
+  );
+
   it('identifies an unassigned refund policy from the eligibility error code', () => {
     const parsed = parseApiProblemDetail({
       status: 400,

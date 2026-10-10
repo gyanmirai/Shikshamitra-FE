@@ -10,7 +10,21 @@ import { render, screen } from '@testing-library/react';
 import { ApplicationManagedStages } from './application-managed-stages';
 
 vi.mock('../payment/application-payment-stage', () => ({
-  ApplicationPaymentStage: () => <div>Confirm fee structure workspace</div>,
+  ApplicationPaymentStage: ({
+    stage: selected,
+    readOnly,
+    canAdvance,
+  }: {
+    stage: AdmissionApplicationStage;
+    readOnly?: boolean;
+    canAdvance: boolean;
+  }) => (
+    <div>
+      Confirm fee structure workspace<span>{selected.id}</span>
+      <span>{readOnly ? 'Read-only' : 'Editable'}</span>
+      <span>{canAdvance ? 'Can continue' : 'Cannot continue'}</span>
+    </div>
+  ),
 }));
 vi.mock('../form-stage/application-form-stage', () => ({
   ApplicationFormStage: () => <div>Form workspace</div>,
@@ -73,3 +87,45 @@ it.each([3, 6, 8])(
     expect(container).toBeEmptyDOMElement();
   }
 );
+
+it('renders a selected future fee stage for editing without allowing workflow advancement', () => {
+  const current = { ...stage, id: 'form', stageType: 1, formStageEnabled: true };
+  const future = { ...stage, id: 'future-payment', status: 0 };
+  render(
+    <ApplicationManagedStages
+      application={application}
+      workflow={
+        {
+          currentStageInstanceId: current.id,
+          stages: [current, future],
+        } as AdmissionApplicationWorkflow
+      }
+      selectedStage={future}
+      canAdvance
+      advancing={false}
+      onComplete={vi.fn()}
+    />
+  );
+  expect(screen.getByText('future-payment')).toBeVisible();
+  expect(screen.getByText('Editable')).toBeVisible();
+  expect(screen.getByText('Cannot continue')).toBeVisible();
+  expect(screen.queryByText('Form workspace')).not.toBeInTheDocument();
+});
+
+it('keeps completed fee stages read-only when selected', () => {
+  const previous = { ...stage, status: 2 };
+  render(
+    <ApplicationManagedStages
+      application={application}
+      workflow={
+        { currentStageInstanceId: 'other', stages: [previous] } as AdmissionApplicationWorkflow
+      }
+      selectedStage={previous}
+      canAdvance
+      advancing={false}
+      onComplete={vi.fn()}
+    />
+  );
+  expect(screen.getByText('Read-only')).toBeVisible();
+  expect(screen.getByText('Cannot continue')).toBeVisible();
+});

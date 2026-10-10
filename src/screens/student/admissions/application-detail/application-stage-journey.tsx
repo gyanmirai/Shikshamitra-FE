@@ -3,17 +3,23 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Typography } from '@mui/material';
-import { Label } from 'src/components/label';
 import CustomStepper from 'src/components/custom-stepper';
-
-import { getStageStatusColor, getStageStatusLabel } from './application-progress-model';
 
 type Props = {
   stages: AdmissionApplicationStage[];
   currentStageId?: string | null;
+  selectedStageId?: string;
+  busy?: boolean;
+  onChange?: (stageId: string) => void;
 };
 
-export function ApplicationStageJourney({ stages, currentStageId }: Props) {
+export function ApplicationStageJourney({
+  stages,
+  currentStageId,
+  selectedStageId,
+  busy,
+  onChange,
+}: Props) {
   const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
 
   if (!orderedStages.length) {
@@ -29,8 +35,10 @@ export function ApplicationStageJourney({ stages, currentStageId }: Props) {
       ariaLabel="Admission journey"
       orientation="vertical"
       steps={orderedStages.map((stage) => stage.name)}
-      activeStep={orderedStages.findIndex(
-        (stage) => stage.id === currentStageId || stage.status === 1
+      activeStep={orderedStages.findIndex((stage) =>
+        selectedStageId
+          ? stage.id === selectedStageId
+          : stage.id === currentStageId || stage.status === 1
       )}
       stepStates={orderedStages.map((stage) => {
         if (stage.status === 2) return 'completed';
@@ -39,11 +47,8 @@ export function ApplicationStageJourney({ stages, currentStageId }: Props) {
         if (stage.id === currentStageId || stage.status === 1) return 'active';
         return 'pending';
       })}
-      stepCaptions={orderedStages.map((stage) => (
-        <Label key={stage.id} color={getStageStatusColor(stage.status)} sx={{ mt: 0.5 }}>
-          {getStageStatusLabel(stage.status)}
-        </Label>
-      ))}
+      disabled={busy}
+      onStepClick={onChange ? (index) => onChange(orderedStages[index].id) : undefined}
     />
   );
 }

@@ -1,17 +1,9 @@
 'use client';
 
-import type { InquiryFollowUp } from 'src/redux/student/admissions/admission-inquiry-management-api';
-
 import { useEffect } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
-import {
-  useGetAdmissionApplicationFollowUpsQuery,
-  useCancelAdmissionApplicationFollowUpMutation,
-  useScheduleAdmissionApplicationFollowUpMutation,
-  useCompleteAdmissionApplicationFollowUpMutation,
-} from 'src/redux/student/admissions/admission-application-follow-ups-api';
 
+import { useApplicationFollowUps } from './use-application-follow-ups';
 import { InquiryFollowUpsPanel } from '../inquiry-management/inquiry-follow-ups';
 
 export function ApplicationFollowUps({
@@ -25,31 +17,12 @@ export function ApplicationFollowUps({
   disabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
 }) {
-  const query = useGetAdmissionApplicationFollowUpsQuery(applicationId, {
-    skip: !applicationId,
-    refetchOnMountOrArgChange: true,
-  });
-  const [schedule, scheduling] = useScheduleAdmissionApplicationFollowUpMutation();
-  const [complete, completing] = useCompleteAdmissionApplicationFollowUpMutation();
-  const [cancel, cancelling] = useCancelAdmissionApplicationFollowUpMutation();
-  const saving = scheduling.isLoading || completing.isLoading || cancelling.isLoading;
+  const { query, saving, value, problem, sourceUnavailable, actions } =
+    useApplicationFollowUps(applicationId);
   useEffect(() => {
     onBusyChange?.(saving);
   }, [saving, onBusyChange]);
   useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
-  const value = query.currentData;
-  const problem = query.isError ? parseApiProblemDetail(query.error) : undefined;
-  const sourceUnavailable = Boolean(
-    (query.error && 'status' in query.error && query.error.status === 404) ||
-    problem?.detail.startsWith('The source inquiry is unavailable.')
-  );
-  const finishInput = (item: InquiryFollowUp, note: string, concurrencyStamp: string) => ({
-    applicationId,
-    followUpId: item.id,
-    concurrencyStamp,
-    followUpConcurrencyStamp: item.concurrencyStamp,
-    note,
-  });
 
   return (
     <Paper
@@ -100,18 +73,7 @@ export function ApplicationFollowUps({
             disabled={disabled}
             readOnly={!value.canManageFollowUps}
             busy={query.isFetching || saving}
-            actions={{
-              schedule: (body) =>
-                schedule({
-                  applicationId,
-                  concurrencyStamp: value.concurrencyStamp,
-                  ...body,
-                }).unwrap(),
-              complete: (item, note) =>
-                complete(finishInput(item, note, value.concurrencyStamp)).unwrap(),
-              cancel: (item, note) =>
-                cancel(finishInput(item, note, value.concurrencyStamp)).unwrap(),
-            }}
+            actions={actions}
           />
         </Stack>
       )}

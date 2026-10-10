@@ -4,8 +4,8 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRef, useMemo, useState } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -16,6 +16,7 @@ import {
   useGetAdmissionApplicationFormQuery,
   useSubmitAdmissionApplicationMutation,
   useGetAdmissionApplicationWorkflowQuery,
+  useEndAdmissionApplicationJourneyMutation,
   useReopenAdmissionApplicationFormMutation,
   useGetAdmissionApplicationFormHistoryQuery,
   useAdvanceAdmissionApplicationWorkflowMutation,
@@ -39,16 +40,18 @@ export type AdvanceOptions = {
   adminOverride?: boolean;
 };
 
-export function useApplicationDetail(id: string) {
+export function useApplicationDetail(id: string, selectedStageId?: string) {
   const applicationQuery = useGetAdmissionApplicationQuery(id);
   const applicationId = applicationQuery.data ? id : skipToken;
   const formQuery = useGetAdmissionApplicationFormQuery(applicationId);
   const workflowQuery = useGetAdmissionApplicationWorkflowQuery(applicationId);
-  const currentFormStage = workflowQuery.data?.stages.find(
-    (stage) => stage.id === workflowQuery.data?.currentStageInstanceId && stage.formStageEnabled
+  const selectedFormStage = workflowQuery.data?.stages.find(
+    (stage) =>
+      stage.id === (selectedStageId ?? workflowQuery.data?.currentStageInstanceId) &&
+      stage.formStageEnabled
   );
   const formStageQuery = useGetAdmissionFormStageQuery(
-    currentFormStage ? { applicationId: id, stageId: currentFormStage.id } : skipToken
+    selectedFormStage ? { applicationId: id, stageId: selectedFormStage.id } : skipToken
   );
   const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(applicationId);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -56,6 +59,9 @@ export function useApplicationDetail(id: string) {
   const [submit, submitState] = useSubmitAdmissionApplicationMutation();
   const [reopen, reopenState] = useReopenAdmissionApplicationFormMutation();
   const [advanceWorkflow, advanceState] = useAdvanceAdmissionApplicationWorkflowMutation();
+  const [endJourneyMutation, endJourneyState] = useEndAdmissionApplicationJourneyMutation();
+  const canManage = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
+  const canEndJourney = canManage && applicationQuery.data?.canEndJourney === true;
   const [errors, setErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [runtimeAction, setRuntimeAction] = useState<RuntimeAction>(null);
@@ -78,6 +84,25 @@ export function useApplicationDetail(id: string) {
     onSubmit: async () => undefined,
   });
   const currentValues = formik.values;
+  const latestValues = useRef(currentValues);
+  latestValues.current = currentValues;
+  const validateEditedField = (
+    fieldCode: string,
+    values: Record<string, string>,
+    showUntouchedError: boolean
+  ) => {
+    const error = formQuery.data
+      ? getDynamicAdmissionValidationErrors(formQuery.data.definition, values)[fieldCode]
+      : undefined;
+    setFieldErrors((previous) => {
+      if ((!showUntouchedError && !previous[fieldCode]) || previous[fieldCode] === error)
+        return previous;
+      const next = { ...previous };
+      if (error) next[fieldCode] = error;
+      else delete next[fieldCode];
+      return next;
+    });
+  };
 
   const persistChanges = async (showSuccessMessage: boolean) => {
     const application = applicationQuery.data;
@@ -248,6 +273,26 @@ export function useApplicationDetail(id: string) {
       });
     }
   };
+  const endJourney = async (reason: string) => {
+    const trimmedReason = reason.trim();
+    if (!canEndJourney || !trimmedReason || trimmedReason.length > 512) return false;
+    const concurrencyStamp = applicationQuery.data?.concurrencyStamp;
+    if (!concurrencyStamp) {
+      shikshaMitraToast.error({ message: 'Refresh the application before ending its journey.' });
+      return false;
+    }
+    try {
+      await endJourneyMutation({ id, input: { reason: trimmedReason, concurrencyStamp } }).unwrap();
+      formik.resetForm();
+      shikshaMitraToast.success({ message: 'Admission journey ended' });
+      return true;
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Unable to end the admission journey',
+      });
+      return false;
+    }
+  };
 
   return {
     applicationQuery,
@@ -274,21 +319,26 @@ export function useApplicationDetail(id: string) {
     submitApplication,
     reopenApplication,
     reopenState,
+    endJourney,
+    endJourneyState,
+    canEndJourney,
     validateStep,
     setFieldValue: async (fieldCode: string, value: string) => {
+      // A selector may change and blur before React renders the new Formik values.
+      const nextValues = { ...latestValues.current, [fieldCode]: value };
+      latestValues.current = nextValues;
+      validateEditedField(fieldCode, nextValues, Boolean(formik.touched[fieldCode]));
       await formik.setFieldValue(fieldCode, value);
     },
     setFieldTouched: async (fieldCode: string) => {
+      // Keep validation local to this field; later steps validate on Next/Submit.
+      validateEditedField(fieldCode, latestValues.current, true);
       await formik.setFieldTouched(fieldCode, true, false);
-      setFieldErrors(
-        formQuery.data
-          ? getDynamicAdmissionValidationErrors(formQuery.data.definition, formik.values)
-          : {}
-      );
     },
-    canAdvance: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
-    canSkip: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
-    canOverride: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
-    canReopen: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
+    canEdit: canManage,
+    canAdvance: canManage,
+    canSkip: canManage,
+    canOverride: canManage,
+    canReopen: canManage,
   };
 }

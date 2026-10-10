@@ -11,6 +11,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+import { getApplicationWorkspaceUrl } from '../application-detail/application-return-url';
 
 export function inquiryHandoffBlocker(inquiry: AdmissionInquiry): string | undefined {
   if (inquiry.isTransferred || inquiry.applicationId)
@@ -41,9 +42,17 @@ export function useInquiryHandoff() {
         inquiryId: inquiry.id,
       }).unwrap();
       shikshaMitraToast.success({
-        message: 'Inquiry moved to Pipeline. Continue the application.',
+        message: application.hasReachedDecision
+          ? 'Inquiry moved to Applications. Continue the admission decision.'
+          : 'Inquiry moved to Pipeline. Continue the application.',
       });
-      router.push(`${studentPaths.enrollment.applications}/${application.id}`);
+      router.push(
+        getApplicationWorkspaceUrl(
+          application.id,
+          studentPaths.enrollment.pipeline,
+          application.hasReachedDecision ?? false
+        )
+      );
     } catch (error) {
       shikshaMitraToast.error({
         message:

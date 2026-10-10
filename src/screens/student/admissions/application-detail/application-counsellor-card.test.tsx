@@ -1,5 +1,6 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Button } from '@mui/material';
 import { vi, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { useState, useCallback } from 'react';
@@ -229,6 +230,32 @@ it('shows header ownership for view-only users without loading edit options', ()
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(getOptions).not.toHaveBeenCalled();
+});
+
+it('reuses the header assignment dialog and permission guard through a custom menu action', async () => {
+  const getOptions = vi.fn();
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/applications/counsellors', () => {
+      getOptions();
+      return HttpResponse.json({ data: [] });
+    })
+  );
+  renderDocumentUi(
+    <ApplicationCounsellorCard
+      presentation="header"
+      application={application}
+      renderHeaderAction={({ canEdit, onEdit, busy }) => (
+        <Button disabled={!canEdit || busy} onClick={onEdit}>
+          Menu assignment
+        </Button>
+      )}
+    />,
+    ['Students.Admissions.Applications.Add']
+  );
+  expect(getOptions).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole('button', { name: 'Menu assignment' }));
+  expect(await screen.findByRole('dialog', { name: 'Assign Journey Counsellor' })).toBeVisible();
+  await waitFor(() => expect(getOptions).toHaveBeenCalledOnce());
 });
 
 it('loads the scoped counsellor pool only when the header editor opens and reuses it on reopen', async () => {

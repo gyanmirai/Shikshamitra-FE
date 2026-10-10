@@ -44,7 +44,7 @@ describe('Admission Offering form rules', () => {
     expect(getOfferingInitialValues(legacy)).toMatchObject({ track: 1, entryMode: 1 });
   });
 
-  it('requires inquiry and setup while application form is derived by the server', () => {
+  it('requires an inquiry form but permits an Offering without an intake setup', () => {
     expect(
       isAdmissionOfferingConfigurationIncomplete({
         entryMode: 0,
@@ -63,6 +63,16 @@ describe('Admission Offering form rules', () => {
         applicationFormDefinitionId: 'application-1',
         inquiryIntakeProfileId: 'inquiry-profile-1',
         counsellorAssignmentProfileId: 'assignment-profile-1',
+      })
+    ).toBe(false);
+    expect(
+      isAdmissionOfferingConfigurationIncomplete({
+        entryMode: 0,
+        workflowDefinitionId: 'workflow-1',
+        inquiryFormDefinitionId: 'inquiry-1',
+        applicationFormDefinitionId: 'application-1',
+        inquiryIntakeProfileId: null,
+        counsellorAssignmentProfileId: null,
       })
     ).toBe(false);
     expect(

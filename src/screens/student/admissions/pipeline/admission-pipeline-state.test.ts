@@ -18,6 +18,7 @@ describe('Pipeline navigation state', () => {
       '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
     );
     const direct = admissionPipelineApplicationUrl('app-id', drawerParams);
+    expect(new URL(direct, 'https://school.test').pathname).toBe('/student/admissions/pipeline/applications/app-id');
     expect(new URL(direct, 'https://school.test').searchParams.get('returnTo')).toBe(
       '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
     );

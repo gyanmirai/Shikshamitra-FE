@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
@@ -43,12 +44,18 @@ export function ApplicationCounsellorCard({
   presentation = 'card',
   disabled = false,
   onBusyChange,
+  renderHeaderAction,
 }: {
   application: AdmissionApplication;
   compact?: boolean;
   presentation?: 'card' | 'header';
   disabled?: boolean;
   onBusyChange?: (busy: boolean) => void;
+  renderHeaderAction?: (context: {
+    canEdit: boolean;
+    onEdit: () => void;
+    busy: boolean;
+  }) => ReactNode;
 }) {
   const header = presentation === 'header';
   const [editing, setEditing] = useState(!header && !application.assignedCounsellorId);
@@ -234,22 +241,28 @@ export function ApplicationCounsellorCard({
                 (application.assignedCounsellorId ? 'Assigned counsellor' : 'Not assigned')}
             </Typography>
           </Box>
-          {canEdit && (
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label={
-                application.assignedCounsellorId
-                  ? 'Change journey counsellor'
-                  : 'Assign journey counsellor'
-              }
-              disabled={disabled || assignment.isLoading}
-              onClick={() => setEditing(true)}
-              sx={{ flexShrink: 0 }}
-            >
-              {application.assignedCounsellorId ? 'Change' : 'Assign'}
-            </Button>
-          )}
+          {renderHeaderAction
+            ? renderHeaderAction({
+                canEdit,
+                onEdit: () => setEditing(true),
+                busy: disabled || assignment.isLoading,
+              })
+            : canEdit && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  aria-label={
+                    application.assignedCounsellorId
+                      ? 'Change journey counsellor'
+                      : 'Assign journey counsellor'
+                  }
+                  disabled={disabled || assignment.isLoading}
+                  onClick={() => setEditing(true)}
+                  sx={{ flexShrink: 0 }}
+                >
+                  {application.assignedCounsellorId ? 'Change' : 'Assign'}
+                </Button>
+              )}
         </Stack>
         {canEdit && editing && (
           <CustomDialog

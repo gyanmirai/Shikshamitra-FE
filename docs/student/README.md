@@ -12,8 +12,12 @@ audience: humans-and-agents
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
 Admissions starts from qualified inquiries, and Pipeline projects active application progress from the existing workflow.
-Pipeline and Applications open the shared Applicant 360 drawer, with compact text-only stage tabs, counsellor assignment in the header, horizontal form sections and a document verification table. The former applicant overview page is replaced by compatibility navigation; identity repair reuses the existing editor. Finalization presents real admission context and compact readiness checks with title help, while preserving workflow rules, permission checks and Finance/Onboarding ownership.
+Pipeline owns active inquiry-linked cases before Admission Decision; Applications owns cases that have entered Decision, including later correction work.
+Both open the shared full-page Applicant 360 workspace with phase-aware menu ancestry and safe return context.
+Applications uses the common searchable table, server paging and sorting, applicant/reference identity, contact/class context, status labels and permission-aware actions.
+Finalization preserves workflow rules, permission checks and Finance/Onboarding ownership.
 Finalization creates an Onboarding case; Onboarding owns enrollment activation.
+The finalized decision panel shows the saved admission summary, live Onboarding handover, fee/stage evidence and decision history; guidance is disclosed through its information icon.
 Student Onboarding uses a persisted Student Setup worklist with Readiness, GR Number, Roll Number, Division, Fees, and Credentials tabs.
 Readiness & Access links Admission Offerings to activation requirements and login-email choices; Numbering & Placement contains GR and Roll settings.
 Fees selects and confirms an existing published fee structure through Onboarding without assigning dues, collecting money, or requiring payment settlement.

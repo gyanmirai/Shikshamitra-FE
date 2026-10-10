@@ -34,6 +34,7 @@ import {
   Drawer,
   Divider,
   MenuItem,
+  Skeleton,
   TextField,
   IconButton,
   Typography,
@@ -86,7 +87,7 @@ type LinkValues = {
 
 const linkSchema = Yup.object({
   cycleId: Yup.string().required('Choose a published admission period.'),
-  setupId: Yup.string().required('Choose an admission intake setup.'),
+  setupId: Yup.string().optional(),
   formId: Yup.string().required('Choose a published inquiry form.'),
   name: Yup.string().trim().required('Enter a link name.').max(128),
   source: Yup.number().integer().required(),
@@ -157,7 +158,7 @@ export function AdmissionPublicInquiryLinks({
       setError('');
       try {
         const setup = (setups.data ?? []).find((item) => item.id === values.setupId);
-        if (!setup) {
+        if (values.setupId && !setup) {
           setError(
             'The selected admission intake setup is no longer available. Choose another setup.'
           );
@@ -167,18 +168,19 @@ export function AdmissionPublicInquiryLinks({
           !routingReady ||
           !linkOptions.some(
             (option) =>
-              option.counsellorAssignmentProfileId === setup.counsellorAssignmentProfileId &&
+              option.counsellorAssignmentProfileId ===
+                (setup?.counsellorAssignmentProfileId ?? null) &&
               option.inquiryFormDefinitionId === values.formId
           )
         ) {
           setError(
-            'Choose a setup and inquiry form linked to the same active Inquiry or Both Offering in this period. Refresh offerings after updating the configuration.'
+            'Choose an inquiry form linked to an active Inquiry or Both Offering in this period. A selected setup must belong to the same Offering. Refresh offerings after updating the configuration.'
           );
           return;
         }
         const result = await create({
           admissionCycleId: values.cycleId,
-          counsellorAssignmentProfileId: setup.counsellorAssignmentProfileId,
+          counsellorAssignmentProfileId: setup?.counsellorAssignmentProfileId ?? null,
           inquiryFormDefinitionId: values.formId,
           name: values.name.trim(),
           source: values.source,
@@ -198,7 +200,9 @@ export function AdmissionPublicInquiryLinks({
             : parsed.errorCode === 'Admissions.PublicInquiry.OfferingRequired'
               ? parsed.detail && parsed.detail !== 'One or more business rules were violated.'
                 ? parsed.detail
-                : 'No active Inquiry or Both Offering in this period matches the selected setup and form. Attach both to the same Offering, activate it, then refresh offerings and retry.'
+                : values.setupId
+                  ? 'No active Inquiry or Both Offering in this period matches the selected setup and form. Attach both to the same Offering, activate it, then refresh offerings and retry.'
+                  : 'No active Inquiry or Both Offering in this period uses the selected inquiry form. Attach the form to an Offering, activate it, then refresh offerings and retry.'
               : parsed.detail || 'Unable to create the inquiry link.'
         );
         if (parsed.errorCode === 'Admissions.PublicInquiry.OfferingRequired')
@@ -212,6 +216,8 @@ export function AdmissionPublicInquiryLinks({
   });
   const linkOptions = routingOptions.currentData ?? [];
   const routingLoading = routingOptions.isLoading || routingOptions.isFetching;
+  const inquiryFormsLoading =
+    forms.isLoading || forms.isFetching || (Boolean(formik.values.cycleId) && routingLoading);
   const routingReady =
     Boolean(formik.values.cycleId) &&
     !routingLoading &&
@@ -235,11 +241,7 @@ export function AdmissionPublicInquiryLinks({
       ? 'Unable to load intake setups'
       : routingLoading && formik.values.cycleId
         ? 'Loading compatible setups…'
-        : availableSetups.length === 0
-          ? allSetups.length === 0
-            ? 'No active intake setups'
-            : 'No matching intake setups'
-          : 'Choose setup';
+        : 'No setup — manual assignment';
   const { dirty } = formik;
   const formEditor = useFormik({
     initialValues: { formId: '' },
@@ -773,47 +775,60 @@ export function AdmissionPublicInquiryLinks({
               </TextField>
             </Grid>
             <Grid size={12}>
-              <TextField
-                select
-                fullWidth
-                required
-                size="small"
-                inputRef={formInputRef}
-                label="Published inquiry form"
-                name="formId"
-                value={formik.values.formId}
-                disabled={!routingReady || availableForms.length === 0}
-                onChange={(event) => {
-                  const formId = event.target.value;
-                  const setup = allSetups.find((item) => item.id === formik.values.setupId);
-                  const keepSetup = linkOptions.some(
-                    (option) =>
-                      option.inquiryFormDefinitionId === formId &&
-                      option.counsellorAssignmentProfileId === setup?.counsellorAssignmentProfileId
-                  );
-                  formik.setValues({
-                    ...formik.values,
-                    formId,
-                    setupId: keepSetup ? formik.values.setupId : '',
-                  });
-                }}
-                onBlur={formik.handleBlur}
-                error={Boolean(formik.touched.formId && formik.errors.formId)}
-                helperText={
-                  formik.touched.formId && formik.errors.formId
-                    ? formik.errors.formId
-                    : !formik.values.cycleId
-                      ? 'Choose an admission period to load linked inquiry forms.'
-                      : 'Forms linked to active Inquiry or Both Offerings in this period.'
-                }
-              >
-                <MenuItem value="">Choose form</MenuItem>
-                {availableForms.map((form) => (
-                  <MenuItem key={form.id} value={form.id}>
-                    {form.name} · v{form.version}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {inquiryFormsLoading ? (
+                <Stack
+                  spacing={0.5}
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading published inquiry forms"
+                >
+                  <Skeleton variant="rounded" height={40} />
+                  <Skeleton variant="text" width="70%" />
+                </Stack>
+              ) : (
+                <TextField
+                  select
+                  fullWidth
+                  required
+                  size="small"
+                  inputRef={formInputRef}
+                  label="Published inquiry form"
+                  name="formId"
+                  value={formik.values.formId}
+                  disabled={!routingReady || availableForms.length === 0}
+                  onChange={(event) => {
+                    const formId = event.target.value;
+                    const setup = allSetups.find((item) => item.id === formik.values.setupId);
+                    const keepSetup = linkOptions.some(
+                      (option) =>
+                        option.inquiryFormDefinitionId === formId &&
+                        option.counsellorAssignmentProfileId ===
+                          (setup?.counsellorAssignmentProfileId ?? null)
+                    );
+                    formik.setValues({
+                      ...formik.values,
+                      formId,
+                      setupId: keepSetup ? formik.values.setupId : '',
+                    });
+                  }}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.formId && formik.errors.formId)}
+                  helperText={
+                    formik.touched.formId && formik.errors.formId
+                      ? formik.errors.formId
+                      : !formik.values.cycleId
+                        ? 'Choose an admission period to load linked inquiry forms.'
+                        : 'Forms linked to active Inquiry or Both Offerings in this period.'
+                  }
+                >
+                  <MenuItem value="">Choose form</MenuItem>
+                  {availableForms.map((form) => (
+                    <MenuItem key={form.id} value={form.id}>
+                      {form.name} · v{form.version}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
             </Grid>
             <Grid size={12}>
               <TextField
@@ -821,22 +836,24 @@ export function AdmissionPublicInquiryLinks({
                 inputRef={setupInputRef}
                 fullWidth
                 size="small"
-                label="Admission intake setup"
+                label="Admission intake setup (optional)"
                 name="setupId"
                 value={formik.values.setupId}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 disabled={
-                  setupsLoading ||
-                  setups.isError ||
-                  routingLoading ||
-                  routingOptions.isError ||
-                  availableSetups.length === 0
+                  setupsLoading || setups.isError || routingLoading || routingOptions.isError
                 }
                 InputLabelProps={{ shrink: true }}
                 SelectProps={{ displayEmpty: true }}
                 error={Boolean(formik.touched.setupId && formik.errors.setupId)}
-                helperText={formik.touched.setupId ? formik.errors.setupId : undefined}
+                helperText={
+                  formik.touched.setupId && formik.errors.setupId
+                    ? formik.errors.setupId
+                    : formik.values.setupId
+                      ? 'Inquiries are automatically routed through this setup.'
+                      : 'Inquiries from this link stay Unassigned. Staff can assign a counsellor later.'
+                }
               >
                 <MenuItem value="">{setupPlaceholder}</MenuItem>
                 {availableSetups.map((setup) => (
@@ -879,9 +896,8 @@ export function AdmissionPublicInquiryLinks({
                   }
                 >
                   No compatible inquiry Offering is available in this period. In Admission
-                  offerings, attach an active intake setup and a published Inquiry form to the same
-                  Offering, then activate it with Inquiry or Both entry mode. Your account also
-                  needs access to that Offering.
+                  offerings, attach a published Inquiry form to an Offering, then activate it with
+                  Inquiry or Both entry mode. Your account also needs access to that Offering.
                 </Alert>
               </Grid>
             )}
@@ -891,9 +907,7 @@ export function AdmissionPublicInquiryLinks({
               !cycles.isLoading &&
               !setupsLoading &&
               !forms.isLoading &&
-              (publishedCycles.length === 0 ||
-                (setups.data ?? []).length === 0 ||
-                publishedForms.length === 0) && (
+              (publishedCycles.length === 0 || publishedForms.length === 0) && (
                 <Grid size={12}>
                   <AdmissionIntakeNotice
                     severity="info"
@@ -907,9 +921,7 @@ export function AdmissionPublicInquiryLinks({
                   >
                     {publishedCycles.length === 0
                       ? 'Publish an admission period before creating a link.'
-                      : publishedForms.length === 0
-                        ? 'Publish an Inquiry form before creating a link.'
-                        : 'No active admission intake setup is available. Create one in the Admission intake setups tab before creating a link.'}
+                      : 'Publish an Inquiry form before creating a link.'}
                   </AdmissionIntakeNotice>
                 </Grid>
               )}
@@ -993,8 +1005,12 @@ export function AdmissionPublicInquiryLinks({
             variant="contained"
             loading={formik.isSubmitting || createState.isLoading}
             disabled={
-              Boolean(formik.values.cycleId) &&
-              (!routingReady || linkOptions.length === 0 || setups.isError || forms.isError)
+              inquiryFormsLoading ||
+              (Boolean(formik.values.cycleId) &&
+                (!routingReady ||
+                  linkOptions.length === 0 ||
+                  (Boolean(formik.values.setupId) && setups.isError) ||
+                  forms.isError))
             }
             onClick={createLink}
           >

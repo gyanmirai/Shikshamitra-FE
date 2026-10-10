@@ -9,6 +9,8 @@ import { AssessmentHistoryDetails } from './assessment-history-details';
 import { ApplicationAssessmentPanel } from './application-assessment-panel';
 import { STAGE_STATUS_LABELS } from '../application-detail/application-progress-model';
 
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
+
 type Props = {
   applicationId: string;
   admissionOfferingId: string;
@@ -19,6 +21,9 @@ type Props = {
   onComplete: () => void;
   compact?: boolean;
   selectedStageId?: string;
+  showCompletionAction?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
+  onOpenAssessments?: (url: string) => void;
 };
 
 export function ApplicationAssessments({ stages, currentStage, selectedStageId, ...props }: Props) {
@@ -28,9 +33,15 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
     : undefined;
   if (selectedStageId) {
     if (!selectedStage?.assessmentEnabled) return null;
-    if (selectedStage.id === currentStage?.id && selectedStage.status < 2)
-      return <ApplicationAssessmentPanel key={selectedStage.id} {...props} stage={selectedStage} />;
-    if (selectedStage.status < 2) return null;
+    if (selectedStage.status < 2)
+      return (
+        <ApplicationAssessmentPanel
+          key={selectedStage.id}
+          {...props}
+          canAdvance={props.canAdvance && selectedStage.id === currentStage?.id}
+          stage={selectedStage}
+        />
+      );
     return (
       <Stack spacing={1}>
         <Typography variant="subtitle2">{selectedStage.name} · Assessment history</Typography>

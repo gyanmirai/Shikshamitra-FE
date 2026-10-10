@@ -9,24 +9,35 @@ import { SeatHistory } from './seat-history';
 import { SeatActionDialog } from './seat-action-dialog';
 import { useApplicationSeat } from './use-application-seat';
 import { SeatCapacitySummary } from './seat-capacity-summary';
+import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
+
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
 type Props = { applicationId: string; stage: AdmissionApplicationStage; canAdvance: boolean;
-  advancing: boolean; onComplete: (concurrencyStamp?: string) => void };
+  advancing: boolean; onComplete: (concurrencyStamp?: string) => void;
+  showCompletionAction?: boolean; onReadinessChange?: ApplicationStageReadinessHandler };
 const color = (status: string): 'success' | 'warning' | 'error' | 'info' | 'default' =>
   status === 'confirmed' ? 'success' : status === 'released' ? 'error' :
     status === 'expired' || status === 'waitlisted' ? 'warning' : status === 'reserved' ? 'info' : 'default';
 
-export function ApplicationSeatStage({ applicationId, stage, canAdvance, advancing, onComplete }: Props) {
+export function ApplicationSeatStage({ applicationId, stage, canAdvance, advancing, onComplete, showCompletionAction = true, onReadinessChange }: Props) {
   const query = useGetAdmissionSeatStageQuery({ applicationId, stageId: stage.id });
   const state = query.data;
+  useApplicationStageReadiness(onReadinessChange, {
+    stageId: stage.id,
+    canComplete: Boolean(state?.canComplete && !query.isError),
+    busy: query.isFetching || advancing,
+    concurrencyStamp: state?.concurrencyStamp,
+  });
   if (query.isLoading) return <Card variant="outlined" sx={{ p: 2 }}><Skeleton height={180} /></Card>;
   if (query.isError || !state) return <Alert severity="error">Seat allocation could not be loaded. Refresh before continuing.</Alert>;
-  return <SeatStageContent state={state} canAdvance={canAdvance} advancing={advancing} onComplete={onComplete} />;
+  return <SeatStageContent state={state} canAdvance={canAdvance} advancing={advancing} onComplete={onComplete} showCompletionAction={showCompletionAction} />;
 }
 
-function SeatStageContent({ state, canAdvance, advancing, onComplete }: {
+function SeatStageContent({ state, canAdvance, advancing, onComplete, showCompletionAction }: {
   state: AdmissionSeatStage;
   canAdvance: boolean; advancing: boolean; onComplete: (concurrencyStamp?: string) => void;
+  showCompletionAction: boolean;
 }) {
   const actions = useApplicationSeat(state.applicationId, state.stageId, state, canAdvance && !advancing, onComplete);
   const buttons = [
@@ -52,7 +63,7 @@ function SeatStageContent({ state, canAdvance, advancing, onComplete }: {
         variant={item.action === 'reserve' || item.action === 'confirm' ? 'contained' : 'outlined'}
         color={item.action === 'release' ? 'warning' : 'primary'} startIcon={<Iconify icon={item.icon} />}
         onClick={() => actions.open(item.action)}>{item.label}</Button>)}
-      {state.canComplete && <Button size="small" variant="contained" color="success" disabled={!canAdvance || advancing}
+      {showCompletionAction && state.canComplete && <Button size="small" variant="contained" color="success" disabled={!canAdvance || advancing}
         onClick={() => onComplete(state.concurrencyStamp)}>Continue</Button>}
     </Stack>
     <Divider /><Stack><Typography variant="subtitle2">Seat history</Typography><SeatHistory events={state.events} /></Stack>

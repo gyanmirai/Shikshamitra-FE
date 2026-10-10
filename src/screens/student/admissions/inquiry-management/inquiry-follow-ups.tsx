@@ -3,20 +3,25 @@ import type {
   AdmissionInquiryManagement,
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
-import { useRef, useState } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useId, useRef, useState, useEffect } from 'react';
 import CustomAccordion from 'src/components/custom-accordian';
 import { LoadingButton } from 'src/components/loading-button';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Chip, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import { Box, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
 import {
   useCancelAdmissionInquiryFollowUpMutation,
   useScheduleAdmissionInquiryFollowUpMutation,
   useCompleteAdmissionInquiryFollowUpMutation,
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
+
+import { useFollowUpScheduler } from './use-follow-up-scheduler';
+import { InquiryFollowUpScheduler } from './inquiry-follow-up-scheduler';
 
 export function InquiryFollowUps({
   value,
@@ -76,43 +81,72 @@ export function InquiryFollowUpsPanel({
   compact?: boolean;
   disabled?: boolean;
 }) {
-  const [purpose, setPurpose] = useState('');
-  const [scheduledAt, setScheduledAt] = useState('');
-  const [scheduling, setScheduling] = useState(false);
-  const submitting = useRef(false);
   const history = useBoolean();
+  const scheduler = usePopover();
+  const schedulerId = useId();
   const interactionBlocked = busy || disabled;
-  const schedule = async () => {
-    if (readOnly || interactionBlocked || submitting.current || !purpose.trim() || !scheduledAt)
-      return;
-    const scheduledDate = new Date(scheduledAt);
-    if (Number.isNaN(scheduledDate.getTime())) return;
-    submitting.current = true;
-    setScheduling(true);
-    try {
-      await actions.schedule({ scheduledAt: scheduledDate.toISOString(), purpose: purpose.trim() });
-      setPurpose('');
-      setScheduledAt('');
-      shikshaMitraToast.success({ message: 'Follow-up scheduled' });
-    } catch (error) {
-      const problem = parseApiProblemDetail(error);
-      shikshaMitraToast.error({
-        message:
-          problem.detail === 'Something went wrong'
-            ? 'Follow-up could not be scheduled. Reload and try again.'
-            : problem.detail,
-      });
-    } finally {
-      submitting.current = false;
-      setScheduling(false);
-    }
+  const {
+    purpose,
+    setPurpose,
+    scheduledAt,
+    setScheduledAt,
+    dateError,
+    setDateError,
+    scheduleError,
+    scheduling,
+    schedule,
+  } = useFollowUpScheduler({
+    actions,
+    blocked: readOnly || interactionBlocked,
+    onScheduled: scheduler.onClose,
+  });
+  const closeScheduler = () => {
+    if (!interactionBlocked && !scheduling) scheduler.onClose();
   };
+  const renderScheduler = (inPopover = false) => (
+    <InquiryFollowUpScheduler
+      scheduledAt={scheduledAt}
+      purpose={purpose}
+      disabled={interactionBlocked}
+      scheduling={scheduling}
+      dateError={dateError}
+      error={scheduleError}
+      titleId={`${schedulerId}-title`}
+      onDateChange={setScheduledAt}
+      onDateError={setDateError}
+      onPurposeChange={setPurpose}
+      onSchedule={schedule}
+      onClose={inPopover ? closeScheduler : undefined}
+    />
+  );
   return (
     <Stack spacing={1.5}>
-      {compact && !readOnly && (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Iconify icon="mdi:calendar-clock-outline" width={20} />
-          <Typography variant="subtitle2">Schedule follow-up</Typography>
+      {compact && (
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          justifyContent="space-between"
+          useFlexGap
+          flexWrap="wrap"
+        >
+          <Typography variant="subtitle2">
+            Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
+          </Typography>
+          {!readOnly && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:calendar-clock-outline" width={18} />}
+              disabled={interactionBlocked || scheduling}
+              aria-haspopup="dialog"
+              aria-expanded={scheduler.open}
+              aria-controls={scheduler.open ? schedulerId : undefined}
+              onClick={scheduler.onOpen}
+            >
+              Schedule follow-up
+            </Button>
+          )}
         </Stack>
       )}
       {!compact && (
@@ -120,58 +154,29 @@ export function InquiryFollowUpsPanel({
           Follow-ups · {value.followUps.filter((item) => item.status === 0).length} open
         </Typography>
       )}
-      {!readOnly && (
-        <Box
-          sx={
-            compact
-              ? {
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    sm: 'minmax(0, 1fr) minmax(0, 1.5fr) auto',
-                  },
-                  gap: 1,
-                  alignItems: 'start',
-                }
-              : { display: 'flex', flexDirection: 'column', gap: 1.5 }
-          }
+      {!readOnly && !compact && renderScheduler()}
+      {!readOnly && compact && (
+        <CustomPopover
+          open={scheduler.open}
+          anchorEl={scheduler.anchorEl}
+          onClose={closeScheduler}
+          keepMounted
+          slotProps={{
+            arrow: { hide: true, placement: 'top-right' },
+            paper: {
+              id: schedulerId,
+              role: 'dialog',
+              'aria-labelledby': `${schedulerId}-title`,
+              sx: { width: 400, maxWidth: 'calc(100vw - 32px)' },
+            },
+          }}
         >
-          <TextField
-            fullWidth
-            size="small"
-            type="datetime-local"
-            label="Next follow-up *"
-            value={scheduledAt}
-            disabled={interactionBlocked}
-            onChange={(event) => setScheduledAt(event.target.value)}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            fullWidth
-            size="small"
-            label="Purpose *"
-            value={purpose}
-            disabled={interactionBlocked}
-            multiline={!compact}
-            minRows={compact ? undefined : 2}
-            slotProps={{ htmlInput: { maxLength: 512 } }}
-            onChange={(event) => setPurpose(event.target.value)}
-          />
-          <LoadingButton
-            variant="outlined"
-            size={compact ? 'small' : undefined}
-            loading={scheduling}
-            disabled={interactionBlocked || !purpose.trim() || !scheduledAt}
-            onClick={schedule}
-            sx={compact ? { alignSelf: 'start', justifySelf: 'start' } : { minHeight: 44 }}
-          >
-            Schedule follow-up
-          </LoadingButton>
-        </Box>
+          {renderScheduler(true)}
+        </CustomPopover>
       )}
       {compact ? (
         <CustomAccordion
-          title={`Follow-ups / History · ${value.followUps.filter((item) => item.status === 0).length} open`}
+          title="Follow-up history"
           expanded={history.value}
           onChange={() => {
             if (!interactionBlocked) history.onToggle();
@@ -216,22 +221,34 @@ export function InquiryFollowUpsPanel({
   );
 }
 
-function FollowUpCard({
+export function FollowUpCard({
   item,
   readOnly,
   busy,
   actions,
   compact = false,
+  onBusyChange,
+  onDirtyChange,
 }: {
   item: InquiryFollowUp;
   readOnly: boolean;
   busy: boolean;
   actions: InquiryFollowUpActions;
   compact?: boolean;
+  onBusyChange?: (id: string, busy: boolean) => void;
+  onDirtyChange?: (id: string, dirty: boolean) => void;
 }) {
   const [note, setNote] = useState('');
   const [finishing, setFinishing] = useState<'complete' | 'cancel' | null>(null);
   const submitting = useRef(false);
+  useEffect(() => {
+    onBusyChange?.(item.id, finishing !== null);
+    return () => onBusyChange?.(item.id, false);
+  }, [item.id, finishing, onBusyChange]);
+  useEffect(() => {
+    onDirtyChange?.(item.id, Boolean(note));
+    return () => onDirtyChange?.(item.id, false);
+  }, [item.id, note, onDirtyChange]);
   const finish = async (cancelled: boolean) => {
     if (readOnly || busy || submitting.current || !note.trim() || item.status !== 0) return;
     submitting.current = true;
@@ -266,7 +283,9 @@ function FollowUpCard({
           >
             {item.purpose}
           </Typography>
-          <Chip size="small" label={['Scheduled', 'Completed', 'Cancelled'][item.status]} />
+          <Label color={item.status === 0 ? 'warning' : item.status === 1 ? 'success' : 'default'}>
+            {['Scheduled', 'Completed', 'Cancelled'][item.status]}
+          </Label>
         </Stack>
         <Typography variant="caption" color="text.secondary">
           {fDateTime(item.scheduledAt)}
@@ -289,6 +308,7 @@ function FollowUpCard({
             <Stack direction="row" spacing={1}>
               <LoadingButton
                 size="small"
+                variant="outlined"
                 loading={finishing === 'complete'}
                 disabled={busy || !note.trim()}
                 onClick={() => finish(false)}
@@ -298,6 +318,7 @@ function FollowUpCard({
               </LoadingButton>
               <Button
                 size="small"
+                variant="outlined"
                 color="error"
                 disabled={busy || !note.trim()}
                 onClick={() => finish(true)}

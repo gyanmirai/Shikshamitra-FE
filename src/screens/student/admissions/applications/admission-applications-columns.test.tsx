@@ -1,0 +1,59 @@
+import { vi, it, expect, describe } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { getCellValueForExport } from 'src/components/customizabaleTable/table-export';
+
+import { buildAdmissionApplicationsColumns } from './admission-applications-columns';
+
+const columns = buildAdmissionApplicationsColumns({
+  applicationUrl: (id) => `/applications/${id}`,
+  onOpen: vi.fn(),
+});
+const cell = (id: string) => columns.find((column) => column.id === id)!;
+
+describe('Applications record presentation', () => {
+  it('keeps the lifecycle label and actions visible with supported sorting only', () => {
+    expect(cell('status')).toMatchObject({ sticky: true, stickyPosition: 'right', isSort: true });
+    expect(cell('actions')).toMatchObject({
+      sticky: true,
+      stickyPosition: 'right',
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
+    });
+    expect(columns.every((column) => column.isFilter === false)).toBe(true);
+  });
+  it('uses honest missing data and distinguishes an unresolved counsellor', () => {
+    render(
+      <>
+        {cell('assignedCounsellorName').render?.('-', {
+          assignedCounsellorId: 'archived',
+          assignedCounsellorName: null,
+        })}
+      </>
+    );
+    expect(screen.getByText('Assigned counsellor unavailable')).toBeInTheDocument();
+    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument();
+    expect(getCellValueForExport({ decisionEnteredAt: null }, cell('decisionEnteredAt'))).toBe(
+      'Not recorded'
+    );
+  });
+  it('exports the combined identity and contact information without duplicate columns', () => {
+    expect(
+      getCellValueForExport(
+        { id: 'a', applicantName: 'Riya Patel', applicationNumber: 'APP-2026-000001' },
+        cell('applicantName')
+      )
+    ).toBe('Riya Patel APP-2026-000001');
+    expect(
+      getCellValueForExport(
+        { contactPhone: '9876543210', contactEmail: 'parent@example.test' },
+        cell('contactPhone')
+      )
+    ).toBe('9876543210 parent@example.test');
+    expect(
+      columns.some((column) =>
+        ['applicationNumber', 'offeringCode', 'currentStageName'].includes(column.id)
+      )
+    ).toBe(false);
+  });
+});
