@@ -301,7 +301,7 @@ describe('ApplicationFinalizationDialog', () => {
     });
     expect(screen.getByText('Real Applicant')).toBeVisible();
     expect(screen.getByText('Application APP-42')).toBeVisible();
-    expect(screen.getByText('Offering GSEB-2')).toBeVisible();
+    expect(screen.queryByText('Offering GSEB-2')).not.toBeInTheDocument();
     expect(screen.getByText('In review')).toBeVisible();
     expect(screen.queryByText('Approved')).not.toBeInTheDocument();
     expect(screen.getAllByText('Ready')).toHaveLength(readyPreview.items.length);
@@ -431,5 +431,38 @@ describe('ApplicationFinalizationDialog', () => {
     expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  });
+
+  it('renders inline readiness and Student details while preserving guardian and blocker gates', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(false);
+    const onClose = vi.fn();
+    renderDialog(
+      {
+        ...readyPreview,
+        capturedStudentFields: [
+          { key: 'School.PreviousSchool', label: 'Previous school', value: 'Sunrise School' },
+        ],
+      },
+      onSubmit,
+      { presentation: 'inline', onClose }
+    );
+    expect(screen.getByRole('heading', { name: 'Finalize admission' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Finalize admission' })).toHaveFocus();
+    expect(screen.getByRole('heading', { name: 'Student record details' })).toBeVisible();
+    expect(screen.getByText('Sunrise School')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        existingStudentId: undefined,
+        confirmCreateNew: true,
+        confirmGuardianContactVerified: true,
+      })
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });

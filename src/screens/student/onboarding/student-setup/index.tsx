@@ -67,6 +67,7 @@ import {
   type StudentOnboardingItem,
 } from './student-onboarding-model';
 import {
+  hasAssignedDivision,
   studentSetupTaskHref,
   type StudentSetupView,
   parseStudentSetupView,
@@ -462,7 +463,7 @@ function StudentSetupTable({
         filterType: 'enum',
         enumOptions: placementOptions,
         render: (_value, row) => {
-          const divisionAssigned = Boolean(row.divisionName && row.divisionName !== '—');
+          const divisionAssigned = hasAssignedDivision(row as StudentOnboardingItem);
 
           return (
             <Stack spacing={0.5} alignItems="flex-start">

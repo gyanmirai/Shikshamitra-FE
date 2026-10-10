@@ -39,6 +39,13 @@ const hooks = vi.hoisted(() => ({
   setForm: vi.fn(),
   revokeLoading: false,
   formLoading: false,
+  forms: {
+    data: { items: [{ id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 }] },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  },
 }));
 
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
@@ -68,10 +75,7 @@ vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
   }),
 }));
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
-  useGetAdmissionFormsQuery: () => ({
-    data: { items: [{ id: 'form-1', name: 'Inquiry form', version: 1, status: 1, purpose: 0 }] },
-    isLoading: false,
-  }),
+  useGetAdmissionFormsQuery: () => hooks.forms,
 }));
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
@@ -173,6 +177,9 @@ describe('create public inquiry link', () => {
     hooks.options.isFetching = false;
     hooks.options.isError = false;
     hooks.formLoading = false;
+    hooks.forms.isLoading = false;
+    hooks.forms.isFetching = false;
+    hooks.forms.isError = false;
     hooks.revokeLoading = false;
     hooks.create.mockReturnValue({ unwrap: () => Promise.resolve({ token: 'fixture-token' }) });
   });
@@ -249,6 +256,10 @@ describe('create public inquiry link', () => {
     await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
     await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
     await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+    expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+    expect(
+      screen.queryByRole('combobox', { name: 'Published inquiry form' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
     expect(
       screen.queryByText(/No compatible inquiry Offering is available/)
@@ -256,10 +267,62 @@ describe('create public inquiry link', () => {
     hooks.options.isFetching = false;
     hooks.options.isError = true;
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+    expect(
+      screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
     expect(hooks.create).not.toHaveBeenCalled();
+  });
+
+  it.each(['isLoading', 'isFetching'] as const)(
+    'shows a skeleton while published forms are %s and restores selections after loading',
+    async (loadingState) => {
+      hooks.setups.data = [activeSetup];
+      const { rerender } = renderDrawer();
+      const user = userEvent.setup();
+      await fillLink(user);
+      hooks.forms[loadingState] = true;
+      rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+      expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+      expect(
+        screen.queryByRole('combobox', { name: 'Published inquiry form' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
+      expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+      hooks.forms[loadingState] = false;
+      rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+      expect(
+        screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveTextContent(
+        'Inquiry form · v1'
+      );
+      expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
+        'School intake'
+      );
+      expect(screen.getByRole('button', { name: 'Create link' })).toBeEnabled();
+      expect(hooks.create).not.toHaveBeenCalled();
+    }
+  );
+
+  it('removes the form skeleton on failure and offers retry without an empty prerequisite message', async () => {
+    hooks.forms.isLoading = true;
+    const { rerender } = renderDrawer();
+    expect(screen.getByRole('status', { name: 'Loading published inquiry forms' })).toBeVisible();
+    hooks.forms.isLoading = false;
+    hooks.forms.isError = true;
+    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+    expect(
+      screen.queryByRole('status', { name: 'Loading published inquiry forms' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Unable to load routing options.')).toBeVisible();
+    expect(
+      screen.queryByText('Publish an Inquiry form before creating a link.')
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(hooks.forms.refetch).toHaveBeenCalledOnce();
   });
 
   it('explains the reported generic OfferingRequired response and refreshes compatibility', async () => {
@@ -283,15 +346,16 @@ describe('create public inquiry link', () => {
     expect(hooks.close).not.toHaveBeenCalled();
   });
 
-  it('can refresh an empty list without losing entered details', async () => {
+  it('can retry optional setup lookup without losing entered details', async () => {
+    hooks.setups.isError = true;
     const user = userEvent.setup();
     const { rerender } = renderDrawer();
     await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
-    await user.click(screen.getByRole('button', { name: 'Dismiss information message' }));
-    await user.click(screen.getByRole('button', { name: 'Refresh setups' }));
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(hooks.setups.refetch).toHaveBeenCalledOnce();
 
     hooks.setups.isFetching = true;
+    hooks.setups.isError = false;
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
     expect(screen.getByText('Loading intake setups…')).toBeVisible();
     expect(screen.queryByText('No active intake setups')).not.toBeInTheDocument();
@@ -308,15 +372,15 @@ describe('create public inquiry link', () => {
     expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
   });
 
-  it('explains the missing prerequisite instead of opening an empty setup menu', () => {
+  it('allows manual assignment when no optional setup exists', () => {
     renderDrawer();
 
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    expect(screen.getByText('No active intake setups')).toBeVisible();
-    expect(screen.getByText(/Create one in the Admission intake setups tab/)).toBeVisible();
+    expect(screen.getByText('No setup — manual assignment')).toBeVisible();
+    expect(screen.getByText(/Inquiries from this link stay Unassigned/)).toBeVisible();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
@@ -479,7 +543,53 @@ describe('create public inquiry link', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Create link' }));
     expect(await screen.findByText('Enter a link name.')).toBeVisible();
-    expect(screen.getByText('Choose an admission intake setup.')).toBeVisible();
+    expect(screen.getByText('Choose a published admission period.')).toBeVisible();
+    expect(screen.queryByText('Choose an admission intake setup.')).not.toBeInTheDocument();
+    expect(hooks.create).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'creates a manual-routing link without any setup even when optional setup lookup fails: %s',
+    async (setupError) => {
+      hooks.setups.isError = setupError;
+      hooks.options.currentData = [
+        { counsellorAssignmentProfileId: null, inquiryFormDefinitionId: 'form-1' },
+      ];
+      renderDrawer();
+      const user = userEvent.setup();
+      await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'Manual inquiry link');
+      await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+      await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+      await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+      await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
+      expect(screen.getByText(/Inquiries from this link stay Unassigned/)).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Create link' }));
+      await waitFor(() =>
+        expect(hooks.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            admissionCycleId: 'cycle-1',
+            counsellorAssignmentProfileId: null,
+            inquiryFormDefinitionId: 'form-1',
+            name: 'Manual inquiry link',
+          })
+        )
+      );
+      expect(hooks.close).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('blocks a manual link when its form has no compatible manual-routing option', async () => {
+    renderDrawer();
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'Manual inquiry link');
+    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
+    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    expect(
+      await screen.findByText(/Choose an inquiry form linked to an active Inquiry or Both Offering/)
+    ).toBeVisible();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 });

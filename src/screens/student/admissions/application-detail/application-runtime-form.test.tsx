@@ -5,7 +5,7 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { ApplicationRuntimeForm } from './application-runtime-form';
@@ -107,13 +107,70 @@ function renderForm(overrides: Partial<Props> = {}) {
 }
 
 describe('application form step navigation', () => {
+  it('saves in place and replaces the forward action with submission only on the last step', async () => {
+    const user = userEvent.setup();
+    const save = vi.fn(async () => true);
+    const submit = vi.fn();
+    renderForm({ compact: true, onSave: save, onSubmit: submit });
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(save).toHaveBeenCalledOnce();
+    expect(screen.getByText('Basic details')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Submit application' }));
+    expect(submit).toHaveBeenCalledOnce();
+  });
+
+  it('keeps single-page forms submit-capable and respects their submission permission', () => {
+    renderForm({
+      compact: true,
+      canSubmitForm: false,
+      form: {
+        status: 0,
+        definition: { layoutType: 0, sections: [section('basic', 'Basic details', 'personal', 0)] },
+      } as Props['form'],
+      beforeActions: <div>Staff verification</div>,
+    });
+    expect(screen.queryByRole('navigation', { name: 'Form steps' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit application' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.getByText('Staff verification')).toBeVisible();
+  });
+
+  it('prevents duplicate forwards and section changes until the save finishes', async () => {
+    const user = userEvent.setup();
+    let finishSave!: (saved: boolean) => void;
+    const save = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          finishSave = resolve;
+        })
+    );
+    renderForm({ compact: true, onSave: save });
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
+    expect(screen.getByRole('button', { name: 'Save & Next' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Medical information' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+    expect(save).toHaveBeenCalledOnce();
+    await act(async () => finishSave(true));
+    expect(screen.getByRole('textbox', { name: 'Health details answer' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Submit application' })).toBeEnabled();
+  });
+
   it('keeps historical review read-only while allowing navigation through the configured form sections', async () => {
     const user = userEvent.setup();
     const save = vi.fn();
     const submit = vi.fn();
     renderForm({ compact: true, readOnly: true, onSave: save, onSubmit: submit });
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
-    ['Save draft', 'Save & continue', 'Submit application', 'Reopen form'].forEach((name) => {
+    ['Save', 'Save & Next', 'Submit application', 'Reopen form'].forEach((name) => {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     });
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -129,17 +186,19 @@ describe('application form step navigation', () => {
     expect(
       screen.getByRole('navigation', { name: 'Form steps' }).querySelector('.MuiStepper-horizontal')
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: 'Form steps' }).querySelector('[data-simplebar]')
+    ).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Basic details answer' }), 'Saved student');
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(screen.getByText('Health details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Previous' }));
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveValue(
       'Saved student'
     );
-    expect(screen.getAllByRole('button', { name: 'Save draft' })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Submit application' })).toHaveClass(
-      'MuiButton-sizeSmall'
-    );
+    expect(screen.getAllByRole('button', { name: 'Save' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Submit application' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save & Next' })).toHaveClass('MuiButton-sizeSmall');
   }, 15000);
 
   it('validates and saves the configured section group before continuing in the compact footer', async () => {
@@ -156,14 +215,14 @@ describe('application form step navigation', () => {
         return true;
       },
     });
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(calls).toEqual(['basic', 'contact', 'save']);
     expect(screen.getByText('Health details')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Save & continue' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save & Next' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit application' })).toBeEnabled();
   });
 
-  it('preserves the active section and its answers when Save & continue cannot persist', async () => {
+  it('preserves the active section and its answers when Save & Next cannot persist', async () => {
     const user = userEvent.setup();
     const save = vi.fn(async () => false);
     renderForm({ compact: true, onSave: save });
@@ -171,19 +230,23 @@ describe('application form step navigation', () => {
       screen.getByRole('textbox', { name: 'Basic details answer' }),
       'Keep this answer'
     );
-    await user.click(screen.getByRole('button', { name: 'Save & continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(save).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveValue(
       'Keep this answer'
     );
-    expect(screen.getByText('Step 1 of 2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Personal information' })).toHaveAttribute(
+      'aria-current',
+      'step'
+    );
+    expect(screen.queryByText('Step 1 of 2')).not.toBeInTheDocument();
     expect(screen.queryByText('Health details')).not.toBeInTheDocument();
   });
 
   it('keeps compact fields, step navigation and footer actions locked while saving', () => {
     renderForm({ compact: true, saving: true });
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
-    ['Next', 'Save draft', 'Save & continue', 'Submit application', 'Previous'].forEach((name) => {
+    ['Save', 'Save & Next', 'Previous'].forEach((name) => {
       expect(screen.getByRole('button', { name })).toBeDisabled();
     });
     expect(screen.getByRole('button', { name: 'Medical information' })).toBeDisabled();
@@ -198,7 +261,7 @@ describe('application form step navigation', () => {
       screen.getByRole('textbox', { name: 'Basic details answer' }),
       'Student answer'
     );
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(onValidateStep.mock.calls).toEqual([['basic'], ['contact']]);
     expect(screen.getByText('Health details')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Previous' }));
@@ -211,7 +274,7 @@ describe('application form step navigation', () => {
     const user = userEvent.setup();
     const validate = vi.fn(() => false);
     renderForm({ onValidateStep: validate });
-    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Next' }));
     expect(validate).toHaveBeenCalledWith('basic');
     expect(screen.getByText('Basic details')).toBeVisible();
     expect(screen.queryByText('Health details')).not.toBeInTheDocument();
@@ -220,7 +283,7 @@ describe('application form step navigation', () => {
   it('locks input, saving, submission, and navigation while a request is pending', () => {
     renderForm({ submitting: true });
     expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toBeDisabled();
-    ['Next', 'Save draft', 'Save & continue', 'Submit application'].forEach((name) => {
+    ['Save', 'Save & Next', 'Previous'].forEach((name) => {
       expect(screen.getByRole('button', { name })).toBeDisabled();
     });
   });
@@ -228,10 +291,10 @@ describe('application form step navigation', () => {
   it('waits for a photo read before allowing draft save or submission', () => {
     renderForm();
     act(() => photoReaders.get('Basic details answer')?.(true));
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit application' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save & Next' })).toBeDisabled();
     act(() => photoReaders.get('Basic details answer')?.(false));
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Submit application' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save & Next' })).toBeEnabled();
   });
 });

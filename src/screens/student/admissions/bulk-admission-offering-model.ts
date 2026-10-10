@@ -75,18 +75,12 @@ export const bulkOfferingSchema = Yup.object({
     is: true,
     then: (schema) => schema.required('Workflow is required for activation'),
   }),
-  inquiryIntakeProfileId: Yup.string().when('isActive', {
-    is: true,
-    then: (schema) => schema.required('Inquiry setup is required for activation'),
-  }),
+  inquiryIntakeProfileId: Yup.string(),
   inquiryFormDefinitionId: Yup.string().when('isActive', {
     is: true,
     then: (schema) => schema.required('Inquiry form is required for activation'),
   }),
-  counsellorAssignmentProfileId: Yup.string().when('isActive', {
-    is: true,
-    then: (schema) => schema.required('Counsellor assignment is required for activation'),
-  }),
+  counsellorAssignmentProfileId: Yup.string(),
   isActive: Yup.boolean().required(),
 });
 

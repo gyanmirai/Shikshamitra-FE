@@ -6,8 +6,17 @@ import { render, screen } from '@testing-library/react';
 import { ApplicationAssessments } from './application-assessments';
 
 vi.mock('./application-assessment-panel', () => ({
-  ApplicationAssessmentPanel: ({ stage }: { stage: AdmissionApplicationStage }) => (
-    <div>Editable {stage.name}</div>
+  ApplicationAssessmentPanel: ({
+    stage,
+    canAdvance,
+  }: {
+    stage: AdmissionApplicationStage;
+    canAdvance: boolean;
+  }) => (
+    <div>
+      Editable {stage.name}
+      <span>{canAdvance ? 'Can continue' : 'Cannot continue'}</span>
+    </div>
   ),
 }));
 vi.mock('./assessment-history-details', () => ({
@@ -63,7 +72,7 @@ it('reviews the final completed assessment read-only even when it remains the wo
   expect(screen.queryByText('Editable Current assessment')).not.toBeInTheDocument();
 });
 
-it('does not expose a future or missing assessment as historical work', () => {
+it('lets staff edit a future assessment without advancing or showing historical work', () => {
   const { rerender, container } = render(
     <ApplicationAssessments {...props} selectedStageId="missing" />
   );
@@ -75,5 +84,7 @@ it('does not expose a future or missing assessment as historical work', () => {
       selectedStageId="previous"
     />
   );
-  expect(container).toBeEmptyDOMElement();
+  expect(screen.getByText('Editable Previous assessment')).toBeVisible();
+  expect(screen.getByText('Cannot continue')).toBeVisible();
+  expect(screen.queryByText('Read-only previous')).not.toBeInTheDocument();
 });

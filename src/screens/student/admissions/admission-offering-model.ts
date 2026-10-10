@@ -22,11 +22,7 @@ export const isAdmissionOfferingConfigurationIncomplete = (
     | 'inquiryIntakeProfileId'
     | 'counsellorAssignmentProfileId'
   >
-) =>
-  !values.workflowDefinitionId ||
-  (values.entryMode !== 1 && !values.inquiryFormDefinitionId) ||
-  (values.entryMode !== 1 && !values.inquiryIntakeProfileId) ||
-  !values.counsellorAssignmentProfileId;
+) => !values.workflowDefinitionId || (values.entryMode !== 1 && !values.inquiryFormDefinitionId);
 
 export const availabilityLabels = [
   'Configuration incomplete',

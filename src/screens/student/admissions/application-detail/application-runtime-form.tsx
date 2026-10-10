@@ -5,8 +5,11 @@ import type {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import CustomStepper from 'src/components/custom-stepper';
+import { LoadingButton } from 'src/components/loading-button';
 import { Box, Grid, Alert, Stack, Button, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
@@ -49,6 +52,7 @@ type Props = {
   reopening: boolean;
   onReopen: () => void;
   documents?: ReactNode;
+  beforeActions?: ReactNode;
   compact?: boolean;
   readOnly?: boolean;
 };
@@ -73,11 +77,13 @@ export function ApplicationRuntimeForm({
   reopening,
   onReopen,
   documents,
+  beforeActions,
   compact = false,
   readOnly = false,
 }: Props) {
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
+  const [savingStep, setSavingStep] = useState(false);
   const [language, setLanguage] = useState(form.definition.defaultLanguage ?? 'en');
   const supportedLanguages = form.definition.supportedLanguages?.length
     ? form.definition.supportedLanguages
@@ -105,7 +111,10 @@ export function ApplicationRuntimeForm({
     .filter((step) => step.sections.length > 0);
   const safeActiveStep = Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
-  const interactionLocked = saving || submitting || reopening || readingPhoto;
+  const interactionLocked = saving || submitting || reopening || readingPhoto || savingStep;
+  const isLastStep =
+    !isStepper || visibleSteps.length === 0 || safeActiveStep === visibleSteps.length - 1;
+  const canEditForm = !readOnly && application.status === 0;
   const currentSections = isStepper
     ? (visibleSteps[safeActiveStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
@@ -175,9 +184,15 @@ export function ApplicationRuntimeForm({
     setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
   };
   const saveAndContinue = async () => {
+    if (interactionLocked) return;
     if (!currentSections.every((section) => onValidateStep(section.id))) return;
-    const saved = await onSave();
-    if (saved) moveToNextStep(true);
+    setSavingStep(true);
+    try {
+      const saved = await onSave();
+      if (saved) moveToNextStep(true);
+    } finally {
+      setSavingStep(false);
+    }
   };
 
   const renderSectionFields = (
@@ -379,6 +394,53 @@ export function ApplicationRuntimeForm({
               {form.definition.name} · v{form.formVersion}
             </Typography>
           )}
+          {compact && isStepper && visibleSteps.length > 0 && (
+            <Box
+              component="nav"
+              aria-label="Form steps"
+              sx={{
+                width: 1,
+                minWidth: 0,
+                py: 1,
+                mb: 1.5,
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiStepper-root': { minWidth: visibleSteps.length * 44 },
+                '& .MuiStep-root': { px: 0, minWidth: 0, flex: 1 },
+                '& .MuiStepButton-root': { p: 0.5, minHeight: 44 },
+                '& .MuiStepConnector-root': { top: 18 },
+                '& .MuiStepLabel-label': {
+                  typography: 'caption',
+                  mt: '4px !important',
+                  position: { xs: 'absolute', sm: 'static' },
+                  width: { xs: 1, sm: 'auto' },
+                  height: { xs: 1, sm: 'auto' },
+                  overflow: { xs: 'hidden', sm: 'visible' },
+                  clipPath: { xs: 'inset(50%)', sm: 'none' },
+                },
+                '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': {
+                  color: 'primary.main',
+                },
+              }}
+            >
+              <Scrollbar sx={{ flexGrow: 0 }}>
+                <CustomStepper
+                  ariaLabel="Application form sections"
+                  steps={visibleSteps.map((step) => step.name)}
+                  activeStep={safeActiveStep}
+                  stepStates={visibleSteps.map(() => (form.status === 1 ? 'completed' : 'pending'))}
+                  disabled={interactionLocked}
+                  onStepClick={setActiveStep}
+                />
+              </Scrollbar>
+              <Typography
+                variant="caption"
+                sx={{ display: { xs: 'block', sm: 'none' }, textAlign: 'center', mt: 0.5 }}
+              >
+                {visibleSteps[safeActiveStep]?.name}
+              </Typography>
+            </Box>
+          )}
           {!compact && (
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
               {form.status === 1 ? 'Submitted' : form.status === 2 ? 'Reopened' : 'Draft'}
@@ -405,7 +467,7 @@ export function ApplicationRuntimeForm({
             spacing={compact ? 1.5 : 3}
             alignItems="stretch"
           >
-            {isStepper && visibleSteps.length > 0 && (
+            {!compact && isStepper && visibleSteps.length > 0 && (
               <Box sx={{ width: compact ? 1 : { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
                 <AdmissionFormStepNavigation
                   activeStep={safeActiveStep}
@@ -445,133 +507,90 @@ export function ApplicationRuntimeForm({
           {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
             <Stack sx={{ mt: 2 }}>{documents}</Stack>
           )}
-          {!compact && isStepper && visibleSteps.length > 1 && (
-            <Stack spacing={1} sx={{ mt: 2 }}>
-              <Typography variant="caption" color="text.secondary" textAlign="center">
-                Step {safeActiveStep + 1} of {visibleSteps.length}
-              </Typography>
-              <Stack direction="row" justifyContent="space-between">
-                <Button
-                  size="small"
-                  disabled={interactionLocked || safeActiveStep === 0}
-                  onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
-                >
-                  Previous
-                </Button>
-                <Stack direction="row" spacing={1}>
-                  {showSaveDraft && !readOnly && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={interactionLocked || application.status !== 0}
-                      onClick={saveAndContinue}
-                    >
-                      Save &amp; continue
-                    </Button>
-                  )}
-                  <Button
-                    size="small"
-                    disabled={interactionLocked || safeActiveStep === visibleSteps.length - 1}
-                    onClick={() => moveToNextStep()}
-                  >
-                    Next
-                  </Button>
-                </Stack>
-              </Stack>
-            </Stack>
-          )}
+          {beforeActions && <Box sx={{ mt: 1.5 }}>{beforeActions}</Box>}
           <Stack
             direction="row"
             spacing={1}
             useFlexGap
             flexWrap="wrap"
+            alignItems="center"
             justifyContent="flex-end"
             sx={{
               mt: compact ? 1.5 : 3,
-              pt: compact ? 1.5 : 2,
+              pt: compact ? 1 : 2,
               borderTop: 1,
               borderColor: 'divider',
               ...(compact && {
                 position: 'sticky',
                 bottom: 0,
                 bgcolor: 'background.paper',
-                py: 1.5,
+                py: 1,
                 zIndex: 1,
               }),
             }}
           >
-            {compact && isStepper && visibleSteps.length > 1 && (
-              <>
-                <Button
-                  size="small"
-                  disabled={interactionLocked || safeActiveStep === 0}
-                  onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
-                  sx={{ mr: 'auto' }}
-                >
-                  Previous
-                </Button>
-                <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
-                  Step {safeActiveStep + 1} of {visibleSteps.length}
-                </Typography>
-              </>
-            )}
-            {showSaveDraft && !readOnly && (
+            {isStepper && visibleSteps.length > 1 && (
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={<Iconify icon="mdi:content-save-outline" />}
-                disabled={interactionLocked || application.status !== 0}
-                onClick={onSave}
+                startIcon={<Iconify icon="mdi:arrow-left" width={16} />}
+                disabled={interactionLocked || safeActiveStep === 0}
+                onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
+                sx={{ mr: 'auto' }}
               >
-                Save draft
+                Previous
               </Button>
             )}
-            {compact && isStepper && visibleSteps.length > 1 && (
-              <>
-                {showSaveDraft &&
-                  !readOnly &&
-                  application.status === 0 &&
-                  safeActiveStep < visibleSteps.length - 1 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={interactionLocked}
-                      onClick={saveAndContinue}
-                    >
-                      Save &amp; continue
-                    </Button>
-                  )}
-                <Button
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+              {showSaveDraft && canEditForm && (
+                <LoadingButton
                   size="small"
-                  disabled={interactionLocked || safeActiveStep === visibleSteps.length - 1}
-                  onClick={() => moveToNextStep()}
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
+                  loading={saving && !savingStep && !submitting}
+                  disabled={interactionLocked}
+                  onClick={onSave}
                 >
-                  Next
-                </Button>
-              </>
-            )}
-            {!readOnly && (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Iconify icon="mdi:send-outline" />}
-                disabled={interactionLocked || application.status !== 0 || !canSubmitForm}
-                onClick={onSubmit}
-              >
-                Submit application
-              </Button>
-            )}
-            {!readOnly && application.status === 1 && canReopen && !managedFormStage && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:lock-open-outline" />}
-                disabled={interactionLocked}
-                onClick={onReopen}
-              >
-                Reopen form
-              </Button>
-            )}
+                  Save
+                </LoadingButton>
+              )}
+              {!isLastStep && (
+                <LoadingButton
+                  size="small"
+                  variant={canEditForm ? 'contained' : 'outlined'}
+                  endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
+                  loading={savingStep}
+                  disabled={interactionLocked}
+                  onClick={canEditForm && showSaveDraft ? saveAndContinue : () => moveToNextStep()}
+                >
+                  {canEditForm && showSaveDraft ? 'Save & Next' : 'Next'}
+                </LoadingButton>
+              )}
+              {isLastStep && canEditForm && (
+                <LoadingButton
+                  size="small"
+                  variant="contained"
+                  startIcon={<Iconify icon="mdi:send-outline" width={16} />}
+                  loading={submitting}
+                  disabled={interactionLocked || !canSubmitForm}
+                  onClick={onSubmit}
+                >
+                  Submit application
+                </LoadingButton>
+              )}
+              {!readOnly && application.status === 1 && canReopen && !managedFormStage && (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:lock-open-outline" width={16} />}
+                  loading={reopening}
+                  disabled={interactionLocked}
+                  onClick={onReopen}
+                >
+                  Reopen form
+                </LoadingButton>
+              )}
+            </Stack>
           </Stack>
         </Box>
       </Box>

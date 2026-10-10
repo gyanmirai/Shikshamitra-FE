@@ -313,7 +313,7 @@ export const mapStudentLookupToOnboardingItem = (
   source: 'student-records',
 });
 
-const onboardingCaseStage: Record<StudentOnboardingCase['status'], OnboardingItemStatus> = {
+export const onboardingCaseStage: Record<StudentOnboardingCase['status'], OnboardingItemStatus> = {
   0: 'to-prepare',
   1: 'awaiting-approval',
   2: 'ready-to-activate',

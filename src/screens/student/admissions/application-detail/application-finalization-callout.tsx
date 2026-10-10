@@ -19,7 +19,7 @@ export function ApplicationFinalizationCallout({
       </Typography>
       <Button
         variant="contained"
-        color={compact ? 'inherit' : 'success'}
+        color="inherit"
         size="small"
         disabled={busy}
         startIcon={<Iconify icon="mdi:school-outline" />}

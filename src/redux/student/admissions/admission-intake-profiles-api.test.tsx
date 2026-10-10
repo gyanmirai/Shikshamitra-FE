@@ -11,6 +11,7 @@ import { act, cleanup, waitFor, renderHook } from '@testing-library/react';
 import { createDocumentTestStore } from './document-test-fixture';
 import {
   admissionIntakeProfilesApi,
+  useGetAdmissionIntakeCounsellorsQuery,
   useGetAdmissionPublicInquiryLinkOptionsQuery,
 } from './admission-intake-profiles-api';
 
@@ -48,6 +49,31 @@ it('exports the real generated public inquiry link options hook', () => {
     admissionIntakeProfilesApi.endpoints.getAdmissionPublicInquiryLinkOptions.useQuery
   );
 });
+
+it.each([true, false])(
+  'requests counsellor role filtering only when opted in (%s)',
+  async (counsellorOnly) => {
+    let query = new URLSearchParams();
+    mswServer.use(
+      http.get('*/api/student/enrollment/admissions/intake-profiles/counsellors', ({ request }) => {
+        query = new URL(request.url).searchParams;
+        return HttpResponse.json({
+          data: [{ id: 'counsellor-1', name: 'Counsellor', userName: 'counsellor' }],
+        });
+      })
+    );
+    const { result } = renderHook(
+      () =>
+        useGetAdmissionIntakeCounsellorsQuery(
+          counsellorOnly ? { counsellorOnly: true } : undefined
+        ),
+      { wrapper }
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(query.get('counsellorOnly')).toBe(counsellorOnly ? 'true' : null);
+    expect(result.current.data?.[0].id).toBe('counsellor-1');
+  }
+);
 
 it.each(['plain', 'enveloped'] as const)(
   'requests cycle-scoped options and normalizes a %s response through the real hook',

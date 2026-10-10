@@ -78,10 +78,11 @@ export function BulkAdmissionConfigurationFields({
       </Grid>
       <Grid size={12}>
         <CustomSelect
-          label="Intake & assignment setup (required for activation)"
+          label="Intake & assignment setup (optional)"
           isLoading={setups.isFetching}
           value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
           options={[
+            { value: '', label: 'No setup — manual assignment' },
             ...(legacySelection
               ? [{ value: '__legacy__', label: 'Legacy profile selection' }]
               : []),
@@ -112,9 +113,7 @@ export function BulkAdmissionConfigurationFields({
                 ? 'Legacy profiles are preserved until you choose a combined setup.'
                 : touched.inquiryIntakeProfileId || touched.counsellorAssignmentProfileId
                   ? errors.inquiryIntakeProfileId || errors.counsellorAssignmentProfileId
-                  : startsWithInquiry
-                  ?'Required for activation. Direct registration uses this setup’s counsellor routing.'
-                  : ''
+                  : 'Optional. Choose a setup for automatic routing, or leave empty for manual assignment.'
           }
         />
       </Grid>

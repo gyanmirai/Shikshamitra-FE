@@ -11,6 +11,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Volo.Abp.Identity:PasswordTooShort': 'Password is too short. Check the password requirements.',
   'Volo.Abp.Identity:PasswordRequiresUniqueChars':
     'Password must include more different characters. Check the password requirements.',
+  'Students.Onboarding.RollNumberDuplicate':
+    'This roll number is already assigned or reserved in the selected class/division for this academic year. Enter an unused number, or use Automatic if available.',
   'Admissions.CycleCodeAlreadyExists':
     'An admission cycle already uses this code. Choose a different cycle code and try again.',
   'Admissions:ApplicationStageCannotAdvance':

@@ -17,6 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 addIcon('ic:round-arrow-forward', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 addIcon('eva:checkmark-fill', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
+addIcon('lucide:info', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 
 [
   'close',
@@ -319,16 +320,39 @@ describe('inline workflow details editing', () => {
     );
   });
 
+  it('shows template guidance in a tooltip and closes without saving unchanged details', async () => {
+    const user = userEvent.setup();
+    const { onSave, onClose } = renderEdit();
+    const guidance =
+      'Keep your current journey, or choose a template to replace its stages and routes when saving.';
+    const info = screen.getByRole('button', { name: 'Workflow details information' });
+
+    expect(screen.queryByText(guidance)).not.toBeInTheDocument();
+    await user.hover(info);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(guidance);
+    await user.unhover(info);
+    await user.click(screen.getByRole('button', { name: 'Close workflow editor' }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it('validates the edited details before navigating with the Build journey step', async () => {
     const { onSave, onClose } = renderEdit();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: '' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
     expect(await screen.findByText('Workflow name is required')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), { target: { value: 'Edited through step' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: 'Edited through step' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Step 2: Build journey' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: 'Edited through step', starterJourney: undefined }));
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Edited through step', starterJourney: undefined })
+    );
   });
 
   it('requires confirmation before replacing the journey and can keep the current graph', async () => {

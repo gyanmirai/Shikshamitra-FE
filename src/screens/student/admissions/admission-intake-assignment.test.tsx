@@ -58,7 +58,12 @@ vi.mock('src/components/custom-tabs', () => ({
   CustomTabs: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
-  CustomBreadcrumbs: ({ action }: { action: ReactNode }) => action,
+  CustomBreadcrumbs: ({ heading, action }: { heading: string; action: ReactNode }) => (
+    <header>
+      <h1>{heading}</h1>
+      {action}
+    </header>
+  ),
 }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/components/toast', () => ({
@@ -69,8 +74,18 @@ vi.mock('./admission-intake-notice', () => ({
   AdmissionIntakeNotice: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock('./admission-intake-setup-editor', () => ({
-  AdmissionIntakeSetupEditor: ({ setup }: { setup: AdmissionIntakeSetup | null }) => (
-    <div role="dialog" aria-label={`Editing ${setup?.name ?? 'new setup'}`} />
+  AdmissionIntakeSetupEditor: ({
+    setup,
+    onClose,
+  }: {
+    setup: AdmissionIntakeSetup | null;
+    onClose: () => void;
+  }) => (
+    <section aria-label={`Editing ${setup?.name ?? 'new setup'}`}>
+      <button type="button" onClick={onClose}>
+        Close editor
+      </button>
+    </section>
   ),
 }));
 // Keep the real shared action menu and section cards; simplify only the table infrastructure.
@@ -184,7 +199,7 @@ describe('intake setup details and row actions', () => {
         .querySelector('[data-icon="solar:pen-bold"]')
     ).not.toBeNull();
     await user.click(within(drawer).getByRole('button', { name: 'Edit setup' }));
-    expect(screen.getByRole('dialog', { name: `Editing ${activeSetup.name}` })).toBeVisible();
+    expect(screen.getByRole('region', { name: `Editing ${activeSetup.name}` })).toBeVisible();
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
   });
 
@@ -225,16 +240,78 @@ describe('intake setup details and row actions', () => {
     expect(screen.queryByText('0 Admission Offerings · 0 active')).not.toBeInTheDocument();
   });
 
-  it('opens overflow without opening details and preserves direct edit handling', async () => {
+  it('shows only Edit and Archive without opening details and preserves edit handling', async () => {
     const user = userEvent.setup();
     renderScreen();
-    await user.click(screen.getByRole('button', { name: `More actions for ${activeSetup.name}` }));
-    expect(screen.getByRole('menuitem', { name: 'Archive' })).toBeVisible();
-    expect(screen.queryByRole('menuitem', { name: /View/ })).not.toBeInTheDocument();
+    const row = within(rowFor(activeSetup.name));
+    expect(row.getAllByRole('button')).toHaveLength(2);
+    expect(row.getByRole('button', { name: 'Edit' })).toBeVisible();
+    expect(row.getByRole('button', { name: 'Archive' })).toBeVisible();
+    expect(
+      row.queryByRole('button', { name: /Offering|inquiry link|More actions/ })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
-    await user.keyboard('{Escape}');
     await user.click(screen.getByTestId('table-action-edit'));
-    expect(screen.getByRole('dialog', { name: `Editing ${activeSetup.name}` })).toBeVisible();
+    expect(screen.getByRole('region', { name: `Editing ${activeSetup.name}` })).toBeVisible();
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
   });
+
+  it('keeps only Edit and Archive in the mobile row menu', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    try {
+      const user = userEvent.setup();
+      renderScreen();
+      await user.click(
+        screen.getByRole('button', { name: `More actions for ${activeSetup.name}` })
+      );
+      const menu = within(
+        screen.getByRole('menu', { name: `More actions for ${activeSetup.name}` })
+      );
+      expect(menu.getAllByRole('menuitem')).toHaveLength(2);
+      expect(menu.getByRole('menuitem', { name: 'Edit' })).toBeVisible();
+      expect(menu.getByRole('menuitem', { name: 'Archive' })).toBeVisible();
+      expect(
+        menu.queryByRole('menuitem', { name: /Offering|inquiry link/ })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
+      await user.click(menu.getByRole('menuitem', { name: 'Edit' }));
+      expect(screen.getByRole('region', { name: `Editing ${activeSetup.name}` })).toBeVisible();
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
+  });
+
+  it.each(['create', 'edit'] as const)(
+    'replaces the table with the inline %s form and restores it on close',
+    async (action) => {
+      const user = userEvent.setup();
+      renderScreen();
+      await user.click(
+        screen.getByRole('button', { name: action === 'create' ? 'Create intake setup' : 'Edit' })
+      );
+      expect(screen.getByRole('heading', { name: 'Intake & Assignment' })).toBeVisible();
+      expect(
+        screen.getByRole('region', {
+          name: `Editing ${action === 'create' ? 'new setup' : activeSetup.name}`,
+        })
+      ).toBeVisible();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Create intake setup' })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Close editor' }));
+      expect(screen.getByRole('table', { name: 'Admission intake setups table' })).toBeVisible();
+      expect(screen.getByRole('tab', { name: 'Admission intake setups' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Create intake setup' })).toBeVisible();
+    }
+  );
 });

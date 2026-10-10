@@ -5,6 +5,7 @@ import AdmissionFeeSelectionPanel, {
 } from '../fee-selection/admission-fee-selection-panel';
 
 import type { AdmissionFeeSelectionEditorState } from '../fee-selection/admission-fee-selection-editor';
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
 type Props = {
   applicationId: string;
@@ -15,6 +16,8 @@ type Props = {
   onFeeSelectionStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
   compact?: boolean;
   readOnly?: boolean;
+  showCompletionAction?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
 };
 
 export function ApplicationPaymentStage({
@@ -26,6 +29,8 @@ export function ApplicationPaymentStage({
   onFeeSelectionStateChange,
   compact = false,
   readOnly = false,
+  showCompletionAction = true,
+  onReadinessChange,
 }: Props) {
   const feeEditor = useFeeSelectionEditorState(onFeeSelectionStateChange);
   return (
@@ -38,8 +43,9 @@ export function ApplicationPaymentStage({
       canContinue={canAdvance && !feeEditor.blocked}
       completionStageId={stage.id}
       continuing={advancing}
-      onContinue={onComplete}
+      onContinue={showCompletionAction ? onComplete : undefined}
       onEditorStateChange={feeEditor.update}
+      onReadinessChange={onReadinessChange}
     />
   );
 }

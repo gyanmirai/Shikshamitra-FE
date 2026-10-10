@@ -22,7 +22,11 @@ export const studentPaths = {
     inquiryNew: '/student/admissions/inquiries/new',
     inquiryEdit: (id: string) => `/student/admissions/inquiries/${encodeURIComponent(id)}/edit`,
     pipeline: '/student/admissions/pipeline',
+    applicantWorkspace: (id: string) =>
+      `/student/admissions/pipeline/applications/${encodeURIComponent(id)}`,
     applications: '/student/admissions/applications',
+    decisionWorkspace: (id: string) =>
+      `/student/admissions/applications/${encodeURIComponent(id)}`,
     assessments: '/student/admissions/assessments',
     settings: {
       root: '/student/admissions/settings/cycles',

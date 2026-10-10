@@ -2,8 +2,10 @@ import type { ApplicationAssessment } from 'src/redux/student/admissions/admissi
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
 import { vi, it, expect, beforeEach } from 'vitest';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { ApplicationAssessmentPanel } from './application-assessment-panel';
@@ -11,6 +13,7 @@ import { ApplicationAssessmentPanel } from './application-assessment-panel';
 const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   refetch: vi.fn(),
+  run: vi.fn(),
   permissions: { view: true, book: true, attendance: true, results: true, waive: true },
 }));
 vi.mock('src/redux/student/admissions/admission-assessments-api', () => ({
@@ -19,10 +22,20 @@ vi.mock('src/redux/student/admissions/admission-assessments-api', () => ({
 vi.mock('./use-assessment-permissions', () => ({
   useAssessmentPermissions: () => mocks.permissions,
 }));
+vi.mock('./use-assessment-actions', () => ({ useAssessmentActions: () => mocks.run }));
 vi.mock('./assessment-action-dialog', () => ({
   AssessmentActionDialog: ({ action }: { action: string }) => (
     <div role="dialog">Action {action}</div>
   ),
+}));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
+vi.mock('react-redux', () => ({
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({ confirmPopup: { isChanges: false } }),
+  useDispatch: () => vi.fn(),
+}));
+vi.mock('./assessment-scheduling-guidance', () => ({
+  AssessmentSchedulingGuidance: () => <div>Book a slot before the entrance exam</div>,
 }));
 
 const base: ApplicationAssessment = {
@@ -46,6 +59,7 @@ const stage = {
   id: 'stage-1',
   name: 'Entrance assessment',
   definitionStageId: 'definition-1',
+  status: 1,
 } as AdmissionApplicationStage;
 const query = (data = base, extra = {}) => ({
   currentData: data,
@@ -57,7 +71,7 @@ const query = (data = base, extra = {}) => ({
 });
 const panel = (onComplete = vi.fn()) =>
   render(
-    <ThemeProvider theme={createTheme()}>
+    <ThemeProvider theme={createTheme(defaultSettings)}>
       <ApplicationAssessmentPanel
         compact
         applicationId="application-1"
@@ -73,19 +87,44 @@ const panel = (onComplete = vi.fn()) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.permissions.view = true;
+  mocks.permissions.attendance = true;
+  mocks.permissions.results = true;
+  mocks.permissions.waive = true;
+  mocks.run.mockResolvedValue(undefined);
   mocks.query.mockReturnValue(query());
 });
 
 it('keeps empty requirements and start/waive actions visible in compact mode', () => {
   panel();
-  expect(screen.getByText('No assessment attempt has started.')).toBeVisible();
-  expect(screen.getByText(/Maximum attempts:/)).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Waive' })).toBeEnabled();
+  expect(screen.getByText('No assessment attempt yet')).toBeVisible();
+  expect(screen.getByText('Attempts')).toBeVisible();
+  expect(screen.getByText(`0 of ${DEFAULT_ASSESSMENT_POLICY.maxAttempts}`)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Waive assessment' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Start assessment' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action book');
 });
 
-it('keeps the latest result visible and older attempts available through collapsed history', async () => {
+it('removes the redundant start banner while retaining actionable stage blockers', () => {
+  mocks.query.mockReturnValue(
+    query({
+      ...base,
+      canBook: false,
+      canWaive: false,
+      blockers: [
+        'Create an assessment attempt or record an authorized waiver.',
+        'This assessment stage is not active.',
+      ],
+    })
+  );
+  panel();
+  expect(
+    screen.queryByText('Create an assessment attempt or record an authorized waiver.')
+  ).not.toBeInTheDocument();
+  expect(screen.getByText('This assessment stage is not active.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Start assessment' })).not.toBeInTheDocument();
+});
+
+it('keeps current and historical results together in the embedded attempts table', async () => {
   const attempt = {
     id: 'old',
     attemptNumber: 1,
@@ -103,9 +142,9 @@ it('keeps the latest result visible and older attempts available through collaps
   );
   panel();
   expect(screen.getByText('Attempt 2')).toBeVisible();
-  expect(screen.getByText('Attempt 1')).not.toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Previous attempts (1)' }));
-  await waitFor(() => expect(screen.getByText('Attempt 1')).toBeVisible());
+  expect(screen.getByText('Attempt 1')).toBeVisible();
+  expect(screen.getByRole('table', { name: 'Assessment attempts table' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: /Previous attempts/ })).not.toBeInTheDocument();
 });
 
 it('retains completion capability checks and does not forward click events', () => {
@@ -136,4 +175,386 @@ it('locks compact stage controls during refresh and supports query retry', () =>
   panel();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.refetch).toHaveBeenCalledOnce();
+});
+
+it('shows slot guidance by default only for an unbooked scheduled assessment', () => {
+  mocks.query.mockReturnValue(
+    query({ ...base, policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true } })
+  );
+  const { rerender } = panel();
+  expect(screen.getByText('Book a slot before the entrance exam')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Book assessment slot' })).toBeEnabled();
+  mocks.query.mockReturnValue(
+    query({
+      ...base,
+      policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true },
+      attempts: [
+        {
+          id: 'booked',
+          attemptNumber: 1,
+          sessionId: 'session-1',
+          status: 'pending',
+          attendance: 'pending',
+          outcome: 'pending',
+          createdAt: '',
+          concurrencyStamp: '',
+        },
+      ],
+    })
+  );
+  rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.queryByText('Book a slot before the entrance exam')).not.toBeInTheDocument();
+});
+
+it('reports completion readiness to the page without rendering a duplicate Continue action', () => {
+  const onReadinessChange = vi.fn();
+  mocks.query.mockReturnValue(query({ ...base, canComplete: true }));
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+        showCompletionAction={false}
+        onReadinessChange={onReadinessChange}
+      />
+    </ThemeProvider>
+  );
+  expect(
+    screen.queryByRole('button', { name: 'Complete assessment step' })
+  ).not.toBeInTheDocument();
+  expect(onReadinessChange).toHaveBeenLastCalledWith({
+    stageId: 'stage-1',
+    canComplete: true,
+    busy: false,
+    concurrencyStamp: 'stamp',
+  });
+});
+
+it.each([2, 3, 4])('does not suggest scheduling for historical stage status %i', (status) => {
+  mocks.query.mockReturnValue(
+    query({ ...base, policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true } })
+  );
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={{ ...stage, status } as AdmissionApplicationStage}
+        canAdvance={false}
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.queryByText('Book a slot before the entrance exam')).not.toBeInTheDocument();
+});
+
+it('does not suggest scheduling when server booking capability is unavailable', () => {
+  mocks.query.mockReturnValue(
+    query({
+      ...base,
+      canBook: false,
+      policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true },
+    })
+  );
+  panel();
+  expect(screen.queryByText('Book a slot before the entrance exam')).not.toBeInTheDocument();
+});
+
+const pendingAttempt = {
+  id: 'attempt-1',
+  attemptNumber: 1,
+  attendance: 'pending' as const,
+  status: 'pending' as const,
+  outcome: 'pending' as const,
+  concurrencyStamp: 'reviewed-attempt-stamp',
+  createdAt: '2026-10-10T05:00:00Z',
+};
+const editable = (extra: Partial<ApplicationAssessment> = {}) => ({
+  ...base,
+  canBook: false,
+  canRecordAttendance: true,
+  canRecordResult: false,
+  canCancel: true,
+  attempts: [pendingAttempt],
+  ...extra,
+});
+
+it.each(['present', 'absent'])('records %s directly without a form popup', async (attendance) => {
+  mocks.query.mockReturnValue(query(editable()));
+  panel();
+  fireEvent.click(screen.getByRole('button', { name: `Mark attempt 1 ${attendance}` }));
+  await waitFor(() =>
+    expect(mocks.run).toHaveBeenCalledWith(
+      'attendance',
+      expect.objectContaining({ attendance }),
+      expect.objectContaining({ attempts: [pendingAttempt] })
+    )
+  );
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save result for attempt 1' })).toBeDisabled();
+});
+
+it('preserves decimal marks and the reviewed stamp when a later refresh changes the record', async () => {
+  const reviewed = editable({
+    canRecordResult: true,
+    attempts: [{ ...pendingAttempt, attendance: 'present' }],
+  });
+  mocks.query.mockReturnValue(query(reviewed));
+  const { rerender } = panel();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 100' }), {
+    target: { value: '69.25' },
+  });
+  mocks.query.mockReturnValue(
+    query({ ...reviewed, attempts: [{ ...reviewed.attempts[0], concurrencyStamp: 'new-stamp' }] })
+  );
+  rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  await waitFor(() =>
+    expect(mocks.run).toHaveBeenCalledWith(
+      'result',
+      expect.objectContaining({ marks: 69.25 }),
+      reviewed
+    )
+  );
+});
+
+it('validates the configured mark limit and retains the draft after a failed save', async () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        canRecordResult: true,
+        policy: { ...DEFAULT_ASSESSMENT_POLICY, totalMarks: 80, passingMarks: 32 },
+      })
+    )
+  );
+  mocks.run.mockRejectedValue({ data: { detail: 'The attempt changed. Reload and try again.' } });
+  panel();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 80' }), {
+    target: { value: '81' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  expect(await screen.findByText('Enter marks between 0 and 80')).toBeVisible();
+  expect(mocks.run).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 80' }), {
+    target: { value: '69' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  expect(await screen.findByText('The attempt changed. Reload and try again.')).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Marks / 80' })).toHaveValue('69');
+  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Marks / 80' })).toHaveValue(''));
+});
+
+it('locks conflicting controls and prevents duplicate writes during inline saving', async () => {
+  let resolve!: () => void;
+  mocks.run.mockReturnValue(
+    new Promise<void>((done) => {
+      resolve = done;
+    })
+  );
+  mocks.query.mockReturnValue(query(editable()));
+  panel();
+  fireEvent.click(screen.getByRole('button', { name: 'Mark attempt 1 present' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Mark attempt 1 absent' }));
+  expect(mocks.run).toHaveBeenCalledOnce();
+  expect(screen.getByRole('button', { name: 'Mark attempt 1 absent' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
+  await act(async () => resolve());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Mark attempt 1 absent' })).toBeEnabled()
+  );
+});
+
+it('keeps saved results in the same table without editable completed controls', () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        attempts: [
+          {
+            ...pendingAttempt,
+            attendance: 'present',
+            status: 'completed',
+            outcome: 'passed',
+            marks: 69,
+          },
+        ],
+        canRecordAttendance: false,
+        canRecordResult: false,
+        canComplete: true,
+      })
+    )
+  );
+  panel();
+  expect(screen.getByText('69 / 100')).toBeVisible();
+  expect(screen.getByText('Passed')).toHaveClass('mnl__label__root');
+  expect(screen.queryByRole('textbox', { name: 'Marks / 100' })).not.toBeInTheDocument();
+});
+
+it('retains audited Waive/Cancel dialogs in the shared row menu', () => {
+  mocks.query.mockReturnValue(query(editable()));
+  panel();
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for attempt 1' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Cancel attempt' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Action cancel');
+});
+
+it('does not expose inline write controls when action permissions are denied', () => {
+  mocks.permissions.attendance = false;
+  mocks.permissions.results = false;
+  mocks.permissions.waive = false;
+  mocks.query.mockReturnValue(query(editable({ canRecordResult: true, canCancel: false })));
+  panel();
+  expect(screen.queryByRole('button', { name: 'Mark attempt 1 present' })).not.toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toBeDisabled();
+  expect(
+    screen.queryByRole('button', { name: 'More actions for attempt 1' })
+  ).not.toBeInTheDocument();
+});
+
+it('retains entered marks through a failed background read and locks stale writes', async () => {
+  const data = editable({ canRecordResult: true });
+  mocks.query.mockReturnValue(query(data));
+  const { rerender } = panel();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 100' }), {
+    target: { value: '57' },
+  });
+  mocks.query.mockReturnValue(query(data, { isError: true }));
+  rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toHaveValue('57');
+  expect(screen.getByRole('button', { name: 'Save result for attempt 1' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  await waitFor(() => expect(screen.getByRole('textbox', { name: 'Marks / 100' })).toHaveValue(''));
+});
+
+it('offers discard when the edited attempt disappears after refresh', async () => {
+  mocks.query.mockReturnValue(query(editable({ canRecordResult: true })));
+  const { rerender } = panel();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 100' }), {
+    target: { value: '57' },
+  });
+  mocks.query.mockReturnValue(query(editable({ attempts: [], canRecordResult: false })));
+  rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+  expect(
+    await screen.findByText(
+      'The assessment attempt changed. Discard the unsaved result and try again.'
+    )
+  ).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Discard result' })).not.toBeInTheDocument()
+  );
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
+it('records a pass/fail result when scoring and required attendance are disabled', async () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        canRecordResult: true,
+        canRecordAttendance: false,
+        policy: { ...DEFAULT_ASSESSMENT_POLICY, scoringEnabled: false, attendanceRequired: false },
+      })
+    )
+  );
+  panel();
+  expect(screen.queryByRole('textbox', { name: /Marks/ })).not.toBeInTheDocument();
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Result' }));
+  fireEvent.click(screen.getByRole('option', { name: 'Passed' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save result for attempt 1' }));
+  await waitFor(() =>
+    expect(mocks.run).toHaveBeenCalledWith(
+      'result',
+      expect.objectContaining({ outcome: 'passed' }),
+      expect.anything()
+    )
+  );
+});
+
+it('reports unsaved results to the page and blocks continuation until discard', async () => {
+  const onReadinessChange = vi.fn();
+  mocks.query.mockReturnValue(query(editable({ canRecordResult: true, canComplete: true })));
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <ApplicationAssessmentPanel
+        compact
+        applicationId="application-1"
+        admissionOfferingId="offering-1"
+        stage={stage}
+        canAdvance
+        advancing={false}
+        onComplete={vi.fn()}
+        onReadinessChange={onReadinessChange}
+      />
+    </ThemeProvider>
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: 'Marks / 100' }), {
+    target: { value: '57' },
+  });
+  await waitFor(() =>
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ dirty: true, canComplete: false })
+    )
+  );
+  expect(screen.getByRole('button', { name: 'Complete assessment step' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Discard result' }));
+  await waitFor(() =>
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ canComplete: true })
+    )
+  );
 });

@@ -1,6 +1,9 @@
+import dayjs from 'dayjs';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFollowUps } from './application-follow-ups';
 
@@ -22,6 +25,28 @@ vi.mock('src/redux/student/admissions/admission-application-follow-ups-api', () 
 }));
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
+// Picker interaction is verified in the browser; these tests cover application payloads and locks.
+vi.mock('@mui/x-date-pickers', () => ({
+  DateTimePicker: ({
+    label,
+    value,
+    disabled,
+    onChange,
+  }: {
+    label: string;
+    value: dayjs.Dayjs | null;
+    disabled: boolean;
+    onChange: (value: dayjs.Dayjs | null) => void;
+  }) => (
+    <input
+      type="datetime-local"
+      aria-label={`${label} *`}
+      disabled={disabled}
+      value={value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : ''}
+      onChange={(event) => onChange(event.target.value ? dayjs(event.target.value) : null)}
+    />
+  ),
+}));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: mocks.success, error: mocks.error },
 }));
@@ -181,16 +206,23 @@ describe('application follow-ups', () => {
     expect(screen.getByLabelText('Purpose *')).toHaveValue('Retry call');
   });
 
-  it('keeps the compact scheduler visible and reveals existing cancel commands through history', async () => {
+  it('opens the compact scheduler on demand and reveals existing cancel commands through history', async () => {
     render(
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
         <ApplicationFollowUps applicationId="application-1" compact />
       </ThemeProvider>
     );
-    expect(screen.getByLabelText('Purpose *')).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Schedule follow-up' })).toBeVisible();
+    expect(screen.getByLabelText('Purpose *')).not.toBeVisible();
+    const trigger = screen.getByRole('button', { name: 'Schedule follow-up' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'Schedule follow-up' });
+    expect(within(dialog).getByLabelText('Purpose *')).toBeVisible();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(within(dialog).getByRole('button', { name: 'Schedule' })).toBeDisabled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Call parent')).not.toBeVisible();
-    const history = screen.getByRole('button', { name: 'Follow-ups / History · 1 open' });
+    const history = screen.getByRole('button', { name: 'Follow-up history' });
     expect(history).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(history);
     await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
@@ -213,12 +245,12 @@ describe('application follow-ups', () => {
   it('keeps compact history read-only when backend management capability is false', async () => {
     mocks.query.mockReturnValue(query({ currentData: { ...value, canManageFollowUps: false } }));
     render(
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
         <ApplicationFollowUps applicationId="application-1" compact />
       </ThemeProvider>
     );
     expect(screen.queryByLabelText('Purpose *')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Follow-ups / History · 1 open' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Follow-up history' }));
     await waitFor(() => expect(screen.getByText('Call parent')).toBeVisible());
     expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
@@ -232,7 +264,7 @@ describe('application follow-ups', () => {
     mocks.schedule.mockReturnValue({ unwrap: () => pending });
     const onBusyChange = vi.fn();
     const content = (disabled = false) => (
-      <ThemeProvider theme={createTheme()}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
         <ApplicationFollowUps
           applicationId="application-1"
           compact
@@ -242,13 +274,14 @@ describe('application follow-ups', () => {
       </ThemeProvider>
     );
     const view = render(content());
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
     fireEvent.change(screen.getByLabelText('Next follow-up *'), {
       target: { value: '2026-10-10T10:00' },
     });
     fireEvent.change(screen.getByLabelText('Purpose *'), {
       target: { value: 'Documents reminder' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Schedule follow-up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule' }));
     expect(mocks.schedule).toHaveBeenCalledOnce();
     mocks.scheduling.isLoading = true;
     view.rerender(content(true));
@@ -264,5 +297,46 @@ describe('application follow-ups', () => {
     expect(onBusyChange).toHaveBeenLastCalledWith(false);
     view.unmount();
     expect(onBusyChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('preserves the popover draft across closing and failed scheduling, then closes on success', async () => {
+    mocks.schedule.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('The inquiry changed.'), {
+            data: { detail: 'The inquiry changed.' },
+          })
+        ),
+    });
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationFollowUps applicationId="application-1" compact />
+      </ThemeProvider>
+    );
+    const trigger = screen.getByRole('button', { name: 'Schedule follow-up' });
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'Schedule follow-up' });
+    fireEvent.change(within(dialog).getByLabelText('Next follow-up *'), {
+      target: { value: '2026-10-11T10:00' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('Purpose *'), {
+      target: { value: ' Discuss documents ' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(dialog).not.toBeVisible());
+    fireEvent.click(trigger);
+    expect(within(dialog).getByLabelText('Purpose *')).toHaveValue(' Discuss documents ');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('The inquiry changed.');
+    expect(within(dialog).getByLabelText('Purpose *')).toHaveValue(' Discuss documents ');
+    mocks.schedule.mockReturnValue({ unwrap: () => Promise.resolve(value) });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
+    await waitFor(() => expect(dialog).not.toBeVisible());
+    expect(mocks.schedule).toHaveBeenLastCalledWith({
+      applicationId: 'application-1',
+      concurrencyStamp: 'inquiry-stamp',
+      scheduledAt: new Date('2026-10-11T10:00').toISOString(),
+      purpose: 'Discuss documents',
+    });
   });
 });

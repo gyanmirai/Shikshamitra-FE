@@ -3,13 +3,17 @@ import type {
   AdmissionFeeStructureCandidate,
 } from 'src/redux/student/admissions/admission-fee-selection-types';
 
+import { useState, useCallback } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionFeeSelectionPanel from './admission-fee-selection-panel';
+
+import type { ApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 
 const mocks = vi.hoisted(() => ({
   read: vi.fn(),
@@ -108,6 +112,29 @@ const renderPanel = (
     </ThemeProvider>
   );
 
+function FeeSelectionWorkspace() {
+  const [readiness, setReadiness] = useState<ApplicationStageReadiness>();
+  const onReadinessChange = useCallback(
+    (next: ApplicationStageReadiness) => setReadiness(next),
+    []
+  );
+
+  return (
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <FormBusyRegion busy={Boolean(readiness?.busy)} label="Updating application…">
+        <AdmissionFeeSelectionPanel
+          applicationId="application-1"
+          completionStageId="payment"
+          onReadinessChange={onReadinessChange}
+        />
+      </FormBusyRegion>
+      <button type="button" disabled={!readiness?.canComplete || readiness.busy}>
+        Continue admission
+      </button>
+    </ThemeProvider>
+  );
+}
+
 describe('AdmissionFeeSelectionPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -129,7 +156,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     mocks.confirm.mockReturnValue({ unwrap: mocks.confirmationUnwrap });
     mocks.confirmationUnwrap.mockResolvedValue(selected);
   });
-  it('keeps compact selection and stage guards visible while disclosing saved published heads', async () => {
+  it('keeps compact selection, canonical published heads and stage guards visible', () => {
     setRead(selected);
     const onContinue = vi.fn();
     renderPanel({
@@ -141,12 +168,132 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
-    const details = screen.getByRole('button', { name: 'Published fee heads' });
-    expect(details).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByLabelText('Selected fee heads')).not.toBeVisible();
-    fireEvent.click(details);
-    await waitFor(() => expect(screen.getByLabelText('Selected fee heads')).toBeVisible());
+    expect(screen.getByLabelText('Selected fee heads')).toBeVisible();
+    expect(screen.getByLabelText('Selection summary')).toBeVisible();
     expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('opens the compact first selection directly and summarizes selected optional heads without calculating dues', async () => {
+    renderPanel({ compact: true });
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+        'Class one fees'
+      )
+    );
+    expect(screen.getByLabelText('Mandatory fee heads')).toHaveTextContent('Tuition');
+    expect(screen.getByLabelText('Selection summary')).toHaveTextContent(
+      'Selected optional heads0'
+    );
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    expect(screen.getByLabelText('Selection summary')).toHaveTextContent(
+      'Selected optional heads1'
+    );
+    expect(screen.queryByText(/Configured total/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Finance calculates dues/)).toBeVisible();
+  });
+
+  it('reports readiness and the concurrency stamp to the shared page footer without a duplicate action', () => {
+    setRead(selected);
+    const onReadinessChange = vi.fn();
+    renderPanel({ compact: true, completionStageId: 'payment', onReadinessChange });
+    expect(onReadinessChange).toHaveBeenLastCalledWith({
+      stageId: 'payment',
+      canComplete: true,
+      busy: false,
+      concurrencyStamp: 'stamp-1',
+    });
+    expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Change fee structure' }));
+    expect(onReadinessChange).toHaveBeenLastCalledWith({
+      stageId: 'payment',
+      canComplete: false,
+      busy: false,
+      concurrencyStamp: 'stamp-1',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onReadinessChange).toHaveBeenLastCalledWith({
+      stageId: 'payment',
+      canComplete: true,
+      busy: false,
+      concurrencyStamp: 'stamp-1',
+    });
+  });
+
+  it.each(['empty', 'available', 'loading', 'error'])(
+    'keeps the fee editor interactive without a workspace overlay when candidates are %s',
+    async (candidateState) => {
+      mocks.candidates.mockReturnValue({
+        currentData: candidateState === 'available' ? [candidate] : [],
+        isLoading: candidateState === 'loading',
+        isFetching: candidateState === 'loading',
+        isError: candidateState === 'error',
+        refetch: mocks.refetch,
+      });
+      render(<FeeSelectionWorkspace />);
+      fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+      if (candidateState === 'available') {
+        await waitFor(() =>
+          expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+            'Class one fees'
+          )
+        );
+      }
+      expect(screen.queryByText('Updating application…')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+      if (candidateState === 'empty') {
+        expect(screen.getByText('No matching fee structure')).toBeVisible();
+        expect(
+          screen.queryByRole('button', { name: 'Confirm fee structure' })
+        ).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+        expect(mocks.refetch).toHaveBeenCalledOnce();
+      }
+      if (candidateState === 'error') {
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        expect(mocks.refetch).toHaveBeenCalledOnce();
+      }
+      if (candidateState !== 'available') {
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.getByRole('button', { name: 'Select fee structure' })).toBeEnabled();
+      }
+      expect(mocks.save).not.toHaveBeenCalled();
+    }
+  );
+
+  it('locks during an actual save and releases the editor after a failed save', async () => {
+    let rejectSave!: (error: unknown) => void;
+    mocks.unwrap.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectSave = reject;
+      })
+    );
+    const onEditorStateChange = vi.fn();
+    renderPanel({ onEditorStateChange });
+    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    await waitFor(() =>
+      expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
+        'Class one fees'
+      )
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true })
+    );
+    expect(screen.getByRole('status', { name: 'Saving fee structure' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+    expect(mocks.save).toHaveBeenCalledOnce();
+    rejectSave({ data: { detail: 'The selection could not be saved. Retry.' } });
+    expect(await screen.findByText('The selection could not be saved. Retry.')).toBeVisible();
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
+    );
+    expect(screen.queryByRole('status', { name: 'Saving fee structure' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeEnabled();
   });
 
   it('keeps paid compact selections locked and never exposes new money commands', () => {
@@ -198,8 +345,26 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(mocks.candidates).toHaveBeenCalledWith('application-1', {
       refetchOnMountOrArgChange: true,
     });
-    expect(screen.getByText(/No published fee structure matches/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
+    expect(screen.getByText('No matching fee structure')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open Finance' })).not.toBeInTheDocument();
+  });
+  it('offers Finance navigation only with the exact Fee Structure View permission', () => {
+    permissions.push({ name: 'Finance.Settings.FeeStructure.View', isGranted: true });
+    mocks.candidates.mockReturnValue({
+      currentData: [],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetch,
+    });
+    renderPanel({ compact: true });
+    const link = screen.getByRole('link', { name: 'Open Finance' });
+    expect(link).toHaveAttribute('href', '/finance/settings/create-fee-structure');
+    expect(link).toHaveAttribute('target', '_blank');
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(mocks.save).not.toHaveBeenCalled();
   });
   it('saves selected optional heads with the application concurrency token and preserves errors for retry', async () => {
     mocks.unwrap.mockRejectedValue({

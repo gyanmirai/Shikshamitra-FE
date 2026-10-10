@@ -62,7 +62,7 @@ export function AdmissionOfferingConfigurationFields({
       {missingPublishedConfiguration && (
         <Grid size={12}>
           <Alert severity="warning">
-            Select a published workflow and intake & assignment setup
+            Select a published workflow
             {startsWithInquiry ? ', plus an inquiry form' : ''} before activating this Offering. You
             may save it as inactive while configuration is incomplete.
           </Alert>
@@ -131,7 +131,7 @@ export function AdmissionOfferingConfigurationFields({
           select
           fullWidth
           size="small"
-          label="Intake & assignment setup"
+          label="Intake & assignment setup (optional)"
           value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
           onChange={(event) => {
             if (event.target.value === '__legacy__') return;
@@ -156,11 +156,11 @@ export function AdmissionOfferingConfigurationFields({
               : legacySelection
                 ? 'Legacy profiles are preserved. Choose a combined setup only when you want to replace them.'
                 : startsWithInquiry
-                  ? 'Applies inquiry handling and counsellor routing together.'
-                  : 'Direct registration uses only this setup’s counsellor routing.'
+                  ? 'Optional. Choose a setup for inquiry handling and automatic counsellor routing. Leave empty for manual assignment.'
+                  : 'Optional. Choose a setup for automatic routing, or assign the counsellor during registration.'
           }
         >
-          <MenuItem value="">Choose intake setup</MenuItem>
+          <MenuItem value="">No setup — manual assignment</MenuItem>
           {legacySelection && <MenuItem value="__legacy__">Legacy profile selection</MenuItem>}
           {(setups.data ?? []).map((setup) => (
             <MenuItem key={setup.id} value={setup.id}>
@@ -172,7 +172,7 @@ export function AdmissionOfferingConfigurationFields({
       <Grid size={12}>
         <Typography variant="caption" color="text.secondary">
           Save incomplete preparation as inactive. Activation requires a published cycle, the forms
-          linked to its workflow, an intake setup, and valid dates.
+          linked to its workflow and valid dates. Intake & assignment is optional.
         </Typography>
       </Grid>
     </Grid>

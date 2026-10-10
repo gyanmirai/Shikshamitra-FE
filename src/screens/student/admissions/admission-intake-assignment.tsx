@@ -9,7 +9,6 @@ import type {
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
@@ -98,14 +97,10 @@ const statusColor = (status: SetupRow['statusLabel']) => {
 function getSetupColumns({
   canEdit,
   onEdit,
-  onUseInOffering,
-  onCreateLink,
   onArchive,
 }: {
   canEdit: boolean;
   onEdit: (setup: AdmissionIntakeSetup) => void;
-  onUseInOffering: (setup: AdmissionIntakeSetup) => void;
-  onCreateLink: (setup: AdmissionIntakeSetup) => void;
   onArchive: (setup: AdmissionIntakeSetup) => void;
 }): IColumn[] {
   return [
@@ -173,25 +168,13 @@ function getSetupColumns({
             ? [
                 {
                   id: 'edit',
-                  label: `Edit `,
+                  label: 'Edit',
                   icon: 'solar:pen-bold',
                   onClick: () => onEdit(setup),
                 },
                 {
-                  id: 'offering',
-                  label: `Use  in an Offering`,
-                  icon: 'mdi:school-outline',
-                  onClick: () => onUseInOffering(setup),
-                },
-                {
-                  id: 'link',
-                  label: `Create inquiry link `,
-                  icon: 'mdi:link-variant-plus',
-                  onClick: () => onCreateLink(setup),
-                },
-                {
                   id: 'archive',
-                  label: `Archive `,
+                  label: 'Archive',
                   icon: 'mdi:archive-arrow-down-outline',
                   onClick: () => onArchive(setup),
                 },
@@ -212,7 +195,6 @@ function getSetupColumns({
 }
 
 export default function AdmissionIntakeAssignmentScreen() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const view = searchParams.get('view') === 'links' ? 'links' : 'setups';
   const preselectedSetupId = searchParams.get('intakeSetupId');
@@ -252,15 +234,6 @@ export default function AdmissionIntakeAssignmentScreen() {
     setLinkCreateOpen(true);
   }, [preselectedSetupId, view]);
 
-  const useInOffering = (setup: AdmissionIntakeSetup) => {
-    router.push(
-      `${studentPaths.enrollment.settings.offerings}?intakeSetupId=${encodeURIComponent(setup.id)}`
-    );
-  };
-  const createLink = (setup: AdmissionIntakeSetup) => {
-    router.push(`${basePath}?view=links&intakeSetupId=${encodeURIComponent(setup.id)}`);
-    setLinkCreateOpen(true);
-  };
   const requestArchive = async (setup: AdmissionIntakeSetup) => {
     setArchiveTarget(setup);
     setArchiveUsage(null);
@@ -322,46 +295,63 @@ export default function AdmissionIntakeAssignmentScreen() {
   const columns = getSetupColumns({
     canEdit,
     onEdit: setEditorSetup,
-    onUseInOffering: useInOffering,
-    onCreateLink: createLink,
     onArchive: requestArchive,
   });
 
+  const pageHeader = (
+    <CustomBreadcrumbs
+      heading="Intake & Assignment"
+      description="Configure how inquiries are handled and how one journey counsellor is assigned through onboarding."
+      links={[
+        { name: 'Student', href: studentPaths.dashboard },
+        { name: 'Admissions', href: studentPaths.enrollment.root },
+        { name: 'Settings', href: studentPaths.enrollment.settings.root },
+        { name: 'Intake & Assignment' },
+      ]}
+      slotProps={{
+        action: { alignSelf: 'flex-end' },
+        heading: {},
+        moreLink: {},
+        breadcrumbs: {},
+      }}
+      action={
+        canEdit && editorSetup === undefined ? (
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon={view === 'links' ? 'mdi:link-variant-plus' : 'mdi:plus'} />}
+            onClick={() => {
+              if (view === 'links') setLinkCreateOpen(true);
+              else setEditorSetup(null);
+            }}
+            sx={{ minWidth: 160 }}
+          >
+            {view === 'links' ? 'Create inquiry link' : 'Create intake setup'}
+          </Button>
+        ) : null
+      }
+    />
+  );
+
+  if (canEdit && editorSetup !== undefined) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+        {pageHeader}
+        <AdmissionIntakeSetupEditor
+          key={
+            editorSetup ? `${editorSetup.id}:${editorSetup.concurrencyStamp}` : 'new-intake-setup'
+          }
+          setup={editorSetup}
+          onClose={() => setEditorSetup(undefined)}
+          onReloadLatest={editorSetup ? reloadEditorLatest : undefined}
+        />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
-      <CustomBreadcrumbs
-        heading="Intake & Assignment"
-        description="Configure how inquiries are handled and how one journey counsellor is assigned through onboarding."
-        links={[
-          { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Intake & Assignment' },
-        ]}
-        slotProps={{
-          action: { alignSelf: 'flex-end' },
-          heading: {},
-          moreLink: {},
-          breadcrumbs: {},
-        }}
-        action={
-          canEdit ? (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={view === 'links' ? 'mdi:link-variant-plus' : 'mdi:plus'} />}
-              onClick={() => {
-                if (view === 'links') setLinkCreateOpen(true);
-                else setEditorSetup(null);
-              }}
-              sx={{ minWidth: 160 }}
-            >
-              {view === 'links' ? 'Create inquiry link' : 'Create intake setup'}
-            </Button>
-          ) : null
-        }
-      />
-
+      {pageHeader}
       <Box
         sx={{
           border: 1,
@@ -514,16 +504,6 @@ export default function AdmissionIntakeAssignmentScreen() {
         </Box>
       )}
 
-      {editorSetup !== undefined && (
-        <AdmissionIntakeSetupEditor
-          key={
-            editorSetup ? `${editorSetup.id}:${editorSetup.concurrencyStamp}` : 'new-intake-setup'
-          }
-          setup={editorSetup}
-          onClose={() => setEditorSetup(undefined)}
-          onReloadLatest={editorSetup ? reloadEditorLatest : undefined}
-        />
-      )}
       <SetupDetailsDrawer
         setup={viewSetup}
         onClose={() => setViewSetup(null)}

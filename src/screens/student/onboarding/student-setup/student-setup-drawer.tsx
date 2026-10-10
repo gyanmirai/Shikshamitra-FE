@@ -39,6 +39,7 @@ import {
 
 import StudentOnboardingFees from './student-onboarding-fees';
 import { StudentSetupLoadingFields } from './student-setup-loading';
+import { hasAssignedDivision, type StudentSetupView } from './student-setup-view';
 import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
 import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
@@ -49,7 +50,6 @@ import {
   getReadinessSummary,
 } from './student-onboarding-model';
 
-import type { StudentSetupView } from './student-setup-view';
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 type StudentSetupDrawerProps = {
@@ -709,9 +709,7 @@ export default function StudentSetupDrawer({
                         startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
                         onClick={onAssignDivision}
                       >
-                        {activeStudent.divisionName && activeStudent.divisionName !== '—'
-                          ? 'Change Division'
-                          : 'Assign Division'}
+                        {hasAssignedDivision(activeStudent) ? 'Change Division' : 'Assign Division'}
                       </Button>
                       <Button
                         variant="outlined"

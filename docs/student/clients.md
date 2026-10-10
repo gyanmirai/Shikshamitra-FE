@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-10-10
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,10 @@ audience: humans-and-agents
 # Find Student Enrollment Admissions clients
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
+
+## Finalized application summary reads
+
+The finalized application summary reuses the application/workflow and decision-history reads, plus `getStudentOnboardingCase` only with the exact `Students.Onboarding.View` grant and a linked case. Case and fee-selection evidence use `currentData`, withhold failed or mismatched results, and refetch on mount. Decision history includes nullable `actorName` from the recorded actor; the assigned counsellor is never substituted for finalizing staff. No write, monetary calculation or new endpoint is introduced.
 
 ## Academic filter requests
 
@@ -93,10 +97,14 @@ Successful management commands invalidate the inquiry tag so the list and open d
 Runtime counsellor search and assignment stay in `admission-inquiries-api.ts`; the detail workspace uses server `canReassign`, an offering-scoped eligible pool, and a required transfer reason. Lists display returned counsellor names without requesting the manager-only assignment endpoint. Counsellor and offering column-filter choices come from the loaded page; academic filters and global search still run on the server.
 The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups. The backend filters these queues before paging and returns the row's cycle, offering, counsellor, management readiness, deadlines, and next follow-up in the list response.
 Inquiries uses the server-paged inquiry list with `isTransferred: false`.
-Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
+Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for pre-decision application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
+Applications uses `admission-applications-api.ts` with `decisionWorkspaceOnly=true`, academic scope, server search/sorting and `skipCount`/`maxResultCount`; the returned `totalCount` drives pagination.
+Its identity column uses the real application number; no separate applicant number is invented.
+The list reads `standardName`, `contactPhone`, `contactEmail`, `decisionEnteredAt` and `hasReachedDecision`; the shared generic list remains available to application-history consumers without decision-only filtering.
 Both application and inquiry tags refresh the Pipeline projection after mutations; returning from detail refetches the worklist.
-The compact application drawer reuses these clients; opening it retains the existing list queries. The URL-selected application and local stage review are presentation state, not a second server-state cache. Selecting a completed assessment or document stage requests that stage's existing read-only evidence contract. Fee selection and runtime form review keep their existing APIs and concurrency guards; no new endpoint is introduced.
-The identity editor lazily reuses the applicant 360 read and profile-update endpoints, gated by exact Applicants View/Add access and finalized-record locks. Finalization repair returns to the same dialog and refreshes its existing readiness preview. Header counsellor assignment keeps the existing application assignment mutation and concurrency contract; text-only stage tabs do not change runtime commands.
+The full-page application workspace reuses these clients. Its route owns the application identity and safe return context; stage selection is local presentation state. Selected Form policy reads use the selected stage, while future Documents/Assessment/Fee preparation uses returned server capabilities. Historical evidence remains read-only. List queries are skipped during legacy-link recovery and the worklist refreshes when the user returns.
+`admission-applications-api.ts` adds `endAdmissionApplicationJourney`: POST `/student/enrollment/admissions/applications/{id}/end-journey` with required reason and concurrency stamp. The UI combines existing Applications Add access with server `canEndJourney`. Successful closure refreshes applications/Pipeline, applicant/inquiry history, offering capacity, follow-ups and assessment session occupancy; failed closure preserves cache and entered reason. The [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) owns lifecycle/cleanup rules.
+The identity editor lazily reuses applicant 360 reads/profile updates with exact Applicants View/Add access and finalized-record locks. Finalization repair returns to the same dialog and readiness preview. Header counsellor assignment keeps its existing mutation/concurrency contract. The vertical journey stepper selects a workspace; actual continuation still uses the current-stage runtime command.
 The table exporter explicitly labels its loaded-row scope as **Export current page**.
 Inquiry status remains projected to Pending, Interested, or Not interested without removing legacy status/history.
 The Update client saves optional status/reason, academic context, and original raw form values with concurrency.
@@ -126,7 +134,8 @@ The managed document checklist uses `admission-document-verification-api.ts` and
 The existing `getStudentById` query in `src/redux/student/index.ts` reads `/students/records/{studentId}/profile` through the global API. `student-profile-types.ts` unwraps the response and validates the canonical Student GUID. The profile data boundary mounts tabs only when the returned identity matches the requested student; failed reads show an alert and Retry. Document and admission-evidence queries therefore receive the resolved Student ID. The protected endpoint and direct-record scope rules are owned by the [backend student module](../../../Shikshamitra-BE/docs/modules/student/README.md).
 
 Admissions mutations invalidate the relevant `studentAdmissionsCrmType` tag so lists and detail screens reload configuration or runtime state after a successful change.
-`admission-intake-profiles-api.ts` reads `/student/enrollment/admissions/public-inquiry-links/options?admissionCycleId=...` for compatible setup/form pairs. That query uses Offering, Form, and Cycle cache tags and refreshes when the creation drawer opens or its period changes. The drawer uses `currentData` to avoid submitting cached choices from a previous period.
+The inline setup editor shares one `/student/enrollment/admissions/intake-profiles/counsellors?counsellorOnly=true` read between pool and fallback choices; other lookup consumers retain the default unfiltered request.
+`admission-intake-profiles-api.ts` reads `/student/enrollment/admissions/public-inquiry-links/options?admissionCycleId=...` for compatible setup/form pairs, including null-profile options for manual assignment. The link DTO accepts a nullable assignment profile; an empty optional setup sends null and leaves captured inquiries Unassigned. That query uses Offering, Form, and Cycle cache tags and refreshes when the creation drawer opens or its period changes. The drawer uses `currentData` to avoid submitting cached choices from a previous period. A setup lookup failure does not prevent a compatible manual link from being created.
 Bulk preview is read-like and does not invalidate the offering cache; successful bulk commit does.
 Application form-value saves invalidate the application tag so the concurrency stamp and saved values remain current.
 Inquiry creation invalidates inquiry and applicant tags because it creates the CRM record and its linked applicant context together.

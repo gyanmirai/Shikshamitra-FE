@@ -12,8 +12,10 @@ import { AdmissionQueryError } from '../admission-query-error';
 import { DocumentActionDialog } from './document-action-dialog';
 import { useDocumentPermissions } from './use-document-permissions';
 import { DocumentChecklistContent } from './document-checklist-content';
+import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 
 import type { DocumentAction } from './document-action-model';
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
 export function ApplicationDocumentsPanel({
   applicationId,
@@ -24,6 +26,8 @@ export function ApplicationDocumentsPanel({
   historical = false,
   disabled = false,
   layout = 'cards',
+  showCompletionAction = true,
+  onReadinessChange,
 }: {
   applicationId: string;
   stage: AdmissionApplicationStage;
@@ -33,6 +37,8 @@ export function ApplicationDocumentsPanel({
   historical?: boolean;
   disabled?: boolean;
   layout?: 'cards' | 'table';
+  showCompletionAction?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
   const permissions = useDocumentPermissions();
   const query = useGetApplicationDocumentsQuery(
@@ -45,6 +51,12 @@ export function ApplicationDocumentsPanel({
     summary: ApplicationDocumentVerification;
   } | null>(null);
   const summary = query.currentData;
+  useApplicationStageReadiness(onReadinessChange, {
+    stageId: stage.id,
+    canComplete: Boolean(!historical && permissions.view && summary?.canComplete && !query.isError),
+    busy: disabled || query.isFetching || advancing || Boolean(selected),
+    concurrencyStamp: summary?.concurrencyStamp,
+  });
   return (
     <Card sx={{ p: historical ? 0 : 2, boxShadow: historical ? 'none' : undefined }}>
       <Stack spacing={2}>
@@ -77,10 +89,23 @@ export function ApplicationDocumentsPanel({
               summary={summary}
               permissions={permissions}
               disabled={disabled || query.isFetching || advancing}
-              readOnly={historical || !(summary.isActive || summary.canCollectDuringForm)}
+              readOnly={
+                historical ||
+                !(
+                  summary.isActive ||
+                  summary.canCollectDuringForm ||
+                  summary.requirements.some(
+                    (requirement) =>
+                      requirement.canUpload ||
+                      requirement.canRecordOriginal ||
+                      requirement.canReview ||
+                      requirement.canWaive
+                  )
+                )
+              }
               onAction={(action, requirement) => setSelected({ action, requirement, summary })}
             />
-            {!historical && summary.isActive && canAdvance && (
+            {showCompletionAction && !historical && summary.isActive && canAdvance && (
               <Stack direction="row">
                 <Button
                   size="small"

@@ -1,10 +1,10 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, within } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { ApplicationStageJourney } from './application-stage-journey';
 
@@ -32,7 +32,7 @@ const renderJourney = (stages: AdmissionApplicationStage[]) =>
   );
 
 describe('ApplicationStageJourney', () => {
-  it('renders every configured stage in display order with shared status labels', () => {
+  it('renders every configured stage in display order without status captions or counts', () => {
     renderJourney([
       stage('future', 30, 0, 'Admission decision'),
       stage('done', 10, 2, 'Application form submitted'),
@@ -53,11 +53,42 @@ describe('ApplicationStageJourney', () => {
       within(items[1]).getByText(/intentionally long configured stage name/)
     ).toBeInTheDocument();
     expect(items[1]).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByText('Completed')).toBeInTheDocument();
-    expect(screen.getByText('Current step')).toBeInTheDocument();
-    expect(screen.getByText('Not started')).toBeInTheDocument();
-    expect(screen.getByText('Skipped')).toBeInTheDocument();
-    expect(screen.getByText('Failed')).toBeInTheDocument();
+    ['Completed', 'Current step', 'Not started', 'Skipped', 'Failed'].forEach((caption) =>
+      expect(screen.queryByText(caption)).not.toBeInTheDocument()
+    );
+  });
+
+  it('allows selecting a future stage and locks all step controls while busy', () => {
+    const onChange = vi.fn();
+    const stages = [stage('current', 1, 1, 'Form'), stage('future', 2, 0, 'Assessment')];
+    const { rerender } = render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationStageJourney
+          stages={stages}
+          currentStageId="current"
+          selectedStageId="current"
+          onChange={onChange}
+        />
+      </ThemeProvider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Assessment' }));
+    expect(onChange).toHaveBeenLastCalledWith('future');
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <ApplicationStageJourney
+          stages={stages}
+          currentStageId="current"
+          selectedStageId="future"
+          busy
+          onChange={onChange}
+        />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Assessment' })).toHaveAttribute(
+      'aria-current',
+      'step'
+    );
+    screen.getAllByRole('button').forEach((button) => expect(button).toBeDisabled());
   });
 
   it('shows a stable empty state when no configured stages are returned', () => {

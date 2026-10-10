@@ -6,6 +6,8 @@ import { Stack, Accordion, Typography, AccordionSummary, AccordionDetails } from
 
 import { ApplicationDocumentsPanel } from './application-documents-panel';
 
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
+
 export function ApplicationDocuments({
   stages,
   currentStage,
@@ -20,6 +22,8 @@ export function ApplicationDocuments({
   onComplete: () => void;
   layout?: 'cards' | 'table';
   selectedStageId?: string;
+  showCompletionAction?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const history = stages.filter(
@@ -29,14 +33,14 @@ export function ApplicationDocuments({
   if (selectedStageId) {
     const selected = stages.find((stage) => stage.id === selectedStageId);
     if (!selected?.documentVerificationEnabled) return null;
-    const historical = selected.id !== currentStage?.id || selected.status >= 2;
-    if (historical && selected.status < 2) return null;
+    const historical = selected.status >= 2;
     return (
       <ApplicationDocumentsPanel
         key={selected.id}
         {...props}
         stage={selected}
         historical={historical}
+        canAdvance={props.canAdvance && selected.id === currentStage?.id && !historical}
       />
     );
   }

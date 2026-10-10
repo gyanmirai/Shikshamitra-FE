@@ -1,7 +1,10 @@
 import type { AdmissionFormSectionVerification } from 'src/redux/student/admissions/admission-form-stage-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Chip, List, Button, ListItem, Typography, ListItemText } from '@mui/material';
+import { fDateTime } from 'src/utils/format-time';
+import { Stack, Button, Typography } from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 export function FormStageSectionList({
   sections,
@@ -21,60 +24,98 @@ export function FormStageSectionList({
   return (
     <>
       {!compact && <Typography variant="subtitle2">Section verification</Typography>}
-      <List disablePadding>
-        {required.map((section) => (
-          <ListItem
-            key={section.sectionId}
-            disableGutters
-            divider
-            sx={
-              compact
-                ? {
-                    py: 1,
-                    '& .MuiListItemText-primary': { typography: 'body2' },
-                    '& .MuiListItemText-secondary': { typography: 'caption' },
+      {/* Embedded verification records: the surrounding form remains the primary task. */}
+      <CustomizableTable
+        tableId="admission-form-section-verification"
+        tableTitle="Section verification"
+        data={required}
+        isSearch={false}
+        isFilter={false}
+        isPagination={false}
+        isShowedDense={false}
+        wrapperProps={{ sx: { minWidth: 0, minHeight: 0 } }}
+        tableContainerProps={{ sx: { minWidth: 0 }, 'aria-label': 'Section verification' }}
+        columns={[
+          {
+            id: 'sectionName',
+            label: 'Section',
+            filterType: 'string',
+            minWidth: 180,
+            isSort: false,
+            isFilter: false,
+            render: (_, row) => {
+              const section = row as AdmissionFormSectionVerification;
+              return (
+                <Stack spacing={0.25} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {section.sectionName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {section.verifiedAt
+                      ? `Verified ${fDateTime(section.verifiedAt)}`
+                      : 'Waiting for staff verification'}
+                  </Typography>
+                </Stack>
+              );
+            },
+          },
+          {
+            id: 'verified',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Pending', value: false },
+              { label: 'Verified', value: true },
+            ],
+            isSort: false,
+            isFilter: false,
+            width: 110,
+            sticky: true,
+            stickyPosition: 'right',
+            stickyOnMobile: false,
+            render: (_, row) => {
+              const section = row as AdmissionFormSectionVerification;
+              return (
+                <Label
+                  color={section.verified ? 'success' : 'warning'}
+                  startIcon={
+                    <Iconify
+                      icon={section.verified ? 'mdi:check-circle-outline' : 'mdi:clock-outline'}
+                    />
                   }
-                : undefined
-            }
-            secondaryAction={
-              section.verified ? (
-                <Button size="small" disabled={disabled} onClick={() => onRevoke(section)}>
-                  Reopen
-                </Button>
-              ) : (
+                >
+                  {section.verified ? 'Verified' : 'Pending'}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'actions',
+            label: 'Action',
+            width: 100,
+            align: 'right',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            stickyPosition: 'right',
+            excludeFromExport: true,
+            render: (_, row) => {
+              const section = row as AdmissionFormSectionVerification;
+              return (
                 <Button
                   size="small"
-                  variant="outlined"
+                  variant={section.verified ? 'outlined' : 'contained'}
                   disabled={disabled}
-                  onClick={() => onVerify(section)}
+                  aria-label={`${section.verified ? 'Reopen' : 'Verify'} ${section.sectionName}`}
+                  onClick={() => (section.verified ? onRevoke(section) : onVerify(section))}
                 >
-                  Verify
+                  {section.verified ? 'Reopen' : 'Verify'}
                 </Button>
-              )
-            }
-          >
-            <ListItemText
-              primary={section.sectionName}
-              secondary={
-                section.verifiedAt
-                  ? `Verified ${new Date(section.verifiedAt).toLocaleString()}`
-                  : 'Waiting for staff verification'
-              }
-            />
-            <Chip
-              size="small"
-              color={section.verified ? 'success' : 'default'}
-              icon={
-                <Iconify
-                  icon={section.verified ? 'mdi:check-circle-outline' : 'mdi:clock-outline'}
-                />
-              }
-              label={section.verified ? 'Verified' : 'Pending'}
-              sx={{ mr: 10 }}
-            />
-          </ListItem>
-        ))}
-      </List>
+              );
+            },
+          },
+        ]}
+      />
     </>
   );
 }

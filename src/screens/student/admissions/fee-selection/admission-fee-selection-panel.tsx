@@ -1,18 +1,25 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AdmissionFeeHead } from 'src/redux/student/admissions/admission-fee-selection-types';
 
 import { useSelector } from 'react-redux';
 import { useState, useCallback } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import { fNumber, fCurrency } from 'src/utils/format-number';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import CustomAccordion from 'src/components/custom-accordian';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Skeleton,
+  IconButton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useGetAdmissionFeeSelectionQuery,
   useConfirmAdmissionFeeSelectionOnboardingMutation,
@@ -20,8 +27,11 @@ import {
 
 import { AdmissionFeeSelectionEditor } from './admission-fee-selection-editor';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
+import { AdmissionFeeHeads, AdmissionFeeSelectionSummary } from './admission-fee-selection-summary';
 
 import type { AdmissionFeeSelectionEditorState } from './admission-fee-selection-editor';
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
 type Props = {
   applicationId: string;
@@ -35,6 +45,7 @@ type Props = {
   onEditorStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
   compact?: boolean;
   readOnly?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
 };
 const readPermissions = [
   'Students.Admissions.Applicants.View',
@@ -71,6 +82,7 @@ export default function AdmissionFeeSelectionPanel({
   onEditorStateChange,
   compact = false,
   readOnly = false,
+  onReadinessChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canRead = hasGrantedPermission(permissions, readPermissions);
@@ -78,10 +90,24 @@ export default function AdmissionFeeSelectionPanel({
     skip: !applicationId || !canRead,
   });
   const [editing, setEditing] = useState(false);
+  const [editorDismissed, setEditorDismissed] = useState(false);
   const [confirm, confirmState] = useConfirmAdmissionFeeSelectionOnboardingMutation();
   const [confirmationError, setConfirmationError] = useState<string>();
   const state = query.currentData;
-  const feeDetails = useBoolean();
+  useApplicationStageReadiness(onReadinessChange, {
+    stageId: completionStageId ?? '',
+    canComplete: Boolean(
+      canRead &&
+      !readOnly &&
+      !editing &&
+      state?.selection &&
+      !query.isError &&
+      (!completionStageId || state.currentStageId === completionStageId)
+    ),
+    // The inline editor must stay interactive; editing blocks completion, not the workspace.
+    busy: query.isFetching || continuing,
+    concurrencyStamp: state?.concurrencyStamp,
+  });
 
   if (!canRead || !applicationId) return null;
   if (query.isLoading || (!state && query.isFetching))
@@ -125,6 +151,7 @@ export default function AdmissionFeeSelectionPanel({
     state.canConfirmOnboarding &&
     hasGrantedPermission(permissions, 'Students.Onboarding.Add');
   const { selection } = state;
+  const showEditor = canEdit && (editing || (compact && !selection && !editorDismissed));
 
   return (
     <Box
@@ -138,20 +165,43 @@ export default function AdmissionFeeSelectionPanel({
     >
       <Stack spacing={compact ? 1 : 1.5}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-          <Typography variant={compact ? 'subtitle2' : 'subtitle1'}>
-            Fee structure{state.isRequired && !selection ? ' *' : ''}
-          </Typography>
-          {canEdit && !editing && (
-            <Button
-              size="small"
-              variant={compact && !selection ? 'contained' : 'outlined'}
-              sx={compact ? { alignSelf: 'flex-start' } : undefined}
-              disabled={query.isFetching || query.isError || continuing}
-              onClick={() => setEditing(true)}
-            >
-              {selection ? 'Change fee structure' : 'Select fee structure'}
-            </Button>
-          )}
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle1">
+              {compact && mode === 'admissions' ? 'Fee structure confirmation' : 'Fee structure'}
+              {state.isRequired && !selection ? ' *' : ''}
+            </Typography>
+            {mode === 'admissions' && (
+              <CustomTooltip title="Confirm the published fee structure and any optional fee heads. Finance handles fee assignment, dues and payment separately.">
+                <IconButton size="small" color="info" aria-label="Fee structure information">
+                  <Iconify icon="mdi:information-outline" width={16} />
+                </IconButton>
+              </CustomTooltip>
+            )}
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            {mode === 'admissions' && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:refresh" width={16} />}
+                disabled={query.isFetching || continuing || editing}
+                onClick={() => query.refetch()}
+              >
+                Refresh
+              </Button>
+            )}
+            {canEdit && !showEditor && (
+              <Button
+                size="small"
+                variant={compact && !selection ? 'contained' : 'outlined'}
+                sx={compact ? { alignSelf: 'flex-start' } : undefined}
+                disabled={query.isFetching || query.isError || continuing}
+                onClick={() => setEditing(true)}
+              >
+                {selection ? 'Change fee structure' : 'Select fee structure'}
+              </Button>
+            )}
+          </Stack>
         </Stack>
         {query.isFetching && <LinearProgress aria-label="Refreshing fee structure" />}
         {query.isError && (
@@ -167,12 +217,15 @@ export default function AdmissionFeeSelectionPanel({
             before saving or confirming.
           </Alert>
         )}
-        {editing && canEdit ? (
+        {showEditor ? (
           <AdmissionFeeSelectionEditor
             key={applicationId}
             state={state}
             disabled={query.isError || query.isFetching || continuing}
-            onClose={() => setEditing(false)}
+            onClose={() => {
+              setEditing(false);
+              setEditorDismissed(true);
+            }}
             onEditorStateChange={onEditorStateChange}
             compact={compact}
           />
@@ -185,15 +238,31 @@ export default function AdmissionFeeSelectionPanel({
               Fee structure confirmed {fDateTime(selection.savedAt)}
               {state.ownerStageName ? ` in ${state.ownerStageName}` : ''}
             </Typography>
-            {compact ? (
-              <CustomAccordion
-                title="Published fee heads"
-                expanded={feeDetails.value}
-                onChange={feeDetails.onToggle}
-                content={
+            {compact && mode === 'admissions' ? (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    lg: 'minmax(0, 1.2fr) minmax(0, 1fr)',
+                  },
+                  gap: 1.5,
+                }}
+              >
+                <Stack
+                  spacing={1.5}
+                  sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }}
+                >
+                  <Typography variant="subtitle2">Published fee heads</Typography>
                   <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
-                }
-              />
+                </Stack>
+                <AdmissionFeeSelectionSummary
+                  structureName={selection.structureName}
+                  revisionNumber={selection.revisionNumber}
+                  heads={selection.heads}
+                  currency={selection.currency}
+                />
+              </Box>
             ) : (
               <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
             )}
@@ -295,31 +364,4 @@ export default function AdmissionFeeSelectionPanel({
   );
 }
 
-export function AdmissionFeeHeads({
-  heads,
-  currency,
-}: {
-  heads: AdmissionFeeHead[];
-  currency: string | null;
-}) {
-  return (
-    <Stack component="ul" spacing={1} sx={{ m: 0, pl: 2.5 }} aria-label="Selected fee heads">
-      {heads.map((head) => (
-        <Box component="li" key={head.feeHeadId} sx={{ overflowWrap: 'anywhere' }}>
-          <Typography variant="body2">
-            {head.feeHeadName} ·{' '}
-            {currency
-              ? head.isVariable
-                ? 'Entered during Finance assignment'
-                : fCurrency(head.configuredAmount ?? 0, { currency })
-              : head.isVariable
-                ? 'Entered during Finance assignment'
-                : fNumber(head.configuredAmount ?? 0)}
-            {head.isOptional ? ' · Optional' : ' · Mandatory'}
-            {head.isOneTime ? ' · One-time' : ''}
-          </Typography>
-        </Box>
-      ))}
-    </Stack>
-  );
-}
+export { AdmissionFeeHeads } from './admission-fee-selection-summary';

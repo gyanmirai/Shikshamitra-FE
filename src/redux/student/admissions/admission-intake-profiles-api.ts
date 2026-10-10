@@ -96,7 +96,7 @@ export type SaveAdmissionIntakeSetupInput = {
 export type AdmissionPublicInquiryLink = {
   id: string;
   admissionCycleId: string;
-  counsellorAssignmentProfileId: string;
+  counsellorAssignmentProfileId: string | null;
   inquiryFormDefinitionId?: string | null;
   name: string;
   source: number;
@@ -114,7 +114,7 @@ export type CreateAdmissionPublicInquiryLink = Omit<
 export type CreatedAdmissionPublicInquiryLink = AdmissionPublicInquiryLink & { token: string };
 
 export type AdmissionPublicInquiryLinkOption = {
-  counsellorAssignmentProfileId: string;
+  counsellorAssignmentProfileId: string | null;
   inquiryFormDefinitionId: string;
 };
 
@@ -129,8 +129,14 @@ const setupBaseUrl = '/student/enrollment/admissions/intake-setups';
 
 export const admissionIntakeProfilesApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAdmissionIntakeCounsellors: builder.query<IntakeCounsellorChoice[], void>({
-      query: () => '/student/enrollment/admissions/intake-profiles/counsellors',
+    getAdmissionIntakeCounsellors: builder.query<
+      IntakeCounsellorChoice[],
+      { counsellorOnly?: boolean } | void
+    >({
+      query: (params) => ({
+        url: '/student/enrollment/admissions/intake-profiles/counsellors',
+        params: params || undefined,
+      }),
       transformResponse: (response: Envelope<IntakeCounsellorChoice[]>) => unwrap(response),
       providesTags: [tag],
     }),

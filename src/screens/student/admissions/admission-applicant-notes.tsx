@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
@@ -12,16 +14,24 @@ import {
   useUpdateAdmissionApplicantNoteMutation,
 } from 'src/redux/student/admissions/admission-applicants-api';
 
-type Note = { id: string; text: string; creationTime: string; lastEditedAt?: string | null };
+export type ApplicantNote = {
+  id: string;
+  text: string;
+  creationTime: string;
+  lastEditedAt?: string | null;
+};
 type Props = {
   applicantId: string;
-  notes: Note[];
+  notes: ApplicantNote[];
   embedded?: boolean;
   readOnly?: boolean;
   disabled?: boolean;
   compact?: boolean;
   onBusyChange?: (busy: boolean) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  showEditor?: boolean;
+  onEditStart?: () => void;
+  renderHistory?: (onEdit: (note: ApplicantNote) => void) => ReactNode;
 };
 
 export default function AdmissionApplicantNotes({
@@ -33,6 +43,9 @@ export default function AdmissionApplicantNotes({
   compact = false,
   onBusyChange,
   onDirtyChange,
+  showEditor = true,
+  onEditStart,
+  renderHistory,
 }: Props) {
   const [text, setText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,6 +53,12 @@ export default function AdmissionApplicantNotes({
   const [updateNote, updateState] = useUpdateAdmissionApplicantNoteMutation();
   const isSaving = createState.isLoading || updateState.isLoading;
   const busy = disabled || isSaving;
+  const editNote = (note: ApplicantNote) => {
+    if (readOnly || busy) return;
+    setEditingId(note.id);
+    setText(note.text);
+    onEditStart?.();
+  };
   useEffect(() => {
     onBusyChange?.(isSaving);
   }, [isSaving, onBusyChange]);
@@ -73,7 +92,7 @@ export default function AdmissionApplicantNotes({
           </Typography>
         </Box>
       )}
-      {!readOnly && (
+      {!readOnly && showEditor && (
         <TextField
           size="small"
           multiline
@@ -89,8 +108,8 @@ export default function AdmissionApplicantNotes({
           helperText={`${text.length}/2000 characters`}
         />
       )}
-      {!readOnly && (
-        <Stack direction="row" spacing={1}>
+      {!readOnly && showEditor && (
+        <Stack direction="row" spacing={1} justifyContent={renderHistory ? 'flex-end' : undefined}>
           <LoadingButton
             size="small"
             loading={isSaving}
@@ -120,7 +139,9 @@ export default function AdmissionApplicantNotes({
           )}
         </Stack>
       )}
-      {notes.length ? (
+      {renderHistory ? (
+        renderHistory(editNote)
+      ) : notes.length ? (
         <Stack spacing={1.5}>
           {notes.map((note) => (
             <Paper key={note.id} variant="outlined" sx={{ p: 1.5 }}>

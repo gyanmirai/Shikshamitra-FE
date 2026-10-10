@@ -53,6 +53,40 @@ vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }))
 const student = studentOnboardingTestData[0];
 
 describe('Student Setup drawer readiness UI', () => {
+  it('offers assignment for a pending division and change only after an actual placement', () => {
+    const onAssignDivision = vi.fn();
+    const pendingStudent = {
+      ...student,
+      source: 'onboarding-case' as const,
+      divisionId: null,
+      divisionName: 'Pending',
+      studentEnrollmentId: null,
+    };
+    const { rerender } = render(
+      <StudentSetupDrawer
+        open
+        canManage
+        student={pendingStudent}
+        onClose={vi.fn()}
+        onAssignDivision={onAssignDivision}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Details' }));
+    expect(screen.queryByRole('button', { name: 'Change Division' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Assign Division' }));
+    expect(onAssignDivision).toHaveBeenCalledOnce();
+    rerender(
+      <StudentSetupDrawer
+        open
+        canManage
+        student={{ ...pendingStudent, divisionId: 'division-a', divisionName: 'A' }}
+        onClose={vi.fn()}
+        onAssignDivision={onAssignDivision}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Change Division' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Assign Division' })).not.toBeInTheDocument();
+  });
   it('shows only GR requirements and actions from the GR tab', () => {
     render(<StudentSetupDrawer open taskView="gr-number" canManage student={{ ...student, source: 'onboarding-case', backendStatus: 1 }} onClose={vi.fn()} onAssignGrNumber={vi.fn()} />);
     expect(screen.getByRole('heading', { name: 'GR number' })).toBeInTheDocument();

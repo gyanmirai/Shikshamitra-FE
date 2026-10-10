@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { studentPaths } from 'src/constants/student-menu';
 
 import { isNavigationPathActive } from './path-utils';
 
@@ -7,6 +8,21 @@ describe('isNavigationPathActive', () => {
 
   it('matches the navigation item route exactly', () => {
     expect(isNavigationPathActive(seatingPlanPath, seatingPlanPath, true)).toBe(true);
+  });
+
+  it('keeps Pipeline active and other working menus inactive in Applicant 360', () => {
+    const page = `${studentPaths.enrollment.applicantWorkspace('app-id')}?returnTo=encoded-list`;
+    expect(isNavigationPathActive(page, studentPaths.enrollment.pipeline, true)).toBe(true);
+    expect(isNavigationPathActive(page, studentPaths.enrollment.applications, true)).toBe(false);
+    expect(isNavigationPathActive(page, studentPaths.enrollment.inquiries, true)).toBe(false);
+    expect(isNavigationPathActive(page, studentPaths.enrollment.assessments, true)).toBe(false);
+  });
+
+  it('keeps Applications active after the decision phase handoff', () => {
+    const page = `${studentPaths.enrollment.decisionWorkspace('app-id')}?returnTo=encoded-list`;
+    expect(isNavigationPathActive(page, studentPaths.enrollment.applications, true)).toBe(true);
+    expect(isNavigationPathActive(page, studentPaths.enrollment.pipeline, true)).toBe(false);
+    expect(isNavigationPathActive(page, studentPaths.enrollment.inquiries, true)).toBe(false);
   });
 
   it('matches a nested guided setup route when descendant matching is enabled', () => {
@@ -24,14 +40,14 @@ describe('isNavigationPathActive', () => {
   });
 
   it('does not treat a similarly prefixed route as a descendant', () => {
-    expect(
-      isNavigationPathActive('/academic/seatallocation-archive', seatingPlanPath, true)
-    ).toBe(false);
+    expect(isNavigationPathActive('/academic/seatallocation-archive', seatingPlanPath, true)).toBe(
+      false
+    );
   });
 
   it('does not match descendants when descendant matching is disabled', () => {
-    expect(
-      isNavigationPathActive('/academic/seatallocation/exam-id/setup', seatingPlanPath)
-    ).toBe(false);
+    expect(isNavigationPathActive('/academic/seatallocation/exam-id/setup', seatingPlanPath)).toBe(
+      false
+    );
   });
 });

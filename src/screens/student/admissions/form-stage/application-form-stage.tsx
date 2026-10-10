@@ -1,5 +1,6 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
@@ -20,6 +21,9 @@ import { AdmissionQueryError } from '../admission-query-error';
 import { FormStageSectionList } from './form-stage-section-list';
 import { FormStageReasonDialog } from './form-stage-reason-dialog';
 import { useApplicationFormStage } from './hooks/use-application-form-stage';
+import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
+
+import type { ApplicationStageReadinessHandler } from '../application-detail/application-stage-readiness';
 
 export function ApplicationFormStage({
   applicationId,
@@ -28,6 +32,8 @@ export function ApplicationFormStage({
   advancing,
   onComplete,
   compact = false,
+  showCompletionAction = true,
+  onReadinessChange,
 }: {
   applicationId: string;
   stage: AdmissionApplicationStage;
@@ -35,6 +41,8 @@ export function ApplicationFormStage({
   advancing: boolean;
   onComplete: () => void;
   compact?: boolean;
+  showCompletionAction?: boolean;
+  onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
   const {
     action,
@@ -47,38 +55,48 @@ export function ApplicationFormStage({
     canEdit,
     canReopen,
   } = useApplicationFormStage({ applicationId, stageId: stage.id, advancing });
+  useApplicationStageReadiness(onReadinessChange, {
+    stageId: stage.id,
+    canComplete: Boolean(summary?.canComplete && !query.isError),
+    busy: busy || Boolean(action),
+    concurrencyStamp: summary?.concurrencyStamp,
+  });
   const renderVerification = () =>
     summary && (
       <Stack spacing={1.5}>
-        <Stack direction="row" flexWrap="wrap" gap={1}>
-          {!compact && (
-            <Chip size="small" label={`Owner: ${summary.policy?.responsibility ?? 'applicant'}`} />
-          )}
-          {!compact && (
-            <Chip
-              size="small"
-              label={`Submissions: ${summary.submissionAttempts}/${summary.policy?.maxSubmissionAttempts ?? 1}`}
-            />
-          )}
-          {compact && (
-            <Typography variant="caption" color="text.secondary">
-              {summary.submissionAttempts} of {summary.policy?.maxSubmissionAttempts ?? 1}{' '}
-              submission attempts used
-            </Typography>
-          )}
-          {summary.dueAt && (
-            <Chip
-              size="small"
-              color={summary.isOverdue ? 'error' : 'default'}
-              label={`Due ${new Date(summary.dueAt).toLocaleDateString()}`}
-            />
-          )}
-        </Stack>
-        {summary.blockers.length > 0 && (
-          <Alert severity={summary.isOverdue ? 'error' : 'info'}>
-            {summary.blockers.join(' ')}
-          </Alert>
+        {(!compact || summary.dueAt) && (
+          <Stack direction="row" flexWrap="wrap" gap={1}>
+            {!compact && (
+              <Chip
+                size="small"
+                label={`Owner: ${summary.policy?.responsibility ?? 'applicant'}`}
+              />
+            )}
+            {!compact && (
+              <Chip
+                size="small"
+                label={`Submissions: ${summary.submissionAttempts}/${summary.policy?.maxSubmissionAttempts ?? 1}`}
+              />
+            )}
+            {summary.dueAt && (
+              <Chip
+                size="small"
+                color={summary.isOverdue ? 'error' : 'default'}
+                label={`Due ${new Date(summary.dueAt).toLocaleDateString()}`}
+              />
+            )}
+          </Stack>
         )}
+        {summary.blockers.length > 0 &&
+          (compact && !summary.isOverdue ? (
+            <Typography variant="body2" color="text.secondary" role="status">
+              {summary.blockers.join(' ')}
+            </Typography>
+          ) : (
+            <Alert severity={summary.isOverdue ? 'error' : 'info'}>
+              {summary.blockers.join(' ')}
+            </Alert>
+          ))}
         <FormStageSectionList
           sections={summary.sections}
           disabled={busy || !summary.canVerify || !canEdit}
@@ -90,7 +108,7 @@ export function ApplicationFormStage({
           <Button
             size="small"
             variant="outlined"
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{ alignSelf: compact ? 'flex-end' : 'flex-start' }}
             disabled={busy || !summary.canRequestCorrection}
             onClick={() => setAction({ type: 'correction' })}
           >
@@ -116,13 +134,9 @@ export function ApplicationFormStage({
               </Typography>
             </div>
             {summary && (
-              <Chip
-                size="small"
-                color={summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'info'}
-                label={
-                  summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In progress'
-                }
-              />
+              <Label color={summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'info'}>
+                {summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'In progress'}
+              </Label>
             )}
           </Stack>
         )}
@@ -139,11 +153,16 @@ export function ApplicationFormStage({
                 defaultExpanded={summary.formStatus === 1}
                 disabled={busy}
                 disableGutters
-                sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}
+                sx={{
+                  bgcolor: 'transparent',
+                  boxShadow: 'none',
+                  border: 0,
+                  '&:before': { display: 'none' },
+                }}
               >
                 <AccordionSummary
                   expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}
-                  sx={{ px: 0 }}
+                  sx={{ px: 0, minHeight: 44, '& .MuiAccordionSummary-content': { my: 0.5 } }}
                 >
                   <Stack
                     direction="row"
@@ -152,23 +171,17 @@ export function ApplicationFormStage({
                     flexWrap="wrap"
                     sx={{ width: 1 }}
                   >
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography variant="subtitle2">Section verification</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {summary.formStatus === 1
                           ? `${summary.sections.filter((section) => section.required && section.verified).length} of ${summary.sections.filter((section) => section.required).length} required sections verified`
                           : 'Submit the application before staff verification.'}
+                        {' · '}
+                        {summary.submissionAttempts} of {summary.policy?.maxSubmissionAttempts ?? 1}{' '}
+                        submission attempts used
                       </Typography>
                     </Box>
-                    <Chip
-                      size="small"
-                      color={
-                        summary.canComplete ? 'success' : summary.isOverdue ? 'error' : 'default'
-                      }
-                      label={
-                        summary.canComplete ? 'Ready' : summary.isOverdue ? 'Overdue' : 'Pending'
-                      }
-                    />
                   </Stack>
                 </AccordionSummary>
                 <AccordionDetails sx={{ p: 0, pt: 1 }}>{renderVerification()}</AccordionDetails>
@@ -177,7 +190,7 @@ export function ApplicationFormStage({
               renderVerification()
             )}
             <Stack direction="row" justifyContent={compact ? 'flex-end' : 'flex-start'} spacing={1}>
-              {canAdvance && (
+              {showCompletionAction && canAdvance && (
                 <Button
                   size="small"
                   variant="contained"

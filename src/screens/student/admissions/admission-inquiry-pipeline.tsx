@@ -21,9 +21,9 @@ import {
 
 import { AdmissionQueryError } from './admission-query-error';
 import { getAdmissionApplicationStatusLabel } from './application-status';
-import AdmissionApplicationDetailScreen from './admission-application-detail';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
+import { ApplicationWorkspaceRedirect } from './application-detail/application-workspace-redirect';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
@@ -41,6 +41,7 @@ export default function AdmissionInquiryPipelineScreen() {
   const academic = useAdmissionAcademicFilters();
   const router = useRouter();
   const params = useSearchParams();
+  const applicationId = params.get('application');
   const state = readAdmissionPipelineState(params);
   const permissions = useSelector((value: RootState) => value.auth.permissions);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
@@ -60,7 +61,12 @@ export default function AdmissionInquiryPipelineScreen() {
     mediumId: academic.mediumId || undefined,
     ...academicClassFilterInput(academic.standardId),
   };
-  const skip = !canView || !academic.academicYearId || !academic.boardId || !academic.mediumId;
+  const skip =
+    Boolean(applicationId) ||
+    !canView ||
+    !academic.academicYearId ||
+    !academic.boardId ||
+    !academic.mediumId;
   const optionsQuery = useGetAdmissionPipelineOptionsQuery(academicInput, {
     skip,
     refetchOnMountOrArgChange: true,
@@ -86,21 +92,18 @@ export default function AdmissionInquiryPipelineScreen() {
     (id: string) => admissionPipelineApplicationUrl(id, new URLSearchParams(params.toString())),
     [params]
   );
-  const openDrawer = useCallback(
+  const openWorkspace = useCallback(
     (id: string) => {
-      if (canView)
-        router.push(
-          admissionPipelineUrl(new URLSearchParams(params.toString()), { application: id }, false),
-          { scroll: false }
-        );
+      if (canView) router.push(applicationUrl(id), { scroll: false });
     },
-    [canView, params, router]
+    [canView, applicationUrl, router]
   );
   const columns = useMemo(
-    () => buildAdmissionPipelineColumns(applicationUrl, openDrawer),
-    [applicationUrl, openDrawer]
+    () => buildAdmissionPipelineColumns(applicationUrl, openWorkspace),
+    [applicationUrl, openWorkspace]
   );
   useEffect(() => {
+    if (applicationId) return;
     if (previousYear.current !== academic.academicYearId) {
       previousYear.current = academic.academicYearId;
       update({
@@ -119,9 +122,17 @@ export default function AdmissionInquiryPipelineScreen() {
       state.page * state.rowsPerPage >= data.totalCount
     )
       update({ page: String(Math.max(1, Math.ceil(data.totalCount / state.rowsPerPage))) }, false);
-  }, [academic.academicYearId, data, listQuery.isFetching, state.page, state.rowsPerPage, update]);
+  }, [
+    applicationId,
+    academic.academicYearId,
+    data,
+    listQuery.isFetching,
+    state.page,
+    state.rowsPerPage,
+    update,
+  ]);
   const openApplication = (row: AdmissionPipelineItem) => {
-    openDrawer(row.id);
+    openWorkspace(row.id);
   };
   const hasFilters = Boolean(
     state.search ||
@@ -132,6 +143,19 @@ export default function AdmissionInquiryPipelineScreen() {
     academic.mediumId ||
     academic.standardId
   );
+
+  if (canView && applicationId) {
+    return (
+      <ApplicationWorkspaceRedirect
+        applicationId={applicationId}
+        returnTo={admissionPipelineUrl(
+          new URLSearchParams(params.toString()),
+          { application: undefined },
+          false
+        )}
+      />
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
@@ -157,7 +181,7 @@ export default function AdmissionInquiryPipelineScreen() {
               href={studentPaths.enrollment.applications}
               variant="outlined"
             >
-              View all applications
+              Open Applications
             </Button>
           )
         }
@@ -340,22 +364,6 @@ export default function AdmissionInquiryPipelineScreen() {
             </Box>
           )}
         </>
-      )}
-      {canView && params.get('application') && (
-        <AdmissionApplicationDetailScreen
-          key={params.get('application')}
-          applicationId={params.get('application')!}
-          onClose={() =>
-            router.replace(
-              admissionPipelineUrl(
-                new URLSearchParams(params.toString()),
-                { application: undefined },
-                false
-              ),
-              { scroll: false }
-            )
-          }
-        />
       )}
     </Box>
   );

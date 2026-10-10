@@ -34,7 +34,15 @@ export function AssessmentPanelActions({
     { action: 'waive', allowed: assessment.canWaive && permissions.waive },
   ];
   return (
-    <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+    <Stack
+      direction="row"
+      spacing={1}
+      useFlexGap
+      sx={{
+        flexWrap: 'wrap',
+        justifyContent: compact && !assessment.attempts.length ? 'center' : 'flex-start',
+      }}
+    >
       {actions
         .filter((item) => item.allowed)
         .map(({ action }) => (
@@ -46,9 +54,11 @@ export function AssessmentPanelActions({
             onClick={() => onAction(action)}
           >
             {compact && action === 'waive'
-              ? 'Waive'
-              : action === 'book' && assessment.policy.schedulingEnabled && !compact
-                ? 'Book session'
+              ? 'Waive assessment'
+              : action === 'book' && assessment.policy.schedulingEnabled
+                ? compact
+                  ? 'Book assessment slot'
+                  : 'Book session'
                 : assessmentActionLabels[action]}
           </Button>
         ))}

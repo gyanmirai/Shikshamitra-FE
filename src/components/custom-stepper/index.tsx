@@ -39,6 +39,8 @@ interface CustomStepperProps {
   ariaLabel?: string;
   stepStates?: ('completed' | 'skipped' | 'error' | 'pending' | 'active')[];
   stepCaptions?: React.ReactNode[];
+  onStepClick?: (index: number) => void;
+  disabled?: boolean;
 }
 
 const CustomStepper: React.FC<CustomStepperProps> = ({
@@ -48,6 +50,8 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
   ariaLabel,
   stepStates,
   stepCaptions,
+  onStepClick,
+  disabled = false,
 }) => (
   <Box sx={{ width: '100%' }}>
     <Stepper
@@ -56,6 +60,7 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
       activeStep={activeStep}
       orientation={orientation}
       alternativeLabel={orientation === 'horizontal'}
+      nonLinear={Boolean(onStepClick)}
       sx={{
         m: 0,
         p: 0,
@@ -81,18 +86,47 @@ const CustomStepper: React.FC<CustomStepperProps> = ({
             }),
           }}
         >
-          <StepLabel
-            error={stepStates?.[index] === 'error'}
-            optional={stepCaptions?.[index]}
-            sx={{
-              '& .MuiStepLabel-label': {
-                typography: 'subtitle2',
-                overflowWrap: 'anywhere',
-              },
-            }}
-          >
-            {label}
-          </StepLabel>
+          {onStepClick ? (
+            <StepButton
+              type="button"
+              disabled={disabled}
+              aria-current={index === activeStep ? 'step' : undefined}
+              onClick={() => onStepClick(index)}
+              sx={{
+                m: 0,
+                p: 1,
+                textAlign: 'left',
+                '&.Mui-focusVisible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
+                },
+              }}
+            >
+              <StepLabel
+                error={stepStates?.[index] === 'error'}
+                optional={stepCaptions?.[index]}
+                sx={{
+                  '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
+                }}
+              >
+                {label}
+              </StepLabel>
+            </StepButton>
+          ) : (
+            <StepLabel
+              error={stepStates?.[index] === 'error'}
+              optional={stepCaptions?.[index]}
+              sx={{
+                '& .MuiStepLabel-label': {
+                  typography: 'subtitle2',
+                  overflowWrap: 'anywhere',
+                },
+              }}
+            >
+              {label}
+            </StepLabel>
+          )}
         </Step>
       ))}
     </Stepper>
