@@ -90,9 +90,22 @@ export function createDashboardStore(permissions = dashboardPermissions) {
     reducer: { auth, globalState, [api.reducerPath]: api.reducer },
     middleware: (defaults) => defaults().concat(api.middleware),
   });
+  store.dispatch(loadUser.pending('test', {}));
   store.dispatch(
     loadUser.fulfilled(
-      { user: { sub: 'teacher-1' }, mainModuleVisibility: [], permissionData: permissions },
+      {
+        user: { sub: 'teacher-1' },
+        mainModuleVisibility: [],
+        permissionData: permissions,
+        sessionContext: {
+          accountMode: 'tenant',
+          tenantId: 'school-1',
+          canViewTenants: false,
+          canCreateTenants: false,
+          canUpdateTenants: false,
+          canManageTenantStatus: false,
+        },
+      },
       'test',
       {}
     )
