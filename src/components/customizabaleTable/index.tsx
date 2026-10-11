@@ -78,6 +78,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   showCheckbox = false,
   onSendNotification = () => {},
   searchFieldProps = {},
+  searchableFields,
   noDataText = <>No data available</>,
   errorContent,
   wrapperProps = {},
@@ -119,6 +120,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSideSearch,
     serverSideSort,
     serverSidePagination: serverSidePagination || !isPagination,
+    searchableFields,
   });
 
   const rowsPerPageOptions = useMemo(() => {

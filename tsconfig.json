@@ -52,6 +52,7 @@
     "**/route.ts",
     "**/overview/page.ts",
     "dist",
-    "build"
+    "build",
+    "build-*"
   ]
 }

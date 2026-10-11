@@ -556,11 +556,6 @@ export const studentOnboardingType = {
   onboardingReconciliation: 'StudentOnboardingReconciliation',
 } as const;
 
-// ===== Student Attendance Rule API (reducerPath: StudentAttendanceRuleApi) =====
-export const studentAttendanceRuleType = {
-  studentAttendanceRule: 'Student-Attendance-Rule',
-} as const;
-
 // ===== Student Attendance Type API (reducerPath: StudentAttendanceTypeApi) =====
 export const studentAttendanceType = {
   studentAttendanceType: 'Student-Attendance-Type',
@@ -751,7 +746,6 @@ export const allTagTypes = {
   ...shiftManagementType,
   ...studentType,
   ...studentAdmissionType,
-  ...studentAttendanceRuleType,
   ...studentAttendanceType,
   ...studentCertificateType,
   ...studentChangeClassType,

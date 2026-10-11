@@ -12,6 +12,14 @@ audience: humans-and-agents
 
 TL;DR: use this page to map the implemented Admissions and Onboarding routes to their screens and visible Student menu entries.
 
+## Attendance settings route
+
+| Area                  | Route                         | Screen                                             | Frontend permission                                                             |
+| --------------------- | ----------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Attendance → Settings | `/student/attendance/setting` | `src/screens/student/attendance/setting/index.tsx` | `Students.Attendance.Setting.LeaveType.View`; Add and Delete govern row actions |
+
+The settings page contains only student leave types. Former `task`, `view`, and policy scope query parameters do not select configuration panels.
+
 ## Admissions route map
 
 | Area                                        | Route                                             | Screen                                                                                 | Frontend permission                                                        |
@@ -56,6 +64,21 @@ Readiness & Access and Numbering & Placement persist scoped rules through `/api/
 Numbering & Placement exposes only GR Number and Roll Number tabs, and Division Changes is removed from the menu.
 Fees stays inside Onboarding and exposes structure selection/confirmation only; Credentials exposes account and email actions.
 Backend services remain authoritative for state changes and permissions.
+
+## Student Records route map
+
+The Student Records menu has five submodules. Existing Records workflow URLs remain available for actions linked from a record, but are not separate menu entries.
+
+| Submodule          | Route                             | Screen                                                                         | Permission                                |
+| ------------------ | --------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------- |
+| Student List       | `/student/profile`                | `src/screens/student/studentProfile/index.tsx`                                 | `Students.Records.StudentList.View`       |
+| Student I-Card     | `/student/student-i-card`         | `src/screens/student/records/student-record-documents.tsx` in ID mode          | `Students.Records.StudentICard.View`      |
+| Certificates       | `/student/certificates`           | `src/screens/student/records/student-record-documents.tsx` in certificate mode | `Students.Records.Certificates.View`      |
+| Reports            | `/student/reports`                | `src/screens/student/reports/index.tsx`                                        | `Students.Records.Reports.View`           |
+| Settings           | `/student/studentRecords/setting` | `src/screens/student/recordsSetting/index.tsx`                                 | `Students.Records.Settings.View`          |
+
+I-Card and Certificates use the persisted document APIs rather than the sample rows in the earlier screens. Server permissions and school Records policy still control issuance and record changes.
+The Student I-Card Create action opens a five-step builder (Template, Designer, Students, Review, Export). The Students step uses multiple Board, Medium, Class and Division selections and retains up to 100 selected students across directory pages. Export downloads a bulk A4 PDF; Issue writes numbered cards to history.
 
 ## Menu ownership
 

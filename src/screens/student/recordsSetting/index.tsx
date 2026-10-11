@@ -42,7 +42,7 @@ import {
   useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
-import type { IGroup } from '../management/group-managemnet/type';
+import type { IGroup } from './type';
 
 const HouseSetting = () => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);

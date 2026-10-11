@@ -58,6 +58,7 @@ import { recordsQueryUrl } from './records-url-state';
 import RecordDocumentTemplates from './record-document-templates';
 import RecordDocumentFilters from './components/record-document-filters';
 import DocumentHistoryActions from './components/document-history-actions';
+import StudentICardBuilder from './student-icard-builder';
 
 type HistoryRow = {
   id: string;
@@ -67,12 +68,18 @@ type HistoryRow = {
   status: string;
 };
 
-export default function StudentRecordDocuments() {
+export default function StudentRecordDocuments({
+  fixedKind,
+}: {
+  fixedKind?: 'ids' | 'certificates';
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const kind = params.get('view') === 'ids' ? 'ids' : 'certificates';
+  const kind = fixedKind ?? (params.get('view') === 'ids' ? 'ids' : 'certificates');
+  const pageTitle =
+    fixedKind === 'ids' ? 'Student I-Card' : fixedKind ? 'Certificates' : 'Documents & IDs';
   const studentId = params.get('student') ?? '';
   const canView = hasGrantedPermission(
     permissions,
@@ -94,6 +101,7 @@ export default function StudentRecordDocuments() {
   const [batch, setBatch] = useState<StudentDirectoryItem[]>([]);
   const [idPreview, setIdPreview] = useState<IdCard[]>([]);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [decision, setDecision] = useState<{
     action: 'Reprint' | 'Void' | 'Duplicate';
@@ -318,61 +326,72 @@ export default function StudentRecordDocuments() {
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Documents & IDs"
-        description="Preview, issue, and track student certificates and identity cards."
+        heading={pageTitle}
+        description={
+          fixedKind === 'ids'
+            ? 'Preview, issue, and track student identity cards.'
+            : fixedKind === 'certificates'
+              ? 'Preview, issue, and track student certificates.'
+              : 'Preview, issue, and track student certificates and identity cards.'
+        }
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
-          { name: 'Documents & IDs' },
+          { name: pageTitle },
         ]}
         action={
           canIssue ? (
-            <Button onClick={() => setTemplatesOpen(true)}>Configure template</Button>
+            <Button onClick={() => kind === 'ids' ? setBuilderOpen(true) : setTemplatesOpen(true)}>
+              {kind === 'ids' ? 'Create Student I-Card' : 'Configure template'}
+            </Button>
           ) : undefined
         }
       />
-      <Paper sx={{ borderRadius: 1.5, flexShrink: 0 }}>
-        <CustomTabs
-          value={kind}
-          aria-label="Student documents"
-          sx={{ borderRadius: 1.5 }}
-          slotProps={{ flexContainer: { gap: 1 }, tab: { px: 1 } }}
-        >
-          <Tab
-            value="certificates"
-            label="Certificates"
-            icon={<Iconify icon="solar:document-bold-duotone" />}
-            iconPosition="start"
-            component={RouterLink}
-            href={recordsQueryUrl(pathname, params.toString(), { view: 'certificates' })}
-            id="certificates-tab"
-            aria-controls="documents-panel"
-          />
-          <Tab
-            value="ids"
-            label="Identity cards"
-            icon={<Iconify icon="solar:card-bold-duotone" />}
-            iconPosition="start"
-            component={RouterLink}
-            href={recordsQueryUrl(pathname, params.toString(), { view: 'ids' })}
-            id="ids-tab"
-            aria-controls="documents-panel"
-          />
-        </CustomTabs>
-      </Paper>
+      {!fixedKind && (
+        <Paper sx={{ borderRadius: 1.5, flexShrink: 0 }}>
+          <CustomTabs
+            value={kind}
+            aria-label="Student documents"
+            sx={{ borderRadius: 1.5 }}
+            slotProps={{ flexContainer: { gap: 1 }, tab: { px: 1 } }}
+          >
+            <Tab
+              value="certificates"
+              label="Certificates"
+              icon={<Iconify icon="solar:document-bold-duotone" />}
+              iconPosition="start"
+              component={RouterLink}
+              href={recordsQueryUrl(pathname, params.toString(), { view: 'certificates' })}
+              id="certificates-tab"
+              aria-controls="documents-panel"
+            />
+            <Tab
+              value="ids"
+              label="Identity cards"
+              icon={<Iconify icon="solar:card-bold-duotone" />}
+              iconPosition="start"
+              component={RouterLink}
+              href={recordsQueryUrl(pathname, params.toString(), { view: 'ids' })}
+              id="ids-tab"
+              aria-controls="documents-panel"
+            />
+          </CustomTabs>
+        </Paper>
+      )}
       {!canView ? (
         <Alert severity="warning">You do not have permission to view this document type.</Alert>
       ) : (
         <Box
           id="documents-panel"
           role="tabpanel"
-          aria-labelledby={`${kind}-tab`}
+          aria-labelledby={fixedKind ? undefined : `${kind}-tab`}
+          aria-label={fixedKind ? pageTitle : undefined}
           sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
         >
           <RecordDocumentFilters
             kind={kind}
             busy={busy}
-            canIssue={canIssue}
+            canIssue={canIssue && fixedKind !== 'ids'}
             certificateType={certificateType}
             reason={reason}
             transitionId={transitionId}
@@ -407,7 +426,7 @@ export default function StudentRecordDocuments() {
               );
               setCertificatePreview(null);
               setTransitionId('');
-              if (student && kind === 'ids') {
+              if (student && kind === 'ids' && fixedKind !== 'ids') {
                 setBatch((previous) =>
                   previous.some((s) => s.studentId === student.studentId)
                     ? previous
@@ -520,6 +539,11 @@ export default function StudentRecordDocuments() {
         certificateType={certificateType}
         onClose={() => setTemplatesOpen(false)}
       />
+      <CustomDialog fullScreen hasForm={false} title="Create Student I-Card" open={builderOpen} handleClose={() => setBuilderOpen(false)}>
+        <Box sx={{ flex: 1, minHeight: 0, p: 1, bgcolor: 'background.neutral' }}>
+          {builderOpen && <StudentICardBuilder onClose={() => setBuilderOpen(false)} />}
+        </Box>
+      </CustomDialog>
       <CustomDialog
         open={!!decision}
         handleClose={() => {

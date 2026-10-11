@@ -3,11 +3,6 @@ import path from 'node:path';
 import { it, expect, describe } from 'vitest';
 
 import { parseStudentDashboardPayload } from '.';
-import { normalizeStudentRecordListResponse } from './student-group/student-group';
-import {
-  hasRollNumberValidationErrors,
-  buildRollNumberValidationErrors,
-} from '../../screens/student/management/roll-generation/roll-number-validation';
 
 const repoRoot = path.resolve(__dirname, '../../..');
 
@@ -33,31 +28,6 @@ describe('student production API wiring', () => {
     expect(source).toContain("queryParams.set('skipCount'");
     expect(source).toContain("queryParams.set('maxResultCount'");
     expect(source).toContain("queryParams.set('searchTerm'");
-  });
-
-  it('normalizes house assignment student records while preserving response metadata', () => {
-    const normalized = normalizeStudentRecordListResponse({
-      success: true,
-      data: {
-        totalCount: 2,
-        currentPage: 1,
-        pageSize: 10,
-        totalPages: 1,
-        arrangementType: 1,
-        arrangementBy: 2,
-        items: [{ id: 'first' }, { id: 'second' }],
-      },
-    });
-
-    expect(normalized.data).toEqual([{ id: 'first' }, { id: 'second' }]);
-    expect(normalized.meta).toEqual({
-      totalCount: 2,
-      currentPage: 1,
-      pageSize: 10,
-      totalPages: 1,
-      arrangementType: 1,
-      arrangementBy: 2,
-    });
   });
 
   it('uses upload and dashboard endpoints owned by student records', () => {
@@ -145,44 +115,10 @@ describe('student production API wiring', () => {
     expect(registrationSource).toContain(registrationDocumentEndpoint);
   });
 
-  it('validates manual roll numbers against duplicates, positive values, and student count', () => {
-    const errors = buildRollNumberValidationErrors(
-      [
-        { studentId: 'first', rollNo: 1 },
-        { studentId: 'second', rollNo: 1 },
-        { studentId: 'third', rollNo: 4 },
-        { studentId: 'fourth', rollNo: 0 },
-      ],
-      3
-    );
-
-    expect(errors.first).toBe('Duplicate Roll No!');
-    expect(errors.second).toBe('Duplicate Roll No!');
-    expect(errors.third).toBe('Roll No. cannot exceed total students (3).');
-    expect(errors.fourth).toBe('Roll No. must be greater than zero.');
-    expect(hasRollNumberValidationErrors(errors)).toBe(true);
-    expect(buildRollNumberValidationErrors([{ studentId: 'first', rollNo: 1 }], 1)).toEqual({});
-  });
-
-  it('uses parsed API problem details for Student management submit errors', () => {
-    const rollSource = readSource('src/screens/student/management/roll-generation/index.tsx');
-    const grSource = readSource('src/screens/student/management/gr-generation/index.tsx');
-    const houseSource = readSource('src/screens/student/recordsSetting/index.tsx');
-
-    expect(rollSource).toContain('parseApiProblemDetail(err)');
-    expect(rollSource).toContain('Please fix roll number validation errors before saving.');
-    expect(rollSource).toContain('disabled={!isChanges || hasRollErrors}');
-    expect(grSource).toContain('parseApiProblemDetail(error)');
-    expect(houseSource).toContain('parseApiProblemDetail(error)');
-    expect(grSource).not.toContain("message: 'Something went wrong'");
-    expect(houseSource).not.toContain("message: 'Something went wrong'");
-  });
-
   it('does not reintroduce 100-row capped student record fetches on changed screens', () => {
     const changedScreens = [
       'src/screens/student/upload-student-photo/index.tsx',
       'src/screens/student/upload-student-documents/index.tsx',
-      'src/screens/student/management/bulk-data-update/index.tsx',
     ];
 
     const offenders = changedScreens.filter((relativePath) =>

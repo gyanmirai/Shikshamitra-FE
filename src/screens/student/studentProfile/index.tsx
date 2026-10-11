@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Board, Division, Standards, Organization } from 'src/types/school';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import dayjs from 'dayjs';
@@ -158,12 +158,43 @@ const mapStudentRecordStatus = (item: any) => {
   return item?.status ?? RegistrationStatusType.Active;
 };
 
+const filterControlSx = {
+  width: { xs: '100%', sm: 'calc(50% - 4px)', md: 'calc(20% - 7px)' },
+};
+
 export function StudentProfile() {
   // Dialog state for student ID card
   const statusDialog = useBoolean();
   const dialogForAssignFeeStructure = useBoolean();
   const [selectedStudentForStatus, setSelectedStudentForStatus] = useState<any>(null);
   const [selectedStudentForFee, setSelectedStudentForFee] = useState<any>(null);
+
+  const { currentYear, currentBoard, currentMedium } = useSelector(
+    (state: RootState) => state.globalState
+  );
+  const boards: Board[] = currentYear?.boards ?? [];
+  const [boardId, setBoardId] = useState<string>(currentBoard?.id ?? '');
+  const [mediumId, setMediumId] = useState<string>(currentMedium?.id ?? '');
+  const board =
+    boards.find((item) => item.id === boardId) ??
+    boards.find((item) => item.id === currentBoard?.id) ??
+    boards[0];
+  const mediums = board?.educationMediums ?? [];
+  const selectedMedium =
+    mediums.find((item) => item.id === mediumId) ??
+    mediums.find((item) => item.id === currentMedium?.id) ??
+    mediums[0];
+  const medium =
+    selectedMedium &&
+    selectedMedium.id === currentMedium?.id &&
+    !selectedMedium.educationMediumStages?.length
+      ? currentMedium
+      : selectedMedium;
+
+  useEffect(() => {
+    setBoardId(currentBoard?.id ?? '');
+    setMediumId(currentMedium?.id ?? '');
+  }, [currentYear?.id, currentBoard?.id, currentMedium?.id]);
 
   // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -176,8 +207,6 @@ export function StudentProfile() {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
   // Effect to update organizations when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -319,13 +348,36 @@ export function StudentProfile() {
             }}
           >
             <CustomSelect
+              options={boards}
+              label="Board"
+              value={board?.id ?? ''}
+              onChange={(val) => {
+                setBoardId(String(val));
+                setMediumId('');
+              }}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: filterControlSx }}
+              disabled={!boards.length}
+            />
+            <CustomSelect
+              options={mediums}
+              label="Medium"
+              value={medium?.id ?? ''}
+              onChange={(val) => setMediumId(String(val))}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: filterControlSx }}
+              disabled={!board}
+            />
+            <CustomSelect
               options={allOrganization}
               label="Organization"
               value={organization}
               onChange={(val) => setOrganization(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ sx: filterControlSx }}
               disabled={!medium}
             />
             <CustomSelect
@@ -335,7 +387,7 @@ export function StudentProfile() {
               onChange={(val) => setClass(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ sx: filterControlSx }}
               disabled={!organization}
             />
             <CustomSelect
@@ -345,7 +397,7 @@ export function StudentProfile() {
               onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              formControlProps={{ sx: filterControlSx }}
               disabled={!classes}
             />
           </Paper>

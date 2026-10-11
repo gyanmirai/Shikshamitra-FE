@@ -15,6 +15,7 @@ interface UseTableDataProps {
   serverSideFilter?: boolean;
   serverSideSort?: boolean;
   serverSidePagination?: boolean;
+  searchableFields?: string[];
 }
 
 export const useTableData = ({
@@ -25,6 +26,7 @@ export const useTableData = ({
   serverSideFilter = false,
   serverSideSort = false,
   serverSidePagination = false,
+  searchableFields,
 }: UseTableDataProps) => {
   const { filters, searchTerm, columnVisibility, sorts, page, rowsPerPage } = config;
 
@@ -35,10 +37,25 @@ export const useTableData = ({
     return data.filter(
       (row) =>
         (serverSideSearch ||
-          matchesTableRowSearch(row, columns, columnVisibility, lowerSearchTerm)) &&
+          matchesTableRowSearch(
+            row,
+            columns,
+            columnVisibility,
+            lowerSearchTerm,
+            searchableFields
+          )) &&
         matchesTableRowFilters(row, filters, columns)
     );
-  }, [serverSideFilter, serverSideSearch, data, filters, columnVisibility, columns, searchTerm]);
+  }, [
+    serverSideFilter,
+    serverSideSearch,
+    data,
+    filters,
+    columnVisibility,
+    columns,
+    searchTerm,
+    searchableFields,
+  ]);
 
   // Sorting a result page is independent of search and column matching.
   const sortedData = useMemo(() => {

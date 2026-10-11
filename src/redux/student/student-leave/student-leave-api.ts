@@ -4,8 +4,10 @@ import { studentType, studentLeaveType, studentTakeAttendanceType } from 'src/re
 export type StudentLeaveListQuery = {
   academicYearId?: string;
   filterText?: string;
+  tableFilters?: string;
   studentId?: string;
   educationMediumId?: string;
+  organizationId?: string;
   standardId?: string;
   divisionId?: string;
   studentLeaveTypeId?: string;
@@ -39,6 +41,14 @@ export const StudentLeaveApi = api.injectEndpoints({
         studentType.student,
       ],
     }),
+    updateStudentLeave: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/students/attendance/leaves/${id}`,
+        method: 'PUT',
+        data,
+      }),
+      invalidatesTags: [studentLeaveType.studentLeave],
+    }),
     approveStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
         url: `/students/attendance/leaves/${id}/approve`,
@@ -69,6 +79,7 @@ export const StudentLeaveApi = api.injectEndpoints({
 export const {
   useGetStudentLeaveQuery,
   useAddStudentLeaveMutation,
+  useUpdateStudentLeaveMutation,
   useApproveStudentLeaveMutation,
   useRejectStudentLeaveMutation,
 } = StudentLeaveApi;

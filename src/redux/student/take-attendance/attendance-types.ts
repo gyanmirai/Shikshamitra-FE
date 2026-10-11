@@ -72,6 +72,7 @@ export interface AttendanceMark extends AttendanceScope {
   }[];
 }
 export interface AttendanceMarkResult {
+  attendanceDayId?: string;
   revision?: string | null;
   isSubmitted: boolean;
 }

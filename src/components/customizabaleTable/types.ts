@@ -98,6 +98,7 @@ export interface ICustomizableTableProps {
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;
   searchFieldProps?: TextFieldProps;
+  searchableFields?: string[];
   noDataText?: React.ReactNode;
   errorContent?: ReactNode;
   wrapperProps?: BoxProps;

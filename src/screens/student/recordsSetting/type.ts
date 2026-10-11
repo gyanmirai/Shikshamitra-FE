@@ -10,14 +10,3 @@ export interface IGroup {
   creationTime?: string;
   creatorId?: string;
 }
-
-export interface IStudentHouse {
-  studentId: string;
-  studentName: string;
-  grNo: number;
-  rollNo: number;
-  houseSettingId: string;
-  houseSetting: IGroup;
-  isDivisionHouseLeader: boolean;
-  isGlobalHouseLeader: boolean;
-}

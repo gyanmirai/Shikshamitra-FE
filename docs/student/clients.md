@@ -41,12 +41,20 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 | `admission-applicants-api.ts`   | Applicant 360 identity/family context, application and stage progress with stage timestamps, bounded recent activity, and notes                                                                                                              | Applicant 360                                               |
 | `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history                                                                                                                             | Application list and detail                                 |
 
+### Student Attendance settings
+
+`src/redux/student/attendance-type/attendance-type-api.ts` loads paged leave types and owns create, update, and delete requests. The settings screen uses this client for its searchable table and form. The attendance-management client no longer exposes policy draft/preview/publish or individual-schedule operations.
+
+`src/redux/student/student-leave/student-leave-api.ts` sends the Leave Requests table's URL-backed `tableFilters` with search, status, sort, and paging. Date filters include local calendar-day UTC bounds; the server filters and counts the full scoped result before paging.
+
 ### Student Onboarding
 
 `src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist, detail, capacity, readiness, placement, identifiers, activation, accounts, documents and settings clients.
 The client unwraps the shared `Result<T>` response and invalidates case/list/analytics or related operational tags after commands.
 The list sends `enteredToday` and task filters to the server before pagination, including Fees and Credentials.
 Activation also invalidates the Student Records directory tag so the newly activated student becomes discoverable without stale cached rows.
+
+`src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template, preview, issue, history and bulk PDF export calls. The builder saves the design before requesting previews or exports; issue retains a stable idempotency key for retries. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 

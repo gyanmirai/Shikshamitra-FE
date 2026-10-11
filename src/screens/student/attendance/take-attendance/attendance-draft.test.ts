@@ -7,6 +7,7 @@ import {
   getAttendanceCounts,
   hasAttendanceChanges,
   markRemainingPresent,
+  changeAttendanceMark,
   changeAttendanceStatus,
   normalizeAttendanceRows,
 } from './attendance-draft';
@@ -48,7 +49,7 @@ describe('daily attendance draft', () => {
         row('three'),
         row('closed', { isExpected: false }),
       ])
-    ).toEqual({ expected: 3, present: 1, absent: 1, unmarked: 1, notExpected: 1 });
+    ).toEqual({ expected: 3, unmarked: 1 });
   });
   it('clears present-only details when a mark becomes absent or unmarked', () => {
     const student = row('one', {
@@ -65,6 +66,29 @@ describe('daily attendance draft', () => {
     expect(changeAttendanceStatus(student, AttendanceStatus.Pending)).toMatchObject({
       late: false,
       halfDay: false,
+    });
+  });
+  it('sets full, half, absent and pending marks without retaining incompatible details', () => {
+    const student = row('one', { status: AttendanceStatus.Present, late: true, halfDay: true });
+    expect(changeAttendanceMark(student, 'full')).toMatchObject({
+      status: AttendanceStatus.Present,
+      halfDay: false,
+      late: true,
+    });
+    expect(changeAttendanceMark(student, 'half')).toMatchObject({
+      status: AttendanceStatus.Present,
+      halfDay: true,
+      late: true,
+    });
+    expect(changeAttendanceMark(student, 'absent')).toMatchObject({
+      status: AttendanceStatus.Absent,
+      halfDay: false,
+      late: false,
+    });
+    expect(changeAttendanceMark(student, 'pending')).toMatchObject({
+      status: AttendanceStatus.Pending,
+      halfDay: false,
+      late: false,
     });
   });
   it('detects placement, detail and note changes independent of row ordering', () => {

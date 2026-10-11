@@ -70,7 +70,14 @@ export const studentRecordsApi = api.injectEndpoints({
       RecordsPage<StudentDirectoryItem>,
       StudentDirectoryInput
     >({
-      query: (params) => ({ url: '/students/records/directory', params }),
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          if (Array.isArray(value)) value.forEach((item) => queryParams.append(key, item));
+          else if (value !== undefined && value !== null && value !== '') queryParams.set(key, String(value));
+        });
+        return { url: '/students/records/directory', params: queryParams };
+      },
       transformResponse: (
         response: RecordsPage<StudentDirectoryItem> | { data?: RecordsPage<StudentDirectoryItem> }
       ) => unwrapRecordsResult(response),

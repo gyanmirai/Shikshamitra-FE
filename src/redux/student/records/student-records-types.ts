@@ -86,6 +86,10 @@ export type StudentDirectoryInput = {
   mediumId?: string;
   standardId?: string;
   divisionId?: string;
+  boardIds?: string[];
+  mediumIds?: string[];
+  standardIds?: string[];
+  divisionIds?: string[];
 };
 export type StudentDirectoryOption = { id: string; name: string; parentId?: string | null };
 export type StudentDirectoryOptions = {

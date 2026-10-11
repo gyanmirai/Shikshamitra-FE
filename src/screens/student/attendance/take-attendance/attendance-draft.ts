@@ -17,10 +17,7 @@ export const getAttendanceCounts = (rows: AttendanceStudent[]) => {
   const eligible = rows.filter((row) => row.isExpected);
   return {
     expected: eligible.length,
-    present: eligible.filter((row) => row.status === AttendanceStatus.Present).length,
-    absent: eligible.filter((row) => row.status === AttendanceStatus.Absent).length,
     unmarked: eligible.filter((row) => row.status === AttendanceStatus.Pending).length,
-    notExpected: rows.length - eligible.length,
   };
 };
 
@@ -36,6 +33,21 @@ export const changeAttendanceStatus = (row: AttendanceStudent, status: Attendanc
   status,
   late: status === AttendanceStatus.Present ? row.late : false,
   halfDay: status === AttendanceStatus.Present ? row.halfDay : false,
+});
+
+export const changeAttendanceMark = (
+  row: AttendanceStudent,
+  mark: 'full' | 'half' | 'absent' | 'pending'
+): AttendanceStudent => ({
+  ...row,
+  status:
+    mark === 'absent'
+      ? AttendanceStatus.Absent
+      : mark === 'pending'
+        ? AttendanceStatus.Pending
+        : AttendanceStatus.Present,
+  halfDay: mark === 'half',
+  late: mark === 'full' || mark === 'half' ? row.late : false,
 });
 
 export const hasAttendanceChanges = (rows: AttendanceStudent[], original: AttendanceStudent[]) => {
