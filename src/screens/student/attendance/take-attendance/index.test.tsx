@@ -1,5 +1,6 @@
 import type { AttendanceDay } from 'src/redux/student/take-attendance/attendance-types';
 
+import dayjs from 'dayjs';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -26,7 +27,39 @@ vi.mock('react-redux', () => ({
   useSelector: (select: (state: unknown) => unknown) =>
     select({
       globalState: {
-        currentYear: { id: 'year', startDate: '2026-01-01', endDate: '2026-12-31' },
+        currentYear: {
+          id: 'year',
+          startDate: '2026-01-01',
+          endDate: '2026-12-31',
+          boards: [
+            {
+              id: 'board',
+              name: 'CBSE',
+              educationMediums: [
+                {
+                  id: 'medium',
+                  name: 'English',
+                  educationMediumStages: [
+                    {
+                      id: 'level',
+                      name: 'Primary',
+                      standards: [
+                        {
+                          id: 'class',
+                          name: 'Class 1',
+                          divisions: [{ id: 'division', name: 'A' }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                { id: 'medium-2', name: 'Hindi', educationMediumStages: [] },
+              ],
+            },
+            { id: 'board-2', name: 'State Board', educationMediums: [] },
+          ],
+        },
+        currentBoard: { id: 'board', name: 'CBSE' },
         currentMedium: {
           id: 'medium',
           educationMediumStages: [
@@ -252,6 +285,68 @@ beforeEach(() => {
   }));
 });
 describe('Daily Attendance workspace', () => {
+  it('shows four attendance choices and keeps half day behind the school policy', async () => {
+    const register = day();
+    register.policy.allowHalfDay = false;
+    mocks.query = { ...mocks.query, currentData: register };
+    render(<TakeAttendanceScreen />);
+    expect(await screen.findByRole('button', { name: 'Full day: Aarav' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Half day: Aarav' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Pending: Aarav' })).toBeEnabled();
+  });
+  it('enables present and absent for an eligible current-day roster', async () => {
+    const date = dayjs().format('YYYY-MM-DD');
+    mocks.params = new URLSearchParams(
+      `date=${date}&organization=level&class=class&division=division`
+    );
+    mocks.query = { ...mocks.query, currentData: day({ date, canMark: true, isExpected: true }) };
+    render(<TakeAttendanceScreen />);
+    expect(await screen.findByRole('button', { name: 'Full day: Aarav' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toBeEnabled();
+  });
+  it('saves a half-day mark with present status and half-day credit', async () => {
+    render(<TakeAttendanceScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Half day: Aarav' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mocks.mark).toHaveBeenCalledOnce());
+    expect(mocks.mark.mock.calls[0][0]).toMatchObject({
+      submit: false,
+      entries: expect.arrayContaining([
+        expect.objectContaining({ studentId: 'one', status: 1, halfDay: true, late: false }),
+      ]),
+    });
+  });
+  it('does not allow future attendance even when the URL contains a future date', async () => {
+    mocks.params = new URLSearchParams(
+      `date=${dayjs().add(1, 'day').format('YYYY-MM-DD')}&organization=level&class=class&division=division`
+    );
+    render(<TakeAttendanceScreen />);
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
+    expect(await screen.findByText('Attendance cannot be taken for a future date.')).toBeVisible();
+  });
+  it('shows board and medium filters and clears dependent choices when either changes', () => {
+    render(<TakeAttendanceScreen />);
+    expect(screen.getByLabelText('Board')).toHaveValue('board');
+    expect(screen.getByLabelText('Medium')).toHaveValue('medium');
+    expect(screen.getByLabelText('School level')).toHaveValue('level');
+
+    fireEvent.change(screen.getByLabelText('Medium'), { target: { value: 'medium-2' } });
+    expect(screen.getByLabelText('School level')).toHaveValue('');
+    expect(screen.getByLabelText('Class')).toBeDisabled();
+    expect(mocks.replace).toHaveBeenLastCalledWith(
+      expect.stringContaining('board=board&medium=medium-2'),
+      { scroll: false }
+    );
+
+    fireEvent.change(screen.getByLabelText('Board'), { target: { value: 'board-2' } });
+    expect(screen.getByLabelText('Medium')).toHaveValue('');
+    expect(screen.getByLabelText('School level')).toBeDisabled();
+    expect(mocks.replace).toHaveBeenLastCalledWith(expect.stringContaining('board=board-2'), {
+      scroll: false,
+    });
+  });
   it.each([true, false])(
     'routes leave-credit changes through the correction action with permission=%s',
     async (canCorrect) => {
@@ -269,9 +364,9 @@ describe('Daily Attendance workspace', () => {
       mocks.query = { ...mocks.query, currentData: registered };
       render(<TakeAttendanceScreen />);
       expect(await screen.findByText('Leave correction needed')).toBeVisible();
-      expect(screen.getByRole('button', { name: 'Present: Aarav' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Full day: Aarav' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Absent: Aarav' })).toBeDisabled();
-      expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
       expect(screen.getByText(/before submitting this register again/)).toBeVisible();
       const request = screen.getByRole('button', {
         name: 'Request attendance correction: Aarav',
@@ -297,10 +392,10 @@ describe('Daily Attendance workspace', () => {
     };
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Present: Meera' }));
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Full day: Meera' }));
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalledOnce());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
       submit: false,
@@ -319,7 +414,7 @@ describe('Daily Attendance workspace', () => {
     mocks.query = { ...mocks.query, currentData: registered };
     render(<TakeAttendanceScreen />);
     expect(await screen.findByRole('button', { name: 'Absent: Aarav' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Present: Meera' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Full day: Meera' })).toBeEnabled();
     expect(
       screen.getByRole('button', { name: 'Request attendance correction: Aarav' })
     ).toBeEnabled();
@@ -341,6 +436,7 @@ describe('Daily Attendance workspace', () => {
     expect(screen.getByRole('dialog', { name: 'Request attendance correction' })).toBeVisible();
   });
   it('allows complete submitted attendance to be reviewed and resubmitted when the server flags a changed roster', async () => {
+    mocks.permissions.push({ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true });
     const registered = day({ isSubmitted: true, needsReview: true });
     registered.students.forEach((row) => {
       row.status = 1;
@@ -350,7 +446,7 @@ describe('Daily Attendance workspace', () => {
     expect(
       await screen.findByText('Roster changed after submission. Review and submit again.')
     ).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeEnabled();
   });
   it('keeps heading and flex table geometry during initial loading', () => {
     mocks.query = { ...mocks.query, currentData: undefined, isLoading: true };
@@ -362,9 +458,9 @@ describe('Daily Attendance workspace', () => {
   });
   it('saves a partial draft but requires the complete eligible roster before submit', async () => {
     render(<TakeAttendanceScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Present: Aarav' }));
-    expect(screen.getByRole('button', { name: 'Submit attendance' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Full day: Aarav' }));
+    expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalled());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
       submit: false,
@@ -377,14 +473,17 @@ describe('Daily Attendance workspace', () => {
     });
     expect(mocks.mark.mock.calls[0][0].operationId).toMatch(/^[0-9a-f-]{36}$/);
   });
-  it('marks remaining present, then submits after an explicit complete-register review', async () => {
+  it('submits and locks after an explicit complete-register review', async () => {
+    mocks.permissions.push({ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true });
+    mocks.lock.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
     render(<TakeAttendanceScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Absent: Aarav' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Mark remaining present' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Submit attendance' }));
-    expect(screen.getByRole('dialog', { name: 'Submit attendance?' })).toBeVisible();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Submit attendance' })[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Full day: Meera' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lock' }));
+    expect(screen.getByRole('dialog', { name: 'Lock attendance?' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Lock attendance' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.lock).toHaveBeenCalled());
     expect(mocks.mark.mock.calls[0][0]).toMatchObject({
       submit: true,
       entries: [
@@ -393,17 +492,31 @@ describe('Daily Attendance workspace', () => {
       ],
     });
   });
+  it('locks an already submitted complete register without submitting again', async () => {
+    mocks.permissions.push({ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true });
+    mocks.lock.mockImplementation(() => ({ unwrap: () => Promise.resolve() }));
+    const registered = day({ isSubmitted: true, attendanceDayId: 'day' });
+    registered.students.forEach((student) => {
+      student.status = 1;
+    });
+    mocks.query = { ...mocks.query, currentData: registered };
+    render(<TakeAttendanceScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Lock' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lock attendance' }));
+    await waitFor(() => expect(mocks.lock).toHaveBeenCalledOnce());
+    expect(mocks.mark).not.toHaveBeenCalled();
+  });
   it('uses server authority for read-only marking and explains the boundary', async () => {
     mocks.query = { ...mocks.query, currentData: day({ canMark: false }) };
     render(<TakeAttendanceScreen />);
-    expect(await screen.findByRole('button', { name: 'Present: Aarav' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Full day: Aarav' })).toBeDisabled();
     expect(screen.getByText(/This register is read-only/)).toBeVisible();
   });
   it('warns after cutoff while leaving authorized draft marking available', async () => {
     mocks.query = { ...mocks.query, currentData: day({ isPastMarkingCutoff: true }) };
     render(<TakeAttendanceScreen />);
     expect(await screen.findByText(/school marking cutoff has passed/)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Present: Aarav' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Full day: Aarav' })).toBeEnabled();
   });
   it.each([
     { isExpected: false, isSubmitted: false },
@@ -414,22 +527,37 @@ describe('Daily Attendance workspace', () => {
       currentData: day({ ...flags, isPastMarkingCutoff: true }),
     };
     render(<TakeAttendanceScreen />);
-    await screen.findByText(flags.isSubmitted ? 'Submitted' : 'Draft');
+    await screen.findByRole('button', { name: 'Full day: Aarav' });
     expect(screen.queryByText(/school marking cutoff has passed/)).not.toBeInTheDocument();
+  });
+  it('shows only the four mark choices for an ineligible day and disables them', async () => {
+    const closed = day({ isExpected: false, canMark: false, notExpectedReason: 'Weather closure' });
+    closed.students = closed.students.map((student) => ({
+      ...student,
+      isExpected: false,
+      notExpectedReason: 'Weather closure',
+    }));
+    mocks.query = { ...mocks.query, currentData: closed };
+    render(<TakeAttendanceScreen />);
+    await screen.findByRole('button', { name: 'Full day: Aarav' });
+    ['Full day', 'Half day', 'Pending', 'Absent'].forEach((choice) => {
+      expect(screen.getByRole('button', { name: `${choice}: Aarav` })).toBeDisabled();
+    });
+    expect(screen.queryByText('Not expected')).not.toBeInTheDocument();
   });
   it('preserves local marks when a refreshed roster conflicts with the draft', async () => {
     const view = render(<TakeAttendanceScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Present: Aarav' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Full day: Aarav' }));
     mocks.query = {
       ...mocks.query,
       currentData: day({ revision: 'newer', rosterRevision: 'changed' }),
     };
     view.rerender(<TakeAttendanceScreen />);
-    expect(screen.getByRole('button', { name: 'Present: Aarav' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Full day: Aarav' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     expect(screen.getByText(/roster changed after this draft/)).toBeVisible();
   });
   it('retains the failed draft and reuses the operation id on a safe retry', async () => {
@@ -442,14 +570,14 @@ describe('Daily Attendance workspace', () => {
         ),
     }));
     render(<TakeAttendanceScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Present: Aarav' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Full day: Aarav' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByText(/Connection interrupted/);
-    expect(screen.getByRole('button', { name: 'Present: Aarav' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Full day: Aarav' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(mocks.mark).toHaveBeenCalledTimes(2));
     expect(mocks.mark.mock.calls[1][0].operationId).toBe(mocks.mark.mock.calls[0][0].operationId);
   });

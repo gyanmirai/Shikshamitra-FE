@@ -1,6 +1,5 @@
-import React from 'react';
-import StudentICardScreen from 'src/screens/student/student-i-card';
+import StudentRecordDocuments from 'src/screens/student/records/student-record-documents';
 
-const StudentICard = () => <StudentICardScreen />;
+const StudentICard = () => <StudentRecordDocuments fixedKind="ids" />;
 
 export default StudentICard;

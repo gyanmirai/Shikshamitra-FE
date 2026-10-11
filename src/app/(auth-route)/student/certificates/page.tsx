@@ -1,6 +1,5 @@
-import React from 'react';
-import StudentCertificatesScreen from 'src/screens/student/certificates';
+import StudentRecordDocuments from 'src/screens/student/records/student-record-documents';
 
-const StudentCertificates = () => <StudentCertificatesScreen />;
+const StudentCertificates = () => <StudentRecordDocuments fixedKind="certificates" />;
 
 export default StudentCertificates;

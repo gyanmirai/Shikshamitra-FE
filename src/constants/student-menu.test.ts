@@ -20,7 +20,7 @@ describe('student navigation', () => {
     expect(attendance.path).toBe('/student/attendance/take-attendance');
     expect(attendance.children?.map((item) => item.title)).toEqual([
       'Daily Attendance',
-      'Leave & Corrections',
+      'Leave Requests',
       'Reports',
       'Settings',
     ]);
@@ -37,21 +37,26 @@ describe('student navigation', () => {
       attendance.children?.find((item) => item.title === 'Daily Attendance')?.permissionName
     ).toBe(studentPermissions.attendance.markAttendance);
   });
-  it('exposes the six Student Records workspaces and retains legacy URLs outside the menu', () => {
+  it('exposes the five Student Records submodules and their existing routes', () => {
     const items = Object.values(studentModule(true)).flatMap((sections) =>
       sections.flatMap((group) => group.items)
     );
     const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
     expect(records.children?.map((item) => item.title)).toEqual([
-      'Student Directory',
-      'Changes & Approvals',
-      'Documents & IDs',
-      'Year-End & Transitions',
+      'Student List',
+      'Student I-Card',
+      'Certificates',
       'Reports',
       'Settings',
     ]);
-    expect(records.children?.every((item) => item.path.startsWith('/student/records/'))).toBe(true);
-    expect(records.children?.some((item) => item.path === '/student/management')).toBe(false);
+    expect(records.path).toBe('/student/profile');
+    expect(records.children?.map((item) => item.path)).toEqual([
+      '/student/profile',
+      '/student/student-i-card',
+      '/student/certificates',
+      '/student/reports',
+      '/student/studentRecords/setting',
+    ]);
   });
   it('keeps Dashboard access separate from Dashboard visibility', () => {
     const sections = Object.values(studentModule(true));

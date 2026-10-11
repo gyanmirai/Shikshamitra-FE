@@ -1,69 +1,3 @@
-export type AttendanceOptions = {
-  allowLate: boolean;
-  allowHalfDay: boolean;
-  lateCredit: number;
-  halfDayCredit: number;
-  approvedLeaveTreatment: 'Exclude' | 'Absent';
-  halfDayLeaveTreatment: 'Absent' | 'HalfDenominator';
-  sameDayCorrectionRequiresReason: boolean;
-  priorDayCorrectionRequiresApproval: boolean;
-  lockedCorrectionRequiresApproval: boolean;
-  lowAttendanceThreshold: number;
-  markingCutoff: string;
-  schoolTimeZone: string;
-};
-export type AttendanceException = {
-  id: string;
-  name: string;
-  boardId?: string;
-  mediumId?: string;
-  stageId?: string;
-  standardId?: string;
-  divisionId?: string;
-  options: AttendanceOptions;
-};
-export type AttendancePolicy = {
-  schemaVersion: number;
-  defaults: AttendanceOptions;
-  exceptions: AttendanceException[];
-};
-export type AttendanceSettings = {
-  id?: string;
-  academicYearId?: string;
-  concurrencyStamp?: string;
-  draftPolicy: AttendancePolicy;
-  effectivePolicy: AttendancePolicy;
-  publishedVersionId?: string;
-  publishedVersionNumber: number;
-  isStarter: boolean;
-  effectiveScopeAcademicYearId?: string;
-  versions: {
-    id: string;
-    versionNumber: number;
-    effectiveFrom: string;
-    publishedAt: string;
-    academicYearId?: string;
-  }[];
-};
-export type AttendancePreview = {
-  policy: AttendancePolicy;
-  summary: string[];
-  examples: { label: string; outcome: string }[];
-};
-export type AttendanceSchedule = {
-  retiredFrom?: string | null;
-  id?: string;
-  enrollmentId: string;
-  academicYearId: string;
-  name: string;
-  kind: 'Fixed' | 'Temporary';
-  startDate: string;
-  endDate?: string | null;
-  weekDays: number[];
-  startTime?: string | null;
-  endTime?: string | null;
-  concurrencyStamp?: string;
-};
 export type AttendanceScope = { academicYearId: string; standardId?: string; divisionId?: string };
 export type AttendanceRange = AttendanceScope & {
   startDate: string;
@@ -97,14 +31,6 @@ export type AttendanceDaily = {
 export type AttendanceSummary = AttendanceMetrics & {
   academicYearId: string;
   daily: AttendanceDaily[];
-};
-export type AttendanceEnrollment = {
-  enrollmentId: string;
-  studentId: string;
-  fullName: string;
-  rollNo?: number;
-  attendanceStartDate?: string;
-  revision: string;
 };
 export type AttendanceCorrection = {
   id: string;

@@ -3,7 +3,7 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Board, Division, Standards, Organization } from 'src/types/school';
 import type {
   AttendanceDay,
   AttendanceMark,
@@ -13,10 +13,12 @@ import type {
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -43,7 +45,6 @@ import {
 import {
   useMarkAttendanceMutation,
   useLockAttendanceMutation,
-  useUnlockAttendanceMutation,
   useGetAttendanceByFilterQuery,
 } from 'src/redux/student/take-attendance/take-attendace-api';
 
@@ -53,14 +54,55 @@ import AttendanceCorrectionDialog from './attendance-correction-dialog';
 import {
   getAttendanceCounts,
   hasAttendanceChanges,
-  markRemainingPresent,
+  changeAttendanceMark,
   attendanceStudentName,
-  changeAttendanceStatus,
   normalizeAttendanceRows,
 } from './attendance-draft';
 
-type Selection = { date: string; organization: string; standard: string; division: string };
+type Selection = {
+  date: string;
+  board: string;
+  medium: string;
+  organization: string;
+  standard: string;
+  division: string;
+};
+const attendanceMarks = [
+  { value: 'full', label: 'Full day', icon: 'eva:checkmark-fill', color: 'success' },
+  { value: 'half', label: 'Half day', icon: 'mdi:fraction-one-half', color: 'info' },
+  { value: 'pending', label: 'Pending', icon: 'eva:minus-fill', color: 'warning' },
+  { value: 'absent', label: 'Absent', icon: 'eva:close-fill', color: 'error' },
+] as const;
+const attendanceSegmentButton = {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '4px',
+  transition: 'all 0.2s',
+};
 const today = () => toDateOnly(dayjs());
+const attendanceSearchFields = ['name', 'rollNo', 'grNo'];
+const readAcademicPath = (
+  params: URLSearchParams,
+  boards: Board[],
+  currentBoardId?: string,
+  currentMediumId?: string
+) => {
+  const boardId =
+    params.get('board') ||
+    currentBoardId ||
+    boards.find((item) => item.educationMediums?.some((medium) => medium.id === currentMediumId))
+      ?.id ||
+    boards[0]?.id ||
+    '';
+  const mediums = boards.find((item) => item.id === boardId)?.educationMediums || [];
+  const mediumId =
+    params.get('medium') ||
+    (mediums.some((item) => item.id === currentMediumId) ? currentMediumId : mediums[0]?.id) ||
+    '';
+  return { board: boardId, medium: mediumId };
+};
 const DailyAttendanceWorkspace = () => {
   const router = useRouter();
   const pathname = usePathname();
@@ -73,11 +115,18 @@ const DailyAttendanceWorkspace = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [academicContext, setAcademicContext] = useState({
     year: globals.currentYear,
+    board: globals.currentBoard,
     medium: globals.currentMedium,
   });
-  const { year, medium } = academicContext;
+  const { year } = academicContext;
   const [selection, setSelection] = useState<Selection>(() => ({
     date: searchParams.get('date') || today(),
+    ...readAcademicPath(
+      new URLSearchParams(searchParams.toString()),
+      year?.boards || [],
+      globals.currentBoard?.id,
+      globals.currentMedium?.id
+    ),
     organization: searchParams.get('organization') || '',
     standard: searchParams.get('class') || '',
     division: searchParams.get('division') || '',
@@ -86,19 +135,20 @@ const DailyAttendanceWorkspace = () => {
   const [rows, setRows] = useState<AttendanceStudent[]>([]);
   const [details, setDetails] = useState<AttendanceStudent | null>(null);
   const [requestedCorrection, setRequestedCorrection] = useState<AttendanceStudent | null>(null);
-  const [decision, setDecision] = useState<'submit' | 'discard' | 'lock' | null>(null);
+  const [decision, setDecision] = useState<'lock' | null>(null);
   const [failure, setFailure] = useState<string>('');
   const [correctionReason, setCorrectionReason] = useState('');
   const [retryPayload, setRetryPayload] = useState<AttendanceMark | null>(null);
-  const contextSeen = useRef(`${globals.currentYear?.id}/${globals.currentMedium?.id}`);
+  const contextSeen = useRef(
+    `${globals.currentYear?.id}/${globals.currentBoard?.id}/${globals.currentMedium?.id}`
+  );
   const lastUrl = useRef(searchParams.toString());
   const lastAppliedData = useRef<AttendanceDay | undefined>(undefined);
   const dirty = snapshot ? hasAttendanceChanges(rows, snapshot.students) : false;
   const { requestNavigation, confirmation } = useUnsavedNavigation(dirty, { push: router.push });
-  const [mark, { isLoading: saving }] = useMarkAttendanceMutation();
+  const [markAttendance, { isLoading: saving }] = useMarkAttendanceMutation();
   const [lock, { isLoading: locking }] = useLockAttendanceMutation();
-  const [unlock, { isLoading: unlocking }] = useUnlockAttendanceMutation();
-  const busy = saving || locking || unlocking;
+  const busy = saving || locking;
   const clearDraft = useCallback(() => {
     lastAppliedData.current = undefined;
     setSnapshot(null);
@@ -110,15 +160,26 @@ const DailyAttendanceWorkspace = () => {
     setRequestedCorrection(null);
     setDecision(null);
   }, []);
-  const organizations: Organization[] = medium?.educationMediumStages || [];
+  const boards: Board[] = year?.boards || [];
+  const board = boards.find((item) => item.id === selection.board);
+  const mediums = board?.educationMediums || [];
+  const medium = mediums.find((item) => item.id === selection.medium);
+  const organizations: Organization[] = medium?.educationMediumStages?.length
+    ? medium.educationMediumStages
+    : academicContext.medium?.id === medium?.id
+      ? academicContext.medium.educationMediumStages || []
+      : [];
   const organization = organizations.find((item) => item.id === selection.organization);
   const standards: Standards[] = organization?.standards || [];
   const standard = standards.find((item) => item.id === selection.standard);
   const divisions: Division[] = standard?.divisions || [];
   const validSelection =
     !!year?.id &&
+    !!medium &&
     !!divisions.find((item) => item.id === selection.division) &&
     dayjs(selection.date).isValid() &&
+    selection.date === toDateOnly(dayjs(selection.date)) &&
+    selection.date <= today() &&
     (!year.startDate || selection.date >= toDateOnly(year.startDate)) &&
     (!year.endDate || selection.date <= toDateOnly(year.endDate));
   const { currentData, isLoading, isFetching, isError, error, refetch } =
@@ -144,6 +205,8 @@ const DailyAttendanceWorkspace = () => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries({
         date: next.date,
+        board: next.board,
+        medium: next.medium,
         organization: next.organization,
         class: next.standard,
         division: next.division,
@@ -161,6 +224,12 @@ const DailyAttendanceWorkspace = () => {
     lastUrl.current = searchParams.toString();
     const next = {
       date: searchParams.get('date') || today(),
+      ...readAcademicPath(
+        new URLSearchParams(searchParams.toString()),
+        year?.boards || [],
+        globals.currentBoard?.id,
+        globals.currentMedium?.id
+      ),
       organization: searchParams.get('organization') || '',
       standard: searchParams.get('class') || '',
       division: searchParams.get('division') || '',
@@ -173,20 +242,39 @@ const DailyAttendanceWorkspace = () => {
       return;
     clearDraft();
     setSelection(next);
-  }, [searchParams, clearDraft, selection]);
+  }, [
+    searchParams,
+    clearDraft,
+    selection,
+    globals.currentBoard?.id,
+    globals.currentMedium?.id,
+    year?.boards,
+  ]);
 
   // A global year or medium switch must not silently discard the locally owned draft.
   useEffect(() => {
-    const nextKey = `${globals.currentYear?.id}/${globals.currentMedium?.id}`;
+    const nextKey = `${globals.currentYear?.id}/${globals.currentBoard?.id}/${globals.currentMedium?.id}`;
     if (contextSeen.current === nextKey) return;
     contextSeen.current = nextKey;
     requestNavigation(() => {
       clearDraft();
-      setAcademicContext({ year: globals.currentYear, medium: globals.currentMedium });
-      replaceSelection({ ...selection, organization: '', standard: '', division: '' });
+      setAcademicContext({
+        year: globals.currentYear,
+        board: globals.currentBoard,
+        medium: globals.currentMedium,
+      });
+      replaceSelection({
+        ...selection,
+        board: globals.currentBoard?.id || globals.currentYear?.boards?.[0]?.id || '',
+        medium: globals.currentMedium?.id || '',
+        organization: '',
+        standard: '',
+        division: '',
+      });
     });
   }, [
     globals.currentYear,
+    globals.currentBoard,
     globals.currentMedium,
     requestNavigation,
     clearDraft,
@@ -203,8 +291,20 @@ const DailyAttendanceWorkspace = () => {
   }, [currentData, dirty, busy]);
 
   const counts = useMemo(() => getAttendanceCounts(rows), [rows]);
+  const markCounts = {
+    full: rows.filter(
+      (row) => row.isExpected && row.status === AttendanceStatus.Present && !row.halfDay
+    ).length,
+    half: rows.filter(
+      (row) => row.isExpected && row.status === AttendanceStatus.Present && row.halfDay
+    ).length,
+    pending: rows.filter((row) => row.isExpected && row.status === AttendanceStatus.Pending).length,
+    absent: rows.filter((row) => row.isExpected && row.status === AttendanceStatus.Absent).length,
+  };
   const academicContextChanged =
-    year?.id !== globals.currentYear?.id || medium?.id !== globals.currentMedium?.id;
+    year?.id !== globals.currentYear?.id ||
+    academicContext.board?.id !== globals.currentBoard?.id ||
+    academicContext.medium?.id !== globals.currentMedium?.id;
   const stale =
     !!snapshot &&
     !!currentData &&
@@ -242,8 +342,9 @@ const DailyAttendanceWorkspace = () => {
     dirty &&
     ((correction && snapshot?.policy.sameDayCorrectionRequiresReason !== false) || leaveConflict);
   const canSave = editable && dirty && (!reasonRequired || !!correctionReason.trim());
-  const canSubmit =
+  const canFinalize =
     editable &&
+    canManageLock &&
     counts.expected > 0 &&
     counts.unmarked === 0 &&
     !needsCreditCorrection &&
@@ -269,8 +370,9 @@ const DailyAttendanceWorkspace = () => {
       clearDraft();
       refetch();
     });
-  const save = async (submit: boolean) => {
-    if ((!submit && !canSave) || (submit && !canSubmit) || !snapshot || !year) return;
+  const save = async (finalize: boolean) => {
+    if ((!finalize && !canSave) || (finalize && !canFinalize) || !snapshot || !year) return;
+    const submit = finalize;
     const payload: AttendanceMark =
       retryPayload && retryPayload.submit === submit
         ? retryPayload
@@ -298,19 +400,35 @@ const DailyAttendanceWorkspace = () => {
     setFailure('');
     setRetryPayload(payload);
     try {
-      const result = await mark(payload).unwrap();
+      const result = await markAttendance(payload).unwrap();
       setSnapshot({
         ...snapshot,
+        attendanceDayId: result.attendanceDayId || snapshot.attendanceDayId,
         revision: result.revision,
         isSubmitted: result.isSubmitted,
         students: rows,
       });
       setRetryPayload(null);
       setCorrectionReason('');
-      setDecision(null);
-      shikshaMitraToast.success({
-        message: submit ? 'Attendance submitted.' : 'Attendance draft saved.',
-      });
+      if (finalize) {
+        try {
+          await lock({
+            academicYearId: year.id,
+            standardId: selection.standard,
+            divisionId: selection.division,
+            date: selection.date,
+          }).unwrap();
+          setDecision(null);
+          shikshaMitraToast.success({ message: 'Attendance locked.' });
+        } catch (lockProblem) {
+          const message = `Attendance was submitted, but locking failed. ${parseApiProblemDetail(lockProblem).detail}`;
+          setFailure(message);
+          setDecision(null);
+          shikshaMitraToast.error({ message });
+        }
+      } else {
+        shikshaMitraToast.success({ message: 'Attendance saved.' });
+      }
       refetch();
     } catch (problem) {
       const message = parseApiProblemDetail(problem).detail;
@@ -318,8 +436,20 @@ const DailyAttendanceWorkspace = () => {
       shikshaMitraToast.error({ message });
     }
   };
-  const toggleLock = async () => {
-    if (!canManageLock || !year || !snapshot?.attendanceDayId || busy || dirty) return;
+  const lockSubmitted = async () => {
+    if (
+      !canManageLock ||
+      !year ||
+      !snapshot?.attendanceDayId ||
+      !snapshot.isSubmitted ||
+      snapshot.needsReview ||
+      authoritative?.isLocked ||
+      counts.unmarked > 0 ||
+      busy ||
+      dirty ||
+      !validSelection
+    )
+      return;
     const payload = {
       academicYearId: year.id,
       standardId: selection.standard,
@@ -327,13 +457,13 @@ const DailyAttendanceWorkspace = () => {
       date: selection.date,
     };
     try {
-      await (authoritative?.isLocked ? unlock(payload) : lock(payload)).unwrap();
+      await lock(payload).unwrap();
       setDecision(null);
-      shikshaMitraToast.success({
-        message: authoritative?.isLocked ? 'Attendance unlocked.' : 'Attendance locked.',
-      });
+      shikshaMitraToast.success({ message: 'Attendance locked.' });
+      refetch();
     } catch (problem) {
       setFailure(parseApiProblemDetail(problem).detail);
+      setDecision(null);
     }
   };
 
@@ -343,6 +473,7 @@ const DailyAttendanceWorkspace = () => {
       label: 'Roll no.',
       width: 85,
       filterType: 'string',
+      isFilter: false,
       render: (value) => value ?? '—',
     },
     {
@@ -350,6 +481,7 @@ const DailyAttendanceWorkspace = () => {
       label: 'Student',
       minWidth: 200,
       filterType: 'string',
+      isFilter: false,
       render: (_value, item) => {
         const row = item as AttendanceStudent;
         return (
@@ -371,44 +503,126 @@ const DailyAttendanceWorkspace = () => {
     },
     {
       id: 'statusLabel',
-      label: 'Attendance',
-      minWidth: 225,
+      label: (
+        <Stack spacing={0.5} alignItems="center" sx={{ width: 230 }}>
+          <Typography variant="caption" fontWeight={600}>
+            Attendance
+          </Typography>
+          <Box sx={{ display: 'flex', width: 230, gap: 0.25, px: 0.25 }}>
+            {attendanceMarks.map((mark) => (
+              <CustomTooltip
+                key={mark.value}
+                title={`${mark.label}: ${markCounts[mark.value]}`}
+                arrow
+              >
+                <Box
+                  sx={{
+                    flex: 1,
+                    height: 20,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '10px',
+                    bgcolor: (theme) => alpha(theme.palette[mark.color].main, 0.16),
+                    color: `${mark.color}.dark`,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {markCounts[mark.value]}
+                </Box>
+              </CustomTooltip>
+            ))}
+          </Box>
+        </Stack>
+      ),
+      width: 250,
+      minWidth: 250,
+      maxWidth: 250,
       sticky: true,
       stickyPosition: 'right',
       isSort: false,
       isFilter: false,
       render: (_value, item) => {
         const row = item as AttendanceStudent;
-        if (!row.isExpected)
-          return (
-            <Tooltip title={row.notExpectedReason || 'Not scheduled today'}>
-              <span>
-                <Label>Not expected</Label>
-              </span>
-            </Tooltip>
-          );
         return (
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            {[AttendanceStatus.Present, AttendanceStatus.Absent].map((status) => (
-              <Button
-                key={status}
-                size="small"
-                variant={row.status === status ? 'contained' : 'outlined'}
-                color={status === AttendanceStatus.Present ? 'success' : 'error'}
-                aria-pressed={row.status === status}
-                aria-label={`${status === AttendanceStatus.Present ? 'Present' : 'Absent'}: ${attendanceStudentName(row)}`}
-                disabled={
-                  !editable || !!row.requiresCorrectionApproval || !!row.needsCreditCorrection
-                }
-                onClick={() =>
-                  updateRow(row.studentId, (before) => changeAttendanceStatus(before, status))
-                }
-              >
-                {status === AttendanceStatus.Present ? 'Present' : 'Absent'}
-              </Button>
-            ))}
-            {row.status === AttendanceStatus.Pending && <Label color="warning">Unmarked</Label>}
-          </Stack>
+          <Box
+            sx={{
+              display: 'flex',
+              width: 230,
+              height: 32,
+              bgcolor: 'background.neutral',
+              borderRadius: '6px',
+              p: 0.25,
+              gap: 0.25,
+            }}
+          >
+            {attendanceMarks.map((mark) => {
+              const selected =
+                (mark.value === 'full' &&
+                  row.status === AttendanceStatus.Present &&
+                  !row.halfDay) ||
+                (mark.value === 'half' && row.status === AttendanceStatus.Present && row.halfDay) ||
+                (mark.value === 'pending' && row.status === AttendanceStatus.Pending) ||
+                (mark.value === 'absent' && row.status === AttendanceStatus.Absent);
+              const disabled =
+                !editable ||
+                !row.isExpected ||
+                !!row.requiresCorrectionApproval ||
+                !!row.needsCreditCorrection ||
+                (mark.value === 'half' && !snapshot?.policy.allowHalfDay) ||
+                (mark.value === 'pending' && !!snapshot?.isSubmitted);
+              return (
+                <CustomTooltip
+                  key={mark.value}
+                  title={
+                    !row.isExpected
+                      ? row.notExpectedReason || 'Attendance is unavailable for this student.'
+                      : mark.label
+                  }
+                  arrow
+                  placement="top"
+                >
+                  <Box component="span" sx={{ display: 'flex', flex: 1 }}>
+                    <Box
+                      component="button"
+                      type="button"
+                      disabled={disabled}
+                      aria-pressed={selected}
+                      aria-label={`${mark.label}: ${attendanceStudentName(row)}`}
+                      onClick={() =>
+                        updateRow(row.studentId, (before) =>
+                          changeAttendanceMark(before, mark.value)
+                        )
+                      }
+                      sx={{
+                        ...attendanceSegmentButton,
+                        width: 1,
+                        border: 0,
+                        p: 0,
+                        font: 'inherit',
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        opacity: disabled ? 0.5 : 1,
+                        bgcolor: selected
+                          ? (theme) => theme.palette[mark.color].main
+                          : 'transparent',
+                        color: selected
+                          ? (theme) => theme.palette[mark.color].contrastText
+                          : (theme) => theme.palette.text.secondary,
+                        '&:hover': {
+                          bgcolor: selected
+                            ? (theme) => theme.palette[mark.color].dark
+                            : (theme) => alpha(theme.palette[mark.color].main, 0.08),
+                        },
+                      }}
+                    >
+                      <Iconify icon={mark.icon} width={18} />
+                    </Box>
+                  </Box>
+                </CustomTooltip>
+              );
+            })}
+          </Box>
         );
       },
     },
@@ -495,12 +709,13 @@ const DailyAttendanceWorkspace = () => {
     ...row,
     id: row.studentId,
     name: attendanceStudentName(row),
-    statusLabel: !row.isExpected
-      ? 'Not expected'
-      : row.status === AttendanceStatus.Pending
-        ? 'Unmarked'
+    statusLabel:
+      row.status === AttendanceStatus.Pending
+        ? 'Pending'
         : row.status === AttendanceStatus.Present
-          ? 'Present'
+          ? row.halfDay
+            ? 'Half day'
+            : 'Full day'
           : 'Absent',
     detailLabel: [
       row.late && 'Late',
@@ -512,109 +727,168 @@ const DailyAttendanceWorkspace = () => {
       .filter(Boolean)
       .join(' · '),
   }));
-  const orderedColumns = [columns[0], columns[1], columns[3], columns[2], columns[4]];
+  const orderedColumns = [columns[0], columns[1], columns[2], columns[3], columns[4]];
   const empty =
-    !year || !medium
-      ? 'Choose an academic year and medium to open attendance.'
-      : !organizations.length
-        ? 'No academic classes are available in your current scope.'
-        : !validSelection
-          ? 'Choose a school level, class, division and a valid date.'
-          : snapshot && !snapshot.isExpected
-            ? snapshot.notExpectedReason || 'Attendance is not expected on this date.'
-            : 'No eligible students are assigned to this class on the selected date.';
+    selection.date > today()
+      ? 'Attendance cannot be taken for a future date.'
+      : !year || !board || !medium
+        ? 'Choose a board and medium to open attendance.'
+        : !organizations.length
+          ? 'No academic classes are available in your current scope.'
+          : !validSelection
+            ? 'Choose a board, medium, school level, class, division and a valid date.'
+            : snapshot && !snapshot.isExpected
+              ? snapshot.notExpectedReason || 'Attendance is not expected on this date.'
+              : 'No eligible students are assigned to this class on the selected date.';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
       <CustomBreadcrumbs
         heading="Daily Attendance"
-        description="Choose a class and date, mark attendance, then save a draft or submit the complete register."
+        description="Choose a class and date, then save your marks or lock a complete register."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Attendance', href: studentPaths.attendance.root },
           { name: 'Daily Attendance' },
         ]}
       />
-      <Paper variant="outlined" sx={{ px: 1, py: 1 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
-            <DatePicker
-              label="Date"
-              value={dayjs(selection.date)}
-              format="DD-MM-YYYY"
-              disabled={busy}
-              minDate={year?.startDate ? dayjs(year.startDate) : undefined}
-              maxDate={year?.endDate ? dayjs(year.endDate) : undefined}
-              onChange={(value: Dayjs | null) => {
-                if (value?.isValid()) changeSelection({ date: toDateOnly(value) });
-              }}
-              slotProps={{ textField: { size: 'small', sx: { width: { xs: '100%', sm: 170 } } } }}
-            />
-            <CustomSelect
-              label="School level"
-              options={organizations}
-              value={selection.organization}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value) =>
-                changeSelection({ organization: String(value), standard: '', division: '' })
-              }
-              disabled={!medium || busy}
-              formControlProps={{ sx: { width: { xs: '100%', sm: 170 } } }}
-            />
-            <CustomSelect
-              label="Class"
-              options={standards}
-              value={selection.standard}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value) => changeSelection({ standard: String(value), division: '' })}
-              disabled={!organization || busy}
-              formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
-            />
-            <CustomSelect
-              label="Division"
-              options={divisions}
-              value={selection.division}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value) => changeSelection({ division: String(value) })}
-              disabled={!standard || busy}
-              formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
-            />
-          </Stack>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={!canSave}
-              loading={saving}
-              onClick={() => save(false)}
-            >
-              Save draft
-            </Button>
-            <Tooltip
-              title={
-                counts.unmarked
-                  ? `Mark all ${counts.unmarked} remaining students before submitting.`
-                  : ''
-              }
-            >
-              <span>
-                <Button
-                  size="small"
-                  variant="contained"
-                  disabled={!canSubmit}
-                  loading={saving}
-                  onClick={() => setDecision('submit')}
-                >
-                  Submit attendance
-                </Button>
-              </span>
-            </Tooltip>
-          </Stack>
-        </Stack>
+      <Paper variant="outlined" sx={{ px: 1, py: 1, overflowX: 'auto' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, minmax(145px, 1fr)) auto auto',
+            gap: 1,
+            alignItems: 'center',
+            minWidth: 1080,
+          }}
+        >
+          <DatePicker
+            label="Date"
+            value={dayjs(selection.date)}
+            format="DD-MM-YYYY"
+            disabled={busy}
+            disableFuture
+            minDate={year?.startDate ? dayjs(year.startDate) : undefined}
+            maxDate={year?.endDate && year.endDate < today() ? dayjs(year.endDate) : dayjs()}
+            onChange={(value: Dayjs | null) => {
+              if (value?.isValid()) changeSelection({ date: toDateOnly(value) });
+            }}
+            slotProps={{ textField: { size: 'small', sx: { width: 1 } } }}
+          />
+          <CustomSelect
+            fullWidth
+            label="Board"
+            options={boards}
+            value={board?.id || ''}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => {
+              const nextBoard = boards.find((item) => item.id === String(value));
+              changeSelection({
+                board: String(value),
+                medium: nextBoard?.educationMediums?.[0]?.id || '',
+                organization: '',
+                standard: '',
+                division: '',
+              });
+            }}
+            disabled={!boards.length || busy}
+          />
+          <CustomSelect
+            fullWidth
+            label="Medium"
+            options={mediums}
+            value={medium?.id || ''}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) =>
+              changeSelection({
+                medium: String(value),
+                organization: '',
+                standard: '',
+                division: '',
+              })
+            }
+            disabled={!board || busy}
+          />
+          <CustomSelect
+            fullWidth
+            label="School level"
+            options={organizations}
+            value={selection.organization}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) =>
+              changeSelection({ organization: String(value), standard: '', division: '' })
+            }
+            disabled={!medium || busy}
+          />
+          <CustomSelect
+            fullWidth
+            label="Class"
+            options={standards}
+            value={selection.standard}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => changeSelection({ standard: String(value), division: '' })}
+            disabled={!organization || busy}
+          />
+          <CustomSelect
+            fullWidth
+            label="Division"
+            options={divisions}
+            value={selection.division}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => changeSelection({ division: String(value) })}
+            disabled={!standard || busy}
+          />
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!canSave}
+            loading={saving}
+            onClick={() => save(false)}
+          >
+            Save
+          </Button>
+          <Tooltip
+            title={
+              counts.unmarked ? `Mark all ${counts.unmarked} pending students before locking.` : ''
+            }
+          >
+            <span>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:lock-outline" width={16} />}
+                disabled={
+                  !(
+                    canFinalize ||
+                    (snapshot?.isSubmitted &&
+                      !snapshot.needsReview &&
+                      !!snapshot.attendanceDayId &&
+                      !dirty &&
+                      !stale &&
+                      !authoritative?.isLocked &&
+                      canManageLock &&
+                      counts.unmarked === 0 &&
+                      !needsCreditCorrection &&
+                      validSelection)
+                  )
+                }
+                loading={busy}
+                onClick={() => setDecision('lock')}
+              >
+                Lock
+              </Button>
+            </span>
+          </Tooltip>
+        </Box>
       </Paper>
+      {selection.date > today() && (
+        <Alert severity="warning">Attendance cannot be taken for a future date.</Alert>
+      )}
       {isFetching && <LinearProgress aria-label="Refreshing attendance" />}
       {academicContextChanged && (
         <Alert
@@ -626,8 +900,19 @@ const DailyAttendanceWorkspace = () => {
               onClick={() =>
                 requestNavigation(() => {
                   clearDraft();
-                  setAcademicContext({ year: globals.currentYear, medium: globals.currentMedium });
-                  replaceSelection({ ...selection, organization: '', standard: '', division: '' });
+                  setAcademicContext({
+                    year: globals.currentYear,
+                    board: globals.currentBoard,
+                    medium: globals.currentMedium,
+                  });
+                  replaceSelection({
+                    ...selection,
+                    board: globals.currentBoard?.id || globals.currentYear?.boards?.[0]?.id || '',
+                    medium: globals.currentMedium?.id || '',
+                    organization: '',
+                    standard: '',
+                    division: '',
+                  });
                 })
               }
             >
@@ -636,8 +921,8 @@ const DailyAttendanceWorkspace = () => {
           }
         >
           This draft remains in {year?.name || 'the previous academic year'} and{' '}
-          {medium?.name || 'the previous medium'}. Save or discard it before switching to the
-          selected academic context.
+          {academicContext.medium?.name || 'the previous medium'}. Save or discard it before
+          switching to the selected academic context.
         </Alert>
       )}
       {validSelection && isError && (
@@ -662,7 +947,7 @@ const DailyAttendanceWorkspace = () => {
             </Button>
           }
         >
-          {failure} Your draft is retained.
+          {failure}
         </Alert>
       )}
       {stale && (
@@ -702,83 +987,9 @@ const DailyAttendanceWorkspace = () => {
           This register is read-only. Your permission, teacher assignment or correction policy does
           not allow marking here.
           <Button size="small" href={studentPaths.attendance.leaveAndAbsent}>
-            Leave &amp; Corrections
+            Leave Requests
           </Button>
         </Alert>
-      )}
-      {snapshot && (
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Label
-            color={
-              authoritative?.isLocked ? 'warning' : snapshot.isSubmitted ? 'success' : 'default'
-            }
-          >
-            {authoritative?.isLocked ? 'Locked' : snapshot.isSubmitted ? 'Submitted' : 'Draft'}
-          </Label>
-          <Typography variant="body2">
-            Expected {counts.expected} · Present {counts.present} · Absent {counts.absent} ·
-            Unmarked {counts.unmarked}
-            {counts.notExpected > 0 && ` · Not expected ${counts.notExpected}`}
-          </Typography>
-          {dirty && <Label color="warning">Unsaved changes</Label>}
-          <Box sx={{ flex: 1 }} />
-          <Button
-            size="small"
-            disabled={
-              !editable ||
-              !rows.some(
-                (row) =>
-                  row.isExpected && row.status === AttendanceStatus.Pending && !row.approvedLeaveId
-              )
-            }
-            onClick={() => {
-              setRetryPayload(null);
-              setRows(markRemainingPresent(rows));
-            }}
-          >
-            Mark remaining present
-          </Button>
-          <Button
-            size="small"
-            color="inherit"
-            disabled={!dirty || busy}
-            onClick={() => setDecision('discard')}
-          >
-            Discard changes
-          </Button>
-          {canManageLock && (
-            <Tooltip
-              title={
-                dirty
-                  ? 'Save or discard your changes first.'
-                  : !snapshot.isSubmitted && !authoritative?.isLocked
-                    ? 'Submit the register before locking it.'
-                    : ''
-              }
-            >
-              <span>
-                <Button
-                  size="small"
-                  color="inherit"
-                  startIcon={
-                    <Iconify
-                      icon={authoritative?.isLocked ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
-                    />
-                  }
-                  disabled={
-                    busy ||
-                    dirty ||
-                    !snapshot.attendanceDayId ||
-                    (!snapshot.isSubmitted && !authoritative?.isLocked)
-                  }
-                  onClick={() => setDecision('lock')}
-                >
-                  {authoritative?.isLocked ? 'Unlock' : 'Lock'}
-                </Button>
-              </span>
-            </Tooltip>
-          )}
-        </Stack>
       )}
       {reasonRequired && (
         <TextField
@@ -808,11 +1019,10 @@ const DailyAttendanceWorkspace = () => {
           isSearch
           isPagination
           isFilter={false}
-          page={tableQuery.page}
-          rowsPerPage={tableQuery.rowsPerPage}
+          defaultRowsPerPage={tableQuery.rowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          searchTerm={tableQuery.searchTerm}
-          sorts={tableQuery.sorts}
+          defaultSearchTerm={tableQuery.searchTerm}
+          searchableFields={attendanceSearchFields}
           searchFieldProps={{ placeholder: 'Search students by name, roll no. or GR no.' }}
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
@@ -858,54 +1068,30 @@ const DailyAttendanceWorkspace = () => {
         onClose={() => {
           if (!busy) setDecision(null);
         }}
-        icon={decision === 'discard' ? 'error' : 'info'}
-        title={
-          decision === 'submit'
-            ? 'Submit attendance?'
-            : decision === 'discard'
-              ? 'Discard unsaved attendance?'
-              : authoritative?.isLocked
-                ? 'Unlock attendance?'
-                : 'Lock attendance?'
-        }
+        icon="info"
+        title="Lock attendance?"
         content={
           <Stack spacing={1}>
             <Typography variant="body2">
-              {decision === 'submit'
-                ? `Submit the complete register for ${formatDateOnly(selection.date)}? All ${counts.expected} expected students have been marked.`
-                : decision === 'discard'
-                  ? 'Your unsaved marks and notes will be replaced with the last saved register.'
-                  : authoritative?.isLocked
-                    ? 'Unlocking allows corrections according to your school policy. Previous-day changes still require approval.'
-                    : 'Lock this submitted register to require approved corrections.'}
+              Submit and lock the complete register for {formatDateOnly(selection.date)}? All{' '}
+              {counts.expected} expected students have been marked. Corrections will require
+              approval according to school policy.
             </Typography>
-            {failure && <Alert severity="error">{failure} Your draft is retained.</Alert>}
+            {failure && <Alert severity="error">{failure}</Alert>}
           </Stack>
         }
         action={
           <Button
             variant="contained"
-            color={decision === 'discard' ? 'error' : 'primary'}
+            color="primary"
             loading={busy}
             disabled={busy}
             onClick={() => {
-              if (decision === 'submit') save(true);
-              else if (decision === 'lock') toggleLock();
-              else {
-                setRows(normalizeAttendanceRows(snapshot?.students || []));
-                setRetryPayload(null);
-                setFailure('');
-                setDecision(null);
-              }
+              if (snapshot?.isSubmitted && !dirty && !snapshot.needsReview) lockSubmitted();
+              else save(true);
             }}
           >
-            {decision === 'submit'
-              ? 'Submit attendance'
-              : decision === 'discard'
-                ? 'Discard changes'
-                : authoritative?.isLocked
-                  ? 'Unlock attendance'
-                  : 'Lock attendance'}
+            Lock attendance
           </Button>
         }
       />

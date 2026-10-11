@@ -158,7 +158,7 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
 const ITEMS = [
   {
     icon: ICONS.student,
-    title: 'Student Management',
+    title: 'Students',
     description: 'Student admission, Enrollment, Attendance,I-Card, Certificates.',
   },
   {

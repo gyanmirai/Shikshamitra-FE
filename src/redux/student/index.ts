@@ -41,14 +41,6 @@ export const StudentApi = api.injectEndpoints({
       },
       providesTags: [studentType.student],
     }),
-    changeDivision: builder.mutation({
-      query: (body) => ({
-        url: `/students/records/divisions`,
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [studentType.student],
-    }),
     getAllStudents: builder.query({
       query: () => ({
         url: `/app/student`,
@@ -337,7 +329,6 @@ export const parseStudentDashboardPayload = <T = StudentReportingDashboard>(
 export const {
   useGetFilterStudentsQuery,
   useLazyGetFilterStudentsQuery,
-  useChangeDivisionMutation,
   useGetAllStudentsQuery,
   useGetStudentByIdQuery,
   useGetStudentsByDivisionQuery,

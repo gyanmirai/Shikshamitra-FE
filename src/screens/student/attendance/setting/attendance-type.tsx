@@ -2,33 +2,31 @@
 
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { StudentLeaveType } from 'src/redux/student/attendance-type/attendance-type-api';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import sortQueryString from 'src/utils/sort-query-string';
-import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { attendanceError } from 'src/redux/student/attendance-management/types';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
+  Alert,
   Stack,
   Button,
   Switch,
@@ -38,462 +36,418 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
-  StudentAttendanceTypeApi,
   useGetStudentAttendanceTypeQuery,
   useAddStudentAttendanceTypeMutation,
   useDeleteStudentAttendanceTypeMutation,
   useUpdateStudentAttendanceTypeMutation,
 } from 'src/redux/student/attendance-type/attendance-type-api';
 
-import type { IAttendanceRule } from './type';
+const leaveTypeSchema = Yup.object({
+  type: Yup.string()
+    .trim()
+    .required('Leave Type Is Required')
+    .min(2, 'Use At Least 2 Characters')
+    .max(100, 'Use 100 Characters Or Fewer'),
+  color: Yup.string().required('Leave Type Color Is Required'),
+  isActive: Yup.boolean().required(),
+});
 
-const AttendanceType = ({
-  embedded = false,
-  onBusyChange,
-}: {
-  embedded?: boolean;
-  onBusyChange?: (busy: boolean) => void;
-}) => {
-  const [formBusy, setFormBusy] = useState(false);
-  useEffect(() => {
-    onBusyChange?.(formBusy);
-  }, [formBusy, onBusyChange]);
-  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+export default function AttendanceType() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canWrite = hasGrantedPermission(permissions, 'Students.Attendance.Setting.LeaveType.Add');
   const canDelete = hasGrantedPermission(
     permissions,
     'Students.Attendance.Setting.LeaveType.Delete'
   );
-  // Dialog state for add/edit form
-  const dialog = useBoolean();
-  // Dialog state for delete confirmation
-  const confirm = useBoolean();
+  const [editing, setEditing] = useState<StudentLeaveType | null>(null);
+  const [deleting, setDeleting] = useState<StudentLeaveType | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formBusy, setFormBusy] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filterText, setFilterText] = useState('');
+  const [isActive, setIsActive] = useState<boolean | undefined>();
+  const [sorting, setSorting] = useState('leaveTypeName');
+  const { currentData, isLoading, isFetching, isError, error, refetch } =
+    useGetStudentAttendanceTypeQuery({
+      filterText: filterText || undefined,
+      isActive,
+      sorting,
+      skipCount: page * rowsPerPage,
+      maxResultCount: rowsPerPage,
+    });
+  const [deleteLeaveType, deletion] = useDeleteStudentAttendanceTypeMutation();
+  const rows = useMemo(
+    () =>
+      (currentData?.items ?? []).map((item) => ({
+        ...item,
+        lastUpdatedAt: item.lastModificationTime || item.creationTime || null,
+      })),
+    [currentData]
+  );
 
-  // State to store attendance type data being edited
-  const [editData, setEditData] = useState<IAttendanceRule | null>(null);
-  const dispatch = useDispatch();
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
-  const [query, setQuery] = useState({
-    sorting: '',
-    skipCount: 0,
-    maxResultCount: 10,
-  });
-  // Fetch all attendance types
-  const {
-    data: attendanceTypes,
-    isLoading,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
-    params: query,
-  });
-
-  // Mutation hook for deleting attendance type
-  const [deleteAttendanceType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteStudentAttendanceTypeMutation,
-  });
-
-  // Undo functionality hook
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // Close dialog and reset edit data
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setEditData(null);
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on dialog close animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog?.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      dialog?.onFalse();
-      setTimeout(() => {
-        setEditData(null);
-      }, 200);
-    }
+  const openAdd = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+  const closeForm = () => {
+    if (formBusy) return;
+    setFormOpen(false);
+    setEditing(null);
+    setFormDirty(false);
   };
 
   const columns: IColumn[] = useMemo(
     () => [
       {
         id: 'leaveTypeName',
-        label: 'Type',
-        render(value, row) {
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.color} />
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            </Box>
-          );
-        },
+        label: 'Leave Type',
+        minWidth: 260,
+        sticky: true,
+        stickyPosition: 'left',
+        render: (value, row) => (
+          <Stack direction="row" spacing={1} alignItems="center">
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="body2" fontWeight={600}>
+              {value}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
+        id: 'lastUpdatedAt',
+        label: 'Last Updated',
+        minWidth: 150,
+        isSort: false,
+        isFilter: false,
+        render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '—'),
       },
       {
         id: 'isActive',
-        label: 'Active',
-        render(values) {
-          return <Typography variant="caption">{values ? 'Yes' : 'No'}</Typography>;
-        },
+        label: 'Status',
+        minWidth: 120,
+        sticky: true,
+        stickyPosition: 'right',
+        isSort: false,
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Active', value: true },
+          { label: 'Inactive', value: false },
+        ],
+        render: (value) => (
+          <Label color={value ? 'success' : 'default'} variant="soft">
+            {value ? 'Active' : 'Inactive'}
+          </Label>
+        ),
       },
       {
         id: 'action',
         label: 'Actions',
+        minWidth: 130,
+        width: 130,
+        align: 'center',
         sticky: true,
-        isFilter: false,
+        stickyPosition: 'right',
         isSort: false,
-        minWidth: 60,
-        align: 'left',
-        render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon={canWrite}
-            showDeleteIcon={canDelete}
-            handleEditClick={() => {
-              dialog.onTrue();
-              setEditData(row as IAttendanceRule);
-            }}
-            handleDeleteClick={() => {
-              confirm.onTrue();
-              setEditData(row as IAttendanceRule);
-            }}
+        isFilter: false,
+        excludeFromExport: true,
+        render: (_, row) => (
+          <AdaptiveThreeDotsActions
+            moreLabel={`More Actions for ${row.leaveTypeName}`}
+            actions={[
+              ...(canWrite
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => {
+                        setEditing(row as StudentLeaveType);
+                        setFormOpen(true);
+                      },
+                    },
+                  ]
+                : []),
+              ...(canDelete
+                ? [
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      color: 'error.main',
+                      onClick: () => setDeleting(row as StudentLeaveType),
+                    },
+                  ]
+                : []),
+            ]}
           />
         ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [canWrite, canDelete]
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {embedded ? (
-        <Button disabled={!canWrite} variant="outlined" size="small" onClick={dialog.onTrue}>
-          Add leave type
-        </Button>
-      ) : (
-        <CustomBreadcrumbs
-          heading="Leave Type"
-          description="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
-          links={[
-            { name: 'Student', href: '/student/dashboard/' },
-            { name: 'Attendance', href: '/student/dashboard/' },
-            { name: 'Settings', href: '/student/dashboard/' },
-            { name: 'Leave Type' },
-          ]}
-          action={
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <CustomBreadcrumbs
+        heading="Attendance Settings"
+        description="Manage the leave types available for student attendance and leave requests."
+        links={[
+          { name: 'Student', href: '/student/dashboard' },
+          { name: 'Attendance', href: '/student/attendance/take-attendance' },
+          { name: 'Settings' },
+        ]}
+        action={
+          canWrite ? (
             <Button
               variant="contained"
               size="small"
-              onClick={dialog.onTrue}
               startIcon={<Iconify icon="mdi:plus" />}
-              sx={{ textTransform: 'capitalize', width: '160px' }}
-            >
-              Leave Type
-            </Button>
-          }
-        />
-      )}
-      <CustomizableTable
-        tableTitle="Leave Type"
-        tableId="attendance-type"
-        noDataText={
-          <>
-            No Leave Type Data Found{' '}
-            <Box
-              onClick={() => {
-                dialog.onTrue();
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
+              onClick={openAdd}
             >
               Add Leave Type
-            </Box>
-          </>
-        }
-        isLoading={isLoading}
-        columns={columns}
-        data={attendanceTypes?.items || []}
-        serverSide
-        onServerSort={(column, sortData) => {
-          setQuery((prev) => ({
-            ...prev,
-            sorting: sortQueryString(sortData),
-          }));
-        }}
-        onServerPagination={(page: number, rowsPerPage: number) => {
-          setQuery((prev) => ({
-            ...prev,
-            skipCount: page * rowsPerPage,
-            maxResultCount: rowsPerPage,
-          }));
-        }}
-      />{' '}
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-          setEditData(null);
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete Leave Type{' '}
-            <Box component="span" fontWeight="bold" color="text.primary">
-              {editData?.leaveTypeName}
-            </Box>
-            ?
-          </>
-        }
-        action={
-          <LoadingButton
-            loading={isDeleteLoading}
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              confirmWithUndo({
-                item: editData,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    StudentAttendanceTypeApi.util.updateQueryData(
-                      'getStudentAttendanceType',
-                      undefined,
-                      (draft: any) => {
-                        const index = draft?.items?.findIndex(
-                          (type: any) => type.id === editData?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1 && draft?.items) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteAttendanceType(editData?.id),
-              });
-              confirm.onFalse();
-              setEditData(null);
-            }}
-          >
-            Delete leave type
-          </LoadingButton>
+            </Button>
+          ) : null
         }
       />
-      <CustomDialog
-        open={dialog?.value}
-        disableClose={formBusy}
-        handleClose={() => {
-          setEditData(null);
-          dialog?.onFalse();
+      {isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button startIcon={<Iconify icon={GlobalIcons.refresh} />} onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          {attendanceError(error, 'Leave types could not be loaded.')}
+        </Alert>
+      )}
+      <CustomizableTable
+        tableId="student-attendance-leave-types"
+        tableTitle="Leave Types"
+        exportLabel="Export Current Page"
+        columns={columns}
+        data={rows}
+        isLoading={isLoading || isFetching}
+        serverSidePagination
+        serverSideSearch
+        serverSideSort
+        serverSideFilter
+        serverSideSortMode="single"
+        totalCount={currentData?.totalCount ?? 0}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        onServerPagination={(nextPage, nextRowsPerPage) => {
+          setPage(nextPage - 1);
+          setRowsPerPage(nextRowsPerPage);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {editData ? `Update Leave Type` : 'Add Leave Type'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
-            >
-              <Iconify
-                icon="mdi:information-outline"
-                sx={{ cursor: 'pointer' }}
-                color="info.main"
-              />
-            </CustomTooltip>
-          </Box>
+        onServerSearch={(value) => {
+          setFilterText(value);
+          setPage(0);
+        }}
+        onServerSort={(_, sorts) => {
+          const sort = sorts[0];
+          setSorting(
+            sort?.column === 'leaveTypeName' ? `leaveTypeName ${sort.direction}` : 'leaveTypeName'
+          );
+          setPage(0);
+        }}
+        onServerFilter={(filters) => {
+          const status = filters.find((filter) => filter.column === 'isActive');
+          setIsActive(status ? status.value === true || status.value === 'true' : undefined);
+          setPage(0);
+        }}
+        noDataText={
+          filterText || isActive !== undefined
+            ? 'No leave types match your search or filter.'
+            : 'No leave types have been added yet.'
         }
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, overflow: 'hidden' } }}
+        tableContainerProps={{ sx: { height: 1 } }}
+      />
+      <CustomDialog
+        key={editing?.id ?? 'new'}
+        open={formOpen}
+        title={editing ? 'Edit Leave Type' : 'Add Leave Type'}
+        titleInfo="Choose a name and color to identify this leave type in attendance."
+        handleClose={closeForm}
+        disableClose={formBusy}
+        hasUnsavedChanges={formDirty}
       >
         <AttendanceTypeForm
-          handleClose={handleClose}
-          editData={editData}
+          editData={editing}
+          handleClose={(_, submitted) => {
+            if (submitted) {
+              setFormOpen(false);
+              setEditing(null);
+              setFormDirty(false);
+            } else closeForm();
+          }}
           onBusyChange={setFormBusy}
+          onDirtyChange={setFormDirty}
         />
       </CustomDialog>
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        title="Delete Leave Type?"
+        content={`Delete ${deleting?.leaveTypeName ?? 'this leave type'}? This action cannot be undone.`}
+        onClose={() => {
+          if (!deletion.isLoading) setDeleting(null);
+        }}
+        disableCancel={deletion.isLoading}
+        disableBackdropClick={deletion.isLoading}
+        action={
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            loading={deletion.isLoading}
+            disabled={!canDelete || deletion.isLoading}
+            onClick={async () => {
+              if (!deleting) return;
+              try {
+                await deleteLeaveType(deleting.id).unwrap();
+                shikshaMitraToast.success({ message: 'Leave type deleted.' });
+                setDeleting(null);
+              } catch (failure) {
+                shikshaMitraToast.error({
+                  message: attendanceError(failure, 'Leave type could not be deleted.'),
+                });
+              }
+            }}
+          >
+            Delete Leave Type
+          </Button>
+        }
+      />
     </Box>
   );
-};
+}
 
-export default AttendanceType;
-
-export const AttendanceTypeForm = ({
-  onBusyChange,
+export function AttendanceTypeForm({
   handleClose,
   editData,
+  onBusyChange,
+  onDirtyChange,
 }: {
-  handleClose: (e: any, isSubmit: boolean) => void;
-  editData?: IAttendanceRule | null;
+  handleClose: (event: unknown, isSubmit: boolean) => void;
+  editData?: Pick<StudentLeaveType, 'id' | 'leaveTypeName' | 'color' | 'isActive'> | null;
   onBusyChange?: (busy: boolean) => void;
-}) => {
-  // Mutation hook for updating attendance type with loading state
-  const [updateAttendanceType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateStudentAttendanceTypeMutation,
-  });
-
-  // Mutation hook for adding new attendance type with loading state
-  const [addAttendanceType, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddStudentAttendanceTypeMutation,
-  });
-
-  const busy = isUpdateLoading || isLoading;
-  useEffect(() => {
-    onBusyChange?.(busy);
-  }, [busy, onBusyChange]);
-  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
-  const {
-    initialValues,
-    values,
-    handleChange,
-    setFieldValue,
-    handleSubmit,
-    errors,
-    touched,
-    handleBlur,
-  } = useFormik({
+  onDirtyChange?: (dirty: boolean) => void;
+}) {
+  const [addLeaveType, adding] = useAddStudentAttendanceTypeMutation();
+  const [updateLeaveType, updating] = useUpdateStudentAttendanceTypeMutation();
+  const busy = adding.isLoading || updating.isLoading;
+  const formik = useFormik({
     initialValues: {
-      type: editData?.leaveTypeName || '',
-      color: editData?.color || '',
-      isActive: editData?.isActive || false,
+      type: editData?.leaveTypeName ?? '',
+      color: editData?.color ?? '',
+      isActive: editData?.isActive ?? true,
     },
-    validationSchema: Yup.object({
-      type: Yup.string().required('Leave Type is required'),
-      color: Yup.string().required('Color is required'),
-    }),
-    onSubmit: async (value) => {
+    validationSchema: leaveTypeSchema,
+    onSubmit: async (values) => {
+      const body = {
+        leaveTypeName: values.type.trim(),
+        color: values.color,
+        isActive: values.isActive,
+      };
       try {
-        if (editData) {
-          await updateAttendanceType({
-            id: editData.id,
-            body: {
-              leaveTypeName: value.type,
-              color: value.color,
-              isActive: value.isActive,
-            },
-          });
-          shikshaMitraToast.success({ message: `${value.type} leave type updated sucessfully` });
-        } else {
-          await addAttendanceType({
-            leaveTypeName: value.type,
-            color: value.color,
-            isActive: value.isActive,
-          });
-          shikshaMitraToast.success({ message: `${value.type} leave type created sucessfully` });
-        }
+        if (editData) await updateLeaveType({ id: editData.id, body }).unwrap();
+        else await addLeaveType(body).unwrap();
+        shikshaMitraToast.success({
+          message: editData ? 'Leave type updated.' : 'Leave type added.',
+        });
         handleClose(null, true);
-      } catch (error) {
-        console.error(error);
+      } catch (failure) {
+        shikshaMitraToast.error({
+          message: attendanceError(failure, 'Leave type could not be saved.'),
+        });
       }
     },
   });
+  // The same form is also used by the leave-request dialog.
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+  useEffect(() => {
+    onDirtyChange?.(formik.dirty);
+  }, [formik.dirty, onDirtyChange]);
+  const cancel = () => {
+    if (formik.dirty && !window.confirm('Discard unsaved leave type changes?')) return;
+    handleClose(null, false);
+  };
 
   return (
     <Box>
-      <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-        {/* <Scrollbar sx={{ p: 2 }}> */}
-        <DialogScrollContent>
-          <FormBusyRegion busy={busy} label="Saving leave type…">
-            <Stack spacing={3}>
-              <ShakingTextField error={touched.type && Boolean(errors.type)}>
-                <TextField
-                  label="Leave Type *"
-                  name="type"
-                  fullWidth
-                  value={values.type}
-                  onChange={handleChange}
-                  onBlur={handleBlur} // This was missing!
-                  size="small"
-                  error={!!(errors.type && touched.type)}
-                  helperText={touched.type && errors.type}
-                />
-              </ShakingTextField>
-              <ShakingTextField error={touched.color && Boolean(errors.color)}>
-                {/* Dynamic Heading */}
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1 }}
-                  color={touched.color && errors.color ? 'error.main' : 'text.primary'}
-                >
-                  Leave Type Color *
+      <DialogScrollContent>
+        <FormBusyRegion busy={busy} label="Saving Leave Type…">
+          <Stack spacing={2}>
+            <ShakingTextField error={formik.touched.type && Boolean(formik.errors.type)}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Leave Type *"
+                name="type"
+                value={formik.values.type}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.type && Boolean(formik.errors.type)}
+                helperText={formik.touched.type && formik.errors.type}
+                disabled={busy}
+              />
+            </ShakingTextField>
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Leave Type Color *
+              </Typography>
+              <ColorPickerCircle
+                key={editData?.id ?? 'new'}
+                initialColor={formik.values.color}
+                onSelect={(color) => formik.setFieldValue('color', color)}
+                disabled={busy}
+              />
+              {formik.submitCount > 0 && formik.errors.color && (
+                <Typography variant="caption" color="error.main">
+                  {formik.errors.color}
                 </Typography>
-
-                {/* Color Picker */}
-                <ColorPickerCircle
-                  onSelect={(color: string) => {
-                    setFieldValue('color', color);
-                  }}
-                  initialColor={values.color}
+              )}
+            </Box>
+            <FormControlLabel
+              label="Active"
+              control={
+                <Switch
+                  checked={formik.values.isActive}
                   disabled={busy}
+                  onChange={(_, value) => formik.setFieldValue('isActive', value)}
                 />
-              </ShakingTextField>
-              <ShakingTextField error={touched.isActive && Boolean(errors.isActive)}>
-                <FormControlLabel
-                  label="Active"
-                  control={
-                    <Switch
-                      checked={values.isActive}
-                      onChange={(e) => {
-                        setFieldValue('isActive', e.target.checked);
-                      }}
-                    />
-                  }
-                />
-              </ShakingTextField>
-            </Stack>
-          </FormBusyRegion>
-        </DialogScrollContent>
-        {/* </Scrollbar> */}
-      </BackPopUpChecked>
+              }
+            />
+          </Stack>
+        </FormBusyRegion>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           size="small"
-          startIcon={<Iconify icon="mdi:close" />}
           variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           disabled={busy}
-          color="inherit"
-          onClick={() => {
-            handleClose(null, false);
-          }}
+          onClick={cancel}
         >
           Cancel
         </Button>
-        <LoadingButton
-          startIcon={
-            <Iconify
-              icon={editData ? 'mdi:pencil-outline' : 'mdi:content-save-outline'}
-              width={editData ? 16 : 20}
-              height={editData ? 16 : 20}
-            />
-          }
-          onClick={(e: any) => {
-            handleSubmit(e);
-          }}
-          loading={isUpdateLoading || isLoading}
-          variant="contained"
-          type="submit"
+        <Button
           size="small"
+          variant="contained"
+          startIcon={<Iconify icon={editData ? GlobalIcons.submit : 'mdi:plus'} />}
+          loading={busy}
+          disabled={busy}
+          onClick={() => formik.submitForm()}
         >
-          Submit
-        </LoadingButton>
+          {editData ? 'Save Changes' : 'Add Leave Type'}
+        </Button>
       </DialogActions>
     </Box>
   );
-};
+}

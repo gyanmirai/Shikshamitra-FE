@@ -1,37 +1,55 @@
 import { api } from 'src/redux/service';
 import { studentAttendanceType } from 'src/redux/tagTypes';
 
+export type StudentLeaveType = {
+  id: string;
+  leaveTypeName: string;
+  color: string;
+  isActive: boolean;
+  creationTime?: string;
+  lastModificationTime?: string | null;
+};
+
+export type StudentLeaveTypeInput = Pick<StudentLeaveType, 'leaveTypeName' | 'color' | 'isActive'>;
+
+export type StudentLeaveTypeList = { items: StudentLeaveType[]; totalCount: number };
+export type StudentLeaveTypeQuery = {
+  filterText?: string;
+  isActive?: boolean;
+  sorting?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+};
+
+const tag = studentAttendanceType.studentAttendanceType;
+
 export const StudentAttendanceTypeApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getStudentAttendanceType: builder.query({
-      query: () => ({
+    getStudentAttendanceType: builder.query<StudentLeaveTypeList, StudentLeaveTypeQuery | void>({
+      query: (params) => ({
         url: '/students/attendance/settings/leave-types',
-        method: 'GET',
+        params: params || undefined,
       }),
-      providesTags: [studentAttendanceType.studentAttendanceType],
+      providesTags: [tag],
     }),
-    addStudentAttendanceType: builder.mutation({
-      query: (data) => ({
-        url: '/students/attendance/settings/leave-types',
-        method: 'POST',
-        data,
-      }),
-      invalidatesTags: [studentAttendanceType.studentAttendanceType],
+    addStudentAttendanceType: builder.mutation<StudentLeaveType, StudentLeaveTypeInput>({
+      query: (body) => ({ url: '/students/attendance/settings/leave-types', method: 'POST', body }),
+      invalidatesTags: [tag],
     }),
-    updateStudentAttendanceType: builder.mutation({
+    updateStudentAttendanceType: builder.mutation<
+      StudentLeaveType,
+      { id: string; body: StudentLeaveTypeInput }
+    >({
       query: ({ id, body }) => ({
         url: `/students/attendance/settings/leave-types/${id}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [studentAttendanceType.studentAttendanceType],
+      invalidatesTags: [tag],
     }),
-    deleteStudentAttendanceType: builder.mutation({
-      query: (id) => ({
-        url: `/students/attendance/settings/leave-types/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [studentAttendanceType.studentAttendanceType],
+    deleteStudentAttendanceType: builder.mutation<void, string>({
+      query: (id) => ({ url: `/students/attendance/settings/leave-types/${id}`, method: 'DELETE' }),
+      invalidatesTags: [tag],
     }),
   }),
 });
