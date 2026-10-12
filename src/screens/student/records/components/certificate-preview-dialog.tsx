@@ -15,7 +15,8 @@ export default function CertificatePreviewDialog({ open, title, certificates, bu
   const number = certificate?.certificateId ? certificate.certificateNo : 'Assigned on generation';
   const header = certificate ? (certificate.certificateId ? certificate.template.renderedHeaderContent : certificate.template.renderedHeaderContent.replaceAll(certificate.certificateNo, number)) : '';
   const showNumber = !header.includes(number);
-  const showDate = certificate && !header.includes(certificate.certificateData.IssueDate || certificate.issueDate.slice(0, 10)) && !header.includes(fDate(certificate.issueDate));
+  const issueDateLabel = certificate ? fDate(certificate.issueDate) : null;
+  const showDate = certificate && !header.includes(certificate.certificateData.IssueDate || certificate.issueDate.slice(0, 10)) && (!issueDateLabel || !header.includes(issueDateLabel));
   return (
     <CustomDialog open={open} handleClose={onClose} title={title} maxWidth="md" hasForm={false} disableClose={busy} hasUnsavedChanges={false}>
       <DialogScrollContent>
@@ -32,7 +33,7 @@ export default function CertificatePreviewDialog({ open, title, certificates, bu
                 <Typography variant="h6" align="center" sx={{ whiteSpace: 'pre-line' }}>{header}</Typography>
                 {(showNumber || showDate) && <Stack direction="row" justifyContent="space-between" gap={1} flexWrap="wrap">
                   {showNumber && <Typography variant="body2">Certificate number: {number}</Typography>}
-                  {showDate && <Typography variant="body2">Issue date: {fDate(certificate.issueDate)}</Typography>}
+                  {showDate && <Typography variant="body2">Issue date: {issueDateLabel || certificate.issueDate.slice(0, 10)}</Typography>}
                 </Stack>}
                 <Typography variant="body1" sx={{ lineHeight: 2 }}>Student: <strong>{certificate.student.studentName}</strong><br />
                   GR number: {certificate.student.grNo || certificate.certificateData.GRNo || '—'}<br />

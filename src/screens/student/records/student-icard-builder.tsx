@@ -13,10 +13,12 @@ import { useGetStudentRecordsDirectoryOptionsQuery, useGetStudentRecordsDirector
 import {
   downloadRecordPdf,
   useExportRecordIdsMutation,
+  useCreateRecordIdTemplateMutation,
   useGetRecordIdTemplateQuery,
   useIssueRecordIdsMutation,
   usePreviewRecordIdsMutation,
   useSaveRecordIdTemplateMutation,
+  useUpdateRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
 import {
   Box, Grid, Stack, Paper, Alert, Button, Checkbox, TextField, Typography,
@@ -70,14 +72,16 @@ const asStringArray = (value: string[] | number[]) => value.map(String);
 const studentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity';
 
-export default function StudentICardBuilder({ onClose }: { onClose: () => void }) {
-  const templateQuery = useGetRecordIdTemplateQuery();
+export default function StudentICardBuilder({ onClose, initialTemplate }: { onClose: () => void; initialTemplate?: IdCardTemplate | null }) {
+  const templateQuery = useGetRecordIdTemplateQuery(undefined, { skip: initialTemplate !== undefined });
   const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery({});
   const [saveTemplate, saveState] = useSaveRecordIdTemplateMutation();
+  const [createTemplate, createState] = useCreateRecordIdTemplateMutation();
+  const [updateTemplate, updateState] = useUpdateRecordIdTemplateMutation();
   const [previewCards, previewState] = usePreviewRecordIdsMutation();
   const [exportCards, exportState] = useExportRecordIdsMutation();
   const [issueCards, issueState] = useIssueRecordIdsMutation();
-  const [template, setTemplate] = useState<IdCardTemplate | null>(null);
+  const [template, setTemplate] = useState<IdCardTemplate | null>(() => initialTemplate === undefined ? null : normalizeTemplate(initialTemplate ?? {}));
   const [step, setStep] = useState(0);
   const [completed, setCompleted] = useState<number[]>([]);
   const [scope, setScope] = useState<Scope>(emptyScope);
@@ -88,14 +92,14 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
-  const busy = saveState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
+  const busy = saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
   const schoolName = template?.schoolName ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
 
   useEffect(() => {
-    if (templateQuery.currentData && !template) setTemplate(normalizeTemplate(templateQuery.currentData));
-  }, [template, templateQuery.currentData]);
+    if (initialTemplate === undefined && templateQuery.currentData && !template) setTemplate(normalizeTemplate(templateQuery.currentData));
+  }, [initialTemplate, template, templateQuery.currentData]);
 
   const options = optionsQuery.currentData;
   const mediumOptions = useMemo(() => (options?.mediums ?? []).filter((item) =>
@@ -170,32 +174,36 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     issueKey.current = '';
   };
   const save = async () => {
-    if (!template) return false;
+    if (!template) return null;
     if (!templateName.trim()) {
       setTemplateNameTouched(true);
       setStep(0);
       setError('');
-      return false;
+      return null;
     }
     if (!schoolName.trim() || !template.fields.length) {
       setError('Enter a school name and choose at least one card field.');
-      return false;
+      return null;
     }
     try {
-      const saved = await saveTemplate(template).unwrap();
+      const saved = initialTemplate === undefined
+        ? await saveTemplate(template).unwrap()
+        : template.id
+          ? await updateTemplate({ id: template.id, body: template }).unwrap()
+          : await createTemplate(template).unwrap();
       setTemplate(normalizeTemplate(saved, template));
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
-      return true;
+      return saved;
     } catch {
       setError('The template could not be saved. Refresh if another user changed it.');
-      return false;
+      return null;
     }
   };
-  const preview = async () => {
+  const preview = async (templateId = template?.id ?? undefined) => {
     if (!selectedRows.length) { setError('Select at least one student.'); return false; }
     try {
-      const cards = await previewCards({ studentIds: selectedRows.map((row) => row.studentId) }).unwrap();
+      const cards = await previewCards({ studentIds: selectedRows.map((row) => row.studentId), templateId }).unwrap();
       setPreviews(cards);
       setError('');
       return true;
@@ -213,17 +221,20 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     if (step === 0 && !schoolName.trim()) { setError('Enter a school name.'); return; }
     if (step === 1 && !template?.fields.length) { setError('Choose at least one card field.'); return; }
     if (step === 2 && !selectedRows.length) { setError('Select at least one student.'); return; }
-    if (step === 2 && !(await save())) return;
-    if (step === 2 && !(await preview())) return;
+    const saved = step === 2 ? await save() : null;
+    if (step === 2 && !saved) return;
+    if (step === 2 && !(await preview(saved?.id ?? undefined))) return;
     if (step === 3 && !previews.length && !(await preview())) return;
     setError('');
     setCompleted((current) => current.includes(step) ? current : [...current, step]);
     setStep((current) => Math.min(current + 1, steps.length - 1));
   };
   const exportPdf = async () => {
-    if (!template || !selectedRows.length || !(await save())) return;
+    if (!template || !selectedRows.length) return;
+    const saved = await save();
+    if (!saved) return;
     try {
-      const pdf = await exportCards({ studentIds: selectedRows.map((row) => row.studentId), cardsPerPage: template.cardsPerPage }).unwrap();
+      const pdf = await exportCards({ studentIds: selectedRows.map((row) => row.studentId), cardsPerPage: template.cardsPerPage, templateId: saved.id ?? undefined }).unwrap();
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
       shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
@@ -232,10 +243,12 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     }
   };
   const issue = async () => {
-    if (!selectedRows.length || !(await save())) return;
+    if (!selectedRows.length) return;
+    const saved = await save();
+    if (!saved) return;
     try {
       issueKey.current ||= crypto.randomUUID();
-      await issueCards({ studentIds: selectedRows.map((row) => row.studentId), idempotencyKey: issueKey.current }).unwrap();
+      await issueCards({ studentIds: selectedRows.map((row) => row.studentId), idempotencyKey: issueKey.current, templateId: saved.id ?? undefined }).unwrap();
       shikshaMitraToast.success({ message: 'Student I-Cards issued. Select a student to view history.' });
       onClose();
     } catch {
@@ -243,7 +256,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     }
   };
 
-  if (templateQuery.isError) return <Alert severity="error" action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}>Student I-Card template could not be loaded.</Alert>;
+  if (initialTemplate === undefined && templateQuery.isError) return <Alert severity="error" action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}>Student I-Card template could not be loaded.</Alert>;
   if (!template) return <LinearProgress aria-label="Loading student I-Card template" />;
 
   const columns: IColumn[] = [
@@ -338,7 +351,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
             {step === 3 && <Stack spacing={2}>
               <Typography variant="subtitle1">Review cards</Typography>
               <Typography variant="body2">{selectedRows.length} student{selectedRows.length === 1 ? '' : 's'} selected. {selectedRows.filter((row) => !row.hasPhoto).length} missing photo.</Typography>
-              <Button variant="outlined" disabled={busy} onClick={preview} sx={{ alignSelf: 'flex-start' }}>Refresh preview</Button>
+              <Button variant="outlined" disabled={busy} onClick={() => { preview(); }} sx={{ alignSelf: 'flex-start' }}>Refresh preview</Button>
               <Grid container spacing={1.5}>{previews.map((card) => <Grid key={card.studentId} size={{ xs: 12, sm: 6 }}><StudentCardPreview template={template} card={card} /></Grid>)}</Grid>
             </Stack>}
             {step === 4 && <Stack spacing={2}>
@@ -371,7 +384,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
   );
 }
 
-function StudentCardPreview({ template, card }: { template: IdCardTemplate; card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> }) {
+export function StudentCardPreview({ template, card }: { template: IdCardTemplate; card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> }) {
   const vertical = template.orientation === 'Vertical';
   return <Box sx={{ overflowX: 'auto', mt: 1.5, p: 1.5, bgcolor: 'background.neutral', borderRadius: 1.5 }}>
     <Box sx={{ width: vertical ? 260 : 420, height: vertical ? 420 : 260, bgcolor: template.backgroundColor, color: 'text.primary', border: '1px solid', borderColor: template.primaryColor, borderRadius: 1.5, p: 2, boxSizing: 'border-box', boxShadow: 2 }}>
