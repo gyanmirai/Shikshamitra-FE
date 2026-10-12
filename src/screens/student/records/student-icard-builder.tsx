@@ -7,9 +7,10 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomSelect from 'src/components/custom-select';
-import CustomStepper from 'src/components/custom-stepper';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetStudentRecordsDirectoryOptionsQuery, useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 import {
@@ -17,6 +18,8 @@ import {
   useExportRecordIdsMutation,
   useGetRecordIdTemplateQuery,
   useIssueRecordIdsMutation,
+  useCreateRecordIdTemplateMutation,
+  useUpdateRecordIdTemplateMutation,
   usePreviewRecordIdsMutation,
   useSaveRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
@@ -72,14 +75,22 @@ const asStringArray = (value: string[] | number[]) => value.map(String);
 const studentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity';
 
-export default function StudentICardBuilder({ onClose }: { onClose: () => void }) {
+export default function StudentICardBuilder({
+  onClose,
+  initialTemplate,
+}: {
+  onClose: () => void;
+  initialTemplate?: IdCardTemplate | null;
+}) {
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
-  const templateQuery = useGetRecordIdTemplateQuery();
+  const templateQuery = useGetRecordIdTemplateQuery(undefined, { skip: initialTemplate !== undefined });
   const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery(
     { academicYearId },
     { skip: !academicYearId }
   );
   const [saveTemplate, saveState] = useSaveRecordIdTemplateMutation();
+  const [createTemplate, createState] = useCreateRecordIdTemplateMutation();
+  const [updateTemplate, updateState] = useUpdateRecordIdTemplateMutation();
   const [previewCards, previewState] = usePreviewRecordIdsMutation();
   const [exportCards, exportState] = useExportRecordIdsMutation();
   const [issueCards, issueState] = useIssueRecordIdsMutation();
@@ -95,14 +106,16 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
   const scopeYear = useRef(academicYearId);
-  const busy = saveState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
+  const busy = saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
   const schoolName = template?.schoolName ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
 
   useEffect(() => {
-    if (templateQuery.currentData && !template) setTemplate(normalizeTemplate(templateQuery.currentData));
-  }, [template, templateQuery.currentData]);
+    if (template) return;
+    if (initialTemplate !== undefined) setTemplate(normalizeTemplate(initialTemplate ?? defaultTemplate));
+    else if (templateQuery.currentData) setTemplate(normalizeTemplate(templateQuery.currentData));
+  }, [initialTemplate, template, templateQuery.currentData]);
 
   useEffect(() => {
     if (scopeYear.current === academicYearId) return;
@@ -192,32 +205,36 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     issueKey.current = '';
   };
   const save = async () => {
-    if (!template) return false;
+    if (!template) return null;
     if (!templateName.trim()) {
       setTemplateNameTouched(true);
       setStep(0);
       setError('');
-      return false;
+      return null;
     }
     if (!schoolName.trim() || !template.fields.length) {
       setError('Enter a school name and choose at least one card field.');
-      return false;
+      return null;
     }
     try {
-      const saved = await saveTemplate(template).unwrap();
+      const saved = await (initialTemplate === undefined
+        ? saveTemplate(template)
+        : template.id
+          ? updateTemplate({ id: template.id, body: template })
+          : createTemplate(template)).unwrap();
       setTemplate(normalizeTemplate(saved, template));
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
-      return true;
+      return saved;
     } catch {
       setError('The template could not be saved. Refresh if another user changed it.');
-      return false;
+      return null;
     }
   };
-  const preview = async () => {
+  const preview = async (templateId = template?.id) => {
     if (!selectedRows.length) { setError('Select at least one student.'); return false; }
     try {
-      const cards = await previewCards({ studentIds: selectedRows.map((row) => row.studentId) }).unwrap();
+      const cards = await previewCards({ studentIds: selectedRows.map((row) => row.studentId), templateId: templateId ?? undefined }).unwrap();
       setPreviews(cards);
       setError('');
       return true;
@@ -235,17 +252,24 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     if (step === 0 && !schoolName.trim()) { setError('Enter a school name.'); return; }
     if (step === 1 && !template?.fields.length) { setError('Choose at least one card field.'); return; }
     if (step === 2 && !selectedRows.length) { setError('Select at least one student.'); return; }
-    if (step === 2 && !(await save())) return;
-    if (step === 2 && !(await preview())) return;
-    if (step === 3 && !previews.length && !(await preview())) return;
+    if (step === 2) {
+      const saved = await save();
+      if (!saved || !(await preview(saved.id))) return;
+    }
+    if (step === 3 && !previews.length) {
+      const saved = await save();
+      if (!saved || !(await preview(saved.id))) return;
+    }
     setError('');
     setCompleted((current) => current.includes(step) ? current : [...current, step]);
     setStep((current) => Math.min(current + 1, steps.length - 1));
   };
   const exportPdf = async () => {
-    if (!template || !selectedRows.length || !(await save())) return;
+    if (!template || !selectedRows.length) return;
+    const saved = await save();
+    if (!saved) return;
     try {
-      const pdf = await exportCards({ studentIds: selectedRows.map((row) => row.studentId), cardsPerPage: template.cardsPerPage }).unwrap();
+      const pdf = await exportCards({ studentIds: selectedRows.map((row) => row.studentId), cardsPerPage: template.cardsPerPage, templateId: saved.id ?? undefined }).unwrap();
       if (!pdf.size || (pdf.type && !pdf.type.includes('pdf'))) throw new Error('Invalid PDF');
       downloadRecordPdf(pdf, `Student-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`);
       shikshaMitraToast.success({ message: 'Student I-Card PDF downloaded.' });
@@ -254,10 +278,12 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     }
   };
   const issue = async () => {
-    if (!selectedRows.length || !(await save())) return;
+    if (!selectedRows.length) return;
+    const saved = await save();
+    if (!saved) return;
     try {
       issueKey.current ||= crypto.randomUUID();
-      await issueCards({ studentIds: selectedRows.map((row) => row.studentId), idempotencyKey: issueKey.current }).unwrap();
+      await issueCards({ studentIds: selectedRows.map((row) => row.studentId), templateId: saved.id ?? undefined, idempotencyKey: issueKey.current }).unwrap();
       shikshaMitraToast.success({ message: 'Student I-Cards issued. Select a student to view history.' });
       onClose();
     } catch {
@@ -265,7 +291,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     }
   };
 
-  if (templateQuery.isError) return <Alert severity="error" action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}>Student I-Card template could not be loaded.</Alert>;
+  if (initialTemplate === undefined && templateQuery.isError) return <Alert severity="error" action={<Button onClick={() => templateQuery.refetch()}>Retry</Button>}>Student I-Card template could not be loaded.</Alert>;
   if (!template) return <LinearProgress aria-label="Loading student I-Card template" />;
 
   const columns: IColumn[] = [
@@ -282,16 +308,38 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
   ];
 
   return (
-    <Paper sx={{ height: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 2, gap: 2 }}>
-      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-        <CustomStepper steps={steps} activeStep={step} ariaLabel="Student I-Card creation steps"
-          stepStates={steps.map((_, index) => completed.includes(index) ? 'completed' : index === step ? 'active' : 'pending')} />
-      </Box>
-      <Typography variant="subtitle2" sx={{ display: { xs: 'block', sm: 'none' } }} aria-live="polite">
-        Step {step + 1} of {steps.length}: {steps[step]}
-      </Typography>
-      {error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}
-      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+    <Paper sx={{ height: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', pt: 1.5 }}>
+      <CustomStepperWithFormik
+        initialValues={{}}
+        validationSchema={undefined}
+        steps={steps}
+        activeStep={step}
+        completedSteps={completed}
+        isStepClickable={(index) => index === step || completed.includes(index)}
+        onStepClick={(index) => setStep(index)}
+        handleBack={() => setStep((value) => Math.max(value - 1, 0))}
+        onCancel={onClose}
+        handleNext={async (isLastStep, _values, _formik, setLoading) => {
+          if (isLastStep) { onClose(); return; }
+          setLoading(true);
+          try { await advance(); } finally { setLoading(false); }
+        }}
+        onSave={async (_isLastStep, _values, _formik, setLoading) => {
+          setLoading(true);
+          try { await save(); } finally { setLoading(false); }
+        }}
+        showSaveButton
+        nextButtonLabel="Next"
+        finalButtonLabel="Done"
+        saveButtonProps={{ disabled: busy, size: 'small' }}
+        saveAndNextButtonProps={{
+          disabled: busy,
+          size: 'small',
+          startIcon: <Iconify icon={step === steps.length - 1 ? 'solar:check-circle-bold' : 'ic:round-arrow-forward'} width={18} />,
+          endIcon: null,
+        }}
+        renderItem={() => <Box sx={{ p: 2 }}>
+        {error && <Alert severity="error" onClose={() => setError('')} sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: step === 2 ? 12 : 7 }}>
             {step === 0 && <Stack spacing={2}>
@@ -329,7 +377,6 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
               <Typography variant="subtitle2">Information shown on the card</Typography>
               <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>{fieldChoices.map((field) => <FormControlLabel key={field.id} label={field.name}
                 control={<Checkbox checked={template.fields.includes(field.id)} onChange={(_event, checked) => patchTemplate({ fields: checked ? [...template.fields, field.id] : template.fields.filter((item) => item !== field.id) })} />} />)}</Stack>
-              <Button variant="outlined" onClick={save} disabled={busy} sx={{ alignSelf: 'flex-start' }}>Save template</Button>
             </Stack>}
             {step === 2 && <Stack spacing={2}>
               <Typography variant="subtitle1">Choose students</Typography>
@@ -361,7 +408,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
             {step === 3 && <Stack spacing={2}>
               <Typography variant="subtitle1">Review cards</Typography>
               <Typography variant="body2">{selectedRows.length} student{selectedRows.length === 1 ? '' : 's'} selected. {selectedRows.filter((row) => !row.hasPhoto).length} missing photo.</Typography>
-              <Button variant="outlined" disabled={busy} onClick={preview} sx={{ alignSelf: 'flex-start' }}>Refresh preview</Button>
+              <Button variant="outlined" disabled={busy} onClick={() => preview()} sx={{ alignSelf: 'flex-start' }}>Refresh preview</Button>
               <Grid container spacing={1.5}>{previews.map((card) => <Grid key={card.studentId} size={{ xs: 12, sm: 6 }}><StudentCardPreview template={template} card={card} /></Grid>)}</Grid>
             </Stack>}
             {step === 4 && <Stack spacing={2}>
@@ -382,19 +429,13 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
             <StudentCardPreview template={template} card={sample} />
           </Paper></Grid>}
         </Grid>
-      </Box>
-      <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ pt: 1, borderTop: 1, borderColor: 'divider' }}>
-        <Button variant="outlined" disabled={busy} onClick={() => step === 0 ? onClose() : setStep((value) => value - 1)}>{step === 0 ? 'Cancel' : 'Back'}</Button>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" disabled={busy} onClick={save}>Save</Button>
-          {step < 4 ? <Button variant="contained" disabled={busy} onClick={advance}>Next</Button> : <Button variant="contained" disabled={busy} onClick={onClose}>Done</Button>}
-        </Stack>
-      </Stack>
+        </Box>}
+      />
     </Paper>
   );
 }
 
-function StudentCardPreview({ template, card }: { template: IdCardTemplate; card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> }) {
+export function StudentCardPreview({ template, card }: { template: IdCardTemplate; card?: Pick<IdCard, 'studentSnapshot' | 'hasPhoto' | 'cardNumber'> }) {
   const vertical = template.orientation === 'Vertical';
   return <Box sx={{ overflowX: 'auto', mt: 1.5, p: 1.5, bgcolor: 'background.neutral', borderRadius: 1.5 }}>
     <Box sx={{ width: vertical ? 260 : 420, height: vertical ? 420 : 260, bgcolor: template.backgroundColor, color: 'text.primary', border: '1px solid', borderColor: template.primaryColor, borderRadius: 1.5, p: 2, boxSizing: 'border-box', boxShadow: 2 }}>

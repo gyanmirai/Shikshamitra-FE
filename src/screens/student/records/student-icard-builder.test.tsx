@@ -44,7 +44,15 @@ vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.toa
 vi.mock('react-redux', () => ({
   useSelector: (select: any) => select({ globalState: { currentYear: { id: mocks.yearId } } }),
 }));
-vi.mock('src/components/custom-stepper', () => ({ default: () => <div /> }));
+vi.mock('src/components/custom-stepper', () => ({
+  CustomStepperWithFormik: ({ activeStep, steps, renderItem, onCancel, handleBack, handleNext, onSave }: any) => <div>
+    <nav aria-label="Student I-Card creation steps">{steps.join(' · ')}</nav>
+    {renderItem({ activeStep })}
+    <button type="button" onClick={activeStep === 0 ? onCancel : handleBack}>{activeStep === 0 ? 'Cancel' : 'Back'}</button>
+    <button type="button" onClick={() => onSave(false, {}, {}, () => {})}>Save</button>
+    <button type="button" onClick={() => handleNext(activeStep === steps.length - 1, {}, {}, () => {})}>{activeStep === steps.length - 1 ? 'Done' : 'Next'}</button>
+  </div>,
+}));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, options, onChange }: any) => <div aria-label={`${label} choices`}>
     {options.map((option: any) => <button key={option.id} type="button"
@@ -122,6 +130,8 @@ vi.mock('src/redux/student/records/student-record-documents-api', () => ({
     isError: false,
   }),
   useSaveRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
+  useCreateRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
+  useUpdateRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
   usePreviewRecordIdsMutation: () => [vi.fn(), { isLoading: false }],
   useExportRecordIdsMutation: () => [vi.fn(), { isLoading: false }],
   useIssueRecordIdsMutation: () => [vi.fn(), { isLoading: false }],
@@ -149,7 +159,7 @@ it('retains the entered name when the save response omits it', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   expect(await screen.findByRole('textbox', { name: 'School name' })).toBeVisible();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Save template' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(mocks.toast).toHaveBeenCalled());
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
 

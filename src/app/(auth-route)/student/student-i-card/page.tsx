@@ -1,5 +1,5 @@
-import StudentRecordDocuments from 'src/screens/student/records/student-record-documents';
+import StudentICardTemplates from 'src/screens/student/records/student-icard-templates';
 
-const StudentICard = () => <StudentRecordDocuments fixedKind="ids" />;
+const StudentICard = () => <StudentICardTemplates />;
 
 export default StudentICard;

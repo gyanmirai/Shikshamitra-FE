@@ -54,7 +54,7 @@ The client unwraps the shared `Result<T>` response and invalidates case/list/ana
 The list sends `enteredToday` and task filters to the server before pagination, including Fees and Credentials.
 Activation also invalidates the Student Records directory tag so the newly activated student becomes discoverable without stale cached rows.
 
-`src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template, preview, issue, history and bulk PDF export calls. The builder saves the design before requesting previews or exports; issue retains a stable idempotency key for retries. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
+`src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template list, create, update, delete, preview, issue, history and bulk PDF export calls. The builder saves the selected design before requesting previews or exports and passes its template ID to those calls; issue retains a stable idempotency key for retries. The older single-template client remains for the embedded Records document flow. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 
