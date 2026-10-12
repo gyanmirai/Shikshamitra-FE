@@ -82,8 +82,11 @@ export type StudentDirectoryInput = {
   population?: 'All' | 'Active' | 'Former';
   academicYearId?: string;
   studentId?: string;
+  studentIds?: string[];
+  includeActiveStudentList?: boolean;
   boardId?: string;
   mediumId?: string;
+  academicMediumStageId?: string;
   standardId?: string;
   divisionId?: string;
   boardIds?: string[];
@@ -91,11 +94,12 @@ export type StudentDirectoryInput = {
   standardIds?: string[];
   divisionIds?: string[];
 };
-export type StudentDirectoryOption = { id: string; name: string; parentId?: string | null };
+export type StudentDirectoryOption = { id: string; name: string; parentId?: string | null; stageId?: string | null };
 export type StudentDirectoryOptions = {
   academicYears: StudentDirectoryOption[];
   boards: StudentDirectoryOption[];
   mediums: StudentDirectoryOption[];
+  stages?: StudentDirectoryOption[];
   standards: StudentDirectoryOption[];
   divisions: StudentDirectoryOption[];
 };
@@ -117,7 +121,7 @@ export type StudentDirectoryItem = {
   academicMediumId?: string | null;
   academicMediumName?: string | null;
   entrySource:
-    'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'LegacyNeedsApproval';
+    'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'LegacyNeedsApproval' | 'ActiveStudentList';
   hasPhoto: boolean;
   maskedFields: string[];
 };

@@ -9,12 +9,14 @@ export default function RecordsStudentPicker({
   onSelect,
   disabled = false,
   selectedId,
+  includeActiveStudentList = false,
   size = 'medium',
   helperText = 'Search across active and former records.',
 }: {
   onSelect: (student: StudentDirectoryItem | null) => void;
   disabled?: boolean;
   selectedId?: string;
+  includeActiveStudentList?: boolean;
   size?: 'small' | 'medium';
   helperText?: string | null;
 }) {
@@ -27,10 +29,11 @@ export default function RecordsStudentPicker({
   const query = useGetStudentRecordsDirectoryQuery({
     search: debounced,
     population: 'All',
+    includeActiveStudentList,
     maxResultCount: 100,
   });
   const selectedQuery = useGetStudentRecordsDirectoryQuery(
-    { studentId: selectedId, population: 'All', maxResultCount: 1 },
+    { studentId: selectedId, population: 'All', includeActiveStudentList, maxResultCount: 1 },
     { skip: !selectedId }
   );
   const selection =
@@ -47,6 +50,11 @@ export default function RecordsStudentPicker({
         value={selection}
         options={query.currentData?.items ?? []}
         loading={query.isFetching || selectedQuery.isFetching}
+        loadingText="Loading students…"
+        openOnFocus
+        onOpen={() => {
+          if (!query.isUninitialized && !query.isFetching) query.refetch();
+        }}
         disabled={disabled}
         filterOptions={(options) => options}
         isOptionEqualToValue={(left, right) => left.studentId === right.studentId}
@@ -60,7 +68,15 @@ export default function RecordsStudentPicker({
           setLocalSelection(value);
           onSelect(value);
         }}
-        noOptionsText="No eligible students match. Search by name or GR number."
+        noOptionsText={query.isError
+          ? 'Students could not be loaded. Use Retry below.'
+          : includeActiveStudentList
+            ? debounced
+              ? 'No matching active or records-eligible student found.'
+              : 'No active or records-eligible students are available.'
+            : debounced
+              ? 'No eligible student matches. Students in Student List may need onboarding or historical entry approval.'
+              : 'No eligible student records are available. Complete onboarding or approve a historical entry first.'}
         renderInput={(params) => (
           <TextField
             {...params}

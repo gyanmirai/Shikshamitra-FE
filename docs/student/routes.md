@@ -72,13 +72,15 @@ The Student Records menu has five submodules. Existing Records workflow URLs rem
 | Submodule          | Route                             | Screen                                                                         | Permission                                |
 | ------------------ | --------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------- |
 | Student List       | `/student/profile`                | `src/screens/student/studentProfile/index.tsx`                                 | `Students.Records.StudentList.View`       |
-| Student I-Card     | `/student/student-i-card`         | `src/screens/student/records/student-record-documents.tsx` in ID mode          | `Students.Records.StudentICard.View`      |
-| Certificates       | `/student/certificates`           | `src/screens/student/records/student-record-documents.tsx` in certificate mode | `Students.Records.Certificates.View`      |
+| Student I-Card     | `/student/student-i-card`         | `src/screens/student/records/student-icard-templates.tsx`                      | `Students.Records.StudentICard.View`      |
+| Certificates       | `/student/certificates`           | `src/screens/student/records/student-certificate-workspace.tsx`, through the document screen | `Students.Records.Certificates.View`      |
 | Reports            | `/student/reports`                | `src/screens/student/reports/index.tsx`                                        | `Students.Records.Reports.View`           |
 | Settings           | `/student/studentRecords/setting` | `src/screens/student/recordsSetting/index.tsx`                                 | `Students.Records.Settings.View`          |
 
 I-Card and Certificates use the persisted document APIs rather than the sample rows in the earlier screens. Server permissions and school Records policy still control issuance and record changes.
-The Student I-Card Create action opens a five-step builder (Template, Designer, Students, Review, Export). The Students step uses multiple Board, Medium, Class and Division selections and retains up to 100 selected students across directory pages. Export downloads a bulk A4 PDF; Issue writes numbered cards to history.
+
+Certificate creation follows the Daily Attendance academic selection flow: default Board and Medium, then School level, Class and Division. Each change clears its dependent selections and selected students; the student list loads only after a complete academic selection.
+The Student I-Card page lists saved designs with View, Edit, and Delete actions and shows each design's assigned student count against the active student total for the selected global year. Create and Edit open a five-step builder (Template, Designer, Students, Review, Export) using the shared HR-style stepper. The Students step uses multiple Board, Medium, Class and Division selections for the selected global year and retains up to 100 selected students across directory pages. Selecting multiple classes disables the Division filter and includes students from every division in those classes. Students assigned to another template in the same year can be selected; saving moves them to the current template. Export downloads a bulk A4 PDF; Issue writes numbered cards to history.
 
 ## Menu ownership
 

@@ -1,6 +1,7 @@
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 import type { CertificateType } from 'src/redux/student/records/student-record-documents-api';
 
+import { RouterLink } from 'src/routes/components';
 import { Box, Chip, Stack, Paper, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import RecordsStudentPicker from '../records-student-picker';
@@ -16,6 +17,11 @@ type Props = {
   kind: 'certificates' | 'ids';
   busy: boolean;
   canIssue: boolean;
+  showCertificateTypeSelect?: boolean;
+  showCertificateBatch?: boolean;
+  selectedStudentId?: string;
+  selectedStudentName?: string;
+  legacyEntryHref?: string;
   certificateType: CertificateType;
   reason: string;
   transitionId: string;
@@ -29,6 +35,7 @@ type Props = {
   onReasonChange: (value: string) => void;
   onTransitionChange: (value: string) => void;
   onRemoveStudent: (studentId: string) => void;
+  onFocusStudent?: (studentId: string) => void;
   onPreview: () => void;
   onIssue: () => void;
 };
@@ -38,6 +45,11 @@ export default function RecordDocumentFilters({
   busy,
   onSelect,
   canIssue,
+  showCertificateTypeSelect = true,
+  showCertificateBatch = false,
+  selectedStudentId,
+  selectedStudentName,
+  legacyEntryHref,
   certificateType,
   onCertificateTypeChange,
   reason,
@@ -48,6 +60,7 @@ export default function RecordDocumentFilters({
   exitOptions,
   batch,
   onRemoveStudent,
+  onFocusStudent,
   previewDisabled,
   onPreview,
   issueDisabled,
@@ -58,22 +71,29 @@ export default function RecordDocumentFilters({
     <Paper sx={{ p: 1, borderRadius: 1.5, flexShrink: 0, '& .MuiInputBase-root': { minHeight: 40 } }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'flex-start' }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <RecordsStudentPicker size="small" helperText={null} disabled={busy} onSelect={onSelect} />
+          <RecordsStudentPicker key={showCertificateBatch ? batch.length : 'single'}
+            size="small" helperText={null} disabled={busy} onSelect={onSelect}
+            includeActiveStudentList={certificates} />
         </Box>
         {canIssue && (
           <>
             {certificates ? (
               <>
-                <TextField select size="small" label="Certificate type" value={certificateType}
-                  disabled={busy} onChange={event => onCertificateTypeChange(Number(event.target.value) as CertificateType)}
-                  sx={{ width: { xs: 1, md: 180 } }}>
-                  {certificateTypes.map(type => <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>)}
-                </TextField>
+                {showCertificateTypeSelect && (
+                  <TextField select size="small" label="Certificate type" value={certificateType}
+                    disabled={busy} onChange={event => onCertificateTypeChange(Number(event.target.value) as CertificateType)}
+                    sx={{ width: { xs: 1, md: 180 } }}>
+                    {certificateTypes.map(type => <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>)}
+                  </TextField>
+                )}
                 <TextField size="small" label="Purpose / reason" value={reason} disabled={busy}
                   onChange={event => onReasonChange(event.target.value)} inputProps={{ maxLength: 4000 }}
                   sx={{ flex: 1, minWidth: 0 }} />
                 {certificateType === 3 && (
-                  <TextField select size="small" label="Graduation / withdrawal / transfer case"
+                  <TextField select size="small"
+                    label={showCertificateBatch && selectedStudentName
+                      ? `Exit case for ${selectedStudentName}`
+                      : 'Graduation / withdrawal / transfer case'}
                     value={transitionId} disabled={busy || exitsLoading}
                     onChange={event => onTransitionChange(event.target.value)}
                     sx={{ flex: 1, minWidth: 0 }}>
@@ -95,12 +115,33 @@ export default function RecordDocumentFilters({
             <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0, minHeight: 40 }}>
               <Button size="small" variant="outlined" disabled={previewDisabled} onClick={onPreview}>Preview</Button>
               <Button size="small" variant="contained" disabled={issueDisabled} onClick={onIssue} sx={{ whiteSpace: 'nowrap' }}>
-                Issue {certificates ? 'certificate' : 'cards'}
+                {certificates ? 'Generate certificate' : 'Issue cards'}
               </Button>
             </Stack>
           </>
         )}
       </Stack>
+      {showCertificateBatch && canIssue && (
+        <Stack direction="row" gap={0.5} flexWrap="wrap" alignItems="center" sx={{ mt: 1 }}>
+          {batch.map(student => (
+            <Chip key={student.studentId} size="small" disabled={busy}
+              color={student.studentId === selectedStudentId ? 'primary' : 'default'}
+              variant={student.studentId === selectedStudentId ? 'filled' : 'outlined'}
+              label={[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity'}
+              onClick={() => onFocusStudent?.(student.studentId)}
+              onDelete={() => onRemoveStudent(student.studentId)} />
+          ))}
+          <Typography variant="caption" color="text.secondary">
+            {batch.length}/100 students selected
+            {certificateType === 3 && batch.length > 0 ? ' · Select each name to choose its exit case.' : ''}
+          </Typography>
+          {legacyEntryHref && (
+            <Button size="small" component={RouterLink} href={legacyEntryHref} sx={{ ml: 'auto' }}>
+              Former student missing? Review historical entries
+            </Button>
+          )}
+        </Stack>
+      )}
     </Paper>
   );
 }
