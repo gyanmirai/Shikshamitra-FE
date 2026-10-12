@@ -1,10 +1,8 @@
 'use client';
 
 import type { JSX } from 'react';
-import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import IcardTemplate from 'src/templates/icard';
 import { Iconify } from 'src/components/iconify';
@@ -19,9 +17,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import StudentIDCardCreator from 'src/components/icard-creation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import IcardPreview from './icard-preview';
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
 const StudentIcardScreen = () => {
   const dialog = useBoolean();
@@ -130,7 +130,7 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
 
   const isCustom = useBoolean();
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useStudentAcademicScope();
 
   const [selectedTemplate, setSelectedTemplate] = useState<null | number>(null);
   const isLoading = useBoolean();
@@ -162,6 +162,9 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
 
   return (
     <Box>
+      {selectedTemplate === null && (
+        <StudentAcademicScopeFilters />
+      )}
       {selectedTemplate === null && (
         <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
           <CustomSelect

@@ -15,11 +15,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useGetFilterStudentsQuery } from 'src/redux/student';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
@@ -33,6 +34,8 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
 const FirstTrialCertificate = () => {
   const dialog = useBoolean();
@@ -166,12 +169,7 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State for storing class data
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // Get current board and medium from global state
-  const {
-    // currentBoard,
-    currentMedium: medium,
-    // setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear: scopeYear } = useStudentAcademicScope();
   // State for storing division data
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
@@ -227,12 +225,6 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
     },
   });
 
-  // Query hook for fetching student data
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
-
   // Destructure form values
   const { organization, classes, division } = values;
 
@@ -242,15 +234,37 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
   }, [medium, setFieldValue]);
 
   // Effect to fetch students when filters change
+  const validPlacement = Boolean(
+    scopeYear?.id &&
+    medium?.educationMediumStages?.some(
+      (stage) =>
+        stage.id === organization &&
+        stage.standards?.some(
+          (standard) =>
+            standard.id === classes && standard.divisions?.some((item) => item.id === division)
+        )
+    )
+  );
+  const {
+    currentData: StudentsData,
+    isFetching: isLoading,
+    isError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFilterStudentsQuery,
+    params: {
+      academicYearId: scopeYear?.id,
+      academicMediumId: medium?.id,
+      educationMediumStageId: organization,
+      standardId: classes,
+      divisionId: division,
+    },
+    options: { skip: !validPlacement },
+  });
+
   useEffect(() => {
-    if (division && classes && organization) {
-      getStudents({
-        educationMediumStageId: organization,
-        standardId: classes,
-        divisionId: division,
-      });
-    }
-  }, [division, classes, organization, getStudents]);
+    setFieldValue('student', []);
+  }, [scopeYear?.id, medium?.id, division, validPlacement, isError, setFieldValue]);
 
   // Effect to update classes when organization changes
   useEffect(() => {
@@ -265,11 +279,13 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
   // Memoized table data transformation
   const tableData = useMemo(
     () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
+      validPlacement && !isError
+        ? StudentsData?.items?.map((item: any) => ({
+            ...item,
+            name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          })) || []
+        : [],
+    [StudentsData?.items, validPlacement, isError]
   );
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -289,6 +305,9 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
           </Button>
         </Box>
         <Grid container spacing={3}>
+          <Grid size={{ xs: 12 }}>
+            <StudentAcademicScopeFilters />
+          </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
               <CustomSelect

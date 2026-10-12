@@ -5,7 +5,7 @@ import type {
 } from 'src/utils/userScopeBulkAssignPayload';
 
 import { api } from 'src/redux/service';
-import { employeeType } from 'src/redux/tagTypes';
+import { tagTypes, allTagTypes, employeeType } from 'src/redux/tagTypes';
 
 export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
@@ -342,14 +342,14 @@ export const employeeApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: (result) => (result ? tagTypes : []),
     }),
     getAccessControl: builder.query({
       query: ({ userId, academicYearId }) => ({
         url: `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
         redirect: 'follow',
       }),
-      providesTags: [employeeType.employee],
+      providesTags: [employeeType.employee, allTagTypes.userScope],
     }),
     getEmployeeNotificationHistory: builder.query({
       query: () => ({

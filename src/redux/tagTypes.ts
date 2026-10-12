@@ -681,6 +681,7 @@ export const permissionType = {
 } as const;
 
 export const allTagTypes = {
+	userScope: 'UserScope',
   ...academicCalendarType,
   ...academicType,
   ...quizManagementType,

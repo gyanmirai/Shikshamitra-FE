@@ -1,9 +1,7 @@
-import type { RootState } from 'src/redux/store';
-
-import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   Box,
@@ -19,6 +17,8 @@ import {
   ListItemAvatar,
   CircularProgress,
 } from '@mui/material';
+
+import { StudentAcademicScopeFilters } from '../../student-academic-scope-filters';
 
 export interface SelectedStudent {
   id: string;
@@ -48,11 +48,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   selectedStudent,
   onSelectStudent,
 }) => {
-  const {
-    currentMedium: medium,
-    currentYear,
-    currentBoard,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear, currentBoard } = useStudentAcademicScope();
 
   const [searchText, setSearchText] = useState('');
 
@@ -63,15 +59,15 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   });
 
   const {
-    data: studentsData,
+    currentData: studentsData,
     isLoading,
     isFetching,
     isError,
   } = useGetFeeCollectionListQuery(
     {
-      academicYearId: currentYear?.id,
-      boardId: currentBoard?.id,
-      educationMediumId: medium?.id,
+      academicYearId: currentYear?.id ?? '',
+      boardId: currentBoard?.id ?? '',
+      educationMediumId: medium?.id ?? '',
       skipCount: (tableParams.page - 1) * tableParams.rowsPerPage,
       maxResultCount: tableParams.rowsPerPage,
       search: tableParams.searchTerm || undefined,
@@ -82,13 +78,18 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   const [allStudents, setAllStudents] = useState<any[]>([]);
 
   useEffect(() => {
+    setAllStudents([]);
+    setTableParams((previous) => ({ ...previous, page: 1 }));
+  }, [currentYear?.id, currentBoard?.id, medium?.id, isError]);
+
+  useEffect(() => {
     if (!searchText) {
       setAllStudents([]);
     }
   }, [searchText]);
 
   useEffect(() => {
-    if (studentsData?.items) {
+    if (!isError && medium?.id && studentsData?.items) {
       setAllStudents((prev) => {
         if (tableParams.page === 1) return studentsData.items;
         // Merge without duplicates
@@ -99,7 +100,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
         return [...prev, ...newItems];
       });
     }
-  }, [studentsData, tableParams.page]);
+  }, [studentsData, tableParams.page, isError, medium?.id]);
 
   const hasMore =
     searchText && studentsData?.totalCount ? allStudents.length < studentsData.totalCount : false;
@@ -163,6 +164,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
   );
 
   const filtered = useMemo(() => {
+    if (isError || !medium?.id) return [];
     if (!searchText.trim()) return students;
     const q = searchText.toLowerCase();
     return students.filter(
@@ -173,7 +175,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
           .toLowerCase()
           .includes(q)
     );
-  }, [students, searchText]);
+  }, [students, searchText, isError, medium?.id]);
 
   return (
     <Card
@@ -184,6 +186,7 @@ const StudentSearchPanel: React.FC<StudentSearchPanelProps> = ({
       }}
     >
       {/* Header */}
+      <StudentAcademicScopeFilters />
       <Box
         sx={{
           p: 1.5,

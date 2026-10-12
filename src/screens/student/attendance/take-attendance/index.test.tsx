@@ -85,6 +85,40 @@ vi.mock('src/redux/student/take-attendance/take-attendace-api', () => ({
   useLockAttendanceMutation: () => [mocks.lock, { isLoading: false }],
   useUnlockAttendanceMutation: () => [mocks.unlock, { isLoading: false }],
 }));
+vi.mock('src/hooks/use-student-academic-scope', () => {
+  const currentMedium = {
+    id: 'medium',
+    name: 'English',
+    educationMediumStages: [
+      {
+        id: 'level',
+        name: 'Primary',
+        standards: [{ id: 'class', name: 'Class 1', divisions: [{ id: 'division', name: 'A' }] }],
+      },
+    ],
+  };
+  const currentBoard = {
+    id: 'board',
+    name: 'CBSE',
+    educationMediums: [currentMedium, { id: 'medium-2', name: 'Hindi', educationMediumStages: [] }],
+  };
+  const currentYear = {
+    id: 'year',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    boards: [currentBoard, { id: 'board-2', name: 'State Board', educationMediums: [] }],
+  };
+  return {
+    useStudentAcademicScope: () => ({
+      currentYear,
+      currentMedium,
+      currentBoard,
+      boards: [currentBoard],
+      mediums: [currentMedium],
+      isError: false,
+    }),
+  };
+});
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading }: { heading: string }) => <h1>{heading}</h1>,
 }));
@@ -324,7 +358,9 @@ describe('Daily Attendance workspace', () => {
     render(<TakeAttendanceScreen />);
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Lock' })).toBeDisabled();
-    expect(await screen.findByText('Attendance cannot be taken for a future date.')).toBeVisible();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Attendance cannot be taken for a future date.'
+    );
   });
   it('shows board and medium filters and clears dependent choices when either changes', () => {
     render(<TakeAttendanceScreen />);

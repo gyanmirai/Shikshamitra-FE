@@ -14,11 +14,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useGetFilterStudentsQuery } from 'src/redux/student';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -31,6 +32,8 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
 const CharacterCertificate = () => {
   const dialog = useBoolean();
@@ -172,14 +175,7 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
   // State for storing all divisions within selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  // Get current board and medium from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // Query hook for fetching filtered students based on selected criteria
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
+  const { currentMedium: medium, currentYear: scopeYear } = useStudentAcademicScope();
 
   // Initialize form handling with Formik
   const { errors, touched, initialValues, values, setFieldValue, handleSubmit, handleChange } =
@@ -240,32 +236,58 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
   }, [allClass, classes, setFieldValue]);
 
   // Fetch students data when division, class or organization changes
+  const validPlacement = Boolean(
+    scopeYear?.id &&
+    medium?.educationMediumStages?.some(
+      (stage) =>
+        stage.id === organization &&
+        stage.standards?.some(
+          (standard) =>
+            standard.id === classes && standard.divisions?.some((item) => item.id === division)
+        )
+    )
+  );
+  const {
+    currentData: StudentsData,
+    isFetching: isLoading,
+    isError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFilterStudentsQuery,
+    params: {
+      academicYearId: scopeYear?.id,
+      academicMediumId: medium?.id,
+      educationMediumStageId: organization,
+      standardId: classes,
+      divisionId: division,
+    },
+    options: { skip: !validPlacement },
+  });
+
   useEffect(() => {
-    // Only fetch if all required fields are selected
-    if (division && classes && organization) {
-      getStudents({
-        educationMediumStageId: organization,
-        standardId: classes,
-        divisionId: division,
-      });
-    }
-  }, [division, classes, organization, getStudents]);
+    setFieldValue('student', []);
+  }, [scopeYear?.id, medium?.id, division, validPlacement, isError, setFieldValue]);
 
   // Transform students data for table display
   const tableData = useMemo(
     () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        // Combine first, last and middle names
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
+      validPlacement && !isError
+        ? StudentsData?.items?.map((item: any) => ({
+            ...item,
+            // Combine first, last and middle names
+            name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          })) || []
+        : [],
+    [StudentsData?.items, validPlacement, isError]
   );
 
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
+          <Grid size={{ xs: 12 }}>
+            <StudentAcademicScopeFilters />
+          </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
               <CustomSelect

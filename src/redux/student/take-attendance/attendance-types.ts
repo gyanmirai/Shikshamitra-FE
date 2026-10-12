@@ -17,6 +17,7 @@ export interface AttendanceStudent {
   studentId: string;
   enrollmentId?: string | null;
   grNo?: number | string | null;
+  grNumber?: string | null;
   rollNo?: number | string | null;
   firstName?: string;
   middleName?: string;

@@ -30,6 +30,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { useRef, useMemo, useState, Suspense, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -111,7 +112,7 @@ const DailyAttendanceWorkspace = () => {
     () => readAttendanceTableQuery(searchParams.toString()),
     [searchParams]
   );
-  const globals = useSelector((state: RootState) => state.globalState);
+  const globals = useStudentAcademicScope();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [academicContext, setAcademicContext] = useState({
     year: globals.currentYear,
@@ -167,7 +168,7 @@ const DailyAttendanceWorkspace = () => {
   const organizations: Organization[] = medium?.educationMediumStages?.length
     ? medium.educationMediumStages
     : academicContext.medium?.id === medium?.id
-      ? academicContext.medium.educationMediumStages || []
+      ? academicContext?.medium?.educationMediumStages || []
       : [];
   const organization = organizations.find((item) => item.id === selection.organization);
   const standards: Standards[] = organization?.standards || [];
@@ -256,6 +257,10 @@ const DailyAttendanceWorkspace = () => {
     const nextKey = `${globals.currentYear?.id}/${globals.currentBoard?.id}/${globals.currentMedium?.id}`;
     if (contextSeen.current === nextKey) return;
     contextSeen.current = nextKey;
+    if (!academicContext.year?.id && globals.currentYear?.id) {
+      setAcademicContext({ year: globals.currentYear, medium: globals.currentMedium ,board: globals.currentBoard});
+      return;
+    }
     requestNavigation(() => {
       clearDraft();
       setAcademicContext({
@@ -276,6 +281,8 @@ const DailyAttendanceWorkspace = () => {
     globals.currentYear,
     globals.currentBoard,
     globals.currentMedium,
+    globals.isLoading,
+    academicContext.year?.id,
     requestNavigation,
     clearDraft,
     replaceSelection,
@@ -289,6 +296,22 @@ const DailyAttendanceWorkspace = () => {
     setSnapshot({ ...currentData, students: normalizeAttendanceRows(currentData.students) });
     setRows(normalizeAttendanceRows(currentData.students));
   }, [currentData, dirty, busy]);
+
+  useEffect(() => {
+    if (
+      globals.isError ||
+      (error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        (error.status === 403 || error.status === 404))
+    )
+      clearDraft();
+  }, [globals.isError, error, clearDraft]);
+
+  useEffect(() => {
+    if (!globals.isLoading && (!globals.currentYear || (selection.division && !validSelection)))
+      clearDraft();
+  }, [globals.isLoading, globals.currentYear, selection.division, validSelection, clearDraft]);
 
   const counts = useMemo(() => getAttendanceCounts(rows), [rows]);
   const markCounts = {
@@ -328,6 +351,8 @@ const DailyAttendanceWorkspace = () => {
     authoritative.isExpected &&
     !busy &&
     !stale &&
+    !isError &&
+    !globals.isError &&
     validSelection;
   const correction = !!snapshot?.isSubmitted;
   const needsCreditCorrection = rows.some((row) => row.needsCreditCorrection);
@@ -1014,7 +1039,7 @@ const DailyAttendanceWorkspace = () => {
           tableId="student-daily-attendance"
           tableTitle="Class register"
           columns={orderedColumns}
-          data={tableRows}
+          data={validSelection && !globals.isError && !isError ? tableRows : []}
           isLoading={validSelection && !snapshot && (isLoading || isFetching)}
           isSearch
           isPagination
@@ -1038,7 +1063,7 @@ const DailyAttendanceWorkspace = () => {
           }
         />
       </Box>
-      {details && snapshot && (
+      {details && snapshot && validSelection && !globals.isError && !isError && (
         <AttendanceDetailsDialog
           student={details}
           policy={snapshot.policy}
@@ -1046,20 +1071,25 @@ const DailyAttendanceWorkspace = () => {
           onApply={(row) => updateRow(row.studentId, () => row)}
         />
       )}
-      {requestedCorrection && snapshot?.revision && year && (
-        <AttendanceCorrectionDialog
-          student={requestedCorrection}
-          policy={snapshot.policy}
-          revision={snapshot.revision}
-          scope={{
-            academicYearId: year.id,
-            standardId: selection.standard,
-            divisionId: selection.division,
-            date: selection.date,
-          }}
-          onClose={() => setRequestedCorrection(null)}
-        />
-      )}
+      {requestedCorrection &&
+        snapshot?.revision &&
+        year &&
+        validSelection &&
+        !globals.isError &&
+        !isError && (
+          <AttendanceCorrectionDialog
+            student={requestedCorrection}
+            policy={snapshot.policy}
+            revision={snapshot.revision}
+            scope={{
+              academicYearId: year.id,
+              standardId: selection.standard,
+              divisionId: selection.division,
+              date: selection.date,
+            }}
+            onClose={() => setRequestedCorrection(null)}
+          />
+        )}
       <ConfirmDialog
         open={decision !== null}
         disableBackdropClick

@@ -3,43 +3,72 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-11
+updated_on: 2026-10-12
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
 
+## Student scope repair verification (2026-10-12)
+
+The Attendance RTK Query adapter prefers canonical `grNumber` and preserves legacy numeric `grNo` compatibility for display and search. The component fixture now supplies the full scoped Board/Medium/School level/Class/Division hierarchy, so its tests exercise the Attendance register rather than stop at missing selection data. Focused Attendance UI/API and scope regressions passed 56/56; full-project TypeScript and focused zero-warning ESLint passed.
+
+Supporting headless Playwright used normal HOD sign-in on port 3000, forwarding browser API requests to the rebuilt local API on port 5001 with actual responses. Five checks passed: sign-in, outside Beta Admission denial, Alpha-only Attendance, canonical `QAS26-000001` display, and Alpha-only Directory. Screenshots and results are ignored under `.artifacts/student-e2e-20261012/repair-browser-*`. Original port 5000 still used the earlier build. Codex browser control timed out, so final Codex-browser acceptance is not claimed.
+
+The broader security regression passed 108/109. Its deployment-wiring test fails because the existing deployment workflow lacks the reusable security dependency; that workflow was preserved. The earlier broad Student-suite failures remain separate from these focused repairs. Backend scope and timestamp behavior are documented in [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#student-scope-repairs-2026-10-12). Temporary HOD scope was restored and same-token denial verified; no credentials or browser authentication state were saved to disk. The repair report is `.artifacts/student-e2e-20261012/student-user-scope-repair-report.html`.
+
+## Local Student scope end-to-end QA (2026-10-12)
+
+Actual DDVS API writes created two synthetic applicants, completed Form, Assessment, Fee Selection, Document Verification and Decision, finalized Admissions, and activated both Onboarding cases without student/guardian login accounts. Alpha was moved through an independently approved Records placement request into a dedicated QA division before Attendance writes, so existing students were not marked. Attendance draft, submit, lock, independent correction approval, leave-credit reconciliation, directory filtering and a generated Excel export were verified. Backend behavior and scope defects are recorded in [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#local-student-scope-end-to-end-qa-2026-10-12).
+
+Supporting headless Playwright checks used an isolated browser context with the installed Chrome executable and normal HOD sign-in. They reproduced the outside-division finalized Admission identity and the missing prefixed GR number in Attendance; Directory included Alpha and excluded Beta. Screenshots and the report are ignored under `.artifacts/student-e2e-20261012/`. The Codex in-app browser control tool was unavailable, so these are supporting browser checks, not final Codex-browser acceptance. No authentication state or credentials were saved to disk.
+
+Full-project TypeScript validation passed. The focused scope hook, hierarchy utility and Student academic-year tests passed 29/29. The isolated Attendance component suite failed 23/24: its mocked scope hook returns an academic year without `boards`, leaving the screen at the Board/Medium selection boundary. The broad Student suite was interrupted after stalling and also reported failures in public inquiry links, Applicant 360, cycle dialogs, legacy Student List filters and the production-mock guard. These failures remain unresolved; no whole-Student green result is claimed. Local fixtures and configuration remain for reproduction; temporary HOD/Admin permission overrides and every temporary active scope were restored and verified.
+
+Commands run from this repository:
+
+```powershell
+node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit --incremental
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/hooks/use-student-academic-scope.test.tsx src/utils/academicHierarchyUtils.test.ts src/layouts/components/global-academic-search/student-academic-years.test.ts --pool=threads --maxWorkers=1
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/attendance/take-attendance/index.test.tsx --pool=threads --maxWorkers=1
+node scripts/docs/validate-docs.mjs --module student
+```
+
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
 
-## Admission offering cycle-date inheritance (2026-10-11)
+## Staff Academic UserScope checks (2026-10-09)
 
-Offering create, clone and bulk forms no longer expose Admission window or custom open/close controls. Focused regressions verify that preview/create/update/bulk serializers send `useCycleDates: true` with null override dates even when legacy or stale form values contain custom dates. Edit preserves hidden code, Campus, routing and active state while switching to cycle-date inheritance on save. Removed custom-date schema rules cannot block the form, and server date-range feedback is attached to the visible Admission cycle field.
+The Student browser workspace uses the logged-in staff member's existing Academic UserScope. The final focused Vitest run passed 63 tests across nine files: staff hierarchy pruning and failure handling, attendance draft/navigation behavior, Academic hierarchy utilities, Student dashboard, global year selection, Admissions filters, and Student Setup filters. Full-project `npm run ts` and changed-file ESLint with `--max-warnings=0` passed. Student documentation validation and `git diff --check` passed. Browser verification was omitted at the user's request; no authenticated browser acceptance is claimed.
 
-The current focused frontend run passed 78 tests across 11 suites, including single-form surfaces, edit preview/save, bulk cycle navigation, configuration feedback and safe create defaults. Scoped TypeScript checked 16 related source/test files with zero diagnostics; changed-file ESLint, formatting, Student documentation validation and whitespace checks passed. These supersede the earlier custom-date control behavior documented in historical entries below. A full repository build and staging acceptance are separate gates.
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/hooks/use-student-academic-scope.test.tsx src/screens/student/attendance/take-attendance/index.test.tsx src/utils/academicHierarchyUtils.test.ts src/screens/student/dashboard src/layouts/components/global-academic-search/index.ui.test.tsx src/screens/student/admissions/admission-academic-filters.test.tsx src/screens/student/onboarding/student-setup/student-setup-academic-filters.test.tsx --pool=threads --maxWorkers=1` from the frontend repository. The ignored `.artifacts/student-scope-tests.txt` contains the final result. Run `node scripts/docs/validate-docs.mjs --module student` for module documentation.
 
-Authenticated browser verification was not completed: the current in-app tab was unavailable, and the user reported `AUTH_FAILED` while trying to sign in. Read-only local checks confirmed the API OpenID discovery endpoint responds HTTP 200 and recent token attempts log `invalid_scope`. The frontend requests the application scope `ShikshaMitra`, which is absent from the local API's advertised standard scopes. C: had only about 7 MB free during validation. No files were cleaned, credentials changed, local database migrated or running API restarted. Backend clone coverage is recorded separately in [Student backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+Management and certificate student queries wait for a placement present in the fresh scoped hierarchy. Their rows use the current query response and clear on invalid placement or errors; selected certificate students reset when scope context changes. No Student login or separate Student scope assignment editor is introduced.
 
-## Special admission offerings and derived entry (2026-10-11)
+## Staff Academic UserScope browser checks (2026-10-10)
 
-Routing coverage verifies the single required Admission type selector, no Starts with dropdown, new General Inquiry-first and special Registration-first defaults, saved routing preservation and used-identity locks. Bulk regressions verify track-specific class identity checks, class selection clearing on type changes, null Inquiry configuration for direct registration, retained counsellor setup and bounded type-specific codes. Field feedback attaches routing errors to Admission type and incompatible workflow checks to Published workflow.
+Authenticated Codex in-app browser checks used the existing DDVS Admin account, which displays school-wide access. The local API host and Application assembly were rebuilt on October 10, after the Student scope source changes. This run supplements the automated checks above.
 
-Runtime regressions cover permission-gated special entry, explicit cycle selection, paginated special offerings, General/Inquiry-first exclusion, historical Management/Staff Both support, family-link verification, stable retry IDs, failure recovery and unsaved changes. The final focused frontend run passed 119 tests across 14 suites, including the 31 runtime cases. Scoped TypeScript checked 27 source/test files with zero diagnostics; changed-file ESLint, formatting, Student documentation validation and whitespace checks passed. These scoped checks do not certify a full repository build or staging acceptance.
+| Check | Observed result |
+| --- | --- |
+| Student dashboard and year selection | Dashboard loaded; the global header contained Academic Year only. Switching to 2025-2026 refreshed the displayed year and summaries. Reload returned the header to 2026-2027. |
+| Directory filters | Board and dependent Medium choices loaded. Applying CBSE / English updated the URL; those URL filters survived reload. The directory showed its filtered-empty state. |
+| Daily Attendance | CBSE / English / Primary / Class 1 / A loaded three roster rows. Save and Submit remained disabled with `Calendar not configured` and unconfirmed attendance start dates. |
+| Invalid medium bookmark | An explicit nonexistent medium cleared the roster and disabled dependent selectors, Save and Submit. It did not fall back to the first medium. Restoring the valid bookmark reloaded the three rows. |
+| Board change | Selecting GSEB cleared the previous school level, class and division from the URL and removed the previous roster. |
+| Settings and Admissions | Attendance settings, Admissions Applications and Student Records settings loaded. No console errors were captured in the inspected tab. |
 
-Authenticated localhost UI checks verified all General classes disabled with Offering already exists, the same classes selectable for RTE, and Inquiry selection disappearing on special entry. Starts with is absent in both Bulk Create and a used Offering's Edit drawer; used identity stays disabled. Desktop (1440×900), tablet (768×1024) and mobile (390×844) had no document horizontal overflow and reachable footer actions. Only one eligible cycle was available locally. No offering, cycle or registration was saved; the running API was not restarted, so this does not prove live special creation/save/reload. The desktop screenshot is `.artifacts/special-admission/no-starts-with.jpg`.
+No student, attendance, policy, permission or scope assignments were saved. The ignored `.artifacts/student-scope-browser-2026-10-10/invalid-medium.jpg` captures the invalid-medium result without student details. Browser Back did not change the invalid bookmark during this run; recovery was verified by navigating to the saved valid URL. A class- or division-restricted staff session was not available in this run, so live sibling-record denial, scope revocation and restricted-role write behavior remain unverified in the browser; the focused backend and frontend tests above cover those boundaries.
 
-The isolated current backend gate passed 43 tests, including special registration, family selection, retry safety, scope/tenant checks, type-specific offering uniqueness and common Decision → Finalize → Onboarding handoff. It reused the unchanged compiled EF assembly; this is not a fresh full backend build. A separate broader run exposed legacy fixtures using retired workflow stages; those unrelated tests were not changed. Exact commands and results are recorded in [Student backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+## HOD Academic UserScope browser checks and year-selector repair (2026-10-10)
 
-## Bulk configured-class selection (2026-10-11)
+The user signed in with the existing DDVS HOD account. The Academic header showed `2025-2026 / GSEB / Gujarati`; Student Attendance offered GSEB only, Gujarati only, Higher Secondary only, Classes 11 and 12, and divisions A/B for Class 11. The authorized Class 11 / A roster request for 2025-10-10 returned HTTP 200, but no attendance rows could be marked because the calendar was not configured.
 
-Focused coverage includes `src/redux/student/admissions/admission-offering-class-identities-api.test.tsx`, the bulk hierarchy/model tests and the bulk dialog navigation tests.
-The real client tests exercise plain/enveloped responses, all-page reads, inactive Offerings, exact cycle/Board/Medium/Campus/track scope, empty results, later-page failures, stale-cycle data and Offering-tag refreshes.
-UI tests exercise disabled labels, remaining-class selection, all-configured feedback, loading/error/Retry, and pruning unavailable classes on cycle changes while preserving other configuration.
-Keep backend duplicate preview/commit checks as the concurrent-write safeguard; these tests do not replace that server rule.
-The focused bulk regression run passed 57 tests across 11 files; affected-file TypeScript and ESLint checks cover the eight changed source/test files.
-Authenticated localhost checks verified all 15 General Admission / CBSE / English classes disabled, and a remaining GSEB / Gujarati Class 1 selectable without creating an Offering.
-Desktop (1440×900), tablet (768×1024) and mobile (390×844) dropdown labels and reachable controls were checked, with no document horizontal overflow on tablet/mobile.
-Only one published/open cycle was available locally, so cross-cycle pruning is covered by automated tests rather than a live multi-cycle walkthrough; no create, activation, deletion or deployment was performed.
+The initial Student year list included unassigned 2026-2027 and 2027-2028 nodes returned by the scope hierarchy. Selecting 2026-2027 produced HTTP 403 for dashboard sections and no Attendance board choices. The Student-only year selector now filters those nodes and defaults to an authorized year. After a full browser reload, it selected 2025-2026, offered only that year and loaded all three Student dashboard sections. Explicit year-wide assignments remain selectable even before boards are configured; the generic year helper and non-Student selectors are unchanged.
+
+A known CBSE/English bookmark from the Admin check exposed no Attendance hierarchy or rows and disabled Save/Submit in the HOD session. A previously documented synthetic Student profile bookmark displayed its load-failure boundary; the backend returned HTTP 404, so this does not establish denial of a currently existing out-of-scope Student record. Live scope revocation and saved mutation paths were not exercised. No records, grants or scope assignments were changed.
+
+Focused Vitest passed 35 tests across the Student year selector, its access helper, Academic hierarchy utilities and Student staff scope hook. Full `npm run ts`, affected-file ESLint with zero warnings, Student documentation validation and `git diff --check` passed. Ignored evidence is under `.artifacts/student-scope-browser-2026-10-10/`, including `hod-year-tests.txt`, `hod-authorized-year.jpg`, `hod-class-scope.jpg` and `hod-denied-board.jpg`.
 
 ## Applicant overview removal and finalization refinement (2026-10-09)
 

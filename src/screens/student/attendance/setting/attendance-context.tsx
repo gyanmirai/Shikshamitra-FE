@@ -1,16 +1,16 @@
-import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
-import { useSelector } from 'react-redux';
 import { Paper, Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 
 export function useAttendanceContext() {
   const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const scope = useStudentAcademicScope();
+  const { currentYear, currentMedium } = scope;
   const standards: Standards[] =
     currentMedium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards) ?? [];
   const requestedClass = params.get('class') ?? '';
@@ -29,6 +29,10 @@ export function useAttendanceContext() {
     update,
     currentYear,
     currentMedium,
+    boards: scope.boards,
+    mediums: scope.mediums,
+    currentBoard: scope.currentBoard,
+    isScopeError: scope.isError,
     standards,
     divisions,
     standardId: standard ? requestedClass : '',
@@ -46,6 +50,39 @@ export function AttendanceClassFilters({
   return (
     <Paper variant="outlined" sx={{ p: 1 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <CustomSelect
+          fullWidth
+          size="small"
+          label="Board"
+          value={context.currentBoard?.id ?? ''}
+          options={context.boards.map((item) => ({ value: item.id, label: item.name }))}
+          onChange={(value) =>
+            context.update({
+              board: String(value),
+              medium: undefined,
+              class: undefined,
+              division: undefined,
+              student: undefined,
+              page: undefined,
+            })
+          }
+        />
+        <CustomSelect
+          fullWidth
+          size="small"
+          label="Medium"
+          value={context.currentMedium?.id ?? ''}
+          options={context.mediums.map((item) => ({ value: item.id, label: item.name }))}
+          onChange={(value) =>
+            context.update({
+              medium: String(value),
+              class: undefined,
+              division: undefined,
+              student: undefined,
+              page: undefined,
+            })
+          }
+        />
         <CustomSelect
           fullWidth
           size="small"
