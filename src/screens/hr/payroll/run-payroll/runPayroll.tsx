@@ -1820,8 +1820,13 @@ const RunPayroll = () => {
                                         fontWeight: 700,
                                         fontSize: '0.75rem',
                                         maxWidth: '100%',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
+                                        height: 'auto',
+                                        minHeight: 24,
+                                        py: 0.5,
+                                        lineHeight: 1.5,
+                                        whiteSpace: 'normal',
+                                        overflowWrap: 'anywhere',
+                                        textAlign: 'left',
                                       }}
                                     >
                                       {ISSUE_LABELS[code]?.label || code}

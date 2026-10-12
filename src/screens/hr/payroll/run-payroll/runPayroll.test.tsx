@@ -327,6 +327,7 @@ describe('Run Payroll preview feedback', () => {
       'COMPENSATION_REVISION_REQUIRED',
       'COMPENSATION_REVISION_REQUIRED',
       'UNKNOWN_INTERNAL_CODE',
+      'PF_WAGE_BASIS_REQUIRED',
     ];
     render(view());
     await userEvent.click(screen.getByRole('button', { name: 'View readiness' }));
@@ -334,6 +335,11 @@ describe('Run Payroll preview feedback', () => {
     const additional = screen.getByRole('region', { name: 'Additional readiness checks' });
     expect(within(additional).getAllByText('Effective salary setup required')).toHaveLength(1);
     expect(within(additional).getByText('Another payroll check needs attention')).toBeVisible();
+    expect(
+      within(additional).getByText(
+        'PF wage basis required. Update the salary structure to match the assigned PF rule.'
+      )
+    ).toBeVisible();
     expect(screen.queryByText('UNKNOWN_INTERNAL_CODE')).not.toBeInTheDocument();
   });
 

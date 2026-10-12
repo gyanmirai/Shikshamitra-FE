@@ -26,6 +26,7 @@ const permissions = [
   'HR.PayrollManagement.Settings.StatutorySchemes.Activate',
   'HR.PayrollManagement.Settings.SalaryTemplates.Add',
 ].flatMap((name) => [name, `${name}.View`, `${name}.Add`, `${name}.Edit`]);
+permissions.push('HR.PayrollManagement.RunPayroll.Lock');
 const readiness = {
   month: '2026-10',
   employeeCount: 3,
@@ -45,7 +46,12 @@ const readiness = {
 
 async function mockPayroll(
   page: Page,
-  options: { failReadiness?: boolean; delayDashboard?: boolean; zeroTaxRange?: boolean } = {}
+  options: {
+    failReadiness?: boolean;
+    delayDashboard?: boolean;
+    zeroTaxRange?: boolean;
+    missingPfBasis?: boolean;
+  } = {}
 ) {
   await page.clock.setFixedTime(new Date('2026-10-09T04:00:00Z'));
   await page.addInitScript((academicYear) => {
@@ -71,6 +77,17 @@ async function mockPayroll(
         accessToken: 'payroll-ui-e2e-only',
         expires: '2099-01-01T00:00:00Z',
         profile: { sub: 'payroll-ui-reviewer', name: 'Payroll UI Reviewer', role: 'admin' },
+      };
+    else if (path.endsWith('/host/session-context'))
+      body = {
+        accountMode: 'tenant',
+        tenantId: '11111111-1111-1111-1111-111111111111',
+        setupCompleted: true,
+        canManageSetup: false,
+        canViewTenants: false,
+        canCreateTenants: false,
+        canUpdateTenants: false,
+        canManageTenantStatus: false,
       };
     else if (path.includes('permission-management'))
       body = {
@@ -102,11 +119,42 @@ async function mockPayroll(
           previewRunId: 'ui-preview',
           isCurrent: true,
           isGenerated: false,
-          totalCount: 0,
+          totalCount: options.missingPfBasis ? 2 : 0,
           currentPage: 0,
           pageSize: 25,
-          items: [],
-          readiness,
+          items: options.missingPfBasis
+            ? [
+                {
+                  employeeId: 'ready-staff',
+                  employeeName: 'Ready Test Staff',
+                  employeeIdentifier: 'READY001',
+                  totalWorkingDays: 22,
+                  payableDays: 22,
+                  fullGrossSalary: 10000,
+                  grossSalary: 10000,
+                  totalEarnings: 10000,
+                  netPay: 10000,
+                  reviewStatus: 'REVIEWED',
+                  issueCodes: [],
+                },
+                {
+                  employeeId: 'pf-staff',
+                  employeeName: 'PF Test Staff',
+                  employeeIdentifier: 'PF001',
+                  totalWorkingDays: 22,
+                  payableDays: 22,
+                  fullGrossSalary: 10000,
+                  grossSalary: 10000,
+                  totalEarnings: 10000,
+                  netPay: 10000,
+                  reviewStatus: 'REVIEWED',
+                  issueCodes: ['PF_WAGE_BASIS_REQUIRED'],
+                },
+              ]
+            : [],
+          readiness: options.missingPfBasis
+            ? { ...readiness, blockingIssues: ['PF_WAGE_BASIS_REQUIRED'] }
+            : readiness,
         };
       else
         body = {
@@ -236,6 +284,50 @@ test.describe('Payroll interface consistency', () => {
       'href',
       '/hr/payrollPolicies'
     );
+  });
+
+  test('missing PF basis stays critical and fully readable in a narrow staff drawer', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockPayroll(page, { missingPfBasis: true });
+    await page.goto('/hr/payroll/run-payroll');
+    const lockReviewed = page.getByRole('button', { name: 'Lock Reviewed', exact: true });
+    const readyStaff = page.getByRole('checkbox', { name: 'Select payroll for Ready Test Staff' });
+    await readyStaff.check();
+    await expect(lockReviewed).toBeEnabled();
+    await readyStaff.uncheck();
+    await page.getByRole('checkbox', { name: 'Select payroll for PF Test Staff' }).check();
+    await expect(lockReviewed).toBeDisabled();
+    await page
+      .getByRole('row', { name: /PF Test Staff/ })
+      .getByRole('button', { name: 'View', exact: true })
+      .click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('CRITICAL', { exact: true })).toBeVisible();
+    const warning = dialog.getByText(
+      'PF wage basis required. Update the salary structure to match the assigned PF rule.',
+      { exact: true }
+    );
+    await expect(warning).toBeVisible();
+    const dimensions = await warning.evaluate((element) => ({
+      width: element.clientWidth,
+      contentWidth: element.scrollWidth,
+      height: element.clientHeight,
+      contentHeight: element.scrollHeight,
+    }));
+    expect(dimensions.contentWidth).toBeLessThanOrEqual(dimensions.width + 1);
+    expect(dimensions.contentHeight).toBeLessThanOrEqual(dimensions.height + 1);
+    await page.getByRole('button', { name: 'close', exact: true }).click();
+    await page.getByRole('button', { name: 'View readiness', exact: true }).click();
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByText(
+          'PF wage basis required. Update the salary structure to match the assigned PF rule.',
+          { exact: true }
+        )
+    ).toBeVisible();
   });
 
   test('failed readiness does not show zero counts or a clear cycle', async ({ page }) => {
