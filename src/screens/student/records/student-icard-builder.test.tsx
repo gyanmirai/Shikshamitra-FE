@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   directoryInput: {} as any,
   tableProps: {} as any,
   savedDirectoryInput: {} as any,
+  otherTemplates: [] as any[],
+  directoryItems: [] as any[],
   options: {
     academicYears: [{ id: 'year-1', name: '2026-27' }, { id: 'year-2', name: '2027-28' }],
     boards: [
@@ -81,7 +83,7 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
       return { currentData: { items: [{ studentId: 'student-1', firstName: 'Asha', grNumber: 'GR-1', standardName: 'Class 1', divisionName: 'A', hasPhoto: false }], totalCount: 1 }, isFetching: false };
     }
     mocks.directoryInput = input;
-    return { currentData: { items: [], totalCount: 0 }, isFetching: false };
+    return { currentData: { items: mocks.directoryItems, totalCount: mocks.directoryItems.length }, isFetching: false };
   },
 }));
 
@@ -89,6 +91,8 @@ beforeEach(() => {
   mocks.yearId = 'year-1';
   mocks.tableProps = {};
   mocks.savedDirectoryInput = {};
+  mocks.otherTemplates = [];
+  mocks.directoryItems = [];
   mocks.save.mockReset();
   mocks.toast.mockReset();
 });
@@ -171,6 +175,7 @@ vi.mock('src/redux/student/records/student-record-documents-api', () => ({
     currentData: mocks.template,
     isError: false,
   }),
+  useGetRecordIdTemplatesQuery: () => ({ currentData: mocks.otherTemplates, isError: false, refetch: vi.fn() }),
   useSaveRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
   useCreateRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
   useUpdateRecordIdTemplateMutation: () => [mocks.save, { isLoading: false }],
@@ -240,6 +245,20 @@ it('restores saved academic choices and students when editing, then saves them a
   expect(mocks.directoryInput).toMatchObject({ boardIds: ['board-1'], mediumIds: ['medium-1'], standardIds: ['class-1'], divisionIds: ['division-1'] });
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ id: 'template-1', body: expect.objectContaining({ selection: template.selection }) })));
+});
+
+it('prevents selecting a student assigned to another template in the same year', async () => {
+  const student = { studentId: 'student-2', firstName: 'Meera', grNumber: 'GR-2', standardName: 'Class 1', divisionName: 'A', hasPhoto: false };
+  mocks.directoryItems = [student];
+  mocks.otherTemplates = [{ id: 'template-other', name: 'Existing card', selection: { academicYearId: 'year-1', studentIds: [student.studentId] } }];
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder initialTemplate={null} onClose={vi.fn()} /></ThemeProvider>);
+  await openStudentsStep();
+
+  const selectionColumn = mocks.tableProps.columns.find((column: any) => column.id === 'select');
+  const checkbox = selectionColumn.render(null, student);
+  expect(checkbox.props.disabled).toBe(true);
+  expect(mocks.tableProps.columns.find((column: any) => column.id === 'assignedTemplate').render(null, student)).toBe('Existing card');
+  expect(selectionColumn.renderColumn().props.disabled).toBe(true);
 });
 
 it('preserves saved students from another year during a design-only edit', async () => {

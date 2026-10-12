@@ -21,6 +21,7 @@ import {
   useGetRecordIdTemplatesQuery,
   useDeleteRecordIdTemplateMutation,
 } from 'src/redux/student/records/student-record-documents-api';
+import { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
 
 import StudentICardBuilder, { StudentCardPreview } from './student-icard-builder';
 
@@ -35,6 +36,17 @@ export default function StudentICardTemplates() {
   const canEdit = hasGrantedPermission(permissions, 'Students.Records.StudentICard.Add');
   const canDelete = hasGrantedPermission(permissions, 'Students.Records.StudentICard.Delete');
   const templates = useGetRecordIdTemplatesQuery(undefined, { skip: !canView });
+  const students = useGetStudentRecordsDirectoryQuery({
+    population: 'Active', academicYearId: yearId, skipCount: 0, maxResultCount: 1,
+  }, { skip: !canView || !yearId });
+  const tableRows = (templates.currentData ?? []).map((row) => ({
+    ...row,
+    assignedStudents: !yearId || students.isError || !students.currentData
+      ? '—'
+      : row.selection?.academicYearId && row.selection.academicYearId !== yearId
+        ? 'Other academic year'
+        : `${row.selection?.studentIds?.length ?? 0} / ${students.currentData.totalCount}`,
+  }));
   const [deleteTemplate, deleting] = useDeleteRecordIdTemplateMutation();
 
   const openCreate = () => { setSelected(null); form.onTrue(); };
@@ -61,6 +73,9 @@ export default function StudentICardTemplates() {
     { id: 'name', label: 'Template', align: 'left', sticky: true, width: 260, minWidth: 220 },
     { id: 'schoolName', label: 'School', align: 'left', width: 220, minWidth: 180 },
     { id: 'orientation', label: 'Orientation', align: 'left', width: 132, minWidth: 120 },
+    { id: 'assignedStudents', label: 'Students assigned / total', align: 'left', width: 205, minWidth: 190,
+      isSort: false, isFilter: false,
+    },
     { id: 'cardsPerPage', label: 'Cards per page', align: 'left', width: 150, minWidth: 130, filterType: 'number' },
     {
       id: 'actions', label: 'Action', align: 'left', sticky: true, width: 108, minWidth: 96,
@@ -105,7 +120,7 @@ export default function StudentICardTemplates() {
         <CustomizableTable
           tableId="student-icard-templates"
           columns={columns}
-          data={templates.currentData ?? []}
+          data={tableRows}
           isLoading={templates.isLoading}
           isPagination isSearch
           noDataText="No Student I-Card templates found."

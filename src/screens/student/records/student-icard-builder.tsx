@@ -17,6 +17,7 @@ import {
   downloadRecordPdf,
   useExportRecordIdsMutation,
   useGetRecordIdTemplateQuery,
+  useGetRecordIdTemplatesQuery,
   useIssueRecordIdsMutation,
   useCreateRecordIdTemplateMutation,
   useUpdateRecordIdTemplateMutation,
@@ -85,6 +86,7 @@ export default function StudentICardBuilder({
 }) {
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const templateQuery = useGetRecordIdTemplateQuery(undefined, { skip: initialTemplate !== undefined });
+  const templatesQuery = useGetRecordIdTemplatesQuery();
   const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery(
     { academicYearId },
     { skip: !academicYearId }
@@ -188,6 +190,16 @@ export default function StudentICardBuilder({
   }, { skip: step < 2 || !academicYearId });
   const rows = directory.currentData?.items ?? [];
   const selectedRows = scopeYear.current === academicYearId ? Object.values(selected) : [];
+  const assignedElsewhere = useMemo(() => {
+    const assignments = new Map<string, string>();
+    (templatesQuery.currentData ?? []).forEach((existing) => {
+      if (!academicYearId || !existing.selection || existing.id === template?.id || existing.selection.academicYearId !== academicYearId) return;
+      (existing.selection.studentIds ?? []).forEach((studentId) => assignments.set(studentId, existing.name));
+    });
+    return assignments;
+  }, [templatesQuery.currentData, template?.id, academicYearId]);
+  const availableRows = rows.filter((row) => !assignedElsewhere.has(row.studentId));
+  const conflictingRows = selectedRows.filter((row) => assignedElsewhere.has(row.studentId));
   const sample = previews[0] ?? (selectedRows[0] ? {
     studentSnapshot: {
       StudentName: studentName(selectedRows[0]), GRNumber: selectedRows[0].grNumber ?? '',
@@ -221,6 +233,7 @@ export default function StudentICardBuilder({
     />
   );
   const toggleStudent = (student: StudentDirectoryItem) => {
+    if (templatesQuery.isLoading || (assignedElsewhere.has(student.studentId) && !selected[student.studentId])) return;
     setSelectionEdited(true);
     setSelected((previous) => {
       const next = { ...previous };
@@ -232,11 +245,12 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const togglePage = () => {
+    if (templatesQuery.isLoading || !availableRows.length) return;
     setSelectionEdited(true);
-    const allSelected = rows.every((row) => selected[row.studentId]);
+    const allSelected = availableRows.every((row) => selected[row.studentId]);
     setSelected((previous) => {
       const next = { ...previous };
-      rows.forEach((row) => {
+      availableRows.forEach((row) => {
         if (allSelected) delete next[row.studentId];
         else if (Object.keys(next).length < 100) next[row.studentId] = row;
       });
@@ -261,6 +275,11 @@ export default function StudentICardBuilder({
       setError('Choose at least one card field.');
       return null;
     }
+    if (conflictingRows.length) {
+      setStep(2);
+      setError(`${conflictingRows.length} selected student${conflictingRows.length === 1 ? ' is' : 's are'} already assigned to another template. Remove the selection before saving.`);
+      return null;
+    }
     try {
       const selection: IdCardSelection = template.selection?.academicYearId &&
         template.selection.academicYearId !== academicYearId && !selectionEdited
@@ -277,8 +296,14 @@ export default function StudentICardBuilder({
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
       return saved;
-    } catch {
-      setError('The template could not be saved. Refresh if another user changed it.');
+    } catch (failure) {
+      const response = failure as { data?: { error?: { code?: string }; code?: string } };
+      const code = response.data?.error?.code ?? response.data?.code;
+      if (code === 'Students:Records:IdTemplateStudentConflict') {
+        templatesQuery.refetch();
+        setStep(2);
+        setError('One or more students were assigned to another template. Refresh the student selection and try again.');
+      } else setError('The template could not be saved. Refresh if another user changed it.');
       return null;
     }
   };
@@ -348,15 +373,17 @@ export default function StudentICardBuilder({
   const columns: IColumn[] = [
     { id: 'select', label: '', isSort: false, isFilter: false, excludeFromExport: true, minWidth: 50,
       renderColumn: () => <Checkbox size="small" aria-label="Select all students on this page"
-        checked={rows.length > 0 && rows.every((row) => !!selected[row.studentId])}
-        indeterminate={rows.some((row) => !!selected[row.studentId]) && !rows.every((row) => !!selected[row.studentId])}
-        disabled={!rows.length || busy} onChange={togglePage} />,
+        checked={availableRows.length > 0 && availableRows.every((row) => !!selected[row.studentId])}
+        indeterminate={availableRows.some((row) => !!selected[row.studentId]) && !availableRows.every((row) => !!selected[row.studentId])}
+        disabled={!availableRows.length || busy || templatesQuery.isLoading} onChange={togglePage} />,
       render: (_value, data) => {
       const row = data as StudentDirectoryItem;
       return <Checkbox size="small" aria-label={`Select ${studentName(row)}`} checked={!!selected[row.studentId]}
-        disabled={busy || (!selected[row.studentId] && selectedRows.length >= 100)} onChange={() => toggleStudent(row)} />;
+        disabled={busy || templatesQuery.isLoading || (!selected[row.studentId] && (selectedRows.length >= 100 || assignedElsewhere.has(row.studentId)))} onChange={() => toggleStudent(row)} />;
     } },
     { id: 'firstName', label: 'Student', minWidth: 190, render: (_value, data) => studentName(data as StudentDirectoryItem) },
+    { id: 'assignedTemplate', label: 'Assigned template', minWidth: 160, isSort: false, isFilter: false,
+      render: (_value, data) => assignedElsewhere.get((data as StudentDirectoryItem).studentId) ?? (selected[(data as StudentDirectoryItem).studentId] ? 'This template' : '—') },
     { id: 'grNumber', label: 'GR number', minWidth: 110 },
     { id: 'standardName', label: 'Class', minWidth: 110, isSort: false },
     { id: 'divisionName', label: 'Division', minWidth: 110, isSort: false },
@@ -443,6 +470,8 @@ export default function StudentICardBuilder({
               {idsToHydrate.length > 0 && savedStudents.isFetching && <LinearProgress aria-label="Loading saved students" />}
               {savedStudents.isError && idsToHydrate.length > 0 && <Alert severity="error" action={<Button onClick={() => savedStudents.refetch()}>Retry</Button>}>Saved students could not be loaded.</Alert>}
               {selectionWarning && <Alert severity="warning" onClose={() => setSelectionWarning('')}>{selectionWarning}</Alert>}
+              {conflictingRows.length > 0 && <Alert severity="warning">{conflictingRows.length} saved student{conflictingRows.length === 1 ? ' is' : 's are'} also assigned to another template. Deselect before saving.</Alert>}
+              {templatesQuery.isError && <Alert severity="warning" action={<Button onClick={() => templatesQuery.refetch()}>Retry</Button>}>Other template assignments could not be loaded. The server will check for duplicates when you save.</Alert>}
               {optionsQuery.isError && <Alert severity="error" action={<Button onClick={() => optionsQuery.refetch()}>Retry</Button>}>Academic choices could not be loaded.</Alert>}
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Board', 'boardIds', boardOptions, (value) => ({ boardIds: value, mediumIds: [], standardIds: [], divisionIds: [] }))}</Grid>
