@@ -27,6 +27,7 @@ const permissions = [
   'HR.PayrollManagement.Settings.SalaryTemplates.Add',
 ].flatMap((name) => [name, `${name}.View`, `${name}.Add`, `${name}.Edit`]);
 permissions.push('HR.PayrollManagement.RunPayroll.Lock');
+permissions.push('HR.PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation');
 const readiness = {
   month: '2026-10',
   employeeCount: 3,
@@ -51,8 +52,20 @@ async function mockPayroll(
     delayDashboard?: boolean;
     zeroTaxRange?: boolean;
     missingPfBasis?: boolean;
+    esiEnabled?: boolean;
+    denyCalculation?: boolean;
   } = {}
 ) {
+  let esiVersion = {
+    id: 'ui-esic',
+    enabled: Boolean(options.esiEnabled),
+    registrationNumber: null,
+    coveredSince: null,
+    effectiveMonth: '2026-10',
+    concurrencyStamp: 'ui-stamp',
+    isCancelled: false,
+    calculationSettings: { wageBasis: 'CLASSIFIED_EARNINGS' },
+  };
   await page.clock.setFixedTime(new Date('2026-10-09T04:00:00Z'));
   await page.addInitScript((academicYear) => {
     localStorage.setItem(
@@ -94,7 +107,10 @@ async function mockPayroll(
         groups: [
           {
             name: 'Payroll UI test',
-            permissions: permissions.map((name) => ({ name, isGranted: true })),
+            permissions: permissions.map((name) => ({
+              name,
+              isGranted: !(options.denyCalculation && name.endsWith('.ConfigureCalculation')),
+            })),
           },
         ],
       };
@@ -168,19 +184,42 @@ async function mockPayroll(
           errorCode: null,
           errorMessage: null,
         };
-    } else if (path.includes('/esi/configuration'))
+    } else if (path.includes('/esi/configuration')) {
+      if (route.request().method() === 'PUT') {
+        esiVersion = {
+          ...esiVersion,
+          ...route.request().postDataJSON(),
+          concurrencyStamp: 'saved-stamp',
+        };
+      }
       body = {
         hasSchoolWideScope: true,
         suggestedEffectiveMonth: '2026-10',
-        history: [],
-        current: {
-          id: 'ui-esic',
-          enabled: false,
-          registrationNumber: null,
-          coveredSince: null,
-          effectiveMonth: '2026-10',
-          concurrencyStamp: 'ui-stamp',
-          isCancelled: false,
+        history: [esiVersion],
+        current: esiVersion,
+      };
+    } else if (path.endsWith('/esi/rule'))
+      body = { employeePercentage: 0.75, employerPercentage: 3.25 };
+    else if (path.endsWith('/esi/component-treatments'))
+      body = [
+        {
+          componentId: '22222222-2222-2222-2222-222222222222',
+          componentName: 'School Basic',
+          treatment: 'Included',
+        },
+      ];
+    else if (path.endsWith('/esi/impact-preview'))
+      body = {
+        items: [],
+        totalCount: 0,
+        summary: {
+          employeeCount: 0,
+          employeesNeedingAttention: 0,
+          coveredEmployeeCount: 0,
+          employeeContributionTotal: 0,
+          employerContributionTotal: 0,
+          canActivate: true,
+          blockingIssues: [],
         },
       };
     else if (path.includes('professional-taxes'))
@@ -226,6 +265,72 @@ async function expectCompactActions(page: Page, root = 'main', hasActions = true
 }
 
 test.describe('Payroll interface consistency', () => {
+  test('ESIC Basic basis and documented rates reach preview and save together', async ({
+    page,
+  }) => {
+    await mockPayroll(page, { esiEnabled: true });
+    await page.goto('/hr/payroll/setting/statutory-schemes');
+    await page.getByLabel('ESIC wage basis', { exact: true }).click();
+    await page.getByRole('option', { name: 'Basic component', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Basic component', exact: true }).click();
+    await page.getByRole('option', { name: 'School Basic', exact: true }).click();
+    await page.getByRole('switch', { name: 'Use administrator rate override' }).check();
+    await page.getByLabel('Employee ESIC percentage', { exact: true }).fill('0.5');
+    await page.getByLabel('Employer ESIC percentage', { exact: true }).fill('4');
+    await page.getByLabel('Rate override reason', { exact: true }).fill('Synthetic policy review');
+    const previewRequest = page.waitForRequest(
+      (request) =>
+        request.url().includes('/esi/impact-preview') &&
+        Boolean(request.postDataJSON()?.configurationDraft?.calculationSettings?.evidenceReference)
+    );
+    await page
+      .getByLabel('Supporting evidence reference', { exact: true })
+      .fill('Synthetic policy reference');
+    expect(
+      (await previewRequest).postDataJSON().configurationDraft.calculationSettings
+    ).toMatchObject({
+      wageBasis: 'BASIC_COMPONENT',
+      employeePercentage: 0.5,
+      employerPercentage: 4,
+    });
+    const saved = page.waitForRequest(
+      (request) => request.method() === 'PUT' && request.url().includes('/esi/configuration')
+    );
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    expect((await saved).postDataJSON()).toMatchObject({
+      effectiveMonth: '2026-10',
+      calculationSettings: {
+        wageBasis: 'BASIC_COMPONENT',
+        basicComponentId: '22222222-2222-2222-2222-222222222222',
+        employeePercentage: 0.5,
+        employerPercentage: 4,
+        overrideReason: 'Synthetic policy review',
+        evidenceReference: 'Synthetic policy reference',
+      },
+    });
+    await expect(page.getByText('ESIC settings saved.', { exact: true })).toBeVisible();
+    await expectCompactActions(page);
+  });
+
+  test('ESIC calculation controls require ConfigureCalculation even for an administrator', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockPayroll(page, { esiEnabled: true, denyCalculation: true });
+    await page.goto('/hr/payroll/setting/statutory-schemes');
+    await expect(page.getByLabel('ESIC wage basis', { exact: true })).toBeDisabled();
+    await expect(
+      page.getByRole('switch', { name: 'Use administrator rate override' })
+    ).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText(/Other required wages and statutory add-back still apply/)
+    ).toBeVisible();
+    expect(
+      await page.locator('body').evaluate((element) => element.scrollWidth <= window.innerWidth)
+    ).toBe(true);
+  });
+
   test.use({ storageState: { cookies: [], origins: [] } });
   const screens = [
     ['/hr/payroll', 'Overview'],

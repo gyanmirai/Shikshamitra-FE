@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-10-12
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,10 @@ audience: humans-and-agents
 
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
+
+`src/redux/hr/pf-coverage-api.ts` owns PF school-coverage history and effective-dated writes, invalidating PF, salary, and payroll caches.
+`esi-configuration-api.ts` carries ESIC calculation settings and effective months; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
+Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
 
 ## Client map
 

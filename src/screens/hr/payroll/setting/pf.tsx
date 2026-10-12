@@ -47,6 +47,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { PfCoverageSettings } from './pf-coverage-settings';
+
 interface IPF {
   id: string;
   creationTime: string;
@@ -136,6 +138,7 @@ const PF = () => {
           </Button>
         }
       />
+      <PfCoverageSettings />
       {ChangesConfirmDialog}
       <ConfirmDialog
         open={confirm.value}

@@ -13,9 +13,13 @@ import {
 describe('Statutory Schemes permission groups', () => {
   const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
   const node = { permissionName: `${root}.View` };
-  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map(
-    (action) => `${root}.${action}`
-  );
+  const edits = [
+    'Edit',
+    'Activate',
+    'ManageEnrollment',
+    'ApproveOverride',
+    'ConfigureCalculation',
+  ].map((action) => `${root}.${action}`);
   const catalog = [`${root}.View`, ...edits].map((name) => ({ name, isGranted: true }));
 
   it('uses three existing controls and maps Edit to all four defined write permissions', () => {
@@ -118,13 +122,16 @@ describe.each(['AccountHead', 'IncomeCategory', 'ExpenseCategory', 'BankAccount'
 it('shows only the exact posting setup grants supplied by the server', () => {
   const base = 'Finance.Accounts.Settings.PostingSetup';
   const catalog = ['View', 'Edit'].map((action) => ({
-    name: `${base}.${action}`, isGranted: false,
+    name: `${base}.${action}`,
+    isGranted: false,
   }));
   expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Edit']);
-  expect(getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'Edit', true, catalog))
-    .toEqual(new Set([`${base}.Edit`]));
-  expect(getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'View', false, catalog))
-    .toEqual(new Set([`${base}.View`]));
+  expect(
+    getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'Edit', true, catalog)
+  ).toEqual(new Set([`${base}.Edit`]));
+  expect(
+    getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'View', false, catalog)
+  ).toEqual(new Set([`${base}.View`]));
 });
 
 it('does not invent actions missing from the permission catalog', () => {

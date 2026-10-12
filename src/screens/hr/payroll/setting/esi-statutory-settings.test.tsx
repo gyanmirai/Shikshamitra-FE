@@ -129,7 +129,10 @@ describe('Compact ESIC settings', () => {
       )
     );
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('effectiveMonth');
+    expect(mocks.save.mock.calls[0][0]).toHaveProperty(
+      'effectiveMonth',
+      mocks.settings.suggestedEffectiveMonth
+    );
     expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('previewFingerprint');
   });
   it('preserves drafts and reuses the request key after a failure', async () => {

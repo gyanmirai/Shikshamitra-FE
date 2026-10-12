@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
+import type { EsiConfigurationDraft } from './esi-configuration-api';
+
 export type EsiRule = {
   id: string;
   schemeCode: 'ESI';
@@ -132,6 +134,7 @@ export type EsiImpactPreview = {
 };
 
 export type EsiImpactPreviewRequest = {
+  configurationDraft?: EsiConfigurationDraft;
   monthYear: string;
   search?: string;
   coverage?: 'all' | 'covered' | 'notCovered';

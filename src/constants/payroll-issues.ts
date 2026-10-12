@@ -2,6 +2,36 @@ export const PAYROLL_ISSUE_LABELS: Record<
   string,
   { label: string; severity: 'CRITICAL' | 'WARNING' | 'INFO'; color: 'warning' | 'error' | 'info' }
 > = {
+  PF_MEMBERSHIP_REVIEW_REQUIRED: {
+    label: 'Review school PF coverage and previous membership',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  PF_ENROLLMENT_REQUIRED: {
+    label: 'Mandatory or continuing PF enrollment required',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  PF_CONSENT_REQUIRED: {
+    label: 'Employee consent required for voluntary PF',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  PF_ESTABLISHMENT_NOT_COVERED: {
+    label: 'PF enrollment conflicts with school coverage',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_BASIC_COMPONENT_REQUIRED: {
+    label: 'Review the selected ESIC Basic component',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
+  ESI_RATE_OVERRIDE: {
+    label: 'Administrator ESIC rate override. Review the documented reason and evidence.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
   PF_WAGE_BASIS_REQUIRED: {
     label: 'PF wage basis required. Update the salary structure to match the assigned PF rule.',
     severity: 'CRITICAL',

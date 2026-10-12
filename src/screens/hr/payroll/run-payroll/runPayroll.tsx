@@ -76,7 +76,23 @@ import {
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
+type PayrollStatutoryTrace = {
+  CalculationSettings?: { WageBasis?: string; OverrideReason?: string; EvidenceReference?: string };
+  EligibilityWages?: number;
+  EmployeePercentage?: number;
+  EmployerPercentage?: number;
+};
+const parseStatutoryTrace = (value: unknown): PayrollStatutoryTrace | null => {
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 type PayrollRow = {
+  statutoryTrace: PayrollStatutoryTrace | null;
   id: string;
   employeeName: string;
   employeeIdentifier: string;
@@ -377,6 +393,7 @@ const RunPayroll = () => {
         const issueCodes = item.issueCodes || [];
         const issueSeverity = resolveIssueSeverity(issueCodes);
         return {
+          statutoryTrace: parseStatutoryTrace(item.esiCalculationDetailsJson),
           id: item.employeeId,
           employeeName: item.employeeName,
           employeeIdentifier: item.employeeIdentifier,
@@ -1526,6 +1543,14 @@ const RunPayroll = () => {
               },
             }}
           >
+            {activeRow?.statutoryTrace?.CalculationSettings?.OverrideReason && (
+              <Alert severity="warning" sx={{ m: 2 }}>
+                ESIC administrator override: employee {activeRow.statutoryTrace.EmployeePercentage}
+                %, employer {activeRow.statutoryTrace.EmployerPercentage}%.{' '}
+                {activeRow.statutoryTrace.CalculationSettings.OverrideReason} Evidence:{' '}
+                {activeRow.statutoryTrace.CalculationSettings.EvidenceReference}.
+              </Alert>
+            )}
             {activeRow ? (
               <Stack sx={{ height: '100%', minHeight: 0 }}>
                 <DrawerHeader

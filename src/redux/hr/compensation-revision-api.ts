@@ -2,7 +2,13 @@ import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
-import type { SalaryBasis, ProtectionPolicy, SalaryRuleOverride } from './salary-template-api';
+import type {
+  SalaryBasis,
+  PfEnrollment,
+  PfEligibility,
+  ProtectionPolicy,
+  SalaryRuleOverride,
+} from './salary-template-api';
 
 export type EmployeeActivationReadiness = {
   canActivate: boolean;
@@ -26,6 +32,8 @@ export type CompensationRevisionLine = {
 };
 
 export type CompensationRevision = {
+  pfEnrollment?: PfEnrollment;
+  pfEligibility?: PfEligibility;
   id: string;
   employeeId: string;
   revisionNumber: number;
@@ -58,6 +66,7 @@ export type CompensationRevision = {
 };
 
 export type SaveEmployeeCompensation = {
+  pfEnrollment?: PfEnrollment;
   templateVersionId: string;
   salaryBasis: SalaryBasis;
   monthlyAmount: number;

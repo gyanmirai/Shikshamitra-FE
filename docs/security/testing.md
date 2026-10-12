@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-10-12
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -37,7 +37,7 @@ Tests preserve the staging Student bundles and Accounts Settings exceptions whil
 | Matrix | Existing grouped mappings; repeat navigation stays selected; search/collapse never edits grants; inline focus returns to the opener |
 | Visibility | Separate dialog, independent flags, nested settings, unmapped flags, no action mutations |
 | Direct and inherited grants | Role/user grant and revoke round trips; removing direct grants leaves inherited access effective |
-| Statutory Schemes | View/Edit/Delete controls, four-action Edit group, unavailable Delete disabled, provider restrictions and unrelated or undisplayed grants preserved |
+| Statutory Schemes | View/Edit/Delete controls, five-action Edit group including ConfigureCalculation when present in the catalogue, unavailable Delete disabled, provider restrictions and unrelated or undisplayed grants preserved |
 | Save | Changed entries only, unchanged grants preserved, pre-save drift check, post-save verification |
 | Drafts | Review every changed entry, discard without writes, refetch errors, provider changes, duplicate submission, close during save |
 | Browser | Keyboard operation, focus return, dirty Cancel/Escape/history, failed reads/writes, bounded scrolling and 44px actions |

@@ -44,6 +44,7 @@ import {
 
 import EsiOverrideDialog from './esi-override-dialog';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
+import { EsiCalculationFields } from './esi-calculation-fields';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
 import { EsiConfigurationEmployees } from './esi-configuration-employees';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
@@ -118,7 +119,8 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
   const canEdit =
     settings.hasSchoolWideScope &&
     hasGrantedPermission(permissions, actions.edit) &&
-    hasGrantedPermission(permissions, actions.activate);
+    hasGrantedPermission(permissions, actions.activate) &&
+    hasGrantedPermission(permissions, actions.configureCalculation);
   const canManageEnrollment = hasGrantedPermission(permissions, actions.manageEnrollment);
   const canApproveOverride = hasGrantedPermission(permissions, actions.approveOverride);
   const [save, saveState] = useSaveEsiConfigurationMutation();
@@ -167,13 +169,26 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
   }, [form.dirty]);
-  const month = settings.suggestedEffectiveMonth;
+  const [previewDraft, setPreviewDraft] = useState<EsiConfigurationDraft | undefined>();
+  useEffect(() => {
+    const timer = setTimeout(
+      () =>
+        setPreviewDraft(
+          form.dirty && Object.keys(validateConfiguration(form.values)).length === 0 && canEdit
+            ? configurationPayload(form.values)
+            : undefined
+        ),
+      500
+    );
+    return () => clearTimeout(timer);
+  }, [form.values, form.dirty, canEdit]);
+  const month = form.values.effectiveMonth || settings.suggestedEffectiveMonth;
   const effectiveOn = `${month}-01`;
   const rules = useGetEsiRuleQuery(effectiveOn, { skip: !form.values.enabled });
   const treatments = useGetEsiComponentTreatmentsQuery(effectiveOn, { skip: !form.values.enabled });
   const attention = usePreviewEsiImpactQuery(
-    { monthYear: toApiMonth(month), pageSize: 10 },
-    { skip: !settings.current?.enabled }
+    { monthYear: toApiMonth(month), pageSize: 10, configurationDraft: previewDraft },
+    { skip: !form.values.enabled || Boolean(previewDraft && previewDraft.effectiveMonth !== month) }
   );
   const refreshPreview = async () => {
     if (settings.current?.enabled) await attention.refetch();
@@ -211,6 +226,15 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                     disabled={!canEdit || busy}
                   />
                 }
+              />
+            </Grid>
+            <Grid size={12}>
+              <EsiCalculationFields
+                form={form}
+                disabled={!canEdit || busy}
+                settings={settings}
+                components={treatments.data ?? []}
+                rule={rules.data}
               />
             </Grid>
             {form.values.enabled && (
@@ -266,10 +290,9 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       {formatEsiCurrency(rules.data.standardWageCeiling)}; persons with disability:{' '}
                       {formatEsiCurrency(rules.data.disabilityWageCeiling)}. Eligibility and
                       contribution-period continuity are determined from staff facts and payroll
-                      history. Each share is rounded up to the next rupee. Staff with average
-                      daily wages up to{' '}
-                      {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)} are exempt
-                      from the staff share; the employer share still applies.
+                      history. Each share is rounded up to the next rupee. Staff with average daily
+                      wages up to {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)}{' '}
+                      are exempt from the staff share; the employer share still applies.
                     </Typography>
                   ) : (
                     <Skeleton />
@@ -346,6 +369,17 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
             </>
           )}
 
+          {form.dirty &&
+            previewDraft &&
+            attention.data &&
+            typeof attention.data.summary.employeeContributionTotal === 'number' && (
+              <Alert severity={attention.isError ? 'error' : 'info'}>
+                {attention.isFetching
+                  ? 'Updating draft impact…'
+                  : `Draft impact: ${attention.data.summary.coveredEmployeeCount} staff covered. Employee ESIC ${formatEsiCurrency(attention.data.summary.employeeContributionTotal)}, employer ESIC ${formatEsiCurrency(attention.data.summary.employerContributionTotal)}.`}{' '}
+                Staff issues remain visible for review before payroll locking.
+              </Alert>
+            )}
           {settings.history.length > 0 && (
             <Accordion disableGutters>
               <AccordionSummary expandIcon={<ExpandMore />}>
@@ -376,8 +410,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       setEmployees(employees === 'needsAttention' ? null : 'needsAttention')
                     }
                   >
-                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention}
-                    )
+                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention})
                   </Button>
                 )}
                 <Button

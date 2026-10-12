@@ -162,6 +162,7 @@ export const hrPermissions = {
         activate: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.Activate`,
         manageEnrollment: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.ManageEnrollment`,
         approveOverride: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.ApproveOverride`,
+        configureCalculation: `${defaultHrPermissionName}PayrollManagement.Settings.StatutorySchemes.ConfigureCalculation`,
       },
       salaryTemplates: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates`,
       salaryTemplateActions: {
