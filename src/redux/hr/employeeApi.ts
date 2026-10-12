@@ -11,6 +11,24 @@ export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
 export const EMPLOYEE_LIST_MAX_PAGE_SIZE = 500;
 
+export interface EmployeeSearchOption {
+  id: string;
+  fullName: string;
+  status: number;
+}
+
+export interface EmployeeOptionsResponse {
+  items: EmployeeSearchOption[];
+  hasMore: boolean;
+}
+
+export interface EmployeeOptionsInput {
+  page: number;
+  pageSize: number;
+  search: string;
+  status?: 'Active';
+}
+
 export type EmployeeDashboardStatus =
   | 'Present'
   | 'HalfDay'
@@ -145,6 +163,10 @@ export const employeePayrollInvalidationTags = [
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
+    getEmployeeOptions: builder.query<EmployeeOptionsResponse, EmployeeOptionsInput>({
+      query: (params) => ({ url: '/employees/options', params }),
+      providesTags: [employeeType.employee],
+    }),
     getEmployee: builder.query({
       query: (args) => ({
         url: `/employees`,
@@ -443,6 +465,7 @@ export const {
   useGetEmployeeDashboardQuery,
   useGetEmployeeQuery,
   useLazyGetEmployeeQuery,
+  useLazyGetEmployeeOptionsQuery,
   useUpdateEmployeeMutation,
   useAddAccessControlMutation,
   useGetAccessControlQuery,

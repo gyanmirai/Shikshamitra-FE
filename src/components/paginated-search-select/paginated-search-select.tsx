@@ -1,13 +1,48 @@
+import type { PaperProps } from '@mui/material/Paper';
+
 import React from 'react';
 import TextField from '@mui/material/TextField';
-import { Box, Typography } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import CircularProgress from '@mui/material/CircularProgress';
+import { Box, Paper, Button, Typography } from '@mui/material';
 
 import { SearchNotFound } from '../search-not-found';
 import { usePaginatedSearch } from './use-paginated-search';
 
 import type { PaginatedSearchSelectProps } from './types';
+
+type SearchResultsPaperProps = PaperProps & {
+  searchError?: string | null;
+  retry?: () => void;
+  retryDisabled?: boolean;
+};
+
+function SearchResultsPaper({
+  children,
+  searchError,
+  retry,
+  retryDisabled,
+  ...props
+}: SearchResultsPaperProps) {
+  return (
+    <Paper {...props}>
+      {children}
+      {searchError && (
+        <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+          <Button
+            size="small"
+            disabled={retryDisabled}
+            onMouseDown={(event) => event.preventDefault()}
+            onKeyDown={(event) => event.stopPropagation()}
+            onClick={retry}
+          >
+            Retry results
+          </Button>
+        </Box>
+      )}
+    </Paper>
+  );
+}
 
 export function PaginatedSearchSelect<
   T,
@@ -37,6 +72,8 @@ export function PaginatedSearchSelect<
     inputValue,
     handleInputChange,
     loadMore,
+    error: searchError,
+    retry,
   } = usePaginatedSearch<T>({
     fetchOptions,
     minChars,
@@ -102,6 +139,10 @@ export function PaginatedSearchSelect<
       openOnFocus
       options={options || []}
       loading={loading}
+      slots={{ paper: SearchResultsPaper }}
+      slotProps={{
+        paper: { searchError, retry, retryDisabled: Boolean(loading) } as SearchResultsPaperProps,
+      }}
       inputValue={inputValue}
       getOptionLabel={getOptionText}
       getOptionKey={getStableOptionKey}
@@ -135,6 +176,10 @@ export function PaginatedSearchSelect<
       noOptionsText={
         props.noOptionsText !== undefined ? (
           props.noOptionsText
+        ) : searchError ? (
+          <Typography variant="body2" color="error.main" sx={{ p: 2 }}>
+            Results are unavailable. Retry below.
+          </Typography>
         ) : inputValue.length < minChars ? (
           <Box p={2} textAlign="center">
             <Typography variant="body2" color="text.secondary">
@@ -156,8 +201,30 @@ export function PaginatedSearchSelect<
           name={name}
           required={required}
           placeholder={placeholder}
-          error={error}
-          helperText={helperText}
+          error={error || Boolean(searchError)}
+          helperText={
+            searchError ? (
+              <Box
+                component="span"
+                role="alert"
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                <span>{searchError}</span>
+                {!open && (
+                  <Button
+                    size="small"
+                    disabled={loading}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={retry}
+                  >
+                    Retry results
+                  </Button>
+                )}
+              </Box>
+            ) : (
+              helperText
+            )
+          }
           onMouseDown={() => setOpen(true)}
           InputProps={{
             ...params.InputProps,

@@ -9,6 +9,8 @@ interface UsePaginatedSearchParams<T> {
   debounceMs?: number;
 }
 
+type SearchRequest = { query: string; page: number; append: boolean; generation: number };
+
 export function usePaginatedSearch<T>({
   fetchOptions,
   minChars = 2,
@@ -17,109 +19,126 @@ export function usePaginatedSearch<T>({
   const [options, setOptions] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchOptionsRef = useRef(fetchOptions);
+  const queryRef = useRef('');
+  const generationRef = useRef(0);
+  const requestSequenceRef = useRef(0);
+  const activeRequestRef = useRef<number | null>(null);
+  const loadedQueryRef = useRef<string | null>(null);
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const failedRequestRef = useRef<SearchRequest | null>(null);
 
-  // Keep track of the latest query to avoid race conditions
-  const latestQueryRef = useRef('');
-  // Synchronous loading guard — prevents concurrent duplicate requests
-  const loadingRef = useRef(false);
-  // Track the last requested page per query to prevent duplicate page fetches
-  const lastRequestedPageRef = useRef<{ query: string; page: number } | null>(null);
+  useEffect(() => {
+    fetchOptionsRef.current = fetchOptions;
+  }, [fetchOptions]);
 
   const loadOptions = useCallback(
-    async (query: string, pageNum: number, append: boolean) => {
-      // Don't search if query is too short
-      if (query.length < minChars && query.length > 0) {
-        return;
-      }
+    async (request: SearchRequest) => {
+      const { query, page: pageNum, append, generation } = request;
+      if (generation !== generationRef.current || query !== queryRef.current) return;
+      if (query.length > 0 && query.length < minChars) return;
+      if (append && (activeRequestRef.current !== null || loadedQueryRef.current !== query)) return;
 
-      // For new searches (append=false), always allow through and reset tracking state.
-      // For load-more (append=true), use synchronous guard to block duplicate scroll events
-      // that fire before React's async `loading` state update propagates.
-      if (append) {
-        if (loadingRef.current) return;
-        const lastReq = lastRequestedPageRef.current;
-        if (lastReq && lastReq.query === query && lastReq.page === pageNum) return;
-      } else {
-        // New query — reset refs so a fresh load is always allowed
-        lastRequestedPageRef.current = null;
-      }
-
-      loadingRef.current = true;
-      lastRequestedPageRef.current = { query, page: pageNum };
+      requestSequenceRef.current += 1;
+      const requestId = requestSequenceRef.current;
+      activeRequestRef.current = requestId;
+      failedRequestRef.current = null;
       setLoading(true);
       setError(null);
-      latestQueryRef.current = query;
+      const isCurrent = () =>
+        generationRef.current === generation && activeRequestRef.current === requestId;
 
       try {
-        const response = await fetchOptions(query, pageNum);
-
-        // Check if this validation is still relevant (avoid race condition)
-        if (latestQueryRef.current !== query) return;
-
-        if (append) {
-          setOptions((prev) => [...prev, ...response.data]);
-        } else {
-          setOptions(response.data);
-        }
-
+        const response = await fetchOptionsRef.current(query, pageNum);
+        if (!isCurrent()) return;
+        setOptions((previous) => (append ? [...previous, ...response.data] : response.data));
         setHasMore(response.hasMore);
-        setPage(pageNum);
-      } catch (err) {
-        if (latestQueryRef.current !== query) return;
-        console.error('Failed to fetch options:', err);
+        pageRef.current = pageNum;
+        hasMoreRef.current = response.hasMore;
+        loadedQueryRef.current = query;
+      } catch {
+        if (!isCurrent()) return;
+        failedRequestRef.current = request;
         setError('Failed to load results');
       } finally {
-        if (latestQueryRef.current === query) {
-          loadingRef.current = false;
+        if (isCurrent()) {
+          activeRequestRef.current = null;
           setLoading(false);
         }
       }
     },
-    [fetchOptions, minChars]
+    [minChars]
   );
 
   const debouncedLoadOptions = useMemo(
-    () => debounce((query: string) => loadOptions(query, 1, false), debounceMs),
+    () =>
+      debounce((request: SearchRequest) => {
+          loadOptions(request);
+      }, debounceMs),
     [loadOptions, debounceMs]
   );
+
+  useEffect(() => () => debouncedLoadOptions.cancel(), [debouncedLoadOptions]);
+
   const handleInputChange = useCallback(
     (newInputValue: string) => {
       setInputValue(newInputValue);
-
-      // If cleared, reset
+      // Invalidate responses immediately, including during the debounce delay or a short query.
+      generationRef.current += 1;
+      const generation = generationRef.current;
+      queryRef.current = newInputValue;
+      activeRequestRef.current = null;
+      loadedQueryRef.current = null;
+      failedRequestRef.current = null;
+      debouncedLoadOptions.cancel();
+      setOptions([]);
+      pageRef.current = 1;
+      hasMoreRef.current = false;
+      setHasMore(false);
+      setError(null);
+      const request = { query: newInputValue, page: 1, append: false, generation };
       if (!newInputValue) {
-        debouncedLoadOptions.cancel();
-        loadOptions('', 1, false); // Load default options if desired, or clear
-        return;
+        loadOptions(request);
+      } else if (newInputValue.length >= minChars) {
+        setLoading(true);
+        debouncedLoadOptions(request);
+      } else {
+        setLoading(false);
       }
-
-      debouncedLoadOptions(newInputValue);
     },
-    [debouncedLoadOptions, loadOptions]
+    [debouncedLoadOptions, loadOptions, minChars]
   );
 
   const loadMore = useCallback(() => {
-    if (!loading && hasMore) {
-      loadOptions(inputValue, page + 1, true);
+    if (hasMoreRef.current && activeRequestRef.current === null) {
+      loadOptions({
+        query: queryRef.current,
+        page: pageRef.current + 1,
+        append: true,
+        generation: generationRef.current,
+      });
     }
-  }, [loading, hasMore, inputValue, page, loadOptions]);
+  }, [loadOptions]);
 
-  // Initial load
+  const retry = useCallback(() => {
+    if (activeRequestRef.current === null && failedRequestRef.current) {
+      loadOptions(failedRequestRef.current);
+    }
+  }, [loadOptions]);
+
   useEffect(() => {
-    loadOptions('', 1, false);
+    loadOptions({ query: '', page: 1, append: false, generation: generationRef.current });
+    return () => {
+      generationRef.current += 1;
+      activeRequestRef.current = null;
+      debouncedLoadOptions.cancel();
+    };
+    // Initial loading belongs to the mounted picker, not to callback identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return {
-    options,
-    loading,
-    inputValue,
-    handleInputChange,
-    loadMore,
-    hasMore,
-    error,
-  };
+  return { options, loading, inputValue, handleInputChange, loadMore, hasMore, error, retry };
 }
