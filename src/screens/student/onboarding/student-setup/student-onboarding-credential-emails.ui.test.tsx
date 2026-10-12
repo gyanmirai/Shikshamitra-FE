@@ -18,10 +18,15 @@ const mocks = vi.hoisted(() => ({
   sending: false,
 }));
 vi.mock('react-redux', () => ({
-  useSelector: (select: (state: unknown) => unknown) => select({ auth: { permissions: [
-    { name: 'AbpIdentity.Users.Create', isGranted: true },
-    { name: 'AbpIdentity.Users.Update', isGranted: true },
-  ] } }),
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({
+      auth: {
+        permissions: [
+          { name: 'AbpIdentity.Users.Create', isGranted: true },
+          { name: 'AbpIdentity.Users.Update', isGranted: true },
+        ],
+      },
+    }),
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
@@ -52,14 +57,30 @@ beforeEach(() => {
   mocks.upload.mockReset();
   mocks.upload.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   mocks.sending = false;
-  mocks.accounts = { data: [
-    { accountType: 'student', email: 'student@example.com', isActive: true, emailConfirmed: true },
-    { accountType: 'guardian', email: 'parent@example.com', isActive: true, emailConfirmed: true },
-  ], refetch: vi.fn() };
-  mocks.handoffs = { data: [
-    { serviceKey: 'student-account', required: true },
-    { serviceKey: 'guardian-account', required: true },
-  ], refetch: vi.fn() };
+  mocks.accounts = {
+    data: [
+      {
+        accountType: 'student',
+        email: 'student@example.com',
+        isActive: true,
+        emailConfirmed: true,
+      },
+      {
+        accountType: 'guardian',
+        email: 'parent@example.com',
+        isActive: true,
+        emailConfirmed: true,
+      },
+    ],
+    refetch: vi.fn(),
+  };
+  mocks.handoffs = {
+    data: [
+      { serviceKey: 'student-account', required: true },
+      { serviceKey: 'guardian-account', required: true },
+    ],
+    refetch: vi.fn(),
+  };
   mocks.emails = {
     data: [
       {
@@ -97,28 +118,74 @@ beforeEach(() => {
 });
 
 describe('Onboarding credential email recovery', () => {
+  it('offers a case-only parent correction only when the caller permits it', () => {
+    mocks.emails.data = [
+      { accountType: 'student', status: 'Blocked', emailEnabled: false, canSend: false },
+      { accountType: 'guardian', status: 'Blocked', emailEnabled: false, canSend: false },
+    ];
+    const view = render(
+      <StudentOnboardingCredentialEmails
+        caseId="case-1"
+        concurrencyStamp="current-stamp"
+        canEnableGuardianEmail
+      />
+    );
+    expect(
+      screen.getAllByRole('button', { name: 'Enable parent email for this case' })
+    ).toHaveLength(1);
+    view.rerender(
+      <StudentOnboardingCredentialEmails caseId="case-1" concurrencyStamp="current-stamp" />
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Enable parent email for this case' })
+    ).not.toBeInTheDocument();
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
   it('keeps linked account status and failed email retry without displaying account creation fields', async () => {
     mocks.send.mockReturnValue({ unwrap: () => Promise.resolve({ status: 'Pending' }) });
-    render(<StudentOnboardingPortalAccounts canManage student={{
-      ...studentOnboardingTestData[0], id: 'case-1', studentEnrollmentId: 'enrollment-1',
-      backendStatus: 3, concurrencyStamp: 'case-stamp',
-    }} />);
+    render(
+      <StudentOnboardingPortalAccounts
+        canManage
+        student={{
+          ...studentOnboardingTestData[0],
+          id: 'case-1',
+          studentEnrollmentId: 'enrollment-1',
+          backendStatus: 3,
+          concurrencyStamp: 'case-stamp',
+        }}
+      />
+    );
     expect(screen.getByText('Student: student@example.com — Linked.')).toBeInTheDocument();
     expect(screen.getByText('Guardian: parent@example.com — Linked.')).toBeInTheDocument();
     expect(screen.getByText('Failed')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: /Profile email/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Create and link account' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Create and link account' })
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry email' }));
-    await waitFor(() => expect(mocks.send).toHaveBeenCalledWith({
-      id: 'case-1', accountType: 'guardian', concurrencyStamp: 'case-stamp',
-    }));
+    await waitFor(() =>
+      expect(mocks.send).toHaveBeenCalledWith({
+        id: 'case-1',
+        accountType: 'guardian',
+        concurrencyStamp: 'case-stamp',
+      })
+    );
     expect(mocks.provision).not.toHaveBeenCalled();
   });
   it('retains account creation fields when a required account is missing', () => {
-    mocks.accounts.data = mocks.accounts.data.filter((account: { accountType: string }) => account.accountType !== 'guardian');
-    render(<StudentOnboardingPortalAccounts canManage student={{
-      ...studentOnboardingTestData[0], studentEnrollmentId: 'enrollment-1', backendStatus: 3,
-    }} />);
+    mocks.accounts.data = mocks.accounts.data.filter(
+      (account: { accountType: string }) => account.accountType !== 'guardian'
+    );
+    render(
+      <StudentOnboardingPortalAccounts
+        canManage
+        student={{
+          ...studentOnboardingTestData[0],
+          studentEnrollmentId: 'enrollment-1',
+          backendStatus: 3,
+        }}
+      />
+    );
     expect(screen.getByRole('textbox', { name: /Profile email/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create and link account' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Retry email' })).toBeInTheDocument();

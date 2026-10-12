@@ -69,7 +69,8 @@ it('starts a blank journey only for an explicit blank choice', () => {
 
 it('does not overwrite unreadable existing form configuration', () => {
   const graph = getAdmissionWorkflowTemplate('standard', 'form-1');
-  graph.stages[0].configurationJson = '{broken';
+  const form = graph.stages.find((stage) => stage.stageType === 1)!;
+  form.configurationJson = '{broken';
   expect(() =>
     getWorkflowDetailsJourney(
       { ...details, registrationFormDefinitionId: 'form-2' },
@@ -77,5 +78,5 @@ it('does not overwrite unreadable existing form configuration', () => {
       graph.transitions
     )
   ).toThrow();
-  expect(graph.stages[0].configurationJson).toBe('{broken');
+  expect(form.configurationJson).toBe('{broken');
 });

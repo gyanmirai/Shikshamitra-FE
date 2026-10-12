@@ -135,6 +135,19 @@ export type AdmissionOfferingListInput = {
   maxResultCount?: number;
 };
 
+export type AdmissionOfferingClassScope = {
+  admissionCycleId: string;
+  boardId: string;
+  mediumId: string;
+  campusId: string | null;
+  track: AdmissionTrack;
+};
+
+export type AdmissionOfferingClassIdentity = Pick<
+  AdmissionOfferingListItem,
+  'standardId' | 'stageId'
+>;
+
 export type ValidateAdmissionOfferingInput = AdmissionOfferingWriteInput & {
   admissionCycleId: string;
   excludingOfferingId?: string | null;
@@ -175,6 +188,11 @@ const unwrapResult = <T>(response: ResultEnvelope<T> | T): T => {
   return response as T;
 };
 
+const cycleDependentOfferingTags = [
+  studentAdmissionsCrmType.admissionOffering,
+  studentAdmissionsCrmType.admissionCycle,
+];
+
 export const admissionOfferingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAdmissionOfferings: builder.query<
@@ -190,13 +208,65 @@ export const admissionOfferingsApi = api.injectEndpoints({
           | ResultEnvelope<PagedResult<AdmissionOfferingListItem>>
           | PagedResult<AdmissionOfferingListItem>
       ) => unwrapResult(response),
+      providesTags: cycleDependentOfferingTags,
+    }),
+    getAdmissionOfferingClassIdentities: builder.query<
+      AdmissionOfferingClassIdentity[],
+      AdmissionOfferingClassScope
+    >({
+      async queryFn(scope, _queryApi, _options, baseQuery) {
+        const identities: AdmissionOfferingClassIdentity[] = [];
+        let skipCount = 0;
+        // Read every page, including inactive offerings; table filters are not a uniqueness check.
+        while (true) {
+          // The next offset depends on the previous page's actual size.
+          // eslint-disable-next-line no-await-in-loop
+          const result = await baseQuery({
+            url: '/student/enrollment/admissions/offerings',
+            params: studentAcademicFilterParams({
+              ...scope,
+              sorting: 'code asc',
+              skipCount,
+              maxResultCount: 100,
+            }),
+          });
+          if (result.error) return { error: result.error };
+          const page = unwrapResult(
+            result.data as ResultEnvelope<PagedResult<AdmissionOfferingListItem>>
+          );
+          if (
+            !page ||
+            !Array.isArray(page.items) ||
+            !Number.isFinite(page.totalCount) ||
+            (!page.items.length && skipCount < page.totalCount)
+          ) {
+            return {
+              error: { status: 'CUSTOM_ERROR', error: 'Offering classes could not be loaded.' },
+            };
+          }
+          identities.push(
+            ...page.items
+              .filter(
+                (offering) =>
+                  offering.admissionCycleId === scope.admissionCycleId &&
+                  offering.boardId === scope.boardId &&
+                  offering.mediumId === scope.mediumId &&
+                  (offering.campusId ?? null) === scope.campusId &&
+                  offering.track === scope.track
+              )
+              .map(({ standardId, stageId }) => ({ standardId, stageId }))
+          );
+          skipCount += page.items.length;
+          if (skipCount >= page.totalCount) return { data: identities };
+        }
+      },
       providesTags: [studentAdmissionsCrmType.admissionOffering],
     }),
     getAdmissionOffering: builder.query<AdmissionOffering, string>({
       query: (id) => `/student/enrollment/admissions/offerings/${id}`,
       transformResponse: (response: ResultEnvelope<AdmissionOffering> | AdmissionOffering) =>
         unwrapResult(response),
-      providesTags: [studentAdmissionsCrmType.admissionOffering],
+      providesTags: cycleDependentOfferingTags,
     }),
     createAdmissionOffering: builder.mutation<
       AdmissionOffering,
@@ -303,7 +373,7 @@ export const admissionOfferingsApi = api.injectEndpoints({
       transformResponse: (
         response: ResultEnvelope<AdmissionOfferingAvailability> | AdmissionOfferingAvailability
       ) => unwrapResult(response),
-      providesTags: [studentAdmissionsCrmType.admissionOffering],
+      providesTags: cycleDependentOfferingTags,
     }),
     getAdmissionClassCapacity: builder.query<AdmissionClassCapacity, string>({
       query: (id) => `/student/enrollment/admissions/offerings/${id}/class-capacity`,
@@ -357,6 +427,7 @@ export const admissionOfferingsApi = api.injectEndpoints({
 export const {
   useGetAdmissionOfferingsQuery,
   useLazyGetAdmissionOfferingsQuery,
+  useGetAdmissionOfferingClassIdentitiesQuery,
   useGetAdmissionOfferingQuery,
   useLazyGetAdmissionOfferingQuery,
   useCreateAdmissionOfferingMutation,

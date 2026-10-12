@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-10-11
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Understand Student frontend integration
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
-Admissions starts from qualified inquiries, and Pipeline projects active application progress from the existing workflow.
+General admissions start from qualified inquiries; RTE, Management and Staff can start through their configured special Registration offerings. Pipeline projects inquiry-linked application progress from the existing workflow.
 Pipeline owns active inquiry-linked cases before Admission Decision; Applications owns cases that have entered Decision, including later correction work.
 Both open the shared full-page Applicant 360 workspace with phase-aware menu ancestry and safe return context.
 Applications uses the common searchable table, server paging and sorting, applicant/reference identity, contact/class context, status labels and permission-aware actions.

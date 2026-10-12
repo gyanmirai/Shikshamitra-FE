@@ -5,9 +5,7 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { CSS } from '@dnd-kit/utilities';
 import { Label } from 'src/components/label';
-import { useSortable } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -54,10 +52,6 @@ export function WorkflowStageCard({
   onEditPath,
   onDeletePath,
 }: Props) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: stage.id,
-    disabled: readOnly,
-  });
   const orderedTransitions = transitions
     .slice()
     .sort(
@@ -66,21 +60,20 @@ export function WorkflowStageCard({
     );
   const getDestination = (path: AdmissionWorkflowTransition) =>
     stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
+  const canChooseNextStep =
+    !readOnly && !stage.isTerminalStage && !orderedTransitions.some((path) => path.isDefault);
 
   return (
     <Card
       id={`workflow-stage-${stage.id}`}
-      ref={setNodeRef}
+      component="li"
       variant="outlined"
       sx={{
         zIndex: 1,
         minWidth: 0,
         borderRadius: 2,
-        opacity: isDragging ? 0.65 : 1,
         bgcolor: 'background.paper',
         borderColor: issueCount > 0 ? 'warning.main' : 'divider',
-        transform: CSS.Transform.toString(transform),
-        transition,
         '&:hover': { borderColor: issueCount > 0 ? 'warning.main' : 'text.disabled' },
       }}
     >
@@ -91,31 +84,16 @@ export function WorkflowStageCard({
         sx={{
           p: { xs: 1, sm: 1.25 },
           display: { xs: 'grid', sm: 'flex' },
-          gridTemplateColumns: '44px 36px minmax(0, 1fr) 44px 44px',
+          gridTemplateColumns: '36px minmax(0, 1fr) 44px 44px',
           rowGap: 0.75,
         }}
       >
-        {!readOnly && (
-          <IconButton
-            size="small"
-            aria-label={`Reorder ${stage.name}`}
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-            }}
-            {...attributes}
-            {...listeners}
-          >
-            <Iconify icon="mdi:drag-vertical" />
-          </IconButton>
-        )}
         <Avatar
           sx={{
             width: 36,
             height: 36,
             flexShrink: 0,
-            gridColumn: readOnly ? 1 : 2,
+            gridColumn: 1,
             gridRow: 1,
             typography: 'subtitle2',
             color: 'text.primary',
@@ -185,7 +163,7 @@ export function WorkflowStageCard({
           </Stack>
         </Box>
 
-        {!readOnly && !stage.isTerminalStage && (
+        {canChooseNextStep && (
           <Button
             size="small"
             variant="outlined"
@@ -196,9 +174,7 @@ export function WorkflowStageCard({
               display: { xs: 'none', sm: 'inline-flex' },
             }}
           >
-            {orderedTransitions.some((path) => path.isDefault)
-              ? 'Add special outcome'
-              : 'Choose next step'}
+            Choose next step
           </Button>
         )}
 
@@ -208,7 +184,7 @@ export function WorkflowStageCard({
             aria-label={`${readOnly ? 'View' : 'Edit'} ${stage.name}`}
             onClick={onEdit}
             sx={{
-              gridColumn: 4,
+              gridColumn: 3,
               gridRow: 1,
               width: { xs: 44, md: 36 },
               height: { xs: 44, md: 36 },
@@ -223,7 +199,7 @@ export function WorkflowStageCard({
           <ThreeDotsActions
             moreLabel={`Actions for ${stage.name}`}
             sx={{
-              gridColumn: 5,
+              gridColumn: 4,
               gridRow: 1,
               '& .MuiIconButton-root': {
                 width: { xs: 44, md: 36 },
@@ -242,17 +218,14 @@ export function WorkflowStageCard({
                     <Iconify icon="mdi:content-copy" /> Duplicate stage
                   </MenuItem>
                 )}
-                {!readOnly && !stage.isTerminalStage && (
+                {canChooseNextStep && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
                       onAddPath();
                     }}
                   >
-                    <Iconify icon="mdi:source-branch-plus" />{' '}
-                    {orderedTransitions.some((path) => path.isDefault)
-                      ? 'Add special outcome'
-                      : 'Choose next step'}
+                    <Iconify icon="mdi:source-branch-plus" /> Choose next step
                   </MenuItem>
                 )}
                 {orderedTransitions.length > 0 && <Divider />}
@@ -264,10 +237,15 @@ export function WorkflowStageCard({
                         onEditPath(path);
                       }}
                     >
-                      <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
-                      {readOnly ? 'View' : 'Edit'} route to {getDestination(path)}
+                      <Iconify
+                        icon={
+                          readOnly || !path.isDefault ? 'mdi:eye-outline' : 'mdi:pencil-outline'
+                        }
+                      />
+                      {readOnly || !path.isDefault ? 'View' : 'Edit'} route to{' '}
+                      {getDestination(path)}
                     </MenuItem>
-                    {!readOnly && (
+                    {!readOnly && path.isDefault && (
                       <MenuItem
                         onClick={() => {
                           popover.onClose();

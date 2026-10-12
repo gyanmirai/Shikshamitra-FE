@@ -61,10 +61,13 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'Enter a change reason before updating an Active concession policy.',
   'Finance:ConcessionPolicy:010022': 'Only an Active concession policy can be the default.',
   'Finance:RefundPolicy:010028': 'Only an Active refund policy can be the default.',
-  'Finance:FeeRefund:010010': "No refund policy is assigned to this student's fee structure. Assign a refund policy before creating a refund request.",
+  'Finance:FeeRefund:010010':
+    "No refund policy is assigned to this student's fee structure. Assign a refund policy before creating a refund request.",
   'Finance:FeeRefund:010002': 'No refundable paid balance remains for the selected fee lines.',
-  'Finance:FeeRefund:010004': 'A refund has already been requested for this payment. Review the existing refund request.',
-  'Finance:FeeRefund:010011': 'The assigned refund policy is unavailable. Ask an administrator to review the fee assignment.',
+  'Finance:FeeRefund:010004':
+    'A refund has already been requested for this payment. Review the existing refund request.',
+  'Finance:FeeRefund:010011':
+    'The assigned refund policy is unavailable. Ask an administrator to review the fee assignment.',
   'Finance:FeeRefund:010012': 'The selected fee head is not refundable under the assigned policy.',
   'Finance:FeeRefund:010025': 'This payment is not settled yet, so it cannot be refunded.',
   'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
@@ -75,8 +78,10 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:Concession:030003':
     'The request or fee balances changed. Refresh, review, and approve again.',
   'Finance:Concession:030004': 'Select and review due-fee allocations before approval.',
-  'Finance:Concession:010030': 'The paid fee has no settled receipt available for an automatic refund. Review its payment before approving the concession.',
-  'Finance:Concession:010031': 'Close or reverse the linked refund requests before fully reversing this concession.',
+  'Finance:Concession:010030':
+    'The paid fee has no settled receipt available for an automatic refund. Review its payment before approving the concession.',
+  'Finance:Concession:010031':
+    'Close or reverse the linked refund requests before fully reversing this concession.',
   'Academic:Timetable:020004':
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
   'ShikshaMitra.Submission:UseFeedbackToReview':
@@ -150,6 +155,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   const candidates: string[] = [];
 
   addCandidate(candidates, data?.data?.Reason);
+  addCandidate(candidates, data?.error?.data?.Reason);
   addCandidate(candidates, data?.data?.Message);
   addCandidate(candidates, data?.data?.message);
   addCandidate(candidates, data?.data?.detail);

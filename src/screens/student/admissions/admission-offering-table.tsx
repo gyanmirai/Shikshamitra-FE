@@ -1,8 +1,10 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { buildAdmissionOfferingColumns } from './admission-offering-columns';
@@ -19,6 +21,13 @@ type Props = AdmissionOfferingActionProps & {
   onSearch: (value: string) => void;
   onSort: (value: string) => void;
   onPagination: (page: number, rowsPerPage: number) => void;
+  selection?: {
+    selectedIds: string[];
+    eligibleIds: string[];
+    disabled: boolean;
+    onToggle: (row: AdmissionOfferingListItem, checked: boolean) => void;
+    onToggleAll: (checked: boolean) => void;
+  };
 };
 
 export function AdmissionOfferingTable(props: Props) {
@@ -33,12 +42,69 @@ export function AdmissionOfferingTable(props: Props) {
     onSort,
     onPagination,
     onView,
+    selection,
   } = props;
+  const columns = buildAdmissionOfferingColumns(props);
+  if (selection) {
+    const selectedCount = selection.eligibleIds.filter((id) =>
+      selection.selectedIds.includes(id)
+    ).length;
+    const selectionColumn: IColumn = {
+      id: 'offering-selection',
+      label: '',
+      width: 64,
+      minWidth: 64,
+      headerSx: { px: 1 },
+      cellSx: { px: 1 },
+      align: 'center',
+      sticky: true,
+      stickyPosition: 'left',
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
+      renderColumn: () => (
+        <Checkbox
+          size="small"
+          sx={{ width: 44, height: 44 }}
+          checked={selectedCount > 0 && selectedCount === selection.eligibleIds.length}
+          indeterminate={selectedCount > 0 && selectedCount < selection.eligibleIds.length}
+          disabled={selection.disabled || selection.eligibleIds.length === 0}
+          inputProps={{ 'aria-label': 'Select all eligible offerings on this page' }}
+          onChange={(_, checked) => selection.onToggleAll(checked)}
+          onClick={(event) => event.stopPropagation()}
+        />
+      ),
+      render: (_, row) => (
+        <Checkbox
+          size="small"
+          sx={{ width: 44, height: 44 }}
+          checked={selection.selectedIds.includes(row.id)}
+          disabled={selection.disabled || !selection.eligibleIds.includes(row.id)}
+          inputProps={{ 'aria-label': `Select ${row.name || row.code} for activation` }}
+          onChange={(_event, checked) =>
+            selection.onToggle(row as AdmissionOfferingListItem, checked)
+          }
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        />
+      ),
+    };
+    // Keep selection, offering identity, and row actions readable on narrow screens.
+    // Statuses remain available in the table's horizontal scroll region on mobile.
+    columns.forEach((column) => {
+      if (column.id === 'name') {
+        column.headerSx = { width: { xs: 140, sm: 210 }, minWidth: { xs: 140, sm: 210 } };
+        column.cellSx = { width: { xs: 140, sm: 210 }, minWidth: { xs: 140, sm: 210 } };
+      }
+      if (column.id === 'configurationStatus') column.stickyOnMobile = false;
+    });
+    columns.unshift(selectionColumn);
+  }
   return (
     <CustomizableTable
       tableId="admission-offerings"
       tableTitle="Admission offerings"
-      columns={buildAdmissionOfferingColumns(props)}
+      columns={columns}
       data={rows}
       handleRowClick={(row) => onView(row as AdmissionOfferingListItem)}
       rowProps={(row) => ({

@@ -73,8 +73,19 @@ function InquiryFollowUpContent({
   onClose: () => void;
 }) {
   const [openedAt] = useState(() => Date.now());
-  const detail = useGetAdmissionInquiryQuery(inquiry.id, { refetchOnMountOrArgChange: true });
   const management = useGetAdmissionInquiryManagementQuery(inquiry.id, {
+    refetchOnMountOrArgChange: true,
+  });
+  const managementReady = Boolean(
+    management.currentData &&
+    !management.isFetching &&
+    !management.isError &&
+    management.fulfilledTimeStamp &&
+    management.fulfilledTimeStamp >= openedAt
+  );
+  // Management can initialize a legacy row and rotate the inquiry stamp.
+  const detail = useGetAdmissionInquiryQuery(inquiry.id, {
+    skip: !managementReady,
     refetchOnMountOrArgChange: true,
   });
   const [record, recording] = useRecordAdmissionInquiryFollowUpNoteMutation();
@@ -90,14 +101,22 @@ function InquiryFollowUpContent({
   const current = detail.currentData;
   const state = management.currentData;
   const fetching = detail.isFetching || management.isFetching;
-  const queryError = detail.isError || management.isError;
-  const ready = Boolean(current && state && !fetching && !queryError);
   const freshForOpening = Boolean(
+    managementReady &&
     detail.fulfilledTimeStamp &&
-    detail.fulfilledTimeStamp >= openedAt &&
     management.fulfilledTimeStamp &&
-    management.fulfilledTimeStamp >= openedAt
+    detail.fulfilledTimeStamp >= management.fulfilledTimeStamp
   );
+  const queryError = Boolean(
+    detail.isError ||
+    management.isError ||
+    (freshForOpening &&
+      !fetching &&
+      current &&
+      state &&
+      (!current.concurrencyStamp?.trim() || !state.concurrencyStamp?.trim()))
+  );
+  const ready = Boolean(current && state && freshForOpening && !fetching && !queryError);
   const readOnlyReason =
     current && state
       ? inquiryFollowUpReadOnlyReason(current, state, canManage, currentUserId)
@@ -181,7 +200,7 @@ function InquiryFollowUpContent({
     else onClose();
   };
   const reload = () => {
-    detail.refetch();
+    // Skipping/resubscribing the detail query refetches it after management succeeds.
     management.refetch();
   };
   const notes = [...(state?.notes ?? [])].sort(

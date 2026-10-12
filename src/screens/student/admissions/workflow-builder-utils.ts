@@ -51,20 +51,6 @@ export const normalizeAdmissionWorkflowStages = (
   stages: AdmissionWorkflowStage[]
 ): AdmissionWorkflowStage[] => stages.map(normalizeStageConfiguration);
 
-export const reorderStages = (
-  stages: AdmissionWorkflowStage[],
-  activeId: string,
-  overId: string
-): AdmissionWorkflowStage[] => {
-  const oldIndex = stages.findIndex((stage) => stage.id === activeId);
-  const newIndex = stages.findIndex((stage) => stage.id === overId);
-  if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return stages;
-  const reordered = [...stages];
-  const [moved] = reordered.splice(oldIndex, 1);
-  reordered.splice(newIndex, 0, moved);
-  return reordered.map((stage, index) => ({ ...stage, displayOrder: index }));
-};
-
 export const duplicateStage = (
   stages: AdmissionWorkflowStage[],
   sourceId: string

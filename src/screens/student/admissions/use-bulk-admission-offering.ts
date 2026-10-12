@@ -32,12 +32,33 @@ export function useBulkAdmissionOffering(
   const definitionOptions = useAdmissionDefinitionOptions(open);
 
   const submit = async (values: BulkOfferingValues, previewOnly: boolean) => {
+    const selectedCycle = values.admissionCycle;
+    if (
+      !selectedCycle ||
+      selectedCycle.academicYearId !== cycle.academicYearId ||
+      selectedCycle.status !== 1 ||
+      selectedCycle.windowStatus !== 1
+    ) {
+      shikshaMitraToast.error({
+        message: 'Choose a published and open admission cycle for this academic year.',
+      });
+      return null;
+    }
     try {
       const standards = (await loadStandards(values.mediumId, true).unwrap()) as Standards[];
       const result = await bulkCreate({
-        admissionCycleId: cycle.id,
+        admissionCycleId: selectedCycle.id,
         body: toBulkOfferingInput(values, standards, previewOnly),
       }).unwrap();
+      if (!previewOnly && !result.canCommit) {
+        setPreviewStandards(standards);
+        setPreview(result);
+        shikshaMitraToast.error({
+          message:
+            'No offerings were created. Review the class issues and go Back to update your selection.',
+        });
+        return null;
+      }
       if (previewOnly) {
         setPreviewStandards(standards);
         setPreview(result);
@@ -56,7 +77,9 @@ export function useBulkAdmissionOffering(
     }
   };
   const canSaveInactive = Boolean(
-    preview?.items.length && preview.items.every((item) => item.canSaveInactive)
+    preview?.canCommit &&
+    preview.items.length &&
+    preview.items.every((item) => item.canSaveInactive)
   );
   const canActivate = Boolean(
     preview?.items.length && preview.items.every((item) => item.canActivate)
@@ -66,7 +89,7 @@ export function useBulkAdmissionOffering(
     preview,
     previewStandards,
     previewOfferings: (values: BulkOfferingValues) => submit({ ...values, isActive: false }, true),
-    createOfferings: (values: BulkOfferingValues) => submit(values, false),
+    createOfferings: (values: BulkOfferingValues) => submit({ ...values, isActive: false }, false),
     canSaveInactive,
     canActivate,
     clearPreview: () => {

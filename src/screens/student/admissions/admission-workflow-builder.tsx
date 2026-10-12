@@ -117,6 +117,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   };
   const openAddTransition = (stage: AdmissionWorkflowStage) => {
     const outgoing = draft.transitions.filter((item) => item.fromStageId === stage.id);
+    if (outgoing.some((item) => item.isDefault)) return;
     const destination =
       draft.stages.find((item) => item.id !== stage.id && item.displayOrder > stage.displayOrder) ??
       draft.stages.find((item) => item.id !== stage.id);
@@ -230,7 +231,6 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
               draft.markDirty();
             }}
             onDeleteStage={draft.setStageToDelete}
-            onDragEnd={draft.handleDragEnd}
             onAddTransition={openAddTransition}
             onEditTransition={openEditTransition}
             onDeleteTransition={(id) => {

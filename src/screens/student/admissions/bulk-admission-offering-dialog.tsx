@@ -4,40 +4,32 @@ import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useMemo, useState } from 'react';
+import { formatDateOnly } from 'src/utils/date-only';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import { Box, Alert, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
-import {
-  Box,
-  Alert,
-  Stack,
-  Table,
-  Paper,
-  Radio,
-  Button,
-  Drawer,
-  Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  IconButton,
-  RadioGroup,
-  Typography,
-  TableContainer,
-  FormControlLabel,
-} from '@mui/material';
+import { useGetAdmissionOfferingClassIdentitiesQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useBulkAdmissionOffering } from './use-bulk-admission-offering';
 import { BulkAdmissionHierarchyFields } from './bulk-admission-hierarchy-fields';
+import { BulkAdmissionOfferingPreview } from './bulk-admission-offering-preview';
+import { getBulkOfferingFieldIssues } from './bulk-admission-offering-validation';
 import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
+import { AdmissionOfferingRoutingFields } from './admission-offering-routing-fields';
 import { BulkAdmissionConfigurationFields } from './bulk-admission-configuration-fields';
-import { bulkOfferingSchema, bulkOfferingInitialValues } from './bulk-admission-offering-model';
+import {
+  bulkOfferingSchema,
+  getConfiguredBulkClassIds,
+  bulkOfferingInitialValues,
+} from './bulk-admission-offering-model';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 
@@ -50,11 +42,43 @@ type Props = {
 
 // Select classes + Configure are merged into step 0; Preview is step 1
 const STEPS = ['Select & Configure', 'Preview'];
+const NO_STANDARDS: Standards[] = [];
+const cycleLabel = (cycle: AdmissionCycle) =>
+  `${cycle.name} · ${cycle.academicYearName} · ${formatDateOnly(cycle.startDate, 'DD MMM YYYY')} – ${formatDateOnly(cycle.endDate, 'DD MMM YYYY')}`;
 
 export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId, onClose }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const [classesReady, setClassesReady] = useState(true);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
   const bulk = useBulkAdmissionOffering(cycle, open, onClose);
+  const [loadCycles, cyclesQuery] = useLazyGetAdmissionCyclesQuery();
+  const [cycleOptionsRevision, setCycleOptionsRevision] = useState(0);
+  const fetchCycles = useCallback(
+    async (search: string, page: number) => {
+      const skipCount = (page - 1) * 25;
+      // The shared selector sends its display label on reset; do not search the API for that label.
+      const selectedCycle = formikRef.current?.values.admissionCycle;
+      const query = selectedCycle && search === cycleLabel(selectedCycle) ? '' : search;
+      const result = await loadCycles({
+        academicYearId: cycle.academicYearId,
+        status: 1,
+        windowStatus: 1,
+        search: query || undefined,
+        skipCount,
+        maxResultCount: 25,
+      }).unwrap();
+      return {
+        data: result.items.filter(
+          (item) =>
+            item.academicYearId === cycle.academicYearId &&
+            item.status === 1 &&
+            item.windowStatus === 1
+        ),
+        hasMore: skipCount + result.items.length < result.totalCount,
+      };
+    },
+    [loadCycles, cycle.academicYearId]
+  );
   const setups = useGetAdmissionIntakeSetupsQuery(undefined, { skip: !initialIntakeSetupId });
   const initialSetup = (setups.data ?? []).find((setup) => setup.id === initialIntakeSetupId);
   const initialValues = useMemo<BulkOfferingValues>(
@@ -84,6 +108,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
     setIsLoading: (value: boolean) => void
   ) => {
     if (activeStep === 0) {
+      if (!classesReady) return;
       setIsLoading(true);
       try {
         const preview = await bulk.previewOfferings(values);
@@ -123,7 +148,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography id="bulk-admission-offering-title" variant="h6" component="h2">
               <AdmissionDialogTitle
-                title="Bulk create offerings"
+                title="Bulk Create Offerings"
                 helpText="Create one admission offering for every selected class."
               />
             </Typography>
@@ -131,6 +156,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
         </Box>
         <IconButton
           aria-label="Close bulk admission offering drawer"
+          size="small"
           disabled={bulk.loading}
           onClick={requestClose}
           sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
@@ -159,12 +185,9 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
           backButtonProps={{ sx: { ml: 'auto', mr: 1 } }}
           nextButtonLabel="Preview offerings"
           finalButtonLabel={`Create ${selectedCount} offering${selectedCount === 1 ? '' : 's'}`}
-          disableSubmit={
-            activeStep === 1 &&
-            (!bulk.canSaveInactive ||
-              Boolean(formikRef.current?.values.isActive && !bulk.canActivate))
-          }
+          disableSubmit={activeStep === 1 && !bulk.canSaveInactive}
           saveAndNextButtonProps={{
+            disabled: activeStep === 0 && !classesReady,
             endIcon: activeStep === 0 ? <Iconify icon="mdi:eye-outline" width={18} /> : undefined,
           }}
           renderItem={({ formik }) => {
@@ -183,18 +206,35 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
                     The selected admission intake setup could not be loaded.
                   </Alert>
                 )}
-                {initialSetup && (
-                  <Alert severity="success">
-                    <strong>{initialSetup.name}</strong> is selected. It will provide inquiry
-                    handling and counsellor routing for these Offerings.
-                  </Alert>
+                {initialSetup &&
+                  formik.values.inquiryIntakeProfileId === initialSetup.inquiryIntakeProfileId &&
+                  formik.values.counsellorAssignmentProfileId ===
+                    initialSetup.counsellorAssignmentProfileId && (
+                    <Alert severity="success">
+                      <strong>{initialSetup.name}</strong> is selected. It will provide inquiry
+                      handling and counsellor routing for these Offerings.
+                    </Alert>
+                  )}
+                {formik.values.admissionCycle && (
+                  <AdmissionOfferingCycleContext
+                    cycle={formik.values.admissionCycle}
+                    showCode={false}
+                  />
                 )}
-                <AdmissionOfferingCycleContext cycle={cycle} />
                 <BulkAdmissionOfferingStep
+                  open={open}
                   activeStep={activeStep}
                   formik={formik}
-                  cycle={cycle}
+                  scopeCycle={cycle}
+                  fetchCycles={fetchCycles}
+                  cycleOptionsRevision={cycleOptionsRevision}
+                  cycleOptionsError={cyclesQuery.isError}
+                  retryCycles={() => setCycleOptionsRevision((revision) => revision + 1)}
                   bulk={bulk}
+                  onClassesReadyChange={setClassesReady}
+                  onEdit={() => {
+                    if (!bulk.loading) setActiveStep(0);
+                  }}
                 />
               </Stack>
             );
@@ -208,214 +248,302 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
 type BulkState = ReturnType<typeof useBulkAdmissionOffering>;
 
 function BulkAdmissionOfferingStep({
+  open,
   activeStep,
   formik,
-  cycle,
+  scopeCycle,
+  fetchCycles,
+  cycleOptionsRevision,
+  cycleOptionsError,
+  retryCycles,
   bulk,
+  onClassesReadyChange,
+  onEdit,
 }: {
+  open: boolean;
   activeStep: number;
   formik: FormikProps<BulkOfferingValues>;
-  cycle: AdmissionCycle;
+  scopeCycle: AdmissionCycle;
+  fetchCycles: (
+    search: string,
+    page: number
+  ) => Promise<{ data: AdmissionCycle[]; hasMore: boolean }>;
+  cycleOptionsRevision: number;
+  cycleOptionsError: boolean;
+  retryCycles: () => void;
   bulk: BulkState;
+  onClassesReadyChange: (ready: boolean) => void;
+  onEdit: () => void;
 }) {
   const standardsQuery = useGetClassByMediumQuery(formik.values.mediumId, {
     skip: !formik.values.mediumId,
   });
-  const standards = (standardsQuery.data ?? []) as Standards[];
-  const change = (field: keyof BulkOfferingValues, value: unknown) => {
+  const standards = (standardsQuery.currentData ?? NO_STANDARDS) as Standards[];
+  const canCheckClasses = Boolean(
+    open && formik.values.admissionCycle && formik.values.boardId && formik.values.mediumId
+  );
+  const configuredClassesQuery = useGetAdmissionOfferingClassIdentitiesQuery(
+    {
+      admissionCycleId: formik.values.admissionCycle?.id ?? '',
+      boardId: formik.values.boardId,
+      mediumId: formik.values.mediumId,
+      campusId: formik.values.campusId,
+      track: formik.values.track,
+    },
+    { skip: !canCheckClasses, refetchOnMountOrArgChange: true }
+  );
+  const classesReady =
+    !canCheckClasses ||
+    (configuredClassesQuery.isSuccess &&
+      !configuredClassesQuery.isFetching &&
+      configuredClassesQuery.currentData !== undefined &&
+      standardsQuery.isSuccess &&
+      !standardsQuery.isFetching &&
+      !standardsQuery.isError);
+  const configuredClassIds = useMemo(
+    () => getConfiguredBulkClassIds(standards, configuredClassesQuery.currentData ?? []),
+    [standards, configuredClassesQuery.currentData]
+  );
+  const { standardIds } = formik.values;
+  const { setValues } = formik;
+  const { clearPreview } = bulk;
+
+  useEffect(() => {
+    onClassesReadyChange(classesReady);
+  }, [classesReady, onClassesReadyChange]);
+
+  useEffect(() => {
+    if (activeStep !== 0 || !canCheckClasses || !classesReady) return;
+    const remaining = standardIds.filter(
+      (id) => standards.some((standard) => standard.id === id) && !configuredClassIds.includes(id)
+    );
+    if (remaining.length === standardIds.length) return;
+    clearPreview();
+    setValues(
+      (current) => ({
+        ...current,
+        standardIds: current.standardIds.filter((id) => remaining.includes(id)),
+      }),
+      true
+    );
+  }, [
+    activeStep,
+    canCheckClasses,
+    classesReady,
+    configuredClassIds,
+    standards,
+    standardIds,
+    setValues,
+    clearPreview,
+  ]);
+  const standardNameById = Object.fromEntries(
+    bulk.previewStandards.map((standard) => [standard.id, standard.name])
+  );
+  const fieldIssues = getBulkOfferingFieldIssues(bulk.preview, standardNameById);
+  const change = (updates: Partial<BulkOfferingValues>) => {
     bulk.clearPreview();
-    formik.setFieldValue(field, value);
+    formik.setValues({ ...formik.values, ...updates }, true);
   };
 
-  if (activeStep === 0) {
-    return (
-      <Stack spacing={2}>
-        <FormSectionCard
-          icon="mdi:school-outline"
-          title="Select classes"
-          titleTypographyProps={{
-            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
-          }}
-        >
-          {bulk.hierarchyError && (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={bulk.retryHierarchy}>
-                  Retry
-                </Button>
-              }
+  return (
+    <>
+      {/* Preserve remote-select labels as well as Formik values when returning from Preview. */}
+      <Box hidden={activeStep !== 0}>
+        <Stack spacing={2}>
+          <FormSectionCard
+            icon="mdi:school-outline"
+            title="Select classes"
+            titleTypographyProps={{
+              sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+            }}
+          >
+            <ShakingTextField
+              error={Boolean(
+                (formik.touched.admissionCycle && formik.errors.admissionCycle) ||
+                fieldIssues.admissionCycle?.blocking
+              )}
+              sx={{ mb: 1 }}
             >
-              School class options could not be loaded.
-            </Alert>
-          )}
-          {bulk.hierarchyEmpty && !bulk.optionsLoading && (
-            <Alert severity="info">No school classes are configured for this academic year.</Alert>
-          )}
-          {formik.values.mediumId && standardsQuery.isError && (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" size="small" onClick={() => standardsQuery.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Classes for this medium could not be loaded.
-            </Alert>
-          )}
-          {formik.values.mediumId &&
-            standardsQuery.isSuccess &&
-            !standardsQuery.isFetching &&
-            !standards.length && (
-              <Alert severity="info">No classes are configured for this medium.</Alert>
+              <PaginatedSearchSelect<AdmissionCycle>
+                key={cycleOptionsRevision}
+                fullWidth
+                size="small"
+                label="Admission cycle *"
+                name="admissionCycle"
+                value={formik.values.admissionCycle}
+                fetchOptions={fetchCycles}
+                minChars={0}
+                getOptionLabel={cycleLabel}
+                filterOptions={(options) => options}
+                getOptionKey={(item) => item.id}
+                isOptionEqualToValue={(item, selected) => item.id === selected.id}
+                onChange={(_, selected) => {
+                  if (selected?.id === formik.values.admissionCycle?.id) return;
+                  bulk.clearPreview();
+                  formik.setValues(
+                    {
+                      ...formik.values,
+                      admissionCycle: selected,
+                      useCycleDates: true,
+                      openDate: null,
+                      closeDate: null,
+                    },
+                    true
+                  );
+                  formik.setFieldTouched('admissionCycle', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('admissionCycle', true)}
+                error={Boolean(
+                  (formik.touched.admissionCycle && formik.errors.admissionCycle) ||
+                  fieldIssues.admissionCycle?.blocking
+                )}
+                helperText={
+                  formik.touched.admissionCycle && formik.errors.admissionCycle
+                    ? String(formik.errors.admissionCycle)
+                    : (fieldIssues.admissionCycle?.message ?? '')
+                }
+                noOptionsText={
+                  cycleOptionsError
+                    ? 'Admission cycles could not be loaded. Use Retry.'
+                    : 'No published and open admission cycles found for this academic year'
+                }
+              />
+            </ShakingTextField>
+            <Box sx={{ mb: 1 }}>
+              <AdmissionOfferingRoutingFields
+                values={formik.values}
+                onChange={({ track, entryMode }) =>
+                  change({
+                    track,
+                    entryMode,
+                    standardIds: [],
+                    workflowDefinitionId: '',
+                    inquiryFormDefinitionId: '',
+                    inquiryIntakeProfileId: '',
+                  })
+                }
+                onBlur={(field) => formik.setFieldTouched(field, true)}
+                feedback={Object.fromEntries(
+                  (['track', 'entryMode'] as const).map((field) => [
+                    field,
+                    {
+                      error: Boolean(
+                        (formik.touched[field] && formik.errors[field]) ||
+                        fieldIssues[field]?.blocking
+                      ),
+                      helperText:
+                        formik.touched[field] && formik.errors[field]
+                          ? String(formik.errors[field])
+                          : fieldIssues[field]?.message,
+                    },
+                  ])
+                )}
+              />
+            </Box>
+            {cycleOptionsError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" size="small" onClick={retryCycles}>
+                    Retry
+                  </Button>
+                }
+              >
+                Admission cycles could not be loaded.
+              </Alert>
             )}
-          <BulkAdmissionHierarchyFields
-            formik={formik}
-            hierarchy={bulk.hierarchy}
-            standards={standards}
-            loading={bulk.optionsLoading || standardsQuery.isFetching}
-            change={change}
-          />
-        </FormSectionCard>
-
-        <FormSectionCard
-          icon="mdi:cog-outline"
-          title="Configure offerings"
-          titleTypographyProps={{
-            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
-          }}
-        >
-          <BulkAdmissionConfigurationFields
-            formik={formik}
-            cycle={cycle}
-            fetchWorkflows={bulk.fetchWorkflows}
-            fetchInquiryForms={bulk.fetchInquiryForms}
-            change={change}
-          />
-        </FormSectionCard>
-      </Stack>
-    );
-  }
-
-  return (
-    <BulkAdmissionOfferingPreview
-      formik={formik}
-      bulk={bulk}
-      standardNameById={Object.fromEntries(
-        bulk.previewStandards.map((standard) => [standard.id, standard.name])
-      )}
-    />
-  );
-}
-
-function BulkAdmissionOfferingPreview({
-  formik,
-  bulk,
-  standardNameById,
-}: {
-  formik: FormikProps<BulkOfferingValues>;
-  bulk: BulkState;
-  standardNameById: Record<string, string>;
-}) {
-  if (!bulk.preview) {
-    return <Alert severity="warning">Preview the selected offerings before creating them.</Alert>;
-  }
-
-  return (
-    <Stack spacing={2}>
-      <Box>
-        <Typography variant="subtitle1">Preview offerings</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Review every generated offering and choose what should happen after creation.
-        </Typography>
-      </Box>
-
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small" aria-label="Admission offering preview">
-          <TableHead>
-            <TableRow>
-              <TableCell>Standard</TableCell>
-              <TableCell>Code</TableCell>
-              <TableCell align="right">Readiness</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {bulk.preview.items.map((item) => {
-              const readiness = item.canActivate
-                ? { label: 'Ready', color: 'success' as const }
-                : item.canSaveInactive
-                  ? { label: 'Inactive only', color: 'warning' as const }
-                  : { label: 'Needs changes', color: 'error' as const };
-              return (
-                <TableRow key={item.standardId}>
-                  <TableCell>{standardNameById[item.standardId] ?? item.standardId}</TableCell>
-                  <TableCell>{item.code}</TableCell>
-                  <TableCell align="right">
-                    <Label color={readiness.color}>{readiness.label}</Label>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {bulk.preview.items.some((item) => item.errors.length > 0) && (
-        <Alert severity="warning">
-          {bulk.preview.items
-            .flatMap((item) => item.errors.map((error) => error.message))
-            .join(' ')}
-        </Alert>
-      )}
-
-      <Box>
-        <Typography variant="subtitle1" sx={{ mb: 1 }}>
-          After creation
-        </Typography>
-        <RadioGroup
-          value={formik.values.isActive ? 'active' : 'inactive'}
-          onChange={(event) => formik.setFieldValue('isActive', event.target.value === 'active')}
-        >
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Paper variant="outlined" sx={{ flex: 1, px: 1.5, py: 0.5 }}>
-              <FormControlLabel
-                value="inactive"
-                control={<Radio size="small" />}
-                label={
-                  <Box>
-                    <Typography variant="subtitle2">Create as inactive</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Save the batch for later activation.
-                    </Typography>
-                  </Box>
+            {bulk.hierarchyError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" size="small" onClick={bulk.retryHierarchy}>
+                    Retry
+                  </Button>
                 }
-              />
-            </Paper>
-            <Paper variant="outlined" sx={{ flex: 1, px: 1.5, py: 0.5 }}>
-              <FormControlLabel
-                value="active"
-                disabled={!bulk.canActivate}
-                control={<Radio size="small" />}
-                label={
-                  <Box>
-                    <Typography variant="subtitle2">Activate ready offerings</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {bulk.canActivate
-                        ? `Open all ${bulk.preview.items.length} for admissions now.`
-                        : 'Resolve readiness issues before activation.'}
-                    </Typography>
-                  </Box>
+              >
+                School class options could not be loaded.
+              </Alert>
+            )}
+            {bulk.hierarchyEmpty && !bulk.optionsLoading && (
+              <Alert severity="info">
+                No school classes are configured for this academic year.
+              </Alert>
+            )}
+            {formik.values.mediumId && standardsQuery.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" size="small" onClick={() => standardsQuery.refetch()}>
+                    Retry
+                  </Button>
                 }
-              />
-            </Paper>
-          </Stack>
-        </RadioGroup>
-      </Box>
+              >
+                Classes for this medium could not be loaded.
+              </Alert>
+            )}
+            {formik.values.mediumId &&
+              standardsQuery.isSuccess &&
+              !standardsQuery.isFetching &&
+              !standards.length && (
+                <Alert severity="info">No classes are configured for this medium.</Alert>
+              )}
+            <BulkAdmissionHierarchyFields
+              formik={formik}
+              hierarchy={bulk.hierarchy}
+              standards={standards}
+              loading={bulk.optionsLoading || standardsQuery.isFetching}
+              change={change}
+              fieldIssues={fieldIssues}
+              configuredClassIds={configuredClassIds}
+              classesDisabled={!canCheckClasses}
+              classesLoading={canCheckClasses && !classesReady && !configuredClassesQuery.isError}
+              classesError={canCheckClasses && configuredClassesQuery.isError}
+              retryClasses={() => configuredClassesQuery.refetch()}
+            />
+          </FormSectionCard>
 
-      <Typography variant="caption" color="text.secondary">
-        Nothing is created until you confirm.
-      </Typography>
-    </Stack>
+          <FormSectionCard
+            icon="mdi:cog-outline"
+            title="Configure offerings"
+            descriptionTooltip={
+              formik.values.track === 1
+                ? 'RTE starts with Registration. Choose a published workflow that starts with a Registration Form and has no Inquiry or Entrance Assessment stage. Intake & assignment is optional.'
+                : formik.values.entryMode === 1
+                  ? 'Choose a published workflow that starts with a Registration Form and has no Inquiry stage. Intake & assignment is optional.'
+                  : 'Workflow and Inquiry form are required before activation. Inactive preparation is allowed without them. Intake & assignment is optional; select No setup — manual assignment to assign counsellors yourself.'
+            }
+            titleTypographyProps={{
+              sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+            }}
+          >
+            <Box hidden={!formik.values.admissionCycle}>
+              <BulkAdmissionConfigurationFields
+                formik={formik}
+                fetchWorkflows={bulk.fetchWorkflows}
+                fetchInquiryForms={bulk.fetchInquiryForms}
+                change={change}
+                fieldIssues={fieldIssues}
+              />
+            </Box>
+            {!formik.values.admissionCycle && (
+              <Typography variant="body2" color="text.secondary">
+                Select an admission cycle to configure the workflow and forms.
+              </Typography>
+            )}
+          </FormSectionCard>
+        </Stack>
+      </Box>
+      {activeStep === 1 && (
+        <BulkAdmissionOfferingPreview
+          preview={bulk.preview}
+          canCreate={bulk.canSaveInactive}
+          standardNameById={standardNameById}
+          onEdit={onEdit}
+          busy={bulk.loading}
+          track={formik.values.track}
+          entryMode={formik.values.entryMode}
+        />
+      )}
+    </>
   );
 }

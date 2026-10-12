@@ -1,7 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { AdmissionOfferingListInput } from 'src/redux/student/admissions/admission-offerings-api';
 
+import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
@@ -9,6 +11,7 @@ import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admi
 
 import { useAdmissionOfferingActions } from './use-admission-offering-actions';
 import { useAdmissionOfferingFilters } from './use-admission-offering-filters';
+import { useBulkAdmissionOfferingActivation } from './use-bulk-admission-offering-activation';
 
 const toListInput = (
   cycleId: string | undefined,
@@ -46,6 +49,33 @@ export function useAdmissionOfferingsScreen() {
     { skip: !cycle || !filterState.filters.boardId || !filterState.filters.mediumId }
   );
   const actions = useAdmissionOfferingActions(cycle, Boolean(initialIntakeSetupId));
+  const tenantId = useSelector((state: RootState) => state.auth.sessionContext?.tenantId);
+  const userId = useSelector((state: RootState) => state.auth.user?.sub);
+  const bulkActivationDisabled = Boolean(
+    !cycle ||
+    !filterState.filters.boardId ||
+    !filterState.filters.mediumId ||
+    cyclesQuery.isFetching ||
+    offeringsQuery.isFetching ||
+    offeringsQuery.isError ||
+    actions.commanding ||
+    actions.pendingAction ||
+    actions.dialogMode ||
+    actions.bulkOpen ||
+    actions.detailsOpen
+  );
+  const bulkActivation = useBulkAdmissionOfferingActivation({
+    rows: offeringsQuery.data?.items ?? [],
+    scopeKey: JSON.stringify([
+      tenantId,
+      userId,
+      cycle?.id,
+      cycle?.academicYearId,
+      filterState.filters,
+    ]),
+    canActivate: actions.permissions.activate,
+    disabled: bulkActivationDisabled,
+  });
   return {
     ...filterState,
     cyclesQuery,
@@ -54,5 +84,7 @@ export function useAdmissionOfferingsScreen() {
     offeringsQuery,
     initialIntakeSetupId,
     ...actions,
+    bulkActivation,
+    bulkActivationDisabled,
   };
 }

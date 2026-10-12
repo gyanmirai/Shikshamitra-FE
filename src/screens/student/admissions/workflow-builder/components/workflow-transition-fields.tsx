@@ -17,6 +17,7 @@ import {
   AccordionSummary,
 } from '@mui/material';
 
+import { getTransitionSummary } from '../../workflow-builder-utils';
 import { hasInquiryCondition } from '../workflow-inquiry-retirement';
 import { isApplicationStageType } from '../workflow-stage-configuration';
 import { WorkflowPreservedCondition } from './workflow-preserved-condition';
@@ -32,6 +33,7 @@ type Props = {
   formik: FormikProps<WorkflowTransitionFormValues>;
   stages: AdmissionWorkflowStage[];
   readOnly: boolean;
+  simpleNextStep?: boolean;
   lockFromStage?: boolean;
   conditionFields?: WorkflowConditionField[];
   competingPaths?: number;
@@ -44,6 +46,7 @@ export function WorkflowTransitionFields({
   formik,
   stages,
   readOnly,
+  simpleNextStep = false,
   lockFromStage = false,
   conditionFields = [],
   competingPaths = 0,
@@ -66,6 +69,35 @@ export function WorkflowTransitionFields({
     !formik.values.preserveCondition &&
     (!assessment || !isAssessmentOutcomeCondition(formik.values)) &&
     (!documents || !isDocumentOutcomeCondition(formik.values));
+  if (simpleNextStep) {
+    return (
+      <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
+        <Stack spacing={2} sx={{ p: 2 }}>
+          {formik.status && <Alert severity="error">{String(formik.status)}</Alert>}
+          <Stack spacing={0.25}>
+            <Typography variant="caption" color="text.secondary">
+              After
+            </Typography>
+            <Typography variant="subtitle2">{from?.name ?? 'Current stage'}</Typography>
+          </Stack>
+          <WorkflowTransitionStageSelect
+            formik={formik}
+            field="toStageId"
+            label="Continue to *"
+            stages={stages}
+            readOnly={readOnly}
+          />
+          <Typography variant="body2" color="text.secondary">
+            {formik.values.hasCondition
+              ? `Saved path: ${getTransitionSummary(formik.values)}. Existing special paths remain read-only.`
+              : assessment
+                ? 'Passed or waived applicants follow this next step. Failed, absent or retake outcomes stay at Assessment; staff can arrange an allowed retake or end the journey as Withdrawn.'
+                : 'The applicant follows this next step after the stage completion requirements are met.'}
+          </Typography>
+        </Stack>
+      </Scrollbar>
+    );
+  }
   return (
     <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
       <Stack spacing={2} sx={{ p: 2 }}>

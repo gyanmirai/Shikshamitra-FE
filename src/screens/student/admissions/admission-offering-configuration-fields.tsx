@@ -1,10 +1,12 @@
 import type { FormikProps } from 'formik';
 
+import ShakingTextField from 'src/components/shaking-text-field';
 import { Grid, Alert, MenuItem, TextField, Typography } from '@mui/material';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { AdmissionDefinitionSelect } from './admission-definition-select';
+import { AdmissionOfferingRoutingFields } from './admission-offering-routing-fields';
 import {
   type AdmissionOfferingFormValues,
   isAdmissionOfferingConfigurationIncomplete,
@@ -26,6 +28,12 @@ type Props = {
   fetchInquiryForms: AdmissionDefinitionFetcher;
   initialWorkflow?: AdmissionDefinitionOption | null;
   initialInquiryForm?: AdmissionDefinitionOption | null;
+  compact?: boolean;
+  showCode?: boolean;
+  twoColumnLayout?: boolean;
+  hideConfigurationWarning?: boolean;
+  onDismissConfigurationWarning?: () => void;
+  routingLocked?: boolean;
 };
 
 export function AdmissionOfferingConfigurationFields({
@@ -34,9 +42,16 @@ export function AdmissionOfferingConfigurationFields({
   fetchInquiryForms,
   initialWorkflow,
   initialInquiryForm,
+  compact = false,
+  showCode = true,
+  twoColumnLayout = false,
+  hideConfigurationWarning = false,
+  onDismissConfigurationWarning,
+  routingLocked = false,
 }: Props) {
   const missingPublishedConfiguration = isAdmissionOfferingConfigurationIncomplete(formik.values);
   const startsWithInquiry = formik.values.entryMode !== 1;
+  const configurationFieldSize = twoColumnLayout ? { xs: 12, sm: 6 } : 12;
   const inquiryForm = useGetAdmissionFormQuery(formik.values.inquiryFormDefinitionId ?? '', {
     skip: !formik.values.inquiryFormDefinitionId,
   });
@@ -55,48 +70,88 @@ export function AdmissionOfferingConfigurationFields({
   );
 
   return (
-    <Grid container spacing={1.5}>
-      <Grid size={12}>
-        <Typography variant="subtitle2">Admission configuration</Typography>
-      </Grid>
-      {missingPublishedConfiguration && (
+    <Grid container spacing={compact ? 1 : 1.5}>
+      {!compact && (
         <Grid size={12}>
-          <Alert severity="warning">
+          <Typography variant="subtitle2">Admission configuration</Typography>
+        </Grid>
+      )}
+      {missingPublishedConfiguration && !hideConfigurationWarning && (
+        <Grid size={12}>
+          <Alert severity="warning" onClose={onDismissConfigurationWarning}>
             Select a published workflow
             {startsWithInquiry ? ', plus an inquiry form' : ''} before activating this Offering. You
             may save it as inactive while configuration is incomplete.
           </Alert>
         </Grid>
       )}
-      <Grid size={{ xs: 12, sm: 7 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Offering name *"
-          {...formik.getFieldProps('name')}
-          error={formik.touched.name && Boolean(formik.errors.name)}
-          helperText={
-            formik.touched.name
-              ? formik.errors.name
-              : 'A clear name shown to staff and families, such as Grade 1 General Admission.'
-          }
-        />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 5 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Offering code *"
-          {...formik.getFieldProps('code')}
-          error={formik.touched.code && Boolean(formik.errors.code)}
-          helperText={
-            formik.touched.code
-              ? formik.errors.code
-              : 'A stable operational code used to identify this intake.'
-          }
-        />
-      </Grid>
       <Grid size={12}>
+        <AdmissionOfferingRoutingFields
+          values={formik.values}
+          locked={routingLocked}
+          onChange={({ track, entryMode }) => {
+            formik.setValues({
+              ...formik.values,
+              track,
+              entryMode,
+              workflowDefinitionId: null,
+              applicationFormDefinitionId: null,
+              inquiryFormDefinitionId: null,
+              inquiryIntakeProfileId: null,
+            });
+          }}
+          onBlur={(field) => formik.setFieldTouched(field, true)}
+          feedback={{
+            track: {
+              error: Boolean(formik.touched.track && formik.errors.track),
+              helperText: formik.touched.track ? formik.errors.track : undefined,
+            },
+            entryMode: {
+              error: Boolean(formik.touched.entryMode && formik.errors.entryMode),
+              helperText: formik.touched.entryMode ? formik.errors.entryMode : undefined,
+            },
+          }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: twoColumnLayout ? 6 : showCode ? 7 : 12 }}>
+        <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Offering name *"
+            {...formik.getFieldProps('name')}
+            error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={
+              formik.touched.name
+                ? formik.errors.name
+                : compact
+                  ? undefined
+                  : 'A clear name shown to staff and families, such as Grade 1 General Admission.'
+            }
+          />
+        </ShakingTextField>
+      </Grid>
+      {showCode && (
+        <Grid size={{ xs: 12, sm: twoColumnLayout ? 6 : 5 }}>
+          <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Offering code *"
+              {...formik.getFieldProps('code')}
+              error={formik.touched.code && Boolean(formik.errors.code)}
+              helperText={
+                formik.touched.code
+                  ? formik.errors.code
+                  : compact
+                    ? undefined
+                    : 'A stable operational code used to identify this intake.'
+              }
+            />
+          </ShakingTextField>
+        </Grid>
+      )}
+      <Grid size={configurationFieldSize}>
         <AdmissionDefinitionSelect
           label="Published workflow"
           valueId={formik.values.workflowDefinitionId ?? null}
@@ -107,11 +162,13 @@ export function AdmissionOfferingConfigurationFields({
             formik.setFieldValue('applicationFormDefinitionId', null);
           }}
           noOptionsText="No published workflows found"
-          helperText="Application form comes from the workflow’s Form stage."
+          helperText={
+            compact ? undefined : 'Application form comes from the workflow’s Form stage.'
+          }
         />
       </Grid>
       {startsWithInquiry && (
-        <Grid size={12}>
+        <Grid size={configurationFieldSize}>
           <AdmissionDefinitionSelect
             label="Published inquiry form"
             valueId={formik.values.inquiryFormDefinitionId ?? null}
@@ -126,7 +183,7 @@ export function AdmissionOfferingConfigurationFields({
           />
         </Grid>
       )}
-      <Grid size={12}>
+      <Grid size={configurationFieldSize}>
         <TextField
           select
           fullWidth
@@ -155,9 +212,11 @@ export function AdmissionOfferingConfigurationFields({
               ? 'Unable to load admission intake setups.'
               : legacySelection
                 ? 'Legacy profiles are preserved. Choose a combined setup only when you want to replace them.'
-                : startsWithInquiry
-                  ? 'Optional. Choose a setup for inquiry handling and automatic counsellor routing. Leave empty for manual assignment.'
-                  : 'Optional. Choose a setup for automatic routing, or assign the counsellor during registration.'
+                : compact
+                  ? undefined
+                  : startsWithInquiry
+                    ? 'Optional. Choose a setup for inquiry handling and automatic counsellor routing. Leave empty for manual assignment.'
+                    : 'Optional. Choose a setup for automatic routing, or assign the counsellor during registration.'
           }
         >
           <MenuItem value="">No setup — manual assignment</MenuItem>
@@ -169,12 +228,14 @@ export function AdmissionOfferingConfigurationFields({
           ))}
         </TextField>
       </Grid>
-      <Grid size={12}>
-        <Typography variant="caption" color="text.secondary">
-          Save incomplete preparation as inactive. Activation requires a published cycle, the forms
-          linked to its workflow and valid dates. Intake & assignment is optional.
-        </Typography>
-      </Grid>
+      {!compact && (
+        <Grid size={12}>
+          <Typography variant="caption" color="text.secondary">
+            Save incomplete preparation as inactive. Activation requires a published cycle, the
+            forms linked to its workflow and valid dates. Intake & assignment is optional.
+          </Typography>
+        </Grid>
+      )}
     </Grid>
   );
 }

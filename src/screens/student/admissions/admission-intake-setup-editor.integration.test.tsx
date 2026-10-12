@@ -112,7 +112,7 @@ it('shows the simplified inquiry controls and saves API-selected pool and fallba
 it('keeps source and pool checkbox menus open for multiple selections and reviews saved values', async () => {
   const user = userEvent.setup();
   render(editor());
-  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: 'Create Admission Intake Setup' })).toBeVisible();
   fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
     target: { value: 'Multiple sources' },
   });
@@ -199,15 +199,21 @@ it('reviews edits with an update label and retains the concurrency stamp', async
   expect(hooks.create).not.toHaveBeenCalled();
 }, 15000);
 
-it('preserves an inline draft when discarding is cancelled', async () => {
+it('preserves a drawer draft when discarding is cancelled', async () => {
   const user = userEvent.setup();
   render(editor());
   fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
     target: { value: 'Keep draft' },
   });
   await user.click(screen.getByRole('button', { name: 'Close admission intake setup editor' }));
-  expect(screen.getByRole('dialog')).toHaveTextContent('Discard setup changes?');
-  await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByRole('dialog', { name: 'Discard setup changes?' })).toHaveTextContent(
+    'Discard setup changes?'
+  );
+  await user.click(
+    within(screen.getByRole('dialog', { name: 'Discard setup changes?' })).getByRole('button', {
+      name: 'Cancel',
+    })
+  );
   expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Keep draft');
   expect(hooks.close).not.toHaveBeenCalled();
 });
@@ -247,3 +253,16 @@ it('recovers both routing fields after a failed lookup without losing inquiry va
   await user.click(screen.getByRole('button', { name: 'Back' }));
   expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Preserved draft');
 }, 15000);
+
+it('uses safe Escape dismissal for a dirty drawer and retains its draft', async () => {
+  const user = userEvent.setup();
+  render(editor());
+  fireEvent.change(screen.getByRole('textbox', { name: 'Setup name *' }), {
+    target: { value: 'Escape draft' },
+  });
+  await user.keyboard('{Escape}');
+  expect(screen.getByRole('dialog', { name: 'Discard setup changes?' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Escape draft');
+  expect(hooks.close).not.toHaveBeenCalled();
+});

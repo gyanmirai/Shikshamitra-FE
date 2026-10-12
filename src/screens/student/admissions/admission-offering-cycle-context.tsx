@@ -1,15 +1,15 @@
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { Paper, Stack, Typography } from '@mui/material';
 import { Label } from 'src/components/label';
 import { formatDateOnly } from 'src/utils/date-only';
+import { Paper, Stack, Typography } from '@mui/material';
 
-type Props = { cycle: AdmissionCycle };
+type Props = { cycle: AdmissionCycle; showCode?: boolean };
 
 const cycleStatusLabels = ['Draft', 'Published', 'Closed', 'Archived'] as const;
 const cycleStatusColors = ['default', 'success', 'warning', 'default'] as const;
 
-export function AdmissionOfferingCycleContext({ cycle }: Props) {
+export function AdmissionOfferingCycleContext({ cycle, showCode = true }: Props) {
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
       <Stack
@@ -21,7 +21,8 @@ export function AdmissionOfferingCycleContext({ cycle }: Props) {
         <Stack spacing={0.25}>
           <Typography variant="subtitle2">{cycle.name}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {cycle.academicYearName || 'Academic year'} · {cycle.code}
+            {cycle.academicYearName || 'Academic year'}
+            {showCode && ` · ${cycle.code}`}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Cycle window: {formatDateOnly(cycle.startDate, 'DD MMM YYYY')} –{' '}

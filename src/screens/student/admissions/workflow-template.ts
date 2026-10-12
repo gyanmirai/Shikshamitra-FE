@@ -35,7 +35,8 @@ type WorkflowTemplate = {
   transitions: AdmissionWorkflowTransition[];
 };
 
-export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDefinition[] = [
+// Keep historical template IDs readable without offering them for new selections.
+const WORKFLOW_TEMPLATE_DEFINITIONS: readonly AdmissionWorkflowTemplateDefinition[] = [
   {
     id: 'standard',
     name: 'Standard admission',
@@ -44,26 +45,32 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
     recommended: true,
     stages: [
       {
+        code: 'ENTRANCE_ASSESSMENT',
+        name: 'Entrance assessment',
+        stageType: 2,
+        description: 'Schedule and record the configured test, interaction, or interview outcome.',
+      },
+      {
         code: 'APPLICATION_FORM',
-        name: 'Application form submitted',
+        name: 'Admission form',
         stageType: 1,
         description: 'Collect and submit the school-defined applicant and guardian information.',
       },
       {
         code: 'DOCUMENT_VERIFICATION',
-        name: 'Documents verified',
+        name: 'Document verification',
         stageType: 5,
         description: 'Collect and verify only the documents required by the school.',
       },
       {
         code: 'FEE_STRUCTURE_CONFIRMATION',
-        name: 'Fee structure confirmed',
+        name: 'Payment',
         stageType: 4,
         description: 'Confirm the applicable Finance class fee structure before continuing.',
       },
       {
         code: 'ADMISSION_DECISION',
-        name: 'Admission decision recorded',
+        name: 'Admission finalization',
         stageType: 7,
         description: 'Approve, waitlist, or reject the application and close the journey.',
       },
@@ -174,6 +181,10 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   },
 ] as const;
 
+export const ADMISSION_WORKFLOW_TEMPLATES = WORKFLOW_TEMPLATE_DEFINITIONS.filter(
+  (template) => template.id === 'standard'
+);
+
 export const STANDARD_ADMISSION_JOURNEY = ADMISSION_WORKFLOW_TEMPLATES[0].stages;
 
 export const EMPTY_WORKFLOW_STARTER = {
@@ -195,7 +206,7 @@ export const isWorkflowTemplateId = (value: unknown): value is WorkflowTemplateI
 
 export const getWorkflowTemplateDefinition = (id: unknown) =>
   isWorkflowTemplateId(id)
-    ? ADMISSION_WORKFLOW_TEMPLATES.find((template) => template.id === id)
+    ? WORKFLOW_TEMPLATE_DEFINITIONS.find((template) => template.id === id)
     : undefined;
 
 export const getWorkflowStarterDefinition = (id: unknown) =>
@@ -205,7 +216,7 @@ export function findMatchingWorkflowTemplate(
   stages: AdmissionWorkflowStage[]
 ): WorkflowTemplateId | undefined {
   const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
-  return ADMISSION_WORKFLOW_TEMPLATES.find(
+  return WORKFLOW_TEMPLATE_DEFINITIONS.find(
     (template) =>
       template.stages.length === orderedStages.length &&
       template.stages.every(

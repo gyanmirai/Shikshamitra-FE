@@ -4,6 +4,22 @@ import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
   it.each([
+    {
+      detail: 'One or more business rules were violated.',
+      data: { Reason: "The email must match the selected person's saved profile." },
+    },
+    {
+      error: {
+        message: 'One or more business rules were violated.',
+        data: { Reason: "The email must match the selected person's saved profile." },
+      },
+    },
+  ])('shows the portal account profile reason from both API error formats', (data) => {
+    expect(parseApiProblemDetail({ status: 400, data }).detail).toBe(
+      "The email must match the selected person's saved profile."
+    );
+  });
+  it.each([
     ['PasswordRequiresNonAlphanumeric', 'a special character'],
     ['PasswordRequiresLower', 'a lowercase letter'],
     ['PasswordRequiresUpper', 'an uppercase letter'],

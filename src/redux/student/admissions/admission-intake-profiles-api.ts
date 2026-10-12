@@ -214,6 +214,18 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
       transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
       invalidatesTags: [tag],
     }),
+    restoreAdmissionIntakeSetup: builder.mutation<
+      AdmissionIntakeSetup,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `${setupBaseUrl}/${id}/restore`,
+        method: 'POST',
+        body: { concurrencyStamp },
+      }),
+      transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
+      invalidatesTags: [tag],
+    }),
     getAdmissionPublicInquiryLinkOptions: builder.query<AdmissionPublicInquiryLinkOption[], string>(
       {
         query: (admissionCycleId) => ({
@@ -285,6 +297,7 @@ export const {
   useGetAdmissionIntakeSetupUsageQuery,
   useLazyGetAdmissionIntakeSetupUsageQuery,
   useArchiveAdmissionIntakeSetupMutation,
+  useRestoreAdmissionIntakeSetupMutation,
   useGetAdmissionPublicInquiryLinksQuery,
   useGetAdmissionPublicInquiryLinkOptionsQuery,
   useCreateAdmissionPublicInquiryLinkMutation,

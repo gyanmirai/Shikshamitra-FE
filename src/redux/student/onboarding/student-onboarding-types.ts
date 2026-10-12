@@ -81,6 +81,7 @@ export type StudentOnboardingEvent = {
 };
 
 export type StudentOnboardingCase = {
+  portalAccountOwners?: StudentPortalAccountOwner[] | null;
   admissionRoute?: string;
   capturedStudentFields?: Array<{ key: string; label: string; value: string }>;
 
@@ -146,6 +147,13 @@ export type StudentOnboardingCase = {
   events: StudentOnboardingEvent[];
   creationTime?: string;
   lastModificationTime?: string | null;
+};
+
+export type StudentPortalAccountOwner = {
+  accountType: 'student' | 'guardian';
+  relationship: 'self' | 'father' | 'mother' | 'guardian';
+  name?: string | null;
+  email?: string | null;
 };
 
 export type StudentOnboardingCasePage = {

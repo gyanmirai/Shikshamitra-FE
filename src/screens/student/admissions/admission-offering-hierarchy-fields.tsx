@@ -1,14 +1,14 @@
 import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
-import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 import type { AdmissionCampus } from 'src/redux/student/admissions/admission-campuses-api';
+import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 import { AdmissionCampusSelect } from './admission-campus-select';
-import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 import { useAdmissionCampusOptions } from './use-admission-campus-options';
+import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
 import type { AdmissionOfferingFormValues } from './admission-offering-model';
 
@@ -20,6 +20,8 @@ type Props = {
   standardsLoading: boolean;
   identityLocked: boolean;
   initialCampus?: AdmissionCampus | null;
+  compact?: boolean;
+  showCampus?: boolean;
 };
 
 const fieldError = (
@@ -35,6 +37,8 @@ export function AdmissionOfferingHierarchyFields({
   standardsLoading,
   identityLocked,
   initialCampus,
+  compact = false,
+  showCampus = true,
 }: Props) {
   const fetchCampuses = useAdmissionCampusOptions();
   const { boards, mediums, stages } = getAdmissionHierarchyOptions(
@@ -47,21 +51,27 @@ export function AdmissionOfferingHierarchyFields({
   );
 
   return (
-    <Grid container spacing={1.5}>
-      <Grid size={12}>
-        <Typography variant="subtitle2">Academic hierarchy</Typography>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <AdmissionCampusSelect
-          label="Campus (optional)"
-          valueId={formik.values.campusId ?? null}
-          initialOption={initialCampus}
-          fetchOptions={fetchCampuses}
-          disabled={identityLocked}
-          onChange={(value) => formik.setFieldValue('campusId', value)}
-          helperText="Select a campus when this intake is campus-specific."
-        />
-      </Grid>
+    <Grid container spacing={compact ? 1 : 1.5}>
+      {!compact && (
+        <Grid size={12}>
+          <Typography variant="subtitle2">Academic hierarchy</Typography>
+        </Grid>
+      )}
+      {showCampus && (
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <AdmissionCampusSelect
+            label="Campus (optional)"
+            valueId={formik.values.campusId ?? null}
+            initialOption={initialCampus}
+            fetchOptions={fetchCampuses}
+            disabled={identityLocked}
+            onChange={(value) => formik.setFieldValue('campusId', value)}
+            helperText={
+              compact ? undefined : 'Select a campus when this intake is campus-specific.'
+            }
+          />
+        </Grid>
+      )}
       <Grid size={{ xs: 12, sm: 6 }}>
         <CustomSelect
           options={boards}

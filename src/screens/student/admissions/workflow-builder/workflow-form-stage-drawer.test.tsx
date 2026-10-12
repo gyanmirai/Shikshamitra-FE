@@ -110,7 +110,7 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       'Stage details',
       'Form completion',
       'Stage behavior',
-      'Special outcomes',
+      'Next step',
       'Advanced submission settings',
     ].forEach((name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument());
     expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
@@ -161,7 +161,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     expect(completion).toHaveAttribute('aria-expanded', 'false');
     expect(screen.getByText('Required stage')).toBeVisible();
     expect(screen.getByText('Entry stage')).toBeVisible();
-    expect(screen.getByText('End of journey', { selector: '.MuiFormControlLabel-label' })).toBeVisible();
+    expect(
+      screen.getByText('End of journey', { selector: '.MuiFormControlLabel-label' })
+    ).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form).toMatchObject(
@@ -172,7 +174,9 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
     const completion = screen.getByRole('button', { name: 'Submission and verification' });
     await user.click(
-      screen.getByRole('switch', { name: 'Require staff verification before completing this stage' })
+      screen.getByRole('switch', {
+        name: 'Require staff verification before completing this stage',
+      })
     );
     await user.click(completion);
     expect(completion).toHaveAttribute('aria-expanded', 'true');

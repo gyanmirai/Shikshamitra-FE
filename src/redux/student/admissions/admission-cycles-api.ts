@@ -175,64 +175,143 @@ export const admissionCyclesApi = api.injectEndpoints({
         unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    updateAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; body: CreateUpdateAdmissionCycle }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}`, method: 'PUT', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    updateAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: CreateUpdateAdmissionCycle }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    publishAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; concurrencyStamp: string }>({
-      query: ({ id, concurrencyStamp }) => ({ url: `/student/enrollment/admissions/cycles/${id}/publish`, method: 'POST', params: { concurrencyStamp } }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    publishAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/publish`,
+        method: 'POST',
+        params: { concurrencyStamp },
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    closeAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; body: AdmissionCycleAction }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}/close`, method: 'POST', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    closeAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: AdmissionCycleAction }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/close`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    reopenAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; body: ReopenAdmissionCycle }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}/reopen`, method: 'POST', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    reopenAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: ReopenAdmissionCycle }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/reopen`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    archiveAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; body: AdmissionCycleAction }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}/archive`, method: 'POST', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    archiveAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: AdmissionCycleAction }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/archive`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
     deleteAdmissionCycle: builder.mutation<void, { id: string; concurrencyStamp: string }>({
-      query: ({ id, concurrencyStamp }) => ({ url: `/student/enrollment/admissions/cycles/${id}`, method: 'DELETE', params: { concurrencyStamp } }),
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}`,
+        method: 'DELETE',
+        params: { concurrencyStamp },
+      }),
       invalidatesTags: cycleTags,
     }),
     cloneAdmissionCycle: builder.mutation<AdmissionCycle, CloneAdmissionCycle>({
-      query: (body) => ({ url: '/student/enrollment/admissions/cycles/clone', method: 'POST', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+      query: (body) => ({
+        url: '/student/enrollment/admissions/cycles/clone',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    updateAdmissionCycleWindow: builder.mutation<AdmissionCycle, { id: string; body: UpdateAdmissionCycleWindow }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}/window`, method: 'PUT', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    updateAdmissionCycleWindow: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: UpdateAdmissionCycleWindow }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/window`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
-    scheduleAdmissionCycle: builder.mutation<AdmissionCycle, { id: string; body: ScheduleAdmissionCycle }>({
-      query: ({ id, body }) => ({ url: `/student/enrollment/admissions/cycles/${id}/schedule`, method: 'PUT', body }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) => unwrapResult(response),
+    scheduleAdmissionCycle: builder.mutation<
+      AdmissionCycle,
+      { id: string; body: ScheduleAdmissionCycle }
+    >({
+      query: ({ id, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/schedule`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: ResultEnvelope<AdmissionCycle> | AdmissionCycle) =>
+        unwrapResult(response),
       invalidatesTags: cycleTags,
     }),
     validateAdmissionCycle: builder.mutation<AdmissionCycleValidation, string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/validate`, method: 'POST' }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycleValidation> | AdmissionCycleValidation) => unwrapResult(response),
+      query: (id) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/validate`,
+        method: 'POST',
+      }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionCycleValidation> | AdmissionCycleValidation
+      ) => unwrapResult(response),
     }),
     getAdmissionCycleImpact: builder.query<AdmissionCycleImpact, string>({
       query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/impact`, method: 'GET' }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycleImpact> | AdmissionCycleImpact) => unwrapResult(response),
+      transformResponse: (response: ResultEnvelope<AdmissionCycleImpact> | AdmissionCycleImpact) =>
+        unwrapResult(response),
     }),
     getAdmissionCycleHistory: builder.query<AdmissionCycleHistory[], string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/history`, method: 'GET' }),
-      transformResponse: (response: ResultEnvelope<AdmissionCycleHistory[]> | AdmissionCycleHistory[]) => unwrapResult(response),
+      query: (id) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/history`,
+        method: 'GET',
+      }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionCycleHistory[]> | AdmissionCycleHistory[]
+      ) => unwrapResult(response),
     }),
     getAdmissionCycleCapacity: builder.query<AdmissionCycleCapacitySummary, string>({
-      query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/capacity`, method: 'GET' }),
+      query: (id) => ({
+        url: `/student/enrollment/admissions/cycles/${id}/capacity`,
+        method: 'GET',
+      }),
       transformResponse: (
         response: ResultEnvelope<AdmissionCycleCapacitySummary> | AdmissionCycleCapacitySummary
       ) => unwrapResult(response),
@@ -258,6 +337,7 @@ export const admissionCyclesApi = api.injectEndpoints({
 
 export const {
   useGetAdmissionCyclesQuery,
+  useLazyGetAdmissionCyclesQuery,
   useGetAdmissionCycleQuery,
   useCreateAdmissionCycleMutation,
   useUpdateAdmissionCycleMutation,

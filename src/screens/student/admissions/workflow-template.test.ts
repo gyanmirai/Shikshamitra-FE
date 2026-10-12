@@ -3,6 +3,7 @@ import { DEFAULT_FORM_STAGE_POLICY } from 'src/redux/student/admissions/admissio
 
 import {
   WORKFLOW_TEMPLATE_IDS,
+  ADMISSION_WORKFLOW_STARTERS,
   ADMISSION_WORKFLOW_TEMPLATES,
   getAdmissionWorkflowTemplate,
   findMatchingWorkflowTemplate,
@@ -10,13 +11,14 @@ import {
 } from './workflow-template';
 
 describe('admissions workflow templates', () => {
-  it('offers school-ready starting points for simple through selective admissions', () => {
+  it('offers only Standard admission and Blank workflow while recognizing historical IDs', () => {
     expect(WORKFLOW_TEMPLATE_IDS).toEqual(['standard', 'simple', 'assessment', 'selective']);
     expect(ADMISSION_WORKFLOW_TEMPLATES.map((template) => template.name)).toEqual([
       'Standard admission',
-      'Simple admission',
-      'Assessment-based admission',
-      'Full admission journey',
+    ]);
+    expect(ADMISSION_WORKFLOW_STARTERS.map((template) => template.id)).toEqual([
+      'standard',
+      'empty',
     ]);
     expect(ADMISSION_WORKFLOW_TEMPLATES.filter((template) => template.recommended)).toHaveLength(1);
   });
@@ -63,10 +65,19 @@ describe('admissions workflow templates', () => {
     const template = getRegistrationWorkflowTemplate('form-1');
 
     expect(template.stages.map((stage) => stage.code)).toEqual([
+      'ENTRANCE_ASSESSMENT',
       'APPLICATION_FORM',
       'DOCUMENT_VERIFICATION',
       'FEE_STRUCTURE_CONFIRMATION',
       'ADMISSION_DECISION',
+    ]);
+    expect(template.stages.map((stage) => stage.stageType)).toEqual([2, 1, 5, 4, 7]);
+    expect(template.stages.map((stage) => stage.name)).toEqual([
+      'Entrance assessment',
+      'Admission form',
+      'Document verification',
+      'Payment',
+      'Admission finalization',
     ]);
   });
 

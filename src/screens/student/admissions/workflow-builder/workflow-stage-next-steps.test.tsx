@@ -3,9 +3,9 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { screen, fireEvent } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { screen, fireEvent } from '@testing-library/react';
 
 import { WorkflowStageNextSteps } from './components/workflow-stage-next-steps';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
@@ -32,8 +32,8 @@ const defaultPath: AdmissionWorkflowTransition = {
   isDefault: true,
 };
 
-describe('stage special outcomes', () => {
-  it('adds an outcome through the existing route editor without removing the usual path', async () => {
+describe('stage next steps', () => {
+  it('keeps the usual path editable without offering special outcomes', async () => {
     const onAddPath = vi.fn();
     const onEditPath = vi.fn();
     renderDocumentUi(
@@ -47,19 +47,20 @@ describe('stage special outcomes', () => {
     );
     const user = userEvent.setup();
     expect(screen.getByText(destination.name)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Add special outcome' }));
-    expect(onAddPath).toHaveBeenCalledExactlyOnceWith(stage);
+    expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
+    expect(onAddPath).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Change' }));
     expect(onEditPath).toHaveBeenCalledExactlyOnceWith(defaultPath);
   });
-  it('uses the same outcome action before the first route is configured', async () => {
+  it('can configure a usual next step when there is no default route', async () => {
     const onAddPath = vi.fn();
     renderDocumentUi(
       <WorkflowStageNextSteps stage={stage} stages={[stage]} onAddPath={onAddPath} />
     );
     expect(screen.getByText('No next step configured.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Add special outcome' }));
+    expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Choose next step' }));
     expect(onAddPath).toHaveBeenCalledExactlyOnceWith(stage);
   });
   it('locks outcome actions until pending stage changes are applied', () => {
@@ -75,9 +76,9 @@ describe('stage special outcomes', () => {
         onEditPath={onEditPath}
       />
     );
-    expect(screen.getByRole('button', { name: 'Add special outcome' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Change' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Add special outcome' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change' }));
     expect(onAddPath).not.toHaveBeenCalled();
     expect(onEditPath).not.toHaveBeenCalled();
   });

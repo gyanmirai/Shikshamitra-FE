@@ -53,9 +53,9 @@ export function WorkflowFormStageFields(props: Props) {
   const completion = useBoolean(true);
   const completionNeedsAttention = Boolean(
     formDetailsLoading ||
-      formDetailsError ||
-      !formDefinitionId ||
-      getAdmissionFormStageConfigurationError(formik.values.configurationJson, forms)
+    formDetailsError ||
+    !formDefinitionId ||
+    getAdmissionFormStageConfigurationError(formik.values.configurationJson, forms)
   );
 
   return (
@@ -89,7 +89,7 @@ export function WorkflowFormStageFields(props: Props) {
           />
         </FormSectionCard>
         <WorkflowFormStageSettings {...props} />
-        <FormSectionCard title="Special outcomes" icon="mdi:source-branch-plus">
+        <FormSectionCard title="Next step" icon="mdi:arrow-right">
           <WorkflowStageNextSteps
             stage={formik.values}
             stages={stages}

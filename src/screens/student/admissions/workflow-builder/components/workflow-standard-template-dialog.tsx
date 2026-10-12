@@ -73,7 +73,9 @@ export function WorkflowStandardTemplateDialog({
     if (open) setWarningDismissed(false);
   }, [open]);
   const initialValues = {
-    templateId: initialTemplateId,
+    templateId: ADMISSION_WORKFLOW_TEMPLATES.some((template) => template.id === initialTemplateId)
+      ? initialTemplateId
+      : ('standard' as const),
     registrationFormDefinitionId: initialRegistrationFormDefinitionId ?? '',
     inquiryFormDefinitionId: initialInquiryFormDefinitionId,
   };

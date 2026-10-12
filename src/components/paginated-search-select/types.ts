@@ -15,6 +15,8 @@ export type PaginatedSearchSelectProps<
   'options' | 'loading' | 'renderInput' | 'onInputChange'
 > & {
   label: string;
+  name?: string;
+  required?: boolean;
   placeholder?: string;
   fetchOptions: (query: string, page: number) => Promise<FetchOptionsResponse<T>>;
   minChars?: number;

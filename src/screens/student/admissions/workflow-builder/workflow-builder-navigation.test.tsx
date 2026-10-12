@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
-import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
+import type {
+  AdmissionWorkflowStage,
+  AdmissionWorkflowTransition,
+} from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -22,7 +25,6 @@ const handlers = {
   onEditStage: vi.fn(),
   onDuplicateStage: vi.fn(),
   onDeleteStage: vi.fn(),
-  onDragEnd: vi.fn(),
   onAddTransition: vi.fn(),
   onEditTransition: vi.fn(),
   onDeleteTransition: vi.fn(),
@@ -51,14 +53,16 @@ function Wrapper({ children }: { children: ReactNode }) {
 function Canvas({
   stages = [],
   readOnly = false,
+  transitions = [],
 }: {
   stages?: AdmissionWorkflowStage[];
   readOnly?: boolean;
+  transitions?: AdmissionWorkflowTransition[];
 }) {
   return (
     <WorkflowBuilderCanvas
       stages={stages}
-      transitions={[]}
+      transitions={transitions}
       readOnly={readOnly}
       loadingStageTypes={false}
       issueCountByStage={{}}
@@ -71,6 +75,85 @@ function Canvas({
 }
 
 describe('WorkflowBuilderCanvas', () => {
+  it('shows numbered stages in saved sequence without draggable controls', () => {
+    const assessment: AdmissionWorkflowStage = {
+      ...stage,
+      id: 'assessment',
+      name: 'Entrance assessment',
+      stageType: 2,
+      displayOrder: 0,
+    };
+    const form = { ...stage, displayOrder: 1, isEntryStage: false };
+    const decision: AdmissionWorkflowStage = {
+      ...stage,
+      id: 'decision',
+      name: 'Admission finalization',
+      stageType: 7,
+      displayOrder: 2,
+      isEntryStage: false,
+      isTerminalStage: true,
+    };
+    const stages = [decision, form, assessment];
+    render(<Canvas stages={stages} />, { wrapper: Wrapper });
+    const sequence = screen.getByRole('list', { name: 'Journey stage sequence' });
+    const cards = within(sequence).getAllByRole('listitem');
+    expect(cards.map((card) => within(card).getByRole('heading').textContent)).toEqual([
+      assessment.name,
+      form.name,
+      decision.name,
+    ]);
+    cards.forEach((card, index) => {
+      expect(within(card).getByText(String(index + 1))).toBeInTheDocument();
+      expect(card).not.toHaveAttribute('draggable', 'true');
+    });
+    expect(screen.queryByRole('button', { name: /^Reorder / })).not.toBeInTheDocument();
+    expect(stages.map((item) => item.id)).toEqual([decision.id, form.id, assessment.id]);
+  });
+  it('keeps saved special paths viewable without edit or remove actions', async () => {
+    const next = { ...stage, id: 'next', name: 'Next stage', displayOrder: 1, isEntryStage: false };
+    const special: AdmissionWorkflowTransition = {
+      id: 'special',
+      fromStageId: stage.id,
+      toStageId: next.id,
+      priority: 1,
+      isDefault: false,
+      conditionRuleJson: JSON.stringify({
+        field: 'application.status',
+        operator: 'Equals',
+        value: 'approved',
+      }),
+    };
+    render(<Canvas stages={[stage, next]} transitions={[special]} />, { wrapper: Wrapper });
+    fireEvent.click(screen.getByRole('button', { name: `Actions for ${stage.name}` }));
+    expect(
+      await screen.findByRole('menuitem', { name: 'View route to Next stage' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: 'Edit route to Next stage' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: 'Remove route to Next stage' })
+    ).not.toBeInTheDocument();
+  });
+  it('removes special outcome actions from connected stage cards and their menus', async () => {
+    const next = { ...stage, id: 'next', name: 'Next stage', displayOrder: 1, isEntryStage: false };
+    const usual: AdmissionWorkflowTransition = {
+      id: 'usual',
+      fromStageId: stage.id,
+      toStageId: next.id,
+      priority: 0,
+      isDefault: true,
+    };
+    render(<Canvas stages={[stage, next]} transitions={[usual]} />, { wrapper: Wrapper });
+    expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: `Actions for ${stage.name}` }));
+    expect(
+      await screen.findByRole('menuitem', { name: 'Edit route to Next stage' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Add special outcome' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit route to Next stage' }));
+    expect(handlers.onEditTransition).toHaveBeenCalledWith(usual);
+  });
   it('shows the journey directly and keeps empty-state creation usable', () => {
     render(<Canvas />, { wrapper: Wrapper });
     expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
@@ -150,7 +233,6 @@ describe('WorkflowBuilderCanvas', () => {
         onAddPath={handlers.onAddTransition}
         onEditPath={handlers.onEditTransition}
         onDeletePath={handlers.onDeleteTransition}
-        onDragEnd={handlers.onDragEnd}
       />,
       { wrapper: Wrapper }
     );
