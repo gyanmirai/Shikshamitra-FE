@@ -1,10 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IdCard, IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 import type { StudentDirectoryItem, StudentDirectoryOption } from 'src/redux/student/records/student-records-types';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomSelect from 'src/components/custom-select';
 import CustomStepper from 'src/components/custom-stepper';
@@ -22,6 +24,8 @@ import {
   Box, Grid, Stack, Paper, Alert, Button, Checkbox, TextField, Typography,
   FormControlLabel, ToggleButton, ToggleButtonGroup, LinearProgress,
 } from '@mui/material';
+
+import { getStudentICardAcademicOptions } from './student-icard-academic-options';
 
 const steps = ['Template', 'Designer', 'Students', 'Review', 'Export'];
 const presets = [
@@ -71,8 +75,13 @@ const studentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity';
 
 export default function StudentICardBuilder({ onClose }: { onClose: () => void }) {
+  // Same global year used by Daily Attendance; never fall back to an unscoped directory.
+  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id) ?? '';
   const templateQuery = useGetRecordIdTemplateQuery();
-  const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery({});
+  const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery(
+    { academicYearId },
+    { skip: !academicYearId }
+  );
   const [saveTemplate, saveState] = useSaveRecordIdTemplateMutation();
   const [previewCards, previewState] = usePreviewRecordIdsMutation();
   const [exportCards, exportState] = useExportRecordIdsMutation();
@@ -88,6 +97,10 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
+  const selectionYear = useRef(academicYearId);
+  // Prevent previous-year filters or selections from being sent while the reset effect runs.
+  const scopeIsCurrentYear = selectionYear.current === academicYearId;
+  const activeScope = scopeIsCurrentYear ? scope : emptyScope;
   const busy = saveState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
   const schoolName = template?.schoolName ?? '';
@@ -97,25 +110,28 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     if (templateQuery.currentData && !template) setTemplate(normalizeTemplate(templateQuery.currentData));
   }, [template, templateQuery.currentData]);
 
+  useEffect(() => {
+    if (selectionYear.current === academicYearId) return;
+    selectionYear.current = academicYearId;
+    setScope(emptyScope);
+    setSearch('');
+    setPage(0);
+    setSelected({});
+    setPreviews([]);
+    issueKey.current = '';
+  }, [academicYearId]);
+
   const options = optionsQuery.currentData;
-  const mediumOptions = useMemo(() => (options?.mediums ?? []).filter((item) =>
-    !scope.boardIds.length || (item.parentId && scope.boardIds.includes(item.parentId))
-  ), [options?.mediums, scope.boardIds]);
-  const classOptions = useMemo(() => (options?.standards ?? []).filter((item) =>
-    !scope.mediumIds.length || (item.parentId && scope.mediumIds.includes(item.parentId))
-  ).filter((item) => !scope.boardIds.length || mediumOptions.some((medium) => medium.id === item.parentId)),
-  [options?.standards, scope.mediumIds, scope.boardIds, mediumOptions]);
-  const divisionOptions = useMemo(() => (options?.divisions ?? []).filter((item) =>
-    !scope.standardIds.length || (item.parentId && scope.standardIds.includes(item.parentId))
-  ).filter((item) => !scope.mediumIds.length && !scope.boardIds.length ||
-    classOptions.some((standard) => standard.id === item.parentId)),
-  [options?.divisions, scope.standardIds, scope.mediumIds, scope.boardIds, classOptions]);
+  const { boards: boardOptions, mediums: mediumOptions, standards: classOptions, divisions: divisionOptions } =
+    useMemo(() => getStudentICardAcademicOptions(options, academicYearId, activeScope),
+      [options, academicYearId, activeScope]);
   const directory = useGetStudentRecordsDirectoryQuery({
+    academicYearId,
     population: 'Active', maxResultCount: 25, skipCount: page * 25,
-    search: search.trim() || undefined, ...scope,
-  }, { skip: step < 2 });
-  const rows = directory.currentData?.items ?? [];
-  const selectedRows = Object.values(selected);
+    search: search.trim() || undefined, ...activeScope,
+  }, { skip: step < 2 || !academicYearId });
+  const rows = academicYearId ? (directory.currentData?.items ?? []) : [];
+  const selectedRows = scopeIsCurrentYear ? Object.values(selected) : [];
   const sample = previews[0] ?? (selectedRows[0] ? {
     studentSnapshot: {
       StudentName: studentName(selectedRows[0]), GRNumber: selectedRows[0].grNumber ?? '',
@@ -138,11 +154,11 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
     label: string, key: keyof Scope, choices: StudentDirectoryOption[], patch: (value: string[]) => Partial<Scope>
   ) => (
     <CustomSelect
-      label={label} multiple value={scope[key]} options={choices}
+      label={label} multiple value={activeScope[key]} options={choices}
       labelKey="name" valueKey="id" isSearch
       isLoading={optionsQuery.isFetching}
       onChange={(value) => changeScope(patch(asStringArray(value)))}
-      disabled={busy || optionsQuery.isError}
+      disabled={busy || !academicYearId || optionsQuery.isError || !optionsQuery.currentData}
       formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
     />
   );
@@ -312,9 +328,10 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
             {step === 2 && <Stack spacing={2}>
               <Typography variant="subtitle1">Choose students</Typography>
               <Typography variant="body2" color="text.secondary">Select one or more boards, mediums, classes, and divisions. The choices narrow from left to right.</Typography>
+              {!academicYearId && <Alert severity="info">Select an academic year from the global academic filter to choose students.</Alert>}
               {optionsQuery.isError && <Alert severity="error" action={<Button onClick={() => optionsQuery.refetch()}>Retry</Button>}>Academic choices could not be loaded.</Alert>}
               <Grid container spacing={1.5}>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Board', 'boardIds', options?.boards ?? [], (value) => ({ boardIds: value, mediumIds: [], standardIds: [], divisionIds: [] }))}</Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Board', 'boardIds', boardOptions, (value) => ({ boardIds: value, mediumIds: [], standardIds: [], divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Medium', 'mediumIds', mediumOptions, (value) => ({ mediumIds: value, standardIds: [], divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Class', 'standardIds', classOptions, (value) => ({ standardIds: value, divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Division', 'divisionIds', divisionOptions, (value) => ({ divisionIds: value }))}</Grid>
@@ -326,7 +343,7 @@ export default function StudentICardBuilder({ onClose }: { onClose: () => void }
               </Stack>
               {directory.isError && <Alert severity="error" action={<Button onClick={() => directory.refetch()}>Retry</Button>}>Students could not be loaded.</Alert>}
               <CustomizableTable tableId="student-icard-builder-selection" columns={columns} data={rows} isLoading={directory.isFetching}
-                isSearch={false} isFilter={false} isPagination={false} isShowedDense={false} noDataText="No active students match these selections."
+                isSearch={false} isFilter={false} isPagination={false} isShowedDense={false} noDataText={academicYearId ? "No active students match these selections." : "Select a global academic year to load students."}
                 wrapperProps={{ sx: { minHeight: 280 } }} tableContainerProps={{ sx: { maxHeight: 360 } }} />
               <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
                 <Typography variant="caption">{directory.currentData?.totalCount ?? 0} matching students</Typography>
