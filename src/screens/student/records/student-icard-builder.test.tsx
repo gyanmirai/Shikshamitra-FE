@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   optionsInput: {} as any,
   directoryInput: {} as any,
   tableProps: {} as any,
+  savedDirectoryInput: {} as any,
   options: {
     academicYears: [{ id: 'year-1', name: '2026-27' }, { id: 'year-2', name: '2027-28' }],
     boards: [
@@ -75,6 +76,10 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
     return { currentData: mocks.options, isFetching: false };
   },
   useGetStudentRecordsDirectoryQuery: (input: any) => {
+    if (input.studentIds?.length) {
+      mocks.savedDirectoryInput = input;
+      return { currentData: { items: [{ studentId: 'student-1', firstName: 'Asha', grNumber: 'GR-1', standardName: 'Class 1', divisionName: 'A', hasPhoto: false }], totalCount: 1 }, isFetching: false };
+    }
     mocks.directoryInput = input;
     return { currentData: { items: [], totalCount: 0 }, isFetching: false };
   },
@@ -83,6 +88,7 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
 beforeEach(() => {
   mocks.yearId = 'year-1';
   mocks.tableProps = {};
+  mocks.savedDirectoryInput = {};
   mocks.save.mockReset();
   mocks.toast.mockReset();
 });
@@ -216,4 +222,35 @@ it('retains the entered name when the save response omits it', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
 
   expect(await screen.findByRole('textbox', { name: /Template name/ })).toHaveValue('QA Student I-Card');
+});
+
+it('restores saved academic choices and students when editing, then saves them again', async () => {
+  const template = {
+    ...mocks.template, id: 'template-1', name: 'Class 1 card', concurrencyStamp: 'stamp-1',
+    selection: { academicYearId: 'year-1', boardIds: ['board-1'], mediumIds: ['medium-1'],
+      standardIds: ['class-1'], divisionIds: ['division-1'], studentIds: ['student-1'] },
+  };
+  mocks.save.mockReturnValue({ unwrap: async () => template });
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder initialTemplate={template} onClose={vi.fn()} /></ThemeProvider>);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await waitFor(() => expect(screen.getByText('1/100 students selected')).toBeVisible());
+  expect(mocks.savedDirectoryInput).toMatchObject({ academicYearId: 'year-1', studentIds: ['student-1'] });
+  expect(mocks.directoryInput).toMatchObject({ boardIds: ['board-1'], mediumIds: ['medium-1'], standardIds: ['class-1'], divisionIds: ['division-1'] });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ id: 'template-1', body: expect.objectContaining({ selection: template.selection }) })));
+});
+
+it('preserves saved students from another year during a design-only edit', async () => {
+  const template = {
+    ...mocks.template, id: 'template-1', name: 'Class 1 card', concurrencyStamp: 'stamp-1',
+    selection: { academicYearId: 'year-2', boardIds: ['board-2'], mediumIds: ['medium-2'],
+      standardIds: ['class-2'], divisionIds: ['division-2'], studentIds: ['student-1'] },
+  };
+  mocks.save.mockReturnValue({ unwrap: async () => template });
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder initialTemplate={template} onClose={vi.fn()} /></ThemeProvider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ selection: template.selection }) })));
+  expect(mocks.savedDirectoryInput).toEqual({});
 });

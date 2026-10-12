@@ -1,6 +1,6 @@
 'use client';
 
-import type { IdCard, IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
+import type { IdCard, IdCardTemplate, IdCardSelection } from 'src/redux/student/records/student-record-documents-api';
 import type { RootState } from 'src/redux/store';
 import type { StudentDirectoryItem, StudentDirectoryOption } from 'src/redux/student/records/student-records-types';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -68,6 +68,7 @@ const normalizeTemplate = (value: Partial<IdCardTemplate>, previous: IdCardTempl
   showQrCode: value.showQrCode ?? previous.showQrCode,
   showPhoto: value.showPhoto ?? previous.showPhoto,
   fields: value.fields ?? previous.fields,
+  selection: value.selection ?? previous.selection,
 });
 type Scope = { boardIds: string[]; mediumIds: string[]; standardIds: string[]; divisionIds: string[] };
 const emptyScope: Scope = { boardIds: [], mediumIds: [], standardIds: [], divisionIds: [] };
@@ -103,11 +104,15 @@ export default function StudentICardBuilder({
   const [pageSize, setPageSize] = useState(25);
   const [sorting, setSorting] = useState('');
   const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>({});
+  const [idsToHydrate, setIdsToHydrate] = useState<string[]>([]);
+  const [selectionEdited, setSelectionEdited] = useState(false);
+  const [selectionWarning, setSelectionWarning] = useState('');
   const [previews, setPreviews] = useState<IdCard[]>([]);
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
   const scopeYear = useRef(academicYearId);
+  const loadedSelectionYear = useRef<string | undefined>();
   const busy = saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
@@ -124,9 +129,40 @@ export default function StudentICardBuilder({
     setScope(emptyScope);
     setPage(0);
     setSelected({});
+    setIdsToHydrate([]);
+    setSelectionEdited(false);
+    setSelectionWarning('');
+    loadedSelectionYear.current = undefined;
     setPreviews([]);
     issueKey.current = '';
   }, [academicYearId]);
+
+  useEffect(() => {
+    if (!template || !academicYearId || loadedSelectionYear.current === academicYearId) return;
+    loadedSelectionYear.current = academicYearId;
+    const saved = template.selection;
+    if (saved?.academicYearId !== academicYearId) return;
+    setScope({
+      boardIds: saved.boardIds ?? [], mediumIds: saved.mediumIds ?? [],
+      standardIds: saved.standardIds ?? [], divisionIds: saved.divisionIds ?? [],
+    });
+    setIdsToHydrate(saved.studentIds ?? []);
+  }, [template, academicYearId]);
+
+  const hydrationBatch = idsToHydrate.slice(0, 30);
+  const savedStudents = useGetStudentRecordsDirectoryQuery({
+    population: 'Active', academicYearId, studentIds: hydrationBatch,
+    maxResultCount: 100, skipCount: 0,
+  }, { skip: !academicYearId || idsToHydrate.length === 0 });
+  useEffect(() => {
+    if (!idsToHydrate.length || !savedStudents.currentData || savedStudents.isFetching) return;
+    const found = Object.fromEntries(savedStudents.currentData.items.map((row) => [row.studentId, row]));
+    setSelected((previous) => ({ ...previous, ...found }));
+    if (Object.keys(found).length < hydrationBatch.length) {
+      setSelectionWarning('Some saved students are no longer active or visible in this academic year.');
+    }
+    setIdsToHydrate((previous) => previous.slice(hydrationBatch.length));
+  }, [idsToHydrate, hydrationBatch.length, savedStudents.currentData, savedStudents.isFetching]);
 
   const currentScope = scopeYear.current === academicYearId ? scope : emptyScope;
   const options = academicYearId ? optionsQuery.currentData : undefined;
@@ -164,6 +200,8 @@ export default function StudentICardBuilder({
     setPreviews([]);
   };
   const changeScope = (patch: Partial<Scope>) => {
+    setSelectionEdited(true);
+    setSelectionWarning('');
     setScope((previous) => ({ ...previous, ...patch }));
     setPage(0);
     setSelected({});
@@ -183,6 +221,7 @@ export default function StudentICardBuilder({
     />
   );
   const toggleStudent = (student: StudentDirectoryItem) => {
+    setSelectionEdited(true);
     setSelected((previous) => {
       const next = { ...previous };
       if (next[student.studentId]) delete next[student.studentId];
@@ -193,6 +232,7 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const togglePage = () => {
+    setSelectionEdited(true);
     const allSelected = rows.every((row) => selected[row.studentId]);
     setSelected((previous) => {
       const next = { ...previous };
@@ -207,6 +247,10 @@ export default function StudentICardBuilder({
   };
   const save = async () => {
     if (!template) return null;
+    if (idsToHydrate.length) {
+      setError('Wait for the saved student selection to load before saving.');
+      return null;
+    }
     if (!templateName.trim()) {
       setTemplateNameTouched(true);
       setStep(0);
@@ -218,12 +262,18 @@ export default function StudentICardBuilder({
       return null;
     }
     try {
+      const selection: IdCardSelection = template.selection?.academicYearId &&
+        template.selection.academicYearId !== academicYearId && !selectionEdited
+        ? template.selection
+        : { academicYearId, ...currentScope, studentIds: selectedRows.map((row) => row.studentId) };
+      const payload = { ...template, selection };
       const saved = await (initialTemplate === undefined
-        ? saveTemplate(template)
+        ? saveTemplate(payload)
         : template.id
-          ? updateTemplate({ id: template.id, body: template })
-          : createTemplate(template)).unwrap();
-      setTemplate(normalizeTemplate(saved, template));
+          ? updateTemplate({ id: template.id, body: payload })
+          : createTemplate(payload)).unwrap();
+      setTemplate(normalizeTemplate(saved, payload));
+      setSelectionEdited(false);
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
       return saved;
@@ -251,6 +301,7 @@ export default function StudentICardBuilder({
       return;
     }
     if (step === 1 && !template?.fields.length) { setError('Choose at least one card field.'); return; }
+    if (step === 2 && idsToHydrate.length) { setError('Wait for the saved student selection to load.'); return; }
     if (step === 2 && !selectedRows.length) { setError('Select at least one student.'); return; }
     if (step === 2) {
       const saved = await save();
@@ -336,9 +387,9 @@ export default function StudentICardBuilder({
         showSaveButton
         nextButtonLabel="Next"
         finalButtonLabel="Done"
-        saveButtonProps={{ disabled: busy, size: 'small' }}
+        saveButtonProps={{ disabled: busy || idsToHydrate.length > 0, size: 'small' }}
         saveAndNextButtonProps={{
-          disabled: busy,
+          disabled: busy || idsToHydrate.length > 0,
           size: 'small',
           startIcon: <Iconify icon={step === steps.length - 1 ? 'solar:check-circle-bold' : 'ic:round-arrow-forward'} width={18} />,
           endIcon: null,
@@ -387,6 +438,11 @@ export default function StudentICardBuilder({
               <Typography variant="subtitle1">Choose students</Typography>
               <Typography variant="body2" color="text.secondary">Select one or more boards, mediums, classes, and divisions. The choices narrow from left to right.</Typography>
               {!academicYearId && <Alert severity="info">Select a global academic year to choose students.</Alert>}
+              {template.selection?.academicYearId && template.selection.academicYearId !== academicYearId &&
+                <Alert severity="info">This template's saved students belong to another academic year. Select students for the current year to replace that selection.</Alert>}
+              {idsToHydrate.length > 0 && savedStudents.isFetching && <LinearProgress aria-label="Loading saved students" />}
+              {savedStudents.isError && idsToHydrate.length > 0 && <Alert severity="error" action={<Button onClick={() => savedStudents.refetch()}>Retry</Button>}>Saved students could not be loaded.</Alert>}
+              {selectionWarning && <Alert severity="warning" onClose={() => setSelectionWarning('')}>{selectionWarning}</Alert>}
               {optionsQuery.isError && <Alert severity="error" action={<Button onClick={() => optionsQuery.refetch()}>Retry</Button>}>Academic choices could not be loaded.</Alert>}
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Board', 'boardIds', boardOptions, (value) => ({ boardIds: value, mediumIds: [], standardIds: [], divisionIds: [] }))}</Grid>

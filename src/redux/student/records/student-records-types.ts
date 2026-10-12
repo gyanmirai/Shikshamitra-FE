@@ -82,6 +82,7 @@ export type StudentDirectoryInput = {
   population?: 'All' | 'Active' | 'Former';
   academicYearId?: string;
   studentId?: string;
+  studentIds?: string[];
   boardId?: string;
   mediumId?: string;
   standardId?: string;
