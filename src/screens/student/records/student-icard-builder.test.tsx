@@ -149,6 +149,22 @@ it('shows a required field error instead of crashing when a template has no name
   expect(mocks.save).not.toHaveBeenCalled();
 });
 
+it('allows Next and Save with a blank school name', async () => {
+  mocks.save.mockReturnValue({ unwrap: async () => ({ ...mocks.template, id: 'template-1', name: 'Class 1 template', schoolName: '' }) });
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder initialTemplate={null} onClose={vi.fn()} /></ThemeProvider>);
+
+  fireEvent.change(await screen.findByRole('textbox', { name: /Template name/ }), {
+    target: { value: 'Class 1 template' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(await screen.findByRole('textbox', { name: 'School name' })).toBeVisible();
+  expect(screen.queryByText('Enter a school name.')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ schoolName: '' })));
+});
+
 it('retains the entered name when the save response omits it', async () => {
   mocks.save.mockReturnValue({ unwrap: async () => mocks.template });
   render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);

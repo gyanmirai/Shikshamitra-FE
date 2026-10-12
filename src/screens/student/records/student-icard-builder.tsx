@@ -108,7 +108,6 @@ export default function StudentICardBuilder({
   const scopeYear = useRef(academicYearId);
   const busy = saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
-  const schoolName = template?.schoolName ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
 
   useEffect(() => {
@@ -212,8 +211,8 @@ export default function StudentICardBuilder({
       setError('');
       return null;
     }
-    if (!schoolName.trim() || !template.fields.length) {
-      setError('Enter a school name and choose at least one card field.');
+    if (!template.fields.length) {
+      setError('Choose at least one card field.');
       return null;
     }
     try {
@@ -249,7 +248,6 @@ export default function StudentICardBuilder({
       setError('');
       return;
     }
-    if (step === 0 && !schoolName.trim()) { setError('Enter a school name.'); return; }
     if (step === 1 && !template?.fields.length) { setError('Choose at least one card field.'); return; }
     if (step === 2 && !selectedRows.length) { setError('Select at least one student.'); return; }
     if (step === 2) {
