@@ -439,7 +439,7 @@ export default function StudentICardBuilder({
               <Typography variant="body2" color="text.secondary">Select one or more boards, mediums, classes, and divisions. The choices narrow from left to right.</Typography>
               {!academicYearId && <Alert severity="info">Select a global academic year to choose students.</Alert>}
               {template.selection?.academicYearId && template.selection.academicYearId !== academicYearId &&
-                <Alert severity="info">This template's saved students belong to another academic year. Select students for the current year to replace that selection.</Alert>}
+                <Alert severity="info">This template&apos;s saved students belong to another academic year. Select students for the current year to replace that selection.</Alert>}
               {idsToHydrate.length > 0 && savedStudents.isFetching && <LinearProgress aria-label="Loading saved students" />}
               {savedStudents.isError && idsToHydrate.length > 0 && <Alert severity="error" action={<Button onClick={() => savedStudents.refetch()}>Retry</Button>}>Saved students could not be loaded.</Alert>}
               {selectionWarning && <Alert severity="warning" onClose={() => setSelectionWarning('')}>{selectionWarning}</Alert>}
