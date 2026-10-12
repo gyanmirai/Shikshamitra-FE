@@ -30,6 +30,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -42,19 +43,22 @@ import {
   useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
-import type { IGroup } from './type';
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
+import { IGroup } from './type';
+
 
 const HouseSetting = () => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium } = useStudentAcademicScope();
   const [query, setQuery] = useState({
     sorting: '',
     skipCount: 0,
     maxResultCount: 10,
   });
-  const { data: groupData, refetch } = useQueryAndMutation({
+  const { currentData: groupData, refetch, isError } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
     params: (currentMedium as Medium)?.id,
+    options: { skip: !currentMedium?.id },
   });
 
   const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -181,6 +185,7 @@ const HouseSetting = () => {
           </Button>
         }
       />
+      <StudentAcademicScopeFilters />
       <CustomizableTable
         tableTitle="House Setting"
         tableId="group-management-table"
@@ -203,7 +208,7 @@ const HouseSetting = () => {
             </Box>{' '}
           </>
         }
-        totalCount={groupData?.data?.length || 0}
+        totalCount={currentMedium?.id && !isError ? groupData?.data?.length || 0 : 0}
         // isLoading={isLoading}
         // serverSide
         // onServerPagination={async (page, rowPerPage) => {
@@ -215,7 +220,7 @@ const HouseSetting = () => {
         //   setQueryParams(newParams);
         // }}
         columns={columns}
-        data={groupData?.data || []}
+        data={currentMedium?.id && !isError ? groupData?.data || [] : []}
         serverSide
         onServerSort={(column, sortData) => {
           setQuery((prev) => ({
@@ -319,7 +324,7 @@ const GroupManagementForm = ({
   editData: IGroup | null;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium } = useStudentAcademicScope();
 
   // Hooks for adding and updating student groups using custom query and mutation hook
   const [addGroup, { isLoading }] = useQueryAndMutation({

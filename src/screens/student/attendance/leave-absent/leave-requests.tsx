@@ -31,6 +31,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';

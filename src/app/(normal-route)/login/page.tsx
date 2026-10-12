@@ -18,11 +18,13 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import React, { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
+import MobileLoginScreen from 'src/screens/login/login-screen';
 import { LogoWithText } from 'src/components/logo/logo-with-text';
 
 // --- Validation Schemas ---
@@ -41,6 +43,13 @@ const BRAND_GREEN = '#2f8f68';
 const BRAND_GREEN_DARK = '#1f7a57';
 
 export default function LoginPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  return isMobile ? <MobileLoginScreen /> : <DesktopLoginPage />;
+}
+
+function DesktopLoginPage() {
   const [tenantInactive, setTenantInactive] = useState(false);
   useEffect(() => {
     setTenantInactive(

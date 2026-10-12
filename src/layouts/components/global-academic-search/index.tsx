@@ -32,6 +32,8 @@ import {
   getScopedSelectedAcademicOption,
 } from 'src/utils/academicHierarchyUtils';
 
+import { getStudentAcademicYears } from './student-academic-years';
+
 import type { GlobalAcademicSearchOption } from './types';
 
 type AcademicYearWithBoards = AcademicYear & { boards: Board[] };
@@ -69,6 +71,8 @@ const GlobalAcademicSearch = () => {
   const { data }: any = useSession();
 
   const dispatch = useDispatch();
+  const pathname = usePathname();
+  const isStudentModule = pathname === '/student' || pathname.startsWith('/student/');
 
   // Redux state selectors for current academic selections
   const { currentYear, currentBoard, currentMedium } = useSelector(
@@ -92,10 +96,24 @@ const GlobalAcademicSearch = () => {
     },
   });
 
-  const { data: accessControl, isLoading: isScopeLoading } = useGetUserScopeHierarchyQuery(
-    { userId: data?.profile?.sub },
-    { skip: !data?.profile?.sub || !data?.accessToken }
+  const {
+    currentData: scopeData,
+    isLoading: isScopeLoading,
+    isError: isScopeError,
+  } = useGetUserScopeHierarchyQuery(
+    {
+      userId: data?.profile?.sub,
+      cacheTenantId: data?.profile?.tenantId || data?.profile?.tenantid || data?.profile?.tenant,
+    },
+    {
+      skip: !data?.profile?.sub || !data?.accessToken,
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    }
   );
+  const accessControl =
+    !isScopeError && scopeData?.userId === data?.profile?.sub ? scopeData : undefined;
 
   // Memoized computation of merged academic data
   const allData = useMemo<AcademicYearWithBoards[]>(() => {
@@ -112,8 +130,11 @@ const GlobalAcademicSearch = () => {
     [accessControl, allData]
   );
   const scopedYears = useMemo<AcademicYearWithBoards[]>(
-    () => getScopedAcademicYears(allData, accessControl),
-    [accessControl, allData]
+    () =>
+      isStudentModule
+        ? getStudentAcademicYears(allData, accessControl)
+        : getScopedAcademicYears(allData, accessControl),
+    [accessControl, allData, isStudentModule]
   );
 
   const options = useMemo<GlobalAcademicSearchOption[]>(
@@ -140,11 +161,14 @@ const GlobalAcademicSearch = () => {
       getScopedSelectedAcademicOption(currentYear, currentBoard, currentMedium, options) ?? null,
     [currentBoard, currentMedium, currentYear, options]
   );
-  const pathname = usePathname();
-  const isStudentModule = pathname === '/student' || pathname.startsWith('/student/');
-  const isShowOnlyYearModule = ['/dashboard', '/finance', '/library', '/calendar', '/hr', '/student'].some(
-    (route) => pathname.startsWith(route)
-  );
+  const isShowOnlyYearModule = [
+    '/dashboard',
+    '/finance',
+    '/library',
+    '/calendar',
+    '/hr',
+    '/student',
+  ].some((route) => pathname.startsWith(route));
   const hasAcademicSelection = isShowOnlyYearModule
     ? !!selectedYearOption
     : !!selectedBoardMediumOption;
@@ -191,8 +215,9 @@ const GlobalAcademicSearch = () => {
     const shouldUpdateYear = selection.academicYear !== currentYear;
     const shouldUpdateBoard =
       (selection.board?.id || undefined) !== (currentBoard?.id || undefined);
-    const shouldUpdateMedium =
-      (selection.medium?.id || undefined) !== (currentMedium?.id || undefined);
+    const shouldUpdateMedium = selection.medium?.id
+      ? selection.medium !== currentMedium
+      : !!currentMedium?.id;
 
     if (shouldUpdateYear) {
       dispatch(setCurrentYear(selection.academicYear));
@@ -220,22 +245,18 @@ const GlobalAcademicSearch = () => {
 
   const getDefaultAcademicSelection = useCallback(() => {
     const academicYear = findCurrentAcademicYear<AcademicYear>(years?.items || []);
-    if (!academicYear) {
-      return null;
-    }
-
     // Always return the full option (year + board + medium) so that board and
     // medium are persisted in Redux even on year-only routes (Dashboard etc.).
     // The year-only UI simply doesn't display them.
-    const defaultOption = options.find((option) => option.academicYear.id === academicYear.id);
+    const defaultOption = options.find((option) => option.academicYear.id === academicYear?.id);
     if (defaultOption) return defaultOption;
 
     // Fallback: year with no boards/mediums yet
     const defaultYearOption = yearOptions.find(
-      (option) => option.academicYear.id === academicYear.id
+      (option) => option.academicYear.id === academicYear?.id
     );
-    return defaultYearOption ?? null;
-  }, [options, yearOptions, years?.items]);
+    return defaultYearOption ?? (isStudentModule ? options[0] ?? yearOptions[0] : null) ?? null;
+  }, [isStudentModule, options, yearOptions, years?.items]);
 
   const applyAcademicOption = useCallback(
     (option: GlobalAcademicSearchOption | null) => {
@@ -326,9 +347,13 @@ const GlobalAcademicSearch = () => {
           {ConfirmDialog}
           <CustomTooltip
             arrow
-            title={!hasAcademicSelection
-              ? isStudentModule ? 'Select academic year' : 'Select Academic Year, Board and Medium'
-              : undefined}
+            title={
+              !hasAcademicSelection
+                ? isStudentModule
+                  ? 'Select academic year'
+                  : 'Select Academic Year, Board and Medium'
+                : undefined
+            }
             placement="bottom"
           >
             <AnimatedWrapper error={!hasAcademicSelection} sx={{ minWidth: 0, width: '100%' }}>
@@ -349,7 +374,9 @@ const GlobalAcademicSearch = () => {
                   size="small"
                   onChange={async (event, newValue) => {
                     const confirmed = await showConfirm({
-                      title: isStudentModule ? 'Change academic year' : 'Change Academic Year, Board and Medium',
+                      title: isStudentModule
+                        ? 'Change academic year'
+                        : 'Change Academic Year, Board and Medium',
                       confirmText: isStudentModule ? 'Change year' : undefined,
                       message: !currentYear?.name
                         ? `Are you sure you want to set academic year ${newValue?.academicYear?.name}?`

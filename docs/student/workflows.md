@@ -8,6 +8,10 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Staff academic scope
+
+Student browser tasks are staff tasks. The staff member's existing Academic assignments determine which Student records are available. Keep the global year selection and use local Board/Medium selectors for authorized placement contexts. Attendance drafts retain their unsaved-navigation flow; failed authorization or a revoked placement clears inaccessible roster data.
+
 ## Shared permission editing
 
 The original [Security editor layout](../security/workflows.md) is retained, with complete catalogue coverage and independent action toggles.

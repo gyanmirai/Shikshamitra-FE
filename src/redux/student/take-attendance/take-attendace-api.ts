@@ -21,6 +21,14 @@ export const buildAttendanceRequest = (args: AttendanceFilter) => ({
   params: args,
 });
 
+export const normalizeAttendanceDay = (day: AttendanceDay): AttendanceDay => ({
+  ...day,
+  students: day.students.map((student) => ({
+    ...student,
+    grNo: student.grNumber || student.grNo,
+  })),
+});
+
 export const StudentTakeAttendanceApi = api.injectEndpoints({
   endpoints: (builder) => ({
     requestAttendanceCorrection: builder.mutation<
@@ -43,6 +51,7 @@ export const StudentTakeAttendanceApi = api.injectEndpoints({
     }),
     getAttendanceByFilter: builder.query<AttendanceDay, AttendanceFilter>({
       query: buildAttendanceRequest,
+      transformResponse: normalizeAttendanceDay,
       providesTags: (_result, _error, args) => [
         { type: studentTakeAttendanceType.studentTakeAttendance, id: attendanceDayCacheId(args) },
         { type: studentTakeAttendanceType.studentTakeAttendance, id: 'ROSTER' },

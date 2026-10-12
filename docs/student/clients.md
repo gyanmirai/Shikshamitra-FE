@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-11
+updated_on: 2026-10-12
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,10 +18,9 @@ The finalized application summary reuses the application/workflow and decision-h
 
 ## Academic filter requests
 
-Bulk class selection uses `getAdmissionOfferingClassIdentities` in `src/redux/student/admissions/admission-offerings-api.ts` to read every page of the existing Offering list for the explicitly selected cycle, Board, Medium and admission track.
-The lookup includes inactive Offerings, filters the exact nullable Campus scope, and returns class/school-level identities rather than using the table's current page or availability filters.
-It shares the existing Offering cache tag, refetches on scope changes/mount, and exposes only `currentData`; failed or incomplete paging never becomes an empty successful result.
-No backend endpoint or write contract is added, and server preview/commit validation remains authoritative.
+`src/hooks/use-student-academic-scope.ts` reads the logged-in staff hierarchy through `userScopeApi`, merges it with Academic board data and prunes the selected year's descendants with `getScopedAcademicData`. Local `board`/`medium` query parameters select among authorized options; invalid selections and failed scope reads expose no hierarchy. Attendance, legacy management, certificates, ID cards and profile selectors consume this hook. The global Student header continues to show the year only. `src/layouts/components/global-academic-search/student-academic-years.ts` excludes unassigned year nodes returned for the scope editor, retaining explicit year-wide scope and authorized board ancestry. Student entry selects an authorized year when the current calendar year is outside scope; other module selectors keep their existing behavior.
+
+`getUserScopeHierarchy` has a typed contract and the shared `UserScope` cache tag. Successful HR bulk scope assignment invalidates dependent API tags, including cached Student reads. Staff hierarchy queries refresh on mount, focus and reconnect; cached hierarchy from a different user is not rendered. Session loading resets API caches when identity or tenant changes. Backend scope checks remain authoritative for every request.
 
 `src/utils/student-academic-filter-query.ts` preserves scalar `standardId`/`divisionId` requests for a single selection and serializes multiple selections as repeated `standardIds`/`divisionIds` query keys. Admissions queues, Offering lists and Student Setup apply collections server-side before counting and paging. Board and Medium stay scalar; requests wait for their selection and an academic year. Assessments filters its authorized scopes by the same selected Board, Medium and classes before requesting a roster.
 
@@ -55,6 +54,8 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 | `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history                                                                                                                             | Application list and detail                                 |
 
 ### Student Attendance settings
+
+`src/redux/student/take-attendance/take-attendace-api.ts` normalizes roster responses by preferring canonical `grNumber` over legacy `grNo`. Existing register display and search consume the normalized value; numeric-only historical identifiers remain supported.
 
 `src/redux/student/attendance-type/attendance-type-api.ts` loads paged leave types and owns create, update, and delete requests. The settings screen uses this client for its searchable table and form. The attendance-management client no longer exposes policy draft/preview/publish or individual-schedule operations.
 

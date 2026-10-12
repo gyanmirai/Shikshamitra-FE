@@ -106,7 +106,7 @@ The Offering screen checks `Create`, `Edit`, `Clone`, `Activate`, `Deactivate`, 
 The Workflow screens check granular `View`, `Create`, `Edit`, `Delete`, `Clone`, `Validate`, `Publish`, `Archive`, and `ViewUsage` permissions.
 These checks improve UX; matching backend authorization remains mandatory.
 
-During local development only, `src/utils/permissions.ts` temporarily treats `Students.Admissions` and its descendants as granted so the Admissions menu and screens remain available while permissions are being wired. Production builds continue to enforce every permission. Remove the marked development bypass before permission rollout is signed off.
+`src/utils/permissions.ts` requires the exact action grant in every environment. Admissions menus and screens do not bypass permissions during local development. Academic UserScope independently limits the data available to staff.
 
 ## Route rule
 

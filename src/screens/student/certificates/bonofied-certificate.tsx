@@ -16,11 +16,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useGetFilterStudentsQuery } from 'src/redux/student';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
@@ -34,6 +35,8 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
 const BonofiedCertificate = () => {
   const dialog = useBoolean();
@@ -172,8 +175,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
   // State to store list of divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  // Get current medium and board from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear: scopeYear } = useStudentAcademicScope();
 
   // Initialize form with Formik
   const {
@@ -233,31 +235,49 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
   }, [allClass, classes, setFieldValue]);
 
-  // Initialize query hook for fetching students
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+  // Fetch students when division, class and organization are all selected
+  const validPlacement = Boolean(
+    scopeYear?.id &&
+    medium?.educationMediumStages?.some(
+      (stage) =>
+        stage.id === organization &&
+        stage.standards?.some(
+          (standard) =>
+            standard.id === classes && standard.divisions?.some((item) => item.id === division)
+        )
+    )
+  );
+  const {
+    currentData: StudentsData,
+    isFetching: isLoading,
+    isError,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFilterStudentsQuery,
+    params: {
+      academicYearId: scopeYear?.id,
+      academicMediumId: medium?.id,
+      educationMediumStageId: organization,
+      standardId: classes,
+      divisionId: division,
+    },
+    options: { skip: !validPlacement },
   });
 
-  // Fetch students when division, class and organization are all selected
   useEffect(() => {
-    if (division && classes && organization) {
-      getStudents({
-        educationMediumStageId: organization,
-        standardId: classes,
-        divisionId: division,
-      });
-    }
-  }, [division, classes, organization, getStudents]);
+    setFieldValue('student', []);
+  }, [scopeYear?.id, medium?.id, division, validPlacement, isError, setFieldValue]);
 
   // Transform student data to include full name
   const tableData = useMemo(
     () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
+      validPlacement && !isError
+        ? StudentsData?.items?.map((item: any) => ({
+            ...item,
+            name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          })) || []
+        : [],
+    [StudentsData?.items, validPlacement, isError]
   );
 
   return (
@@ -276,6 +296,9 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
             </Button>
           </Box>
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <StudentAcademicScopeFilters />
+            </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(touched.organization && errors.organization)}>
                 <CustomSelect

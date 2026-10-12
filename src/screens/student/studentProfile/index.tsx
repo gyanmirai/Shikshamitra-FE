@@ -1,12 +1,10 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import type { Board, Division, Standards, Organization } from 'src/types/school';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
@@ -22,6 +20,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { Box, Paper, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 import FeeStructureAssignmentForm from 'src/screens/finance/FeeStructureAssign/Components/StudentFeeStructureAssignmentForm';
 import {
@@ -43,6 +42,9 @@ import { StudentInformation } from './information';
 import ChangeStudentStatusForm from './change-status-form';
 import { StudentProfileView } from './student-profile-view';
 import { StudentProfileDataBoundary } from './student-profile-data-boundary';
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
+import { useSelector } from 'react-redux';
+import { RootState } from 'src/redux/store';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
@@ -207,6 +209,7 @@ export function StudentProfile() {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
+
   // Effect to update organizations when medium changes
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -247,16 +250,17 @@ export function StudentProfile() {
     medium?.id && selectedOrganization?.id && selectedClass?.id && resolvedDivision
   );
   const {
-    data: StudentsData,
+    currentData: StudentsData,
     isLoading,
     isFetching,
+    isError,
   } = useGetStudentsByDivisionQuery(resolvedDivision, {
     skip: !shouldFetchStudents,
   });
 
   // Transform students data to include full name
   const tableData = useMemo(() => {
-    if (!shouldFetchStudents) return [];
+    if (!shouldFetchStudents || isError) return [];
 
     return (
       StudentsData?.items?.map((item: any) => ({
@@ -273,7 +277,7 @@ export function StudentProfile() {
         status: mapStudentRecordStatus(item),
       })) || []
     );
-  }, [shouldFetchStudents, StudentsData?.items]);
+  }, [shouldFetchStudents, StudentsData?.items, isError]);
 
   // Find currently selected student based on search params
   const currentStudent: boolean = !!searchParams?.student;
@@ -334,6 +338,7 @@ export function StudentProfile() {
       {/* <Box sx={{ flex: 1, overflow: 'auto', height: '100%' }}> */}
       {!currentStudent && (
         <>
+          <StudentAcademicScopeFilters />
           <Paper
             elevation={2}
             sx={{
