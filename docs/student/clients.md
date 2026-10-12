@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-10
+updated_on: 2026-10-11
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,11 +18,24 @@ The finalized application summary reuses the application/workflow and decision-h
 
 ## Academic filter requests
 
+Bulk class selection uses `getAdmissionOfferingClassIdentities` in `src/redux/student/admissions/admission-offerings-api.ts` to read every page of the existing Offering list for the explicitly selected cycle, Board, Medium and admission track.
+The lookup includes inactive Offerings, filters the exact nullable Campus scope, and returns class/school-level identities rather than using the table's current page or availability filters.
+It shares the existing Offering cache tag, refetches on scope changes/mount, and exposes only `currentData`; failed or incomplete paging never becomes an empty successful result.
+No backend endpoint or write contract is added, and server preview/commit validation remains authoritative.
+
 `src/utils/student-academic-filter-query.ts` preserves scalar `standardId`/`divisionId` requests for a single selection and serializes multiple selections as repeated `standardIds`/`divisionIds` query keys. Admissions queues, Offering lists and Student Setup apply collections server-side before counting and paging. Board and Medium stay scalar; requests wait for their selection and an academic year. Assessments filters its authorized scopes by the same selected Board, Medium and classes before requesting a roster.
 
 ## Admission Cycle client
 
-Offering writes retain the existing RTK Query client. The backend resolves the Application form from the selected workflow; new UI writes omit a separate Application form choice. Inquiry form selection remains explicit. Bulk input no longer needs a shared school-level ID: each selected class supplies its own academic path at the backend. Existing read DTOs retain historical track, entry-mode and form metadata.
+Offering Edit opens its drawer before the existing lazy detail GET finishes. Detail loading/error/Retry belongs to that drawer, not to list loading; retry requests the same Offering ID. A request token discards late responses after close or a newer selection. Editing uses the latest returned detail and concurrency stamp; no endpoint, write payload, permission or backend lifecycle rule is changed. Academic-option failures expose Retry through the existing query refetches.
+
+The two-step edit UI reuses the same readiness and update operations. Continue validates academic identity and configuration together before Preview. Offering code, Campus and admission-window inputs are no longer rendered in Edit. The stored code is still validated and submitted unchanged, but is also omitted from Edit Preview; existing Campus assignments are preserved. The edit-only two-column configuration layout changes no field handlers or API requests. Create, edit, clone and bulk surfaces omit the Admission window dropdown and custom-date inputs. Preview and write payloads always send `useCycleDates: true`, `openDate: null` and `closeDate: null`, so the backend resolves the selected cycle's current dates instead of a copied snapshot. Editing and saving a legacy custom-date Offering changes it to cycle-date inheritance; no bulk migration, code regeneration, campus clearing or extra lookup endpoint is introduced. Clone inherits the target cycle's dates rather than the source's overrides. Generic backend create/update date-override compatibility remains available for other consumers.
+
+Offering writes retain the existing RTK Query client. The backend resolves the Application form from the selected workflow; new UI writes omit a separate Application form choice. Admission type determines the new offering's entry route: General sends Inquiry-first, special types send Direct registration. There is no separate Starts with control. Direct writes omit Inquiry form/intake references but retain an optional counsellor assignment profile. Bulk input no longer needs a shared school-level ID: each selected class supplies its own academic path at the backend. Edit and clone retain saved track/entry metadata unless the type is changed; used routing cannot be changed.
+
+Offering list, detail and availability reads provide the existing Admission Cycle tag as well as the Offering tag. Cycle mutations therefore refresh subscribed dates and availability through the standard RTK Query invalidation mechanism; no polling, extra endpoint or Offering write is added. Configured-class identity and room-capacity reads retain their existing independent cache tags.
+
+The Applications special-registration drawer uses the existing paginated cycle and offering reads, scoped to the current academic year and explicitly selected cycle/type. It never defaults to the first cycle or truncates a global offering list. General and inquiry-only offerings are excluded; historical Management/Staff Inquiry-or-direct offerings remain eligible. Loading, paging, failure/Retry and empty results use the existing selectors. The existing special-registration and family-match mutations preserve child/guardian identity, sibling verification, idempotency and counsellor ownership; General fresh direct registration remains server-rejected.
 
 `src/redux/student/admissions/admission-cycles-api.ts` owns the Admission Cycle RTK Query contract.
 It provides server-paged list/detail reads, impact/history reads, Draft create/edit, readiness validation, publish, close, reopen, archive, unused-Draft delete, clone, window revision, and schedule commands.
@@ -142,9 +155,13 @@ The managed document checklist uses `admission-document-verification-api.ts` and
 The existing `getStudentById` query in `src/redux/student/index.ts` reads `/students/records/{studentId}/profile` through the global API. `student-profile-types.ts` unwraps the response and validates the canonical Student GUID. The profile data boundary mounts tabs only when the returned identity matches the requested student; failed reads show an alert and Retry. Document and admission-evidence queries therefore receive the resolved Student ID. The protected endpoint and direct-record scope rules are owned by the [backend student module](../../../Shikshamitra-BE/docs/modules/student/README.md).
 
 Admissions mutations invalidate the relevant `studentAdmissionsCrmType` tag so lists and detail screens reload configuration or runtime state after a successful change.
-The inline setup editor shares one `/student/enrollment/admissions/intake-profiles/counsellors?counsellorOnly=true` read between pool and fallback choices; other lookup consumers retain the default unfiltered request.
+The setup drawer shares one `/student/enrollment/admissions/intake-profiles/counsellors?counsellorOnly=true` read between pool and fallback choices; other lookup consumers retain the default unfiltered request.
 `admission-intake-profiles-api.ts` reads `/student/enrollment/admissions/public-inquiry-links/options?admissionCycleId=...` for compatible setup/form pairs, including null-profile options for manual assignment. The link DTO accepts a nullable assignment profile; an empty optional setup sends null and leaves captured inquiries Unassigned. That query uses Offering, Form, and Cycle cache tags and refreshes when the creation drawer opens or its period changes. The drawer uses `currentData` to avoid submitting cached choices from a previous period. A setup lookup failure does not prevent a compatible manual link from being created.
 Bulk preview is read-like and does not invalidate the offering cache; successful bulk commit does.
+
+Bulk offering feedback maps the server's named validation codes to their existing controls. Registration-form checks belong to Published workflow because the workflow owns that form; duplicate/hierarchy checks belong to Class. Shared messages are deduplicated, class-specific checks retain readable class names, and unknown codes remain visible in Preview. This presentation does not replace `canCommit`/`canSaveInactive` or turn activation-only checks into creation blockers. The manual-assignment menu uses a display-only value so its label stays visible; the payload still sends both intake profile IDs as null. Missing optional workflow selection is also serialized as null, not an empty GUID. No new endpoint or permission change is introduced.
+
+Bulk create uses `useLazyGetAdmissionCyclesQuery` for its required Admission cycle selector. The existing list endpoint receives the current `academicYearId`, `status: 1` (Published), `windowStatus: 1` (Open), search and 25-item pagination. The selected cycle is frontend form context only; preview and commit send its ID as `admissionCycleId` through the existing bulk endpoint. Missing, closed, unpublished or wrong-year selections are rejected locally before either command. The Offering list's cycle-filter fallback remains separate and unchanged.
 Application form-value saves invalidate the application tag so the concurrency stamp and saved values remain current.
 Inquiry creation invalidates inquiry and applicant tags because it creates the CRM record and its linked applicant context together.
 
@@ -176,3 +193,13 @@ Context reads `/api/students/dashboard/context`; sections read `/api/students/da
 See [backend dashboard API](../../../Shikshamitra-BE/docs/modules/student/api.md#student-dashboard-live-reads). Existing Reporting preview APIs remain available to their existing consumers.
 
 Population and saved-register doughnuts, class-strength bars and admissions workload bars reuse the same section responses. Chart code is dynamically loaded through the shared chart component when a non-empty graph approaches the viewport; no analytics endpoint, polling or additional query is introduced. Accessible value links remain available before the graph mounts. Failed/skipped reads contribute no graph or priority data, and each chart respects the section's server-confirmed availability and exact metric grants.
+
+The intake setup Restore mutation posts the current concurrency stamp to `/student/enrollment/admissions/intake-setups/{id}/restore` and invalidates the existing intake-profile cache tag, refreshing setup lists, usage and link options. The lifecycle contract is owned by [backend Student APIs](../../../Shikshamitra-BE/docs/modules/student/api.md).
+
+## Portal account owner profiles
+
+The existing Onboarding case-detail query supplies optional `portalAccountOwners` from the canonical Student profile; the drawer uses only matching `currentData` for both owners and concurrency. Credentials selects Father, Mother or Other guardian explicitly and prefills the selected saved email read-only. Refresh locks submission and updates the email, requiring renewed ownership confirmation after email/relationship changes. Missing email requires correction in Student Records. An older API without this additive field retains manual email entry with explicit relationship selection. Account failures use `parseApiProblemDetail` to surface RFC/nested `data.Reason` instead of generic business-rule text. Provisioning, sender eligibility and send/resend permissions remain unchanged.
+
+`GuardianProfileEmailDialog` reuses the Records family snapshot and audited change APIs. It changes only the selected parent's email, preserving every other profile/sibling value and the expected snapshot hash. Records Changes View and Create plus editable Onboarding access guard the entry action. Pending corrections link to the owning Changes & Approvals review; approval and apply conflicts are never reported as a saved email.
+
+The case-only parent email action posts `{reason,concurrencyStamp}` to `/student/onboarding/{id}/guardian-credential-email/enable`. The existing Onboarding Add/Configure permission guards this action; only an activated, open case with a required guardian account can expose it. Successful corrections invalidate the existing case detail/list/handoff/analytics tags, including credential eligibility. Saving does not create an account or request delivery. The backend owns the pinned snapshot and audit contract.

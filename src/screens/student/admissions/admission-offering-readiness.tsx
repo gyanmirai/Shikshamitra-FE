@@ -3,12 +3,12 @@ import type { AdmissionOfferingValidation } from 'src/redux/student/admissions/a
 import { Iconify } from 'src/components/iconify';
 import { List, Alert, ListItem, AlertTitle, ListItemIcon, ListItemText } from '@mui/material';
 
-type Props = { result?: AdmissionOfferingValidation | null };
+type Props = { result?: AdmissionOfferingValidation | null; onClose?: () => void };
 
-export function AdmissionOfferingReadiness({ result }: Props) {
+export function AdmissionOfferingReadiness({ result, onClose }: Props) {
   if (!result) {
     return (
-      <Alert severity="info">
+      <Alert severity="info" onClose={onClose}>
         <AlertTitle>Readiness is checked before saving</AlertTitle>
         <List dense disablePadding>
           {[
@@ -41,7 +41,7 @@ export function AdmissionOfferingReadiness({ result }: Props) {
   }
 
   return (
-    <Alert severity="warning">
+    <Alert severity="warning" onClose={onClose}>
       <AlertTitle>Configuration incomplete</AlertTitle>
       <List dense disablePadding>
         {result.errors.map((error) => (

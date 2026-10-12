@@ -8,6 +8,8 @@ import AdmissionOfferingsScreen from './admission-offerings';
 const openBulk = vi.fn();
 const useAdmissionOfferingsScreen = vi.fn();
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+
 vi.mock('./use-admission-offerings-screen', () => ({
   useAdmissionOfferingsScreen: () => useAdmissionOfferingsScreen(),
 }));
@@ -22,7 +24,14 @@ vi.mock('./admission-offering-filters', () => ({
 vi.mock('./admission-offering-more-filters', () => ({
   AdmissionOfferingMoreFilters: () => <button type="button">Filters</button>,
 }));
-vi.mock('./admission-offering-table', () => ({ AdmissionOfferingTable: () => null }));
+vi.mock('./admission-offering-table', () => ({
+  AdmissionOfferingTable: ({ loading }: { loading: boolean }) => (
+    <div data-testid="offering-table-loading">{String(loading)}</div>
+  ),
+}));
+vi.mock('./admission-offering-dialog', () => ({
+  AdmissionOfferingDialog: () => <div>Edit offering drawer</div>,
+}));
 vi.mock('./admission-offering-details-drawer', () => ({
   AdmissionOfferingDetailsDrawer: () => null,
 }));
@@ -52,6 +61,22 @@ const screenState = (bulkOpen = false) => ({
   loadingDetail: false,
   saving: false,
   commanding: false,
+  bulkActivationDisabled: false,
+  bulkActivation: {
+    busy: false,
+    selectedRows: [],
+    selectedIds: [],
+    eligibleRows: [],
+    failures: [],
+    confirmationOpen: false,
+    progress: null,
+    toggleSelection: vi.fn(),
+    toggleAll: vi.fn(),
+    clearSelection: vi.fn(),
+    requestActivation: vi.fn(),
+    cancelActivation: vi.fn(),
+    confirmActivation: vi.fn(),
+  },
   permissions: {
     view: true,
     create: true,
@@ -122,5 +147,37 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.getByText('Bulk offering drawer')).toBeVisible();
+  });
+  it('leaves table rows intact when only the edit detail request is loading', () => {
+    useAdmissionOfferingsScreen.mockReturnValue({
+      ...screenState(),
+      dialogMode: 'edit',
+      loadingDetail: true,
+    });
+    render(<AdmissionOfferingsScreen />);
+    expect(screen.getByTestId('offering-table-loading')).toHaveTextContent('false');
+    expect(screen.getByText('Edit offering drawer')).toBeVisible();
+  });
+  it('shows a simple single-offering activation popup with the actual action label', () => {
+    useAdmissionOfferingsScreen.mockReturnValue({
+      ...screenState(),
+      pendingAction: { type: 'activate', row: { id: 'offering-1', name: 'Class 1 General' } },
+    });
+    render(<AdmissionOfferingsScreen />);
+    expect(screen.getByRole('dialog', { name: 'Activate Admission Offering?' })).toBeVisible();
+    expect(screen.getByText('“Class 1 General” will become active.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Activate' })).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Current usage|server will recheck/)).not.toBeInTheDocument();
+  });
+  it('disables cancel and activation while the single-offering command is running', () => {
+    useAdmissionOfferingsScreen.mockReturnValue({
+      ...screenState(),
+      pendingAction: { type: 'activate', row: { id: 'offering-1', name: 'Class 1 General' } },
+      commanding: true,
+    });
+    render(<AdmissionOfferingsScreen />);
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Activate' })).toBeDisabled();
   });
 });

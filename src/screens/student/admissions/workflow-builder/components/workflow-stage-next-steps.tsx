@@ -76,7 +76,9 @@ export function WorkflowStageNextSteps({
                   'Destination unavailable'}
               </Typography>
             </Box>
-            {!readOnly && onEditPath && routeAction('Change', () => onEditPath(path))}
+            {!readOnly &&
+              onEditPath &&
+              routeAction(path.isDefault ? 'Change' : 'View', () => onEditPath(path))}
           </Stack>
         ))
       ) : (
@@ -86,11 +88,8 @@ export function WorkflowStageNextSteps({
       )}
       {!readOnly &&
         onAddPath &&
-        routeAction(
-          'Add special outcome',
-          () => onAddPath(stage),
-          'mdi:source-branch-plus'
-        )}
+        !paths.some((path) => path.isDefault) &&
+        routeAction('Choose next step', () => onAddPath(stage), 'mdi:source-branch-plus')}
     </Stack>
   );
 }

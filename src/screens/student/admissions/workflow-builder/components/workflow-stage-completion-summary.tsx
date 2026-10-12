@@ -29,7 +29,7 @@ export function getWorkflowStageCompletionDescription(stage: AdmissionWorkflowSt
       ? `The attached form is submitted with valid required answers${policy?.requireSectionVerification ? ' and the configured sections have staff verification' : ''}. Outstanding correction requests must be resolved.`
       : 'The application is submitted using the attached published form.';
   if (stage.stageType === 2 && managed)
-    description = `An assessment outcome is recorded${policy?.schedulingEnabled ? ' for a booked session' : ''}${policy?.attendanceRequired ? ', with attendance recorded' : ''}${policy?.reviewRequired ? ', and the result is reviewed' : ''}. Failed, absent, and retake outcomes require a matching special path.`;
+    description = `An assessment outcome is recorded${policy?.schedulingEnabled ? ' for a booked session' : ''}${policy?.attendanceRequired ? ', with attendance recorded' : ''}${policy?.reviewRequired ? ', and the result is reviewed' : ''}. Failed, absent, and retake outcomes cannot follow the usual path; staff can arrange an allowed retake or end the journey as Withdrawn.`;
   if (stage.stageType === 3 && managed)
     description =
       'Every eligibility check passes or has an approved exception. Ineligible or missing-information outcomes need an explicit matching path to continue.';

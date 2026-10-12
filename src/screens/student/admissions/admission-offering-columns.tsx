@@ -21,26 +21,53 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   {
     id: 'name',
     label: 'Offering',
+    sticky: true,
     minWidth: 210,
     render: (value, row) => (
       <AdmissionTableText
         text={String(value || row.code)}
-        secondary={`${row.code} · ${admissionTrackLabels[row.track as AdmissionOfferingListItem['track']]}`}
-        tooltip={`${value || row.code} · ${row.code} · ${admissionTrackLabels[row.track as AdmissionOfferingListItem['track']]} · ${admissionEntryModeLabels[row.entryMode as AdmissionOfferingListItem['entryMode']]}`}
+        secondary={`${admissionTrackLabels[row.track as AdmissionOfferingListItem['track']]}`}
         strong
       />
     ),
   },
-  { id: 'boardName', label: 'Board', minWidth: 120, render: (value) => <AdmissionTableText text={String(value ?? '—')} /> },
-  { id: 'campusName', label: 'Campus', minWidth: 130, render: (value) => <AdmissionTableText text={String(value ?? '—')} /> },
-  { id: 'mediumName', label: 'Medium', minWidth: 120, render: (value) => <AdmissionTableText text={String(value ?? '—')} /> },
-  { id: 'stageName', label: 'School level', minWidth: 130, render: (value) => <AdmissionTableText text={String(value ?? '—')} /> },
-  { id: 'standardName', label: 'Standard', minWidth: 130, render: (value) => <AdmissionTableText text={String(value ?? '—')} /> },
+  {
+    id: 'boardName',
+    label: 'Board',
+    minWidth: 120,
+    render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
+  },
+  {
+    id: 'mediumName',
+    label: 'Medium',
+    minWidth: 120,
+    render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
+  },
+  {
+    id: 'stageName',
+    label: 'School level',
+    minWidth: 130,
+    render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
+  },
+  {
+    id: 'standardName',
+    label: 'Standard',
+    minWidth: 130,
+    render: (value) => <AdmissionTableText text={String(value ?? '—')} />,
+  },
   {
     id: 'workflowName',
     label: 'Workflow',
     minWidth: 170,
-    render: (_, row) => <AdmissionTableText text={row.workflowName && row.workflowVersion != null ? `${row.workflowName} v${row.workflowVersion}` : 'Not configured'} />,
+    render: (_, row) => (
+      <AdmissionTableText
+        text={
+          row.workflowName && row.workflowVersion != null
+            ? `${row.workflowName} v${row.workflowVersion}`
+            : 'Not configured'
+        }
+      />
+    ),
   },
   {
     id: 'effectiveOpenDate',
@@ -76,19 +103,42 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   },
   {
     id: 'configurationStatus',
-    label: <><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Configuration</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Statuses</Box></>,
+    label: (
+      <>
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+          Configuration
+        </Box>
+        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+          Statuses
+        </Box>
+      </>
+    ),
     sticky: true,
     stickyPosition: 'right',
     minWidth: 130,
     render: (value, row) => {
       const availability = Number((row as AdmissionOfferingListItem).availabilityStatus);
       const configuration = value === 1 ? 'Ready' : 'Missing config';
-      const configurationLabel = <Label color={value === 1 ? 'success' : 'warning'}>{configuration}</Label>;
+      const configurationLabel = (
+        <Label color={value === 1 ? 'success' : 'warning'}>{configuration}</Label>
+      );
       return (
         <>
-          <CustomTooltip title={`Availability: ${availabilityLabels[availability]} · Configuration: ${configuration}`} arrow>
-            <Box sx={{ display: { xs: 'flex', sm: 'none' }, flexDirection: 'column', alignItems: 'flex-start', gap: 0.5 }}>
-              <Label color={availabilityColors[availability]}>{availabilityLabels[availability]}</Label>
+          <CustomTooltip
+            title={`Availability: ${availabilityLabels[availability]} · Configuration: ${configuration}`}
+            arrow
+          >
+            <Box
+              sx={{
+                display: { xs: 'flex', sm: 'none' },
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 0.5,
+              }}
+            >
+              <Label color={availabilityColors[availability]}>
+                {availabilityLabels[availability]}
+              </Label>
               {configurationLabel}
             </Box>
           </CustomTooltip>

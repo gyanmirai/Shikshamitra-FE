@@ -1,6 +1,5 @@
 'use client';
 
-import type { DragEndEvent } from '@dnd-kit/core';
 import type {
   AdmissionWorkflow,
   AdmissionWorkflowStage,
@@ -12,9 +11,9 @@ import type {
 import { isEqual } from 'src/utils/helper';
 import { useRef, useState, useEffect } from 'react';
 
+import { createStage } from '../../workflow-builder-utils';
 import { isApplicationStageType } from '../workflow-stage-configuration';
 import { getSequentialAppendRoute } from '../workflow-route-diagnostics';
-import { createStage, reorderStages } from '../../workflow-builder-utils';
 import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
 import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../workflow-template';
 
@@ -128,12 +127,6 @@ export function useWorkflowBuilderDraft(
     }));
     restoreSnapshot(next);
   };
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    recordHistory();
-    setStages((current) => reorderStages(current, String(active.id), String(over.id)));
-    markDirty();
-  };
   const addStage = (stageTypes: AdmissionWorkflowStageTypeMetadata[]) => {
     const metadata = stageTypes.find(
       (item) =>
@@ -235,7 +228,6 @@ export function useWorkflowBuilderDraft(
     undo,
     redo,
     issueCountByStage,
-    handleDragEnd,
     addStage,
     saveStage,
     deleteStage,

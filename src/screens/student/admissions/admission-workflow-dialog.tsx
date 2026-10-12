@@ -110,16 +110,27 @@ function WorkflowDetailsDirtyState({ dirty }: { dirty: boolean }) {
   return confirmation;
 }
 
-const CREATE_STARTER_IDS: readonly WorkflowStarterId[] = [
-  'standard',
-  'simple',
-  'assessment',
-  'empty',
-];
+const CREATE_STARTER_IDS: readonly WorkflowStarterId[] = ['standard', 'empty'];
+
+function WorkflowJourneyCounts({
+  stageCount,
+  routeCount,
+}: {
+  stageCount: number;
+  routeCount: number;
+}) {
+  return (
+    <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" aria-live="polite">
+      <Label variant="outlined">{stageCount} stages</Label>
+      <Label variant="outlined">{routeCount} routes</Label>
+    </Stack>
+  );
+}
 
 function WorkflowTemplatePreview({
   template,
   routeCount = Math.max(template.stages.length - 1, 0),
+  showCounts = true,
 }: {
   template: {
     name: string;
@@ -127,6 +138,7 @@ function WorkflowTemplatePreview({
     stages: ReadonlyArray<{ code: string; name: string; description?: string }>;
   };
   routeCount?: number;
+  showCounts?: boolean;
 }) {
   return (
     <Stack spacing={2} aria-live="polite">
@@ -137,10 +149,9 @@ function WorkflowTemplatePreview({
         </Typography>
       </Box>
 
-      <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
-        <Label variant="outlined">{template.stages.length} stages</Label>
-        <Label variant="outlined">{routeCount} routes</Label>
-      </Stack>
+      {showCounts && (
+        <WorkflowJourneyCounts stageCount={template.stages.length} routeCount={routeCount} />
+      )}
 
       {template.stages.length > 0 ? (
         <Stack spacing={0} aria-label={`${template.name} stage preview`}>
@@ -355,7 +366,7 @@ function CreateWorkflowDialog({
             '& > div > .MuiStepper-root': {
               width: 1,
               px: { xs: 1, sm: 2 },
-              py: 2,
+              py: 0,
               flexShrink: 0,
             },
             '& > div > form > div:last-child': {
@@ -422,7 +433,7 @@ function CreateWorkflowDialog({
                         xs: 'minmax(0, 1fr)',
                         lg: 'minmax(0, 7fr) minmax(0, 5fr)',
                       },
-                      alignItems: 'start',
+                      alignItems: 'stretch',
                     }}
                   >
                     <WorkflowDetailsDirtyState dirty={formik.dirty && !busy} />
@@ -525,13 +536,21 @@ function CreateWorkflowDialog({
                         )}
                       </Stack>
                     </FormSectionCard>
-                    <FormSectionCard icon="mdi:sitemap-outline" title="Journey preview">
-                      <WorkflowTemplatePreview
-                        template={selectedTemplate}
-                        routeCount={
-                          keepingJourney ? (currentJourney?.transitions.length ?? 0) : undefined
-                        }
-                      />
+                    <FormSectionCard
+                      icon="mdi:sitemap-outline"
+                      title="Journey preview"
+                      action={
+                        <WorkflowJourneyCounts
+                          stageCount={selectedTemplate.stages.length}
+                          routeCount={
+                            keepingJourney
+                              ? (currentJourney?.transitions.length ?? 0)
+                              : Math.max(selectedTemplate.stages.length - 1, 0)
+                          }
+                        />
+                      }
+                    >
+                      <WorkflowTemplatePreview template={selectedTemplate} showCounts={false} />
                     </FormSectionCard>
                   </Box>
                 </Box>

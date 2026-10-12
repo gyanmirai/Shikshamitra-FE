@@ -16,6 +16,7 @@ import { BulkAdmissionOfferingDialog } from './bulk-admission-offering-dialog';
 import { AdmissionOfferingMoreFilters } from './admission-offering-more-filters';
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
+import { BulkAdmissionOfferingActivation } from './bulk-admission-offering-activation';
 
 export default function AdmissionOfferingsScreen() {
   const screen = useAdmissionOfferingsScreen();
@@ -62,7 +63,7 @@ export default function AdmissionOfferingsScreen() {
               size="small"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               sx={{ minWidth: 140 }}
-              disabled={!screen.cycle}
+              disabled={!screen.cycle || screen.bulkActivation.busy}
               onClick={screen.openBulk}
             >
               Add Offering
@@ -98,6 +99,10 @@ export default function AdmissionOfferingsScreen() {
       <Box
         sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
+        <BulkAdmissionOfferingActivation
+          activation={screen.bulkActivation}
+          disabled={screen.bulkActivationDisabled}
+        />
         {filteredEmpty && (
           <Alert
             severity="info"
@@ -123,19 +128,20 @@ export default function AdmissionOfferingsScreen() {
             loading={
               screen.cyclesQuery.isLoading ||
               screen.cyclesQuery.isFetching ||
-              screen.offeringsQuery.isFetching ||
-              screen.loadingDetail
+              screen.offeringsQuery.isFetching
             }
             totalCount={screen.offeringsQuery.data?.totalCount ?? 0}
             page={screen.filters.page}
             rowsPerPage={screen.filters.rowsPerPage}
             search={screen.filters.search}
-            canEdit={screen.permissions.edit}
-            canClone={screen.permissions.clone}
-            canActivate={screen.permissions.activate}
-            canDeactivate={screen.permissions.deactivate}
-            canDelete={screen.permissions.delete}
-            onView={(row) => screen.openDetailed('view', row)}
+            canEdit={screen.permissions.edit && !screen.bulkActivation.busy}
+            canClone={screen.permissions.clone && !screen.bulkActivation.busy}
+            canActivate={screen.permissions.activate && !screen.bulkActivation.busy}
+            canDeactivate={screen.permissions.deactivate && !screen.bulkActivation.busy}
+            canDelete={screen.permissions.delete && !screen.bulkActivation.busy}
+            onView={(row) => {
+              if (!screen.bulkActivation.busy) screen.openDetailed('view', row);
+            }}
             onEdit={(row) => screen.openDetailed('edit', row)}
             onClone={(row) => screen.openDetailed('clone', row)}
             onToggleActive={screen.requestAction}
@@ -143,6 +149,17 @@ export default function AdmissionOfferingsScreen() {
             onSearch={(search) => screen.update({ search })}
             onSort={(sorting) => screen.update({ sorting })}
             onPagination={(page, rowsPerPage) => screen.update({ page: page - 1, rowsPerPage })}
+            selection={
+              screen.permissions.activate
+                ? {
+                    selectedIds: screen.bulkActivation.selectedIds,
+                    eligibleIds: screen.bulkActivation.eligibleRows.map((row) => row.id),
+                    disabled: screen.bulkActivationDisabled || screen.bulkActivation.busy,
+                    onToggle: screen.bulkActivation.toggleSelection,
+                    onToggleAll: screen.bulkActivation.toggleAll,
+                  }
+                : undefined
+            }
           />
         </Box>
       </Box>
@@ -154,6 +171,9 @@ export default function AdmissionOfferingsScreen() {
           cycle={screen.cycle}
           cycles={screen.cycles}
           offering={screen.selected}
+          loadingDetail={screen.loadingDetail}
+          detailError={screen.detailError}
+          onRetryDetail={screen.retryDetail}
           saving={screen.saving}
           onClose={screen.closeDialog}
           onSave={screen.save}
@@ -176,11 +196,18 @@ export default function AdmissionOfferingsScreen() {
       <ConfirmDialog
         open={Boolean(screen.pendingAction)}
         onClose={screen.cancelAction}
-        icon={action === 'delete' ? 'error' : 'warning'}
+        icon={action === 'activate' ? null : action === 'delete' ? 'error' : 'warning'}
         title={`${action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'} Admission Offering?`}
+        aria-label={`${action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'} Admission Offering?`}
+        aria-describedby="offering-action-description"
+        disableBackdropClick
+        disableCancel={screen.commanding}
+        disableEscapeKeyDown={screen.commanding}
         content={
           action && screen.pendingAction ? (
-            <AdmissionOfferingActionImpact action={action} offering={screen.pendingAction.row} />
+            <Box id="offering-action-description">
+              <AdmissionOfferingActionImpact action={action} offering={screen.pendingAction.row} />
+            </Box>
           ) : null
         }
         action={
@@ -190,11 +217,18 @@ export default function AdmissionOfferingsScreen() {
             color={action === 'delete' ? 'error' : 'primary'}
             loading={screen.commanding}
             startIcon={
-              <Iconify icon={action === 'delete' ? GlobalIcons.delete : GlobalIcons.submit} />
+              <Iconify
+                icon={action === 'delete' ? 'mdi:delete-outline' : 'mdi:check-circle-outline'}
+              />
             }
             onClick={screen.confirmAction}
+            sx={
+              action === 'activate'
+                ? { bgcolor: 'text.primary', color: 'background.paper' }
+                : undefined
+            }
           >
-            {action === 'delete' ? 'Delete' : 'Confirm'}
+            {action === 'delete' ? 'Delete' : action === 'activate' ? 'Activate' : 'Deactivate'}
           </Button>
         }
       />

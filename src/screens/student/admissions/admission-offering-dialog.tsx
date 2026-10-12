@@ -28,7 +28,6 @@ import { useAdmissionOfferingForm } from './use-admission-offering-form';
 import { AdmissionOfferingReadiness } from './admission-offering-readiness';
 import { AdmissionOfferingEditDrawer } from './admission-offering-edit-drawer';
 import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
-import { AdmissionOfferingWindowFields } from './admission-offering-window-fields';
 import { AdmissionOfferingHierarchyFields } from './admission-offering-hierarchy-fields';
 import { AdmissionOfferingConfigurationFields } from './admission-offering-configuration-fields';
 
@@ -39,19 +38,37 @@ type Props = {
   cycles: AdmissionCycle[];
   mode?: 'create' | 'edit' | 'clone';
   offering?: AdmissionOffering | null;
+  loadingDetail?: boolean;
+  detailError?: string | null;
+  onRetryDetail?: () => void;
   saving: boolean;
   onSave: (values: AdmissionOfferingWriteInput, admissionCycleId: string) => Promise<void>;
 };
 
 export function AdmissionOfferingDialog(props: Props) {
-  const { open, onClose, cycle, cycles, mode = 'create', offering, saving, onSave } = props;
+  const {
+    open,
+    onClose,
+    cycle,
+    cycles,
+    mode = 'create',
+    offering,
+    saving,
+    onSave,
+    loadingDetail,
+    detailError,
+    onRetryDetail,
+  } = props;
 
-  if (mode === 'edit' && offering) {
+  if (mode === 'edit') {
     return (
       <AdmissionOfferingEditDrawer
         open={open}
         cycle={cycle}
         offering={offering}
+        loadingDetail={loadingDetail}
+        detailError={detailError}
+        onRetryDetail={onRetryDetail}
         saving={saving}
         onClose={onClose}
         onSave={onSave}
@@ -82,7 +99,7 @@ function AdmissionOfferingLegacyDialog({
   offering,
   saving,
   onSave,
-}: Props) {
+}: Omit<Props, 'loadingDetail' | 'detailError' | 'onRetryDetail'>) {
   const [targetCycleId, setTargetCycleId] = useState(cycle.id);
   const targetCycle =
     mode === 'clone' ? (cycles.find((item) => item.id === targetCycleId) ?? cycle) : cycle;
@@ -126,7 +143,7 @@ function AdmissionOfferingLegacyDialog({
             />
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure the class, dates, published workflow, and intake setup.
+            Configure the class, published workflow, and intake setup.
           </Typography>
         </Box>
         <IconButton
@@ -184,9 +201,9 @@ function AdmissionOfferingLegacyDialog({
         )}
         {mode === 'clone' && (
           <Alert severity="info">
-            Select a valid academic identity for the target cycle. The source offering&apos;s dates,
-            workflow, forms, and code will be copied and revalidated by the server. Applications are
-            never copied.
+            Select a valid academic identity for the target cycle. Its cycle dates apply
+            automatically. The source offering&apos;s workflow, forms, and code will be copied and
+            revalidated by the server. Applications are never copied.
           </Alert>
         )}
         <AdmissionOfferingHierarchyFields
@@ -209,8 +226,6 @@ function AdmissionOfferingLegacyDialog({
         />
         {mode !== 'clone' && (
           <>
-            <Divider />
-            <AdmissionOfferingWindowFields formik={form.formik} cycle={targetCycle} />
             <Divider />
             <AdmissionOfferingConfigurationFields
               formik={form.formik}

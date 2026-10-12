@@ -8,29 +8,32 @@ type Props = {
 };
 
 export function AdmissionOfferingActionImpact({ action, offering }: Props) {
+  if (action === 'delete') {
+    return (
+      <Typography variant="body2">
+        This will permanently delete “{offering.name || offering.code}”. This action cannot be
+        undone.
+      </Typography>
+    );
+  }
+
+  if (action === 'activate') {
+    return (
+      <Typography variant="body2">
+        “{offering.name || offering.code}” will become active.
+      </Typography>
+    );
+  }
+
   const applications = `${offering.applicationCount} ${
     offering.applicationCount === 1 ? 'application' : 'applications'
   }`;
 
   const impact = {
-    activate: {
-      severity: 'success' as const,
-      title: 'New intake can start when the effective window is open',
-      message:
-        'The server will recheck the cycle, dates, academic hierarchy, workflow, and published forms before activation.',
-    },
     deactivate: {
       severity: 'warning' as const,
       title: 'New inquiries and applications will stop immediately',
       message: `${applications} already linked to this offering will remain available for processing.`,
-    },
-    delete: {
-      severity: 'error' as const,
-      title: 'The offering configuration will be permanently removed',
-      message:
-        offering.applicationCount > 0
-          ? `${applications} are linked, so the server will reject deletion. Deactivate the offering instead.`
-          : 'Deletion is allowed only while no inquiry or application depends on this offering.',
     },
   }[action];
 

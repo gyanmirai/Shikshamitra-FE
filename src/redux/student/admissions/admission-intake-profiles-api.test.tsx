@@ -122,3 +122,37 @@ it('exposes a failed options request without reporting routing data as ready', a
   expect(result.current.currentData).toBeUndefined();
   expect(result.current.error).toMatchObject({ status: 500 });
 });
+
+it('restores with a concurrency stamp and refreshes the archived setup list', async () => {
+  let restored = false;
+  let body: unknown;
+  const path = '*/api/student/enrollment/admissions/intake-setups';
+  mswServer.use(
+    http.get(path, () => HttpResponse.json({ data: [{ id: 'setup-1', isArchived: !restored }] })),
+    http.post(`${path}/setup-1/restore`, async ({ request }) => {
+      body = await request.json();
+      restored = true;
+      return HttpResponse.json({ data: { id: 'setup-1', isArchived: false } });
+    })
+  );
+  const { result } = renderHook(
+    () =>
+      admissionIntakeProfilesApi.endpoints.getAdmissionIntakeSetups.useQuery({
+        includeArchived: true,
+      }),
+    { wrapper }
+  );
+  await waitFor(() => expect(result.current.data?.[0].isArchived).toBe(true));
+  await act(async () => {
+    await store
+      .dispatch(
+        admissionIntakeProfilesApi.endpoints.restoreAdmissionIntakeSetup.initiate({
+          id: 'setup-1',
+          concurrencyStamp: 'latest-stamp',
+        })
+      )
+      .unwrap();
+  });
+  expect(body).toEqual({ concurrencyStamp: 'latest-stamp' });
+  await waitFor(() => expect(result.current.data?.[0].isArchived).toBe(false));
+});

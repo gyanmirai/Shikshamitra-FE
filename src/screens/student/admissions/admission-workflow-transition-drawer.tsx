@@ -37,6 +37,7 @@ type Props = {
   formsError?: boolean;
   onRetryForms?: () => void;
   readOnly: boolean;
+  simpleNextStep?: boolean;
   onClose: () => void;
   onSave: (transition: AdmissionWorkflowTransition) => void;
 };
@@ -51,12 +52,16 @@ export function AdmissionWorkflowTransitionDrawer({
   formsError,
   onRetryForms,
   readOnly,
+  simpleNextStep = false,
   onClose,
   onSave,
 }: Props) {
   const discard = useBoolean();
   const conditionState = getTransitionConditionEditorState(transition?.conditionRuleJson);
   const creatingConditionalPath = transition?.id === '' && transition.isDefault === false;
+  const locked =
+    readOnly ||
+    (simpleNextStep && (conditionState.hasCondition || transition?.isDefault === false));
   const defaultFromStageId = transition?.fromStageId ?? stages[0]?.id ?? '';
   const conditionFields = getRouteConditionFields(forms, stages, transitions, defaultFromStageId);
   const nextPriority =
@@ -128,6 +133,10 @@ export function AdmissionWorkflowTransitionDrawer({
       return errors;
     },
     onSubmit: (values, helpers) => {
+      if (locked) {
+        helpers.setSubmitting(false);
+        return;
+      }
       const condition = values.hasCondition
         ? {
             field: values.conditionField,
@@ -170,7 +179,7 @@ export function AdmissionWorkflowTransitionDrawer({
     onClose();
   };
   const requestClose = () => {
-    if (!readOnly && formik.dirty) discard.onTrue();
+    if (!locked && formik.dirty) discard.onTrue();
     else close();
   };
 
@@ -190,10 +199,16 @@ export function AdmissionWorkflowTransitionDrawer({
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
             <Box>
               <Typography variant="h6">
-                {readOnly ? 'Next-step details' : 'What happens next?'}
+                {locked
+                  ? 'Next-step details'
+                  : simpleNextStep
+                    ? 'Choose next step'
+                    : 'What happens next?'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Choose the usual next step or add a path for a specific outcome.
+                {simpleNextStep
+                  ? 'Choose where the applicant continues after this stage.'
+                  : 'Choose the usual next step or add a path for a specific outcome.'}
               </Typography>
             </Box>
             <IconButton
@@ -220,10 +235,11 @@ export function AdmissionWorkflowTransitionDrawer({
                   !item.isDefault
               ).length
             }
-            readOnly={readOnly}
+            readOnly={locked}
+            simpleNextStep={simpleNextStep}
             lockFromStage
           />
-          {!readOnly && (
+          {!locked && (
             <DrawerActions
               onCancel={requestClose}
               disabled={

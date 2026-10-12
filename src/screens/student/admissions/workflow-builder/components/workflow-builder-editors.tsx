@@ -9,8 +9,6 @@ import { Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
-import { getRouteSourceFormIds } from '../workflow-condition-catalog';
-import { useWorkflowRouteForms } from '../hooks/use-workflow-route-forms';
 import { AdmissionWorkflowStageDrawer } from '../../admission-workflow-stage-drawer';
 import { AdmissionWorkflowTransitionDrawer } from '../../admission-workflow-transition-drawer';
 
@@ -55,14 +53,6 @@ export function WorkflowBuilderEditors({
   onAddPath,
   onEditPath,
 }: Props) {
-  const routeForms = useWorkflowRouteForms(
-    transitionOpen,
-    getRouteSourceFormIds(
-      stages,
-      transitions,
-      editingTransition?.fromStageId ?? stages[0]?.id ?? ''
-    )
-  );
   const connectedTransitions = stageToDelete
     ? transitions.filter(
         (transition) =>
@@ -90,10 +80,7 @@ export function WorkflowBuilderEditors({
         transition={editingTransition}
         stages={stages}
         transitions={transitions}
-        forms={routeForms.forms}
-        formsLoading={routeForms.loading}
-        formsError={routeForms.error}
-        onRetryForms={routeForms.retry}
+        simpleNextStep
         readOnly={readOnly}
         onClose={onCloseTransition}
         onSave={onSaveTransition}

@@ -10,7 +10,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionIntakeAssignmentScreen from './admission-intake-assignment';
 
@@ -30,6 +30,8 @@ const hooks = vi.hoisted(() => ({
     isError: false,
     refetch: vi.fn(),
   },
+  restore: vi.fn(),
+  refetchSetups: vi.fn(),
   push: vi.fn(),
 }));
 
@@ -45,11 +47,12 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
     data: hooks.setups,
     isLoading: false,
     isError: false,
-    refetch: vi.fn(),
+    refetch: hooks.refetchSetups,
   }),
   useGetAdmissionIntakeSetupUsageQuery: () => hooks.usage,
   useLazyGetAdmissionIntakeSetupUsageQuery: () => [vi.fn(), { isFetching: false }],
   useArchiveAdmissionIntakeSetupMutation: () => [vi.fn(), { isLoading: false }],
+  useRestoreAdmissionIntakeSetupMutation: () => [hooks.restore, { isLoading: false }],
 }));
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
@@ -65,7 +68,7 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
     </header>
   ),
 }));
-vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
+
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
 }));
@@ -159,6 +162,10 @@ const rowFor = (name: string) => screen.getByRole('row', { name: new RegExp(name
 describe('intake setup details and row actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    hooks.restore.mockReturnValue({
+      unwrap: () => Promise.resolve({ ...archivedSetup, isArchived: false }),
+    });
+    hooks.refetchSetups.mockReturnValue({ unwrap: () => Promise.resolve(hooks.setups) });
     hooks.canEdit = true;
     hooks.setups = [activeSetup, archivedSetup];
     hooks.usage.data = emptyUsage;
@@ -171,7 +178,8 @@ describe('intake setup details and row actions', () => {
     renderScreen();
     expect(screen.queryByTestId('table-action-view')).not.toBeInTheDocument();
     expect(within(rowFor(activeSetup.name)).getByTestId('table-action-edit')).toBeVisible();
-    expect(within(rowFor(archivedSetup.name)).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(rowFor(archivedSetup.name)).getByTestId('table-action-edit')).toBeDisabled();
+    expect(within(rowFor(archivedSetup.name)).getByTestId('table-action-restore')).toBeEnabled();
     await user.click(within(rowFor(archivedSetup.name)).getByText(archivedSetup.name));
     const drawer = screen.getByRole('dialog', { name: archivedSetup.name });
     expect(within(drawer).getByRole('heading', { name: 'Inquiry handling' })).toBeVisible();
@@ -245,13 +253,13 @@ describe('intake setup details and row actions', () => {
     renderScreen();
     const row = within(rowFor(activeSetup.name));
     expect(row.getAllByRole('button')).toHaveLength(2);
-    expect(row.getByRole('button', { name: 'Edit' })).toBeVisible();
-    expect(row.getByRole('button', { name: 'Archive' })).toBeVisible();
+    expect(row.getByRole('button', { name: `Edit ${activeSetup.name}` })).toBeVisible();
+    expect(row.getByRole('button', { name: `Archive ${activeSetup.name}` })).toBeVisible();
     expect(
       row.queryByRole('button', { name: /Offering|inquiry link|More actions/ })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
-    await user.click(screen.getByTestId('table-action-edit'));
+    await user.click(within(rowFor(activeSetup.name)).getByTestId('table-action-edit'));
     expect(screen.getByRole('region', { name: `Editing ${activeSetup.name}` })).toBeVisible();
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
   });
@@ -278,13 +286,13 @@ describe('intake setup details and row actions', () => {
         screen.getByRole('menu', { name: `More actions for ${activeSetup.name}` })
       );
       expect(menu.getAllByRole('menuitem')).toHaveLength(2);
-      expect(menu.getByRole('menuitem', { name: 'Edit' })).toBeVisible();
-      expect(menu.getByRole('menuitem', { name: 'Archive' })).toBeVisible();
+      expect(menu.getByRole('menuitem', { name: `Edit ${activeSetup.name}` })).toBeVisible();
+      expect(menu.getByRole('menuitem', { name: `Archive ${activeSetup.name}` })).toBeVisible();
       expect(
         menu.queryByRole('menuitem', { name: /Offering|inquiry link/ })
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
-      await user.click(menu.getByRole('menuitem', { name: 'Edit' }));
+      await user.click(menu.getByRole('menuitem', { name: `Edit ${activeSetup.name}` }));
       expect(screen.getByRole('region', { name: `Editing ${activeSetup.name}` })).toBeVisible();
     } finally {
       window.matchMedia = originalMatchMedia;
@@ -292,12 +300,14 @@ describe('intake setup details and row actions', () => {
   });
 
   it.each(['create', 'edit'] as const)(
-    'replaces the table with the inline %s form and restores it on close',
+    'retains the table context while the %s editor is open',
     async (action) => {
       const user = userEvent.setup();
       renderScreen();
       await user.click(
-        screen.getByRole('button', { name: action === 'create' ? 'Create intake setup' : 'Edit' })
+        screen.getByRole('button', {
+          name: action === 'create' ? 'Create intake setup' : `Edit ${activeSetup.name}`,
+        })
       );
       expect(screen.getByRole('heading', { name: 'Intake & Assignment' })).toBeVisible();
       expect(
@@ -305,13 +315,100 @@ describe('intake setup details and row actions', () => {
           name: `Editing ${action === 'create' ? 'new setup' : activeSetup.name}`,
         })
       ).toBeVisible();
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Create intake setup' })).not.toBeInTheDocument();
+      expect(screen.getByRole('table')).toBeVisible();
+      expect(screen.getByRole('tab', { name: 'Admission intake setups' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Create intake setup' })).toBeDisabled();
       await user.click(screen.getByRole('button', { name: 'Close editor' }));
       expect(screen.getByRole('table', { name: 'Admission intake setups table' })).toBeVisible();
       expect(screen.getByRole('tab', { name: 'Admission intake setups' })).toBeVisible();
       expect(screen.getByRole('button', { name: 'Create intake setup' })).toBeVisible();
     }
   );
+});
+
+describe('setup restoration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    hooks.canEdit = true;
+    hooks.setups = [activeSetup, archivedSetup];
+    hooks.restore.mockReturnValue({
+      unwrap: () => Promise.resolve({ ...archivedSetup, isArchived: false }),
+    });
+  });
+
+  it('restores an archived setup with its concurrency stamp after confirmation', async () => {
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(
+      within(rowFor(archivedSetup.name)).getByRole('button', { name: 'Restore Archived intake' })
+    );
+    expect(hooks.restore).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Restore setup' }));
+    expect(hooks.restore).toHaveBeenCalledWith({
+      id: archivedSetup.id,
+      concurrencyStamp: archivedSetup.concurrencyStamp,
+    });
+  });
+
+  it('keeps archive disabled while the setup has active usage', () => {
+    hooks.setups = [{ ...activeSetup, activeOfferingCount: 1 }];
+    renderScreen();
+    expect(screen.getByTestId('table-action-archive')).toBeDisabled();
+    expect(screen.getByTestId('table-action-edit')).toBeEnabled();
+  });
+
+  it('keeps the restore confirmation open after failure and allows retry', async () => {
+    hooks.restore.mockReturnValueOnce({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Restore temporarily unavailable'), {
+            data: { detail: 'Restore temporarily unavailable' },
+          })
+        ),
+    });
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(within(rowFor(archivedSetup.name)).getByTestId('table-action-restore'));
+    await user.click(screen.getByRole('button', { name: 'Restore setup' }));
+    expect(await screen.findByText('Restore temporarily unavailable')).toBeVisible();
+    expect(screen.getByRole('dialog', { name: 'Restore Admission Intake Setup?' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Restore setup' }));
+    expect(hooks.restore).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not open details when the disabled action wrapper is clicked', () => {
+    renderScreen();
+    fireEvent.click(
+      within(rowFor(archivedSetup.name)).getByTestId('table-action-edit').parentElement!
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('requires a reload after a stale restore and retries with the latest stamp', async () => {
+    hooks.restore.mockReturnValueOnce({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('Stale setup'), {
+            data: { errorCode: 'Admissions.Intake.ConcurrencyConflict' },
+          })
+        ),
+    });
+    hooks.refetchSetups.mockReturnValue({
+      unwrap: () => Promise.resolve([{ ...archivedSetup, concurrencyStamp: 'new-stamp' }]),
+    });
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(within(rowFor(archivedSetup.name)).getByTestId('table-action-restore'));
+    await user.click(screen.getByRole('button', { name: 'Restore setup' }));
+    expect(await screen.findByRole('button', { name: 'Restore setup' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Reload latest' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Restore setup' })).toBeEnabled()
+    );
+    await user.click(screen.getByRole('button', { name: 'Restore setup' }));
+    expect(hooks.restore).toHaveBeenLastCalledWith({
+      id: archivedSetup.id,
+      concurrencyStamp: 'new-stamp',
+    });
+  });
 });

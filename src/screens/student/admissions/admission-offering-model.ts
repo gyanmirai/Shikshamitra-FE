@@ -1,9 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { AdmissionOfferingWriteInput } from 'src/redux/student/admissions/admission-offerings-api';
 
-import dayjs from 'dayjs';
-import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
-
 export type AdmissionOfferingFormValues = Omit<
   AdmissionOfferingWriteInput,
   'openDate' | 'closeDate'
@@ -70,11 +67,11 @@ export const getOfferingInitialValues = (
   stageId: offering?.stageId ?? '',
   standardId: offering?.standardId ?? '',
   code: offering?.code ?? '',
-  track: offering?.applicationCount === 0 ? 0 : (offering?.track ?? 0),
-  entryMode: offering?.applicationCount === 0 ? 0 : (offering?.entryMode ?? 0),
-  useCycleDates: offering?.useCycleDates ?? true,
-  openDate: offering?.openDate ? dayjs(offering.openDate) : null,
-  closeDate: offering?.closeDate ? dayjs(offering.closeDate) : null,
+  track: offering?.track ?? 0,
+  entryMode: offering?.entryMode ?? 0,
+  useCycleDates: true,
+  openDate: null,
+  closeDate: null,
   workflowDefinitionId: offering?.workflowDefinitionId ?? null,
   inquiryFormDefinitionId: offering?.inquiryFormDefinitionId ?? null,
   applicationFormDefinitionId: offering?.applicationFormDefinitionId ?? null,
@@ -87,8 +84,9 @@ export const toOfferingWriteInput = (
   values: AdmissionOfferingFormValues
 ): AdmissionOfferingWriteInput => ({
   ...values,
-  openDate: values.useCycleDates ? null : datePickerToDateTimeOffset(values.openDate),
-  closeDate: values.useCycleDates ? null : datePickerToDateTimeOffset(values.closeDate),
+  useCycleDates: true,
+  openDate: null,
+  closeDate: null,
 });
 
 export const getAdmissionApiError = (error: unknown, fallback: string): string => {

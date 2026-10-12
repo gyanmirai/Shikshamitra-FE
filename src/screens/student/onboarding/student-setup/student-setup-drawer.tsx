@@ -425,10 +425,22 @@ export default function StudentSetupDrawer({
                 description="Create or link app access and send login details after activation."
               >
                 <StudentOnboardingPortalAccounts
+                  key={activeStudent.id}
+                  profileOwners={
+                    !capturedFieldsQuery.isError &&
+                    capturedFieldsQuery.currentData?.id === activeStudent.id
+                      ? (capturedFieldsQuery.currentData.portalAccountOwners ?? undefined)
+                      : undefined
+                  }
+                  profilesLoading={capturedFieldsQuery.isFetching}
+                  profilesError={capturedFieldsQuery.isError}
+                  onRefreshProfiles={() => capturedFieldsQuery.refetch()}
                   student={{
                     ...activeStudent,
                     concurrencyStamp:
-                      capturedFieldsQuery.data?.concurrencyStamp ?? activeStudent.concurrencyStamp,
+                      capturedFieldsQuery.currentData?.id === activeStudent.id
+                        ? capturedFieldsQuery.currentData.concurrencyStamp
+                        : activeStudent.concurrencyStamp,
                   }}
                   canManage={canManage}
                 />
@@ -617,11 +629,21 @@ export default function StudentSetupDrawer({
                       <AccordionDetails>
                         <StudentOnboardingPortalAccounts
                           key={activeStudent.id}
+                          profileOwners={
+                            !capturedFieldsQuery.isError &&
+                            capturedFieldsQuery.currentData?.id === activeStudent.id
+                              ? (capturedFieldsQuery.currentData.portalAccountOwners ?? undefined)
+                              : undefined
+                          }
+                          profilesLoading={capturedFieldsQuery.isFetching}
+                          profilesError={capturedFieldsQuery.isError}
+                          onRefreshProfiles={() => capturedFieldsQuery.refetch()}
                           student={{
                             ...activeStudent,
                             concurrencyStamp:
-                              capturedFieldsQuery.data?.concurrencyStamp ??
-                              activeStudent.concurrencyStamp,
+                              capturedFieldsQuery.currentData?.id === activeStudent.id
+                                ? capturedFieldsQuery.currentData.concurrencyStamp
+                                : activeStudent.concurrencyStamp,
                           }}
                           canManage={canManage}
                         />

@@ -9,7 +9,6 @@ import { normalizeAdmissionWorkflowStageType } from 'src/redux/student/admission
 import { getRegistrationFormTemplate } from './form-dialog/registration-form-template';
 import {
   createStage,
-  reorderStages,
   duplicateStage,
   parseSimpleCondition,
   getTransitionStepLabel,
@@ -44,19 +43,6 @@ describe('workflow builder utilities', () => {
     expect(existing.map((item) => item.code)).toEqual(['STAGE_1', 'STAGE_3', 'STAGE_4']);
     expect(createStage(metadata, 0, true).code).toBe('STAGE_1');
   });
-  it('reorders stages without changing explicit entry and terminal meaning', () => {
-    const result = reorderStages(
-      [stage('one', 0), stage('two', 1), stage('three', 2)],
-      'three',
-      'one'
-    );
-
-    expect(result.map((item) => item.id)).toEqual(['three', 'one', 'two']);
-    expect(result.map((item) => item.displayOrder)).toEqual([0, 1, 2]);
-    expect(result.find((item) => item.id === 'one')?.isEntryStage).toBe(true);
-    expect(result.find((item) => item.id === 'three')?.isTerminalStage).toBe(true);
-  });
-
   it('serializes a controlled condition without executable expressions', () => {
     const serialized = serializeSimpleCondition({
       field: 'application.score',

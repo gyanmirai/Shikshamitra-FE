@@ -28,6 +28,7 @@ import {
   Stack,
   Alert,
   Button,
+  Drawer,
   Divider,
   TextField,
   IconButton,
@@ -163,14 +164,14 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   const usage = useGetAdmissionIntakeSetupUsageQuery(setup?.id ?? '', { skip: !setup });
   const [createSetup, createState] = useCreateAdmissionIntakeSetupMutation();
   const [updateSetup, updateState] = useUpdateAdmissionIntakeSetupMutation();
-  const saving = createState.isLoading || updateState.isLoading;
+  const saving = createState.isLoading || updateState.isLoading || reloadingLatest;
   const initialValues = useMemo(() => getInitialAdmissionIntakeSetupValues(setup), [setup]);
   const usageCount =
     (usage.data?.offerings.length ?? setup?.activeOfferingCount ?? 0) +
     (usage.data?.publicInquiryLinks.length ?? setup?.activePublicInquiryLinkCount ?? 0);
 
   const requestClose = () => {
-    if (saving) return;
+    if (saving || reloadingLatest) return;
     if (formikRef.current?.dirty) {
       setConfirmClose(true);
       return;
@@ -231,155 +232,168 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
 
   return (
     <>
-      <Box
-        component="section"
-        aria-labelledby="intake-setup-editor-title"
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 2,
-          bgcolor: 'background.paper',
+      <Drawer
+        anchor="right"
+        open
+        onClose={requestClose}
+        PaperProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': 'intake-setup-editor-title',
+          sx: { width: { xs: 1, md: 960 }, maxWidth: 1 },
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
-          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
-            <Typography id="intake-setup-editor-title" variant="h6">
-              {setup ? 'Edit admission intake setup' : 'Create admission intake setup'}
-            </Typography>
-            <CustomTooltip
-              title="Configure inquiry handling and counsellor routing together."
-              arrow
-              placement="right"
-            >
-              <IconButton size="small" color="info" aria-label="Admission intake setup information">
-                <Iconify icon="lucide:info" width={16} />
-              </IconButton>
-            </CustomTooltip>
-          </Stack>
-          <IconButton
-            size="small"
-            aria-label="Close admission intake setup editor"
-            onClick={requestClose}
-            disabled={saving}
-            sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
-          >
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Stack>
-        <Divider />
-
         <Box
+          component="section"
+          aria-labelledby="intake-setup-editor-title"
           sx={{
             flex: 1,
             minHeight: 0,
-            overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
           }}
         >
-          {staleConflict && (
-            <AdmissionIntakeNotice
-              severity="warning"
-              closeDisabled={reloadingLatest}
-              sx={{ m: 2, mb: 0, flexShrink: 0 }}
-              action={
-                <Button
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
+            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+              <Typography id="intake-setup-editor-title" variant="h6">
+                {setup ? 'Edit Admission Intake Setup' : 'Create Admission Intake Setup'}
+              </Typography>
+              <CustomTooltip
+                title="Configure inquiry handling and counsellor routing together."
+                arrow
+                placement="right"
+              >
+                <IconButton
                   size="small"
-                  color="warning"
-                  loading={reloadingLatest}
-                  onClick={reloadLatest}
+                  color="info"
+                  aria-label="Admission intake setup information"
                 >
-                  Reload latest
-                </Button>
-              }
+                  <Iconify icon="lucide:info" width={16} />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
+            <IconButton
+              size="small"
+              aria-label="Close admission intake setup editor"
+              onClick={requestClose}
+              disabled={saving || reloadingLatest}
+              sx={{ width: { xs: 44, sm: 36 }, height: { xs: 44, sm: 36 } }}
             >
-              This setup changed in another session. Reload the latest version before editing again.
-              Reloading replaces the values currently entered here.
-              {reloadError && (
-                <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
-                  {reloadError}
-                </Typography>
-              )}
-            </AdmissionIntakeNotice>
-          )}
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomStepperWithFormik
-              initialValues={initialValues}
-              steps={[
-                'Inquiry handling',
-                'Counsellor routing',
-                setup ? 'Review & update' : 'Review & create',
-              ]}
-              activeStep={step}
-              validationSchema={getAdmissionIntakeSetupStepSchema(
-                step,
-                !counsellors.isLoading && !counsellors.isFetching && !counsellors.isError
-                  ? (counsellors.data ?? []).map((person) => person.id)
-                  : undefined
-              )}
-              validateOnChange
-              showSaveButton={false}
-              validateForwardStepClick
-              isStepClickable={(index) => index <= step}
-              completedSteps={Array.from({ length: step }, (_, index) => index)}
-              onStepClick={(index) => setStep(index)}
-              nextButtonLabel="Next"
-              finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
-              disableSubmit={Boolean(
-                staleConflict ||
-                counsellors.isLoading ||
-                counsellors.isFetching ||
-                counsellors.isError ||
-                (setup && (usage.isLoading || usage.isError))
-              )}
-              saveAndNextButtonProps={{ loading: saving }}
-              onCancel={requestClose}
-              handleBack={() => setStep((current) => Math.max(0, current - 1))}
-              handleNext={(isLastStep, values: AdmissionIntakeSetupValues) => {
-                if (isLastStep) finish(values);
-                else setStep((current) => Math.min(2, current + 1));
-              }}
-              renderItem={({ formik, activeStep }) => {
-                const form = formik as FormikProps<AdmissionIntakeSetupValues>;
-                formikRef.current = form;
-                return (
-                  <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                    {activeStep === 0 && <InquiryHandlingStep formik={form} saving={saving} />}
-                    {activeStep === 1 && (
-                      <CounsellorRoutingStep
-                        formik={form}
-                        counsellors={counsellors.data ?? []}
-                        loading={counsellors.isLoading || counsellors.isFetching}
-                        loadError={counsellors.isError}
-                        saving={saving}
-                        onRetry={() => counsellors.refetch()}
-                      />
-                    )}
-                    {activeStep === 2 && (
-                      <ReviewStep
-                        values={form.values}
-                        counsellors={counsellors.data ?? []}
-                        editing={Boolean(setup)}
-                        usageCount={usageCount}
-                        usage={usage.data}
-                        usageError={usage.isError}
-                        onRetryUsage={() => usage.refetch()}
-                        onEdit={setStep}
-                        saving={saving}
-                      />
-                    )}
-                  </Stack>
-                );
-              }}
-            />
+              <Iconify icon="mdi:close" />
+            </IconButton>
+          </Stack>
+          <Divider />
+
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {staleConflict && (
+              <AdmissionIntakeNotice
+                severity="warning"
+                closeDisabled={reloadingLatest}
+                sx={{ m: 2, mb: 0, flexShrink: 0 }}
+                action={
+                  <Button
+                    size="small"
+                    color="warning"
+                    loading={reloadingLatest}
+                    onClick={reloadLatest}
+                  >
+                    Reload latest
+                  </Button>
+                }
+              >
+                This setup changed in another session. Reload the latest version before editing
+                again. Reloading replaces the values currently entered here.
+                {reloadError && (
+                  <Typography variant="caption" component="div" sx={{ mt: 0.5 }}>
+                    {reloadError}
+                  </Typography>
+                )}
+              </AdmissionIntakeNotice>
+            )}
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <CustomStepperWithFormik
+                initialValues={initialValues}
+                steps={[
+                  'Inquiry handling',
+                  'Counsellor routing',
+                  setup ? 'Review & update' : 'Review & create',
+                ]}
+                activeStep={step}
+                validationSchema={getAdmissionIntakeSetupStepSchema(
+                  step,
+                  !counsellors.isLoading && !counsellors.isFetching && !counsellors.isError
+                    ? (counsellors.data ?? []).map((person) => person.id)
+                    : undefined
+                )}
+                validateOnChange
+                showSaveButton={false}
+                validateForwardStepClick
+                isStepClickable={(index) => index <= step}
+                completedSteps={Array.from({ length: step }, (_, index) => index)}
+                onStepClick={(index) => setStep(index)}
+                nextButtonLabel="Next"
+                finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
+                disableSubmit={Boolean(
+                  staleConflict ||
+                  counsellors.isLoading ||
+                  counsellors.isFetching ||
+                  counsellors.isError ||
+                  (setup && (usage.isLoading || usage.isError))
+                )}
+                saveAndNextButtonProps={{ loading: saving }}
+                onCancel={requestClose}
+                handleBack={() => setStep((current) => Math.max(0, current - 1))}
+                handleNext={(isLastStep, values: AdmissionIntakeSetupValues) => {
+                  if (isLastStep) finish(values);
+                  else setStep((current) => Math.min(2, current + 1));
+                }}
+                renderItem={({ formik, activeStep }) => {
+                  const form = formik as FormikProps<AdmissionIntakeSetupValues>;
+                  formikRef.current = form;
+                  return (
+                    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
+                      {activeStep === 0 && <InquiryHandlingStep formik={form} saving={saving} />}
+                      {activeStep === 1 && (
+                        <CounsellorRoutingStep
+                          formik={form}
+                          counsellors={counsellors.data ?? []}
+                          loading={counsellors.isLoading || counsellors.isFetching}
+                          loadError={counsellors.isError}
+                          saving={saving}
+                          onRetry={() => counsellors.refetch()}
+                        />
+                      )}
+                      {activeStep === 2 && (
+                        <ReviewStep
+                          values={form.values}
+                          counsellors={counsellors.data ?? []}
+                          editing={Boolean(setup)}
+                          usageCount={usageCount}
+                          usage={usage.data}
+                          usageError={usage.isError}
+                          onRetryUsage={() => usage.refetch()}
+                          onEdit={setStep}
+                          saving={saving}
+                        />
+                      )}
+                    </Stack>
+                  );
+                }}
+              />
+            </Box>
           </Box>
         </Box>
-      </Box>
+      </Drawer>
 
       <ConfirmDialog
         open={confirmClose}
@@ -591,8 +605,8 @@ function CounsellorRoutingStep({
     >
       <Stack spacing={2}>
         <AdmissionIntakeNotice severity="info">
-          New inquiries and direct registrations go to the eligible counsellor with the fewest
-          active cases. That counsellor remains the journey owner through admission and onboarding.
+          New inquiries go to the eligible counsellor with the fewest active cases. That counsellor
+          remains the journey owner through admission and onboarding.
         </AdmissionIntakeNotice>
         {loadError && (
           <Alert
@@ -755,8 +769,11 @@ function ReviewStep({
         </AdmissionIntakeNotice>
       )}
       {editing && usage && <UsageNames usage={usage} />}
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={1} alignItems="stretch">
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ display: 'flex', '& > .MuiCard-root': { flex: 1, minWidth: 0 } }}
+        >
           <FormSectionCard
             icon="mdi:clipboard-text-outline"
             title="Inquiry handling"
@@ -822,7 +839,10 @@ function ReviewStep({
             </Stack>
           </FormSectionCard>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ display: 'flex', '& > .MuiCard-root': { flex: 1, minWidth: 0 } }}
+        >
           <FormSectionCard
             icon="mdi:account-switch-outline"
             title="Counsellor routing"

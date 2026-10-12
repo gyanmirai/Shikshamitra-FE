@@ -111,9 +111,9 @@ describe('workflow creation first step', () => {
     const firstTemplate = screen.getByRole('radio', { name: /Standard admission/ });
     const name = screen.getByRole('textbox', { name: 'Workflow name *' });
     expect(firstTemplate.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
     expect(screen.queryByText('Choose a workflow template')).toBeNull();
-    expect(firstTemplate.closest('.MuiCard-root')).not.toHaveTextContent('4 stages');
+    expect(firstTemplate.closest('.MuiCard-root')).not.toHaveTextContent('5 stages');
     expect(screen.queryByRole('radio', { name: /Selective admission with offer/ })).toBeNull();
     expect(screen.queryByRole('combobox', { name: /Inquiry form/ })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Journey preview' })).toBeInTheDocument();
@@ -124,8 +124,17 @@ describe('workflow creation first step', () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
-    expect(screen.getByText('Entrance assessment completed')).toBeInTheDocument();
+    const preview = screen.getByRole('heading', { name: 'Journey preview' }).closest('section')!;
+    expect(within(preview).getByText('5 stages')).toBeInTheDocument();
+    expect(within(preview).getByText('4 routes')).toBeInTheDocument();
+    const stages = screen.getByLabelText('Standard admission stage preview');
+    expect(stages).toHaveTextContent(
+      /Entrance assessment.*Admission form.*Document verification.*Payment.*Admission finalization/
+    );
+    await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
+    expect(within(preview).getByText('0 stages')).toBeInTheDocument();
+    expect(within(preview).getByText('0 routes')).toBeInTheDocument();
+    expect(within(preview).getByText('No stages yet')).toBeInTheDocument();
   });
 
   it('keeps the chosen template and registration form without an inquiry default', async () => {
@@ -136,7 +145,6 @@ describe('workflow creation first step', () => {
       target: { value: 'Grade 1 Admission' },
     });
     expect(screen.queryByRole('textbox', { name: 'Workflow code *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
     await selectForm(user, 'Registration form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
@@ -144,7 +152,7 @@ describe('workflow creation first step', () => {
     expect(onSave.mock.calls[0][0]).toMatchObject({
       name: 'Grade 1 Admission',
       code: '',
-      starterJourney: 'assessment',
+      starterJourney: 'standard',
       defaultInquiryFormDefinitionId: null,
       registrationFormDefinitionId: 'registration-form',
     });
@@ -298,7 +306,7 @@ describe('inline workflow details editing', () => {
       'step'
     );
     expect(screen.getByRole('button', { name: 'Step 2: Build journey' })).toBeEnabled();
-    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'Journey preview' })).toBeInTheDocument();
     expect(screen.getByText('School-specific registration')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Registration form *' })).toHaveValue(
@@ -358,7 +366,7 @@ describe('inline workflow details editing', () => {
   it('requires confirmation before replacing the journey and can keep the current graph', async () => {
     const user = userEvent.setup();
     const { onSave } = renderEdit();
-    await user.click(screen.getByRole('radio', { name: /Simple admission/ }));
+    await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
     expect(screen.queryByText('School-specific registration')).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Save & continue' }));
     expect(
@@ -381,13 +389,13 @@ describe('inline workflow details editing', () => {
   it('saves an explicitly confirmed replacement, retaining form selection', async () => {
     const user = userEvent.setup();
     const { onSave } = renderEdit();
-    await user.click(screen.getByRole('radio', { name: /Simple admission/ }));
+    await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
     await user.click(screen.getByRole('button', { name: 'Save & continue' }));
     await user.click(await screen.findByRole('button', { name: 'Replace & save' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        starterJourney: 'simple',
+        starterJourney: 'standard',
         registrationFormDefinitionId: registrationForm.id,
       })
     );

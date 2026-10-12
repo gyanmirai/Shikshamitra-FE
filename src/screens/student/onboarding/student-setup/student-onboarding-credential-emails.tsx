@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
@@ -13,14 +14,20 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { StudentSetupLoadingRows } from './student-setup-loading';
+import GuardianCredentialEmailDialog from './guardian-credential-email-dialog';
 
 export default function StudentOnboardingCredentialEmails({
   caseId,
   concurrencyStamp,
+  canEnableGuardianEmail = false,
+  caseLabel,
 }: {
   caseId: string;
   concurrencyStamp?: string | null;
+  canEnableGuardianEmail?: boolean;
+  caseLabel?: string;
 }) {
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const emails = useGetStudentCredentialEmailsQuery(caseId);
   const [sendEmail, sending] = useSendStudentCredentialEmailMutation();
 
@@ -50,7 +57,9 @@ export default function StudentOnboardingCredentialEmails({
   return (
     <Stack spacing={1}>
       <Stack direction="row" spacing={0.5} alignItems="center">
-        <Typography component="h4" variant="subtitle2">Credential Emails</Typography>
+        <Typography component="h4" variant="subtitle2">
+          Credential Emails
+        </Typography>
         <CustomTooltip
           title="Sent means the email sender accepted the message. New accounts receive initial credentials; existing parent accounts keep their password when another child is linked."
           arrow
@@ -60,7 +69,9 @@ export default function StudentOnboardingCredentialEmails({
           </IconButton>
         </CustomTooltip>
       </Stack>
-      {emails.isFetching && emails.data && <LinearProgress aria-label="Loading credential email status" />}
+      {emails.isFetching && emails.data && (
+        <LinearProgress aria-label="Loading credential email status" />
+      )}
       {emails.isFetching && !emails.isError && !emails.data && (
         <StudentSetupLoadingRows label="Loading credential email status" count={2} />
       )}
@@ -82,20 +93,36 @@ export default function StudentOnboardingCredentialEmails({
             spacing={0.5}
             sx={{ py: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="flex-start"
+              spacing={1}
+            >
               <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
                 {email.accountType === 'student' ? 'Student' : 'Parent/guardian'}:{' '}
                 {email.email || 'Email unavailable'}
               </Typography>
               <Label
-                color={email.emailEnabled === false ? 'default'
-                  : email.status === 'Sent' ? 'success'
-                    : email.status === 'Failed' ? 'error'
-                      : email.status === 'Blocked' ? 'warning'
-                        : email.status === 'Pending' ? 'info' : 'default'}
+                color={
+                  email.emailEnabled === false
+                    ? 'default'
+                    : email.status === 'Sent'
+                      ? 'success'
+                      : email.status === 'Failed'
+                        ? 'error'
+                        : email.status === 'Blocked'
+                          ? 'warning'
+                          : email.status === 'Pending'
+                            ? 'info'
+                            : 'default'
+                }
               >
-                {email.emailEnabled === false ? 'Disabled'
-                  : email.status === 'NotRequested' ? 'Not requested' : email.status}
+                {email.emailEnabled === false
+                  ? 'Disabled'
+                  : email.status === 'NotRequested'
+                    ? 'Not requested'
+                    : email.status}
               </Label>
             </Stack>
             {email.emailEnabled === false && (
@@ -103,6 +130,21 @@ export default function StudentOnboardingCredentialEmails({
                 Email sending is disabled in the saved settings.
               </Typography>
             )}
+            {email.accountType === 'guardian' &&
+              email.emailEnabled === false &&
+              canEnableGuardianEmail &&
+              concurrencyStamp && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:email-check-outline" />}
+                  sx={{ alignSelf: 'flex-start' }}
+                  disabled={emails.isFetching || sending.isLoading}
+                  onClick={() => setCorrectionOpen(true)}
+                >
+                  Enable parent email for this case
+                </Button>
+              )}
             {email.message && (
               <Typography variant="body2" color="text.secondary">
                 {email.message}
@@ -157,6 +199,14 @@ export default function StudentOnboardingCredentialEmails({
         >
           Refresh email status
         </Button>
+      )}
+      {correctionOpen && canEnableGuardianEmail && concurrencyStamp && (
+        <GuardianCredentialEmailDialog
+          caseId={caseId}
+          concurrencyStamp={concurrencyStamp}
+          caseLabel={caseLabel}
+          onClose={() => setCorrectionOpen(false)}
+        />
       )}
     </Stack>
   );

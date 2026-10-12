@@ -49,9 +49,7 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
    */
   const initialValues = useMemo(() => {
     const values = getOfferingInitialValues(offering);
-    return mode === 'clone'
-      ? { ...values, track: 0 as const, entryMode: 0 as const, applicationFormDefinitionId: null }
-      : values;
+    return mode === 'clone' ? { ...values, applicationFormDefinitionId: null } : values;
   }, [mode, offering]);
   const formik = useFormik({
     initialValues,

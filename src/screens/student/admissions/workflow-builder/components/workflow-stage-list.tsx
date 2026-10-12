@@ -1,7 +1,6 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { DragEndEvent } from '@dnd-kit/core';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
@@ -13,19 +12,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, Stack, Button, IconButton, Typography } from '@mui/material';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
-import {
-  useSensor,
-  DndContext,
-  useSensors,
-  PointerSensor,
-  closestCenter,
-  KeyboardSensor,
-} from '@dnd-kit/core';
 
 import { WorkflowStageCard } from './workflow-stage-card';
 import { AdmissionDialogTitle } from '../../admission-dialog-title';
@@ -49,7 +35,6 @@ type Props = {
   onAddPath: (stage: AdmissionWorkflowStage) => void;
   onEditPath: (transition: AdmissionWorkflowTransition) => void;
   onDeletePath: (transitionId: string) => void;
-  onDragEnd: (event: DragEndEvent) => void;
 };
 
 export function WorkflowStageList({
@@ -71,12 +56,8 @@ export function WorkflowStageList({
   onAddPath,
   onEditPath,
   onDeletePath,
-  onDragEnd,
 }: Props) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
   const stageIds = new Set(stages.map((stage) => stage.id));
   const hasEntryStage = stages.filter((stage) => stage.isEntryStage).length === 1;
   const hasTerminalStage = stages.some((stage) => stage.isTerminalStage);
@@ -130,7 +111,7 @@ export function WorkflowStageList({
             >
               <AdmissionDialogTitle
                 title="Journey"
-                helpText="Reordering changes the display order. Set each next step or special outcome to control where applicants go."
+                helpText="Stages are shown in their saved sequence. Each stage’s next step controls where applicants continue."
                 helpLabel="Journey arrangement information"
               />
             </Typography>
@@ -147,8 +128,8 @@ export function WorkflowStageList({
                     disabled={!canUndo}
                     onClick={onUndo}
                     sx={{
-                      width: 44,
-                      height: 44,
+                      width: 30,
+                      height: 30,
                       border: 1,
                       borderColor: 'divider',
                       borderRadius: 1,
@@ -165,8 +146,8 @@ export function WorkflowStageList({
                     disabled={!canRedo}
                     onClick={onRedo}
                     sx={{
-                      width: 44,
-                      height: 44,
+                      width: 30,
+                      height: 30,
                       border: 1,
                       borderColor: 'divider',
                       borderRadius: 1,
@@ -235,46 +216,44 @@ export function WorkflowStageList({
         )}
         {stages.length > 0 && (
           <Box sx={{ minWidth: 0, p: { xs: 1, sm: 2 }, pb: { xs: 1, sm: 1.5 } }}>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableContext
-                items={stages.map((stage) => stage.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <Stack
-                  spacing={1.25}
-                  sx={{
-                    position: 'relative',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 34,
-                      bottom: 34,
-                      left: { xs: 26, sm: 32 },
-                      width: '1px',
-                      bgcolor: 'divider',
-                    },
-                  }}
-                >
-                  {stages.map((stage, index) => (
-                    <WorkflowStageCard
-                      key={stage.id}
-                      stage={stage}
-                      stages={stages}
-                      transitions={transitions.filter((item) => item.fromStageId === stage.id)}
-                      stepNumber={index + 1}
-                      readOnly={readOnly}
-                      issueCount={issueCountByStage[stage.id] ?? 0}
-                      onEdit={() => onEdit(stage)}
-                      onDuplicate={() => onDuplicate(stage)}
-                      onDelete={() => onDelete(stage)}
-                      onAddPath={() => onAddPath(stage)}
-                      onEditPath={onEditPath}
-                      onDeletePath={onDeletePath}
-                    />
-                  ))}
-                </Stack>
-              </SortableContext>
-            </DndContext>
+            <Stack
+              component="ol"
+              aria-label="Journey stage sequence"
+              spacing={1.25}
+              sx={{
+                position: 'relative',
+                listStyle: 'none',
+                m: 0,
+                p: 0,
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 34,
+                  bottom: 34,
+                  left: 28,
+                  width: '1px',
+                  bgcolor: 'divider',
+                },
+              }}
+            >
+              {orderedStages.map((stage, index) => (
+                <WorkflowStageCard
+                  key={stage.id}
+                  stage={stage}
+                  stages={stages}
+                  transitions={transitions.filter((item) => item.fromStageId === stage.id)}
+                  stepNumber={index + 1}
+                  readOnly={readOnly}
+                  issueCount={issueCountByStage[stage.id] ?? 0}
+                  onEdit={() => onEdit(stage)}
+                  onDuplicate={() => onDuplicate(stage)}
+                  onDelete={() => onDelete(stage)}
+                  onAddPath={() => onAddPath(stage)}
+                  onEditPath={onEditPath}
+                  onDeletePath={onDeletePath}
+                />
+              ))}
+            </Stack>
           </Box>
         )}
       </Scrollbar>

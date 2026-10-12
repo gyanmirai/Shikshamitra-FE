@@ -68,6 +68,7 @@ export function useAdmissionOfferingEditor({ open, cycle, offering, onSave }: In
     hierarchyEmpty: !hierarchyQuery.isFetching && !hierarchyQuery.isError && hierarchy.length === 0,
     hierarchyLoading: hierarchyQuery.isFetching,
     queryFailed: hierarchyQuery.isError,
+    retryHierarchy: hierarchyQuery.refetch,
     validating: validationState.isLoading,
     ...definitionOptions,
   };

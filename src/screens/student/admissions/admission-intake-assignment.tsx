@@ -38,6 +38,7 @@ import {
   useGetAdmissionIntakeSetupsQuery,
   useGetAdmissionIntakeSetupUsageQuery,
   useArchiveAdmissionIntakeSetupMutation,
+  useRestoreAdmissionIntakeSetupMutation,
   useLazyGetAdmissionIntakeSetupUsageQuery,
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
@@ -98,10 +99,12 @@ function getSetupColumns({
   canEdit,
   onEdit,
   onArchive,
+  onRestore,
 }: {
   canEdit: boolean;
   onEdit: (setup: AdmissionIntakeSetup) => void;
   onArchive: (setup: AdmissionIntakeSetup) => void;
+  onRestore: (setup: AdmissionIntakeSetup) => void;
 }): IColumn[] {
   return [
     {
@@ -163,31 +166,43 @@ function getSetupColumns({
       minWidth: 92,
       render: (_value, row) => {
         const setup = row as SetupRow;
-        const actions =
-          canEdit && !setup.isArchived
-            ? [
-                {
-                  id: 'edit',
-                  label: 'Edit',
-                  icon: 'solar:pen-bold',
-                  onClick: () => onEdit(setup),
-                },
-                {
-                  id: 'archive',
-                  label: 'Archive',
-                  icon: 'mdi:archive-arrow-down-outline',
-                  onClick: () => onArchive(setup),
-                },
-              ]
-            : [];
+        const actions = canEdit
+          ? [
+              {
+                id: 'edit',
+                label: `Edit ${setup.name}`,
+                icon: 'solar:pen-bold',
+                disabled: setup.isArchived,
+                tooltip: setup.isArchived
+                  ? 'Restore this setup before editing.'
+                  : `Edit ${setup.name}`,
+                onClick: () => onEdit(setup),
+              },
+              {
+                id: setup.isArchived ? 'restore' : 'archive',
+                label: `${setup.isArchived ? 'Restore' : 'Archive'} ${setup.name}`,
+                icon: setup.isArchived
+                  ? 'mdi:archive-arrow-up-outline'
+                  : 'mdi:archive-arrow-down-outline',
+                disabled: !setup.isArchived && usageTotal(setup) > 0,
+                tooltip:
+                  !setup.isArchived && usageTotal(setup) > 0
+                    ? 'Remove this setup from active Offerings and inquiry links before archiving.'
+                    : `${setup.isArchived ? 'Restore' : 'Archive'} ${setup.name}`,
+                onClick: () => (setup.isArchived ? onRestore(setup) : onArchive(setup)),
+              },
+            ]
+          : [];
         return (
-          <AdaptiveThreeDotsActions
-            mobileDirectActionLimit={0}
-            actions={actions}
-            placement="top-right"
-            moreLabel={`More actions for ${setup.name}`}
-            sx={{ justifyContent: 'flex-end' }}
-          />
+          <Box onClick={(event) => event.stopPropagation()}>
+            <AdaptiveThreeDotsActions
+              mobileDirectActionLimit={0}
+              actions={actions}
+              placement="top-right"
+              moreLabel={`More actions for ${setup.name}`}
+              sx={{ justifyContent: 'flex-end' }}
+            />
+          </Box>
         );
       },
     },
@@ -215,6 +230,11 @@ export default function AdmissionIntakeAssignmentScreen() {
   const lastAutoOpenedLinkSetupId = useRef<string | null>(preselectedSetupId);
   const [loadArchiveUsage, archiveUsageState] = useLazyGetAdmissionIntakeSetupUsageQuery();
   const [archiveSetup, archiveState] = useArchiveAdmissionIntakeSetupMutation();
+  const [restoreSetup, restoreState] = useRestoreAdmissionIntakeSetupMutation();
+  const [restoreTarget, setRestoreTarget] = useState<AdmissionIntakeSetup | null>(null);
+  const [restoreError, setRestoreError] = useState('');
+  const [restoreConflict, setRestoreConflict] = useState(false);
+  const [restoreReloading, setRestoreReloading] = useState(false);
   const rows = (setups.data ?? []).map(toSetupRow);
   const setupListState = getAdmissionIntakeSetupListState({
     isLoading: setups.isLoading,
@@ -284,6 +304,41 @@ export default function AdmissionIntakeAssignmentScreen() {
       setArchiveReloading(false);
     }
   };
+  const confirmRestore = async () => {
+    if (!restoreTarget || restoreState.isLoading || restoreConflict || restoreReloading) return;
+    try {
+      await restoreSetup({
+        id: restoreTarget.id,
+        concurrencyStamp: restoreTarget.concurrencyStamp,
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Admission intake setup restored.' });
+      setRestoreTarget(null);
+    } catch (error) {
+      if (isAdmissionIntakeSetupConcurrencyError(error)) {
+        setRestoreConflict(true);
+        setRestoreError('');
+      } else {
+        setRestoreError(parseApiProblemDetail(error).detail || 'Unable to restore this setup.');
+      }
+    }
+  };
+  const reloadRestoreLatest = async () => {
+    if (!restoreTarget || restoreReloading) return;
+    setRestoreReloading(true);
+    setRestoreError('');
+    try {
+      const latest = (await setups.refetch().unwrap()).find(
+        (setup) => setup.id === restoreTarget.id
+      );
+      if (!latest) throw new Error('This admission intake setup is no longer available.');
+      setRestoreTarget(latest);
+      setRestoreConflict(false);
+    } catch (error) {
+      setRestoreError(parseApiProblemDetail(error).detail || 'Unable to reload this setup.');
+    } finally {
+      setRestoreReloading(false);
+    }
+  };
   const reloadEditorLatest = async () => {
     if (!editorSetup) return;
     const latestSetups = await setups.refetch().unwrap();
@@ -296,6 +351,11 @@ export default function AdmissionIntakeAssignmentScreen() {
     canEdit,
     onEdit: setEditorSetup,
     onArchive: requestArchive,
+    onRestore: (setup) => {
+      setRestoreTarget(setup);
+      setRestoreError('');
+      setRestoreConflict(false);
+    },
   });
 
   const pageHeader = (
@@ -315,7 +375,7 @@ export default function AdmissionIntakeAssignmentScreen() {
         breadcrumbs: {},
       }}
       action={
-        canEdit && editorSetup === undefined ? (
+        canEdit ? (
           <Button
             size="small"
             variant="contained"
@@ -324,6 +384,7 @@ export default function AdmissionIntakeAssignmentScreen() {
               if (view === 'links') setLinkCreateOpen(true);
               else setEditorSetup(null);
             }}
+            disabled={editorSetup !== undefined}
             sx={{ minWidth: 160 }}
           >
             {view === 'links' ? 'Create inquiry link' : 'Create intake setup'}
@@ -332,22 +393,6 @@ export default function AdmissionIntakeAssignmentScreen() {
       }
     />
   );
-
-  if (canEdit && editorSetup !== undefined) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
-        {pageHeader}
-        <AdmissionIntakeSetupEditor
-          key={
-            editorSetup ? `${editorSetup.id}:${editorSetup.concurrencyStamp}` : 'new-intake-setup'
-          }
-          setup={editorSetup}
-          onClose={() => setEditorSetup(undefined)}
-          onReloadLatest={editorSetup ? reloadEditorLatest : undefined}
-        />
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
@@ -464,26 +509,22 @@ export default function AdmissionIntakeAssignmentScreen() {
                 isPagination
                 isSearch
                 isFilter
-                // noDataText={
-                //   <Stack spacing={1.5} alignItems="center" sx={{ py: 3 }}>
-                //     <Iconify icon="mdi:account-switch-outline" width={40} color="text.disabled" />
-                //     <Box textAlign="center">
-                //       <Typography variant="subtitle2">No admission intake setups yet</Typography>
-                //       <Typography variant="body2" color="text.secondary">
-                //         Create inquiry handling and counsellor routing together.
-                //       </Typography>
-                //     </Box>
-                //     {canEdit && (
-                //       <Button
-                //         size="small"
-                //         variant="contained"
-                //         onClick={() => setEditorSetup(null)}
-                //       >
-                //         Create intake setup
-                //       </Button>
-                //     )}
-                //   </Stack>
-                // }
+                noDataText={
+                  <Stack spacing={1.5} alignItems="center" sx={{ py: 3 }}>
+                    <Iconify icon="mdi:account-switch-outline" width={40} color="text.disabled" />
+                    <Box textAlign="center">
+                      <Typography variant="subtitle2">No admission intake setups yet</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Create inquiry handling and counsellor routing together.
+                      </Typography>
+                    </Box>
+                    {canEdit && (
+                      <Button size="small" variant="contained" onClick={() => setEditorSetup(null)}>
+                        Create intake setup
+                      </Button>
+                    )}
+                  </Stack>
+                }
               />
             </Box>
           )}
@@ -504,6 +545,61 @@ export default function AdmissionIntakeAssignmentScreen() {
         </Box>
       )}
 
+      {canEdit && editorSetup !== undefined && (
+        <AdmissionIntakeSetupEditor
+          key={
+            editorSetup ? `${editorSetup.id}:${editorSetup.concurrencyStamp}` : 'new-intake-setup'
+          }
+          setup={editorSetup}
+          onClose={() => setEditorSetup(undefined)}
+          onReloadLatest={editorSetup ? reloadEditorLatest : undefined}
+        />
+      )}
+      <ConfirmDialog
+        open={Boolean(restoreTarget)}
+        onClose={() => {
+          if (restoreState.isLoading || restoreReloading) return;
+          setRestoreTarget(null);
+        }}
+        disableBackdropClick
+        disableCancel={restoreState.isLoading || restoreReloading}
+        title={
+          restoreConflict ? 'Reload Setup Before Restoring' : 'Restore Admission Intake Setup?'
+        }
+        content={
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              <strong>{restoreTarget?.name}</strong> will be available for editing and new
+              selections again. Existing Offerings, links and inquiry assignments keep their current
+              state.
+            </Typography>
+            {restoreError && <Alert severity="error">{restoreError}</Alert>}
+            {restoreConflict && (
+              <Alert
+                severity="warning"
+                action={
+                  <Button size="small" loading={restoreReloading} onClick={reloadRestoreLatest}>
+                    Reload latest
+                  </Button>
+                }
+              >
+                This setup changed in another session. Reload its latest status before restoring.
+              </Alert>
+            )}
+          </Stack>
+        }
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            loading={restoreState.isLoading}
+            disabled={restoreConflict || restoreReloading}
+            onClick={confirmRestore}
+          >
+            Restore setup
+          </Button>
+        }
+      />
       <SetupDetailsDrawer
         setup={viewSetup}
         onClose={() => setViewSetup(null)}

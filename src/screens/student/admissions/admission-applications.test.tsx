@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   clear: vi.fn(),
   search: '',
   canView: true,
+  canStart: false,
   academicYearId: 'year-1' as string | undefined,
   boardId: 'board-1',
   mediumId: 'medium-1',
@@ -20,7 +21,10 @@ const state = vi.hoisted(() => ({
   queryResult: {} as Record<string, unknown>,
 }));
 vi.mock('react-redux', () => ({
-  useSelector: () => [{ name: 'Students.Admissions.Applications.View', isGranted: state.canView }],
+  useSelector: () => [
+    { name: 'Students.Admissions.Applications.View', isGranted: state.canView },
+    { name: 'Students.Admissions.Applications.Add', isGranted: state.canStart },
+  ],
 }));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/student/admissions/applications',
@@ -33,7 +37,30 @@ vi.mock('next/link', () => ({
   ),
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
-  CustomBreadcrumbs: () => <h1>Applications</h1>,
+  CustomBreadcrumbs: ({ action }: { action?: React.ReactNode }) => (
+    <>
+      <h1>Applications</h1>
+      {action}
+    </>
+  ),
+}));
+vi.mock('./admission-direct-registration-dialog', () => ({
+  default: ({
+    open,
+    onClose,
+    academicYearId,
+  }: {
+    open: boolean;
+    onClose: () => void;
+    academicYearId: string;
+  }) =>
+    open ? (
+      <section aria-label="Special registration" data-year={academicYearId}>
+        <button type="button" onClick={onClose}>
+          Close registration
+        </button>
+      </section>
+    ) : null,
 }));
 vi.mock('./admission-query-error', () => ({
   AdmissionQueryError: ({ onRetry }: { onRetry: () => void }) => (
@@ -119,6 +146,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.search = 'board=board-1&medium=medium-1&page=2';
   state.canView = true;
+  state.canStart = false;
   state.academicYearId = 'year-1';
   state.boardId = 'board-1';
   state.mediumId = 'medium-1';
@@ -146,6 +174,26 @@ beforeEach(() => {
 });
 
 describe('Applications decision workspace', () => {
+  it('opens special registration only with the existing Start/Add permission and current academic year', () => {
+    state.canStart = true;
+    render(<AdmissionApplicationsScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Start special registration' }));
+    expect(screen.getByLabelText('Special registration')).toHaveAttribute('data-year', 'year-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Close registration' }));
+    expect(screen.queryByLabelText('Special registration')).not.toBeInTheDocument();
+  });
+  it('does not expose special-registration entry without Start/Add permission', () => {
+    render(<AdmissionApplicationsScreen />);
+    expect(
+      screen.queryByRole('button', { name: 'Start special registration' })
+    ).not.toBeInTheDocument();
+  });
+  it('disables special-registration entry when the academic year is missing', () => {
+    state.canStart = true;
+    state.academicYearId = undefined;
+    render(<AdmissionApplicationsScreen />);
+    expect(screen.getByRole('button', { name: 'Start special registration' })).toBeDisabled();
+  });
   it('requests only the decision phase with correct server paging and counts', () => {
     render(<AdmissionApplicationsScreen />);
     expect(state.query).toHaveBeenCalledWith(

@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   close: vi.fn(),
   error: vi.fn(),
   refetch: vi.fn(),
+  detailQuery: vi.fn(),
   detail: {} as QueryState<AdmissionInquiry>,
   management: {} as QueryState<AdmissionInquiryManagement>,
   permissions: [{ name: 'Students.Admissions.Inquiries.Add', isGranted: true }],
@@ -31,7 +32,10 @@ vi.mock('react-redux', () => ({
     selector({ auth: { permissions: mocks.permissions, user: { sub: 'counsellor-1' } } }),
 }));
 vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
-  useGetAdmissionInquiryQuery: () => mocks.detail,
+  useGetAdmissionInquiryQuery: (id: string, options: unknown) => {
+    mocks.detailQuery(id, options);
+    return mocks.detail;
+  },
 }));
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({
   useGetAdmissionInquiryManagementQuery: () => mocks.management,
@@ -130,20 +134,22 @@ beforeEach(() => {
   mocks.move.mockReset();
   mocks.error.mockReset();
   mocks.refetch.mockReset();
+  mocks.detailQuery.mockReset();
   mocks.shell.mockReset();
   mocks.permissions = [{ name: 'Students.Admissions.Inquiries.Add', isGranted: true }];
+  const freshStamp = Date.now() + 60_000;
   mocks.detail = {
     currentData: inquiry,
     isFetching: false,
     isError: false,
-    fulfilledTimeStamp: Date.now() + 60_000,
+    fulfilledTimeStamp: freshStamp,
     refetch: mocks.refetch,
   };
   mocks.management = {
     currentData: management,
     isFetching: false,
     isError: false,
-    fulfilledTimeStamp: Date.now() + 60_000,
+    fulfilledTimeStamp: freshStamp,
     refetch: mocks.refetch,
   };
   mocks.record.mockReturnValue({ unwrap: () => Promise.resolve(management) });
@@ -176,6 +182,44 @@ it('shows notes and exactly three statuses, then saves one atomic Interested fol
   );
   await waitFor(() => expect(mocks.close).toHaveBeenCalledOnce());
   expect(mocks.move).not.toHaveBeenCalled();
+});
+
+it('loads management before inquiry details and waits for the inquiry stamp refreshed after initialization', async () => {
+  const user = userEvent.setup();
+  const freshStamp = Date.now() + 60_000;
+  mocks.detail = {
+    ...mocks.detail,
+    fulfilledTimeStamp: freshStamp - 1,
+    currentData: { ...inquiry, concurrencyStamp: 'before-initialization' },
+  };
+  mocks.management = { ...mocks.management, isFetching: true };
+  const view = render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(mocks.detailQuery).toHaveBeenLastCalledWith(
+    inquiry.id,
+    expect.objectContaining({ skip: true })
+  );
+  mocks.management = { ...mocks.management, isFetching: false, fulfilledTimeStamp: freshStamp };
+  view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(mocks.detailQuery).toHaveBeenLastCalledWith(
+    inquiry.id,
+    expect.objectContaining({ skip: false })
+  );
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  mocks.detail = {
+    ...mocks.detail,
+    fulfilledTimeStamp: freshStamp + 1,
+    currentData: { ...inquiry, concurrencyStamp: 'after-initialization' },
+  };
+  view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+  await user.type(screen.getByRole('textbox', { name: 'Notes' }), 'Family chose another school');
+  fireEvent.change(screen.getByRole('combobox', { name: 'Status' }), { target: { value: '6' } });
+  await user.click(screen.getByRole('button', { name: 'Submit' }));
+  await waitFor(() =>
+    expect(mocks.record).toHaveBeenCalledWith(
+      expect.objectContaining({ inquiryConcurrencyStamp: 'after-initialization' })
+    )
+  );
 });
 
 it('prefills the active reminder when the detail response has no queue projection', async () => {
@@ -270,6 +314,22 @@ it('waits for both opening GETs before using defaults and preserves edits on lat
   );
 });
 
+it.each(['management', 'inquiry'])(
+  'blocks writes and offers retry when the %s stamp is missing',
+  async (missing) => {
+    const user = userEvent.setup();
+    if (missing === 'management')
+      mocks.management.currentData = { ...management, concurrencyStamp: '' };
+    else mocks.detail.currentData = { ...inquiry, concurrencyStamp: '' };
+    render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+    expect(screen.getByText('Follow-up notes could not be loaded.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(mocks.record).not.toHaveBeenCalled();
+  }
+);
+
 it('blocks empty notes and requires a future reminder for Pending', async () => {
   const user = userEvent.setup();
   render(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
@@ -327,8 +387,18 @@ it('preserves failed drafts and selected status across refetch while using fresh
     await screen.findByText('This inquiry changed. Reload its details and submit your note again.')
   ).toBeVisible();
   expect(mocks.close).not.toHaveBeenCalled();
+  const reloadStamp = Date.now() + 120_000;
+  mocks.management = {
+    ...mocks.management,
+    fulfilledTimeStamp: reloadStamp,
+    currentData: { ...management, concurrencyStamp: 'management-new' },
+  };
+  view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep this parent note');
   mocks.detail = {
     ...mocks.detail,
+    fulfilledTimeStamp: reloadStamp + 1,
     currentData: { ...inquiry, concurrencyStamp: 'inquiry-new', status: 6 },
   };
   mocks.management = {
@@ -417,7 +487,7 @@ it('blocks submit while loading or when queries fail and provides retry', async 
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByText('Follow-up notes could not be loaded.')).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(mocks.refetch).toHaveBeenCalledTimes(2);
+  expect(mocks.refetch).toHaveBeenCalledOnce();
   expect(mocks.record).not.toHaveBeenCalled();
 });
 

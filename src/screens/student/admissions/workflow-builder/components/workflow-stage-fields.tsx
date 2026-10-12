@@ -98,7 +98,7 @@ export function WorkflowStageFields(props: Props) {
           stages={stages}
           readOnly={readOnly}
         />
-        <FormSectionCard title="Special outcomes" icon="mdi:source-branch-plus">
+        <FormSectionCard title="Next step" icon="mdi:arrow-right">
           <WorkflowStageNextSteps
             stage={formik.values}
             stages={stages}

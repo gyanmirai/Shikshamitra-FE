@@ -11,7 +11,7 @@ import { vi, it, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, waitFor, renderHook, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent, renderHook } from '@testing-library/react';
 
 import { WorkflowSetupProgress } from './components/workflow-setup-progress';
 import { useWorkflowBuilderDraft } from './hooks/use-workflow-builder-draft';
@@ -121,7 +121,11 @@ it('saves the current journey, validates, reloads its stamp and publishes immedi
   mswServer.use(
     http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) => {
       requests.push('save');
-      saved = { ...workflow, ...(await request.json() as object), concurrencyStamp: 'saved-stamp' };
+      saved = {
+        ...workflow,
+        ...((await request.json()) as object),
+        concurrencyStamp: 'saved-stamp',
+      };
       return HttpResponse.json({ data: saved });
     }),
     http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () => {
@@ -140,11 +144,16 @@ it('saves the current journey, validates, reloads its stamp and publishes immedi
       return HttpResponse.json({ data: { ...saved, status: 1 } });
     })
   );
-  const wrapper = ({ children }: { children: ReactNode }) => <Provider store={store}>{children}</Provider>;
-  const { result } = renderHook(() => {
-    const draft = useWorkflowBuilderDraft(workflow, null);
-    return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
-  }, { wrapper });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(
+    () => {
+      const draft = useWorkflowBuilderDraft(workflow, null);
+      return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+    },
+    { wrapper }
+  );
   act(() => result.current.draft.markDirty());
   await act(async () => {
     const first = result.current.commands.publish();
@@ -162,18 +171,29 @@ it('keeps an invalid workflow in the builder without publishing', async () => {
   const store = makeStore();
   const publish = vi.fn();
   mswServer.use(
-    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', () => HttpResponse.json({ data: workflow })),
+    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', () =>
+      HttpResponse.json({ data: workflow })
+    ),
     http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () =>
-      HttpResponse.json({ data: { isValid: false, issues: [{ code: 'MissingRoute', message: 'Add a route' }] } })),
+      HttpResponse.json({
+        data: { isValid: false, issues: [{ code: 'MissingRoute', message: 'Add a route' }] },
+      })
+    ),
     http.post('*/api/student/enrollment/admissions/workflows/workflow-1/publish', () => {
-      publish(); return HttpResponse.json({ data: workflow });
+      publish();
+      return HttpResponse.json({ data: workflow });
     })
   );
-  const wrapper = ({ children }: { children: ReactNode }) => <Provider store={store}>{children}</Provider>;
-  const { result } = renderHook(() => {
-    const draft = useWorkflowBuilderDraft(workflow, null);
-    return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
-  }, { wrapper });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(
+    () => {
+      const draft = useWorkflowBuilderDraft(workflow, null);
+      return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+    },
+    { wrapper }
+  );
   await act(async () => expect(await result.current.commands.publish()).toBeNull());
   expect(publish).not.toHaveBeenCalled();
   expect(result.current.draft.sidePanel).toBe('validation');
@@ -283,7 +303,7 @@ it('saves a selected template to the same draft while retaining inquiry configur
     await result.current.commands.saveDetails({
       name: 'Updated',
       code: 'FRESH_ADMISSION',
-      starterJourney: 'simple',
+      starterJourney: 'standard',
       registrationFormDefinitionId: 'registration-2',
     });
   });
@@ -292,9 +312,13 @@ it('saves a selected template to the same draft while retaining inquiry configur
     concurrencyStamp: 'stamp-1',
     defaultInquiryFormDefinitionId: 'inquiry-1',
   });
-  expect(result.current.draft.stages).toHaveLength(3);
-  expect(result.current.draft.transitions).toHaveLength(2);
-  expect(JSON.parse(result.current.draft.stages[0].configurationJson!)).toMatchObject({
+  expect(result.current.draft.stages.map((stage) => stage.stageType)).toEqual([2, 1, 5, 4, 7]);
+  expect(result.current.draft.transitions).toHaveLength(4);
+  expect(requestBody).toMatchObject({
+    stages: result.current.draft.stages,
+    transitions: result.current.draft.transitions,
+  });
+  expect(JSON.parse(result.current.draft.stages[1].configurationJson!)).toMatchObject({
     formDefinitionId: 'registration-2',
   });
   expect(result.current.draft.loadedStamp).toBe('stamp-2');

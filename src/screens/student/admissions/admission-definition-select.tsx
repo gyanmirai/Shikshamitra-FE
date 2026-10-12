@@ -10,10 +10,13 @@ import type {
 
 type Props = {
   label: string;
+  name?: string;
+  required?: boolean;
   valueId: string | null;
   initialOption?: AdmissionDefinitionOption | null;
   fetchOptions: AdmissionDefinitionFetcher;
   onChange: (id: string | null) => void;
+  onBlur?: () => void;
   disabled?: boolean;
   error?: boolean;
   helperText?: ReactNode;
@@ -27,10 +30,13 @@ export const getAdmissionDefinitionLabel = (option: AdmissionDefinitionOption) =
 
 export function AdmissionDefinitionSelect({
   label,
+  name,
+  required,
   valueId,
   initialOption,
   fetchOptions,
   onChange,
+  onBlur,
   disabled,
   error,
   helperText,
@@ -47,6 +53,8 @@ export function AdmissionDefinitionSelect({
       fullWidth
       size="small"
       label={label}
+      name={name}
+      required={required}
       loadingLabel={`Loading ${label.toLowerCase()}`}
       value={value}
       disabled={disabled}
@@ -61,6 +69,7 @@ export function AdmissionDefinitionSelect({
         onChange(option?.id ?? null);
       }}
       error={error}
+      onBlur={onBlur}
       helperText={helperText}
       noOptionsText={noOptionsText}
     />

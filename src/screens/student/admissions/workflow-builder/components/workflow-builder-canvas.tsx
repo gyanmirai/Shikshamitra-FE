@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import type { DragEndEvent } from '@dnd-kit/core';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
@@ -25,7 +24,6 @@ type Props = {
   onEditStage: (stage: AdmissionWorkflowStage) => void;
   onDuplicateStage: (stage: AdmissionWorkflowStage) => void;
   onDeleteStage: (stage: AdmissionWorkflowStage) => void;
-  onDragEnd: (event: DragEndEvent) => void;
   onAddTransition: (stage: AdmissionWorkflowStage) => void;
   onEditTransition: (transition: AdmissionWorkflowTransition) => void;
   onDeleteTransition: (transitionId: string) => void;
@@ -47,7 +45,6 @@ export function WorkflowBuilderCanvas({
   onEditStage,
   onDuplicateStage,
   onDeleteStage,
-  onDragEnd,
   onAddTransition,
   onEditTransition,
   onDeleteTransition,
@@ -82,7 +79,6 @@ export function WorkflowBuilderCanvas({
         onAddPath={onAddTransition}
         onEditPath={onEditTransition}
         onDeletePath={onDeleteTransition}
-        onDragEnd={onDragEnd}
       />
     </Card>
   );

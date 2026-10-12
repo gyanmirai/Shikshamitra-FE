@@ -70,6 +70,19 @@ const caseTags = (id: string) => [
 
 export const studentOnboardingApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    enableGuardianCredentialEmail: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; reason: string; concurrencyStamp: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/guardian-credential-email/enable`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
+    }),
     getAvailableOnboardingOfferings: builder.query<OnboardingAvailableOffering[], string | void>({
       query: (academicYearId) => ({
         url: '/student/onboarding/settings/offerings',
@@ -772,6 +785,7 @@ export const studentOnboardingApi = api.injectEndpoints({
 });
 
 export const {
+  useEnableGuardianCredentialEmailMutation,
   useGetAvailableOnboardingOfferingsQuery,
   useReviewStudentOnboardingRequirementsMutation,
   useGetStudentOnboardingWorkflowDocumentsQuery,

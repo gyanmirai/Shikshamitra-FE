@@ -16,6 +16,8 @@ export function PaginatedSearchSelect<
   FreeSolo extends boolean | undefined = undefined,
 >({
   label,
+  name,
+  required,
   fetchOptions,
   minChars = 2,
   debounceMs = 400,
@@ -151,6 +153,8 @@ export function PaginatedSearchSelect<
         <TextField
           {...params}
           label={label}
+          name={name}
+          required={required}
           placeholder={placeholder}
           error={error}
           helperText={helperText}

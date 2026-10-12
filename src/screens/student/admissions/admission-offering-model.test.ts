@@ -1,3 +1,5 @@
+import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
+
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 
@@ -21,7 +23,7 @@ describe('Admission Offering form rules', () => {
     expect(bulkOfferingInitialValues.isActive).toBe(false);
   });
 
-  it('normalizes unused legacy offerings while preserving used admission paths', () => {
+  it('preserves selected admission types for unused and used offerings', () => {
     const legacy = {
       boardId: 'board',
       mediumId: 'medium',
@@ -34,8 +36,8 @@ describe('Admission Offering form rules', () => {
       isActive: false,
     };
     expect(getOfferingInitialValues({ ...legacy, applicationCount: 0 })).toMatchObject({
-      track: 0,
-      entryMode: 0,
+      track: 1,
+      entryMode: 1,
     });
     expect(getOfferingInitialValues({ ...legacy, applicationCount: 1 })).toMatchObject({
       track: 1,
@@ -104,7 +106,7 @@ describe('Admission Offering form rules', () => {
     expect(input.closeDate).toBeNull();
   });
 
-  it('serializes override dates as DateTimeOffset values', () => {
+  it('ignores stale override dates and always serializes cycle-date inheritance', () => {
     const input = toOfferingWriteInput({
       ...getOfferingInitialValues(),
       boardId: 'board',
@@ -117,14 +119,16 @@ describe('Admission Offering form rules', () => {
       useCycleDates: false,
     });
 
-    expect(input.openDate).toMatch(/^2026-10-01T00:00:00[+-]\d{2}:\d{2}$/);
-    expect(input.closeDate).toMatch(/^2027-03-31T00:00:00[+-]\d{2}:\d{2}$/);
+    expect(input.useCycleDates).toBe(true);
+    expect(input.openDate).toBeNull();
+    expect(input.closeDate).toBeNull();
   });
 
-  it('rejects a close date before the open date', async () => {
+  it('does not block saving on obsolete hidden custom-date validation', async () => {
     await expect(
       admissionOfferingSchema.validate({
         ...getOfferingInitialValues(),
+        name: 'Grade 5 admission',
         boardId: 'board',
         mediumId: 'medium',
         stageId: 'stage',
@@ -134,7 +138,31 @@ describe('Admission Offering form rules', () => {
         openDate: dayjs('2026-10-02'),
         closeDate: dayjs('2026-10-01'),
       })
-    ).rejects.toThrow('Close date must be on or after the open date');
+    ).resolves.toMatchObject({ code: 'GRADE-5' });
+  });
+
+  it('initializes edits and clones with cycle dates without mutating the stored offering', () => {
+    const stored = {
+      boardId: 'board',
+      mediumId: 'medium',
+      stageId: 'stage',
+      standardId: 'standard',
+      code: 'LEGACY',
+      useCycleDates: false,
+      openDate: '2026-10-05',
+      closeDate: '2026-10-20',
+      isActive: false,
+    };
+    expect(getOfferingInitialValues(stored)).toMatchObject({
+      useCycleDates: true,
+      openDate: null,
+      closeDate: null,
+    });
+    expect(stored).toMatchObject({
+      useCycleDates: false,
+      openDate: '2026-10-05',
+      closeDate: '2026-10-20',
+    });
   });
 
   it('validates the edit class step without requiring later configuration fields', async () => {
@@ -186,8 +214,25 @@ describe('Admission Offering form rules', () => {
   });
 
   it('allows incomplete bulk configuration only when saving inactive', async () => {
+    const admissionCycle: AdmissionCycle = {
+      id: 'cycle',
+      name: 'General Admission',
+      code: 'GENERAL',
+      academicYearId: 'year',
+      academicYearName: '2026-2027',
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      status: 1,
+      windowStatus: 1,
+      isAcceptingApplications: true,
+      linkedOfferingCount: 0,
+      activeOfferingCount: 0,
+      applicationCount: 0,
+      concurrencyStamp: 'stamp',
+    };
     const draft = {
       ...bulkOfferingInitialValues,
+      admissionCycle,
       boardId: 'board',
       mediumId: 'medium',
       standardIds: ['standard'],

@@ -3,6 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
@@ -14,6 +16,7 @@ import { academicClassFilterInput } from 'src/utils/student-academic-filter-quer
 import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { getApplicationWorkspaceUrl } from './application-detail/application-return-url';
 import { buildAdmissionApplicationsColumns } from './applications/admission-applications-columns';
@@ -36,6 +39,9 @@ export default function AdmissionApplicationsScreen() {
   const state = readAdmissionApplicationsState(params);
   const permissions = useSelector((value: RootState) => value.auth.permissions);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
+  // The backend Start capability aliases Applications.Add; keep that exact permission boundary.
+  const canStart = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
+  const registration = useBoolean();
   const queryString = params.toString();
   const returnTo = admissionApplicationsUrl(
     pathname,
@@ -146,6 +152,19 @@ export default function AdmissionApplicationsScreen() {
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Applications' },
         ]}
+        action={
+          canView && canStart ? (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:plus" />}
+              disabled={!academic.academicYearId}
+              onClick={registration.onTrue}
+            >
+              Start special registration
+            </Button>
+          ) : undefined
+        }
       />
       {!canView ? (
         <Alert severity="warning">
@@ -224,6 +243,14 @@ export default function AdmissionApplicationsScreen() {
             />
           </Box>
         </>
+      )}
+      {canView && canStart && academic.academicYearId && (
+        <AdmissionDirectRegistrationDialog
+          key={academic.academicYearId}
+          academicYearId={academic.academicYearId}
+          open={registration.value}
+          onClose={registration.onFalse}
+        />
       )}
     </Box>
   );

@@ -81,9 +81,9 @@ describe('manual workflow template drawer', () => {
     );
     await user.unhover(screen.getByRole('button', { name: 'Workflow template information' }));
     await user.click(screen.getByRole('button', { name: 'Preview selected journey' }));
-    expect(screen.getByText('1. Application form submitted')).toBeVisible();
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
-    expect(screen.getByText('2. Entrance assessment completed')).toBeVisible();
+    expect(screen.getByText('1. Entrance assessment')).toBeVisible();
+    expect(screen.getByText('2. Admission form')).toBeVisible();
+    expect(screen.getAllByRole('radio')).toHaveLength(1);
   });
 
   it('shows the forms already attached to the workflow', async () => {
@@ -102,13 +102,13 @@ describe('manual workflow template drawer', () => {
     const props = renderDrawer();
 
     expect(document.querySelector('.MuiDrawer-paperAnchorRight')).toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    await user.click(screen.getByRole('radio', { name: /Standard admission/ }));
     await selectForm(user, 'Published inquiry form (optional)', 'Parent inquiry · v2');
     await selectForm(user, 'Published registration form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Replace journey' }));
 
     await waitFor(() =>
-      expect(props.onApply).toHaveBeenCalledWith('assessment', 'registration-form', 'inquiry-form')
+      expect(props.onApply).toHaveBeenCalledWith('standard', 'registration-form', 'inquiry-form')
     );
     expect(props.onClose).toHaveBeenCalledOnce();
   });
@@ -121,7 +121,7 @@ describe('manual workflow template drawer', () => {
     expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
     expect(props.onApply).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    await selectForm(user, 'Published inquiry form (optional)', 'Parent inquiry · v2');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('Discard template selections?')).toBeInTheDocument();
     expect(props.onClose).not.toHaveBeenCalled();

@@ -45,7 +45,7 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
       title="Assessment setup"
       descriptionTooltip={
         enabled
-          ? `Staff must record an outcome.${policy.schedulingEnabled ? ' Book an exam session first in Assessments.' : ' No exam session or booking is required.'}${policy.attendanceRequired ? ' Record attendance.' : ''}${policy.scoringEnabled ? ' Enter marks unless the applicant is absent.' : ''} Failed, absent and retake outcomes need an explicit next step. Authorized staff can waive the assessment with a reason.`
+          ? `Staff must record an outcome.${policy.schedulingEnabled ? ' Book an exam session first in Assessments.' : ' No exam session or booking is required.'}${policy.attendanceRequired ? ' Record attendance.' : ''}${policy.scoringEnabled ? ' Enter marks unless the applicant is absent.' : ''} Failed, absent and retake outcomes cannot use the usual next step. Staff can arrange an allowed retake or end the journey as Withdrawn. Authorized staff can waive the assessment with a reason.`
           : 'Staff complete this stage using the existing workflow controls. Choose a result or exam process to use separate assessment records.'
       }
     >
