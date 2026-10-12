@@ -15,8 +15,11 @@ vi.mock('src/components/customDialog', () => ({
   default: ({ open, title, children, onSubmit, hasForm }: any) => !open ? null : <section role="dialog" aria-label={title}><h2>{title}</h2>{hasForm === false ? children : <form onSubmit={onSubmit}>{children}</form>}</section>,
   DialogScrollContent: ({ children }: any) => <div>{children}</div>,
 }));
-vi.mock('src/components/custom-select', () => ({ default: ({ label, options, value, onChange, disabled }: any) => <label>{label}<select aria-label={label} value={value} disabled={disabled}
-  onChange={event => onChange(event.target.value)}><option value="" disabled>Select</option>{options.map((option: any) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label> }));
+vi.mock('src/components/custom-select', () => ({ default: ({ label, options, value, onChange, disabled }: any) => <>
+  <label htmlFor={`mock-select-${label.replace(/\s+/g, '-')}`}>{label}</label>
+  <select id={`mock-select-${label.replace(/\s+/g, '-')}`} value={value} disabled={disabled}
+    onChange={event => onChange(event.target.value)}><option value="" disabled>Select</option>{options.map((option: any) => <option key={option.id} value={option.id}>{option.name}</option>)}</select>
+</> }));
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({ DatePicker: ({ label }: any) => <div>{label}</div> }));
 vi.mock('src/components/customizabaleTable', () => ({ default: ({ columns, data }: any) => <div>{columns.map((column: any) => <div key={column.id}>{column.label}</div>)}
   {data.map((row: any) => <div key={row.id}>{columns.map((column: any) => <span key={column.id}>{column.render ? column.render(row[column.id], row) : row[column.id]}</span>)}</div>)}</div> }));
@@ -74,7 +77,7 @@ it('filters through academic stage and clears student selection when hierarchy c
   expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveValue('medium-1');
   expect(screen.getByRole('combobox', { name: 'Class' })).toBeDisabled();
   expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
-  expect(screen.queryByRole('option', { name: 'All', exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: /^All$/ })).not.toBeInTheDocument();
   expect(screen.queryByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeInTheDocument();
   await user.selectOptions(screen.getByRole('combobox', { name: 'Board' }), 'board-1');
   await user.selectOptions(screen.getByRole('combobox', { name: 'Medium' }), 'medium-1');
