@@ -1,5 +1,5 @@
 import { ThemeProvider } from '@mui/material/styles';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -28,10 +28,12 @@ const mocks = vi.hoisted(() => ({
     ],
     standards: [
       { id: 'class-1', name: 'Class 1', parentId: 'medium-1' },
+      { id: 'class-10', name: 'Class 10', parentId: 'medium-1' },
       { id: 'class-2', name: 'Class 1', parentId: 'medium-2' },
     ],
     divisions: [
       { id: 'division-1', name: 'A', parentId: 'class-1' },
+      { id: 'division-10', name: 'B', parentId: 'class-10' },
       { id: 'division-2', name: 'A', parentId: 'class-2' },
     ],
   },
@@ -58,9 +60,11 @@ vi.mock('src/components/custom-stepper', () => ({
   </div>,
 }));
 vi.mock('src/components/custom-select', () => ({
-  default: ({ label, options, onChange }: any) => <div aria-label={`${label} choices`}>
+  default: ({ label, options, onChange, disabled }: any) => <div aria-label={`${label} choices`} aria-disabled={disabled}>
     {options.map((option: any) => <button key={option.id} type="button"
-      onClick={() => onChange([option.id])}>{option.name} ({option.id})</button>)}
+      disabled={disabled} onClick={() => onChange([option.id])}>{option.name} ({option.id})</button>)}
+    {label === 'Class' && options.length > 1 && <button type="button" disabled={disabled}
+      onClick={() => onChange([options[0].id, options[1].id])}>Select multiple classes</button>}
   </div>,
 }));
 vi.mock('src/components/customizabaleTable', () => ({ default: (props: any) => {
@@ -155,6 +159,20 @@ it('loads choices and students for the global academic year and narrows the full
   });
 });
 
+it('includes every division and disables the division filter when multiple classes are selected', async () => {
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);
+  await openStudentsStep();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Class 1 (class-1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'A (division-1)' }));
+  expect(mocks.directoryInput.divisionIds).toEqual(['division-1']);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Select multiple classes' }));
+  expect(screen.getByLabelText('Division choices')).toHaveAttribute('aria-disabled', 'true');
+  expect(screen.getByText('All divisions are included when multiple classes are selected.')).toBeVisible();
+  expect(mocks.directoryInput).toMatchObject({ standardIds: ['class-1', 'class-10'], divisionIds: [] });
+});
+
 it('clears academic selections when the global year changes', async () => {
   const { rerender } = render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);
   await openStudentsStep();
@@ -247,18 +265,25 @@ it('restores saved academic choices and students when editing, then saves them a
   await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({ id: 'template-1', body: expect.objectContaining({ selection: template.selection }) })));
 });
 
-it('prevents selecting a student assigned to another template in the same year', async () => {
+it('allows selecting a student assigned to another template and saves the transfer', async () => {
   const student = { studentId: 'student-2', firstName: 'Meera', grNumber: 'GR-2', standardName: 'Class 1', divisionName: 'A', hasPhoto: false };
   mocks.directoryItems = [student];
   mocks.otherTemplates = [{ id: 'template-other', name: 'Existing card', selection: { academicYearId: 'year-1', studentIds: [student.studentId] } }];
+  mocks.save.mockReturnValue({ unwrap: async () => ({ ...mocks.template, id: 'template-new', name: 'Student card' }) });
   render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder initialTemplate={null} onClose={vi.fn()} /></ThemeProvider>);
   await openStudentsStep();
 
   const selectionColumn = mocks.tableProps.columns.find((column: any) => column.id === 'select');
   const checkbox = selectionColumn.render(null, student);
-  expect(checkbox.props.disabled).toBe(true);
+  expect(checkbox.props.disabled).toBe(false);
   expect(mocks.tableProps.columns.find((column: any) => column.id === 'assignedTemplate').render(null, student)).toBe('Existing card');
-  expect(selectionColumn.renderColumn().props.disabled).toBe(true);
+  expect(selectionColumn.renderColumn().props.disabled).toBe(false);
+  act(() => checkbox.props.onChange());
+  expect(screen.getByText('Saving will move 1 selected student from their current template to this one.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.objectContaining({
+    selection: expect.objectContaining({ academicYearId: 'year-1', studentIds: ['student-2'] }),
+  })));
 });
 
 it('preserves saved students from another year during a design-only edit', async () => {

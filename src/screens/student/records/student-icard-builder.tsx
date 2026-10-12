@@ -166,7 +166,10 @@ export default function StudentICardBuilder({
     setIdsToHydrate((previous) => previous.slice(hydrationBatch.length));
   }, [idsToHydrate, hydrationBatch.length, savedStudents.currentData, savedStudents.isFetching]);
 
-  const currentScope = scopeYear.current === academicYearId ? scope : emptyScope;
+  const yearScope = scopeYear.current === academicYearId ? scope : emptyScope;
+  const currentScope = yearScope.standardIds.length > 1
+    ? { ...yearScope, divisionIds: [] }
+    : yearScope;
   const options = academicYearId ? optionsQuery.currentData : undefined;
   const boardOptions = useMemo(
     () => (options?.boards ?? []).filter((item) => item.parentId === academicYearId),
@@ -198,8 +201,7 @@ export default function StudentICardBuilder({
     });
     return assignments;
   }, [templatesQuery.currentData, template?.id, academicYearId]);
-  const availableRows = rows.filter((row) => !assignedElsewhere.has(row.studentId));
-  const conflictingRows = selectedRows.filter((row) => assignedElsewhere.has(row.studentId));
+  const movingRows = selectedRows.filter((row) => assignedElsewhere.has(row.studentId));
   const sample = previews[0] ?? (selectedRows[0] ? {
     studentSnapshot: {
       StudentName: studentName(selectedRows[0]), GRNumber: selectedRows[0].grNumber ?? '',
@@ -221,19 +223,19 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const scopeSelect = (
-    label: string, key: keyof Scope, choices: StudentDirectoryOption[], patch: (value: string[]) => Partial<Scope>
+    label: string, key: keyof Scope, choices: StudentDirectoryOption[], patch: (value: string[]) => Partial<Scope>,
+    disabled = false
   ) => (
     <CustomSelect
       label={label} multiple value={currentScope[key]} options={choices}
       labelKey="name" valueKey="id" isSearch
       isLoading={optionsQuery.isFetching}
       onChange={(value) => changeScope(patch(asStringArray(value)))}
-      disabled={busy || !academicYearId || optionsQuery.isError}
+      disabled={disabled || busy || !academicYearId || optionsQuery.isError}
       formControlProps={{ sx: { width: '100%', minWidth: 0 } }}
     />
   );
   const toggleStudent = (student: StudentDirectoryItem) => {
-    if (templatesQuery.isLoading || (assignedElsewhere.has(student.studentId) && !selected[student.studentId])) return;
     setSelectionEdited(true);
     setSelected((previous) => {
       const next = { ...previous };
@@ -245,12 +247,12 @@ export default function StudentICardBuilder({
     issueKey.current = '';
   };
   const togglePage = () => {
-    if (templatesQuery.isLoading || !availableRows.length) return;
+    if (!rows.length) return;
     setSelectionEdited(true);
-    const allSelected = availableRows.every((row) => selected[row.studentId]);
+    const allSelected = rows.every((row) => selected[row.studentId]);
     setSelected((previous) => {
       const next = { ...previous };
-      availableRows.forEach((row) => {
+      rows.forEach((row) => {
         if (allSelected) delete next[row.studentId];
         else if (Object.keys(next).length < 100) next[row.studentId] = row;
       });
@@ -275,11 +277,6 @@ export default function StudentICardBuilder({
       setError('Choose at least one card field.');
       return null;
     }
-    if (conflictingRows.length) {
-      setStep(2);
-      setError(`${conflictingRows.length} selected student${conflictingRows.length === 1 ? ' is' : 's are'} already assigned to another template. Remove the selection before saving.`);
-      return null;
-    }
     try {
       const selection: IdCardSelection = template.selection?.academicYearId &&
         template.selection.academicYearId !== academicYearId && !selectionEdited
@@ -296,14 +293,8 @@ export default function StudentICardBuilder({
       setError('');
       shikshaMitraToast.success({ message: 'Student I-Card template saved.' });
       return saved;
-    } catch (failure) {
-      const response = failure as { data?: { error?: { code?: string }; code?: string } };
-      const code = response.data?.error?.code ?? response.data?.code;
-      if (code === 'Students:Records:IdTemplateStudentConflict') {
-        templatesQuery.refetch();
-        setStep(2);
-        setError('One or more students were assigned to another template. Refresh the student selection and try again.');
-      } else setError('The template could not be saved. Refresh if another user changed it.');
+    } catch {
+      setError('The template could not be saved. Refresh if another user changed it.');
       return null;
     }
   };
@@ -373,13 +364,13 @@ export default function StudentICardBuilder({
   const columns: IColumn[] = [
     { id: 'select', label: '', isSort: false, isFilter: false, excludeFromExport: true, minWidth: 50,
       renderColumn: () => <Checkbox size="small" aria-label="Select all students on this page"
-        checked={availableRows.length > 0 && availableRows.every((row) => !!selected[row.studentId])}
-        indeterminate={availableRows.some((row) => !!selected[row.studentId]) && !availableRows.every((row) => !!selected[row.studentId])}
-        disabled={!availableRows.length || busy || templatesQuery.isLoading} onChange={togglePage} />,
+        checked={rows.length > 0 && rows.every((row) => !!selected[row.studentId])}
+        indeterminate={rows.some((row) => !!selected[row.studentId]) && !rows.every((row) => !!selected[row.studentId])}
+        disabled={!rows.length || busy} onChange={togglePage} />,
       render: (_value, data) => {
       const row = data as StudentDirectoryItem;
       return <Checkbox size="small" aria-label={`Select ${studentName(row)}`} checked={!!selected[row.studentId]}
-        disabled={busy || templatesQuery.isLoading || (!selected[row.studentId] && (selectedRows.length >= 100 || assignedElsewhere.has(row.studentId)))} onChange={() => toggleStudent(row)} />;
+        disabled={busy || (!selected[row.studentId] && selectedRows.length >= 100)} onChange={() => toggleStudent(row)} />;
     } },
     { id: 'firstName', label: 'Student', minWidth: 190, render: (_value, data) => studentName(data as StudentDirectoryItem) },
     { id: 'assignedTemplate', label: 'Assigned template', minWidth: 160, isSort: false, isFilter: false,
@@ -470,15 +461,16 @@ export default function StudentICardBuilder({
               {idsToHydrate.length > 0 && savedStudents.isFetching && <LinearProgress aria-label="Loading saved students" />}
               {savedStudents.isError && idsToHydrate.length > 0 && <Alert severity="error" action={<Button onClick={() => savedStudents.refetch()}>Retry</Button>}>Saved students could not be loaded.</Alert>}
               {selectionWarning && <Alert severity="warning" onClose={() => setSelectionWarning('')}>{selectionWarning}</Alert>}
-              {conflictingRows.length > 0 && <Alert severity="warning">{conflictingRows.length} saved student{conflictingRows.length === 1 ? ' is' : 's are'} also assigned to another template. Deselect before saving.</Alert>}
-              {templatesQuery.isError && <Alert severity="warning" action={<Button onClick={() => templatesQuery.refetch()}>Retry</Button>}>Other template assignments could not be loaded. The server will check for duplicates when you save.</Alert>}
+              {movingRows.length > 0 && <Alert severity="info">Saving will move {movingRows.length} selected student{movingRows.length === 1 ? '' : 's'} from their current template to this one.</Alert>}
+              {templatesQuery.isError && <Alert severity="warning" action={<Button onClick={() => templatesQuery.refetch()}>Retry</Button>}>Other template assignments could not be loaded. Saving will still move any selected students assigned to another template.</Alert>}
               {optionsQuery.isError && <Alert severity="error" action={<Button onClick={() => optionsQuery.refetch()}>Retry</Button>}>Academic choices could not be loaded.</Alert>}
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Board', 'boardIds', boardOptions, (value) => ({ boardIds: value, mediumIds: [], standardIds: [], divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Medium', 'mediumIds', mediumOptions, (value) => ({ mediumIds: value, standardIds: [], divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Class', 'standardIds', classOptions, (value) => ({ standardIds: value, divisionIds: [] }))}</Grid>
-                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Division', 'divisionIds', divisionOptions, (value) => ({ divisionIds: value }))}</Grid>
+                <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Division', 'divisionIds', divisionOptions, (value) => ({ divisionIds: value }), currentScope.standardIds.length > 1)}</Grid>
               </Grid>
+              {currentScope.standardIds.length > 1 && <Typography variant="caption" color="text.secondary">All divisions are included when multiple classes are selected.</Typography>}
               <Typography variant="body2" color="text.secondary">{selectedRows.length}/100 students selected</Typography>
               {directory.isError && <Alert severity="error" action={<Button onClick={() => directory.refetch()}>Retry</Button>}>Students could not be loaded.</Alert>}
               <CustomizableTable tableId="student-icard-builder-selection" tableTitle="Students" columns={columns} data={rows}
