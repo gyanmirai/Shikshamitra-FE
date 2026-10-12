@@ -100,6 +100,8 @@ export default function StudentICardBuilder({
   const [scope, setScope] = useState<Scope>(emptyScope);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [sorting, setSorting] = useState('');
   const [selected, setSelected] = useState<Record<string, StudentDirectoryItem>>({});
   const [previews, setPreviews] = useState<IdCard[]>([]);
   const [error, setError] = useState('');
@@ -145,8 +147,8 @@ export default function StudentICardBuilder({
     (!currentScope.standardIds.length || currentScope.standardIds.includes(item.parentId ?? ''))
   ), [options?.divisions, currentScope.standardIds, classOptions]);
   const directory = useGetStudentRecordsDirectoryQuery({
-    population: 'Active', maxResultCount: 25, skipCount: page * 25,
-    academicYearId, search: search.trim() || undefined, ...currentScope,
+    population: 'Active', maxResultCount: pageSize, skipCount: page * pageSize,
+    academicYearId, search: search.trim() || undefined, sorting: sorting || undefined, ...currentScope,
   }, { skip: step < 2 || !academicYearId });
   const rows = directory.currentData?.items ?? [];
   const selectedRows = scopeYear.current === academicYearId ? Object.values(selected) : [];
@@ -293,16 +295,21 @@ export default function StudentICardBuilder({
   if (!template) return <LinearProgress aria-label="Loading student I-Card template" />;
 
   const columns: IColumn[] = [
-    { id: 'select', label: '', isSort: false, isFilter: false, minWidth: 50, render: (_value, data) => {
+    { id: 'select', label: '', isSort: false, isFilter: false, excludeFromExport: true, minWidth: 50,
+      renderColumn: () => <Checkbox size="small" aria-label="Select all students on this page"
+        checked={rows.length > 0 && rows.every((row) => !!selected[row.studentId])}
+        indeterminate={rows.some((row) => !!selected[row.studentId]) && !rows.every((row) => !!selected[row.studentId])}
+        disabled={!rows.length || busy} onChange={togglePage} />,
+      render: (_value, data) => {
       const row = data as StudentDirectoryItem;
       return <Checkbox size="small" aria-label={`Select ${studentName(row)}`} checked={!!selected[row.studentId]}
         disabled={busy || (!selected[row.studentId] && selectedRows.length >= 100)} onChange={() => toggleStudent(row)} />;
     } },
     { id: 'firstName', label: 'Student', minWidth: 190, render: (_value, data) => studentName(data as StudentDirectoryItem) },
     { id: 'grNumber', label: 'GR number', minWidth: 110 },
-    { id: 'standardName', label: 'Class', minWidth: 110 },
-    { id: 'divisionName', label: 'Division', minWidth: 110 },
-    { id: 'hasPhoto', label: 'Photo', minWidth: 80, render: (value) => value ? 'Ready' : 'Missing' },
+    { id: 'standardName', label: 'Class', minWidth: 110, isSort: false },
+    { id: 'divisionName', label: 'Division', minWidth: 110, isSort: false },
+    { id: 'hasPhoto', label: 'Photo', minWidth: 80, isSort: false, render: (value) => value ? 'Ready' : 'Missing' },
   ];
 
   return (
@@ -387,21 +394,24 @@ export default function StudentICardBuilder({
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Class', 'standardIds', classOptions, (value) => ({ standardIds: value, divisionIds: [] }))}</Grid>
                 <Grid size={{ xs: 12, sm: 6, lg: 3 }}>{scopeSelect('Division', 'divisionIds', divisionOptions, (value) => ({ divisionIds: value }))}</Grid>
               </Grid>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                <TextField size="small" label="Search students" value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} sx={{ flex: 1 }} />
-                <Button variant="outlined" disabled={!rows.length || busy} onClick={togglePage}>{rows.length && rows.every((row) => selected[row.studentId]) ? 'Clear page' : 'Select page'}</Button>
-                <Typography variant="body2">{selectedRows.length}/100 selected</Typography>
-              </Stack>
+              <Typography variant="body2" color="text.secondary">{selectedRows.length}/100 students selected</Typography>
               {directory.isError && <Alert severity="error" action={<Button onClick={() => directory.refetch()}>Retry</Button>}>Students could not be loaded.</Alert>}
-              <CustomizableTable tableId="student-icard-builder-selection" columns={columns} data={rows} isLoading={directory.isFetching}
-                isSearch={false} isFilter={false} isPagination={false} isShowedDense={false} noDataText="No active students match these selections."
+              <CustomizableTable tableId="student-icard-builder-selection" tableTitle="Students" columns={columns} data={rows}
+                isLoading={directory.isFetching} totalCount={directory.currentData?.totalCount ?? 0}
+                serverSidePagination serverSideSearch serverSideSort serverSideSortMode="single"
+                page={page} rowsPerPage={pageSize} rowsPerPageOptions={[10, 25, 50, 100]}
+                searchTerm={search} sorts={sorting ? [{ column: sorting.startsWith('grnumber') ? 'grNumber' : 'firstName',
+                  direction: sorting.endsWith('desc') ? 'desc' : 'asc' }] : []}
+                onServerPagination={(nextPage, nextPageSize) => { setPageSize(nextPageSize); setPage(nextPage - 1); }}
+                onServerSearch={(value) => { if (value !== search) { setSearch(value); setPage(0); } }}
+                onServerSort={(_column, nextSorts) => {
+                  setSorting(nextSorts.length ? `${nextSorts[0].column === 'firstName' ? 'name' : 'grnumber'} ${nextSorts[0].direction}` : '');
+                  setPage(0);
+                }}
+                searchFieldProps={{ placeholder: 'Search students by name or GR number',
+                  inputProps: { 'aria-label': 'Search students' } }}
+                noDataText="No active students match these selections."
                 wrapperProps={{ sx: { minHeight: 280 } }} tableContainerProps={{ sx: { maxHeight: 360 } }} />
-              <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
-                <Typography variant="caption">{directory.currentData?.totalCount ?? 0} matching students</Typography>
-                <Button disabled={page === 0 || directory.isFetching} onClick={() => setPage((value) => value - 1)}>Previous</Button>
-                <Typography variant="caption">Page {page + 1}</Typography>
-                <Button disabled={directory.isFetching || (page + 1) * 25 >= (directory.currentData?.totalCount ?? 0)} onClick={() => setPage((value) => value + 1)}>Next</Button>
-              </Stack>
             </Stack>}
             {step === 3 && <Stack spacing={2}>
               <Typography variant="subtitle1">Review cards</Typography>

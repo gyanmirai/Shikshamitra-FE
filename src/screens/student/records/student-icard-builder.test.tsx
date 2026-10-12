@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   yearId: 'year-1',
   optionsInput: {} as any,
   directoryInput: {} as any,
+  tableProps: {} as any,
   options: {
     academicYears: [{ id: 'year-1', name: '2026-27' }, { id: 'year-2', name: '2027-28' }],
     boards: [
@@ -59,7 +60,15 @@ vi.mock('src/components/custom-select', () => ({
       onClick={() => onChange([option.id])}>{option.name} ({option.id})</button>)}
   </div>,
 }));
-vi.mock('src/components/customizabaleTable', () => ({ default: () => <div /> }));
+vi.mock('src/components/customizabaleTable', () => ({ default: (props: any) => {
+  mocks.tableProps = props;
+  return <div aria-label="Student selection table">
+    <button type="button" onClick={() => props.onServerPagination(2, props.rowsPerPage)}>Table next page</button>
+    <button type="button" onClick={() => props.onServerPagination(1, 50)}>Table 50 rows</button>
+    <button type="button" onClick={() => props.onServerSearch('Asha')}>Table search</button>
+    <button type="button" onClick={() => props.onServerSort('grNumber', [{ column: 'grNumber', direction: 'desc' }])}>Table sort</button>
+  </div>;
+} }));
 vi.mock('src/redux/student/records/student-records-api', () => ({
   useGetStudentRecordsDirectoryOptionsQuery: (input: any) => {
     mocks.optionsInput = input;
@@ -73,8 +82,35 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
 
 beforeEach(() => {
   mocks.yearId = 'year-1';
+  mocks.tableProps = {};
   mocks.save.mockReset();
   mocks.toast.mockReset();
+});
+
+it('uses the shared table toolbar and footer for server search, sorting and pagination', async () => {
+  render(<ThemeProvider theme={createTheme(defaultSettings)}><StudentICardBuilder onClose={vi.fn()} /></ThemeProvider>);
+  await openStudentsStep();
+
+  expect(mocks.tableProps).toMatchObject({
+    tableTitle: 'Students', serverSidePagination: true, serverSideSearch: true,
+    serverSideSort: true, page: 0, rowsPerPage: 25,
+  });
+  expect(mocks.tableProps.isSearch).not.toBe(false);
+  expect(mocks.tableProps.isFilter).not.toBe(false);
+  expect(mocks.tableProps.isPagination).not.toBe(false);
+  expect(mocks.tableProps.isShowedDense).not.toBe(false);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Table next page' }));
+  expect(mocks.directoryInput).toMatchObject({ skipCount: 25, maxResultCount: 25 });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Table 50 rows' }));
+  expect(mocks.directoryInput).toMatchObject({ skipCount: 0, maxResultCount: 50 });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Table search' }));
+  expect(mocks.directoryInput).toMatchObject({ skipCount: 0, search: 'Asha' });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Table sort' }));
+  expect(mocks.directoryInput).toMatchObject({ sorting: 'grnumber desc', skipCount: 0 });
 });
 
 const openStudentsStep = async () => {
