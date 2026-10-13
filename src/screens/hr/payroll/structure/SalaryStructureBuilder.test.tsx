@@ -50,7 +50,10 @@ vi.mock('src/redux/hr/statutory-scheme-api', () => ({
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 vi.mock('src/redux/PF/PFApi', () => ({
-  useGetPFQuery: () => ({ data: { items: [] }, isError: false }),
+  useGetPFQuery: () => ({
+    data: { items: [{ id: 'pf-rule', name: 'School PF', isActive: true }] },
+    isError: false,
+  }),
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({
   useUpdateEmployeeStatusMutation: () => [mocks.activate, { isLoading: false }],
@@ -186,29 +189,139 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(screen.getByRole('button', { name: 'ESIC details' })).toBeVisible();
   });
 
-  it('keeps the PF label, description and keyboard toggle accessible without help changing the draft', async () => {
+  it('offers explicit, accessible PF opt-in and opt-out choices above the gross ceiling', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    const pfSwitch = screen.getByRole('switch', { name: 'PF enrollment' });
-    expect(pfSwitch).toHaveAccessibleDescription('Deduct Provident Fund for this employee');
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.type(screen.getByLabelText('Monthly salary'), '30000');
+    const choices = screen.getByRole('radiogroup', { name: 'PF enrollment' });
+    expect(choices).toHaveAccessibleDescription(
+      'Above ₹25,000 gross salary, choose whether to enroll in PF.'
+    );
+    const optIn = screen.getByRole('radio', { name: 'Opt in to PF' });
+    const optOut = screen.getByRole('radio', { name: 'Opt out of PF' });
+    expect(optIn).not.toBeChecked();
+    expect(optOut).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
 
-    await user.click(screen.getByText('PF enrollment', { exact: true }));
-    expect(pfSwitch).toBeChecked();
+    await user.click(optIn);
+    expect(optIn).toBeChecked();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     );
     await user.click(screen.getByRole('button', { name: 'About PF applicability' }));
-    expect(pfSwitch).toBeChecked();
-    await user.click(pfSwitch);
-    await user.keyboard(' ');
-    expect(pfSwitch).toBeChecked();
+    expect(optIn).toBeChecked();
+    await user.click(optOut);
+    expect(optOut).toBeChecked();
+    await user.keyboard('{ArrowLeft}');
+    expect(optIn).toBeChecked();
     expect(mocks.calculate).not.toHaveBeenCalled();
     expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
+  it.each(['24999', '25000'])('requires PF automatically at gross salary %s', async (amount) => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.type(screen.getByLabelText('Monthly salary'), amount);
+    expect(screen.getByText('PF is mandatory for gross salary up to ₹25,000.')).toBeVisible();
+    expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        monthlyAmount: Number(amount),
+        pfApplicable: true,
+        pfRuleId: 'pf-rule',
+      })
+    );
+  });
+
+  it('requires an explicit choice when salary increases from mandatory to optional', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    const amount = screen.getByLabelText('Monthly salary');
+    await user.type(amount, '25000');
+    await user.clear(amount);
+    await user.type(amount, '25001');
+    expect(screen.getByRole('radio', { name: 'Opt in to PF' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Opt out of PF' })).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({ monthlyAmount: 25001, pfApplicable: false, pfRuleId: null })
+    );
+  });
+
+  it('uses calculated gross for CTC even when the quoted employer cost is above the ceiling', async () => {
+    const user = userEvent.setup();
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 24500,
+        employerCost: 26000,
+        pfEligibility: {
+          grossSalary: 24500,
+          wages: 14700,
+          coverageCeiling: 25000,
+          status: 'MANDATORY',
+          enrollmentRequired: true,
+          canSave: true,
+        },
+      }),
+    });
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '26000');
+    await user.click(screen.getByRole('radio', { name: 'Opt in to PF' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(
+      await screen.findByText('PF is mandatory for gross salary up to ₹25,000.')
+    ).toBeVisible();
+    expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+  });
+
+  it('requires a voluntary choice after calculating an undecided CTC salary', async () => {
+    const user = userEvent.setup();
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 30000,
+        employerCost: 30000,
+        pfEligibility: {
+          grossSalary: 30000,
+          wages: 18000,
+          coverageCeiling: 25000,
+          status: 'VOLUNTARY',
+          enrollmentRequired: false,
+          canSave: true,
+        },
+      }),
+    });
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '30000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(await screen.findByText('Choose whether to opt in or opt out of PF')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+    expect(mocks.calculate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ pfApplicable: false, pfRuleId: null })
+    );
   });
 
   it('preserves formatted decimal and large amounts in calculation and save payloads', async () => {

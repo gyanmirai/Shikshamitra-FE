@@ -427,7 +427,12 @@ One-time adjustments remain in monthly payroll.
 ## PF enrollment and ESIC calculation settings
 
 Salary setup retains the Gross/CTC choice and one monthly amount.
-Authorized HR staff record previous PF membership, enrollment, and voluntary consent evidence during onboarding or later salary updates.
+Authorized HR staff record previous PF membership during onboarding salary setup or later salary updates.
+PF enrollment shows Required for mandatory enrollment, or explicit Opt in to PF and Opt out of PF choices for voluntary enrollment.
+New voluntary enrollment has no preselected choice, and calculation or saving waits for that choice.
+Opting in reveals the PF rule and voluntary consent reference; opting out excludes the PF rule from the request.
+CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
+Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.

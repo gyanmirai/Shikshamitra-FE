@@ -127,6 +127,7 @@ export type PfEnrollment = {
   consentReference?: string | null;
 };
 export type PfEligibility = {
+  grossSalary?: number | null;
   status: string;
   wages: number;
   coverageCeiling: number;
