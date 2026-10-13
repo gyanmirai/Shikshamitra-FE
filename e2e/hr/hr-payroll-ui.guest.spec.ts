@@ -272,12 +272,12 @@ test.describe('Payroll interface consistency', () => {
     await page.goto('/hr/payroll/setting/statutory-schemes');
     await page.getByLabel('ESIC eligibility basis', { exact: true }).click();
     await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
-    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveValue(
+    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveText(
       'Payable basic salary'
     );
-    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveAttribute(
-      'readonly',
-      ''
+    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveJSProperty(
+      'tagName',
+      'OUTPUT'
     );
     await page.getByRole('combobox', { name: 'Basic salary component', exact: true }).click();
     await page.getByRole('option', { name: 'School Basic', exact: true }).click();
@@ -330,13 +330,44 @@ test.describe('Payroll interface consistency', () => {
       page.getByRole('switch', { name: 'Use administrator rate override' })
     ).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0);
-    await expect(
-      page.getByText(/Other statutory inclusions and adjustments still apply/)
-    ).toBeVisible();
+    await page.getByRole('button', { name: 'About ESIC salary bases' }).focus();
+    await expect(page.getByRole('tooltip')).toContainText(
+      'Other statutory inclusions and adjustments still apply'
+    );
     expect(
       await page.locator('body').evaluate((element) => element.scrollWidth <= window.innerWidth)
     ).toBe(true);
   });
+
+  for (const width of [390, 768, 1440]) {
+    test(`ESIC compact settings preserve derived bases and rates at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await mockPayroll(page, { esiEnabled: true });
+      await page.goto('/hr/payroll/setting/statutory-schemes');
+      const basis = page.getByLabel('ESIC calculation basis', { exact: true });
+      const eligibility = page.getByRole('combobox', { name: /^ESIC eligibility basis/ });
+      await expect(basis).toHaveText('Payable included salary components');
+      await expect(page.getByText('Employee 0.75%', { exact: true })).toBeVisible();
+      await expect(page.getByText('Employer 3.25%', { exact: true })).toBeVisible();
+      await expect(page.getByLabel('Rate override reason', { exact: true })).toHaveCount(0);
+      await eligibility.click();
+      await page.getByRole('option', { name: 'Gross salary', exact: true }).click();
+      await expect(basis).toHaveText('Payable gross salary');
+      await eligibility.click();
+      await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
+      await page.getByRole('combobox', { name: 'Basic salary component', exact: true }).click();
+      await page.getByRole('option', { name: 'School Basic', exact: true }).click();
+      await expect(basis).toHaveText('Payable basic salary');
+      expect(
+        await page.locator('body').evaluate((element) => element.scrollWidth <= window.innerWidth)
+      ).toBe(true);
+      await page.getByRole('button', { name: 'Save', exact: true }).scrollIntoViewIfNeeded();
+      await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeInViewport();
+      await expectCompactActions(page);
+    });
+  }
 
   test.use({ storageState: { cookies: [], origins: [] } });
   const screens = [

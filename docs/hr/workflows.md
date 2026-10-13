@@ -436,6 +436,8 @@ ESIC settings provide an effective month, an ESIC eligibility basis, a derived E
 Eligibility uses the full-month salary under the selected included-components, Gross, or Basic source.
 The calculation basis displays the payable salary under the same source after attendance adjustments.
 The displayed calculation basis is read-only and does not introduce an independent policy setting.
+The compact form pairs related controls, displays the calculation basis as a read-only summary, and shows default contribution rates inline.
+Salary-basis guidance is available through a keyboard-accessible help control; documented rate overrides keep their warning and evidence fields visible.
 Calculation editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
 Read-only users retain the compact settings and impact preview without enabled calculation controls.
 Basic uses a school earning component marked Basic in the salary template, including percentage-of-Gross formulas such as 60 percent.

@@ -211,11 +211,12 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
           {error && <Alert severity="error">{error}</Alert>}
           <SectionCard
             title="ESIC"
+            gridProps={{ spacing: 2 }}
             paperProps={{
               sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
             }}
           >
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
               <FormControlLabel
                 label="Calculate ESIC in payroll"
                 control={
@@ -228,11 +229,32 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                 }
               />
             </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Effective payroll month"
+                type="month"
+                size="small"
+                fullWidth
+                value={form.values.effectiveMonth ?? ''}
+                disabled={!canEdit || busy}
+                slotProps={{ inputLabel: { shrink: true } }}
+                error={Boolean(form.errors.effectiveMonth)}
+                helperText={form.errors.effectiveMonth}
+                onChange={(event) => {
+                  const effectiveMonth = event.target.value;
+                  const version =
+                    settings.history.find(
+                      (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
+                    ) ?? settings.current;
+                  form.setFieldValue('effectiveMonth', effectiveMonth);
+                  if (version) form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
+                }}
+              />
+            </Grid>
             <Grid size={12}>
               <EsiCalculationFields
                 form={form}
                 disabled={!canEdit || busy}
-                settings={settings}
                 components={treatments.data ?? []}
                 rule={rules.data}
               />
