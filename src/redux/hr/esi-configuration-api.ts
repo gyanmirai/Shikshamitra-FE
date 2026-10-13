@@ -3,8 +3,10 @@ import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import type { EsiComponentTreatment } from './statutory-scheme-api';
 
+export type EsiSalaryBasis = 'CLASSIFIED_EARNINGS' | 'GROSS' | 'BASIC_COMPONENT';
 export type EsiCalculationSettings = {
-  wageBasis: 'CLASSIFIED_EARNINGS' | 'GROSS' | 'BASIC_COMPONENT';
+  eligibilityBasis: EsiSalaryBasis;
+  calculationBasis: EsiSalaryBasis;
   basicComponentId?: string | null;
   employeePercentage?: number | null;
   employerPercentage?: number | null;

@@ -64,7 +64,10 @@ async function mockPayroll(
     effectiveMonth: '2026-10',
     concurrencyStamp: 'ui-stamp',
     isCancelled: false,
-    calculationSettings: { wageBasis: 'CLASSIFIED_EARNINGS' },
+    calculationSettings: {
+      eligibilityBasis: 'CLASSIFIED_EARNINGS',
+      calculationBasis: 'CLASSIFIED_EARNINGS',
+    },
   };
   await page.clock.setFixedTime(new Date('2026-10-09T04:00:00Z'));
   await page.addInitScript((academicYear) => {
@@ -270,14 +273,12 @@ test.describe('Payroll interface consistency', () => {
   }) => {
     await mockPayroll(page, { esiEnabled: true });
     await page.goto('/hr/payroll/setting/statutory-schemes');
-    await page.getByLabel('ESIC eligibility basis', { exact: true }).click();
+    await page.getByRole('combobox', { name: /^ESIC eligibility basis/ }).click();
+    await page.getByRole('option', { name: 'Gross salary', exact: true }).click();
+    await page.getByRole('combobox', { name: /^ESIC calculation basis/ }).click();
     await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
-    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveText(
-      'Payable basic salary'
-    );
-    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveJSProperty(
-      'tagName',
-      'OUTPUT'
+    await expect(page.getByRole('combobox', { name: /^ESIC eligibility basis/ })).toHaveText(
+      'Gross salary'
     );
     await page.getByRole('combobox', { name: 'Basic salary component', exact: true }).click();
     await page.getByRole('option', { name: 'School Basic', exact: true }).click();
@@ -296,7 +297,8 @@ test.describe('Payroll interface consistency', () => {
     expect(
       (await previewRequest).postDataJSON().configurationDraft.calculationSettings
     ).toMatchObject({
-      wageBasis: 'BASIC_COMPONENT',
+      eligibilityBasis: 'GROSS',
+      calculationBasis: 'BASIC_COMPONENT',
       employeePercentage: 0.5,
       employerPercentage: 4,
     });
@@ -307,7 +309,8 @@ test.describe('Payroll interface consistency', () => {
     expect((await saved).postDataJSON()).toMatchObject({
       effectiveMonth: '2026-10',
       calculationSettings: {
-        wageBasis: 'BASIC_COMPONENT',
+        eligibilityBasis: 'GROSS',
+        calculationBasis: 'BASIC_COMPONENT',
         basicComponentId: '22222222-2222-2222-2222-222222222222',
         employeePercentage: 0.5,
         employerPercentage: 4,
@@ -326,6 +329,7 @@ test.describe('Payroll interface consistency', () => {
     await mockPayroll(page, { esiEnabled: true, denyCalculation: true });
     await page.goto('/hr/payroll/setting/statutory-schemes');
     await expect(page.getByLabel('ESIC eligibility basis', { exact: true })).toBeDisabled();
+    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toBeDisabled();
     await expect(page.getByRole('switch', { name: 'Enable ESIC for payroll' })).toBeDisabled();
     await expect(
       page.getByRole('switch', { name: 'Use administrator rate override' })
@@ -341,7 +345,7 @@ test.describe('Payroll interface consistency', () => {
   });
 
   for (const width of [390, 768, 1440]) {
-    test(`ESIC compact settings preserve derived bases and rates at ${width}px`, async ({
+    test(`ESIC compact settings preserve independent bases and rates at ${width}px`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -356,20 +360,35 @@ test.describe('Payroll interface consistency', () => {
       await expect(page.getByText('Inactive', { exact: true })).toBeVisible();
       await enabled.check();
       await expect(page.getByText('Active', { exact: true })).toBeVisible();
-      const basis = page.getByLabel('ESIC calculation basis', { exact: true });
+      const basis = page.getByRole('combobox', { name: /^ESIC calculation basis/ });
       const eligibility = page.getByRole('combobox', { name: /^ESIC eligibility basis/ });
-      await expect(basis).toHaveText('Payable included salary components');
+      await expect(basis).toHaveText('Included salary components');
       await expect(page.getByText('Employee 0.75%', { exact: true })).toBeVisible();
       await expect(page.getByText('Employer 3.25%', { exact: true })).toBeVisible();
       await expect(page.getByLabel('Rate override reason', { exact: true })).toHaveCount(0);
       await eligibility.click();
       await page.getByRole('option', { name: 'Gross salary', exact: true }).click();
-      await expect(basis).toHaveText('Payable gross salary');
-      await eligibility.click();
+      await expect(basis).toHaveText('Included salary components');
+      await basis.click();
       await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
       await page.getByRole('combobox', { name: 'Basic salary component', exact: true }).click();
       await page.getByRole('option', { name: 'School Basic', exact: true }).click();
-      await expect(basis).toHaveText('Payable basic salary');
+      await eligibility.click();
+      await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
+      await expect(basis).toHaveText('Basic salary');
+      await expect(page.getByRole('combobox', { name: /^Basic salary component/ })).toHaveText(
+        'School Basic'
+      );
+      await basis.click();
+      await page.getByRole('option', { name: 'Gross salary', exact: true }).click();
+      await expect(eligibility).toHaveText('Basic salary');
+      await expect(page.getByRole('combobox', { name: /^Basic salary component/ })).toHaveText(
+        'School Basic'
+      );
+      await eligibility.click();
+      await page.getByRole('option', { name: 'Gross salary', exact: true }).click();
+      await expect(basis).toHaveText('Gross salary');
+      await expect(page.getByRole('combobox', { name: /^Basic salary component/ })).toHaveCount(0);
       expect(
         await page.locator('body').evaluate((element) => element.scrollWidth <= window.innerWidth)
       ).toBe(true);

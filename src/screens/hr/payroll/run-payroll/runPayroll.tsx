@@ -77,7 +77,13 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 type PayrollStatutoryTrace = {
-  CalculationSettings?: { WageBasis?: string; OverrideReason?: string; EvidenceReference?: string };
+  CalculationSettings?: {
+    EligibilityBasis?: string;
+    CalculationBasis?: string;
+    WageBasis?: string;
+    OverrideReason?: string;
+    EvidenceReference?: string;
+  };
   EligibilityWages?: number;
   EmployeePercentage?: number;
   EmployerPercentage?: number;

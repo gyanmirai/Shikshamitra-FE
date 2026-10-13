@@ -12,7 +12,10 @@ export function configurationValues(settings: EsiConfigurationSettings): EsiConf
     ) ?? settings.current;
   return {
     effectiveMonth: settings.suggestedEffectiveMonth,
-    calculationSettings: selected.calculationSettings ?? { wageBasis: 'CLASSIFIED_EARNINGS' },
+    calculationSettings: selected.calculationSettings ?? {
+      eligibilityBasis: 'CLASSIFIED_EARNINGS',
+      calculationBasis: 'CLASSIFIED_EARNINGS',
+    },
     concurrencyStamp: selected.concurrencyStamp,
     enabled: selected.enabled,
     registrationNumber: selected.registrationNumber ?? '',
@@ -29,7 +32,11 @@ export function validateConfiguration(
   if (!values.effectiveMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(values.effectiveMonth))
     errors.effectiveMonth = 'Choose an effective month.';
   const config = values.calculationSettings;
-  if (config?.wageBasis === 'BASIC_COMPONENT' && !config.basicComponentId)
+  if (
+    (config?.eligibilityBasis === 'BASIC_COMPONENT' ||
+      config?.calculationBasis === 'BASIC_COMPONENT') &&
+    !config.basicComponentId
+  )
     errors.calculationSettings = { basicComponentId: 'Choose the Basic salary component.' };
   if (config?.employeePercentage != null || config?.employerPercentage != null) {
     const configurationErrors: Record<string, string> = {};

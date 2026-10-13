@@ -432,11 +432,12 @@ The salary calculation returns the enrollment decision and blocks saving when re
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 
-ESIC settings provide an effective month, an ESIC eligibility basis, a derived ESIC calculation basis, and optional documented employee/employer rate overrides.
+ESIC settings provide an effective month, independently selectable ESIC eligibility and calculation bases, and optional documented employee/employer rate overrides.
 Eligibility uses the full-month salary under the selected included-components, Gross, or Basic source.
-The calculation basis displays the payable salary under the same source after attendance adjustments.
-The displayed calculation basis is read-only and does not introduce an independent policy setting.
-The compact form pairs related controls, displays the calculation basis as a read-only summary, and shows default contribution rates inline.
+The calculation basis chooses the payable salary source after attendance adjustments.
+Changing one basis preserves the other choice.
+The compact form pairs both selectors and shows default contribution rates inline.
+Selecting Basic for either basis reveals one shared Basic salary component selector; its selection is retained until neither basis uses Basic.
 Salary-basis guidance is available through a keyboard-accessible help control; documented rate overrides keep their warning and evidence fields visible.
 Calculation editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
 Read-only users retain the compact settings and impact preview without enabled calculation controls.

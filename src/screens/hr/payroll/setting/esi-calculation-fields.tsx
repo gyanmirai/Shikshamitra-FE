@@ -29,37 +29,65 @@ type Props = {
 };
 
 export function EsiCalculationFields({ form, disabled, components, rule }: Props) {
-  const config = form.values.calculationSettings ?? { wageBasis: 'CLASSIFIED_EARNINGS' };
+  const config = form.values.calculationSettings;
   const override = config.employeePercentage != null || config.employerPercentage != null;
   const errors: FormikErrors<EsiCalculationSettings> = form.errors.calculationSettings ?? {};
-  const update = (change: Partial<EsiCalculationSettings>) =>
-    form.setFieldValue('calculationSettings', { ...config, ...change });
+  const update = (change: Partial<EsiCalculationSettings>) => {
+    const next = { ...config, ...change };
+    if (next.eligibilityBasis !== 'BASIC_COMPONENT' && next.calculationBasis !== 'BASIC_COMPONENT')
+      next.basicComponentId = null;
+    return form.setFieldValue('calculationSettings', next);
+  };
   const errorFor = (key: keyof EsiCalculationSettings) => ({
     error: Boolean(errors?.[key]),
     helperText: errors?.[key],
   });
   return (
     <Stack spacing={2}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
-        <TextField
-          label="ESIC eligibility basis"
-          select
-          size="small"
-          fullWidth
-          value={config.wageBasis}
-          disabled={disabled || !form.values.enabled}
-          onChange={(event) =>
-            update({
-              wageBasis: event.target.value as EsiCalculationSettings['wageBasis'],
-              basicComponentId: null,
-            })
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Typography variant="subtitle2">Salary bases</Typography>
+        <CustomTooltip
+          arrow
+          title={
+            <Box sx={{ p: 1.5 }}>
+              Choose eligibility and calculation bases independently. Eligibility uses full-month
+              salary. Calculation uses payable salary after attendance adjustments. Basic must use a
+              component marked Basic in the salary template. Other statutory inclusions and
+              adjustments still apply.
+            </Box>
           }
         >
-          <MenuItem value="CLASSIFIED_EARNINGS">Included salary components</MenuItem>
-          <MenuItem value="GROSS">Gross salary</MenuItem>
-          <MenuItem value="BASIC_COMPONENT">Basic salary</MenuItem>
-        </TextField>
-        {form.values.enabled && config.wageBasis === 'BASIC_COMPONENT' && (
+          <IconButton size="small" aria-label="About ESIC salary bases">
+            <InfoOutlined sx={{ fontSize: 16 }} />
+          </IconButton>
+        </CustomTooltip>
+      </Stack>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+        {(['eligibilityBasis', 'calculationBasis'] as const).map((key) => (
+          <TextField
+            key={key}
+            label={key === 'eligibilityBasis' ? 'ESIC eligibility basis' : 'ESIC calculation basis'}
+            select
+            size="small"
+            fullWidth
+            value={config[key]}
+            disabled={disabled || !form.values.enabled}
+            helperText={
+              key === 'eligibilityBasis'
+                ? 'Full-month salary for eligibility'
+                : 'Payable salary after attendance adjustments'
+            }
+            onChange={(event) => update({ [key]: event.target.value })}
+          >
+            <MenuItem value="CLASSIFIED_EARNINGS">Included salary components</MenuItem>
+            <MenuItem value="GROSS">Gross salary</MenuItem>
+            <MenuItem value="BASIC_COMPONENT">Basic salary</MenuItem>
+          </TextField>
+        ))}
+      </Stack>
+      {form.values.enabled &&
+        (config.eligibilityBasis === 'BASIC_COMPONENT' ||
+          config.calculationBasis === 'BASIC_COMPONENT') && (
           <TextField
             label="Basic salary component"
             select
@@ -68,6 +96,7 @@ export function EsiCalculationFields({ form, disabled, components, rule }: Props
             disabled={disabled}
             value={config.basicComponentId ?? ''}
             {...errorFor('basicComponentId')}
+            helperText={errors.basicComponentId || 'Used wherever Basic salary is selected.'}
             onChange={(event) => update({ basicComponentId: event.target.value })}
           >
             <MenuItem value="">Choose a component</MenuItem>
@@ -78,47 +107,6 @@ export function EsiCalculationFields({ form, disabled, components, rule }: Props
             ))}
           </TextField>
         )}
-      </Stack>
-      {form.values.enabled && (
-        <Box sx={{ px: 1.5, py: 1, borderRadius: 1, bgcolor: 'background.neutral' }}>
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
-              ESIC calculation basis
-            </Typography>
-            <CustomTooltip
-              arrow
-              title={
-                <Box sx={{ p: 1.5 }}>
-                  Eligibility uses full-month salary. Calculation uses payable salary after
-                  attendance adjustments. Basic must use a component marked Basic in the salary
-                  template. Other statutory inclusions and adjustments still apply.
-                </Box>
-              }
-            >
-              <IconButton size="small" aria-label="About ESIC salary bases">
-                <InfoOutlined sx={{ fontSize: 16 }} />
-              </IconButton>
-            </CustomTooltip>
-          </Stack>
-          <Typography
-            component="output"
-            aria-label="ESIC calculation basis"
-            variant="body2"
-            fontWeight={600}
-          >
-            {
-              {
-                CLASSIFIED_EARNINGS: 'Payable included salary components',
-                GROSS: 'Payable gross salary',
-                BASIC_COMPONENT: 'Payable basic salary',
-              }[config.wageBasis]
-            }
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            After attendance adjustments
-          </Typography>
-        </Box>
-      )}
       {form.values.enabled && (
         <>
           <Stack
