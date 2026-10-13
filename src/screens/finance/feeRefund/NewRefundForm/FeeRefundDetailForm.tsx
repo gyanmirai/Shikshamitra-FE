@@ -4,33 +4,34 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { getIn } from 'formik';
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import {
   Box,
   Grid,
-  Alert,
   Radio,
-  Paper,
+  Stack,
   MenuItem,
+  FormLabel,
   TextField,
   Typography,
   RadioGroup,
+  FormControl,
+  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import { isAllowedRefundMethod, getAllowedRefundMethodOptions } from './refundPayoutMethods';
 import {
+  isRefundRequestField,
   refundPaymentMethodsConfig,
   getInitialRefundPaymentDetails,
-  isRefundRequestField,
 } from './refundPaymentDetailsConfig';
 
 import type { RefundFormik } from './types';
@@ -43,19 +44,29 @@ export default function FeeRefundDetailsForm({
   formik: RefundFormik;
   allowedPayoutMethods?: string[];
 }): React.ReactElement {
-  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
-  const { currentData: eligibility, isFetching: eligibilityFetching, isError: eligibilityError } = useGetRefundEligibilityQuery(
+  const {
+    currentData: eligibility,
+    isFetching: eligibilityFetching,
+    isError: eligibilityError,
+  } = useGetRefundEligibilityQuery(
     { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
     { skip: !formik.values.studentId || !currentYear?.id }
   );
   const methods = allowedPayoutMethods ?? eligibility?.allowedPayoutMethods;
-  const methodsReady = allowedPayoutMethods !== undefined || Boolean(eligibility && !eligibilityFetching && !eligibilityError);
-  const canConfigureRefund = allowedPayoutMethods !== undefined || Boolean(
-    eligibility && !eligibilityFetching && !eligibilityError && eligibility.totalRefundable > 0 &&
-    eligibility.feeHeads.some((head) => head.months.some((month) => month.refundable > 0))
-  );
+  const methodsReady =
+    allowedPayoutMethods !== undefined ||
+    Boolean(eligibility && !eligibilityFetching && !eligibilityError);
+  const canConfigureRefund =
+    allowedPayoutMethods !== undefined ||
+    Boolean(
+      eligibility &&
+      !eligibilityFetching &&
+      !eligibilityError &&
+      eligibility.totalRefundable > 0 &&
+      eligibility.feeHeads.some((head) => head.months.some((month) => month.refundable > 0))
+    );
   const methodOptions = getAllowedRefundMethodOptions(methodsReady ? methods : undefined);
   const { refundMethod } = formik.values;
   const { setFieldValue, setFieldTouched } = formik;
@@ -66,119 +77,87 @@ export default function FeeRefundDetailsForm({
       setFieldTouched('refundMethod', false, false);
     }
   }, [methodsReady, methods, refundMethod, setFieldValue, setFieldTouched]);
-  const {
-    data: bankAccountsData,
-    isLoading: bankAccountsLoading,
-    isFetching: bankAccountsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBankAccountQuery,
-    params: { academicYearId: currentYear?.id ?? '' },
-    options: { skip: !currentYear?.id },
-  });
-
-  const bankAccountOptions = useMemo(
-    () =>
-      bankAccountsData?.items.map(
-        (account: { bankName: string; accountNumber: string; id: string }) => ({
-          name: `${account.bankName} - ${account.accountNumber}`,
-          id: account.id,
-        })
-      ) ?? [],
-    [bankAccountsData]
-  );
-
-  const isBankAccountsBusy = bankAccountsLoading || bankAccountsFetching;
-
+  useEffect(() => {
+    if (
+      eligibility &&
+      !eligibilityFetching &&
+      !eligibilityError &&
+      !eligibility.allowPartialRefund &&
+      formik.values.refundType === 'partial'
+    ) {
+      setFieldValue('refundType', 'full', false);
+    }
+  }, [eligibility, eligibilityFetching, eligibilityError, formik.values.refundType, setFieldValue]);
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
-      {/* ── Refund Type Selection ── */}
-      {formik.values.studentId && canConfigureRefund && (
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 2,
-            mb: 1,
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            gap: 2,
-          }}
-        >
-          <Typography variant="subtitle2" fontWeight={700}>
-            Refund Type
-          </Typography>
-          <RadioGroup
-            row
-            name="refundType"
-            value={formik.values.refundType || 'full'}
-            onChange={(e) => {
-              const newType = e.target.value;
-              formik.setFieldValue('refundType', newType);
-              // If switched to 'full', we need to reset amounts to max refundable, but we don't have feeHeads here.
-              // We will let FeeHeadRefundTable handle the reset if we can, or we do it inside FeeHeadRefundTable via an effect.
-            }}
-          >
-            <FormControlLabel value="full" control={<Radio size="small" />} label="Full Refund" />
-            <FormControlLabel
-              value="partial"
-              control={<Radio size="small" />}
-              label="Partial Refund"
-              disabled={eligibility != null && !eligibility.allowPartialRefund}
-            />
-          </RadioGroup>
-        </Paper>
-      )}
+      <FormSectionCard
+        title="Refund details"
+        icon="solar:bill-list-bold-duotone"
+        descriptionTooltip="Select paid fee months from one receipt. Full refund uses the available policy limit; partial refund lets you enter an amount when the linked policy permits it. The server checks deductions and limits on submission."
+      >
+        {formik.values.studentId && canConfigureRefund && (
+          <FormControl>
+            <FormLabel id="refund-type-label">Refund type</FormLabel>
+            <RadioGroup
+              row
+              aria-labelledby="refund-type-label"
+              name="refundType"
+              value={formik.values.refundType || 'full'}
+              onChange={(e) => {
+                const newType = e.target.value;
+                formik.setFieldValue('refundType', newType);
+              }}
+            >
+              <FormControlLabel value="full" control={<Radio size="small" />} label="Full refund" />
+              <FormControlLabel
+                value="partial"
+                control={<Radio size="small" />}
+                label="Partial refund"
+                disabled={eligibility != null && !eligibility.allowPartialRefund}
+              />
+            </RadioGroup>
+            {eligibility && !eligibility.allowPartialRefund && (
+              <FormHelperText>The linked refund policy allows full refunds only.</FormHelperText>
+            )}
+          </FormControl>
+        )}
 
-      {canConfigureRefund && eligibility?.refundPolicyName && (
-        <Alert severity="info" sx={{ mb: 1 }}>
-          Policy: <strong>{eligibility.refundPolicyName}</strong> · Maximum currently refundable: ₹
-          {eligibility.totalRefundable.toLocaleString('en-IN')}
-          {eligibility.processingTargetDays != null
-            ? ` · Target processing time: ${eligibility.processingTargetDays} day(s)`
-            : ''}
-        </Alert>
-      )}
+        {canConfigureRefund && eligibility?.refundPolicyName && (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+            <Typography variant="body2" sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+              Policy: <strong>{eligibility.refundPolicyName}</strong>
+            </Typography>
+            <Typography variant="body2">
+              Maximum refundable: <strong>{formatCurrency(eligibility.totalRefundable)}</strong>
+            </Typography>
+          </Stack>
+        )}
 
-      {/* ── Fee Head-wise Refund Accordion Table ── */}
-      <FeeHeadRefundTable
-        formik={formik}
-        showError={
-          !!(formik.touched.feeHeadRefunds && formik.errors.feeHeadRefunds) &&
-          typeof formik.errors.feeHeadRefunds === 'string'
-        }
-        errorMessage={
-          typeof formik.errors.feeHeadRefunds === 'string'
-            ? (formik.errors.feeHeadRefunds as string)
-            : undefined
-        }
-        onHasRecords={setHasPaymentRecords}
-      />
+        {/* ── Fee Head-wise Refund Accordion Table ── */}
+        <FeeHeadRefundTable
+          compact
+          formik={formik}
+          showError={
+            !!(formik.touched.feeHeadRefunds && formik.errors.feeHeadRefunds) &&
+            typeof formik.errors.feeHeadRefunds === 'string'
+          }
+          errorMessage={
+            typeof formik.errors.feeHeadRefunds === 'string'
+              ? (formik.errors.feeHeadRefunds as string)
+              : undefined
+          }
+          onHasRecords={setHasPaymentRecords}
+        />
+      </FormSectionCard>
 
       {/* ── Refund Payment Details Card ── */}
       {formik.values.studentId && hasPaymentRecords && canConfigureRefund && (
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: '16px',
-            border: `1px solid ${theme.palette.divider}`,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-          }}
+        <FormSectionCard
+          title="Refund payment details"
+          icon="solar:wallet-bold-duotone"
+          descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Payment is recorded separately after approval."
         >
-          {/* Card header */}
-          <Box display="flex" alignItems="center" gap={1} mb={2.5}>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                Refund Payment Details
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Choose the refund method and fill in the required payment information
-              </Typography>
-            </Box>
-          </Box>
-
-          <Grid container spacing={2.5}>
+          <Grid container spacing={1}>
             {/* Refund Method */}
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
@@ -187,8 +166,10 @@ export default function FeeRefundDetailsForm({
                 <CustomSelect
                   options={methodOptions}
                   disabled={!methodsReady || methodOptions.length === 0}
-                  label="Refund Method *"
-                  value={methodsReady && isAllowedRefundMethod(refundMethod, methods) ? refundMethod : ''}
+                  label="Refund method *"
+                  value={
+                    methodsReady && isAllowedRefundMethod(refundMethod, methods) ? refundMethod : ''
+                  }
                   onChange={(value) => {
                     formik.setFieldValue('refundMethod', value);
                     formik.setFieldTouched('refundMethod', false);
@@ -199,19 +180,25 @@ export default function FeeRefundDetailsForm({
                     formik.validateForm();
                   }}
                   name="refundMethod"
+                  onBlur={() => formik.setFieldTouched('refundMethod', true)}
                   multiple={false}
                   error={formik.touched.refundMethod && Boolean(formik.errors.refundMethod)}
-                  helperText={eligibilityError && allowedPayoutMethods === undefined
-                    ? 'Unable to load refund policy payment methods. Retry before submitting.'
-                    : !methodsReady ? 'Loading refund policy payment methods…'
-                      : methodOptions.length === 0 ? 'No payment methods are available under this refund policy.'
-                        : (formik.touched.refundMethod && formik.errors.refundMethod) as string}
+                  helperText={
+                    eligibilityError && allowedPayoutMethods === undefined
+                      ? 'Unable to load refund policy payment methods. Retry before submitting.'
+                      : !methodsReady
+                        ? 'Loading refund policy payment methods…'
+                        : methodOptions.length === 0
+                          ? 'No payment methods are available under this refund policy.'
+                          : ((formik.touched.refundMethod && formik.errors.refundMethod) as string)
+                  }
                 />
               </ShakingTextField>
             </Grid>
 
             {/* Dynamic payment fields */}
-            {methodsReady && isAllowedRefundMethod(refundMethod, methods) &&
+            {methodsReady &&
+              isAllowedRefundMethod(refundMethod, methods) &&
               refundPaymentMethodsConfig[
                 formik.values.refundMethod as keyof typeof refundPaymentMethodsConfig
               ]
@@ -224,7 +211,7 @@ export default function FeeRefundDetailsForm({
 
                   return (
                     <Grid
-                      size={{ xs: 12, md: 6 }}
+                      size={{ xs: 12, md: field.type === 'multiline' ? 12 : 6 }}
                       key={`${formik.values.refundMethod}-${field.name}`}
                     >
                       <ShakingTextField error={Boolean(touched && error)}>
@@ -255,20 +242,10 @@ export default function FeeRefundDetailsForm({
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             size="small"
-                            disabled={field.name === 'sourceBankAccount' && isBankAccountsBusy}
                             error={Boolean(touched && error)}
-                            helperText={
-                              touched && typeof error === 'string'
-                                ? error
-                                : field.name === 'sourceBankAccount' && isBankAccountsBusy
-                                  ? 'Loading bank accounts...'
-                                  : ''
-                            }
+                            helperText={touched && typeof error === 'string' ? error : ''}
                           >
-                            {(field.name === 'sourceBankAccount' && bankAccountOptions.length > 0
-                              ? bankAccountOptions
-                              : field.options
-                            )?.map((opt: any) => (
+                            {field.options?.map((opt: any) => (
                               <MenuItem key={opt.id} value={opt.id}>
                                 {opt.name}
                               </MenuItem>
@@ -384,7 +361,7 @@ export default function FeeRefundDetailsForm({
                 multiline
                 minRows={2}
                 size="small"
-                label="Notes (Optional)"
+                label="Refund reason"
                 name="notes"
                 value={formik.values.notes}
                 onChange={(e) => {
@@ -400,15 +377,12 @@ export default function FeeRefundDetailsForm({
                   }
                   formik.handleBlur(e);
                 }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '10px',
-                  },
-                }}
+                error={Boolean(formik.touched.notes && formik.errors.notes)}
+                helperText={formik.touched.notes && formik.errors.notes}
               />
             </Grid>
           </Grid>
-        </Box>
+        </FormSectionCard>
       )}
     </Box>
   );

@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-11
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -47,6 +47,10 @@ The backend remains authoritative for stale concurrency, lifecycle transitions, 
 ## Academic filters
 
 Admissions Inquiries, Pipeline, Applications, Assessments, and Admission Offering use one Board and one Medium, with no All option for either. Empty or invalid parent selections default to an available school option; changing a parent resets its descendants. Class supports multiple selections within the selected Medium. Student Setup uses the same parent rules and supports multiple classes and divisions, with class names included in division labels. Class and Division retain All options within the selected academic scope. Clear filters retains Board and Medium; URL selections survive reload. Identifier locks still require exactly one Division. The retained Review queue component uses the shared filters, but `/student/admissions/reviews` currently has no active route.
+
+## Certificate workspace
+
+Certificates uses the compact icon tabs from Student Setup, with the Generated month picker on the right of the same bar (stacked within that bar on narrow screens). The page header offers a small Create certificate action; Configure template is not shown here. Certificate creation defaults to the first school level, class and division under the selected Board/Medium. Changing a parent selects the first available descendants and clears selected students. Creation, preview, batch review and certificate-action dialogs use the shared dialog shell, Title Case headings, title information tooltips and small footer buttons with leading icons.
 
 ## Configuration workflow
 

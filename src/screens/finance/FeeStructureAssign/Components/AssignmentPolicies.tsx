@@ -4,10 +4,11 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import CustomSelect from 'src/components/custom-select';
-import { Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card';
+import { Box, Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
-  selectableAssignmentPolicyFamilies,
   useAssignmentPolicyOptionsQuery,
+  selectableAssignmentPolicyFamilies,
 } from 'src/redux/finance/studentFeeAssignment';
 
 export default function AssignmentPolicies({
@@ -42,11 +43,15 @@ export default function AssignmentPolicies({
     );
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
-        {editing
-          ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts.'
-          : 'Policies default to the selected fee structure. Changes here apply only to this student.'}
-      </Typography>
+      <FormSectionHeader
+        icon="mdi:shield-check-outline"
+        title={editing ? 'Student policies' : 'Policy defaults and overrides'}
+        descriptionTooltip={
+          editing
+            ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts.'
+            : 'Policies default to the selected fee structure. Changes here apply only to this student.'
+        }
+      />
       {options.isLoading && <Skeleton height={48} />}
       {options.isError && (
         <Alert
@@ -60,66 +65,74 @@ export default function AssignmentPolicies({
           Policy choices could not be loaded. Retry to change a policy.
         </Alert>
       )}
-      {selectableAssignmentPolicyFamilies.map((family) => {
-        const inherited = defaults.find((p) => p.family === family);
-        const selected = selections.find((p) => p.family === family);
-        const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
-        const available = [...(options.data ?? []).filter((p) => p.family === family)];
-        if (inherited && !available.some((p) => p.versionId === inherited.versionId))
-          available.push(inherited);
-        const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
-        const overridden = !editing && value !== (inherited?.versionId ?? '');
-        return (
-          <Stack key={family} spacing={0.5}>
-            <CustomSelect
-              name={`${studentId}-${family}`}
-              label={label}
-              value={value}
-              disabled={disabled || !canOverride || options.isLoading || options.isError}
-              options={[
-                ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
-                ...available.map((p) => ({
-                  value: p.versionId,
-                  label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? (editing ? ' · currently assigned' : ' · fee structure default') : ''}`,
-                })),
-              ]}
-              helperText={
-                overridden
-                  ? `Override for this student · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
-                  : undefined
-              }
-              onChange={(next) => {
-                const nextVersionId = String(next) || null;
-                const nextSelections = [
-                  ...selections.filter((p) => p.family !== family),
-                  ...(editing || nextVersionId !== (inherited?.versionId ?? null)
-                    ? [{ family, versionId: nextVersionId }]
-                    : []),
-                ];
-                const hasOverride = nextSelections.some(
-                  (policy) =>
-                    policy.versionId !==
-                    (defaults.find((item) => item.family === policy.family)?.versionId ?? null)
-                );
-                onChange(nextSelections, hasOverride || editing ? reason : '');
-              }}
-            />
-            {overridden && canOverride && (
-              <Button
-                size="small"
-                sx={{ alignSelf: 'flex-start' }}
-                disabled={disabled}
-                onClick={() => {
-                  const nextSelections = selections.filter((policy) => policy.family !== family);
-                  onChange(nextSelections, nextSelections.length ? reason : '');
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+          gap: 2,
+        }}
+      >
+        {selectableAssignmentPolicyFamilies.map((family) => {
+          const inherited = defaults.find((p) => p.family === family);
+          const selected = selections.find((p) => p.family === family);
+          const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
+          const available = [...(options.data ?? []).filter((p) => p.family === family)];
+          if (inherited && !available.some((p) => p.versionId === inherited.versionId))
+            available.push(inherited);
+          const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
+          const overridden = !editing && value !== (inherited?.versionId ?? '');
+          return (
+            <Stack key={family} spacing={0.5} sx={{ minWidth: 0 }}>
+              <CustomSelect
+                name={`${studentId}-${family}`}
+                label={label}
+                value={value}
+                disabled={disabled || !canOverride || options.isLoading || options.isError}
+                options={[
+                  ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
+                  ...available.map((p) => ({
+                    value: p.versionId,
+                    label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? (editing ? ' · currently assigned' : ' · fee structure default') : ''}`,
+                  })),
+                ]}
+                helperText={
+                  overridden
+                    ? `Override for this student · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
+                    : undefined
+                }
+                onChange={(next) => {
+                  const nextVersionId = String(next) || null;
+                  const nextSelections = [
+                    ...selections.filter((p) => p.family !== family),
+                    ...(editing || nextVersionId !== (inherited?.versionId ?? null)
+                      ? [{ family, versionId: nextVersionId }]
+                      : []),
+                  ];
+                  const hasOverride = nextSelections.some(
+                    (policy) =>
+                      policy.versionId !==
+                      (defaults.find((item) => item.family === policy.family)?.versionId ?? null)
+                  );
+                  onChange(nextSelections, hasOverride || editing ? reason : '');
                 }}
-              >
-                Reset {family} to fee structure default
-              </Button>
-            )}
-          </Stack>
-        );
-      })}
+              />
+              {overridden && canOverride && (
+                <Button
+                  size="small"
+                  sx={{ alignSelf: 'flex-start' }}
+                  disabled={disabled}
+                  onClick={() => {
+                    const nextSelections = selections.filter((policy) => policy.family !== family);
+                    onChange(nextSelections, nextSelections.length ? reason : '');
+                  }}
+                >
+                  Reset {family} to fee structure default
+                </Button>
+              )}
+            </Stack>
+          );
+        })}
+      </Box>
       {!editing && selections.length > 0 && (
         <Button size="small" disabled={disabled} onClick={() => onChange([], '')}>
           Restore fee structure defaults

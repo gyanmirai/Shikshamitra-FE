@@ -38,8 +38,11 @@ import {
 import RefundWorklist from './Components/RefundWorklist';
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import FeeRefundFormComponent from './NewRefundForm/RefundForm';
-import { normalizeRefundMethod, getAllowedRefundMethodOptions } from './NewRefundForm/refundPayoutMethods';
 import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
+import {
+  normalizeRefundMethod,
+  getAllowedRefundMethodOptions,
+} from './NewRefundForm/refundPayoutMethods';
 
 import type { IStudentFeeData } from './type';
 
@@ -117,6 +120,7 @@ const FeeRefund = () => {
   const [failureReason, setFailureReason] = useState('');
   const [bankAccountId, setBankAccountId] = useState('');
   const [replacementRefundId, setReplacementRefundId] = useState<string | undefined>();
+  const [refundFormBusy, setRefundFormBusy] = useState(false);
 
   /**
    * Handles closing of the refund request form dialog
@@ -124,6 +128,7 @@ const FeeRefund = () => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (refundFormBusy && !isSubmit) return;
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setSelectedFeeRefund(null);
       setReplacementRefundId(undefined);
@@ -152,30 +157,32 @@ const FeeRefund = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addRefundRequest.value ? (
-        <CustomBreadcrumbs
-          heading={isEditMode ? 'Edit Refund Request' : 'Add Refund Request'}
-          description={
-            isEditMode
-              ? 'Form to update and resubmit student fee refund requests.'
-              : 'Form to record and request student fee refunds.'
-          }
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            {
-              name: 'Fee Refund',
-              href: '/finance/fee-refund',
-              onClick() {
-                addRefundRequest.onFalse();
-                setIsEditMode(false);
+        <Box inert={refundFormBusy || undefined} aria-busy={refundFormBusy}>
+          <CustomBreadcrumbs
+            heading={isEditMode ? 'Edit Refund Request' : 'Add Refund Request'}
+            description={
+              isEditMode
+                ? 'Form to update and resubmit student fee refund requests.'
+                : 'Form to record and request student fee refunds.'
+            }
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              {
+                name: 'Fee Refund',
+                href: '/finance/fee-refund',
+                onClick() {
+                  addRefundRequest.onFalse();
+                  setIsEditMode(false);
+                },
               },
-            },
-            { name: isEditMode ? 'Edit Refund Request' : 'Add Refund Request' },
-          ]}
-          isBack={addRefundRequest.value}
-          onBack={() => {
-            handleClose(null, false);
-          }}
-        />
+              { name: isEditMode ? 'Edit Refund Request' : 'Add Refund Request' },
+            ]}
+            isBack={addRefundRequest.value}
+            onBack={() => {
+              handleClose(null, false);
+            }}
+          />
+        </Box>
       ) : viewRefundRequest.value ? (
         <CustomBreadcrumbs
           heading="View Refund Request"
@@ -281,6 +288,7 @@ const FeeRefund = () => {
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <FeeRefundFormComponent
             onCancel={handleClose}
+            onBusyChange={setRefundFormBusy}
             defaultBoardId={academicFilters.selectedBoard}
             defaultMediumId={academicFilters.selectedMedium}
             defaultStandardId={
@@ -467,11 +475,13 @@ const FeeRefund = () => {
             disabled={!!selectedFeeRefund?._refundMethod}
             required
           >
-            {getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).map((method) => (
-              <MenuItem key={method.value} value={method.value}>
-                {method.label}
-              </MenuItem>
-            ))}
+            {getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).map(
+              (method) => (
+                <MenuItem key={method.value} value={method.value}>
+                  {method.label}
+                </MenuItem>
+              )
+            )}
           </TextField>
           {settlementMethod !== 'Cash' && (
             <TextField
@@ -530,7 +540,9 @@ const FeeRefund = () => {
                 isProcessing ||
                 !selectedFeeRefund?._refundRequestId ||
                 !settlementMethod ||
-                !getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).some((method) => method.value === settlementMethod) ||
+                !getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).some(
+                  (method) => method.value === settlementMethod
+                ) ||
                 !evidenceReference.trim() ||
                 (settlementMethod !== 'Cash' && !externalReference.trim()) ||
                 (settlementMethod !== 'Cash' && !bankAccountId)

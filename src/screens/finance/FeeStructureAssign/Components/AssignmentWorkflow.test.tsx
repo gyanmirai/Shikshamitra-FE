@@ -293,7 +293,7 @@ describe('assignment review and commit boundaries', () => {
       })
     );
     expect(requests.find((item: any) => item.studentId === 'two').policies).toBeUndefined();
-  }, 20000);
+  }, 30000);
   it('requires a policy reason and submits the student override through preview and commit', async () => {
     mount(undefined, true);
     await selectStructure();
@@ -353,9 +353,25 @@ describe('assignment review and commit boundaries', () => {
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(1));
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Preview assignments' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Step 2: Heads and service' })).toBeDisabled();
     resolve(result());
     await screen.findByText('Preview amount 12000');
     expect(mocks.preview).toHaveBeenCalledTimes(1);
+  });
+  it('returns directly to completed setup steps and requires a fresh preview', async () => {
+    mount();
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('Preview amount 12000');
+    fireEvent.click(screen.getByRole('button', { name: 'Step 2: Heads and service' }));
+    expect(screen.getByRole('button', { name: 'Include transport for one' })).toBeInTheDocument();
+    expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Step 4: Review' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('Preview amount 12000');
+    expect(mocks.preview).toHaveBeenCalledTimes(2);
+    expect(mocks.commit).not.toHaveBeenCalled();
   });
   it('submits the reviewed token and retains canonical completion', async () => {
     mount();

@@ -8,39 +8,22 @@ import type {
   StructureCandidate,
 } from 'src/redux/finance/feeStructureWorkspace';
 
-import dayjs from 'dayjs';
+import { getIn } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { getStorage, setStorage } from 'src/hooks/use-local-storage';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Box, Stack, Alert, Button, Skeleton, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useDeleteClassWiseFeeStructureMutation } from 'src/redux/finance/financeFeeStructure';
-import {
-  Box,
-  Stack,
-  Alert,
-  Button,
-  Switch,
-  Checkbox,
-  Skeleton,
-  TextField,
-  IconButton,
-  Typography,
-  CircularProgress,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useReviseStructureMutation,
   usePreviewStructureMutation,
@@ -50,8 +33,12 @@ import {
 
 import PolicyImpactDialog from './PolicyImpactDialog';
 import { policyImpactRows } from '../policyImpactModel';
+import FeeStructureHeadsStep from './FeeStructureHeadsStep';
+import FeeStructureReviewStep from './FeeStructureReviewStep';
 import StructureScheduleDialog from './StructureScheduleDialog';
+import FeeStructurePoliciesStep from './FeeStructurePoliciesStep';
 import useFeeStructureLookups from '../hooks/useFeeStructureLookups';
+import useFeeStructureWorkspaceForm from '../hooks/useFeeStructureWorkspaceForm';
 import {
   amountError,
   defaultPolicy,
@@ -74,16 +61,10 @@ interface Props {
   onDeleted?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
-  structureSelector?: React.ReactNode;
+  onNameChange?: (name: string) => void;
 }
 const workflowSteps = ['Fee heads & terms', 'Policies', 'Review & publish'];
 const workflowKeys = ['heads', 'policies', 'review'];
-const stepperValues = {};
-const workflowDescriptions = [
-  'Add fee heads, set amounts, and choose published payment terms.',
-  'Choose how fees are collected and refunded.',
-  'Check coverage and installment schedules before publishing.',
-];
 const families: {
   key: StructurePolicyFamily;
   label: string;
@@ -105,15 +86,6 @@ const families: {
     empty: 'No refund policy attached',
   },
 ];
-const money = (value: number | null) =>
-  value == null
-    ? 'Calculated during assignment'
-    : new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(Math.ceil(value));
 
 export default function FeeStructureWorkspaceCard({
   initialData,
@@ -123,15 +95,23 @@ export default function FeeStructureWorkspaceCard({
   onDeleted,
   onDirtyChange,
   onBusyChange,
-  structureSelector,
+  onNameChange,
 }: Props) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const focusErrorPending = useRef(false);
   const [record, setRecord] = useState<StructureRecord | undefined>(initialData.record);
-  const [candidate, setCandidate] = useState<StructureCandidate>(() =>
-    structureCandidate(initialData.record)
+  const [amountInputs, setAmountInputs] = useState<Record<string, string>>({});
+  const { formik, validationSchema } = useFeeStructureWorkspaceForm(
+    initialData.record,
+    amountInputs
   );
+  const candidate = formik.values;
+  const nameCallback = useRef(onNameChange);
+  nameCallback.current = onNameChange;
+  useEffect(() => {
+    nameCallback.current?.(candidate.name);
+  }, [candidate.name]);
+  const setCandidate = formik.setValues;
   const [baseline, setBaseline] = useState(() =>
     JSON.stringify(structureCandidate(initialData.record))
   );
@@ -162,7 +142,6 @@ export default function FeeStructureWorkspaceCard({
     'publish' | 'delete' | 'discard' | 'revision' | null
   >(null);
   const [scheduleHead, setScheduleHead] = useState<string>();
-  const [addHeadId, setAddHeadId] = useState('');
   const [pendingTerm, setPendingTerm] = useState<{
     headId: string;
     term: StructureSettings['terms'][number] | null;
@@ -170,7 +149,6 @@ export default function FeeStructureWorkspaceCard({
   const generation = useRef(0);
   const [requestId] = useState(uuidv4);
   const locked = record?.status === FeeStructureLockStatusType.Locked;
-  const [amountInputs, setAmountInputs] = useState<Record<string, string>>({});
   const pendingTermDefaults = useRef(new Set<string>());
   const dirty =
     JSON.stringify(candidate) !== baseline ||
@@ -215,7 +193,10 @@ export default function FeeStructureWorkspaceCard({
         return {
           ...family,
           policyLabel:
-            (locked ? record?.publicationReview?.policyLabels?.[family.key] : undefined) ||
+            (locked
+              ? record?.publicationReview?.policyLabels?.[family.key] ||
+                record?.policyLabels?.[family.key]
+              : undefined) ||
             (selected
               ? `${selected.name} · v${selected.versionNumber}${selected.isDefault ? ' · Default' : ''}`
               : record?.policyLabels?.[family.key] || 'Selected policy version'),
@@ -228,14 +209,35 @@ export default function FeeStructureWorkspaceCard({
     [candidate, settings, preview, locked, record, collectionItems, refundItems]
   );
   const selectedImpact = impacts.find((item) => item.key === impactFamily);
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touched: Record<string, boolean> = Object.fromEntries([
+    ['name', !!formik.touched.name],
+    ...candidate.feeHeads.flatMap((line, position) => [
+      [line.feeHeadId, !!getIn(formik.touched, `feeHeads.${position}.amount`)],
+      [
+        `term:${line.feeHeadId}`,
+        !!getIn(formik.touched, `feeHeads.${position}.paymentTermVersionId`),
+      ],
+    ]),
+  ]);
   const [submitted, setSubmitted] = useState(false);
   const defaultsHandled = useRef(new Set<StructurePolicyFamily>());
   const patchRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
   const nameError = !candidate.name.trim()
     ? 'Enter a name for this Fee Structure.'
     : serverNameError;
-  const touch = (field: string) => setTouched((old) => ({ ...old, [field]: true }));
+  const touch = (field: string) => {
+    const term = field.startsWith('term:');
+    const position = candidate.feeHeads.findIndex(
+      (line) => line.feeHeadId === (term ? field.slice(5) : field)
+    );
+    formik.setFieldTouched(
+      field === 'name'
+        ? 'name'
+        : `feeHeads.${position}.${term ? 'paymentTermVersionId' : 'amount'}`,
+      true,
+      false
+    );
+  };
   useEffect(() => {
     if (record || !settings) return;
     const defaults = families.flatMap(({ key }) => {
@@ -260,7 +262,7 @@ export default function FeeStructureWorkspaceCard({
           old
         )
       );
-  }, [record, settings, catalogs]);
+  }, [record, settings, catalogs, setCandidate]);
   const [saveDraft, { isLoading: saving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSaveStructureDraftMutation,
@@ -296,7 +298,7 @@ export default function FeeStructureWorkspaceCard({
   useEffect(() => () => busyCallback.current?.(false), []);
   useEffect(() => {
     contentRef.current?.closest<HTMLElement>('.simplebar-content-wrapper')?.scrollTo({ top: 0 });
-    headingRef.current?.focus({ preventScroll: true });
+    contentRef.current?.focus({ preventScroll: true });
   }, [tab]);
   useEffect(() => {
     if (!focusErrorPending.current) return;
@@ -304,10 +306,12 @@ export default function FeeStructureWorkspaceCard({
     contentRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [tab, submitted, error]);
   const publishBlockReason = dirty
-    ? 'Save draft to attach your selected policies and other changes before publishing.'
-    : !preview?.isReady
-      ? 'Open Review & Publish and run the readiness check before publishing.'
-      : '';
+    ? 'Save draft before publishing.'
+    : preview?.errors.length
+      ? `Resolve ${preview.errors.length} issue${preview.errors.length === 1 ? '' : 's'} before publishing.`
+      : !preview?.isReady
+        ? 'Run the readiness check before publishing.'
+        : '';
   const writable =
     !viewOnly &&
     editing &&
@@ -330,7 +334,7 @@ export default function FeeStructureWorkspaceCard({
     }));
     generation.current += 1;
     setPreview(undefined);
-  }, [writable, terms.ready, terms.error, settings, candidate.feeHeads]);
+  }, [writable, terms.ready, terms.error, settings, candidate.feeHeads, setCandidate]);
   const dirtyCallback = useRef(onDirtyChange);
   dirtyCallback.current = onDirtyChange;
   useEffect(() => {
@@ -383,7 +387,7 @@ export default function FeeStructureWorkspaceCard({
     setEditing(false);
     setSubmitted(false);
     setServerNameError('');
-    setTouched({});
+    formik.setTouched({});
     setAmountInputs({});
     pendingTermDefaults.current.clear();
     patchRequest.current = undefined;
@@ -494,7 +498,7 @@ export default function FeeStructureWorkspaceCard({
     if (action === 'discard') {
       setServerNameError('');
       setSubmitted(false);
-      setTouched({});
+      formik.setTouched({});
       setAmountInputs({});
       pendingTermDefaults.current.clear();
       const next = structureCandidate(record);
@@ -530,7 +534,7 @@ export default function FeeStructureWorkspaceCard({
       if (action === 'revision') {
         await revise(args).unwrap();
         shikshaMitraToast.success({
-          message: 'The draft revision is available below. The published version is unchanged.',
+          message: 'Draft revision created. Select it from the structures list.',
         });
       }
       setConfirmation(null);
@@ -569,20 +573,6 @@ export default function FeeStructureWorkspaceCard({
     (step) => step >= 0
   );
   const canPublish = !viewOnly && !locked && !!record && !!settings?.permissions.publish;
-  const visibleHeads = candidate.feeHeads.map((line) => ({
-    ...line,
-    _id: line.feeHeadId,
-    feeHeadName:
-      (locked ? line.feeHeadName : settings?.heads.find((h) => h.id === line.feeHeadId)?.name) ??
-      line.feeHeadName ??
-      'Unavailable Fee Head',
-  }));
-  const termOptions = [
-    ...(settings?.terms.map((term) => ({
-      value: term.versionId,
-      label: `${term.name} · v${term.versionNumber}${term.isDefault ? ' · Default' : ''}`,
-    })) ?? []),
-  ];
 
   return (
     <Box
@@ -606,89 +596,94 @@ export default function FeeStructureWorkspaceCard({
         }}
       >
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {structureSelector || (
-              <Typography variant="subtitle1" noWrap>
-                {candidate.name || 'New Fee Structure'}
-              </Typography>
-            )}
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: 'block', mt: structureSelector ? 0.5 : 0 }}
-            >
-              {settings?.className || 'Class fees'} ·{' '}
-              {settings?.academicYearName || 'Loading academic context'} ·{' '}
-              {candidate.feeHeads.length} Fee Heads
-            </Typography>
-          </Box>
           <Stack
             direction="row"
             spacing={1}
+            useFlexGap
+            flexWrap="wrap"
             alignItems="center"
-            sx={{ flexWrap: 'wrap', rowGap: 1 }}
+            sx={{ flex: 1, minWidth: 0 }}
           >
-            <Label color={locked ? 'success' : 'warning'}>
-              {locked ? 'Published' : 'Draft'} · v{record?.revisionNumber ?? 1}
-            </Label>
-            {dirty && !viewOnly && <Label color="info">Unsaved</Label>}
+            <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
+              {candidate.name || 'New fee structure'}
+            </Typography>
+            <Label color={locked ? 'success' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
+            <Typography variant="caption" color="text.secondary">
+              v{record?.revisionNumber ?? 1}
+            </Typography>
             {viewOnly && <Label color="default">Read-only</Label>}
-            <Button
-              size="small"
-              disabled={navigationBusy || isFetching}
-              onClick={() => {
-                generation.current += 1;
-                setPreview(undefined);
-                refetch();
-              }}
-              startIcon={<Iconify icon={GlobalIcons.refresh} />}
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ ml: 'auto' }}
             >
-              Refresh context
-            </Button>
-            {!viewOnly && editing && dirty && (
-              <Button
-                size="small"
-                color="inherit"
-                disabled={navigationBusy}
-                onClick={() => setConfirmation('discard')}
-              >
-                Discard changes
-              </Button>
-            )}
-            {!viewOnly && !locked && !editing && settings?.permissions.edit && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon={GlobalIcons.edit} />}
-                disabled={navigationBusy}
-                onClick={() => setEditing(true)}
-              >
-                Edit draft
-              </Button>
-            )}
-            {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                loading={revising}
-                disabled={navigationBusy}
-                startIcon={<Iconify icon="solar:pen-new-square-bold" />}
-                onClick={() => setConfirmation('revision')}
-              >
-                Create revision
-              </LoadingButton>
-            )}
-            {!viewOnly && !locked && settings?.permissions.delete && (
-              <Button
-                size="small"
-                color="error"
-                disabled={navigationBusy}
-                startIcon={<Iconify icon={GlobalIcons.delete} />}
-                onClick={() => setConfirmation('delete')}
-              >
-                Delete draft
-              </Button>
-            )}
+              {!viewOnly && !locked && !editing && settings?.permissions.edit && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon={GlobalIcons.edit} />}
+                  disabled={navigationBusy}
+                  onClick={() => setEditing(true)}
+                >
+                  Edit draft
+                </Button>
+              )}
+              {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  loading={revising}
+                  disabled={navigationBusy}
+                  startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
+                  onClick={() => setConfirmation('revision')}
+                >
+                  Create revision
+                </LoadingButton>
+              )}
+              <AdaptiveThreeDotsActions
+                moreLabel="More structure actions"
+                directActionLimit={0}
+                actions={[
+                  {
+                    id: 'refresh',
+                    label: 'Refresh Context',
+                    icon: 'mdi:refresh',
+                    disabled: navigationBusy || isFetching,
+                    onClick: () => {
+                      generation.current += 1;
+                      setPreview(undefined);
+                      refetch();
+                    },
+                  },
+                  ...(!viewOnly && editing && dirty
+                    ? [
+                        {
+                          id: 'discard',
+                          label: 'Discard Changes',
+                          icon: 'mdi:undo',
+                          disabled: navigationBusy,
+                          onClick: () => setConfirmation('discard'),
+                        },
+                      ]
+                    : []),
+                  ...(!viewOnly && !locked && settings?.permissions.delete
+                    ? [
+                        {
+                          id: 'delete',
+                          label: 'Delete Draft',
+                          icon: 'mdi:delete-outline',
+                          color: 'error.main',
+                          disabled: navigationBusy,
+                          onClick: () => setConfirmation('delete'),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            </Stack>
           </Stack>
         </Stack>
       </Box>
@@ -708,7 +703,7 @@ export default function FeeStructureWorkspaceCard({
           {error}
         </Alert>
       )}
-      {!record && families.some(({ key }) => catalogs[key].error) && (
+      {!record && tab !== 'policies' && families.some(({ key }) => catalogs[key].error) && (
         <Alert severity="warning" sx={{ m: 2 }}>
           Some default policies could not be loaded. Open Policies to retry or choose them before
           publishing.
@@ -741,11 +736,12 @@ export default function FeeStructureWorkspaceCard({
             <CustomStepperWithFormik
               activeStep={activeStep}
               steps={workflowSteps}
-              initialValues={stepperValues}
-              validationSchema={undefined}
+              initialValues={formik.initialValues}
+              formikInstance={formik}
+              validationSchema={validationSchema}
               completedSteps={completedSteps}
               errors={[
-                Boolean(submitted && !headsValid),
+                Boolean((submitted || Object.keys(formik.errors).length > 0) && !headsValid),
                 Boolean(!locked && !candidate.collectionPolicyVersionId),
                 Boolean(preview?.errors.length),
               ]}
@@ -764,16 +760,15 @@ export default function FeeStructureWorkspaceCard({
               }}
               showSaveButton={writable}
               saveButtonLabel="Save draft"
-              nextButtonLabel={writable ? 'Save & next' : 'Next'}
+              nextButtonLabel={writable ? 'Save & Continue' : 'Next'}
               finalButtonLabel="Publish structure"
               disableSubmit={!canPublish || !!publishBlockReason}
               saveButtonProps={{
                 loading: saving,
                 disabled:
                   navigationBusy || (!record && families.some(({ key }) => catalogs[key].loading)),
-                sx: { minHeight: { xs: 44, sm: 36 } },
               }}
-              backButtonProps={{ disabled: navigationBusy, sx: { minHeight: { xs: 44, sm: 36 } } }}
+              backButtonProps={{ disabled: navigationBusy }}
               saveAndNextButtonProps={{
                 loading: saving || publishing,
                 disabled:
@@ -781,906 +776,160 @@ export default function FeeStructureWorkspaceCard({
                   (!locked && activeStep === 1 && !candidate.collectionPolicyVersionId) ||
                   (writable && !record && families.some(({ key }) => catalogs[key].loading)),
                 sx: {
-                  minHeight: { xs: 44, sm: 36 },
                   ...(activeStep === 2 && !canPublish && { display: 'none' }),
                 },
               }}
               renderItem={() => (
                 <Box
                   ref={contentRef}
-                  sx={{
-                    minWidth: 0,
-                  }}
+                  role="region"
+                  tabIndex={-1}
+                  aria-label={workflowSteps[activeStep]}
+                  sx={{ minWidth: 0, p: { xs: 1.5, sm: 2 }, outline: 'none' }}
                 >
-                  <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 2 }}>
-                    <Typography
-                      ref={headingRef}
-                      component="h2"
-                      variant="subtitle1"
-                      tabIndex={-1}
-                      sx={{ outline: 'none' }}
-                    >
-                      {workflowSteps[activeStep]}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {workflowDescriptions[activeStep]}
-                    </Typography>
-                  </Box>
                   {tab === 'heads' && (
-                    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                        <ShakingTextField error={Boolean((touched.name || submitted) && nameError)}>
-                          <TextField
-                            label="Fee Structure name *"
-                            size="small"
-                            fullWidth
-                            disabled={!writable || !!record?.previousRevisionId}
-                            value={candidate.name}
-                            onChange={(e) => change({ ...candidate, name: e.target.value })}
-                            inputProps={{ maxLength: 256 }}
-                            onBlur={() => touch('name')}
-                            error={Boolean((touched.name || submitted) && nameError)}
-                            helperText={
-                              (touched.name || submitted) && nameError
-                                ? nameError
-                                : 'Use a unique name for this class and academic year.'
-                            }
-                          />
-                        </ShakingTextField>
-                      </Stack>
-                      <Typography variant="body2" color="text.secondary">
-                        Fixed amounts cover the payment term. Variable fees are priced during
-                        assignment.
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
-                      >
-                        Fixed fees subtotal:{' '}
-                        {money(
-                          candidate.feeHeads
-                            .filter((h) => !h.isVariable)
-                            .reduce((total, h) => total + (h.amount ?? 0), 0)
-                        )}
-                        {' · '}
-                        {candidate.feeHeads.filter((h) => h.isVariable).length} variable fee heads
-                        priced during assignment. Optional fees apply only when selected for a
-                        student.
-                      </Typography>
-                      {(!settings.permissions.headsRead || heads.isError) && (
-                        <Alert
-                          severity="warning"
-                          action={
-                            settings.permissions.headsRead ? (
-                              <Button
-                                size="small"
-                                startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                                onClick={() => heads.refetch()}
-                              >
-                                Retry Fee Heads
-                              </Button>
-                            ) : undefined
-                          }
-                        >
-                          {settings.permissions.headsRead
-                            ? 'Fee Heads could not be loaded. Existing lines are preserved.'
-                            : 'You do not have permission to browse Fee Heads.'}
-                        </Alert>
-                      )}
-                      {terms.error && (
-                        <Alert
-                          severity="warning"
-                          action={
-                            <Button
-                              size="small"
-                              startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                              onClick={terms.retry}
-                            >
-                              Retry terms
-                            </Button>
-                          }
-                        >
-                          Payment Terms could not be loaded. Saved version pins are preserved.
-                        </Alert>
-                      )}
-                      {writable && (
-                        <Stack
-                          direction={{ xs: 'column', sm: 'row' }}
-                          spacing={1}
-                          alignItems="flex-start"
-                          sx={{ maxWidth: { sm: 640 }, width: 1 }}
-                        >
-                          <CustomSelect
-                            label="Add Fee Head"
-                            isLoading={heads.isFetching}
-                            disabled={!settings.permissions.headsRead || heads.isError}
-                            helperText="Choose an active Fee Head from this academic year. Each head can be added once."
-                            value={addHeadId}
-                            options={settings.heads.filter(
-                              (h) => !candidate.feeHeads.some((l) => l.feeHeadId === h.id)
-                            )}
-                            labelKey="name"
-                            valueKey="id"
-                            onChange={(value) => setAddHeadId(String(value))}
-                            isSearch
-                            formControlProps={{ fullWidth: true }}
-                          />
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            disabled={!addHeadId}
-                            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                            sx={{ whiteSpace: 'nowrap', minHeight: { xs: 44, sm: 36 } }}
-                            onClick={() => {
-                              const head = settings.heads.find((h) => h.id === addHeadId);
-                              if (!head) return;
-                              pendingTermDefaults.current.add(head.id);
-                              setAmountInputs((old) => ({ ...old, [head.id]: '' }));
-                              setTouched((old) => ({
-                                ...old,
-                                [head.id]: false,
-                                [`term:${head.id}`]: false,
-                              }));
-                              change({
-                                ...candidate,
-                                feeHeads: [
-                                  ...candidate.feeHeads,
-                                  {
-                                    feeHeadId: head.id,
-                                    feeHeadName: head.name,
-                                    amount: 0,
-                                    isVariable: false,
-                                    isOneTime: false,
-                                    isOptional: false,
-                                    payableMonth: 0,
-                                    payableYear: 0,
-                                    paymentTermId: null,
-                                    paymentTermVersionId: null,
-                                    scheduleMode: 'Inherited',
-                                    installmentOverrides: [],
-                                  },
-                                ],
-                              });
-                              setAddHeadId('');
-                            }}
-                          >
-                            Add head
-                          </Button>
-                        </Stack>
-                      )}
-                      <CustomizableTable
-                        tableTitle="Fee heads"
-                        tableId={`structure-heads-${record?.id ?? `${initialData.classId}-${index}`}`}
-                        data={visibleHeads}
-                        isPagination={false}
-                        isSearch={false}
-                        isFilter={false}
-                        isShowedDense={false}
-                        noDataText="Add Fee Heads to start configuring this structure."
-                        columns={[
-                          {
-                            id: 'feeHeadName',
-                            isFilter: false,
-                            label: 'Fee Head',
-                            sticky: true,
-                            minWidth: 160,
-                          },
-                          {
-                            id: 'isVariable',
-                            label: 'Pricing',
-                            minWidth: 140,
-                            isSort: false,
-                            isFilter: false,
-                            render: (_v, row) => (
-                              <FormControlLabel
-                                label="Variable"
-                                control={
-                                  <Switch
-                                    size="small"
-                                    checked={!!row.isVariable}
-                                    disabled={!writable}
-                                    slotProps={{
-                                      input: { 'aria-label': `${row.feeHeadName} variable fee` },
-                                    }}
-                                    onChange={(_event, checked) => {
-                                      setAmountInputs((old) => {
-                                        const next = { ...old };
-                                        delete next[row.feeHeadId];
-                                        return next;
-                                      });
-                                      changeLine(row.feeHeadId, {
-                                        isVariable: checked,
-                                        amount: null,
-                                      });
-                                    }}
-                                  />
-                                }
-                              />
-                            ),
-                          },
-                          {
-                            id: 'amount',
-                            label: 'Total fee',
-                            align: 'right',
-                            minWidth: 190,
-                            isSort: false,
-                            isFilter: false,
-                            render: (_v, row) =>
-                              row.isVariable ? (
-                                <Typography variant="body2" color="text.secondary" textAlign="right">
-                                  Entered during student assignment
-                                </Typography>
-                              ) : writable ? (
-                                <TextField
-                                  type="number"
-                                  size="small"
-                                  fullWidth
-                                  required
-                                  label="Total fee"
-                                  value={amountInputs[row.feeHeadId] ?? row.amount ?? ''}
-                                  onBlur={() => touch(row.feeHeadId)}
-                                  error={Boolean(
-                                    (touched[row.feeHeadId] || submitted) &&
-                                    amountError(amountInputs[row.feeHeadId] ?? row.amount)
-                                  )}
-                                  helperText={
-                                    (touched[row.feeHeadId] || submitted) &&
-                                    amountError(amountInputs[row.feeHeadId] ?? row.amount)
-                                      ? amountError(amountInputs[row.feeHeadId] ?? row.amount)
-                                      : 'Total for the selected payment term.'
-                                  }
-                                  inputProps={{
-                                    style: { textAlign: 'right' },
-                                    min: 0,
-                                    max: 9999999999.99,
-                                    step: 1,
-                                    'aria-label': `${row.feeHeadName} total fee`,
-                                  }}
-                                  onChange={(e) => {
-                                    setAmountInputs((old) => ({
-                                      ...old,
-                                      [row.feeHeadId]: e.target.value,
-                                    }));
-                                    changeLine(row.feeHeadId, {
-                                      amount: e.target.value === '' ? null : Number(e.target.value),
-                                    });
-                                  }}
-                                />
-                              ) : (
-                                money(row.amount)
-                              ),
-                          },
-                          {
-                            id: 'paymentTermVersionId',
-                            label: 'Payment Term & version',
-                            minWidth: 280,
-                            isSort: false,
-                            isFilter: false,
-                            render: (_v, row) => {
-                              const termError = paymentTermError({
-                                paymentTermId: row.paymentTermId,
-                                paymentTermVersionId: row.paymentTermVersionId,
-                              });
-                              return (
-                                <Stack spacing={1}>
-                                  <CustomSelect
-                                    label="Payment Term"
-                                    isSearch
-                                    required
-                                    onBlur={() => touch(`term:${row.feeHeadId}`)}
-                                    error={Boolean(
-                                      writable &&
-                                      (touched[`term:${row.feeHeadId}`] || submitted) &&
-                                      termError
-                                    )}
-                                    isLoading={
-                                      terms.loading &&
-                                      !settings.terms.length &&
-                                      !row.paymentTermVersionId
-                                    }
-                                    noOptionsMessage="No active published Payment Terms for this academic year and board."
-                                    helperText={
-                                      !settings.permissions.termsRead
-                                        ? 'You do not have permission to browse Payment Terms.'
-                                        : writable &&
-                                            (touched[`term:${row.feeHeadId}`] || submitted) &&
-                                            termError
-                                          ? termError
-                                          : !settings.terms.length &&
-                                              !terms.loading &&
-                                              !row.paymentTermVersionId
-                                            ? 'Publish a Payment Term for this academic year and board, then retry terms.'
-                                            : !row.paymentTermVersionId
-                                              ? 'Required. Select an active, published Payment Term.'
-                                              : 'Published version retained until changed.'
-                                    }
-                                    disabledValues={
-                                      row.paymentTermVersionId &&
-                                      !settings.terms.some(
-                                        (term) => term.versionId === row.paymentTermVersionId
-                                      )
-                                        ? [row.paymentTermVersionId]
-                                        : []
-                                    }
-                                    value={row.paymentTermVersionId ?? ''}
-                                    options={
-                                      locked && row.paymentTermVersionId
-                                        ? [
-                                            {
-                                              value: row.paymentTermVersionId,
-                                              label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'}`,
-                                            },
-                                          ]
-                                        : termOptions.some(
-                                              (x) => x.value === row.paymentTermVersionId
-                                            ) || !row.paymentTermVersionId
-                                          ? termOptions
-                                          : [
-                                              ...termOptions,
-                                              {
-                                                value: row.paymentTermVersionId,
-                                                label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'} · unavailable for new use`,
-                                              },
-                                            ]
-                                    }
-                                    labelKey="label"
-                                    valueKey="value"
-                                    disabled={!writable || !settings.permissions.termsRead}
-                                    onChange={(value) => {
-                                      pendingTermDefaults.current.delete(row.feeHeadId);
-                                      touch(`term:${row.feeHeadId}`);
-                                      if (!value) {
-                                        if (row.scheduleMode === 'Customized')
-                                          setPendingTerm({ headId: row.feeHeadId, term: null });
-                                        else
-                                          changeLine(row.feeHeadId, {
-                                            paymentTermId: null,
-                                            paymentTermVersionId: null,
-                                            scheduleMode: 'Inherited',
-                                            installmentOverrides: [],
-                                          });
-                                        return;
-                                      }
-                                      const term = settings.terms.find(
-                                        (x) => x.versionId === value
-                                      );
-                                      if (!term) return;
-                                      if (row.scheduleMode === 'Customized') {
-                                        setPendingTerm({ headId: row.feeHeadId, term });
-                                        return;
-                                      }
-                                      changeLine(row.feeHeadId, {
-                                        paymentTermId: term.id,
-                                        paymentTermVersionId: term.versionId,
-                                        paymentTermName: term.name,
-                                        paymentTermVersionNumber: term.versionNumber,
-                                        scheduleMode: 'Inherited',
-                                        installmentOverrides: [],
-                                      });
-                                    }}
-                                    formControlProps={{ fullWidth: true, required: true }}
-                                  />
-                                  <Button
-                                    size="small"
-                                    startIcon={<Iconify icon={GlobalIcons.eye} />}
-                                    disabled={
-                                      !row.paymentTermVersionId || !settings.permissions.termsRead
-                                    }
-                                    onClick={() => setScheduleHead(row.feeHeadId)}
-                                  >
-                                    {row.scheduleMode === 'Customized'
-                                      ? 'View customized schedule'
-                                      : 'View installment schedule'}
-                                  </Button>
-                                </Stack>
-                              );
+                    <FeeStructureHeadsStep
+                      formik={formik}
+                      settings={settings}
+                      tableId={`structure-heads-${record?.id ?? `${initialData.classId}-${index}`}`}
+                      writable={writable}
+                      busy={navigationBusy}
+                      locked={!!locked}
+                      revision={!!record?.previousRevisionId}
+                      submitted={submitted || Object.keys(formik.errors).length > 0}
+                      nameError={nameError}
+                      amountInputs={amountInputs}
+                      touched={touched}
+                      headsLoading={heads.isFetching}
+                      headsError={heads.isError}
+                      termsLoading={terms.loading}
+                      termsError={terms.error}
+                      onRetryHeads={() => heads.refetch()}
+                      onRetryTerms={terms.retry}
+                      onTouch={touch}
+                      onChange={change}
+                      onAdd={(id) => {
+                        const head = settings.heads.find((item) => item.id === id);
+                        if (!head || candidate.feeHeads.some((line) => line.feeHeadId === id))
+                          return;
+                        pendingTermDefaults.current.add(head.id);
+                        setAmountInputs((previous) => ({ ...previous, [head.id]: '' }));
+                        change({
+                          ...candidate,
+                          feeHeads: [
+                            ...candidate.feeHeads,
+                            {
+                              feeHeadId: head.id,
+                              feeHeadName: head.name,
+                              categoryName: head.categoryName,
+                              amount: null,
+                              isVariable: false,
+                              isOneTime: false,
+                              isOptional: false,
+                              payableMonth: 0,
+                              payableYear: 0,
+                              paymentTermId: null,
+                              paymentTermVersionId: null,
+                              scheduleMode: 'Inherited',
+                              installmentOverrides: [],
                             },
-                          },
-                          {
-                            id: 'kind',
-                            label: 'Charge options',
-                            minWidth: 125,
-                            isSort: false,
-                            isFilter: false,
-                            render: (_v, row) => (
-                              <Stack>
-                                <FormControlLabel
-                                  control={
-                                    <Checkbox
-                                      size="small"
-                                      disabled={!writable}
-                                      checked={row.isOptional}
-                                      onChange={(_e, checked) =>
-                                        changeLine(row.feeHeadId, { isOptional: checked })
-                                      }
-                                    />
-                                  }
-                                  label="Optional"
-                                />
-                              </Stack>
-                            ),
-                          },
-                          {
-                            id: 'actions',
-                            label: 'Actions',
-                            minWidth: 70,
-                            sticky: true,
-                            stickyPosition: 'right',
-                            isSort: false,
-                            isFilter: false,
-                            render: (_v, row) =>
-                              writable && (
-                                <AdaptiveThreeDotsActions
-                                  actions={[
-                                    {
-                                      id: 'delete',
-                                      label: 'Delete',
-                                      icon: 'solar:trash-bin-trash-bold',
-                                      onClick: () => {
-                                        pendingTermDefaults.current.delete(row.feeHeadId);
-                                        setAmountInputs((old) => {
-                                          const next = { ...old };
-                                          delete next[row.feeHeadId];
-                                          return next;
-                                        });
-                                        change({
-                                          ...candidate,
-                                          feeHeads: candidate.feeHeads.filter(
-                                            (x) => x.feeHeadId !== row.feeHeadId
-                                          ),
-                                        });
-                                      },
-                                      color: 'error.main',
-                                    },
-                                  ]}
-                                />
-                              ),
-                          },
-                        ]}
-                      />
-                    </Stack>
+                          ],
+                        });
+                      }}
+                      onRemove={(id) => {
+                        pendingTermDefaults.current.delete(id);
+                        setAmountInputs((previous) => {
+                          const next = { ...previous };
+                          delete next[id];
+                          return next;
+                        });
+                        change({
+                          ...candidate,
+                          feeHeads: candidate.feeHeads.filter((line) => line.feeHeadId !== id),
+                        });
+                      }}
+                      onVariable={(id, variable) => {
+                        setAmountInputs((previous) => {
+                          const next = { ...previous };
+                          delete next[id];
+                          return next;
+                        });
+                        changeLine(id, { isVariable: variable, amount: null });
+                      }}
+                      onAmount={(id, raw, amount) => {
+                        setAmountInputs((previous) => ({ ...previous, [id]: raw }));
+                        changeLine(id, { amount });
+                      }}
+                      onLineChange={changeLine}
+                      onTerm={(line, term) => {
+                        pendingTermDefaults.current.delete(line.feeHeadId);
+                        touch(`term:${line.feeHeadId}`);
+                        if (line.scheduleMode === 'Customized') {
+                          setPendingTerm({ headId: line.feeHeadId, term });
+                          return;
+                        }
+                        changeLine(line.feeHeadId, {
+                          paymentTermId: term?.id ?? null,
+                          paymentTermVersionId: term?.versionId ?? null,
+                          paymentTermName: term?.name,
+                          paymentTermVersionNumber: term?.versionNumber,
+                          scheduleMode: 'Inherited',
+                          installmentOverrides: [],
+                        });
+                      }}
+                      onSchedule={setScheduleHead}
+                    />
                   )}
                   {tab === 'policies' && (
-                    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, width: '100%' }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Collection is required to publish. Refund is optional. Use the eye action to
-                        review fee head coverage.
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: {
-                            xs: 'minmax(0, 1fr)',
-                            md: 'repeat(2, minmax(0, 1fr))',
-                          },
-                          alignItems: 'stretch',
-                          gap: 2,
-                        }}
-                      >
-                        {impacts.map(({ key, label, description, empty, rows }) => {
-                          const versionKey = `${key}PolicyVersionId` as const;
-                          const idKey = `${key}PolicyId` as const;
-                          const options = settings.policies
-                            .filter((p) => p.family === key)
-                            .map((p) => ({
-                              value: p.versionId,
-                              label: `${p.name} · v${p.versionNumber}${p.isDefault ? ' · Default' : ''}`,
-                            }));
-                          const frozenLabel = record?.publicationReview?.policyLabels?.[key];
-                          if (locked && frozenLabel && candidate[versionKey]) {
-                            options.length = 0;
-                            options.push({ value: candidate[versionKey]!, label: frozenLabel });
-                          }
-                          if (
-                            candidate[versionKey] &&
-                            !options.some((p) => p.value === candidate[versionKey])
-                          )
-                            options.push({
-                              value: candidate[versionKey]!,
-                              label: `${record?.policyLabels?.[key] ?? 'Attached version'} · retained`,
-                            });
-                          return (
-                            <Stack
-                              key={key}
-                              spacing={1.5}
-                              component="section"
-                              aria-label={label}
-                              sx={{
-                                p: 2,
-                                minWidth: 0,
-                                bgcolor: 'background.paper',
-                                border: 1,
-                                borderColor: 'divider',
-                                borderRadius: 1.5,
-                                '& .MuiChip-root': { maxWidth: '100%' },
-                                '& .MuiSelect-select': { minWidth: 0 },
-                              }}
-                            >
-                              <Stack
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                spacing={1}
-                              >
-                                <Typography component="h3" variant="subtitle2">
-                                  {label}
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{ display: 'block', mt: 0.5 }}
-                                  >
-                                    {key === 'collection' ? 'Required to publish' : 'Optional'}
-                                  </Typography>
-                                </Typography>
-                                <CustomTooltip
-                                  title={
-                                    candidate[versionKey]
-                                      ? 'View fee head impact'
-                                      : 'Select a policy to view its fee head impact'
-                                  }
-                                >
-                                  <span>
-                                    <IconButton
-                                      aria-label={`View ${label} fee head impact`}
-                                      disabled={!candidate[versionKey]}
-                                      onClick={() => setImpactFamily(key)}
-                                      sx={{
-                                        minWidth: 44,
-                                        minHeight: 44,
-                                        color: 'text.secondary',
-                                        '&.Mui-focusVisible': {
-                                          outline: '2px solid',
-                                          outlineColor: 'primary.main',
-                                          outlineOffset: 2,
-                                        },
-                                      }}
-                                    >
-                                      <Iconify icon="mdi:eye-outline" width={20} />
-                                    </IconButton>
-                                  </span>
-                                </CustomTooltip>
-                              </Stack>
-                              <Typography variant="body2" color="text.secondary">
-                                {description}
-                              </Typography>
-                              <CustomSelect
-                                label={label}
-                                value={candidate[versionKey] ?? ''}
-                                options={options}
-                                isSearch
-                                isLoading={catalogs[key].loading}
-                                error={
-                                  catalogs[key].error ||
-                                  (key === 'collection' && !locked && !candidate[versionKey])
-                                }
-                                helperText={
-                                  key === 'collection' && !locked && !candidate[versionKey]
-                                    ? 'Collection Policy is required'
-                                    : catalogs[key].error
-                                      ? 'Could not load this policy list. Retry to choose a policy.'
-                                      : !settings.permissions[`${key}Read`]
-                                        ? 'You do not have permission to browse this policy family.'
-                                        : candidate[versionKey]
-                                          ? 'This version stays attached until you change it.'
-                                          : settings.policies.filter(
-                                                (p) => p.family === key && p.isDefault
-                                              ).length > 1
-                                            ? 'Multiple default policies exist. Choose one explicitly and correct defaults in Settings.'
-                                            : empty
-                                }
-                                disabledValues={
-                                  candidate[versionKey] &&
-                                  !settings.policies.some(
-                                    (p) => p.family === key && p.versionId === candidate[versionKey]
-                                  )
-                                    ? [candidate[versionKey]!]
-                                    : []
-                                }
-                                labelKey="label"
-                                valueKey="value"
-                                disabled={
-                                  !writable ||
-                                  !settings.permissions[key] ||
-                                  !settings.permissions[`${key}Read`] ||
-                                  catalogs[key].error
-                                }
-                                onChange={(value) => {
-                                  defaultsHandled.current.add(key);
-                                  const policy = settings.policies.find(
-                                    (p) => p.versionId === value && p.family === key
-                                  );
-                                  change({
-                                    ...candidate,
-                                    [idKey]: policy?.id ?? null,
-                                    [versionKey]: policy?.versionId ?? null,
-                                  });
-                                }}
-                                formControlProps={{ fullWidth: true }}
-                              />
-                              {candidate[versionKey] && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {rows
-                                    ? `${rows.length} fee head${rows.length === 1 ? '' : 's'} · View coverage and exclusions`
-                                    : catalogs[key].loading
-                                      ? 'Loading fee head impact…'
-                                      : 'View impact for available details'}
-                                </Typography>
-                              )}
-                              <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                sx={{ mt: 'auto !important', pt: 1 }}
-                              >
-                                <Button
-                                  size="small"
-                                  startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                                  disabled={
-                                    navigationBusy ||
-                                    !settings.permissions[`${key}Read`] ||
-                                    catalogs[key].loading
-                                  }
-                                  onClick={catalogs[key].retry}
-                                >
-                                  {catalogs[key].error ? 'Retry' : 'Refresh list'}
-                                </Button>
-                                {!viewOnly && candidate[versionKey] && (
-                                  <Button
-                                    size="small"
-                                    startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                                    disabled={!writable || !settings.permissions[key]}
-                                    onClick={() => {
-                                      defaultsHandled.current.add(key);
-                                      change({
-                                        ...candidate,
-                                        [idKey]: null,
-                                        [versionKey]: null,
-                                      });
-                                    }}
-                                  >
-                                    Clear selection
-                                  </Button>
-                                )}
-                              </Stack>
-                            </Stack>
-                          );
-                        })}
-                      </Box>
-                    </Stack>
+                    <FeeStructurePoliciesStep
+                      candidate={candidate}
+                      settings={settings}
+                      impacts={impacts}
+                      catalogs={catalogs}
+                      writable={writable}
+                      locked={!!locked}
+                      busy={navigationBusy}
+                      onChange={(key, version) => {
+                        defaultsHandled.current.add(key);
+                        const policy = settings.policies.find(
+                          (item) => item.family === key && item.versionId === version
+                        );
+                        change({
+                          ...candidate,
+                          [`${key}PolicyId`]: policy?.id ?? null,
+                          [`${key}PolicyVersionId`]: policy?.versionId ?? null,
+                        });
+                      }}
+                      onView={setImpactFamily}
+                    />
                   )}
                   {tab === 'review' && (
-                    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                      <Box
-                        component="section"
-                        aria-label="Selected policies"
-                        sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}
-                      >
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                          sx={{ mb: 1 }}
-                        >
-                          <Typography variant="subtitle2">Selected policies</Typography>
-                          <Button
-                            size="small"
-                            disabled={navigationBusy}
-                            onClick={() => navigate(1)}
-                          >
-                            {writable ? 'Edit policies' : 'View policies'}
-                          </Button>
-                        </Stack>
-                        <Box
-                          component="dl"
-                          sx={{
-                            m: 0,
-                            display: 'grid',
-                            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-                            gap: 2,
-                          }}
-                        >
-                          {impacts.map((impact) => (
-                            <Box key={impact.key}>
-                              <Typography component="dt" variant="caption" color="text.secondary">
-                                {impact.label}
-                              </Typography>
-                              <Typography
-                                component="dd"
-                                variant="body2"
-                                sx={{ m: 0, mt: 0.5, overflowWrap: 'anywhere' }}
-                              >
-                                {candidate[`${impact.key}PolicyVersionId`]
-                                  ? impact.policyLabel
-                                  : impact.empty}
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Box>
-                      </Box>
-                      {locked && (
-                        <Alert severity={record?.publicationReview ? 'info' : 'warning'}>
-                          {record?.publicationReview
-                            ? 'This is the saved publication review. Later settings changes do not alter it.'
-                            : 'This legacy structure has no saved publication review. The checks below describe current settings and do not reconstruct historical calculations.'}
-                        </Alert>
-                      )}
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle1" sx={{ flex: 1 }}>
-                          {locked ? 'Publication checks' : 'Configuration readiness'}
-                        </Typography>
-                        <LoadingButton
-                          size="small"
-                          startIcon={<Iconify icon={GlobalIcons.refresh} />}
-                          loading={previewing}
-                          disabled={navigationBusy}
-                          onClick={review}
-                        >
-                          {locked ? 'View publication checks' : 'Recheck configuration'}
-                        </LoadingButton>
-                      </Stack>
-                      {previewing && (
-                        <Alert severity="info" role="status">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <CircularProgress size={18} aria-label="Checking configuration" />
-                            <span>Checking policy coverage, settings and installment schedules…</span>
-                          </Stack>
-                        </Alert>
-                      )}
-                      {!preview && !previewing && (
-                        <Alert severity="info">
-                          Check the current configuration to see readiness and coverage.
-                        </Alert>
-                      )}
-                      {preview && (
-                        <>
-                          <Alert
-                            severity={
-                              preview.isReady
-                                ? preview.warnings.length
-                                  ? 'warning'
-                                  : 'success'
-                                : 'error'
+                    <FeeStructureReviewStep
+                      candidate={candidate}
+                      record={record}
+                      preview={preview}
+                      impacts={impacts}
+                      writable={writable}
+                      locked={!!locked}
+                      busy={navigationBusy}
+                      previewing={previewing}
+                      tableId={`structure-review-${record?.id ?? `${initialData.classId}-${index}`}`}
+                      onReview={review}
+                      onNavigate={navigate}
+                      onRemoveRefund={
+                        writable && settings.permissions.refund && candidate.refundPolicyVersionId
+                          ? () => {
+                              defaultsHandled.current.add('refund');
+                              change({
+                                ...candidate,
+                                refundPolicyId: null,
+                                refundPolicyVersionId: null,
+                              });
+                              setTab('policies');
                             }
-                          >
-                            {locked && record?.publicationReview
-                              ? 'Configuration checks saved at publication.'
-                              : preview.isReady
-                                ? preview.warnings.length
-                                  ? 'Ready to publish — review warnings below.'
-                                  : 'All configuration checks passed.'
-                                : `${preview.errors.length} item(s) need attention before publication.`}
-                          </Alert>
-                          {!!preview.errors.length && (
-                            <Alert severity="error">
-                              <Typography variant="subtitle2">Resolve before publishing</Typography>
-                              <Box component="ul" sx={{ pl: 2.5, my: 0.5 }}>
-                                {preview.errors.map((message, i) => (
-                                  <li key={i}>{message}</li>
-                                ))}
-                              </Box>
-                            </Alert>
-                          )}
-                          {!!preview.warnings.length && (
-                            <Alert severity="warning">
-                              <Typography variant="subtitle2">Review these warnings</Typography>
-                              <Box component="ul" sx={{ pl: 2.5, my: 0.5 }}>
-                                {preview.warnings.map((message, i) => (
-                                  <li key={i}>{message}</li>
-                                ))}
-                              </Box>
-                            </Alert>
-                          )}
-                          <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Typography variant="subtitle2">Policy coverage</Typography>
-                            <Button
-                              size="small"
-                              disabled={navigationBusy}
-                              onClick={() => navigate(1)}
-                            >
-                              {writable ? 'Edit policies' : 'View policies'}
-                            </Button>
-                          </Stack>
-                          <CustomizableTable
-                            tableTitle="Policy coverage"
-                            tableId="structure-policy-coverage"
-                            data={preview.coverage.map((x) => ({ ...x, _id: x.feeHeadId }))}
-                            isPagination={false}
-                            isFilter={false}
-                            isSearch={false}
-                            isShowedDense={false}
-                            columns={[
-                              { id: 'name', label: 'Fee Head', sticky: true, minWidth: 150 },
-                              ...['collection', 'refund', 'accounting'].map((key) => ({
-                                id: key,
-                                label: key.charAt(0).toUpperCase() + key.slice(1),
-                                minWidth: 150,
-                              })),
-                            ]}
-                          />
-                          <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Typography variant="subtitle2">Installment schedule</Typography>
-                            <Button
-                              size="small"
-                              disabled={navigationBusy}
-                              onClick={() => navigate(0)}
-                            >
-                              {writable ? 'Edit fee heads & terms' : 'View fee heads & terms'}
-                            </Button>
-                          </Stack>
-                          <CustomizableTable
-                            tableTitle="Installment schedule"
-                            tableId="structure-resolved-installments"
-                            data={preview.schedules.flatMap((schedule) =>
-                              schedule.installments.map((line) => ({
-                                ...line,
-                                _id: `${schedule.feeHeadId}-${line.sequence}`,
-                                feeHeadName: schedule.feeHeadName,
-                                term: `${schedule.paymentTermName} v${schedule.versionNumber}`,
-                              }))
-                            )}
-                            isPagination={false}
-                            isFilter={false}
-                            isSearch={false}
-                            isShowedDense={false}
-                            columns={[
-                              {
-                                id: 'feeHeadName',
-                                isFilter: false,
-                                label: 'Fee Head',
-                                sticky: true,
-                                minWidth: 140,
-                              },
-                              { id: 'term', label: 'Term version', minWidth: 150 },
-                              { id: 'name', label: 'Installment', minWidth: 140 },
-                              {
-                                id: 'coverageStartDate',
-                                label: 'Service coverage',
-                                minWidth: 210,
-                                render: (_v, row) =>
-                                  `${dayjs(row.coverageStartDate).format('DD MMM YYYY')} – ${dayjs(row.coverageEndDate).format('DD MMM YYYY')}`,
-                              },
-                              {
-                                id: 'demandDate',
-                                label: 'Demand date',
-                                minWidth: 130,
-                                render: (v) => dayjs(v).format('DD-MM-YYYY'),
-                              },
-                              {
-                                id: 'dueDate',
-                                label: 'Due date',
-                                minWidth: 130,
-                                render: (v) => dayjs(v).format('DD-MM-YYYY'),
-                              },
-                              {
-                                id: 'calculatedAmount',
-                                label: 'Amount',
-                                minWidth: 130,
-                                render: (_v, row) =>
-                                  money(
-                                    row.calculatedAmount == null
-                                      ? null
-                                      : Number(row.calculatedAmount)
-                                  ),
-                              },
-                            ]}
-                          />
-                        </>
-                      )}
-                      {record && (
-                        <Typography variant="caption" color="text.secondary">
-                          Version {record.revisionNumber} · Created{' '}
-                          {dayjs(record.creationTime).format('DD-MM-YYYY HH:mm')}
-                          {record.previousRevisionId
-                            ? ' · Revised from an earlier published structure'
-                            : ''}
-                        </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary">
-                        This preview describes structure settings. Student eligibility and
-                        transactions are calculated in their own workflows.
-                      </Typography>
-                    </Stack>
+                          : undefined
+                      }
+                    />
                   )}
                 </Box>
               )}
@@ -1760,7 +1009,7 @@ export default function FeeStructureWorkspaceCard({
             variant="contained"
             loading={busy}
             disabled={navigationBusy}
-            color={confirmation === 'delete' || confirmation === 'discard' ? 'error' : 'primary'}
+            color={confirmation === 'delete' || confirmation === 'discard' ? 'error' : 'inherit'}
             startIcon={
               <Iconify
                 icon={
@@ -1769,7 +1018,7 @@ export default function FeeStructureWorkspaceCard({
                     : confirmation === 'publish'
                       ? GlobalIcons.publish
                       : confirmation === 'revision'
-                        ? 'solar:pen-new-square-bold'
+                        ? 'mdi:file-document-edit-outline'
                         : GlobalIcons.submit
                 }
               />

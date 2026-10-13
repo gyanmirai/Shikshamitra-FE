@@ -32,7 +32,7 @@ export function FormSectionHeader({
         sx={{
           width: 36,
           height: 36,
-          borderRadius: 1,
+          borderRadius: 0.75,
           display: 'grid',
           placeItems: 'center',
           bgcolor: 'background.neutral',
@@ -43,7 +43,7 @@ export function FormSectionHeader({
         <Iconify icon={icon} width={iconSize} aria-hidden />
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+        <Stack direction="row" spacing={0.5} alignItems="center" useFlexGap flexWrap="wrap">
           <Typography component="h2" variant="subtitle2" {...titleTypographyProps}>
             {title}
           </Typography>
@@ -55,7 +55,32 @@ export function FormSectionHeader({
                 }
                 size="small"
                 color="info"
-                sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
+                disableRipple
+                sx={{
+                  p: 0.75,
+                  width: 44,
+                  height: 44,
+                  flexShrink: 0,
+                  justifyContent: 'flex-start',
+                  // Keep the touch target roomy while the visible help circle stays compact.
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: 8,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                  },
+                  '&:hover': { bgcolor: 'transparent' },
+                  '&:hover::before, &.Mui-focusVisible::before': { bgcolor: 'action.hover' },
+                  '&.Mui-focusVisible::before': {
+                    outline: '2px solid',
+                    outlineColor: 'info.main',
+                    outlineOffset: 2,
+                  },
+                  '& .MuiSvgIcon-root, & .iconify': { position: 'relative' },
+                }}
               >
                 <Iconify icon="lucide:info" width={16} aria-hidden />
               </IconButton>

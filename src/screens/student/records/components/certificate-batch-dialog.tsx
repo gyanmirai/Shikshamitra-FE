@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -75,25 +76,29 @@ export default function CertificateBatchDialog({ batchId, certificateType, label
       } },
   ];
   return (
-    <CustomDialog open handleClose={onClose} title={`${label} certificates — students`} maxWidth="lg" hasForm={false} disableClose={busy} hasUnsavedChanges={false}>
+    <CustomDialog open handleClose={onClose} title={`${label} Certificates — Students`}
+      titleInfo="Review students in this batch, download certificates, and use the available actions to manage issued certificates."
+      maxWidth="lg" hasForm={false} disableClose={busy} hasUnsavedChanges={false}>
       <DialogScrollContent>
         <Stack spacing={1}>
           {error && !decision && <Alert severity="error">{error}</Alert>}
           <Box sx={{ height: 420, minHeight: 0 }}><CustomizableTable tableId="certificate-batch-students" tableTitle="Generated certificates for students"
             columns={columns} data={query.currentData?.certificates ?? []} isLoading={query.isFetching} isPagination isSearch
             noDataText="No certificates are available in this batch."
-            errorContent={query.isError ? <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>The student list could not be loaded.</Alert> : undefined}
+            errorContent={query.isError ? <Alert severity="error" action={<Button size="small" startIcon={<Iconify icon="solar:restart-bold" />} onClick={() => query.refetch()}>Retry</Button>}>The student list could not be loaded.</Alert> : undefined}
             wrapperProps={{ sx: { height: 1 } }} tableContainerProps={{ sx: { height: 1 } }} /></Box>
         </Stack>
       </DialogScrollContent>
-      <DialogActions><Button onClick={onClose} disabled={busy}>Close</Button></DialogActions>
-      <CertificatePreviewDialog open={!!view} title="Generated certificate" certificates={view ? [view] : []} onClose={() => setView(null)} />
-      <CustomDialog open={!!decision} handleClose={closeDecision} title={`${decision?.action ?? 'Review'} ${decision?.certificate.certificateNo ?? 'certificate'}`}
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}><Button size="small" variant="outlined" startIcon={<Iconify icon="mingcute:close-line" />} onClick={onClose} disabled={busy}>Close</Button></DialogActions>
+      <CertificatePreviewDialog open={!!view} title="Generated Certificate" certificates={view ? [view] : []} onClose={() => setView(null)} />
+      <CustomDialog open={!!decision} handleClose={closeDecision} title={`${decision?.action ?? 'Review'} Certificate${decision ? ` — ${decision.certificate.certificateNo}` : ''}`}
+        titleInfo={decision?.action === 'Void' ? 'Enter a reason to void this certificate. Voided certificates cannot be downloaded or reprinted.' : 'Enter a reason for this certificate action. The reason will be recorded in its history.'}
         maxWidth="sm" disableClose={busy} hasUnsavedChanges={form.dirty} onSubmit={event => { event.preventDefault(); form.submitForm(); }}>
-        <DialogScrollContent><Stack spacing={2}><TextField label="Reason" required multiline minRows={2} name="reason" value={form.values.reason}
+        <DialogScrollContent><Stack spacing={2}><TextField size="small" label="Reason" required multiline minRows={2} name="reason" value={form.values.reason}
           onChange={form.handleChange} onBlur={form.handleBlur} disabled={busy} error={!!form.touched.reason && !!form.errors.reason}
           helperText={form.touched.reason && form.errors.reason} />{error && <Alert severity="error">{error}</Alert>}</Stack></DialogScrollContent>
-        <DialogActions><Button onClick={closeDecision} disabled={busy}>Cancel</Button><Button type="submit" variant="contained"
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}><Button size="small" variant="outlined" startIcon={<Iconify icon="mingcute:close-line" />} onClick={closeDecision} disabled={busy}>Cancel</Button><Button size="small" type="submit" variant="contained"
+          startIcon={<Iconify icon={decision?.action === 'Void' ? 'solar:trash-bin-trash-bold' : decision?.action === 'Reprint' ? 'solar:printer-bold' : 'solar:copy-bold'} />}
           color={decision?.action === 'Void' ? 'error' : 'primary'} loading={busy} disabled={busy}>{decision?.action ?? 'Save'}</Button></DialogActions>
       </CustomDialog>
     </CustomDialog>

@@ -273,8 +273,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       <AccountSettingVersionDialog
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Expense category'}
-        data={history.data}
-        isLoading={history.isLoading}
+        recordType="Expense category"
+        data={history.currentData}
+        isLoading={history.isFetching}
+        isError={history.isError}
+        onRetry={() => {
+          history.refetch();
+        }}
         onClose={() => setHistoryItem(null)}
       />
     </>

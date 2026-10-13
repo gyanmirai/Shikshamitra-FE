@@ -9,10 +9,13 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { fCurrency } from 'src/utils/format-number';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+
+import { structureScheduleAmounts } from './structureScheduleAmounts';
 
 type Term = StructureSettings['terms'][number];
 interface Props {
@@ -25,19 +28,26 @@ interface Props {
 
 export default function StructureScheduleDialog({ line, term, readOnly, onClose, onSave }: Props) {
   const [rows, setRows] = useState(() =>
-    term.installments.map((master) => {
-      const override = line.installmentOverrides.find(
-        (x) => x.sourcePaymentTermInstallmentId === master.sourcePaymentTermInstallmentId
-      );
-      return Object.fromEntries(
-        Object.entries(master).map(([key, value]) => [
-          key,
-          override?.[key as keyof StructureInstallment] ?? value,
-        ])
-      ) as unknown as StructureInstallment;
-    })
+    [...term.installments]
+      .sort((a, b) => a.sequence - b.sequence)
+      .map((master) => {
+        const override = line.installmentOverrides.find(
+          (x) => x.sourcePaymentTermInstallmentId === master.sourcePaymentTermInstallmentId
+        );
+        return Object.fromEntries(
+          Object.entries(master).map(([key, value]) => [
+            key,
+            override?.[key as keyof StructureInstallment] ?? value,
+          ])
+        ) as unknown as StructureInstallment;
+      })
   );
   const [error, setError] = useState('');
+  const amounts = structureScheduleAmounts(line.isVariable ? null : line.amount, rows);
+  const totalAllocation = rows.reduce((sum, row) => sum + (row.allocationPercentage ?? 0), 0);
+  const totalAmount = amounts.every((amount) => amount !== null)
+    ? amounts.reduce<number>((sum, amount) => sum + (amount ?? 0), 0)
+    : null;
   const derivedDate = (row: StructureInstallment) => {
     if (term.demandGenerationRule === 'SpecificDate') return row.demandDate;
     if (term.demandGenerationRule === 'OnInstallmentStartDate') return row.coverageStartDate;
@@ -106,7 +116,8 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
   ): IColumn => ({
     id,
     label,
-    minWidth: 190,
+    width: 174,
+    minWidth: 174,
     isFilter: false,
     isSort: false,
     render: (_value, row) => {
@@ -115,8 +126,8 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
         typeof rawDate === 'string' && dayjs(rawDate).isValid() ? dayjs(rawDate) : null;
       return (
         <DatePicker
-          label={label}
           format="DD/MM/YYYY"
+          sx={{ width: 1, minWidth: 0 }}
           value={selectedDate}
           disabled={readOnly || disabled}
           onChange={(date) =>
@@ -130,8 +141,10 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
             textField: {
               size: 'small',
               fullWidth: true,
+              InputProps: { 'aria-label': `${row.name} ${label}` },
               inputProps: { 'aria-label': `${row.name} ${label}` },
             },
+            openPickerButton: { 'aria-label': `${row.name} ${label} calendar` },
           }}
         />
       );
@@ -144,10 +157,11 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
       handleClose={onClose}
       title={`${line.feeHeadName || 'Fee Head'} · ${term.name} v${term.versionNumber}`}
       maxWidth="lg"
+      paperProps={{ sx: { maxWidth: 1320, width: 'calc(100% - 32px)', m: 2 } }}
       hasForm={false}
     >
       <DialogScrollContent>
-        <Stack spacing={2} sx={{ p: 2 }}>
+        <Stack spacing={2}>
           <Alert severity="info">
             Changes apply only to this Fee Structure. The published Payment Term remains unchanged.
             Demand dates follow the term rule unless it uses a specific date.
@@ -155,13 +169,41 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
           {error && <Alert severity="error">{error}</Alert>}
           <CustomizableTable
             tableId="fee-structure-schedule-editor"
-            data={rows.map((x) => ({ ...x, _id: x.sourcePaymentTermInstallmentId }))}
+            tableTitle="Payment term installments"
+            data={rows.map((x, index) => ({
+              ...x,
+              _id: x.sourcePaymentTermInstallmentId,
+              amount: amounts[index],
+            }))}
+            showToolbar={false}
+            page={0}
+            rowsPerPage={Math.max(rows.length, 1)}
+            sorts={[]}
+            filters={[]}
+            searchTerm=""
             isPagination={false}
             isSearch={false}
             isFilter={false}
             isShowedDense={false}
+            tableContainerProps={{
+              sx: {
+                '& .MuiTable-root': { tableLayout: 'fixed', minWidth: 1088 },
+                '& .MuiTableCell-root': { px: 1.5, py: 1.5 },
+                '& .MuiTableCell-head': { whiteSpace: 'nowrap' },
+              },
+            }}
             columns={[
-              { id: 'name', label: 'Installment', sticky: true, minWidth: 160, isSort: false },
+              {
+                id: 'name',
+                label: 'Installment',
+                sticky: true,
+                stickyPosition: 'left',
+                width: 150,
+                minWidth: 150,
+                isSort: false,
+                isFilter: false,
+                cellSx: { overflowWrap: 'anywhere' },
+              },
               dateColumn('coverageStartDate', 'Coverage start'),
               dateColumn('coverageEndDate', 'Coverage end'),
               dateColumn('demandDate', 'Demand date', term.demandGenerationRule !== 'SpecificDate'),
@@ -169,11 +211,16 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
               {
                 id: 'allocationPercentage',
                 label: 'Allocation %',
-                minWidth: 130,
+                width: 112,
+                minWidth: 112,
+                align: 'right',
                 isSort: false,
+                isFilter: false,
                 render: (_v, row) => (
                   <TextField
                     size="small"
+                    fullWidth
+                    sx={{ '& input': { textAlign: 'right', fontVariantNumeric: 'tabular-nums' } }}
                     type="number"
                     disabled={readOnly}
                     value={row.allocationPercentage ?? ''}
@@ -193,44 +240,75 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
                   />
                 ),
               },
+              {
+                id: 'amount',
+                label: 'Amount',
+                width: 130,
+                minWidth: 130,
+                align: 'right',
+                isSort: false,
+                isFilter: false,
+                cellSx: { fontVariantNumeric: 'tabular-nums' },
+                render: (_value, row) =>
+                  line.isVariable ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Calculated during assignment
+                    </Typography>
+                  ) : row.amount === null ? (
+                    '—'
+                  ) : (
+                    fCurrency(row.amount)
+                  ),
+              },
             ]}
           />
-          <Typography variant="subtitle2" textAlign="right">
-            Total allocation:{' '}
-            {rows.reduce((sum, x) => sum + (x.allocationPercentage ?? 0), 0).toFixed(2)}%
-          </Typography>
+          <Stack direction="row" spacing={3} justifyContent="flex-end" flexWrap="wrap">
+            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              Total allocation: {totalAllocation.toFixed(2)}%
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              Total amount:{' '}
+              {line.isVariable
+                ? 'Calculated during assignment'
+                : totalAmount === null
+                  ? '—'
+                  : fCurrency(totalAmount)}
+            </Typography>
+          </Stack>
         </Stack>
-        <DialogActions sx={{ p: 2 }}>
-          {!readOnly && (
-            <Button
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.refresh} />}
-              onClick={() => onSave([], false)}
-            >
-              Restore inherited schedule
-            </Button>
-          )}
-          <Box sx={{ flex: 1 }} />
+      </DialogScrollContent>
+      <DialogActions
+        sx={{ p: 2, flexShrink: 0, borderTop: 1, borderColor: 'divider', flexWrap: 'wrap', gap: 1 }}
+      >
+        {!readOnly && (
           <Button
             size="small"
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={onClose}
+            startIcon={<Iconify icon={GlobalIcons.refresh} />}
+            onClick={() => onSave([], false)}
           >
-            {readOnly ? 'Close' : 'Cancel'}
+            Restore inherited schedule
           </Button>
-          {!readOnly && (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              onClick={save}
-            >
-              Use this schedule
-            </Button>
-          )}
-        </DialogActions>
-      </DialogScrollContent>
+        )}
+        <Box sx={{ flex: 1 }} />
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          {readOnly ? 'Close' : 'Cancel'}
+        </Button>
+        {!readOnly && (
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={save}
+          >
+            Use this schedule
+          </Button>
+        )}
+      </DialogActions>
     </CustomDialog>
   );
 }

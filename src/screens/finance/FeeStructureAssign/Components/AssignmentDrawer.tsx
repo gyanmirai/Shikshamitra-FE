@@ -28,7 +28,7 @@ export default function AssignmentDrawer({
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const viewing = students.length === 1 && students[0].isFeeStructureAssigned;
-  const title = viewing ? 'View fee assignment' : 'Assign fee structure';
+  const title = viewing ? 'View Fee Assignment' : 'Assign Fee Structure';
   const requestClose = () => {
     if (busy) return;
     if (isChanges) setConfirmClose(true);
