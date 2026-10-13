@@ -1,7 +1,5 @@
 import type { RootState } from 'src/redux/store';
 
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -33,10 +31,6 @@ export default function FeeStructureEditForm({
   const [busy, setBusy] = useState(false);
   const [pendingClassId, setPendingClassId] = useState<string | null>(null);
   const isDirtyRef = useRef(false);
-  const addNewFnRef = useRef<(() => void) | null>(null);
-  const handleRegisterAddNew = useCallback((fn: () => void) => {
-    addNewFnRef.current = fn;
-  }, []);
   const handleBusyChange = useCallback(
     (value: boolean) => {
       setBusy(value);
@@ -103,25 +97,6 @@ export default function FeeStructureEditForm({
             />
           ))}
         </CustomTabs>
-        {canAdd && (
-          <Button
-            size="small"
-            variant="contained"
-            aria-label="Add Fee Structure"
-            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-            onClick={() => addNewFnRef.current?.()}
-            disabled={busy || !selectedClassId}
-            sx={{
-              flexShrink: 0,
-              '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 } },
-              minWidth: { xs: 40, sm: 'auto' },
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              Add Fee Structure
-            </Box>
-          </Button>
-        )}
       </Box>
       <Box
         id="fee-structure-class-panel"
@@ -151,11 +126,11 @@ export default function FeeStructureEditForm({
               classId={selectedClassId}
               feeStructureMetaDataId={editData.id}
               viewOnly={viewOnly}
+              canAdd={canAdd}
               onDirtyChange={(dirty) => {
                 isDirtyRef.current = dirty;
                 dispatch(setIsChanges(dirty));
               }}
-              onRegisterAddNew={handleRegisterAddNew}
               onBusyChange={handleBusyChange}
             />
           )

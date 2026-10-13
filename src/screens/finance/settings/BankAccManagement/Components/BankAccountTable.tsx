@@ -354,8 +354,13 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       <AccountSettingVersionDialog
         open={Boolean(historyItem)}
         title={historyItem?.bankName || 'Bank account'}
-        data={history.data}
-        isLoading={history.isLoading}
+        recordType="Bank account"
+        data={history.currentData}
+        isLoading={history.isFetching}
+        isError={history.isError}
+        onRetry={() => {
+          history.refetch();
+        }}
         onClose={() => setHistoryItem(null)}
       />
     </>

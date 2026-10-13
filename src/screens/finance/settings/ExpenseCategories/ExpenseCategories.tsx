@@ -4,19 +4,17 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
+import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   expenseCategoryApi,
   useGetExpenseCategoryQuery,
@@ -153,25 +151,9 @@ const FinanceExpenseCategoriesScreen = () => {
             setSelectedExpenseCategory(null);
           }, 200);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedExpenseCategory ? 'Update Expense Category' : 'Add Expense Category'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedExpenseCategory
-                  ? 'This modal allows the user to update required details of a expense category.'
-                  : 'This modal allows the user to add all required details and create a new expense category.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedExpenseCategory ? 'Edit Expense Category' : 'Add Expense Category'}
+        titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        maxWidth="sm"
       >
         <ExpenseCategoryForm
           open={addExpenseCategoryDialog}

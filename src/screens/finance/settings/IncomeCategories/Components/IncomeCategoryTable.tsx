@@ -287,8 +287,13 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       <AccountSettingVersionDialog
         open={Boolean(historyItem)}
         title={historyItem?.name || 'Income category'}
-        data={history.data}
-        isLoading={history.isLoading}
+        recordType="Income category"
+        data={history.currentData}
+        isLoading={history.isFetching}
+        isError={history.isError}
+        onRetry={() => {
+          history.refetch();
+        }}
         onClose={() => setHistoryItem(null)}
       />
     </>

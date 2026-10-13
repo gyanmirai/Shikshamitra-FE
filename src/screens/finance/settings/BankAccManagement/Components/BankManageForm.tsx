@@ -12,23 +12,15 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   usePutBankAccountMutation,
   usePostBankAccountMutation,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
-import {
-  Grid,
-  Button,
-  Accordion,
-  TextField,
-  Typography,
-  DialogActions,
-  AccordionDetails,
-  AccordionSummary,
-} from '@mui/material';
 
 import { getBankAccountInitialValues } from './bankInitialValues';
 import { BankAccountType, type IBankAccountFormProps } from './type';
@@ -53,16 +45,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     type: 'mutation',
     currentQueryAndMutation: usePutBankAccountMutation,
   });
-
-  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({
-    bankDetails: true,
-    accountDetails: true,
-    paymentInfo: true,
-  });
-
-  const handleAccordionToggle = useCallback((panel: string) => {
-    setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
-  }, []);
 
   const formik = useFormik({
     initialValues: getBankAccountInitialValues(editData),
@@ -127,59 +109,20 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     }
   };
   const handleSubmit = useCallback(() => {
-    const fieldToPanelMap: Record<string, string> = {
-      bankName: 'bankDetails',
-      branchName: 'bankDetails',
-      branchAddress: 'bankDetails',
-      accountHolderName: 'accountDetails',
-      accountType: 'accountDetails',
-      accountNumber: 'accountDetails',
-      purpose: 'accountDetails',
-      effectiveFrom: 'bankDetails',
-      effectiveTo: 'bankDetails',
-      ifscCode: 'paymentInfo',
-      upiId: 'paymentInfo',
-    };
-
-    formik.validateForm().then((errors) => {
-      const errorKeys = Object.keys(errors);
-      if (errorKeys.length > 0) {
-        const panelsToOpen: Record<string, boolean> = {};
-        errorKeys.forEach((key) => {
-          if (fieldToPanelMap[key]) {
-            panelsToOpen[fieldToPanelMap[key]] = true;
-          }
-        });
-        setExpandedPanels((prev) => ({ ...prev, ...panelsToOpen }));
-      }
-      formik.handleSubmit();
-    });
+    formik.submitForm();
   }, [formik]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        {/* Section: Bank Details */}
-        <Accordion
-          expanded={expandedPanels.bankDetails}
-          onChange={() => handleAccordionToggle('bankDetails')}
-          disableGutters
-          elevation={0}
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '8px !important',
-            mb: 1.5,
-            '&:before': { display: 'none' },
-          }}
-        >
-          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Bank Details
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Grid container spacing={2}>
+        <Stack spacing={2}>
+          {/* Section: Bank Details */}
+          <FormSectionCard
+            icon="solar:bank-bold-duotone"
+            title="Bank details"
+            descriptionTooltip="Identify the bank and branch that hold this account."
+          >
+            <Grid container spacing={1.5}>
               {/* Bank Name */}
               <Grid size={{ xs: 12 }}>
                 <ShakingTextField
@@ -204,7 +147,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="date"
@@ -218,7 +161,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   helperText={formik.touched.effectiveFrom && formik.errors.effectiveFrom}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   type="date"
@@ -234,7 +177,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               </Grid>
 
               {/* Branch Name */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={formik.touched.branchName && Boolean(formik.errors.branchName)}
                 >
@@ -272,32 +215,17 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 />
               </Grid>
             </Grid>
-          </AccordionDetails>
-        </Accordion>
+          </FormSectionCard>
 
-        {/* Section: Account Details */}
-        <Accordion
-          expanded={expandedPanels.accountDetails}
-          onChange={() => handleAccordionToggle('accountDetails')}
-          disableGutters
-          elevation={0}
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '8px !important',
-            mb: 1.5,
-            '&:before': { display: 'none' },
-          }}
-        >
-          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Account Details
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Grid container spacing={2}>
+          {/* Section: Account Details */}
+          <FormSectionCard
+            icon="solar:wallet-money-bold-duotone"
+            title="Account details"
+            descriptionTooltip="Enter the account holder and account information used for Finance transactions."
+          >
+            <Grid container spacing={1.5}>
               {/* Account Name */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={
                     formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
@@ -326,7 +254,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               </Grid>
 
               {/* Account Type */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.accountType && Boolean(formik.errors.accountType)}
                 >
@@ -346,7 +274,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               </Grid>
 
               {/* Account Number */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
                 >
@@ -391,32 +319,17 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 />
               </Grid>
             </Grid>
-          </AccordionDetails>
-        </Accordion>
+          </FormSectionCard>
 
-        {/* Section: Payment Info */}
-        <Accordion
-          expanded={expandedPanels.paymentInfo}
-          onChange={() => handleAccordionToggle('paymentInfo')}
-          disableGutters
-          elevation={0}
-          sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '8px !important',
-            mb: 1.5,
-            '&:before': { display: 'none' },
-          }}
-        >
-          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Payment Info
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Grid container spacing={2}>
+          {/* Section: Payment Info */}
+          <FormSectionCard
+            icon="solar:card-bold-duotone"
+            title="Payment information"
+            descriptionTooltip="Add the routing codes used to identify this bank account for payments."
+          >
+            <Grid container spacing={1.5}>
               {/* IFSC Code */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
                 >
@@ -440,7 +353,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               </Grid>
 
               {/* UPI ID */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField error={formik.touched.upiId && Boolean(formik.errors.upiId)}>
                   <TextField
                     fullWidth
@@ -461,14 +374,15 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
             </Grid>
-          </AccordionDetails>
-        </Accordion>
+          </FormSectionCard>
+        </Stack>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => onClose(null, false)}
+          disabled={isAddLoading || isUpdateLoading}
           variant="outlined"
           size="small"
         >

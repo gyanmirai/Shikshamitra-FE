@@ -5,7 +5,7 @@ import type {
 
 import { useState } from 'react';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 
@@ -84,8 +84,11 @@ describe('variable student inputs', () => {
     expect(screen.queryByLabelText(/amount override/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox', { name: /Transport.*Optional/ }));
     expect(screen.getByLabelText(/Transport student amount/)).toHaveValue('');
-    expect(screen.getByLabelText(/Configured annual total amount/)).toHaveValue('₹ 5,000');
-    expect(screen.getByLabelText(/Configured annual total amount/)).toHaveAttribute('readonly');
+    const tuition = within(screen.getByRole('region', { name: 'Tuition' }));
+    expect(tuition.getByText('₹ 5,000')).toBeInTheDocument();
+    expect(tuition.getByText('Mandatory')).toBeInTheDocument();
+    expect(tuition.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(tuition.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(
       screen.queryByRole('option', { name: 'Verified transport service' })
     ).not.toBeInTheDocument();

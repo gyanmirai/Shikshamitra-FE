@@ -40,7 +40,25 @@ vi.mock('src/components/customizabaleTable', () => ({
     </div>
   ),
 }));
-vi.mock('src/components/three-dots-actions', () => ({ default: () => null }));
+vi.mock('src/components/adaptive-three-dots-actions', () => ({
+  default: ({ actions }: any) => (
+    <div>
+      {actions.map((action: any) => (
+        <button key={action.id} type="button" disabled={action.disabled} onClick={action.onClick}>
+          {action.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+vi.mock('src/components/customDialog', () => ({
+  default: ({ title, children }: any) => (
+    <div role="dialog" aria-label={title}>
+      {children}
+    </div>
+  ),
+  DialogScrollContent: ({ children }: any) => <div>{children}</div>,
+}));
 
 const term = {
   id: 'monthly',
@@ -52,7 +70,7 @@ const term = {
   demandGenerationRule: '',
   installments: [],
 };
-const catalog = { ready: true, loading: false, error: false, retry: vi.fn() };
+const catalog = { items: [], ready: true, loading: false, error: false, retry: vi.fn() };
 const initialData = {
   name: '',
   classId: 'class',
@@ -91,16 +109,22 @@ beforeEach(() => {
 });
 
 async function addHead() {
+  fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Add Fee Head' }));
   fireEvent.click(await screen.findByRole('option', { name: 'Tuition' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Add head' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add Head' }));
+}
+
+async function chooseCollection(name: string) {
+  fireEvent.click(screen.getByRole('button', { name: /^(Select|Change) Collection Policy$/ }));
+  fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
 
 it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Save & next' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save & Continue' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Save draft' })).not.toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
@@ -124,13 +148,12 @@ it('validates clearing collection immediately and keeps refund optional', async 
   ];
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
-  fireEvent.click(await screen.findByRole('option', { name: 'Collection · v1' }));
-  expect(screen.getByRole('button', { name: 'Save & next' })).not.toBeDisabled();
+  await chooseCollection('Collection');
+  expect(screen.getByRole('button', { name: 'Save & Continue' })).not.toBeDisabled();
   expect(screen.queryByText('Collection Policy is required')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Collection Policy' }));
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Save & next' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save & Continue' })).toBeDisabled();
 });
 
 it('resumes a saved structure at its scoped saved navigation step', () => {
@@ -145,16 +168,24 @@ it('resumes a saved structure at its scoped saved navigation step', () => {
     'aria-current',
     'step'
   );
-  expect(screen.getByRole('combobox', { name: 'Collection Policy' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeTruthy();
 });
 
 it('returns an incomplete saved draft to Policies when its stored progress points to Review', () => {
-  window.localStorage.setItem('fee-structure-progress:metadata:class:saved', JSON.stringify('review'));
-  render(ui({ ...structureCandidate(), id: 'saved', name: 'Saved fees', status: 1, revisionNumber: 1 }));
+  window.localStorage.setItem(
+    'fee-structure-progress:metadata:class:saved',
+    JSON.stringify('review')
+  );
+  render(
+    ui({ ...structureCandidate(), id: 'saved', name: 'Saved fees', status: 1, revisionNumber: 1 })
+  );
   expect(screen.getByText('Collection Policy is required')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
-  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute('aria-current', 'step');
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
   expect(state.mutate).not.toHaveBeenCalled();
 });
 
@@ -195,7 +226,7 @@ it('keeps the current step and entered name when Save & next fails', async () =>
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Annual fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save & next' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
   expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Annual fees');
   expect(screen.getByRole('button', { name: /^Step 1: Fee heads & terms$/i })).toHaveAttribute(
@@ -221,8 +252,8 @@ it('advances after a successful save and restores the canonical name when naviga
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Annual fees' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save & next' }));
-  await screen.findByRole('combobox', { name: 'Collection Policy' });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Continue' }));
+  await screen.findByRole('button', { name: 'Select Collection Policy' });
   expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
     'aria-current',
     'step'
@@ -289,12 +320,9 @@ it('saves the selected collection policy before allowing review and publication 
     screen.getByRole('button', { name: 'Publish structure' }) as HTMLButtonElement;
   expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(
-    screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
-  ).toBe('true');
+  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
-  fireEvent.click(await screen.findByRole('option', { name: 'collection prerna policy · v1' }));
+  await chooseCollection('collection prerna policy');
   expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
@@ -309,7 +337,7 @@ it('saves the selected collection policy before allowing review and publication 
   });
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
-  fireEvent.click(screen.getByRole('button', { name: 'Recheck configuration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Recheck Configuration' }));
   await waitFor(() => expect(publishButton().disabled).toBe(false));
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve({ ...saved, status: 0 }) });
   fireEvent.click(publishButton());
@@ -333,9 +361,7 @@ it.each(['collection', 'collectionRead'])(
     state.lookups.settings.permissions[permission] = false;
     render(ui());
     fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-    expect(
-      screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
-    ).toBe('true');
+    expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeDisabled();
   }
 );
 
@@ -360,9 +386,9 @@ it('offers only structure policies and preserves a legacy concession attachment 
     target: { value: 'Renamed fees' },
   });
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  expect(screen.getByRole('combobox', { name: 'Collection Policy' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Select Collection Policy' })).toBeTruthy();
   expect(screen.queryByRole('combobox', { name: 'Proration Policy' })).toBeNull();
-  expect(screen.getByRole('combobox', { name: 'Refund Policy' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Select Refund Policy' })).toBeTruthy();
   expect(
     screen.queryByText(/Concession Policy|Concession eligibility|Concession Fee Heads/)
   ).toBeNull();
@@ -378,12 +404,14 @@ it('defaults a new row, keeps the selector enabled, and blocks a blank amount be
   render(ui());
   await addHead();
   expect(screen.queryByRole('checkbox', { name: /one.time/i })).toBeNull();
-  expect(screen.getByRole('checkbox', { name: 'Optional' })).toBeTruthy();
+  expect(screen.getByRole('checkbox', { name: 'Optional for students' })).toBeTruthy();
   const select = screen.getByRole('combobox', { name: /Payment Term/ });
   await waitFor(() => expect(select.textContent).toContain('Monthly'));
   expect(select.getAttribute('aria-disabled')).not.toBe('true');
   expect(screen.queryByRole('tab', { name: /All Fee Heads/ })).toBeNull();
-  const amount = screen.getByRole('spinbutton', { name: 'Tuition total fee' }) as HTMLInputElement;
+  const amount = screen.getByRole('textbox', {
+    name: 'Tuition configured amount',
+  }) as HTMLInputElement;
   expect(amount.required).toBe(true);
   expect(amount.value).toBe('');
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
@@ -402,7 +430,7 @@ it('requires a term, then fills the pending row when the published default arriv
     target: { value: 'Annual fees' },
   });
   await addHead();
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Tuition total fee' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tuition configured amount' }), {
     target: { value: '90' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
@@ -446,6 +474,7 @@ it('preserves a saved older pin and permits choosing loaded terms after a failed
   expect(screen.queryByRole('checkbox', { name: /one.time/i })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
   expect(screen.queryByRole('checkbox', { name: /one.time/i })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Fee Head' }));
   const select = screen.getByRole('combobox', { name: /Payment Term/ });
   expect(select.textContent).toContain('Old monthly');
   expect(select.getAttribute('aria-disabled')).not.toBe('true');
@@ -462,14 +491,14 @@ it('clears configured pricing for variable rows, retains terms and optionality, 
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Variable fees' },
   });
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Tuition total fee' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tuition configured amount' }), {
     target: { value: '999' },
   });
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Optional' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Optional for students' }));
   fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
-  expect(screen.queryByRole('spinbutton')).toBeNull();
+  expect(screen.queryByRole('textbox', { name: 'Tuition configured amount' })).toBeNull();
   expect(screen.getByRole('combobox', { name: /Payment Term/ }).textContent).toContain('Monthly');
-  expect(screen.getByRole('checkbox', { name: 'Optional' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: 'Optional for students' })).toBeChecked();
   state.mutate.mockReturnValue({
     unwrap: () => Promise.resolve({ id: 'saved', name: 'Variable fees', status: 1, feeHeads: [] }),
   });
@@ -491,12 +520,12 @@ it('does not restore an old fixed price after switching variable pricing off', a
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Annual fees' },
   });
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Tuition total fee' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tuition configured amount' }), {
     target: { value: '999' },
   });
   fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
   fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
-  expect(screen.getByRole('spinbutton', { name: 'Tuition total fee' })).toHaveValue(null);
+  expect(screen.getByRole('textbox', { name: 'Tuition configured amount' })).toHaveValue('');
   fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeTruthy();
   expect(state.mutate).not.toHaveBeenCalled();
@@ -519,8 +548,7 @@ it('shows unpriced variable installments as entered at assignment even when the 
     target: { value: 'Variable fees' },
   });
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
-  fireEvent.click(await screen.findByRole('option', { name: 'Collection · v1' }));
+  await chooseCollection('Collection');
   state.mutate.mockReturnValueOnce({
     unwrap: () =>
       Promise.resolve({
@@ -553,4 +581,77 @@ it('shows unpriced variable installments as entered at assignment even when the 
   fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   expect(await screen.findByText('Calculated during assignment')).toBeTruthy();
   expect(screen.queryByText(/NaN/)).toBeNull();
+});
+
+it('keeps published policy and payment-term names from the saved snapshot after catalog renames', () => {
+  state.lookups.settings.policies = [
+    {
+      family: 'collection',
+      id: 'collection',
+      versionId: 'collection-v1',
+      name: 'Renamed Collection',
+      versionNumber: 1,
+    },
+  ];
+  const candidate = {
+    ...structureCandidate(),
+    name: 'Published fees',
+    collectionPolicyId: 'collection',
+    collectionPolicyVersionId: 'collection-v1',
+    feeHeads: [
+      {
+        feeHeadId: 'tuition',
+        feeHeadName: 'Tuition',
+        amount: 100,
+        isVariable: false,
+        isOptional: false,
+        isOneTime: false,
+        payableMonth: 0,
+        payableYear: 0,
+        paymentTermId: 'monthly',
+        paymentTermVersionId: 'monthly-v1',
+        paymentTermName: 'Original monthly',
+        paymentTermVersionNumber: 1,
+        scheduleMode: 'Inherited',
+        installmentOverrides: [],
+      },
+    ],
+  };
+  render(
+    ui({
+      ...candidate,
+      id: 'published',
+      status: 0,
+      revisionNumber: 1,
+      publicationReview: {
+        candidate,
+        policyLabels: { collection: 'Original Collection · v1' },
+        isReady: true,
+        errors: [],
+        warnings: [],
+        coverage: [
+          {
+            feeHeadId: 'tuition',
+            name: 'Tuition',
+            collection: 'No late fee',
+            refund: 'Not attached',
+            accounting: 'Ready',
+          },
+        ],
+        schedules: [],
+      },
+    })
+  );
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  expect(screen.getByText('Original Collection · v1')).toBeTruthy();
+  expect(screen.queryByText('Renamed Collection')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  fireEvent.click(screen.getByRole('button', { name: 'View Fee Head' }));
+  expect(screen.getByRole('combobox', { name: /Payment Term/ }).textContent).toContain(
+    'Original monthly'
+  );
+  expect(screen.getByRole('combobox', { name: /Payment Term/ })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
 });

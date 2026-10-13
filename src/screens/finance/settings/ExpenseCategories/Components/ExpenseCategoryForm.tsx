@@ -11,6 +11,7 @@ import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
@@ -130,101 +131,107 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={3}>
-          {/* Expense Category Name */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
-              <TextField
-                fullWidth
-                label="Expense Category Name *"
-                name="name"
-                size="small"
-                value={formik.values.name}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '')
-                    .replace(/^\s+/g, '')
-                    .trimStart()
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-                  formik.setFieldValue('name', value);
-                }}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-              />
-            </ShakingTextField>
-          </Grid>
+        <FormSectionCard
+          icon="solar:wallet-money-bold-duotone"
+          title="Expense category details"
+          descriptionTooltip="Name this category and add tags to organize your expense records."
+        >
+          <Grid container spacing={1.5}>
+            {/* Expense Category Name */}
+            <Grid size={12}>
+              <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
+                <TextField
+                  fullWidth
+                  label="Expense Category Name *"
+                  name="name"
+                  size="small"
+                  value={formik.values.name}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/[^a-zA-Z\s]/g, '')
+                      .replace(/^\s+/g, '')
+                      .trimStart()
+                      .split(' ')
+                      .map((word) =>
+                        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                      )
+                      .join(' ');
+                    formik.setFieldValue('name', value);
+                  }}
+                  error={formik.touched.name && Boolean(formik.errors.name)}
+                  helperText={formik.touched.name && formik.errors.name}
+                />
+              </ShakingTextField>
+            </Grid>
 
-          {/* Tags */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
+            {/* Tags */}
+            <Grid size={12}>
+              <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Tags (optional)"
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  InputProps={{
+                    startAdornment: (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 0.5,
+                          alignItems: 'center',
+                          maxWidth: '100%',
+                        }}
+                      >
+                        {formik.values.tags.map((t: string, index: number) => (
+                          <Chip
+                            key={index}
+                            label={t}
+                            onDelete={() => handleDelete(t)}
+                            size="small"
+                            sx={{ mt: 1 }}
+                          />
+                        ))}
+                      </Box>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      flexWrap: 'wrap',
+                      alignItems: 'flex-start',
+                      minHeight: 'auto',
+                    },
+                    '& .MuiInputBase-input': {
+                      flexGrow: 1,
+                      minWidth: '80px',
+                    },
+                  }}
+                  error={formik.touched.tags && Boolean(formik.errors.tags)}
+                  helperText={
+                    formik.touched.tags && typeof formik.errors.tags === 'string'
+                      ? formik.errors.tags
+                      : 'Press Enter to add a tag'
+                  }
+                />
+              </ShakingTextField>
+            </Grid>
+            {/* Description */}
+            <Grid size={12}>
               <TextField
                 fullWidth
+                multiline
+                rows={3}
+                label="Description"
+                name="description"
                 size="small"
-                label="Tags (optional)"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                onKeyDown={handleKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 0.5,
-                        alignItems: 'center',
-                        maxWidth: '100%',
-                      }}
-                    >
-                      {formik.values.tags.map((t: string, index: number) => (
-                        <Chip
-                          key={index}
-                          label={t}
-                          onDelete={() => handleDelete(t)}
-                          size="small"
-                          sx={{ mt: 1 }}
-                        />
-                      ))}
-                    </Box>
-                  ),
-                }}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                    minHeight: 'auto',
-                  },
-                  '& .MuiInputBase-input': {
-                    flexGrow: 1,
-                    minWidth: '80px',
-                  },
-                }}
-                error={formik.touched.tags && Boolean(formik.errors.tags)}
-                helperText={
-                  formik.touched.tags && typeof formik.errors.tags === 'string'
-                    ? formik.errors.tags
-                    : 'Press Enter to add a tag'
-                }
+                value={formik.values.description}
+                onChange={formik.handleChange}
               />
-            </ShakingTextField>
+            </Grid>
           </Grid>
-          {/* Description */}
-          <Grid size={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Description"
-              name="description"
-              size="small"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-        </Grid>
+        </FormSectionCard>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -233,6 +240,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
           onClick={() => onClose(null, false)}
           variant="outlined"
           size="small"
+          disabled={isAddLoading || isUpdateLoading}
         >
           Cancel
         </Button>

@@ -1,4 +1,4 @@
-import { beforeEach, it, expect, vi } from 'vitest';
+import { it, vi, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from '@testing-library/react';
 
@@ -28,8 +28,8 @@ vi.mock('src/redux/student/records/student-records-api', () => ({
     boards: [{ id: 'board-1', name: 'Board 1', parentId: 'year-1' }, { id: 'board-2', name: 'Board 2', parentId: 'year-1' }],
     mediums: [{ id: 'medium-1', name: 'English', parentId: 'board-1' }],
     stages: [{ id: 'stage-1', name: 'Primary', parentId: 'medium-1' }],
-    standards: [{ id: 'class-1', name: 'Class 1', parentId: 'medium-1', stageId: 'stage-1' }],
-    divisions: [{ id: 'division-1', name: 'A', parentId: 'class-1' }],
+    standards: [{ id: 'class-1', name: 'Class 1', parentId: 'medium-1', stageId: 'stage-1' }, { id: 'class-2', name: 'Class 2', parentId: 'medium-1', stageId: 'stage-1' }],
+    divisions: [{ id: 'division-1', name: 'A', parentId: 'class-1' }, { id: 'division-2', name: 'B', parentId: 'class-2' }],
   } }),
   useGetStudentRecordsDirectoryQuery: (input: any) => { mocks.directory(input); return { currentData: { items: students, totalCount: 2 } }; },
 }));
@@ -50,15 +50,12 @@ beforeEach(() => {
 it('previews selected names in a dialog and retries a partial generation with the same student keys', async () => {
   const user = userEvent.setup();
   render(<StudentCertificateForm certificateType={1} certificateLabel="Bonafide" onClose={mocks.close} onGenerated={mocks.generated} />);
-  await user.selectOptions(screen.getByRole('combobox', { name: 'School level' }), 'stage-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
   await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
   await user.click(screen.getByRole('checkbox', { name: 'Select Ravi Shah' }));
   await user.type(screen.getByRole('textbox', { name: 'Purpose / reason' }), 'Scholarship application');
   await user.click(screen.getByRole('button', { name: 'Preview' }));
   await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
-  expect(screen.getByRole('dialog', { name: 'Bonafide certificate preview' })).toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: 'Bonafide Certificate Preview' })).toBeInTheDocument();
   expect(mocks.preview.mock.calls.map(call => call[0].studentId)).toEqual(['student-1', 'student-2']);
   expect(mocks.preview.mock.calls[0][0].issueDate).toMatch(/Z$/);
   mocks.issue.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('Temporary failure'));
@@ -70,22 +67,26 @@ it('previews selected names in a dialog and retries a partial generation with th
   expect(mocks.issue.mock.calls[3][0].idempotencyKey).toBe(mocks.issue.mock.calls[1][0].idempotencyKey);
 });
 
-it('filters through academic stage and clears student selection when hierarchy changes', async () => {
+it('defaults the full academic hierarchy and clears student selection when it changes', async () => {
   const user = userEvent.setup();
   render(<StudentCertificateForm certificateType={1} certificateLabel="Bonafide" onClose={mocks.close} onGenerated={mocks.generated} />);
   expect(screen.getByRole('combobox', { name: 'Board' })).toHaveValue('board-1');
   expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveValue('medium-1');
-  expect(screen.getByRole('combobox', { name: 'Class' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: 'Division' })).toBeDisabled();
+  expect(screen.getByRole('dialog', { name: 'Create Bonafide Certificates' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'School level' })).toHaveValue('stage-1');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toHaveValue('class-1');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('division-1');
+  expect(screen.getByRole('combobox', { name: 'Class' })).toBeEnabled();
+  expect(screen.getByRole('combobox', { name: 'Division' })).toBeEnabled();
   expect(screen.queryByRole('option', { name: /^All$/ })).not.toBeInTheDocument();
-  expect(screen.queryByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeInTheDocument();
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Board' }), 'board-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Medium' }), 'medium-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'School level' }), 'stage-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-1');
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Division' }), 'division-1');
   expect(mocks.directory).toHaveBeenLastCalledWith(expect.objectContaining({ academicYearId: 'year-1', includeActiveStudentList: true,
     boardId: 'board-1', mediumId: 'medium-1', academicMediumStageId: 'stage-1', standardId: 'class-1', divisionId: 'division-1' }));
+  await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Class' }), 'class-2');
+  expect(screen.getByRole('combobox', { name: 'Division' })).toHaveValue('division-2');
+  expect(screen.getByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeChecked();
+  expect(screen.getByText('Students (0/100 selected)')).toBeInTheDocument();
+  expect(mocks.directory).toHaveBeenLastCalledWith(expect.objectContaining({ standardId: 'class-2', divisionId: 'division-2' }));
   await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
   await user.selectOptions(screen.getByRole('combobox', { name: 'Board' }), 'board-2');
   expect(screen.queryByRole('checkbox', { name: 'Select Asha Patel' })).not.toBeInTheDocument();
@@ -96,3 +97,18 @@ it('filters through academic stage and clears student selection when hierarchy c
   expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
   expect(mocks.preview).not.toHaveBeenCalled();
 });
+
+it.each([[2, 'Character', 'Conduct assessment (optional)', 'Conduct'], [4, 'First Trial', 'First trial particulars (optional)', 'FirstTrialDetails']] as const)(
+  'passes verified particulars through preview and generation for type %s', async (type, label, fieldLabel, key) => {
+    const user = userEvent.setup();
+    render(<StudentCertificateForm certificateType={type} certificateLabel={label} onClose={mocks.close} onGenerated={mocks.generated} />);
+    await user.click(screen.getByRole('checkbox', { name: 'Select Asha Patel' }));
+    await user.type(screen.getByRole('textbox', { name: fieldLabel }), 'Verified school record');
+    await user.click(screen.getByRole('button', { name: 'Preview' }));
+    await waitFor(() => expect(mocks.preview).toHaveBeenCalledOnce());
+    expect(mocks.preview.mock.calls[0][0].certificateFields[key]).toBe('Verified school record');
+    await user.click(screen.getByRole('button', { name: 'Generate certificates (1)' }));
+    await waitFor(() => expect(mocks.issue).toHaveBeenCalledOnce());
+    expect(mocks.issue.mock.calls[0][0].certificateFields).toEqual(mocks.preview.mock.calls[0][0].certificateFields);
+  }
+);

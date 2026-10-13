@@ -4,24 +4,22 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
+import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   bankAccountApi,
   useGetBankAccountQuery,
-  useLazyGetBankAccountByIdQuery,
   useDeleteBankAccountMutation,
+  useLazyGetBankAccountByIdQuery,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import BankAccountForm from './Components/BankManageForm';
@@ -159,25 +157,9 @@ const BankAccountManagement: React.FC = () => {
             setSelectedBankAccount(null);
           }, 200);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedBankAccount ? 'Update Bank Account' : 'Add Bank Account'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedBankAccount
-                  ? 'Update existing bank account details like account number, IFSC, branch and linked payment methods.'
-                  : 'Create a new bank account record (bank name, account number, IFSC, branch, opening balance and linked payment methods).'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedBankAccount ? 'Edit Bank Account' : 'Add Bank Account'}
+        titleInfo="Maintain bank, account, and payment details used by Finance."
+
         maxWidth="sm"
       >
         <BankAccountForm

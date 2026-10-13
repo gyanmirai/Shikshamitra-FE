@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Grid, TextField, Autocomplete } from '@mui/material';
-import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
@@ -32,17 +32,28 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const { currentData: studentsData, isLoading: studentLoading, isFetching: studentFetching, isError: studentsError } =
-    useGetStudentsByScopeQuery(
-      {
-        academicYearId: currentYear?.id || '',
-        boardId: values.boardId,
-        educationMediumId: values.mediumId,
-        classIds: [values.standardId],
-        divisionIds: [values.divisionId],
-      },
-      { skip: !currentYear?.id || !values.boardId || !values.mediumId || !values.standardId || !values.divisionId }
-    );
+  const {
+    currentData: studentsData,
+    isLoading: studentLoading,
+    isFetching: studentFetching,
+    isError: studentsError,
+  } = useGetStudentsByScopeQuery(
+    {
+      academicYearId: currentYear?.id || '',
+      boardId: values.boardId,
+      educationMediumId: values.mediumId,
+      classIds: [values.standardId],
+      divisionIds: [values.divisionId],
+    },
+    {
+      skip:
+        !currentYear?.id ||
+        !values.boardId ||
+        !values.mediumId ||
+        !values.standardId ||
+        !values.divisionId,
+    }
+  );
 
   const studentOptions = useMemo(
     () =>
@@ -88,9 +99,9 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       {/* Board */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
           <CustomSelect
             label="Board *"
@@ -121,7 +132,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
       </Grid>
 
       {/* Medium */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
           <CustomSelect
             label="Medium *"
@@ -150,7 +161,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
       </Grid>
 
       {/* Class */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
           <CustomSelect
             label="Class *"
@@ -178,7 +189,7 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
       </Grid>
 
       {/* Division */}
-      <Grid size={{ xs: 6, md: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
           <CustomSelect
             label="Division *"
@@ -207,12 +218,22 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
           <Autocomplete
             loading={studentLoading || studentFetching}
-            noOptionsText={studentsError ? 'Unable to load students' : values.divisionId ? 'No Student Found' : 'Select a division first'}
+            noOptionsText={
+              studentsError
+                ? 'Unable to load students'
+                : values.divisionId
+                  ? 'No Student Found'
+                  : 'Select a division first'
+            }
             fullWidth
             disabled={disabled || !values.divisionId}
             options={studentOptions}
-            value={studentOptions.find((s) => s.studentId === values.studentId) ||
-              (disabled && values.studentId ? { studentId: values.studentId, name: values.studentName } : null)}
+            value={
+              studentOptions.find((s) => s.studentId === values.studentId) ||
+              (disabled && values.studentId
+                ? { studentId: values.studentId, name: values.studentName }
+                : null)
+            }
             isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
             onChange={(_e, value: any) => {
               setFieldValue('studentId', value?.studentId || '');

@@ -219,6 +219,8 @@ export interface GetFeeRefundsInput {
   legacyHistory?: boolean;
   workflowVersion?: number;
   search?: string;
+  /** JSON column filters, applied by the API before counting and pagination. */
+  filters?: string;
   skipCount?: number;
   maxResultCount?: number;
   sorting?: string;
