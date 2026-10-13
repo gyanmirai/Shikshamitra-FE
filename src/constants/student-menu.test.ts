@@ -95,20 +95,23 @@ describe('student navigation', () => {
       'Students.Onboarding.Add',
     ]);
     expect(onboarding?.visibilityPermissionName).toBe('ShikshaMitra.Module.Students.Onboarding');
-    expect(onboarding?.children?.map((item) => item.title)).toEqual(['Student Setup', 'Settings']);
+    expect(onboarding?.children?.map((item) => item.title)).toEqual([
+      'Student Setup',
+      'Onboarding Settings',
+    ]);
     expect(onboarding?.children?.find((item) => item.title === 'Student Setup')).toMatchObject({
       path: '/student/onboarding/setup',
       permissionName: 'Students.Onboarding.View',
     });
-    expect(onboarding?.children?.find((item) => item.title === 'Settings')).toMatchObject({
+    expect(onboarding?.children?.find((item) => item.title === 'Onboarding Settings')).toMatchObject({
       path: '/student/onboarding/settings',
       permissionName: 'Students.Onboarding.Add',
     });
     expect(
       onboarding?.children
-        ?.find((item) => item.title === 'Settings')
-        ?.children?.map((item) => item.title)
-    ).toEqual(['Readiness & Access', 'Numbering & Placement']);
+        ?.find((item) => item.title === 'Onboarding Settings')
+        ?.children
+    ).toBeUndefined();
   });
 
   it('exposes all notification permission groups in the permission editor', () => {

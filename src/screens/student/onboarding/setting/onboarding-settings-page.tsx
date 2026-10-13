@@ -1,171 +1,113 @@
 'use client';
 
-import type { TooltipProps } from '@mui/material';
-
+import Link from 'next/link';
+import { useRef } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
+import { useSearchParams } from 'src/routes/hooks';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Box, Tab, Paper, Stack, Button } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
-
-const settingsItems = [
-  {
-    title: 'Readiness & Access',
-    description:
-      'Manage saved readiness defaults, approvals, handoffs, and student or guardian access.',
-    path: studentPaths.onboarding.settingsSections.readinessAccess,
-    icon: 'mdi:account-check-outline',
-  },
-  {
-    title: 'Numbering & Placement',
-    description:
-      'Manage saved GR and seat settings, roll numbering, and safe Division-change behavior.',
-    path: studentPaths.onboarding.settingsSections.numberingPlacement,
-    icon: 'mdi:identifier',
-  },
-];
+import PortalAccessSettingsScreen from './portal-access-settings';
+import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
+import { onboardingSettingsTabs, getOnboardingSettingsTab } from './onboarding-settings-navigation';
 
 export default function OnboardingSettingsPage() {
+  const searchParams = useSearchParams();
+  const activeTab = getOnboardingSettingsTab(searchParams.get('tab'));
+  const createActionRef = useRef<(() => void) | null>(null);
+  const getTabHref = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    return `${studentPaths.onboarding.settings}?${params.toString()}`;
+  };
+
   return (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
+    <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: 1 }}>
       <CustomBreadcrumbs
         heading="Onboarding Settings"
-        description=" "
-        tooltipProps={
-          {
-            title: (
-              <OnboardingSettingsBreadcrumbInfo
-                title="Onboarding settings"
-                description="Control readiness, identifiers, roll numbers, and portal access without crowding daily work."
-                items={[
-                  'Manage activation readiness and portal-access rules.',
-                  'Configure GR, Roll number, and Division placement policies.',
-                  'Save backend readiness, seat reservation, and GR identifier settings in their related sections.',
-                ]}
-              />
-            ),
-            sx: { textAlign: 'left' },
-          } as TooltipProps
-        }
+        description="Set student and parent/guardian login requirements, GR series, and Roll number rules. Admission supplies the student's onboarding requirements."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Onboarding', href: studentPaths.onboarding.setup },
-          { name: 'Settings' },
+          { name: 'Onboarding Settings' },
         ]}
       />
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-          gap: 1.5,
-        }}
-      >
-        {settingsItems.map((item) => (
-          <Paper
-            key={item.title}
-            component={RouterLink}
-            href={item.path}
-            variant="outlined"
-            sx={{
-              p: 2,
-              display: 'flex',
-              gap: 1.5,
-              alignItems: 'flex-start',
-              color: 'inherit',
-              textDecoration: 'none',
-              transition: (theme) => theme.transitions.create(['border-color', 'box-shadow']),
-              '&:hover': {
-                borderColor: 'primary.main',
-                boxShadow: 2,
-              },
-              '&:focus-visible': {
-                outline: (theme) => `3px solid ${theme.palette.primary.main}`,
-                outlineOffset: 2,
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                flexShrink: 0,
-                display: 'grid',
-                placeItems: 'center',
-                borderRadius: 1.5,
-                bgcolor: 'action.hover',
-                color: 'primary.main',
-              }}
+      <Paper variant="outlined" sx={{ flexShrink: 0, overflow: 'hidden' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }}>
+          <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <CustomTabs
+              value={activeTab}
+              guardUnsavedChanges={false}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              aria-label="Onboarding settings"
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1 } }}
             >
-              <Iconify icon={item.icon} width={22} />
-            </Box>
-            <Stack spacing={0.5}>
-              <Typography variant="subtitle1" fontWeight={700}>
-                {item.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {item.description}
-              </Typography>
-            </Stack>
-          </Paper>
-        ))}
-      </Box>
-      <Paper variant="outlined" sx={{ p: 1.5 }}>
-        <Stack direction="row" spacing={1} alignItems="flex-start">
-          <Iconify icon="mdi:information-outline" width={20} color="info.main" />
-          <Box>
-            <Typography variant="subtitle2">Persistence boundary</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Readiness profiles, GR and Roll rules, and Division-change settings are saved for the
-              selected school or academic-year scope. Operational activation, seat, identifier,
-              and service-handoff controls continue to use their dedicated backend contracts.
-            </Typography>
+              {onboardingSettingsTabs.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  component={Link}
+                  href={getTabHref(tab.value)}
+                  prefetch={false}
+                  scroll={false}
+                  label={tab.label}
+                  icon={<Iconify icon={tab.icon} width={20} />}
+                  iconPosition="start"
+                  id={`onboarding-settings-tab-${tab.value}`}
+                  aria-controls={`onboarding-settings-panel-${tab.value}`}
+                  sx={{ minHeight: 44, py: 1, textDecoration: 'none' }}
+                />
+              ))}
+            </CustomTabs>
           </Box>
+          {activeTab !== 'portal-access' && (
+            <Box sx={{ px: 1, py: 1, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="mdi:plus" width={18} />}
+                onClick={() => createActionRef.current?.()}
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                {activeTab === 'gr-number' ? 'Add Series' : 'Add Roll Number Rule'}
+              </Button>
+            </Box>
+          )}
         </Stack>
       </Paper>
-    </Stack>
-  );
-}
-
-export function OnboardingSettingsSectionPlaceholder({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <Stack spacing={2} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
-      <CustomBreadcrumbs
-        heading={title}
-        description=" "
-        tooltipProps={
-          {
-            title: (
-              <OnboardingSettingsBreadcrumbInfo
-                title={`${title} settings`}
-                description={description}
-              />
-            ),
-            sx: { textAlign: 'left' },
-          } as TooltipProps
-        }
-        links={[
-          { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Onboarding', href: studentPaths.onboarding.setup },
-          { name: 'Settings', href: studentPaths.onboarding.settings },
-          { name: title },
-        ]}
-      />
-      <Paper
-        variant="outlined"
-        sx={{ flex: 1, minHeight: 240, display: 'grid', placeItems: 'center', p: 3 }}
+      <Box
+        role="tabpanel"
+        id={`onboarding-settings-panel-${activeTab}`}
+        aria-labelledby={`onboarding-settings-tab-${activeTab}`}
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: activeTab === 'portal-access' ? 'auto' : 'hidden',
+        }}
       >
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          {title} configuration will be added in a later onboarding phase.
-        </Typography>
-      </Paper>
+        {activeTab === 'portal-access' && <PortalAccessSettingsScreen />}
+        {activeTab === 'gr-number' && (
+          <GrNumberSettingsScreen
+            embedded
+            showWorkspaceBar={false}
+            createActionRef={createActionRef}
+          />
+        )}
+        {activeTab === 'roll-number' && (
+          <RollNumberSettingsScreen
+            embedded
+            showWorkspaceBar={false}
+            createActionRef={createActionRef}
+          />
+        )}
+      </Box>
     </Stack>
   );
 }

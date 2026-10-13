@@ -520,7 +520,7 @@ describe('student onboarding API', () => {
     expect(deactivateStamp).toBe('series-stamp-1');
   });
 
-  it('round-trips scoped advanced settings with schema and concurrency metadata', async () => {
+  it('round-trips scoped settings with schema and concurrency metadata', async () => {
     const savedRecord = {
       id: 'settings-1',
       concurrencyStamp: 'settings-stamp-1',
@@ -529,11 +529,13 @@ describe('student onboarding API', () => {
       configurationJson: '{"readinessAccess":{"requireDocuments":true}}',
     };
     let getYear = '';
+    let settingsReadCount = 0;
     let saveBody: Record<string, unknown> = {};
     let deleteStamp = '';
 
     mswServer.use(
       http.get('*/api/student/onboarding/settings/configurations', ({ request }) => {
+        settingsReadCount += 1;
         getYear = new URL(request.url).searchParams.get('academicYearId') ?? '';
         return HttpResponse.json({ data: [savedRecord] });
       }),
@@ -565,6 +567,8 @@ describe('student onboarding API', () => {
         })
       )
       .unwrap();
+    await vi.waitFor(() => expect(settingsReadCount).toBe(2));
+    await Promise.all(store.dispatch(api.util.getRunningQueriesThunk()));
     await store
       .dispatch(
         endpoints.deleteStudentOnboardingSettings.initiate({
@@ -573,6 +577,7 @@ describe('student onboarding API', () => {
         })
       )
       .unwrap();
+    await vi.waitFor(() => expect(settingsReadCount).toBe(3));
 
     expect(getYear).toBe('year-1');
     expect(saveBody).toEqual({
@@ -582,6 +587,9 @@ describe('student onboarding API', () => {
       concurrencyStamp: 'settings-stamp-1',
     });
     expect(deleteStamp).toBe('settings-stamp-2');
+    // Settings mutations deliberately refresh active subscribers. Finish those reads
+    // while their request handlers are still installed before this test cleans up.
+    await Promise.all(store.dispatch(api.util.getRunningQueriesThunk()));
     query.unsubscribe();
   });
 

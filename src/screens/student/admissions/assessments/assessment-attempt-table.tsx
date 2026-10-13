@@ -54,10 +54,17 @@ function ResultEntry({
   assessment,
   quick,
   disabled,
-}: Pick<EditableProps, 'assessment' | 'quick' | 'disabled'>) {
+  formId,
+}: Pick<EditableProps, 'assessment' | 'quick' | 'disabled'> & { formId: string }) {
   const { formik } = quick;
   return (
-    <Box component="form" noValidate onSubmit={formik.handleSubmit} sx={{ minWidth: 220 }}>
+    <Box
+      component="form"
+      id={formId}
+      noValidate
+      onSubmit={formik.handleSubmit}
+      sx={{ minWidth: 160 }}
+    >
       <Stack direction="row" spacing={1} alignItems="flex-start">
         {assessment.policy.scoringEnabled ? (
           <NumericFormatCustom
@@ -89,16 +96,6 @@ function ResultEntry({
             helperText={formik.touched.outcome ? formik.errors.outcome : undefined}
           />
         )}
-        <LoadingButton
-          type="submit"
-          size="small"
-          variant="contained"
-          loading={formik.isSubmitting}
-          aria-label={`Save result for attempt ${quick.attempt?.attemptNumber}`}
-          disabled={disabled || !quick.canRecordResult}
-        >
-          Save
-        </LoadingButton>
       </Stack>
     </Box>
   );
@@ -113,6 +110,7 @@ export function AssessmentAttemptTable({
   onAction,
 }: Props) {
   const permissions = useAssessmentPermissions();
+  const resultFormId = `assessment-result-${assessment.applicationId}-${assessment.stageInstanceId}`;
   const scoringEnabled =
     assessment.policy?.scoringEnabled ??
     assessment.attempts.some((attempt) => attempt.marks != null);
@@ -242,7 +240,7 @@ export function AssessmentAttemptTable({
       align: 'right',
       label: scoringEnabled ? (totalMarks != null ? `Marks / ${totalMarks}` : 'Marks') : 'Result',
       filterType: 'number',
-      minWidth: readOnly ? 110 : 240,
+      minWidth: readOnly ? 110 : 192,
       isFilter: false,
       isSort: false,
       render: (_, row) =>
@@ -255,6 +253,7 @@ export function AssessmentAttemptTable({
             assessment={{ ...assessment, policy: assessment.policy }}
             quick={quick}
             disabled={disabled}
+            formId={resultFormId}
           />
         ) : (
           <Typography variant="body2" textAlign="right">
@@ -303,8 +302,8 @@ export function AssessmentAttemptTable({
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 64,
-      width: 64,
+      minWidth: 144,
+      width: 144,
       align: 'right',
       isFilter: false,
       isSort: false,
@@ -323,30 +322,49 @@ export function AssessmentAttemptTable({
           if (row.attemptNumber === lastNumber && assessment.canWaive && permissions.waive)
             actions.push('waive');
         }
-        return actions.length ? (
-          <ThreeDotsActions
-            moreLabel={`More actions for attempt ${row.attemptNumber}`}
-            sx={{ justifyContent: 'flex-end' }}
-            actions={({ popover }) =>
-              actions.map((action) => (
-                <MenuItem
-                  key={action}
-                  disabled={disabled || quick?.formik.dirty}
-                  onClick={() => {
-                    popover.onClose();
-                    onAction?.(action);
-                  }}
-                >
-                  {action === 'attendance'
-                    ? 'Record attendance with notes'
-                    : action === 'result'
-                      ? 'Record result with notes'
-                      : assessmentActionLabels[action]}
-                </MenuItem>
-              ))
-            }
-          />
-        ) : null;
+        const showSave =
+          !readOnly && quick && latest && row.status === 'pending' && assessment.policy;
+        return (
+          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+            {showSave && (
+              <LoadingButton
+                type="submit"
+                form={resultFormId}
+                size="small"
+                variant="contained"
+                loading={quick.formik.isSubmitting}
+                aria-label={`Save result for attempt ${row.attemptNumber}`}
+                disabled={disabled || !quick.canRecordResult}
+              >
+                Save
+              </LoadingButton>
+            )}
+            {actions.length > 0 && (
+              <ThreeDotsActions
+                moreLabel={`More actions for attempt ${row.attemptNumber}`}
+                sx={{ justifyContent: 'flex-end' }}
+                actions={({ popover }) =>
+                  actions.map((action) => (
+                    <MenuItem
+                      key={action}
+                      disabled={disabled || quick?.formik.dirty}
+                      onClick={() => {
+                        popover.onClose();
+                        onAction?.(action);
+                      }}
+                    >
+                      {action === 'attendance'
+                        ? 'Record attendance with notes'
+                        : action === 'result'
+                          ? 'Record result with notes'
+                          : assessmentActionLabels[action]}
+                    </MenuItem>
+                  ))
+                }
+              />
+            )}
+          </Stack>
+        );
       },
     },
   ];

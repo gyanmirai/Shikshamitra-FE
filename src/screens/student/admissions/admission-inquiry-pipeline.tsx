@@ -5,8 +5,7 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
-import { Box, Paper, Alert, Button } from '@mui/material';
+import { Box, Alert, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -20,9 +19,11 @@ import {
 } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { getAdmissionApplicationStatusLabel } from './application-status';
+import { BulkPipelineCounsellor } from './pipeline/bulk-pipeline-counsellor';
+import { useBulkPipelineCounsellor } from './pipeline/use-bulk-pipeline-counsellor';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
+import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
 import { ApplicationWorkspaceRedirect } from './application-detail/application-workspace-redirect';
 import {
   AdmissionAcademicFilters,
@@ -30,12 +31,11 @@ import {
 } from './admission-academic-filters';
 import {
   admissionPipelineUrl,
-  PIPELINE_ACTIVE_STATUSES,
   readAdmissionPipelineState,
   admissionPipelineApplicationUrl,
 } from './pipeline/admission-pipeline-state';
 
-const ALL = '__all__';
+const EMPTY_PIPELINE_ROWS: AdmissionPipelineItem[] = [];
 
 export default function AdmissionInquiryPipelineScreen() {
   const academic = useAdmissionAcademicFilters();
@@ -44,7 +44,12 @@ export default function AdmissionInquiryPipelineScreen() {
   const applicationId = params.get('application');
   const state = readAdmissionPipelineState(params);
   const permissions = useSelector((value: RootState) => value.auth.permissions);
+  const tenantId = useSelector((value: RootState) => value.auth.sessionContext?.tenantId);
+  const userId = useSelector((value: RootState) => value.auth.user?.sub);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
+  const canAssign =
+    canView && hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
+  const interactionLocked = useRef(false);
   const update = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
       router.replace(
@@ -88,19 +93,70 @@ export default function AdmissionInquiryPipelineScreen() {
   const data = listQuery.currentData;
   const options = optionsQuery.currentData;
   const myCases = state.myCases ?? options?.defaultMyCases;
+  const queryBusy =
+    skip ||
+    listQuery.isFetching ||
+    listQuery.isError ||
+    optionsQuery.isFetching ||
+    optionsQuery.isError ||
+    !data ||
+    !options;
+  const bulk = useBulkPipelineCounsellor({
+    rows: data?.items ?? EMPTY_PIPELINE_ROWS,
+    scopeKey: JSON.stringify([tenantId, userId, academicInput, params.toString(), myCases]),
+    canAssign: canAssign && !applicationId,
+    disabled: queryBusy,
+  });
+  interactionLocked.current = bulk.busy;
+  const updateInteractive = useCallback(
+    (changes: Record<string, string | undefined>, resetPage = true) => {
+      if (!interactionLocked.current) update(changes, resetPage);
+    },
+    [update]
+  );
+  const { update: changeAcademic } = academic;
+  const updateAcademic = useCallback(
+    (...changes: Parameters<typeof changeAcademic>) => {
+      if (!interactionLocked.current) changeAcademic(...changes);
+    },
+    [changeAcademic]
+  );
   const applicationUrl = useCallback(
     (id: string) => admissionPipelineApplicationUrl(id, new URLSearchParams(params.toString())),
     [params]
   );
   const openWorkspace = useCallback(
     (id: string) => {
-      if (canView) router.push(applicationUrl(id), { scroll: false });
+      if (canView && !interactionLocked.current) router.push(applicationUrl(id), { scroll: false });
     },
     [canView, applicationUrl, router]
   );
   const columns = useMemo(
-    () => buildAdmissionPipelineColumns(applicationUrl, openWorkspace),
-    [applicationUrl, openWorkspace]
+    () =>
+      buildAdmissionPipelineColumns(
+        applicationUrl,
+        openWorkspace,
+        canAssign
+          ? {
+              selectedIds: bulk.selectedIds,
+              eligibleIds: bulk.eligibleIds,
+              disabled: queryBusy || bulk.busy,
+              onToggle: bulk.toggleSelection,
+              onToggleAll: bulk.toggleAll,
+            }
+          : undefined
+      ),
+    [
+      applicationUrl,
+      openWorkspace,
+      canAssign,
+      bulk.selectedIds,
+      bulk.eligibleIds,
+      bulk.busy,
+      bulk.toggleSelection,
+      bulk.toggleAll,
+      queryBusy,
+    ]
   );
   useEffect(() => {
     if (applicationId) return;
@@ -179,6 +235,7 @@ export default function AdmissionInquiryPipelineScreen() {
               size="small"
               component={Link}
               href={studentPaths.enrollment.applications}
+              disabled={bulk.busy}
               variant="outlined"
             >
               Open Applications
@@ -196,112 +253,35 @@ export default function AdmissionInquiryPipelineScreen() {
             boardId={academic.boardId}
             mediumId={academic.mediumId}
             standardId={academic.standardId}
-            onChange={academic.update}
-            onClear={academic.clear}
-          />
-          {academic.academicYearId && (
-            <Paper variant="outlined" sx={{ p: 1, flexShrink: 0 }}>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'repeat(2, minmax(0, 1fr))',
-                    md: 'repeat(4, minmax(0, 1fr))',
-                  },
-                  gap: 1,
+            onChange={updateAcademic}
+            disabled={bulk.busy}
+            filterAction={
+              <AdmissionPipelineMoreFilters
+                key={JSON.stringify([tenantId, userId, academicInput])}
+                values={state}
+                options={options}
+                isLoading={optionsQuery.isFetching}
+                isError={optionsQuery.isError}
+                disabled={bulk.busy || skip}
+                onRetry={() => {
+                  if (!skip && !interactionLocked.current) optionsQuery.refetch();
                 }}
-              >
-                <CustomSelect
-                  fullWidth
-                  label="Cases"
-                  value={myCases === undefined ? '' : myCases ? 'my' : 'all'}
-                  options={[
-                    { label: 'My active cases', value: 'my' },
-                    { label: 'All authorized active cases', value: 'all' },
-                  ]}
-                  isLoading={optionsQuery.isFetching && !options}
-                  disabled={!options}
-                  onChange={(value) => update({ queue: String(value), counsellor: undefined })}
-                />
-                <CustomSelect
-                  fullWidth
-                  label="Counsellor"
-                  value={state.assignedCounsellorId ?? ALL}
-                  disabled={!options || myCases !== false}
-                  options={[
-                    { label: 'All counsellors', value: ALL },
-                    ...(options?.counsellors ?? []).map((item) => ({
-                      label: item.name,
-                      value: item.id,
-                    })),
-                  ]}
-                  isSearch
-                  onChange={(value) =>
-                    update({ counsellor: value === ALL ? undefined : String(value) })
-                  }
-                />
-                <CustomSelect
-                  fullWidth
-                  label="Current step"
-                  value={state.currentStageCode ?? ALL}
-                  disabled={!options}
-                  options={[
-                    { label: 'All steps', value: ALL },
-                    ...(options?.stages ?? []).map((item) => ({
-                      label: item.name,
-                      value: item.code,
-                    })),
-                  ]}
-                  isSearch
-                  onChange={(value) => update({ stage: value === ALL ? undefined : String(value) })}
-                />
-                <CustomSelect
-                  fullWidth
-                  label="Status"
-                  value={state.status === undefined ? ALL : String(state.status)}
-                  options={[
-                    { label: 'All active statuses', value: ALL },
-                    ...PIPELINE_ACTIVE_STATUSES.map((value) => ({
-                      label: getAdmissionApplicationStatusLabel(value),
-                      value: String(value),
-                    })),
-                  ]}
-                  onChange={(value) =>
-                    update({ status: value === ALL ? undefined : String(value) })
-                  }
-                />
-                {hasFilters && (
-                  <Button
-                    sx={{ flexShrink: 0 }}
-                    onClick={() =>
-                      update({
-                        search: undefined,
-                        counsellor: undefined,
-                        stage: undefined,
-                        status: undefined,
-                        board: undefined,
-                        medium: undefined,
-                        class: undefined,
-                      })
-                    }
-                  >
-                    Clear filters
-                  </Button>
-                )}
-              </Box>
-            </Paper>
-          )}
+                onApply={updateInteractive}
+              />
+            }
+          />
+          <BulkPipelineCounsellor assignment={bulk} disabled={queryBusy || !canAssign} />
           {listQuery.isError || optionsQuery.isError ? (
             <AdmissionQueryError
               onRetry={() => {
-                if (!skip) {
+                if (!skip && !interactionLocked.current) {
                   listQuery.refetch();
                   optionsQuery.refetch();
                 }
               }}
             />
           ) : (
-            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <Box inert={bulk.busy || undefined} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <CustomizableTable
                 tableId="admission-application-pipeline"
                 tableTitle="Active admissions"
@@ -319,9 +299,9 @@ export default function AdmissionInquiryPipelineScreen() {
                 searchTerm={state.search}
                 sorts={state.sorts}
                 totalCount={data?.totalCount ?? 0}
-                onServerSearch={(search) => update({ search: search || undefined })}
+                onServerSearch={(search) => updateInteractive({ search: search || undefined })}
                 onServerSort={(_, sorts) =>
-                  update({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
+                  updateInteractive({ sort: sorts[0]?.column, direction: sorts[0]?.direction })
                 }
                 page={state.page}
                 rowsPerPage={state.rowsPerPage}
@@ -329,7 +309,10 @@ export default function AdmissionInquiryPipelineScreen() {
                 rowsPerPageOptions={[10, 25, 100]}
                 isPagination
                 onServerPagination={(page, size) =>
-                  update({ page: String(page), size: String(size) }, size !== state.rowsPerPage)
+                  updateInteractive(
+                    { page: String(page), size: String(size) },
+                    size !== state.rowsPerPage
+                  )
                 }
                 handleRowClick={(row) => openApplication(row as AdmissionPipelineItem)}
                 rowProps={(row) => ({

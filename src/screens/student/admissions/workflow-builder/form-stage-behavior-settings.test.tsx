@@ -12,14 +12,15 @@ import { FormStageBehaviorSettings } from './components/form-stage-behavior-sett
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 describe('Form submission behavior', () => {
-  it('allows changing late submission without a deadline and preserves hidden policy values', async () => {
+  it('hides late submission and preserves saved deadline policy while changing corrections', async () => {
     const changed = vi.fn();
     function Settings() {
       const [policy, setPolicy] = useState<AdmissionFormStagePolicy>({
         ...DEFAULT_FORM_STAGE_POLICY,
         responsibility: 'staff',
-        dueInDays: null,
+        dueInDays: 7,
         allowLateSubmission: false,
+        allowCorrectionRequests: false,
       });
       return (
         <FormStageBehaviorSettings
@@ -33,7 +34,8 @@ describe('Form submission behavior', () => {
       );
     }
     renderDocumentUi(<Settings />);
-    const toggle = screen.getByRole('switch', { name: 'Allow late submission' });
+    expect(screen.queryByRole('switch', { name: 'Allow late submission' })).not.toBeInTheDocument();
+    const toggle = screen.getByRole('switch', { name: 'Allow corrections' });
     expect(toggle).toBeEnabled();
     expect(toggle).not.toBeChecked();
     const user = userEvent.setup();
@@ -42,18 +44,23 @@ describe('Form submission behavior', () => {
     expect(changed).toHaveBeenLastCalledWith(
       expect.objectContaining({
         responsibility: 'staff',
-        dueInDays: null,
-        allowLateSubmission: true,
+        dueInDays: 7,
+        allowLateSubmission: false,
+        allowCorrectionRequests: true,
       })
     );
     await user.click(toggle);
     expect(toggle).not.toBeChecked();
     expect(changed).toHaveBeenLastCalledWith(
-      expect.objectContaining({ allowLateSubmission: false })
+      expect.objectContaining({
+        allowCorrectionRequests: false,
+        allowLateSubmission: false,
+        dueInDays: 7,
+      })
     );
   });
 
-  it('keeps saved late-submission settings visible and locked when editing is unavailable', () => {
+  it('keeps corrections locked when editing is unavailable without exposing late submission', () => {
     const changed = vi.fn();
     renderDocumentUi(
       <FormStageBehaviorSettings
@@ -62,8 +69,8 @@ describe('Form submission behavior', () => {
         onChange={changed}
       />
     );
-    expect(screen.getByRole('switch', { name: 'Allow late submission' })).toBeChecked();
-    expect(screen.getByRole('switch', { name: 'Allow late submission' })).toBeDisabled();
+    expect(screen.queryByRole('switch', { name: 'Allow late submission' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeDisabled();
     expect(changed).not.toHaveBeenCalled();
   });
 });

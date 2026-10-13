@@ -15,6 +15,8 @@ export type RecordSection =
   | 'previous-school'
   | 'placement'
   | 'status'
+  | 'custom-details'
+  | 'registration-form'
   | 'photo';
 export type RecordChange = {
   id: string;
@@ -22,6 +24,7 @@ export type RecordChange = {
   studentName: string;
   academicYearId: string;
   requestedBy: string;
+  requestedByName?: string | null;
   correctsChangeId?: string | null;
   policyVersionId?: string | null;
   section: RecordSection;
@@ -43,6 +46,7 @@ export type RecordChange = {
   photoPreviewUrl?: string | null;
   decisions: {
     actorId: string;
+    actorName?: string | null;
     stage: number;
     decision: string;
     reason: string;
@@ -135,6 +139,8 @@ export const studentRecordChangesApi = api.injectEndpoints({
           ? []
           : [
               ...refreshTags,
+              { type: studentType.student, id: `RECORDS-DETAILS-${body.studentId}` },
+              { type: studentType.student, id: `RECORDS-PROFILE-${body.studentId}` },
               {
                 type: studentType.student,
                 id: `RECORDS-SNAPSHOT-${body.studentId}-${body.section}`,

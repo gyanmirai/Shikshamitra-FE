@@ -1,37 +1,71 @@
+import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { ThreeDotsActionContext } from 'src/components/three-dots-actions/types';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
-import { Button } from '@mui/material';
 import { Label } from 'src/components/label';
 import { RouterLink } from 'src/routes/components';
-import { studentPaths } from 'src/constants/student-menu';
+import { Link, Stack, Avatar } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 
-const nameOf = (student: StudentDirectoryItem) =>
+export const directoryStudentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
   'Restricted identity';
 
-const entrySourceLabels: Record<string, string> = {
-  ActivatedOnboarding: 'Enrollment activated',
-  CompletedOnboarding: 'Onboarding completed',
-  LegacyOverride: 'Approved historical entry',
-  LegacyNeedsApproval: 'Historical entry pending approval',
+export type DirectoryRowActions = (
+  row: StudentDirectoryItem,
+  context: ThreeDotsActionContext
+) => ReactNode;
+
+type Options = {
+  profileHref: (studentId: string) => string;
+  rowActions?: DirectoryRowActions;
+  compact?: boolean;
 };
 
-export const directoryColumns: IColumn[] = [
+export const buildDirectoryColumns = ({
+  profileHref,
+  rowActions,
+  compact = false,
+}: Options): IColumn[] => [
   {
     id: 'name',
     label: 'Student',
-    minWidth: 200,
+    minWidth: compact ? 136 : 200,
+    width: compact ? 136 : undefined,
+    cellSx: compact ? { px: 1 } : undefined,
+    headerSx: compact ? { px: 1 } : undefined,
     isSort: true,
+    isFilter: false,
+    filterType: 'string',
     render: (_value, row) => (
-      <Button
-        component={RouterLink}
-        href={`${studentPaths.records.studentList}?student=${encodeURIComponent(row.studentId)}`}
-        color="inherit"
-        sx={{ textAlign: 'left', justifyContent: 'flex-start' }}
-      >
-        {nameOf(row as StudentDirectoryItem)}
-      </Button>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Avatar
+          sx={{
+            display: compact ? 'none' : 'flex',
+            width: 32,
+            height: 32,
+            bgcolor: 'background.neutral',
+            color: 'text.secondary',
+            fontSize: 12,
+          }}
+        >
+          {[row.firstName, row.lastName]
+            .filter(Boolean)
+            .map((name) => String(name).charAt(0))
+            .join('')
+            .slice(0, 2) || '—'}
+        </Avatar>
+        <Link
+          component={RouterLink}
+          href={profileHref(row.studentId)}
+          color="inherit"
+          underline="hover"
+          sx={{ typography: 'body2', fontWeight: 'fontWeightSemiBold', overflowWrap: 'anywhere' }}
+        >
+          {directoryStudentName(row as StudentDirectoryItem)}
+        </Link>
+      </Stack>
     ),
   },
   {
@@ -39,28 +73,53 @@ export const directoryColumns: IColumn[] = [
     label: 'GR number',
     minWidth: 120,
     isSort: true,
-    render: (value, row) => value || row.grNo || '—',
+    isFilter: false,
+    filterType: 'string',
+    render: (value, row) => value || (row.grNo ?? '—'),
   },
-  { id: 'standardName', label: 'Class', minWidth: 110 },
-  { id: 'divisionName', label: 'Division', minWidth: 110 },
-  { id: 'rollNo', label: 'Roll number', minWidth: 100, render: (value) => value ?? '—' },
+  {
+    id: 'classDivision',
+    label: 'Class / Division',
+    minWidth: 150,
+    isSort: false,
+    isFilter: false,
+    filterType: 'string',
+  },
+  {
+    id: 'rollNo',
+    label: 'Roll number',
+    minWidth: 100,
+    isSort: false,
+    isFilter: false,
+    filterType: 'number',
+    render: (value) => value ?? '—',
+  },
   {
     id: 'status',
     label: 'Status',
-    minWidth: 120,
+    minWidth: compact ? 72 : 120,
+    width: compact ? 72 : undefined,
+    cellSx: compact ? { px: 1 } : undefined,
+    headerSx: compact ? { px: 1 } : undefined,
+    isSort: false,
+    isFilter: false,
+    filterType: 'enum',
+    enumOptions: [
+      { value: 6, label: 'Active' },
+      { value: 7, label: 'Inactive' },
+      { value: 8, label: 'Left' },
+    ],
+    sticky: true,
+    stickyPosition: 'right',
     render: (value) => (
       <Label color={value === 'Enrolled' || value === 6 ? 'success' : 'default'}>
         {typeof value === 'number'
           ? ({ 6: 'Active', 7: 'Inactive', 8: 'Left' }[value] ?? 'Unknown')
-          : value}
+          : value === 'Enrolled'
+            ? 'Active'
+            : value || 'Unknown'}
       </Label>
     ),
-  },
-  {
-    id: 'entrySource',
-    label: 'Record entry',
-    minWidth: 150,
-    render: (value) => entrySourceLabels[String(value)] ?? '—',
   },
   {
     id: 'actions',
@@ -68,18 +127,24 @@ export const directoryColumns: IColumn[] = [
     isSort: false,
     isFilter: false,
     align: 'right',
-    minWidth: 115,
+    minWidth: compact ? 80 : rowActions ? 90 : 60,
+    width: compact ? 80 : rowActions ? 90 : 60,
+    cellSx: compact ? { px: 1 } : undefined,
+    headerSx: compact ? { px: 1 } : undefined,
     sticky: true,
     stickyPosition: 'right',
     excludeFromExport: true,
     render: (_value, row) => (
-      <Button
-        component={RouterLink}
-        href={`${studentPaths.records.studentList}?student=${encodeURIComponent(row.studentId)}`}
-        aria-label={`Open profile for ${nameOf(row as StudentDirectoryItem)}`}
-      >
-        Open profile
-      </Button>
+      <ThreeDotsActions
+        showViewIcon
+        viewIcon="mdi:eye-outline"
+        viewHref={profileHref(row.studentId)}
+        viewLabel={`View profile for ${directoryStudentName(row as StudentDirectoryItem)}`}
+        moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
+        showThreeDots={Boolean(rowActions)}
+        actions={(context) => rowActions?.(row as StudentDirectoryItem, context)}
+        sx={{ justifyContent: 'flex-end' }}
+      />
     ),
   },
 ];

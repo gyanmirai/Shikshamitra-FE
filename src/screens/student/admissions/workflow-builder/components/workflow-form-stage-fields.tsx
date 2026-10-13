@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   AdmissionWorkflowStage,
-  AdmissionWorkflowTransition,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -13,7 +12,6 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { WorkflowFormSettings } from './workflow-form-settings';
-import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
 import { WorkflowFormStageBasics } from './workflow-form-stage-basics';
 import { WorkflowFormStageSettings } from './workflow-form-stage-settings';
 
@@ -23,15 +21,11 @@ type Props = {
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
   stages: AdmissionWorkflowStage[];
-  transitions?: AdmissionWorkflowTransition[];
   formDefinitionId: string;
   formDetailsLoading?: boolean;
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
-  onAddPath?: (stage: AdmissionWorkflowStage) => void;
-  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
-  routeEditingDisabled?: boolean;
 };
 
 export function WorkflowFormStageFields(props: Props) {
@@ -44,11 +38,6 @@ export function WorkflowFormStageFields(props: Props) {
     formDetailsError,
     onRetryFormDetails,
     readOnly,
-    stages,
-    transitions,
-    onAddPath,
-    onEditPath,
-    routeEditingDisabled,
   } = props;
   const completion = useBoolean(true);
   const completionNeedsAttention = Boolean(
@@ -89,17 +78,6 @@ export function WorkflowFormStageFields(props: Props) {
           />
         </FormSectionCard>
         <WorkflowFormStageSettings {...props} />
-        <FormSectionCard title="Next step" icon="mdi:arrow-right">
-          <WorkflowStageNextSteps
-            stage={formik.values}
-            stages={stages}
-            transitions={transitions}
-            readOnly={readOnly}
-            onAddPath={onAddPath}
-            onEditPath={onEditPath}
-            routeEditingDisabled={routeEditingDisabled}
-          />
-        </FormSectionCard>
       </>
     </Stack>
   );

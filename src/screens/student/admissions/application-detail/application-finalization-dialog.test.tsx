@@ -269,7 +269,15 @@ describe('ApplicationFinalizationDialog', () => {
         'does not assign a class division, seat, GR number, roll number, fees, or login account'
       )
     );
-    expect(screen.getByText(/hand this admission over to Student Onboarding/)).toBeVisible();
+    expect(screen.getByText('Onboarding handover')).toBeVisible();
+    expect(
+      screen.getByText(/Finalizing creates or links a Student identity and an Onboarding case/)
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        /Placement, GR and roll numbers, fees and accounts are completed in Student Onboarding/
+      )
+    ).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

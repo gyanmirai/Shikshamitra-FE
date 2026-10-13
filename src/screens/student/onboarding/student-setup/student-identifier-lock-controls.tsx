@@ -1,10 +1,13 @@
 'use client';
 
 import * as Yup from 'yup';
-import { useState } from 'react';
 import { useFormik } from 'formik';
+import { Iconify } from 'src/components/iconify';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Stack, Alert, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useSetStudentOnboardingIdentifierLockMutation } from 'src/redux/student/onboarding/student-onboarding-api';
@@ -15,15 +18,24 @@ export default function StudentIdentifierLockControls({
   identifierType,
   canLock,
   canUnlock,
+  disabled = false,
+  onInteractionChange,
 }: {
   academicYearId?: string;
   divisionId?: string;
   identifierType: 'gr' | 'roll';
   canLock: boolean;
   canUnlock: boolean;
+  disabled?: boolean;
+  onInteractionChange?: (active: boolean) => void;
 }) {
   const [action, setAction] = useState<'lock' | 'unlock' | null>(null);
   const [save, saving] = useSetStudentOnboardingIdentifierLockMutation();
+  const savingRef = useRef(false);
+  useEffect(() => {
+    onInteractionChange?.(Boolean(action));
+    return () => onInteractionChange?.(false);
+  }, [action, onInteractionChange]);
   const label = identifierType === 'gr' ? 'GR numbers' : 'Roll numbers';
   const form = useFormik({
     initialValues: { reason: '' },
@@ -39,9 +51,11 @@ export default function StudentIdentifierLockControls({
         !divisionId ||
         !action ||
         saving.isLoading ||
+        savingRef.current ||
         (action === 'lock' ? !canLock : !canUnlock)
       )
         return;
+      savingRef.current = true;
       try {
         await save({
           academicYearId,
@@ -60,22 +74,28 @@ export default function StudentIdentifierLockControls({
           parseApiProblemDetail(error).detail ||
             'The number lock could not be changed. Refresh and retry.'
         );
+      } finally {
+        savingRef.current = false;
       }
     },
   });
+  const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty, {
+    blockNavigation: saving.isLoading,
+  });
   const close = () => {
-    if (!saving.isLoading) {
-      setAction(null);
-      form.resetForm();
-    }
+    if (!savingRef.current)
+      requestNavigation(() => {
+        setAction(null);
+        form.resetForm();
+      });
   };
   return (
     <>
-      <Stack direction="row" spacing={1} sx={{ px: 1 }}>
+      <Stack direction="row" spacing={1}>
         <Button
           size="small"
           variant="outlined"
-          disabled={!canLock || !academicYearId || !divisionId}
+          disabled={disabled || saving.isLoading || !canLock || !academicYearId || !divisionId}
           onClick={() => setAction('lock')}
         >
           Lock {label}
@@ -84,7 +104,7 @@ export default function StudentIdentifierLockControls({
           <Button
             size="small"
             variant="outlined"
-            disabled={!academicYearId || !divisionId}
+            disabled={disabled || saving.isLoading || !academicYearId || !divisionId}
             onClick={() => setAction('unlock')}
           >
             Unlock {label}
@@ -94,7 +114,8 @@ export default function StudentIdentifierLockControls({
       <CustomDialog
         open={Boolean(action)}
         handleClose={close}
-        title={`${action === 'unlock' ? 'Unlock' : 'Lock'} ${label}`}
+        guardUnsavedChanges={false}
+        title={`${action === 'unlock' ? 'Unlock' : 'Lock'} ${identifierType === 'gr' ? 'GR Numbers' : 'Roll Numbers'}`}
         maxWidth="xs"
         hasUnsavedChanges={form.dirty}
         disableClose={saving.isLoading}
@@ -103,28 +124,37 @@ export default function StudentIdentifierLockControls({
           <Stack spacing={1.5}>
             <Alert severity="info">
               This applies to {label} for students in the selected Division. New students receive
-              the next available number.
+              the next available number while locked; after unlocking, published numbering rules
+              apply.
             </Alert>
             {action === 'unlock' && (
-              <TextField
-                fullWidth
-                required
-                size="small"
-                label="Unlock reason"
-                name="reason"
-                value={form.values.reason}
-                onChange={form.handleChange}
-                onBlur={form.handleBlur}
-                error={Boolean(form.touched.reason && form.errors.reason)}
-                helperText={form.touched.reason ? form.errors.reason : undefined}
-                disabled={saving.isLoading}
-              />
+              <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Unlock reason"
+                  name="reason"
+                  value={form.values.reason}
+                  onChange={form.handleChange}
+                  onBlur={form.handleBlur}
+                  error={Boolean(form.touched.reason && form.errors.reason)}
+                  helperText={form.touched.reason ? form.errors.reason : undefined}
+                  disabled={saving.isLoading}
+                />
+              </ShakingTextField>
             )}
             {form.status && <Alert severity="error">{form.status}</Alert>}
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button size="small" variant="outlined" onClick={close} disabled={saving.isLoading}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={close}
+            disabled={saving.isLoading}
+            startIcon={<Iconify icon="mdi:close" />}
+          >
             Cancel
           </Button>
           <Button
@@ -132,11 +162,15 @@ export default function StudentIdentifierLockControls({
             variant="contained"
             loading={saving.isLoading}
             onClick={() => form.submitForm()}
+            startIcon={
+              <Iconify icon={action === 'unlock' ? 'mdi:lock-open-outline' : 'mdi:lock-outline'} />
+            }
           >
             Submit
           </Button>
         </DialogActions>
       </CustomDialog>
+      {confirmation}
     </>
   );
 }

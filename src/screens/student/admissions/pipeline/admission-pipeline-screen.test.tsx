@@ -7,11 +7,19 @@ const context = vi.hoisted(() => ({
   params: new URLSearchParams(),
   year: 'year-1',
   canView: true,
+  canAssign: false,
+  bulkBusy: false,
+  bulkInput: {} as Record<string, any>,
+  filterProps: {} as Record<string, any>,
+  academicUpdate: vi.fn(),
   replace: vi.fn(),
   push: vi.fn(),
   list: vi.fn(),
   options: vi.fn(),
-  data: { items: [{ id: 'app-1', applicationNumber: 'APP-1' }], totalCount: 31 },
+  data: {
+    items: [{ id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 }],
+    totalCount: 31,
+  },
   error: false,
   fetching: false,
   table: {} as Record<string, any>,
@@ -26,7 +34,10 @@ vi.mock('react-redux', () => ({
       auth: {
         permissions: [
           { name: 'Students.Admissions.Applications.View', isGranted: context.canView },
+          { name: 'Students.Admissions.Applications.Add', isGranted: context.canAssign },
         ],
+        user: { sub: 'operator-1' },
+        sessionContext: { tenantId: 'tenant-1' },
       },
     }),
 }));
@@ -36,10 +47,45 @@ vi.mock('../admission-academic-filters', () => ({
     boardId: 'board-1',
     mediumId: 'medium-1',
     standardId: '',
-    update: vi.fn(),
+    update: context.academicUpdate,
     clear: vi.fn(),
   }),
-  AdmissionAcademicFilters: () => null,
+  AdmissionAcademicFilters: ({ filterAction, onChange, disabled }: any) => (
+    <div data-testid="academic-filter-row">
+      <button type="button" disabled={disabled} onClick={() => onChange('board', 'board-2')}>
+        Change board
+      </button>
+      {filterAction}
+    </div>
+  ),
+}));
+vi.mock('./use-bulk-pipeline-counsellor', () => ({
+  useBulkPipelineCounsellor: (input: any) => {
+    context.bulkInput = input;
+    return {
+      selectedIds: [],
+      eligibleIds: input.canAssign ? input.rows.map((row: any) => row.id) : [],
+      busy: context.bulkBusy,
+      toggleSelection: vi.fn(),
+      toggleAll: vi.fn(),
+    };
+  },
+}));
+vi.mock('./bulk-pipeline-counsellor', () => ({ BulkPipelineCounsellor: () => null }));
+vi.mock('./admission-pipeline-more-filters', () => ({
+  AdmissionPipelineMoreFilters: (props: any) => {
+    context.filterProps = props;
+    const { disabled, onApply } = props;
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onApply({ queue: 'all', counsellor: 'staff-1', stage: 'exam', status: '1' })}
+      >
+        Apply operational filters
+      </button>
+    );
+  },
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: any) => <div>{action}</div>,
@@ -87,9 +133,16 @@ describe('Pipeline worklist', () => {
     context.params = new URLSearchParams();
     context.year = 'year-1';
     context.canView = true;
+    context.canAssign = false;
+    context.bulkBusy = false;
     context.error = false;
     context.fetching = false;
-    context.data = { items: [{ id: 'app-1', applicationNumber: 'APP-1' }], totalCount: 31 };
+    context.data = {
+      items: [
+        { id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 },
+      ],
+      totalCount: 31,
+    };
   });
   it('uses backend default queue and scoped server paging, rather than inquiry rows', () => {
     context.params = new URLSearchParams('page=2&size=10&search=Jay&sort=enteredAt&direction=desc');
@@ -165,5 +218,82 @@ describe('Pipeline worklist', () => {
     context.fetching = true;
     render(<AdmissionInquiryPipelineScreen />);
     expect(context.replace).not.toHaveBeenCalled();
+  });
+
+  it('adds checkbox selection only with exact Applications View and Add grants', () => {
+    const rendered = render(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.columns.some((column: any) => column.id === 'pipeline-selection')).toBe(
+      false
+    );
+    context.canAssign = true;
+    rendered.rerender(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.columns[0].id).toBe('pipeline-selection');
+    expect(context.bulkInput.canAssign).toBe(true);
+    context.canView = false;
+    rendered.rerender(<AdmissionInquiryPipelineScreen />);
+    expect(context.bulkInput.canAssign).toBe(false);
+  });
+
+  it('places operational filters in the academic row and applies them in one URL update', () => {
+    context.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&class=class-1&search=QA&page=3&size=10'
+    );
+    render(<AdmissionInquiryPipelineScreen />);
+    expect(screen.getByTestId('academic-filter-row')).toContainElement(
+      screen.getByText('Apply operational filters')
+    );
+    fireEvent.click(screen.getByText('Apply operational filters'));
+    expect(context.replace).toHaveBeenCalledTimes(1);
+    const params = new URL(context.replace.mock.calls[0][0], 'https://school.test').searchParams;
+    expect(Object.fromEntries(params.entries())).toEqual({
+      board: 'board-1',
+      medium: 'medium-1',
+      class: 'class-1',
+      search: 'QA',
+      size: '10',
+      queue: 'all',
+      counsellor: 'staff-1',
+      stage: 'exam',
+      status: '1',
+    });
+  });
+
+  it('forwards the shared academic filter key and value without changing its contract', () => {
+    render(<AdmissionInquiryPipelineScreen />);
+    fireEvent.click(screen.getByText('Change board'));
+    expect(context.academicUpdate).toHaveBeenCalledWith('board', 'board-2');
+  });
+
+  it('includes actor, academic scope and page filters in the selection boundary', () => {
+    context.canAssign = true;
+    context.params = new URLSearchParams('page=2&size=10&queue=my&search=QA');
+    const rendered = render(<AdmissionInquiryPipelineScreen />);
+    const initialScope = context.bulkInput.scopeKey;
+    expect(JSON.parse(initialScope)).toEqual([
+      'tenant-1',
+      'operator-1',
+      { academicYearId: 'year-1', boardId: 'board-1', mediumId: 'medium-1' },
+      'page=2&size=10&queue=my&search=QA',
+      true,
+    ]);
+    context.params = new URLSearchParams('page=3&size=10&queue=my&search=QA');
+    rendered.rerender(<AdmissionInquiryPipelineScreen />);
+    expect(context.bulkInput.scopeKey).not.toBe(initialScope);
+  });
+
+  it('blocks row navigation and filter/search/page changes while assignment runs', () => {
+    context.canAssign = true;
+    context.bulkBusy = true;
+    render(<AdmissionInquiryPipelineScreen />);
+    expect(screen.getByRole('link', { name: 'Open Applications' })).toHaveClass('Mui-disabled');
+    expect(screen.getByText('Change board')).toBeDisabled();
+    expect(screen.getByText('Apply operational filters')).toBeDisabled();
+    fireEvent.click(screen.getByText('Open row'));
+    context.table.onServerSearch('other');
+    context.table.onServerPagination(2, 10);
+    context.filterProps.onApply({ queue: 'my' });
+    expect(context.push).not.toHaveBeenCalled();
+    expect(context.replace).not.toHaveBeenCalled();
+    expect(context.academicUpdate).not.toHaveBeenCalled();
   });
 });

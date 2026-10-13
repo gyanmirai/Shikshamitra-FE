@@ -128,8 +128,8 @@ describe('Persisted onboarding settings year isolation', () => {
   });
 
   it.each([
-    ['/student/onboarding/settings/readiness-access', 'Readiness & Access'],
-    ['/student/onboarding/settings/numbering-placement', 'Numbering & Placement'],
+    ['/student/onboarding/settings/readiness-access', 'Onboarding Settings'],
+    ['/student/onboarding/settings/numbering-placement', 'Onboarding Settings'],
     ['/student/onboarding/settings', 'Onboarding Settings'],
   ])(
     'keeps the %s page context visible during loading and a retryable error',

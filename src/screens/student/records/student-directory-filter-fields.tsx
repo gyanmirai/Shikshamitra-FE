@@ -1,6 +1,6 @@
 import type { StudentDirectoryOptions } from 'src/redux/student/records/student-records-types';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 export type DirectoryFilters = {
@@ -14,6 +14,7 @@ type Props = {
   values: DirectoryFilters;
   options?: StudentDirectoryOptions;
   isLoading: boolean;
+  disabled?: boolean;
   onChange: (changes: Partial<DirectoryFilters>) => void;
 };
 
@@ -21,14 +22,21 @@ const scopeValue = (value: string | number) => (value === 'all' ? '' : String(va
 
 const gridSx = {
   display: 'grid',
-  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-  gap: 1.5,
+  gridTemplateColumns: {
+    xs: 'minmax(0, 1fr)',
+    sm: 'repeat(2, minmax(0, 1fr))',
+    lg: 'repeat(4, minmax(0, 1fr))',
+  },
+  gap: 1,
+  flex: 1,
+  minWidth: 0,
 };
 
 export default function StudentDirectoryFilterFields({
   values,
   options,
   isLoading,
+  disabled = false,
   onChange,
 }: Props) {
   const mediums = (options?.mediums ?? []).filter(
@@ -49,50 +57,49 @@ export default function StudentDirectoryFilterFields({
   const resetScope = { board: '', medium: '', class: '', division: '' };
 
   return (
-    <Stack spacing={2}>
-      <Typography variant="overline" color="text.secondary">
-        Academic scope
-      </Typography>
-      <Box sx={gridSx}>
-        <CustomSelect
-          label="Board"
-          value={values.board || 'all'}
-          isLoading={isLoading}
-          options={[{ id: 'all', name: 'All boards' }, ...(options?.boards ?? [])]}
-          labelKey="name"
-          valueKey="id"
-          onChange={(value) => onChange({ ...resetScope, board: scopeValue(String(value)) })}
-        />
-        <CustomSelect
-          label="Medium"
-          value={values.medium || 'all'}
-          isLoading={isLoading}
-          options={[{ id: 'all', name: 'All mediums' }, ...mediums]}
-          labelKey="name"
-          valueKey="id"
-          onChange={(value) =>
-            onChange({ medium: scopeValue(String(value)), class: '', division: '' })
-          }
-        />
-        <CustomSelect
-          label="Class"
-          value={values.class || 'all'}
-          isLoading={isLoading}
-          options={[{ id: 'all', name: 'All classes' }, ...classes]}
-          labelKey="name"
-          valueKey="id"
-          onChange={(value) => onChange({ class: scopeValue(String(value)), division: '' })}
-        />
-        <CustomSelect
-          label="Division"
-          value={values.division || 'all'}
-          isLoading={isLoading}
-          options={[{ id: 'all', name: 'All divisions' }, ...divisions]}
-          labelKey="name"
-          valueKey="id"
-          onChange={(value) => onChange({ division: scopeValue(String(value)) })}
-        />
-      </Box>
-    </Stack>
+    <Box sx={gridSx}>
+      <CustomSelect
+        label="Board"
+        value={values.board || 'all'}
+        isLoading={isLoading}
+        disabled={disabled}
+        options={[{ id: 'all', name: 'All boards' }, ...(options?.boards ?? [])]}
+        labelKey="name"
+        valueKey="id"
+        onChange={(value) => onChange({ ...resetScope, board: scopeValue(String(value)) })}
+      />
+      <CustomSelect
+        label="Medium"
+        value={values.medium || 'all'}
+        isLoading={isLoading}
+        disabled={disabled}
+        options={[{ id: 'all', name: 'All mediums' }, ...mediums]}
+        labelKey="name"
+        valueKey="id"
+        onChange={(value) =>
+          onChange({ medium: scopeValue(String(value)), class: '', division: '' })
+        }
+      />
+      <CustomSelect
+        label="Class"
+        value={values.class || 'all'}
+        isLoading={isLoading}
+        disabled={disabled}
+        options={[{ id: 'all', name: 'All classes' }, ...classes]}
+        labelKey="name"
+        valueKey="id"
+        onChange={(value) => onChange({ class: scopeValue(String(value)), division: '' })}
+      />
+      <CustomSelect
+        label="Division"
+        value={values.division || 'all'}
+        isLoading={isLoading}
+        disabled={disabled}
+        options={[{ id: 'all', name: 'All divisions' }, ...divisions]}
+        labelKey="name"
+        valueKey="id"
+        onChange={(value) => onChange({ division: scopeValue(String(value)) })}
+      />
+    </Box>
   );
 }

@@ -247,7 +247,7 @@ export const defaultOnboardingRules: OnboardingRules = {
 };
 
 export const defaultAccountRules: AccountRules = {
-  studentAccount: true,
+  studentAccount: false,
   guardianAccount: true,
   verifiedGuardianContact: true,
   deliveryTiming: 'after-activation',
@@ -376,7 +376,7 @@ export const defaultGrNumberConfiguration: GrNumberConfiguration = {
   padding: 6,
   suffix: '',
   formatPattern: '{PREFIX}{SEQUENCE}{SUFFIX}',
-  applicableProfileIds: defaultOnboardingProfiles.map((profile) => profile.id),
+  applicableProfileIds: [],
   sequenceScope: 'school',
   resetPolicy: 'continuous',
   maximumNumber: null,
@@ -438,7 +438,7 @@ export const defaultDivisionChangeConfiguration: DivisionChangeConfiguration = {
 export const defaultOnboardingSettings: OnboardingSettingsConfiguration = {
   academicAvailability: { schoolLevelNames: null },
   readinessAccess: defaultReadinessAccessRules,
-  onboardingProfiles: defaultOnboardingProfiles,
+  onboardingProfiles: [],
   grNumber: {
     assignmentMode: 'both',
     configurations: [
@@ -636,15 +636,14 @@ export const getAcademicApplicabilityValidationError = (configuration: AcademicA
 
 export const isGrConfigurationApplicable = (
   configuration: GrNumberConfiguration,
-  profileId?: string,
+  _profileId?: string,
   effectiveDate = new Date().toISOString().slice(0, 10),
   context: AcademicPathContext = {}
 ) =>
   configuration.isActive &&
   getNumberingRuleStatus(configuration) === 'published' &&
   (!configuration.effectiveFrom || configuration.effectiveFrom <= effectiveDate) &&
-  isAcademicApplicabilityMatch(configuration, context) &&
-  Boolean(profileId && configuration.applicableProfileIds.includes(profileId));
+  isAcademicApplicabilityMatch(configuration, context);
 
 export const findRollNumberConfiguration = (
   configurations: RollNumberConfiguration[],

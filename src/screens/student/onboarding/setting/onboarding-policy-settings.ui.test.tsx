@@ -3,13 +3,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
+import OnboardingSettingsPage from './onboarding-settings-page';
 import { defaultOnboardingSettings } from '../onboarding-settings-model';
 import { OnboardingSettingsProvider } from '../onboarding-settings-context';
-import {
-  GrNumberSettingsScreen,
-  RollNumberSettingsScreen,
-  NumberingPlacementSettingsScreen,
-} from './onboarding-number-settings';
+import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
+
+vi.mock('./portal-access-settings', () => ({ default: () => <div>Portal settings</div> }));
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
@@ -223,6 +222,7 @@ describe('Onboarding numbering settings', () => {
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1));
     const saved = persist.mock.calls[0][1].grNumber.configurations.at(-1);
     expect(saved).toMatchObject({ status: 'draft', version: 1, isActive: false, stageMode: 'all', divisionMode: 'all', requireManualApproval: false });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 10000 });
     fireEvent.click(await screen.findByRole('button', { name: 'Publish CBSE Class 6' }));
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(2));
     expect(persist.mock.calls[1][1].grNumber.configurations.at(-1)).toMatchObject({ status: 'published', isActive: true });
@@ -281,8 +281,10 @@ describe('Onboarding numbering settings', () => {
     expect(screen.getByRole('textbox', { name: /Series name/ })).toHaveValue('Retry series');
   });
 
-  it('removes Division Changes from the numbering workspace', () => {
-    renderSettings(<NumberingPlacementSettingsScreen />);
+  it('merges login and numbering settings without a division tab or duplicate page heading', () => {
+    renderSettings(<OnboardingSettingsPage />);
+    expect(screen.getAllByTestId('breadcrumb-heading')).toHaveLength(1);
+    expect(screen.getByRole('tab', { name: 'Portal Access' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'GR Number' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Roll Number' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Division Changes' })).not.toBeInTheDocument();

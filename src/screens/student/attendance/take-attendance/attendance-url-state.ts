@@ -8,7 +8,7 @@ export type AttendanceTableQuery = Pick<
 export function readAttendanceTableQuery(query: string): AttendanceTableQuery {
   const params = new URLSearchParams(query);
   const page = Number(params.get('page'));
-  const size = Number(params.get('size'));
+  const size = Number(params.get('pageSize') || params.get('size'));
   let sorts: IParams['sorts'] = [];
   try {
     const parsed: unknown = JSON.parse(params.get('sorts') || '[]');
@@ -24,6 +24,11 @@ export function readAttendanceTableQuery(query: string): AttendanceTableQuery {
         .slice(0, 2);
   } catch {
     /* Invalid URL state falls back to the unsorted register. */
+  }
+  const sort = params.get('sort');
+  if (sort && /^(name|grNumber|rollNo) (asc|desc)$/.test(sort)) {
+    const [column, direction] = sort.split(' ');
+    sorts = [{ column, direction: direction as 'asc' | 'desc' }];
   }
   return {
     page: Number.isInteger(page) && page >= 0 ? page : 0,

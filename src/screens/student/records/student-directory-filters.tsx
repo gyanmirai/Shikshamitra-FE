@@ -5,17 +5,16 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import StudentDirectoryFilterPanel from './student-directory-filter-panel';
 
-import type { DirectoryFilters } from './student-directory-filter-fields';
+import type { StudentPopulation } from './student-directory-filter-panel';
 
 type Props = {
-  values: DirectoryFilters;
-  academicYearId: string;
-  onApply: (values: DirectoryFilters) => void;
+  population: StudentPopulation;
+  onApply: (population: StudentPopulation) => void;
 };
 
-export default function StudentDirectoryFilters({ values, academicYearId, onApply }: Props) {
+export default function StudentDirectoryFilters({ population, onApply }: Props) {
   const popover = usePopover();
-  const count = Object.values(values).filter(Boolean).length;
+  const count = population === 'Former' ? 1 : 0;
 
   return (
     <>
@@ -46,8 +45,8 @@ export default function StudentDirectoryFilters({ values, academicYearId, onAppl
             id: 'student-directory-filters',
             'aria-labelledby': 'student-directory-filter-title',
             sx: {
-              p: 2.5,
-              width: 580,
+              p: 2,
+              width: 360,
               maxWidth: 'calc(100vw - 32px)',
               maxHeight: 'calc(100dvh - 32px)',
               display: 'flex',
@@ -58,8 +57,8 @@ export default function StudentDirectoryFilters({ values, academicYearId, onAppl
       >
         {popover.open && (
           <StudentDirectoryFilterPanel
-            key={academicYearId}
-            {...{ values, academicYearId, onApply }}
+            key={population}
+            {...{ population, onApply }}
             onClose={popover.onClose}
           />
         )}

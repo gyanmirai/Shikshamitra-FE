@@ -19,6 +19,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
 import {
   Box,
   Tab,
@@ -47,6 +48,7 @@ import RecordPhotoPreview from './record-photo-preview';
 import RecordsStudentPicker from './records-student-picker';
 import StudentDuplicateReviews from './student-duplicate-reviews';
 import { recordDiffValue, recordFieldLabel } from './record-diff';
+import { useProfileChangeDiff } from './student-record-change-diff';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
 
 export const changeSections: { value: RecordSection; label: string }[] = [
@@ -60,6 +62,7 @@ export const changeSections: { value: RecordSection; label: string }[] = [
   { value: 'placement', label: 'Class and division' },
   { value: 'status', label: 'Active or inactive status' },
   { value: 'photo', label: 'Student photo' },
+  { value: 'custom-details', label: 'School details captured at admission' },
 ];
 
 export default function StudentRecordChanges() {
@@ -102,6 +105,14 @@ export default function StudentRecordChanges() {
   );
   const [decide, decisionState] = useDecideStudentRecordChangeMutation();
   const current = detail.isError ? undefined : detail.currentData;
+  const customDetails = useGetStudentRecordDetailsQuery(
+    { studentId: current?.studentId ?? '' },
+    { skip: !current || current.payloadMasked || current.section !== 'custom-details' }
+  );
+  const customDiff = useProfileChangeDiff(
+    current,
+    customDetails.currentData?.registrationSources ?? []
+  );
   const canReadDirectory = hasGrantedPermission(permissions, 'Students.Records.StudentList.View');
   const diffOptions = useGetStudentRecordsDirectoryOptionsQuery(
     { academicYearId: current?.academicYearId },
@@ -270,22 +281,25 @@ export default function StudentRecordChanges() {
                       sensitive-field permissions.
                     </Alert>
                   )}
-                  {studentId && snapshot.isFetching && !snapshot.currentData && (
+                  {studentId && snapshot.isFetching && !draftDirty && (
                     <LinearProgress aria-label="Loading current student section" />
                   )}
-                  {studentId && !snapshot.isError && snapshot.currentData && (
-                    <RecordChangeForm
-                      key={`${studentId}-${section}-${params.get('reload') ?? ''}`}
-                      studentId={studentId}
-                      onDirtyChange={setDraftDirty}
-                      snapshot={snapshot.currentData}
-                      correctsChangeId={params.get('corrects') ?? undefined}
-                      onReload={() => update({ reload: crypto.randomUUID() })}
-                      onSubmitted={(id) =>
-                        navigate({ mode: undefined, request: id, corrects: undefined })
-                      }
-                    />
-                  )}
+                  {studentId &&
+                    !snapshot.isError &&
+                    snapshot.currentData &&
+                    (!snapshot.isFetching || draftDirty) && (
+                      <RecordChangeForm
+                        key={`${studentId}-${section}-${params.get('reload') ?? ''}`}
+                        studentId={studentId}
+                        onDirtyChange={setDraftDirty}
+                        snapshot={snapshot.currentData}
+                        correctsChangeId={params.get('corrects') ?? undefined}
+                        onReload={() => update({ reload: crypto.randomUUID() })}
+                        onSubmitted={(id) =>
+                          navigate({ mode: undefined, request: id, corrects: undefined })
+                        }
+                      />
+                    )}
                 </>
               )}
             </Stack>
@@ -452,6 +466,22 @@ export default function StudentRecordChanges() {
                 {current.photoPreviewUrl && !current.payloadMasked && (
                   <RecordPhotoPreview studentId={current.studentId} uri={current.photoPreviewUrl} />
                 )}
+                {current.section === 'custom-details' && customDetails.isError && (
+                  <Alert
+                    severity="error"
+                    action={<Button onClick={() => customDetails.refetch()}>Retry</Button>}
+                  >
+                    Field labels could not be loaded. Retry before reviewing this change.
+                  </Alert>
+                )}
+                {current.section === 'custom-details' && customDiff.isError && (
+                  <Alert
+                    severity="error"
+                    action={<Button onClick={customDiff.retry}>Retry</Button>}
+                  >
+                    Selected field labels could not be loaded. Retry before reviewing this change.
+                  </Alert>
+                )}
                 {current.payloadMasked ? (
                   <Alert severity="info">
                     This request contains protected fields you cannot view.
@@ -469,36 +499,49 @@ export default function StudentRecordChanges() {
                         { id: 'before', label: 'Current value' },
                         { id: 'proposed', label: 'Proposed value' },
                       ]}
-                      data={Object.keys(current.proposed ?? {})
-                        .filter(
-                          (key) =>
-                            JSON.stringify(current.before?.[key]) !==
-                            JSON.stringify(current.proposed?.[key])
-                        )
-                        .map((key) => ({
-                          id: key,
-                          field: recordFieldLabel(key),
-                          before: recordDiffValue(
-                            key,
-                            current.before?.[key],
-                            diffOptions.currentData,
-                            siblingNames
-                          ),
-                          proposed: recordDiffValue(
-                            key,
-                            current.proposed?.[key],
-                            diffOptions.currentData,
-                            siblingNames
-                          ),
-                        }))}
+                      isLoading={
+                        current.section === 'custom-details' &&
+                        (customDetails.isFetching || customDiff.isLoading)
+                      }
+                      data={
+                        current.section === 'custom-details'
+                          ? customDiff.diffs.map((item, index) => ({
+                              id: String(index),
+                              field: item.label,
+                              before: item.before,
+                              proposed: item.after,
+                            }))
+                          : Object.keys(current.proposed ?? {})
+                              .filter(
+                                (key) =>
+                                  JSON.stringify(current.before?.[key]) !==
+                                  JSON.stringify(current.proposed?.[key])
+                              )
+                              .map((key) => ({
+                                id: key,
+                                field: recordFieldLabel(key),
+                                before: recordDiffValue(
+                                  key,
+                                  current.before?.[key],
+                                  diffOptions.currentData,
+                                  siblingNames
+                                ),
+                                proposed: recordDiffValue(
+                                  key,
+                                  current.proposed?.[key],
+                                  diffOptions.currentData,
+                                  siblingNames
+                                ),
+                              }))
+                      }
                       noDataText="No field differences."
                     />
                   </Box>
                 )}
                 {current.decisions.map((item, index) => (
                   <Typography key={index} variant="body2">
-                    Stage {item.stage}: {item.decision} · {item.reason} ·{' '}
-                    {fDateTime(item.creationTime)}
+                    Stage {item.stage}: {item.decision} · {item.actorName ?? 'Reviewer'} ·{' '}
+                    {item.reason} · {fDateTime(item.creationTime)}
                   </Typography>
                 ))}
                 {failure && <Alert severity="error">{failure}</Alert>}
@@ -521,6 +564,15 @@ export default function StudentRecordChanges() {
           {!decision ? (
             <>
               {current?.canApprove &&
+                (current.section !== 'custom-details' ||
+                  Boolean(
+                    customDetails.currentData &&
+                    !customDetails.currentData.customDetailsMasked &&
+                    !customDetails.isError &&
+                    !customDetails.isFetching &&
+                    !customDiff.isLoading &&
+                    !customDiff.isError
+                  )) &&
                 hasGrantedPermission(permissions, 'Students.Records.Changes.Approve') && (
                   <>
                     <Button onClick={() => setDecision('reject')} color="error">

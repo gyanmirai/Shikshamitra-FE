@@ -1,4 +1,5 @@
 import React from 'react';
+import { RouterLink } from 'src/routes/components';
 import { Box, Tooltip, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -21,6 +22,7 @@ const ThreeDotsActions = ({
   showThreeDots = true,
   viewIcon = 'carbon:view-filled',
   viewLabel = 'View',
+  viewHref,
   editLabel = 'Edit',
   deleteLabel = 'Delete',
   moreLabel = 'More actions',
@@ -40,6 +42,7 @@ const ThreeDotsActions = ({
         <Tooltip title={viewLabel}>
           <span>
             <IconButton
+              {...(viewHref && !disableViewIcon ? { component: RouterLink, href: viewHref } : {})}
               aria-label={viewLabel}
               data-testid="table-action-view"
               onClick={(e) => {
