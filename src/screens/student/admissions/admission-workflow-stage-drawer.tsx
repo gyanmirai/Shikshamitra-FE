@@ -3,7 +3,6 @@
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   AdmissionWorkflowStage,
-  AdmissionWorkflowTransition,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -24,28 +23,13 @@ type Props = {
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
   stages?: AdmissionWorkflowStage[];
-  transitions?: AdmissionWorkflowTransition[];
   readOnly: boolean;
   onClose: () => void;
   onSave: (stage: AdmissionWorkflowStage) => void;
-  onAddPath?: (stage: AdmissionWorkflowStage) => void;
-  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
 };
 
 export function AdmissionWorkflowStageDrawer(props: Props) {
-  const {
-    open,
-    stage,
-    stageTypes,
-    forms,
-    stages = [],
-    transitions,
-    readOnly,
-    onClose,
-    onSave,
-    onAddPath,
-    onEditPath,
-  } = props;
+  const { open, stage, stageTypes, forms, stages = [], readOnly, onClose, onSave } = props;
   const {
     formik,
     metadata,
@@ -85,7 +69,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                   title={`${readOnly ? 'View' : 'Configure'} ${metadata?.displayName ?? 'stage'}`}
                   helpText={
                     readOnly
-                      ? 'Review this stage’s details, completion rules, and next steps.'
+                      ? 'Review this stage’s details and completion rules.'
                       : 'Apply changes updates this stage in the journey. Use Save draft to store the workflow.'
                   }
                   helpLabel="Stage configuration information"
@@ -132,14 +116,8 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 formDetailsError={formDetailsError}
                 onRetryFormDetails={retryFormDetails}
                 stages={stages}
-                transitions={transitions}
                 formDefinitionId={formDefinitionId}
                 readOnly={readOnly}
-                onAddPath={onAddPath}
-                onEditPath={onEditPath}
-                routeEditingDisabled={
-                  formik.dirty || !stages.some((item) => item.id === formik.values.id)
-                }
               />
             </Scrollbar>
             <Stack

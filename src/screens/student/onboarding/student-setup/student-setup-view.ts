@@ -11,9 +11,9 @@ export const studentSetupViews: Array<{
   icon: string;
 }> = [
   { value: 'readiness', label: 'Readiness', icon: 'mdi:clipboard-check-outline' },
+  { value: 'division', label: 'Division', icon: 'mdi:google-classroom' },
   { value: 'gr-number', label: 'GR Number', icon: 'mdi:identifier' },
   { value: 'roll-number', label: 'Roll Number', icon: 'mdi:format-list-numbered' },
-  { value: 'division', label: 'Division', icon: 'mdi:google-classroom' },
   { value: 'fees', label: 'Fees', icon: 'mdi:receipt-text-outline' },
   { value: 'credentials', label: 'Credentials', icon: 'mdi:account-key-outline' },
 ];

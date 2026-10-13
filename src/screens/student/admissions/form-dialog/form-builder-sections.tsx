@@ -263,7 +263,8 @@ export function FormBuilderSections({
           open={sidePanel !== null}
           onClose={() => setSidePanel(null)}
           aria-labelledby="admission-form-field-settings-title"
-          sx={{ zIndex: theme.zIndex.modal + 1 }}
+          // Portal order keeps settings above the wizard and newly opened menus above settings.
+          sx={{ zIndex: theme.zIndex.modal }}
           slotProps={{ paper: { sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 } } }}
         >
           {settingsContent}

@@ -91,6 +91,37 @@ function setup(
 }
 
 describe('single-page stage drawer', { timeout: 15000 }, () => {
+  it.each([1, 2, 4, 5, 7] as const)('omits next-step settings for stage type %s', (type) => {
+    renderDocumentUi(
+      <AdmissionWorkflowStageDrawer
+        open
+        stage={{ ...stage, stageType: type }}
+        stageTypes={[
+          {
+            ...metadata,
+            type,
+            supportsFormAttachment: type === 1,
+            supportedConfiguration:
+              type === 1
+                ? ['form']
+                : type === 2
+                  ? ['assessment']
+                  : type === 5
+                    ? ['documentVerification']
+                    : [],
+          },
+        ]}
+        forms={[form]}
+        stages={[{ ...stage, stageType: type }]}
+        readOnly={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('heading', { name: 'Stage details' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
+  });
   it('shows Form details, completion and advanced controls together without the stepper or removed fields', async () => {
     const { user, onSave } = setup(
       JSON.stringify({
@@ -106,13 +137,11 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
         extension: 'keep',
       })
     );
-    [
-      'Stage details',
-      'Form completion',
-      'Stage behavior',
-      'Next step',
-      'Advanced submission settings',
-    ].forEach((name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument());
+    ['Stage details', 'Form completion', 'Stage behavior', 'Advanced submission settings'].forEach(
+      (name) => expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+    );
+    expect(screen.queryByRole('heading', { name: 'Next step' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose next step' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Advanced settings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();

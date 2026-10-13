@@ -62,28 +62,11 @@ const parseConfiguration = (
 const getRecordKey = (academicYearId?: string | null) => academicYearId ?? 'school';
 
 function SettingsStateHeader({ pathname }: { pathname: string }) {
-  const sections = studentPaths.onboarding.settingsSections;
   const isSettings = pathname.startsWith(studentPaths.onboarding.settings);
-  const isNumbering = [
-    sections.numberingPlacement,
-    sections.grNumber,
-    sections.rollNumber,
-  ].includes(pathname);
-  const isReadiness = isSettings && pathname !== studentPaths.onboarding.settings && !isNumbering;
-  const heading = isNumbering
-    ? 'Numbering & Placement'
-    : isReadiness
-      ? 'Readiness & Access'
-      : isSettings
-        ? 'Onboarding Settings'
-        : 'Student Setup';
-  const description = isNumbering
-    ? 'Create and publish GR series and Roll rules for Onboarding.'
-    : isReadiness
-      ? 'Connect Admission Offerings to activation requirements and app login emails.'
-      : isSettings
-        ? 'Configure admission readiness, student identifiers and app access.'
-        : 'Prepare admission students for activation and complete their app access.';
+  const heading = isSettings ? 'Onboarding Settings' : 'Student Setup';
+  const description = isSettings
+    ? 'Configure portal access, GR numbers and roll numbers.'
+    : 'Prepare admission students for activation and complete their app access.';
   return (
     <CustomBreadcrumbs
       heading={heading}
@@ -91,15 +74,7 @@ function SettingsStateHeader({ pathname }: { pathname: string }) {
       links={[
         { name: 'Student', href: studentPaths.dashboard },
         { name: 'Onboarding', href: studentPaths.onboarding.setup },
-        ...(isSettings
-          ? [
-              {
-                name: 'Settings',
-                ...(isNumbering || isReadiness ? { href: studentPaths.onboarding.settings } : {}),
-              },
-            ]
-          : []),
-        ...(isNumbering || isReadiness || !isSettings ? [{ name: heading }] : []),
+        { name: heading },
       ]}
     />
   );

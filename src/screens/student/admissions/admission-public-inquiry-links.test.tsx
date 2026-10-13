@@ -24,6 +24,7 @@ const hooks = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   create: vi.fn(),
+  infoToast: vi.fn(),
   close: vi.fn(),
   setupQuery: vi.fn(),
   optionsQuery: vi.fn(),
@@ -133,7 +134,9 @@ vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => 
   ),
 }));
 vi.mock('@mui/x-date-pickers', () => ({ DateTimePicker: () => null }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { success: vi.fn(), info: hooks.infoToast },
+}));
 
 const activeSetup = {
   id: 'setup-1',
@@ -240,10 +243,45 @@ describe('create public inquiry link', () => {
     await user.keyboard('{Escape}');
     hooks.options.currentData = [];
     rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    expect(screen.getByText(/No compatible inquiry Offering is available/)).toBeVisible();
+    expect(
+      screen.queryByText(/No compatible inquiry Offering is available/)
+    ).not.toBeInTheDocument();
+    expect(hooks.infoToast).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    expect(hooks.infoToast).toHaveBeenCalledWith({
+      message:
+        'First create or attach a published Inquiry form to an active Admission Offering with Inquiry or Both entry mode in this period.',
+    });
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
+    expect(hooks.create).not.toHaveBeenCalled();
+  });
+
+  it('supports keyboard prerequisite feedback and opens options after offerings are refreshed', async () => {
+    hooks.options.currentData = [];
+    const { rerender } = renderDrawer();
+    const user = userEvent.setup();
+    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
+    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
+    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
+    const form = screen.getByRole('combobox', { name: 'Published inquiry form' });
+    form.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(hooks.infoToast).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
+    expect(hooks.options.refetch).toHaveBeenCalledOnce();
+    hooks.options.currentData = [
+      { counsellorAssignmentProfileId: null, inquiryFormDefinitionId: 'form-1' },
+    ];
+    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
+    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
+    await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
+    expect(hooks.infoToast).toHaveBeenCalledOnce();
+    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+    expect(screen.getByRole('button', { name: 'Create link' })).toBeEnabled();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 

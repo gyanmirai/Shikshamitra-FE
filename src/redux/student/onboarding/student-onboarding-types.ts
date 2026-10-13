@@ -305,3 +305,27 @@ export type StudentCredentialEmail = {
   emailEnabled?: boolean;
   canSend?: boolean;
 };
+
+export type StudentCredentialsRecipient = {
+  accountType: 'student' | 'guardian';
+  relationship: 'self' | 'father' | 'mother' | 'guardian';
+  name?: string | null;
+  email?: string | null;
+  canSend: boolean;
+  blockedReason?: string | null;
+  delivery?: StudentCredentialEmail | null;
+};
+
+export type StudentCredentialsWorkspace = {
+  caseId: string;
+  concurrencyStamp: string;
+  recipients: StudentCredentialsRecipient[];
+};
+
+export type SendStudentCredentials = {
+  id: string;
+  accountType: StudentCredentialsRecipient['accountType'];
+  relationship: StudentCredentialsRecipient['relationship'];
+  expectedEmail: string;
+  concurrencyStamp: string;
+};

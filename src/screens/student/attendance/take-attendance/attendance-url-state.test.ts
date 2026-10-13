@@ -3,6 +3,18 @@ import { it, expect, describe } from 'vitest';
 import { attendanceTableQueryUrl, readAttendanceTableQuery } from './attendance-url-state';
 
 describe('Daily Attendance URL state', () => {
+  it('reads Student List paging and sort keys while preserving the date and academic filters', () => {
+    expect(
+      readAttendanceTableQuery(
+        'date=2026-10-12&board=b&class=c&page=1&pageSize=50&search=260123&sort=grNumber+desc'
+      )
+    ).toMatchObject({
+      page: 1,
+      rowsPerPage: 50,
+      searchTerm: '260123',
+      sorts: [{ column: 'grNumber', direction: 'desc' }],
+    });
+  });
   it('restores search, page and sorting without losing academic context', () => {
     const state = {
       page: 2,

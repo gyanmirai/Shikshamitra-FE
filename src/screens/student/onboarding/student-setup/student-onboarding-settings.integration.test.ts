@@ -3,7 +3,8 @@ import { it, expect, describe } from 'vitest';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import { getReadinessSummary, applyReadinessAccessRules } from './student-onboarding-model';
 import {
-  defaultOnboardingSettings,
+  defaultOnboardingSettings as automaticOnboardingSettings,
+  defaultOnboardingProfiles,
   isStudentApprovalRequired,
   getEffectiveReadinessRules,
   findRollNumberConfiguration,
@@ -14,6 +15,27 @@ import {
   findDivisionChangeConfiguration,
   defaultDivisionChangeConfiguration,
 } from '../onboarding-settings-model';
+
+// Historical profile configurations remain readable without generating them for new schools.
+const defaultOnboardingSettings = {
+  ...automaticOnboardingSettings,
+  onboardingProfiles: defaultOnboardingProfiles,
+};
+
+it('applies published numbering without a readiness profile and still enforces academic coverage', () => {
+  const configuration = {
+    ...defaultGrNumberConfiguration,
+    status: 'published' as const,
+    isActive: true,
+    applicableProfileIds: [],
+    boardMode: 'selected' as const,
+    boardIds: ['cbse'],
+  };
+  expect(isGrConfigurationApplicable(configuration, undefined, '2026-10-12', { boardId: 'cbse' })).toBe(true);
+  expect(isGrConfigurationApplicable(configuration, undefined, '2026-10-12', { boardId: 'gseb' })).toBe(false);
+  expect(isGrConfigurationApplicable({ ...configuration, applicableProfileIds: ['retired-profile'] }, undefined, '2026-10-12', { boardId: 'cbse' })).toBe(true);
+  expect(isGrConfigurationApplicable({ ...configuration, status: 'draft' }, undefined, '2026-10-12', { boardId: 'cbse' })).toBe(false);
+});
 
 describe('Student Setup applied onboarding settings', () => {
   it('removes optional document, identifier, and account checks from readiness', () => {
@@ -256,7 +278,7 @@ describe('Student Setup applied onboarding settings', () => {
       isGrConfigurationApplicable(cbseGrSeries, undefined, undefined, {
         boardId: 'board-cbse',
       })
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('resolves Board, Medium, School Level, Class, and Division specificity independently', () => {

@@ -1,7 +1,7 @@
 import { it, vi, expect, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
-import { defaultOnboardingSettings } from '../onboarding-settings-model';
+import { defaultOnboardingSettings, defaultOnboardingProfiles } from '../onboarding-settings-model';
 import { OnboardingSettingsProvider } from '../onboarding-settings-context';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
@@ -154,7 +154,7 @@ it('does not offer consent confirmation before enrollment or to a read-only user
 });
 
 it('offers a saved school-defined route in Student Setup', () => {
-  const source = defaultOnboardingSettings.onboardingProfiles[0];
+  const source = defaultOnboardingProfiles[0];
   const settings = {
     ...defaultOnboardingSettings,
     onboardingProfiles: [
@@ -184,7 +184,7 @@ it('offers a saved school-defined route in Student Setup', () => {
 });
 
 it('shows custom routes only for this student’s board and campus while retaining the current route', () => {
-  const source = defaultOnboardingSettings.onboardingProfiles[0];
+  const source = defaultOnboardingProfiles[0];
   const settings = {
     ...defaultOnboardingSettings,
     onboardingProfiles: [

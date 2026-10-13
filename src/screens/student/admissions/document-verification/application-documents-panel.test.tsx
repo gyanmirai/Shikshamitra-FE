@@ -19,7 +19,7 @@ describe('applicant document checklist interactions', { timeout: 15000 }, () => 
   it.each([
     { grants: ['View'], canAdd: false, canWaive: false },
     { grants: ['View', 'Add'], canAdd: true, canWaive: false },
-    { grants: ['View', 'Delete'], canAdd: false, canWaive: true },
+    { grants: ['View', 'Delete'], canAdd: false, canWaive: false },
     { grants: ['View', 'Upload', 'Review', 'RecordOriginal', 'Waive'], canAdd: false, canWaive: false },
   ])('uses canonical document grants: $grants', async ({ grants, canAdd, canWaive }) => {
     mswServer.use(

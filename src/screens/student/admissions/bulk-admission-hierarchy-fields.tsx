@@ -2,8 +2,8 @@ import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
-import { Grid, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, Button, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { admissionTrackLabels } from './admission-offering-model';
@@ -12,6 +12,8 @@ import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 import type { BulkOfferingFieldIssues } from './bulk-admission-offering-validation';
+
+const ALL_CLASSES_OPTION = '__bulk_offering_all_classes__';
 
 type Props = {
   formik: FormikProps<BulkOfferingValues>;
@@ -44,6 +46,21 @@ export function BulkAdmissionHierarchyFields({
   const options = getAdmissionHierarchyOptions(hierarchy, values.boardId, values.mediumId);
   const allConfigured =
     standards.length > 0 && standards.every((standard) => configuredClassIds.includes(standard.id));
+  const availableClassIds = standards
+    .filter((standard) => !configuredClassIds.includes(standard.id))
+    .map((standard) => standard.id);
+  const allClassesSelected =
+    availableClassIds.length > 0 &&
+    availableClassIds.every((id) => values.standardIds.includes(id));
+  const classOptions = availableClassIds.length
+    ? [
+        {
+          id: ALL_CLASSES_OPTION,
+          name: allClassesSelected ? 'Deselect all classes' : 'Select all classes',
+        },
+        ...standards,
+      ]
+    : standards;
   const classError = Boolean(
     classesError || (touched.standardIds && errors.standardIds) || fieldIssues.standardIds?.blocking
   );
@@ -108,7 +125,15 @@ export function BulkAdmissionHierarchyFields({
         <ShakingTextField error={classError}>
           <CustomSelect
             multiple
-            options={standards}
+            options={classOptions}
+            renderValue={(selected) => (
+              <Typography component="span" variant="body2" noWrap sx={{ display: 'block' }}>
+                {(Array.isArray(selected) ? selected : [selected])
+                  .map((id) => standards.find((standard) => standard.id === id)?.name)
+                  .filter(Boolean)
+                  .join(', ')}
+              </Typography>
+            )}
             label="Class *"
             name="standardIds"
             labelId="bulk-class-label"
@@ -124,10 +149,13 @@ export function BulkAdmissionHierarchyFields({
             disabledValues={configuredClassIds}
             disabledLabel="Offering already exists"
             onChange={(ids) => {
+              const selectedIds = (Array.isArray(ids) ? ids : [ids]).map(String);
               const selection = selectBulkClasses(
-                (Array.isArray(ids) ? ids : [ids])
-                  .map(String)
-                  .filter((id) => !configuredClassIds.includes(id)),
+                selectedIds.includes(ALL_CLASSES_OPTION)
+                  ? allClassesSelected
+                    ? []
+                    : availableClassIds
+                  : selectedIds.filter((id) => !configuredClassIds.includes(id)),
                 standards
               );
               change(selection);

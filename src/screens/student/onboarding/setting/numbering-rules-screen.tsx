@@ -7,12 +7,14 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { Label } from 'src/components/label';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import {
   Box,
   Stack,
@@ -133,6 +135,7 @@ function NumberingRulesScreen({
   createActionRef,
 }: ScreenProps & { kind: 'gr' | 'roll' }) {
   const isGr = kind === 'gr';
+  const router = useRouter();
   const filters = useOnboardingAcademicStructure({ includeCampuses: false });
   const { settings, scope, saveGrNumberConfiguration, saveRollNumberConfiguration } =
     useOnboardingSettings();
@@ -192,7 +195,6 @@ function NumberingRulesScreen({
             resetPolicy: 'continuous',
             requireManualReason: true,
             requireManualApproval: false,
-            applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
           }
         : {
             ...(common as RollNumberConfiguration),
@@ -215,6 +217,10 @@ function NumberingRulesScreen({
         helpers.setStatus('The draft could not be saved. Review the values and try again.');
       }
     },
+  });
+  const navigationGuard = useUnsavedNavigation(editorOpen && formik.dirty, {
+    push: router.push,
+    blockNavigation: formik.isSubmitting || Boolean(publishingId),
   });
   const openNew = () => {
     setEditingId(null);
@@ -272,10 +278,10 @@ function NumberingRulesScreen({
     setEditorOpen(true);
   };
   const close = () => {
-    if (formik.isSubmitting) return;
-    if (formik.dirty && !window.confirm('Discard unsaved numbering changes?')) return;
-    setEditorOpen(false);
-    formik.resetForm();
+    navigationGuard.requestNavigation(() => {
+      setEditorOpen(false);
+      formik.resetForm();
+    });
   };
   const publish = async (configuration: Configuration) => {
     if (publishingId) return;
@@ -559,6 +565,7 @@ function NumberingRulesScreen({
           ) : null}
         </Stack>
       </SettingsDrawer>
+      {navigationGuard.confirmation}
     </Stack>
   );
 }

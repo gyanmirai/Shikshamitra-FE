@@ -1,34 +1,28 @@
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Stack, Alert, Button, Typography } from '@mui/material';
-import { useGetStudentRecordsDirectoryOptionsQuery } from 'src/redux/student/records/student-records-api';
+import CustomSelect from 'src/components/custom-select';
+import { Stack, Button, Typography } from '@mui/material';
 
-import StudentDirectoryFilterFields from './student-directory-filter-fields';
-
-import type { DirectoryFilters } from './student-directory-filter-fields';
+export type StudentPopulation = 'Active' | 'Former';
 
 type Props = {
-  values: DirectoryFilters;
-  academicYearId: string;
-  onApply: (values: DirectoryFilters) => void;
+  population: StudentPopulation;
+  onApply: (population: StudentPopulation) => void;
 };
 
 export default function StudentDirectoryFilterPanel({
-  values,
-  academicYearId,
+  population,
   onApply,
   onClose,
 }: Props & { onClose: () => void }) {
-  const [draft, setDraft] = useState(values);
-  const options = useGetStudentRecordsDirectoryOptionsQuery({
-    academicYearId: academicYearId || undefined,
-  });
+  const [draft, setDraft] = useState(population);
 
   return (
     <>
       <Stack
-        direction={{ xs: 'column', sm: 'row' }}
+        direction="row"
         spacing={1}
+        alignItems="center"
         justifyContent="space-between"
         sx={{ mb: 2 }}
       >
@@ -39,39 +33,21 @@ export default function StudentDirectoryFilterPanel({
           variant="outlined"
           color="inherit"
           size="small"
-          startIcon={<Iconify icon="solar:restart-bold" width={16} />}
-          onClick={() =>
-            setDraft({
-              board: '',
-              medium: '',
-              class: '',
-              division: '',
-            })
-          }
+          startIcon={<Iconify icon="mdi:restore" width={16} />}
+          onClick={() => setDraft('Active')}
         >
-          Reset Defaults
+          Reset defaults
         </Button>
       </Stack>
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', py: 1 }}>
-        {options.isError && (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={() => options.refetch()}>
-                Retry filters
-              </Button>
-            }
-          >
-            Academic filter choices could not be loaded. The current view is preserved.
-          </Alert>
-        )}
-        <StudentDirectoryFilterFields
-          values={draft}
-          options={options.currentData}
-          isLoading={options.isFetching}
-          onChange={(changes) => setDraft((previous) => ({ ...previous, ...changes }))}
-        />
-      </Stack>
+      <CustomSelect
+        label="Students"
+        value={draft}
+        options={[
+          { value: 'Active', label: 'Active students' },
+          { value: 'Former', label: 'Former students' },
+        ]}
+        onChange={(value) => setDraft(value === 'Former' ? 'Former' : 'Active')}
+      />
       <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 2 }}>
         <Button variant="outlined" color="inherit" onClick={onClose}>
           Cancel
@@ -83,7 +59,7 @@ export default function StudentDirectoryFilterPanel({
             onClose();
           }}
         >
-          Apply Filters
+          Apply filters
         </Button>
       </Stack>
     </>

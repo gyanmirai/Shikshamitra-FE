@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,6 +15,12 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 ## Finalized application summary reads
 
 The finalized application summary reuses the application/workflow and decision-history reads, plus `getStudentOnboardingCase` only with the exact `Students.Onboarding.View` grant and a linked case. Case and fee-selection evidence use `currentData`, withhold failed or mismatched results, and refetch on mount. Decision history includes nullable `actorName` from the recorded actor; the assigned counsellor is never substituted for finalizing staff. No write, monetary calculation or new endpoint is introduced.
+
+## Daily Attendance workspace reads
+
+The take-attendance client reads `/students/attendance/context` for scoped academic options, active teacher assignments, school date and admin lock capability. `/students/attendance/workspace` supplies paged active students for broad filters; `/students/attendance/students` supplies the full dated class roster and revisions once one class/division is selected. These Attendance-owned reads do not require a Student Records grant.
+
+Broad paging, search and sorting run on the server. Full-class display paging/search is local to its loaded register; Save/Submit always retain the complete eligible roster. Date and academic selection plus `search`, `sort`, `page` and `pageSize` are URL-backed. Existing mark requests use `submit: false/true`; locking is a separate request. Mutations invalidate the affected register, workspace and reporting caches. Loading/error context disables marking and preserves unsaved work.
 
 ## Academic filter requests
 
@@ -36,12 +42,44 @@ Offering list, detail and availability reads provide the existing Admission Cycl
 
 The Applications special-registration drawer uses the existing paginated cycle and offering reads, scoped to the current academic year and explicitly selected cycle/type. It never defaults to the first cycle or truncates a global offering list. General and inquiry-only offerings are excluded; historical Management/Staff Inquiry-or-direct offerings remain eligible. Loading, paging, failure/Retry and empty results use the existing selectors. The existing special-registration and family-match mutations preserve child/guardian identity, sibling verification, idempotency and counsellor ownership; General fresh direct registration remains server-rejected.
 
+The offering lookup sends `forSpecialRegistration=true` so eligible entry modes are filtered before server counts and paging. RTE retains its Direct-only request; Management/Staff include retained Both routing. Refresh choices remounts the cycle/offering selectors and requests fresh data while preserving entered applicant/guardian details and selection. The drawer reuses `FormSectionCard` and `Scrollbar`, with a fixed header/footer, cycle prerequisite guidance, contextual empty results and recoverable lookup errors.
+Deploy the backend query contract before the frontend lookup change; an older host cannot provide the eligibility-before-paging guarantee. Validation focuses the first invalid field, and a failed registration/family request focuses its visible inline error without discarding the draft.
+
 `src/redux/student/admissions/admission-cycles-api.ts` owns the Admission Cycle RTK Query contract.
 It provides server-paged list/detail reads, impact/history reads, Draft create/edit, readiness validation, publish, close, reopen, archive, unused-Draft delete, clone, window revision, and schedule commands.
 Every mutation invalidates `studentAdmissionsCrmType.admissionCycle`; impact/history reads are loaded only when their dialogs open.
 The backend owns lifecycle, dependency, permission, institution-timezone, and concurrency enforcement.
 
 ## Client map
+
+### Student Records list and profile
+
+| Client                                                    | Frontend responsibility                                                                                                                                                                                                                                                                            |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/redux/student/records/student-records-api.ts`        | Directory rows and academic options share the global year; scalar academic filters, population, search, sort, offset and page size reach the server                                                                                                                                                |
+| `src/redux/student/index.ts`                              | `getStudentById` reads the protected profile with Student ID and optional selected academic year; `student-profile-types.ts` validates its canonical identity                                                                                                                                      |
+| `src/redux/student/records/student-record-details-api.ts` | Reads `/students/records/{studentId}/details` with selected-year context; structured-section availability, masks, frozen Registration sources and typed original/current values drive the profile. History and custom request review omit the year filter to resolve all readable retained sources |
+| `src/redux/student/records/student-record-changes-api.ts` | Existing snapshots, change requests, decisions and application contracts support the additive `custom-details` section; `RecordChange` supplies reason, actors and protected before/proposed payloads                                                                                              |
+
+The Directory skips both row and option queries while the global year is missing and never uses the legacy division-only list query for this workspace.
+Profile details mount only for Overview, Details and History; documents and related services keep their own reads.
+History queries run only for Overview/History with exact Changes View access.
+Reads use matching `currentData` and suppress failed results, keeping first-load and refetch states local to their owning table or panel.
+
+The profile consumes the returned frozen Registration definition rather than fetching the latest school form.
+`StudentRecordDetails` keeps immutable original answers separate from current values and returns field codes, source IDs, differences and allowed editing capability.
+Inquiry answers are not fetched into this profile.
+Custom fields are not projected into Student List columns, search or exports.
+Structured/custom masks and edit capability remain backend policy decisions; the frontend shows a restricted state and does not infer privacy from a field's label.
+
+Details uses the additive safe `formSources` projection, preserving the existing custom-request sources for other consumers. `student-registration-form-panel.tsx` reads `/students/records/{studentId}/details/form-snapshot` only when editing starts and PUTs typed source values, `clientKey`, reason and `expectedSnapshot` to `/details/form`. A successful immediate save refreshes profile and history without leaving Details. Generic Changes workflows remain separate. The original form version and source schema stay frozen during editing; protected or policy-masked fields remain read-only. The profile's Back button shares the editor's navigation guard, and the editing academic context remains frozen if the global year changes.
+
+Documents combines ordinary requirements and retained admission evidence in one `CustomizableTable`. Profile-specific adapters in `student-profile-information-api.ts` use the existing `/app/student-document` JSON contracts for required status, content and uploads; Base64 conversion uses shared file utilities. Downloads return only completion metadata to Redux, while private previews are evicted when closed. Existing Student List Add and registration-stage eligibility govern ordinary uploads; active/former records cannot upload through that owner. Retained evidence uses its separate Records-scoped download and existing read-only version/review details.
+Records resolves dynamic choices through `/students/records/{studentId}/details/options`, bound to the recorded submission and field code. It does not require Admissions Form View access. Master choices follow the source-year hierarchy; sibling search retains the shared paginated selector. Read-only review requests selected labels only, splitting large before/after sets into batches of at most 20 IDs. Missing or restricted choices show safe labels rather than GUIDs. The source definition, snapshot and untouched typed values stay frozen for an open correction draft; transient refresh failures preserve that draft while access denial blocks submission.
+Successful direct form saves and existing create/approve/apply operations invalidate the affected profile/details, snapshot, Directory and change-history tags according to their endpoint contracts. History is a paged audit timeline with an in-profile before/after drawer; it does not render an enrollment table or redirect to Changes.
+Deployment, data freezing, approval policy, concurrency, tenant scope and custom-value persistence are owned by the [backend Student contracts](../../../Shikshamitra-BE/docs/modules/student/api.md) and [Records product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#permanent-student-records-behavior).
+
+### Admissions clients
 
 | Client                          | Responsibilities                                                                                                                                                                                                                             | Main screens                                                |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -66,13 +104,18 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 `src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist, detail, capacity, readiness, placement, identifiers, activation, accounts, documents and settings clients.
 The client unwraps the shared `Result<T>` response and invalidates case/list/analytics or related operational tags after commands.
 The list sends `enteredToday` and task filters to the server before pagination, including Fees and Credentials.
+Placement, student/owner text operators, Roll comparisons/ranges and whitelisted table sorting are also server-side before counting and paging.
+`use-student-setup-assignment.ts` uses the existing lazy case/series reads without preferring cached values, then the independent placement/GR/Roll mutations.
+`student-setup-assignment-model.ts` refreshes and finishes each case before the next, commits the exact server Roll preview, and surfaces per-row results without automatic failure retries.
+The Manual Division editor reads each case's placement-options endpoint because worklist filter choices omit valid empty divisions.
+Assignment responses update the visible row immediately, including a Roll cleared by a placement change; new list data supersedes temporary responses without replacing unsaved drafts.
 Activation also invalidates the Student Records directory tag so the newly activated student becomes discoverable without stale cached rows.
 
 `src/redux/student/records/student-record-documents-api.ts` owns the Student I-Card template, preview, issue, history and bulk PDF export calls. The builder saves the design before requesting previews or exports; issue retains a stable idempotency key for retries. `student-records-api.ts` serializes multi-select Board, Medium, Class and Division IDs as repeated directory query parameters.
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 
-`persisted-onboarding-settings-provider.tsx` loads and saves versioned configuration through `/api/student/onboarding/settings/configurations`, preserving school/year scope and concurrency stamps. Load or schema failures block editing with Retry; they do not silently substitute defaults. The backend resolves the matching readiness and numbering rules. The obsolete operational editor has been removed.
+`persisted-onboarding-settings-provider.tsx` loads and saves versioned configuration through `/api/student/onboarding/settings/configurations`, preserving school/year scope and concurrency stamps. Load or schema failures block editing with Retry; they do not silently substitute defaults. Portal Access saves only the two account-requirement flags while retaining saved delivery preferences and archived profile metadata. The backend derives pending-case requirements from admission evidence and resolves published academic numbering rules independently of archived readiness profiles. Successful settings writes invalidate settings, case list/detail and analytics subscriptions.
 
 The provider keeps a route-specific shared breadcrumb/header visible during initial load, a year change, request failure or invalid saved configuration, while keeping editable child settings unmounted.
 Identifier Unlock visibility additionally requires the filter-options response's server-derived `canUnlockIdentifiers` capability; absent/false capability or a failed scope lookup hides Unlock.
@@ -82,14 +125,14 @@ The case client owns GET/POST portal-account links and credential-email status/r
 `src/screens/student/onboarding/student-setup/student-onboarding-model.ts` projects backend locks, fee confirmation, credentials pending and requirement-review flags, and splits the legacy combined identifier check into independent GR/Roll tasks.
 It excludes the system-owned final-readiness aggregate from staff task counts and uses the explicit `admissionConfirmed` server flag for an Offering case's Admission confirmed check, while preserving legacy imported-case identity projection.
 
-| Client operation                                                                      | Screen wiring                                                                            | Concurrency and cache behavior                                                                                                            |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Available Offering GET at `/student/onboarding/settings/offerings?academicYearId=...` | `src/screens/student/onboarding/setting/onboarding-policy-settings.tsx`                  | Onboarding-owned read-only choices include academic year and workflow identity without requiring Admissions Offering configuration access |
-| Separate case GR and Roll POSTs                                                       | `src/screens/student/onboarding/student-setup/student-onboarding-operation-dialog.tsx`   | Each task sends only its identifier inputs and current case stamp; assignment invalidates worklist/detail                                 |
-| Identifier-lock POST                                                                  | `src/screens/student/onboarding/student-setup/student-identifier-lock-controls.tsx`      | Selected academic year, division and identifier type; refreshes case/list state                                                           |
-| Fee-structure GET, candidate GET and confirmation PUT                                 | `src/screens/student/onboarding/student-setup/student-onboarding-fees.tsx`               | Reuses Admission fee DTOs; confirmation sends the case stamp and optional head IDs; no Finance mutation                                   |
-| Workflow-document GET, upload, original recording and review                          | `src/screens/student/onboarding/student-setup/student-onboarding-workflow-documents.tsx` | Reuses Admission checklist/actions and application evidence stamps; refreshes documents and readiness                                     |
-| Offering-requirement review POST                                                      | `src/screens/student/onboarding/student-setup/student-setup-drawer.tsx`                  | Explicitly reviews an existing unactivated case using its current stamp                                                                   |
+| Client operation                                                                      | Screen wiring                                                                                                                            | Concurrency and cache behavior                                                                                    |
+| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Available Offering GET at `/student/onboarding/settings/offerings?academicYearId=...` | Compatibility client only; no current settings editor uses it                                                                            | Retained read contract; automatic onboarding requires no Offering-to-rule selection                               |
+| Separate case GR and Roll POSTs                                                       | Inline Student Setup assignment hook and retained `src/screens/student/onboarding/student-setup/student-onboarding-operation-dialog.tsx` | Each task sends only its identifier inputs and current case stamp; assignment invalidates worklist/detail         |
+| Identifier-lock POST                                                                  | `src/screens/student/onboarding/student-setup/student-identifier-lock-controls.tsx`                                                      | Selected academic year, division and identifier type; refreshes case/list state                                   |
+| Fee-structure GET, candidate GET and confirmation PUT                                 | `src/screens/student/onboarding/student-setup/student-onboarding-fees.tsx`                                                               | Reuses Admission fee DTOs; confirmation sends the case stamp and optional head IDs; no Finance mutation           |
+| Workflow-document GET, upload, original recording and review                          | `src/screens/student/onboarding/student-setup/student-onboarding-workflow-documents.tsx`                                                 | Reuses Admission checklist/actions and application evidence stamps; refreshes documents and readiness             |
+| Offering-requirement review POST                                                      | Compatibility client only; no current case drawer action                                                                                 | Retained refresh contract; pending cases adopt automatic requirements on normal scoped reads and readiness checks |
 
 The case's `hasDocumentRequirementsSnapshot` flag distinguishes a frozen empty Offering checklist from a legacy case without a snapshot.
 An empty frozen checklist shows no required documents; only a legacy no-snapshot case falls back to the school-wide Student document panel when the workflow response is empty.
@@ -120,6 +163,15 @@ Runtime counsellor search and assignment stay in `admission-inquiries-api.ts`; t
 The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups. The backend filters these queues before paging and returns the row's cycle, offering, counsellor, management readiness, deadlines, and next follow-up in the list response.
 Inquiries uses the server-paged inquiry list with `isTransferred: false`.
 Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for pre-decision application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
+`src/screens/student/admissions/pipeline/admission-pipeline-more-filters.tsx` receives those existing options and applies one operational filter patch; it adds no reads or endpoints.
+Board, Medium and Class remain visible, while Cases, Counsellor, Current step and Status use the existing `queue`, `counsellor`, `stage` and `status` URL keys.
+`src/screens/student/admissions/pipeline/use-bulk-pipeline-counsellor.ts` reuses `admission-applications-api.ts` for fresh application details, conditional runtime workflow verification, one eligible-counsellor lookup per distinct selected offering, and the existing single-application `assign-counsellor` command.
+The frontend intersects those offering pools, sends commands sequentially with the latest concurrency stamps, skips an unchanged owner and retains failed rows for retry; the batch is not atomic.
+The existing application-tag invalidation refreshes Pipeline after assignment; linked-inquiry and scheduled-follow-up ownership handover stays inside the existing backend command, documented in the [Student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
+
+Started special registrations also appear in Pipeline, with nullable `inquiryId` and **No inquiry follow-ups** for direct cases.
+The compact identity cell shows the applicant name; Application and Inquiry references remain available as optional columns, and Continue remains available when the source Inquiry is absent.
+Decision entry transfers ownership to Applications permanently, including later corrections; no Inquiry or follow-up access is invented for a direct case.
 Applications uses `admission-applications-api.ts` with `decisionWorkspaceOnly=true`, academic scope, server search/sorting and `skipCount`/`maxResultCount`; the returned `totalCount` drives pagination.
 Its identity column uses the real application number; no separate applicant number is invented.
 The list reads `standardName`, `contactPhone`, `contactEmail`, `decisionEnteredAt` and `hasReachedDecision`; the shared generic list remains available to application-history consumers without decision-only filtering.
@@ -176,8 +228,8 @@ Credential-email request mutations invalidate case detail and handoff tags.
 The Credentials pending state uses the backend `credentialsPending` flag, including missing required account links and enabled email recipients whose delivery request is not Sent.
 No credential/password is returned to the staff interface.
 
-Readiness profiles link Offering IDs and persist student/guardian login-email choices and automatic/manual provisioning; the simplified rule editor fixes release timing to activation.
-Existing active/completed cases retain their historical requirement snapshot, and existing unactivated cases requiring migration expose explicit requirement review.
+Pending cases inherit admission requirements and the school's saved account choices automatically, without named readiness rules or Offering-rule links.
+Activated and terminal cases retain their pinned requirements and existing automatic/manual provisioning and release timing.
 
 ## Student dashboard client
 
@@ -199,8 +251,16 @@ The intake setup Restore mutation posts the current concurrency stamp to `/stude
 
 ## Portal account owner profiles
 
-The existing Onboarding case-detail query supplies optional `portalAccountOwners` from the canonical Student profile; the drawer uses only matching `currentData` for both owners and concurrency. Credentials selects Father, Mother or Other guardian explicitly and prefills the selected saved email read-only. Refresh locks submission and updates the email, requiring renewed ownership confirmation after email/relationship changes. Missing email requires correction in Student Records. An older API without this additive field retains manual email entry with explicit relationship selection. Account failures use `parseApiProblemDetail` to surface RFC/nested `data.Reason` instead of generic business-rule text. Provisioning, sender eligibility and send/resend permissions remain unchanged.
+Credentials uses one `getStudentOnboardingCredentials` workspace query at `/student/onboarding/{id}/credentials` for current legal recipients, saved email, permission/readiness feedback, delivery status and case concurrency stamp.
+It does not fall back to manually entered email or the case-detail owner projection.
+`sendStudentOnboardingCredentials` posts only `{accountType,relationship,expectedEmail,concurrencyStamp}` to the same route; the backend owns account preparation and durable delivery intent.
+Successful responses update the workspace cache immediately and invalidate the existing case detail, list, handoff and analytics tags.
+Failed or unknown writes are not silently retried, and refresh disables Send until current data is available.
+No client ownership-verification flag, password or token is sent or returned.
+The backend recipient contract and provenance checks are described in [Student APIs](../../../Shikshamitra-BE/docs/modules/student/api.md#onboarding-credential-delivery).
 
 `GuardianProfileEmailDialog` reuses the Records family snapshot and audited change APIs. It changes only the selected parent's email, preserving every other profile/sibling value and the expected snapshot hash. Records Changes View and Create plus editable Onboarding access guard the entry action. Pending corrections link to the owning Changes & Approvals review; approval and apply conflicts are never reported as a saved email.
 
-The case-only parent email action posts `{reason,concurrencyStamp}` to `/student/onboarding/{id}/guardian-credential-email/enable`. The existing Onboarding Add/Configure permission guards this action; only an activated, open case with a required guardian account can expose it. Successful corrections invalidate the existing case detail/list/handoff/analytics tags, including credential eligibility. Saving does not create an account or request delivery. The backend owns the pinned snapshot and audit contract.
+The legacy provisioning, credential-email and Configure-gated case-only parent-email correction clients remain compatible for their existing consumers.
+The simplified Credentials panel does not invoke a policy correction or change automatic-email preferences.
+Explicit manual sends use the backend's audited manual-intent contract even when automatic email is Off.

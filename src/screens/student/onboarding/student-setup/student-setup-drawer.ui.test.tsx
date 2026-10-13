@@ -1,8 +1,8 @@
 import type { ComponentProps } from 'react';
 
 import { Tabs } from '@mui/material';
-import { it, vi, expect, describe } from 'vitest';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentSetupDrawer from './student-setup-drawer';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
@@ -18,13 +18,21 @@ const mocks = vi.hoisted(() => ({
     { key: 'Medical.BloodGroup', label: 'Blood group', value: 'O+' },
     { key: 'PreviousSchool.Name', label: 'Previous school name', value: 'Sample School' },
   ],
+  capturedFieldsAvailable: true,
+  capturedFieldsLoading: false,
+  capturedFieldsError: false,
+  refetchCapturedFields: vi.fn(),
 }));
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
 }));
 vi.mock('src/components/custom-tabs', () => ({
-  CustomTabs: ({ children, guardUnsavedChanges, ...props }: ComponentProps<typeof Tabs> & {
+  CustomTabs: ({
+    children,
+    guardUnsavedChanges,
+    ...props
+  }: ComponentProps<typeof Tabs> & {
     guardUnsavedChanges?: boolean;
   }) => <Tabs {...props}>{children}</Tabs>,
 }));
@@ -35,7 +43,12 @@ vi.mock('react-redux', () => ({
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => ({
-    data: { capturedStudentFields: mocks.capturedFields },
+    data: mocks.capturedFieldsAvailable
+      ? { capturedStudentFields: mocks.capturedFields }
+      : undefined,
+    isFetching: mocks.capturedFieldsLoading,
+    isError: mocks.capturedFieldsError,
+    refetch: mocks.refetchCapturedFields,
   }),
   usePreviewStudentOnboardingActivationQuery: () => ({
     data: mocks.activationPreview,
@@ -47,12 +60,54 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
 }));
 vi.mock('./student-onboarding-workflow-documents', () => ({ default: () => null }));
 vi.mock('./student-onboarding-fees', () => ({ default: () => null }));
-vi.mock('./student-onboarding-portal-accounts', () => ({ default: () => null }));
+vi.mock('./student-onboarding-portal-accounts', () => ({
+  default: ({ onBusyChange }: { onBusyChange?: (busy: boolean) => void }) => (
+    <>
+      <button type="button" onClick={() => onBusyChange?.(true)}>
+        Simulate credential request
+      </button>
+      <button type="button" onClick={() => onBusyChange?.(false)}>
+        Complete credential request
+      </button>
+    </>
+  ),
+}));
 vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }));
 
 const student = studentOnboardingTestData[0];
 
 describe('Student Setup drawer readiness UI', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.capturedFieldsAvailable = true;
+    mocks.capturedFieldsLoading = false;
+    mocks.capturedFieldsError = false;
+  });
+
+  it('keeps the credentials drawer open while its send action is pending', () => {
+    const onClose = vi.fn();
+    render(
+      <StudentSetupDrawer
+        open
+        taskView="credentials"
+        canManage
+        student={{ ...student, source: 'onboarding-case' }}
+        onClose={onClose}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Simulate credential request' }));
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Close Student Setup' })).toBeDisabled();
+    fireEvent.keyDown(screen.getByRole('heading', { name: student.studentName }), {
+      key: 'Escape',
+      code: 'Escape',
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Complete credential request' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it('offers assignment for a pending division and change only after an actual placement', () => {
     const onAssignDivision = vi.fn();
     const pendingStudent = {
@@ -71,7 +126,7 @@ describe('Student Setup drawer readiness UI', () => {
         onAssignDivision={onAssignDivision}
       />
     );
-    fireEvent.click(screen.getByRole('tab', { name: 'Details' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
     expect(screen.queryByRole('button', { name: 'Change Division' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Assign Division' }));
     expect(onAssignDivision).toHaveBeenCalledOnce();
@@ -88,10 +143,19 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.queryByRole('button', { name: 'Assign Division' })).not.toBeInTheDocument();
   });
   it('shows only GR requirements and actions from the GR tab', () => {
-    render(<StudentSetupDrawer open taskView="gr-number" canManage student={{ ...student, source: 'onboarding-case', backendStatus: 1 }} onClose={vi.fn()} onAssignGrNumber={vi.fn()} />);
+    render(
+      <StudentSetupDrawer
+        open
+        taskView="gr-number"
+        canManage
+        student={{ ...student, source: 'onboarding-case', backendStatus: 1 }}
+        onClose={vi.fn()}
+        onAssignGrNumber={vi.fn()}
+      />
+    );
     expect(screen.getByRole('heading', { name: 'GR number' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Assign / Change GR' })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'Details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Details & Checks' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Documents' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Fee structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Activate Student' })).not.toBeInTheDocument();
@@ -114,11 +178,17 @@ describe('Student Setup drawer readiness UI', () => {
 
     expect(screen.getByRole('heading', { name: student.studentName })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Tasks' })).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('button', { name: 'Student onboarding case information' }))
-      .toBeInTheDocument();
-    expect(screen.queryByText('Read-only admission context handed over from Enrollment.'))
-      .not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Details & Checks' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.queryByRole('tab', { name: 'Checks' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Student onboarding case information' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Read-only admission context handed over from Enrollment.')
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Admission' })).toBeInTheDocument();
     expect(screen.getByText('Admission reference').tagName).toBe('DT');
     expect(screen.getByRole('heading', { name: 'Placement & Identifiers' })).toBeInTheDocument();
@@ -132,7 +202,6 @@ describe('Student Setup drawer readiness UI', () => {
     expect(onAssignGrNumber).toHaveBeenCalledOnce();
     expect(onAssignRollNumber).toHaveBeenCalledOnce();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
     expect(screen.getByRole('heading', { name: 'Readiness & Activation' })).toBeInTheDocument();
     expect(screen.queryByText('Admission approved')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show 3 passed checks' }));
@@ -141,7 +210,9 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('heading', { name: 'Activity & Audit' })).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Refresh Readiness' })).toBeDisabled();
-    expect(screen.getByText(/no onboarding case, so activation is unavailable/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no onboarding case, so activation is unavailable/i)
+    ).toBeInTheDocument();
   });
 
   it('does not render a drawer when no student is selected', () => {
@@ -151,27 +222,63 @@ describe('Student Setup drawer readiness UI', () => {
   });
 
   it('distinguishes completed readiness checks from an action-required case', () => {
-    render(<StudentSetupDrawer open onClose={vi.fn()} student={{
-      ...student,
-      source: 'onboarding-case',
-      status: 'action-required',
-      readinessItems: student.readinessItems.map((check) => ({ ...check, status: 'passed' })),
-    }} />);
+    render(
+      <StudentSetupDrawer
+        open
+        onClose={vi.fn()}
+        student={{
+          ...student,
+          source: 'onboarding-case',
+          status: 'action-required',
+          readinessItems: student.readinessItems.map((check) => ({ ...check, status: 'passed' })),
+        }}
+      />
+    );
 
     expect(screen.getByRole('tab', { name: 'Tasks' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Complete service handoffs')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '5 of 5 checks passed' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    fireEvent.click(screen.getByRole('button', { name: '5 of 5 checks passed' }));
+    expect(screen.getByRole('tab', { name: 'Details & Checks' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    const combinedPanel = screen.getByRole('tabpanel', { name: 'Details & Checks' });
+    expect(within(combinedPanel).getByRole('heading', { name: 'Admission' })).toBeInTheDocument();
+    expect(
+      within(combinedPanel).getByRole('heading', { name: 'Placement & Identifiers' })
+    ).toBeInTheDocument();
+    expect(
+      within(combinedPanel).getByRole('heading', { name: 'Readiness & Activation' })
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show 5 passed checks' })).toBeInTheDocument();
   });
 
   it('does not offer a nonfunctional student-record action or misleading optional Finance check', () => {
-    render(<StudentSetupDrawer open canManage onClose={vi.fn()} student={{
-      ...student, source: 'onboarding-case', status: 'completed', backendStatus: 4,
-      studentEnrollmentId: 'enrollment-1',
-      readinessItems: [{ key: 'finance_accounts_services', label: 'Finance, accounts, and optional services',
-        detail: '', status: 'not-required', blocking: false, owner: 'Student Onboarding' }],
-    }} />);
+    render(
+      <StudentSetupDrawer
+        open
+        canManage
+        onClose={vi.fn()}
+        student={{
+          ...student,
+          source: 'onboarding-case',
+          status: 'completed',
+          backendStatus: 4,
+          studentEnrollmentId: 'enrollment-1',
+          readinessItems: [
+            {
+              key: 'finance_accounts_services',
+              label: 'Finance, accounts, and optional services',
+              detail: '',
+              status: 'not-required',
+              blocking: false,
+              owner: 'Student Onboarding',
+            },
+          ],
+        }}
+      />
+    );
     expect(screen.queryByRole('button', { name: 'View Student Record' })).not.toBeInTheDocument();
     expect(screen.queryByText('Finance, accounts, and optional services')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Admission' })).toBeInTheDocument();
@@ -183,7 +290,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('heading', { name: 'Fee structure' })).toBeInTheDocument();
     expect(screen.getByText('Portal & Emails')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Case Actions' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
     expect(screen.queryByText('Finance, accounts, and optional services')).not.toBeInTheDocument();
   });
 
@@ -275,12 +382,14 @@ describe('Student Setup drawer readiness UI', () => {
 
     render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
     expect(screen.getByRole('link', { name: 'Open student record' })).toHaveAttribute(
       'href',
       `/student/profile?student=${liveStudent.studentId}&tab=general`
     );
-    expect(screen.queryByRole('button', { name: 'Review exception for Address and communication' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Review exception for Address and communication' })
+    ).not.toBeInTheDocument();
   });
 
   it('offers a pending approval as a distinct audited action', () => {
@@ -302,9 +411,156 @@ describe('Student Setup drawer readiness UI', () => {
 
     render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Record approval for Onboarding approval' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Record approval for Onboarding approval' })
+    );
     expect(screen.getByRole('heading', { name: 'Approve Onboarding' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Approve onboarding' })).toBeDisabled();
+  });
+
+  it('retains admission detail loading and retry in the combined panel', () => {
+    mocks.capturedFieldsAvailable = false;
+    mocks.capturedFieldsLoading = true;
+    const liveStudent = {
+      ...student,
+      source: 'onboarding-case' as const,
+      backendStatus: 4 as const,
+    };
+    const { rerender } = render(
+      <StudentSetupDrawer open student={liveStudent} onClose={vi.fn()} />
+    );
+
+    expect(
+      screen.getByRole('status', { name: 'Loading additional admission details' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Readiness & Activation' })).toBeInTheDocument();
+    mocks.capturedFieldsLoading = false;
+    mocks.capturedFieldsError = true;
+    rerender(<StudentSetupDrawer open student={liveStudent} onClose={vi.fn()} />);
+
+    expect(
+      screen.getByText('Additional admission details could not be loaded.')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+  });
+
+  it('keeps requirement review actions unavailable without manage permission', () => {
+    const liveStudent = {
+      ...student,
+      source: 'onboarding-case' as const,
+      readinessItems: [
+        {
+          key: 'approval_review',
+          label: 'Onboarding approval',
+          detail: '',
+          status: 'pending' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+        {
+          key: 'documents',
+          label: 'Required evidence',
+          detail: '',
+          status: 'failed' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+      ],
+    };
+    render(<StudentSetupDrawer open student={liveStudent} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
+
+    expect(screen.getByText('Onboarding approval')).toBeInTheDocument();
+    expect(screen.getByText('Required evidence')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Record approval for Onboarding approval' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Review exception for Required evidence' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change Division' })).not.toBeInTheDocument();
+  });
+
+  it('locks combined-panel actions, tab navigation and close during the primary mutation', () => {
+    const onAssignDivision = vi.fn();
+    const onAssignGrNumber = vi.fn();
+    const onAssignRollNumber = vi.fn();
+    const onClose = vi.fn();
+    const liveStudent = {
+      ...student,
+      source: 'onboarding-case' as const,
+      readinessItems: [
+        {
+          key: 'approval_review',
+          label: 'Onboarding approval',
+          detail: '',
+          status: 'pending' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+        {
+          key: 'documents',
+          label: 'Required evidence',
+          detail: '',
+          status: 'failed' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+        {
+          key: 'admission',
+          label: 'Admission approved',
+          detail: '',
+          status: 'passed' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+      ],
+    };
+    const drawerProps = {
+      open: true,
+      canManage: true,
+      student: liveStudent,
+      onClose,
+      onAssignDivision,
+      onAssignGrNumber,
+      onAssignRollNumber,
+    };
+    const { rerender } = render(<StudentSetupDrawer {...drawerProps} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Details & Checks' }));
+    rerender(<StudentSetupDrawer {...drawerProps} primaryActionLoading />);
+
+    [
+      'Change Division',
+      'Assign GR No.',
+      'Assign Roll No.',
+      'Record approval for Onboarding approval',
+      'Review exception for Required evidence',
+      'Show 1 passed check',
+      'Close',
+      'Close Student Setup',
+    ].forEach((name) => {
+      const button = screen.getByRole('button', { name });
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+    });
+    expect(screen.getByRole('tab', { name: 'Tasks' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('tab', { name: 'Tasks' }));
+    expect(screen.getByRole('tab', { name: 'Details & Checks' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.queryByRole('heading', { name: 'Approve Onboarding' })).not.toBeInTheDocument();
+    expect(onAssignDivision).not.toHaveBeenCalled();
+    expect(onAssignGrNumber).not.toHaveBeenCalled();
+    expect(onAssignRollNumber).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+
+    rerender(<StudentSetupDrawer {...drawerProps} />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Record approval for Onboarding approval' })
+    );
+    expect(screen.getByRole('heading', { name: 'Approve Onboarding' })).toBeInTheDocument();
   });
 });

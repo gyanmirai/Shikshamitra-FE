@@ -41,8 +41,14 @@ export function AdmissionSiblingRuntimeField({
   error,
   onChange,
   onBlur,
+  loadSiblingOptions,
 }: AdmissionRuntimeFieldProps) {
-  const [loadOptions] = useLazyGetAdmissionFormOptionsQuery();
+  const [loadAdmissionOptions] = useLazyGetAdmissionFormOptionsQuery();
+  const loadOptions = useCallback(
+    (input: Parameters<typeof loadAdmissionOptions>[0]) =>
+      loadSiblingOptions ? loadSiblingOptions(input) : loadAdmissionOptions(input).unwrap(),
+    [loadSiblingOptions, loadAdmissionOptions]
+  );
   const [labels, setLabels] = useState<Record<string, string>>({});
   const labelCache = useRef<Record<string, string>>({});
   const [hydrating, setHydrating] = useState(false);
@@ -83,7 +89,6 @@ export function AdmissionSiblingRuntimeField({
       selectedIds: missingIds,
       maxResultCount: MAX_SIBLINGS,
     })
-      .unwrap()
       .then((options) => {
         if (!cancelled) {
           rememberOptions(options.map((option) => ({ id: option.value, label: option.label })));
@@ -110,7 +115,7 @@ export function AdmissionSiblingRuntimeField({
           searchTerm: query.trim(),
           skipCount: (page - 1) * PAGE_SIZE,
           maxResultCount: PAGE_SIZE + 1,
-        }).unwrap();
+        });
         const data = options.slice(0, PAGE_SIZE).map((option) => ({
           id: option.value,
           label: option.label,

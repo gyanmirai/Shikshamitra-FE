@@ -2,6 +2,7 @@ import { it, expect, describe } from 'vitest';
 
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import {
+  studentSetupViews,
   getDefaultTaskScope,
   studentSetupTaskHref,
   parseStudentSetupView,
@@ -11,6 +12,16 @@ import {
 } from './student-setup-view';
 
 describe('Student Setup task views', () => {
+  it('orders assignment tasks as Readiness, Division, GR, Roll, Fees and Credentials', () => {
+    expect(studentSetupViews.map((view) => view.value)).toEqual([
+      'readiness',
+      'division',
+      'gr-number',
+      'roll-number',
+      'fees',
+      'credentials',
+    ]);
+  });
   it('redirects a pending item to its URL-backed task and retains the focused case and academic filters', () => {
     const href = studentSetupTaskHref('/student/onboarding/setup', 'view=readiness&board=cbse&class=1&division=5-a&today=true&scope=all', 'case-1', 'fees');
     const url = new URL(href, 'http://localhost');

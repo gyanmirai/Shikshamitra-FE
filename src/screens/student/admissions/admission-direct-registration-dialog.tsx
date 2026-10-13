@@ -11,14 +11,16 @@ import { useRouter } from 'next/navigation';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useRef, useState, useCallback } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
@@ -133,6 +135,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
   const [familyLookupKey, setFamilyLookupKey] = useState('');
   const [requestError, setRequestError] = useState('');
   const identityRef = useRef('');
+  const fieldsRef = useRef<HTMLDivElement>(null);
+  const requestErrorRef = useRef<HTMLDivElement>(null);
+  const lastFocusedSubmit = useRef(0);
   const [loadOfferings, offeringsQuery] = useLazyGetAdmissionOfferingsQuery();
   const [loadCycles, cyclesQuery] = useLazyGetAdmissionCyclesQuery();
   const [findFamilies, familyLookup] = useLazyFindAdmissionDirectFamiliesQuery();
@@ -199,6 +204,30 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     },
   });
   const busy = startState.isLoading || formik.isSubmitting || familyLookup.isFetching;
+  useEffect(() => {
+    if (
+      !formik.submitCount ||
+      formik.isValidating ||
+      formik.isSubmitting ||
+      lastFocusedSubmit.current === formik.submitCount ||
+      !Object.keys(formik.errors).length
+    )
+      return;
+    const invalidField = fieldsRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (!invalidField) return;
+    const focusTarget =
+      invalidField.querySelector<HTMLElement>(
+        'input:not([type="hidden"]), [contenteditable="true"], [tabindex="0"]'
+      ) ?? invalidField;
+    lastFocusedSubmit.current = formik.submitCount;
+    focusTarget.focus();
+    invalidField.scrollIntoView?.({ block: 'center' });
+  }, [formik.submitCount, formik.isValidating, formik.isSubmitting, formik.errors]);
+  useEffect(() => {
+    if (!requestError || busy) return;
+    requestErrorRef.current?.focus();
+    requestErrorRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [requestError, busy]);
   const requestClose = () => {
     if (busy) return;
     if (formik.dirty) discard.onTrue();
@@ -244,6 +273,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
       const result = await loadOfferings({
         admissionCycleId: formik.values.admissionCycle.id,
         track: formik.values.track,
+        forSpecialRegistration: true,
         // RTE is direct-only. Existing Management/Staff Both offerings also allow registration.
         entryMode: formik.values.track === 1 ? 1 : undefined,
         isActive: true,
@@ -251,7 +281,6 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         search: search === selectedOffering?.name ? undefined : search || undefined,
         skipCount,
         maxResultCount: 25,
-        sorting: 'BoardName, MediumName, StandardName, Code',
       }).unwrap();
       return {
         data: result.items.filter(
@@ -268,12 +297,20 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     [loadOfferings, formik.values.admissionCycle, formik.values.track, selectedOffering?.name]
   );
 
-  const changeIdentity = (field: 'offeringId' | 'guardianMobile', value: string) => {
-    formik.setFieldValue(field, value);
-    if (field === 'offeringId') formik.setFieldValue('counsellorId', '');
-    formik.setFieldValue('existingFamilyId', '');
-    formik.setFieldValue('createSeparateFamily', false);
-    formik.setFieldValue('separateFamilyReason', '');
+  const changeIdentity = (
+    field: 'offeringId' | 'guardianMobile',
+    value: string,
+    changes: Partial<FormValues> = {}
+  ) => {
+    formik.setValues((values) => ({
+      ...values,
+      ...changes,
+      [field]: value,
+      ...(field === 'offeringId' && { counsellorId: '' }),
+      existingFamilyId: '',
+      createSeparateFamily: false,
+      separateFamilyReason: '',
+    }));
     setFamilyMatches(null);
     setFamilyLookupKey('');
     setRequestError('');
@@ -353,6 +390,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
             type="button"
             aria-label="Close direct registration"
             size="small"
+            sx={{ width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
             onClick={requestClose}
             disabled={busy}
           >
@@ -360,12 +398,12 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           </IconButton>
         </Stack>
         <Divider />
-        <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
+        <Scrollbar sx={{ flex: 1, bgcolor: 'background.neutral' }}>
           <FormBusyRegion
             busy={busy}
             label={familyLookup.isFetching ? 'Checking families…' : 'Starting registration…'}
           >
-            <Stack spacing={2}>
+            <Stack ref={fieldsRef} spacing={2} sx={{ p: 2 }}>
               {(cyclesQuery.isError || offeringsQuery.isError) && (
                 <Alert
                   severity="error"
@@ -383,280 +421,318 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   Admission choices could not be loaded. Retry before selecting an offering.
                 </Alert>
               )}
-              <Typography variant="subtitle1">Offering</Typography>
-              <ShakingTextField
-                error={Boolean(formik.touched.admissionCycle && formik.errors.admissionCycle)}
+              <FormSectionCard
+                icon="mdi:school-outline"
+                title="Offering"
+                descriptionTooltip="Choose an open admission cycle, then an active RTE, Management or Staff offering that starts with Registration. General offerings start from Inquiries."
+                action={
+                  <Button
+                    size="small"
+                    type="button"
+                    variant="outlined"
+                    disabled={busy || cyclesQuery.isFetching || offeringsQuery.isFetching}
+                    startIcon={<Iconify icon="mdi:refresh" />}
+                    onClick={() => setReload((value) => value + 1)}
+                  >
+                    Refresh Choices
+                  </Button>
+                }
               >
-                <PaginatedSearchSelect<AdmissionCycle>
-                  key={`cycles-${academicYearId}-${reload}`}
-                  fullWidth
-                  size="small"
-                  label="Admission cycle"
-                  required
-                  value={formik.values.admissionCycle}
-                  fetchOptions={fetchCycles}
-                  minChars={0}
-                  getOptionLabel={(cycle) => cycle.name}
-                  getOptionKey={(cycle) => cycle.id}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  onChange={(_, cycle) => {
-                    formik.setFieldValue('admissionCycle', cycle);
-                    setSelectedOffering(null);
-                    changeIdentity('offeringId', '');
-                  }}
-                  onBlur={() => formik.setFieldTouched('admissionCycle', true)}
+                <ShakingTextField
                   error={Boolean(formik.touched.admissionCycle && formik.errors.admissionCycle)}
-                  helperText={
-                    formik.touched.admissionCycle
-                      ? String(formik.errors.admissionCycle || '')
-                      : undefined
-                  }
-                  noOptionsText={
-                    cyclesQuery.isError
-                      ? 'Admission cycles could not be loaded.'
-                      : 'No published, open admission cycle is available for this academic year.'
-                  }
-                />
-              </ShakingTextField>
-              <CustomSelect
-                fullWidth
-                size="small"
-                label="Admission type"
-                required
-                options={[
-                  { value: 1, label: 'RTE' },
-                  { value: 2, label: 'Management' },
-                  { value: 3, label: 'Staff' },
-                ]}
-                value={formik.values.track}
-                onChange={(value) => {
-                  formik.setFieldValue('track', Number(value));
-                  setSelectedOffering(null);
-                  changeIdentity('offeringId', '');
-                }}
-              />
-              <ShakingTextField
-                error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
-              >
-                <PaginatedSearchSelect<AdmissionOfferingListItem>
-                  key={`offerings-${formik.values.admissionCycle?.id}-${formik.values.track}-${reload}`}
-                  fullWidth
-                  required
-                  size="small"
-                  label="Admission offering"
-                  value={selectedOffering}
-                  disabled={!formik.values.admissionCycle}
-                  fetchOptions={fetchOfferings}
-                  minChars={0}
-                  getOptionLabel={(offering) => offering.name}
-                  getOptionKey={(offering) => offering.id}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  renderOption={({ key, ...props }, offering) => (
-                    <li key={key} {...props}>
-                      <Stack>
-                        <Typography variant="body2">{offering.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {[offering.boardName, offering.mediumName, offering.standardName].join(
-                            ' · '
-                          )}
-                        </Typography>
-                      </Stack>
-                    </li>
-                  )}
-                  onChange={(_, offering) => {
-                    setSelectedOffering(offering);
-                    changeIdentity('offeringId', offering?.id ?? '');
-                  }}
-                  onBlur={() => formik.setFieldTouched('offeringId', true)}
-                  error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
-                  helperText={formik.touched.offeringId && formik.errors.offeringId}
-                  noOptionsText={
-                    offeringsQuery.isError
-                      ? 'Admission offerings could not be loaded.'
-                      : !formik.values.admissionCycle
-                        ? 'Select an admission cycle first.'
-                        : 'No active, open registration-first offering is available for this admission type.'
-                  }
-                />
-              </ShakingTextField>
-              {capacity && (
-                <Alert severity={capacity.isFull ? 'warning' : 'info'}>
-                  {capacity.capacity == null
-                    ? 'Admission room capacity is not set. Division seats are checked during onboarding.'
-                    : `${capacity.remainingSeats} of ${capacity.capacity} admission room seats available.`}
-                  {capacity.isFull && ' Admission room capacity is full; you can still register.'}
-                </Alert>
-              )}
-              <CustomSelect
-                fullWidth
-                size="small"
-                label="Journey counsellor (optional)"
-                value={formik.values.counsellorId}
-                disabled={!formik.values.offeringId || counsellors.isLoading || counsellors.isError}
-                onChange={(value) => formik.setFieldValue('counsellorId', String(value))}
-                helperText="Leave blank to use the offering's counsellor assignment settings."
-                options={[
-                  { value: '', label: 'Use offering settings' },
-                  ...(counsellors.currentData ?? []).map((counsellor) => ({
-                    value: counsellor.id,
-                    label: counsellor.name || counsellor.userName,
-                  })),
-                ]}
-              />
-              {counsellors.isError && (
-                <Alert severity="warning">
-                  Counsellor choices could not be loaded. Automatic assignment still uses the
-                  offering settings.
-                </Alert>
-              )}
-              <Divider />
-              <Typography variant="subtitle1">Applicant</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                {field('applicantFirstName', 'First name', true)}
-                {field('applicantMiddleName', 'Middle name')}
-                {field('applicantLastName', 'Last name')}
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <DatePicker
-                  label="Date of birth"
-                  format={ADMISSION_DATE_FORMAT}
-                  value={
-                    formik.values.applicantDateOfBirth
-                      ? dayjs(formik.values.applicantDateOfBirth)
-                      : null
-                  }
-                  maxDate={dayjs()}
-                  onChange={(value) =>
-                    formik.setFieldValue(
-                      'applicantDateOfBirth',
-                      value?.isValid() ? value.format('YYYY-MM-DD') : ''
-                    )
-                  }
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      required: true,
-                      error: Boolean(formik.submitCount && formik.errors.applicantDateOfBirth),
-                      helperText: formik.submitCount
-                        ? formik.errors.applicantDateOfBirth
-                        : undefined,
-                    },
-                  }}
-                />
+                >
+                  <PaginatedSearchSelect<AdmissionCycle>
+                    key={`cycles-${academicYearId}-${reload}`}
+                    fullWidth
+                    size="small"
+                    label="Admission cycle"
+                    required
+                    value={formik.values.admissionCycle}
+                    fetchOptions={fetchCycles}
+                    minChars={0}
+                    getOptionLabel={(cycle) => cycle.name}
+                    getOptionKey={(cycle) => cycle.id}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    onChange={(_, cycle) => {
+                      setSelectedOffering(null);
+                      changeIdentity('offeringId', '', { admissionCycle: cycle });
+                    }}
+                    onBlur={() => formik.setFieldTouched('admissionCycle', true)}
+                    error={Boolean(formik.touched.admissionCycle && formik.errors.admissionCycle)}
+                    helperText={
+                      formik.touched.admissionCycle && formik.errors.admissionCycle
+                        ? String(formik.errors.admissionCycle)
+                        : 'Published, open cycles for the selected academic year.'
+                    }
+                    noOptionsText={
+                      cyclesQuery.isError
+                        ? 'Admission cycles could not be loaded.'
+                        : 'No matching published, open admission cycle. Clear the search or check Admission Settings → Admission Periods for the selected academic year.'
+                    }
+                  />
+                </ShakingTextField>
                 <CustomSelect
                   fullWidth
                   size="small"
-                  label="Gender"
+                  label="Admission type"
                   required
-                  value={formik.values.applicantGender}
-                  onChange={(value) => formik.setFieldValue('applicantGender', String(value))}
-                  error={Boolean(formik.submitCount && formik.errors.applicantGender)}
-                  helperText={formik.submitCount ? formik.errors.applicantGender : undefined}
                   options={[
-                    { value: 'Male', label: 'Male' },
-                    { value: 'Female', label: 'Female' },
+                    { value: 1, label: 'RTE' },
+                    { value: 2, label: 'Management' },
+                    { value: 3, label: 'Staff' },
+                  ]}
+                  value={formik.values.track}
+                  onChange={(value) => {
+                    setSelectedOffering(null);
+                    changeIdentity('offeringId', '', {
+                      track: Number(value) as FormValues['track'],
+                    });
+                  }}
+                />
+                <ShakingTextField
+                  error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
+                >
+                  <PaginatedSearchSelect<AdmissionOfferingListItem>
+                    key={`offerings-${formik.values.admissionCycle?.id}-${formik.values.track}-${reload}`}
+                    fullWidth
+                    required
+                    size="small"
+                    label="Admission offering"
+                    value={selectedOffering}
+                    disabled={!formik.values.admissionCycle}
+                    fetchOptions={fetchOfferings}
+                    filterOptions={(options) => options}
+                    minChars={0}
+                    getOptionLabel={(offering) => offering.name}
+                    getOptionKey={(offering) => offering.id}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderOption={({ key, ...props }, offering) => (
+                      <li key={key} {...props}>
+                        <Stack>
+                          <Typography variant="body2">{offering.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {[offering.boardName, offering.mediumName, offering.standardName].join(
+                              ' · '
+                            )}
+                          </Typography>
+                        </Stack>
+                      </li>
+                    )}
+                    onChange={(_, offering) => {
+                      setSelectedOffering(offering);
+                      changeIdentity('offeringId', offering?.id ?? '');
+                    }}
+                    onBlur={() => formik.setFieldTouched('offeringId', true)}
+                    error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
+                    helperText={
+                      formik.touched.offeringId && formik.errors.offeringId
+                        ? formik.errors.offeringId
+                        : !formik.values.admissionCycle
+                          ? 'Select an admission cycle first to load offerings.'
+                          : 'Only active, open offerings for this admission type are available.'
+                    }
+                    noOptionsText={
+                      offeringsQuery.isError
+                        ? 'Admission offerings could not be loaded.'
+                        : !formik.values.admissionCycle
+                          ? 'Select an admission cycle first.'
+                          : `No matching active, open ${formik.values.track === 1 ? 'RTE' : formik.values.track === 2 ? 'Management' : 'Staff'} offering. Clear the search or check its type, published workflow and activation in Admission Settings → Admission Offering, then refresh choices.`
+                    }
+                  />
+                </ShakingTextField>
+                {capacity && (
+                  <Alert severity={capacity.isFull ? 'warning' : 'info'}>
+                    {capacity.capacity == null
+                      ? 'Admission room capacity is not set. Division seats are checked during onboarding.'
+                      : `${capacity.remainingSeats} of ${capacity.capacity} admission room seats available.`}
+                    {capacity.isFull && ' Admission room capacity is full; you can still register.'}
+                  </Alert>
+                )}
+                <CustomSelect
+                  fullWidth
+                  size="small"
+                  label="Journey counsellor (optional)"
+                  value={formik.values.counsellorId}
+                  disabled={
+                    !formik.values.offeringId || counsellors.isLoading || counsellors.isError
+                  }
+                  onChange={(value) => formik.setFieldValue('counsellorId', String(value))}
+                  helperText="Leave blank to use the offering's counsellor assignment settings."
+                  options={[
+                    { value: '', label: 'Use offering settings' },
+                    ...(counsellors.currentData ?? []).map((counsellor) => ({
+                      value: counsellor.id,
+                      label: counsellor.name || counsellor.userName,
+                    })),
                   ]}
                 />
-              </Stack>
-              <Divider />
-              <Typography variant="subtitle1">Primary guardian</Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                {field('guardianFirstName', 'First name', true)}
-                {field('guardianLastName', 'Last name')}
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  fullWidth
-                  required
-                  size="small"
-                  label="Mobile"
-                  name="guardianMobile"
-                  inputProps={{ inputMode: 'numeric', maxLength: 10 }}
-                  value={formik.values.guardianMobile}
-                  onChange={(event) => changeIdentity('guardianMobile', event.target.value)}
-                  onBlur={formik.handleBlur}
-                  error={Boolean(formik.touched.guardianMobile && formik.errors.guardianMobile)}
-                  helperText={formik.touched.guardianMobile && formik.errors.guardianMobile}
-                />
-                {field('guardianEmail', 'Email')}
-              </Stack>
-              <CustomSelect
-                fullWidth
-                size="small"
-                label="Relationship"
-                required
-                value={formik.values.guardianRelationship}
-                onChange={(value) => formik.setFieldValue('guardianRelationship', Number(value))}
-                options={[
-                  { value: 0, label: 'Parent' },
-                  { value: 1, label: 'Guardian' },
-                  { value: 2, label: 'Relative' },
-                  { value: 3, label: 'Other' },
-                ]}
-              />
-              <Button
-                type="button"
-                size="small"
-                variant="outlined"
-                disabled={familyLookup.isFetching || !formik.values.offeringId}
-                onClick={checkFamilies}
-                startIcon={<Iconify icon="mdi:account-search-outline" />}
-                sx={{ alignSelf: 'flex-start' }}
+                {counsellors.isError && (
+                  <Alert severity="warning">
+                    Counsellor choices could not be loaded. Automatic assignment still uses the
+                    offering settings.
+                  </Alert>
+                )}
+              </FormSectionCard>
+              <FormSectionCard
+                icon="mdi:account-outline"
+                title="Applicant"
+                descriptionTooltip="Enter the student's basic identity. These details will be carried into the Registration Form."
               >
-                {familyLookup.isFetching ? 'Checking families…' : 'Check existing families'}
-              </Button>
-              {familyMatches && (
-                <Alert severity={familyMatches.length ? 'warning' : 'success'}>
-                  {familyMatches.length
-                    ? 'Existing family found. Link it or explain why this is a separate family.'
-                    : 'No family is available to link in your scope. You can continue with a new family.'}
-                </Alert>
-              )}
-              {familyMatches?.map((family) => (
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  {field('applicantFirstName', 'First name', true)}
+                  {field('applicantMiddleName', 'Middle name')}
+                  {field('applicantLastName', 'Last name')}
+                </Stack>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <DatePicker
+                    label="Date of birth"
+                    format={ADMISSION_DATE_FORMAT}
+                    value={
+                      formik.values.applicantDateOfBirth
+                        ? dayjs(formik.values.applicantDateOfBirth)
+                        : null
+                    }
+                    maxDate={dayjs()}
+                    onChange={(value) =>
+                      formik.setFieldValue(
+                        'applicantDateOfBirth',
+                        value?.isValid() ? value.format('YYYY-MM-DD') : ''
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        required: true,
+                        error: Boolean(formik.submitCount && formik.errors.applicantDateOfBirth),
+                        helperText: formik.submitCount
+                          ? formik.errors.applicantDateOfBirth
+                          : undefined,
+                      },
+                    }}
+                  />
+                  <CustomSelect
+                    fullWidth
+                    size="small"
+                    label="Gender"
+                    required
+                    value={formik.values.applicantGender}
+                    onChange={(value) => formik.setFieldValue('applicantGender', String(value))}
+                    error={Boolean(formik.submitCount && formik.errors.applicantGender)}
+                    helperText={formik.submitCount ? formik.errors.applicantGender : undefined}
+                    options={[
+                      { value: 'Male', label: 'Male' },
+                      { value: 'Female', label: 'Female' },
+                    ]}
+                  />
+                </Stack>
+              </FormSectionCard>
+              <FormSectionCard
+                icon="mdi:account-group-outline"
+                title="Primary guardian"
+                descriptionTooltip="Check the guardian mobile for existing families before starting registration. Link the matching family, or record a reason to keep a separate family."
+              >
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  {field('guardianFirstName', 'First name', true)}
+                  {field('guardianLastName', 'Last name')}
+                </Stack>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    fullWidth
+                    required
+                    size="small"
+                    label="Mobile"
+                    name="guardianMobile"
+                    inputProps={{ inputMode: 'numeric', maxLength: 10 }}
+                    value={formik.values.guardianMobile}
+                    onChange={(event) => changeIdentity('guardianMobile', event.target.value)}
+                    onBlur={formik.handleBlur}
+                    error={Boolean(formik.touched.guardianMobile && formik.errors.guardianMobile)}
+                    helperText={formik.touched.guardianMobile && formik.errors.guardianMobile}
+                  />
+                  {field('guardianEmail', 'Email')}
+                </Stack>
+                <CustomSelect
+                  fullWidth
+                  size="small"
+                  label="Relationship"
+                  required
+                  value={formik.values.guardianRelationship}
+                  onChange={(value) => formik.setFieldValue('guardianRelationship', Number(value))}
+                  options={[
+                    { value: 0, label: 'Parent' },
+                    { value: 1, label: 'Guardian' },
+                    { value: 2, label: 'Relative' },
+                    { value: 3, label: 'Other' },
+                  ]}
+                />
                 <Button
-                  key={family.familyId}
                   type="button"
                   size="small"
-                  variant={
-                    formik.values.existingFamilyId === family.familyId ? 'contained' : 'outlined'
-                  }
-                  onClick={() => {
-                    formik.setFieldValue('existingFamilyId', family.familyId);
-                    formik.setFieldValue('createSeparateFamily', false);
-                  }}
-                  sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                  variant="outlined"
+                  disabled={familyLookup.isFetching || !formik.values.offeringId}
+                  onClick={checkFamilies}
+                  startIcon={<Iconify icon="mdi:account-search-outline" />}
+                  sx={{ alignSelf: 'flex-start' }}
                 >
-                  Link {family.familyNumber} · {family.primaryGuardianName}
-                  {family.applicants.length ? ` · ${family.applicants.join(', ')}` : ''}
+                  {familyLookup.isFetching ? 'Checking families…' : 'Check existing families'}
                 </Button>
-              ))}
-              {formik.values.existingFamilyId && (
-                <Alert severity="info">
-                  The selected family’s saved primary guardian details will be reused. This
-                  registration will not overwrite that guardian record.
+                {familyMatches && (
+                  <Alert severity={familyMatches.length ? 'warning' : 'success'}>
+                    {familyMatches.length
+                      ? 'Existing family found. Link it or explain why this is a separate family.'
+                      : 'No family is available to link in your scope. You can continue with a new family.'}
+                  </Alert>
+                )}
+                {familyMatches?.map((family) => (
+                  <Button
+                    key={family.familyId}
+                    type="button"
+                    size="small"
+                    variant={
+                      formik.values.existingFamilyId === family.familyId ? 'contained' : 'outlined'
+                    }
+                    onClick={() => {
+                      formik.setFieldValue('existingFamilyId', family.familyId);
+                      formik.setFieldValue('createSeparateFamily', false);
+                    }}
+                    sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                  >
+                    Link {family.familyNumber} · {family.primaryGuardianName}
+                    {family.applicants.length ? ` · ${family.applicants.join(', ')}` : ''}
+                  </Button>
+                ))}
+                {formik.values.existingFamilyId && (
+                  <Alert severity="info">
+                    The selected family’s saved primary guardian details will be reused. This
+                    registration will not overwrite that guardian record.
+                  </Alert>
+                )}
+                {Boolean(familyMatches?.length) && (
+                  <Button
+                    type="button"
+                    size="small"
+                    color="inherit"
+                    variant={formik.values.createSeparateFamily ? 'contained' : 'outlined'}
+                    onClick={() => {
+                      formik.setFieldValue('existingFamilyId', '');
+                      formik.setFieldValue('createSeparateFamily', true);
+                    }}
+                  >
+                    Create a separate family
+                  </Button>
+                )}
+                {formik.values.createSeparateFamily &&
+                  field('separateFamilyReason', 'Reason for separate family', true)}
+              </FormSectionCard>
+              {requestError && (
+                <Alert ref={requestErrorRef} tabIndex={-1} severity="error">
+                  {requestError}
                 </Alert>
               )}
-              {Boolean(familyMatches?.length) && (
-                <Button
-                  type="button"
-                  size="small"
-                  color="inherit"
-                  variant={formik.values.createSeparateFamily ? 'contained' : 'outlined'}
-                  onClick={() => {
-                    formik.setFieldValue('existingFamilyId', '');
-                    formik.setFieldValue('createSeparateFamily', true);
-                  }}
-                >
-                  Create a separate family
-                </Button>
-              )}
-              {formik.values.createSeparateFamily &&
-                field('separateFamilyReason', 'Reason for separate family', true)}
-              {requestError && <Alert severity="error">{requestError}</Alert>}
             </Stack>
           </FormBusyRegion>
-        </Stack>
+        </Scrollbar>
         <Stack
           direction="row"
           justifyContent="flex-end"

@@ -58,10 +58,16 @@ export function DocumentChecklistContent({
                 {blocker}
               </Typography>
             ))}
+            {summary.canComplete && (
+              <Typography variant="body2">
+                Your workflow allows continuation. Complete these pending documents in Student
+                Onboarding before activation.
+              </Typography>
+            )}
           </Stack>
         </Alert>
       )}
-      {!readOnly && summary.canComplete && (
+      {!readOnly && summary.canComplete && summary.blockers.length === 0 && (
         <Alert severity="success">
           Document requirements are complete. Continue to the next workflow step.
         </Alert>

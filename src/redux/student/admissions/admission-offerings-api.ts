@@ -117,6 +117,7 @@ export type AdmissionOfferingWriteInput = {
 };
 
 export type AdmissionOfferingListInput = {
+  forSpecialRegistration?: boolean;
   admissionCycleId?: string;
   track?: AdmissionTrack;
   entryMode?: AdmissionEntryMode;

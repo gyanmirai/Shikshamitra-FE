@@ -9,7 +9,7 @@ export type AdmissionPipelineItem = {
   applicationNumber: string;
   applicantId: string;
   applicantName: string;
-  inquiryId: string;
+  inquiryId: string | null;
   inquiryNumber?: string | null;
   sourceInquiryAvailable: boolean;
   offeringCode?: string | null;

@@ -1,5 +1,7 @@
-import { ReadinessAccessSettingsScreen } from 'src/screens/student/onboarding/setting/onboarding-policy-settings';
+import { redirect } from 'next/navigation';
+
+import { studentPaths } from 'src/constants/student-menu';
 
 export default function StudentOnboardingReadinessAccessSettingsPage() {
-  return <ReadinessAccessSettingsScreen />;
+  redirect(studentPaths.onboarding.settingsSections.portalAccess);
 }

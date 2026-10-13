@@ -33,6 +33,7 @@ export default function TableEmptyState({
   if (isFilteredEmptyState) {
     return (
       <EmptyContent
+        slotProps={{ img: { maxWidth: { xs: 72, sm: 160 }, display: { xs: 'none', sm: 'block' } } }}
         title={hasSearch ? `No results found for “${normalizedSearchTerm}”` : 'No results found'}
         description="Try different criteria or clear the active search and filters."
         action={
@@ -42,7 +43,7 @@ export default function TableEmptyState({
               color="inherit"
               size="small"
               onClick={onClearCriteria}
-              sx={{ mt: 2 }}
+              sx={{ mt: { xs: 1, sm: 2 } }}
             >
               {clearLabel}
             </Button>
@@ -55,6 +56,7 @@ export default function TableEmptyState({
 
   return (
     <EmptyContent
+      slotProps={{ img: { maxWidth: { xs: 72, sm: 160 } } }}
       title={noDataText}
       sx={{ width: stickyWidth, position: 'sticky', left: 0, p: 0 }}
     />

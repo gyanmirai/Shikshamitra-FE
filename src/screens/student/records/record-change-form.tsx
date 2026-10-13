@@ -18,13 +18,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Grid, Stack, Alert, Button, TextField, Typography } from '@mui/material';
 import { familyFields } from 'src/components/studentProfile/form-fields/register-fields';
 import { profileSectionPayload } from 'src/components/studentProfile/profile-section-payload';
+import { Box, Grid, Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import { medicalFields } from 'src/components/studentProfile/form-fields/render-medical-details';
 import AddressSection from 'src/components/studentProfile/form-fields/components/AddressSection';
 import { bankDetailsFields } from 'src/components/studentProfile/form-fields/render-bank-details';
 import { communicationFields } from 'src/components/studentProfile/form-fields/render-communication';
+import { CustomRecordChangeForm } from 'src/screens/student/studentProfile/custom-record-change-form';
+import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
 import { previousSchoolFields } from 'src/components/studentProfile/form-fields/render-previous-details';
 import { additionalDetailsFields } from 'src/components/studentProfile/form-fields/render-additional-details';
 import ContactDetailsSection from 'src/components/studentProfile/form-fields/components/ContactDetailsSection';
@@ -55,6 +57,8 @@ const sectionTabs: Record<RecordSection, number> = {
   placement: 7,
   status: 8,
   photo: 9,
+  'custom-details': 10,
+  'registration-form': 10,
 };
 const sectionFields = [
   [],
@@ -75,7 +79,52 @@ const initializers = [
   bankDetailsInitialValues,
 ];
 
-export default function RecordChangeForm({
+type RecordChangeFormProps = {
+  studentId: string;
+  snapshot: RecordSnapshot;
+  correctsChangeId?: string;
+  onSubmitted: (id: string) => void;
+  onReload?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
+};
+
+export default function RecordChangeForm(props: RecordChangeFormProps) {
+  const { snapshot } = props;
+  if (snapshot.section === 'registration-form')
+    return <Alert severity="info">Edit the Registration form in Student Profile.</Alert>;
+  return snapshot.section === 'custom-details' ? (
+    <CustomRecordChangePage {...props} />
+  ) : (
+    <StructuredRecordChangeForm {...props} />
+  );
+}
+
+function CustomRecordChangePage(props: RecordChangeFormProps) {
+  const { studentId } = props;
+  const [ready, setReady] = useState(false);
+  const year = useSelector((state: RootState) => state.globalState.currentYear);
+  const details = useGetStudentRecordDetailsQuery({
+    studentId,
+    academicYearId: year?.id,
+  });
+  if (details.isError && !ready)
+    return (
+      <Alert severity="error" action={<Button onClick={() => details.refetch()}>Retry</Button>}>
+        School details could not be loaded for this request.
+      </Alert>
+    );
+  if (!details.currentData || (details.isFetching && !ready))
+    return <Skeleton height={180} aria-label="Loading school details" />;
+  return (
+    <CustomRecordChangeForm
+      {...props}
+      details={details.currentData}
+      onReady={() => setReady(true)}
+    />
+  );
+}
+
+function StructuredRecordChangeForm({
   studentId,
   snapshot: loadedSnapshot,
   correctsChangeId,

@@ -21,6 +21,18 @@ const row = (id: string, changes: Partial<AttendanceStudent> = {}): AttendanceSt
   ...changes,
 });
 describe('daily attendance draft', () => {
+  it('does not bulk-mark rows governed by approval or leave-credit review', () => {
+    const original = [
+      row('editable'),
+      row('approval', { requiresCorrectionApproval: true }),
+      row('credit', { needsCreditCorrection: true }),
+    ];
+    const result = markRemainingPresent(original);
+    expect(result[0].status).toBe(AttendanceStatus.Present);
+    expect(result[1]).toEqual(original[1]);
+    expect(result[2]).toEqual(original[2]);
+    expect(original[0].status).toBe(AttendanceStatus.Pending);
+  });
   it('fills only eligible unmarked students without replacing absences, details or approved leave', () => {
     const original = [
       row('new'),

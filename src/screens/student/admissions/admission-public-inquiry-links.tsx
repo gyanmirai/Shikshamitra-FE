@@ -135,6 +135,7 @@ export function AdmissionPublicInquiryLinks({
   const [revokeTarget, setRevokeTarget] = useState<AdmissionPublicInquiryLink | null>(null);
   const [viewLink, setViewLink] = useState<LinkRow | null>(null);
   const [optionalOpen, setOptionalOpen] = useState(true);
+  const [formMenuOpen, setFormMenuOpen] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [error, setError] = useState('');
   const publishedCycles = (cycles.data?.items ?? []).filter((cycle) => cycle.status === 1);
@@ -282,6 +283,7 @@ export function AdmissionPublicInquiryLinks({
   };
 
   useEffect(() => {
+    setFormMenuOpen(false);
     if (createOpen) {
       setOptionalOpen(!isMobile);
       setError('');
@@ -755,6 +757,7 @@ export function AdmissionPublicInquiryLinks({
                 value={formik.values.cycleId}
                 onChange={(event) => {
                   setError('');
+                  setFormMenuOpen(false);
                   formik.setValues({
                     ...formik.values,
                     cycleId: event.target.value,
@@ -795,7 +798,21 @@ export function AdmissionPublicInquiryLinks({
                   label="Published inquiry form"
                   name="formId"
                   value={formik.values.formId}
-                  disabled={!routingReady || availableForms.length === 0}
+                  disabled={!routingReady || forms.isError}
+                  SelectProps={{
+                    open: formMenuOpen,
+                    onOpen: () => {
+                      if (availableForms.length === 0) {
+                        shikshaMitraToast.info({
+                          message:
+                            'First create or attach a published Inquiry form to an active Admission Offering with Inquiry or Both entry mode in this period.',
+                        });
+                        return;
+                      }
+                      setFormMenuOpen(true);
+                    },
+                    onClose: () => setFormMenuOpen(false),
+                  }}
                   onChange={(event) => {
                     const formId = event.target.value;
                     const setup = allSetups.find((item) => item.id === formik.values.setupId);
@@ -885,20 +902,11 @@ export function AdmissionPublicInquiryLinks({
                 </Alert>
               </Grid>
             )}
-            {routingReady && linkOptions.length === 0 && (
+            {routingReady && !forms.isError && availableForms.length === 0 && (
               <Grid size={12}>
-                <Alert
-                  severity="info"
-                  action={
-                    <Button size="small" onClick={() => routingOptions.refetch()}>
-                      Refresh offerings
-                    </Button>
-                  }
-                >
-                  No compatible inquiry Offering is available in this period. In Admission
-                  offerings, attach a published Inquiry form to an Offering, then activate it with
-                  Inquiry or Both entry mode. Your account also needs access to that Offering.
-                </Alert>
+                <Button size="small" onClick={() => routingOptions.refetch()}>
+                  Refresh offerings
+                </Button>
               </Grid>
             )}
             {!cycles.isError &&
@@ -907,7 +915,7 @@ export function AdmissionPublicInquiryLinks({
               !cycles.isLoading &&
               !setupsLoading &&
               !forms.isLoading &&
-              (publishedCycles.length === 0 || publishedForms.length === 0) && (
+              publishedCycles.length === 0 && (
                 <Grid size={12}>
                   <AdmissionIntakeNotice
                     severity="info"
@@ -919,9 +927,7 @@ export function AdmissionPublicInquiryLinks({
                       ) : undefined
                     }
                   >
-                    {publishedCycles.length === 0
-                      ? 'Publish an admission period before creating a link.'
-                      : 'Publish an Inquiry form before creating a link.'}
+                    Publish an admission period before creating a link.
                   </AdmissionIntakeNotice>
                 </Grid>
               )}

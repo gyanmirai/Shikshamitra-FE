@@ -67,6 +67,42 @@ function reviewedSummary(): ApplicationDocumentVerification {
 }
 
 describe('admission document table', { timeout: 15000 }, () => {
+  it('shows pending requirements honestly when the workflow allows onboarding deferral', async () => {
+    mswServer.use(
+      http.get(documentStagePath, () =>
+        HttpResponse.json({ ...documentSummary, canComplete: true })
+      )
+    );
+    renderDocumentUi(
+      <ApplicationDocumentsPanel
+        applicationId="application-1"
+        stage={documentStage}
+        layout="table"
+        canAdvance
+        onComplete={vi.fn()}
+      />
+    );
+    expect(await screen.findByText('Birth certificate is required.')).toBeVisible();
+    expect(
+      screen.getByText(/Complete these pending documents in Student Onboarding/)
+    ).toBeVisible();
+    expect(screen.getByText('0 of 1 required documents resolved')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeEnabled();
+    expect(screen.queryByText(/Document requirements are complete/)).not.toBeInTheDocument();
+  });
+
+  it('shows completion only after document blockers are resolved', async () => {
+    renderTable({
+      ...documentSummary,
+      canComplete: true,
+      blockers: [],
+      requirements: [{ ...documentSummary.requirements[0], status: 'accepted' }],
+    });
+    expect(await screen.findByText(/Document requirements are complete/)).toBeVisible();
+    expect(screen.getByText('1 of 1 required documents resolved')).toBeVisible();
+    expect(screen.queryByText(/Complete these pending documents/)).not.toBeInTheDocument();
+  });
+
   it('renders configured requirements and formats with disabled missing-file controls', async () => {
     renderTable();
     const table = await screen.findByRole('table');

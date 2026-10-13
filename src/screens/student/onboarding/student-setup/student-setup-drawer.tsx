@@ -2,22 +2,20 @@
 
 import Link from 'next/link';
 import { LoadingButton } from '@mui/lab';
+import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetStudentOnboardingCaseQuery,
   usePreviewStudentOnboardingActivationQuery,
-  useReviewStudentOnboardingRequirementsMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Box,
@@ -83,7 +81,13 @@ const primaryActions = {
   cancelled: { label: 'Cancelled', icon: 'mdi:cancel' },
 } as const;
 
-type DrawerView = 'tasks' | 'details' | 'checks' | 'history';
+const DRAWER_TABS = [
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'details', label: 'Details & Checks' },
+  { value: 'history', label: 'History' },
+] as const;
+
+type DrawerView = (typeof DRAWER_TABS)[number]['value'];
 
 function SectionCard({
   icon,
@@ -169,18 +173,18 @@ export default function StudentSetupDrawer({
   const [confirmActivation, setConfirmActivation] = useState(false);
   const [waiverCheck, setWaiverCheck] = useState<OnboardingChecklistItem | null>(null);
   const [showPassedChecks, setShowPassedChecks] = useState(false);
+  const [credentialsBusy, setCredentialsBusy] = useState(false);
+  const drawerBusy = primaryActionLoading || credentialsBusy;
   const defaultView: DrawerView =
     student?.source === 'onboarding-case' &&
     student.backendStatus !== 4 &&
     student.backendStatus !== 5
       ? 'tasks'
       : 'details';
-  const [view, setView] = useState<DrawerView>(defaultView);
+  const { value: view, setValue: setView, onChange: onViewChange } = useTabs(defaultView);
   const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
-    skip: !open || activeStudent?.source !== 'onboarding-case',
+    skip: !open || taskView === 'credentials' || activeStudent?.source !== 'onboarding-case',
   });
-  const [reviewRequirements, reviewState] = useReviewStudentOnboardingRequirementsMutation();
-  const [reviewFailure, setReviewFailure] = useState<string>();
   const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
     activeStudent?.id ?? '',
     {
@@ -204,11 +208,11 @@ export default function StudentSetupDrawer({
 
   useEffect(() => {
     setView(defaultView);
-  }, [student?.id, defaultView, open]);
+  }, [student?.id, defaultView, open, setView]);
 
   useEffect(() => {
     if (view === 'history' && !activeStudent?.activity.length) setView('details');
-  }, [view, activeStudent?.activity.length]);
+  }, [view, activeStudent?.activity.length, setView]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -249,7 +253,7 @@ export default function StudentSetupDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={primaryActionLoading ? undefined : onClose}
+      onClose={drawerBusy ? undefined : onClose}
       transitionDuration={{ enter: 300, exit: 250 }}
       PaperProps={{
         'aria-labelledby': 'student-setup-drawer-title',
@@ -264,10 +268,10 @@ export default function StudentSetupDrawer({
     >
       <Stack
         component="header"
-        direction="row"
+        direction={{ xs: 'column', sm: 'row' }}
         justifyContent="space-between"
-        alignItems="center"
-        spacing={2}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        spacing={{ xs: 0.5, sm: 2 }}
         sx={{
           px: { xs: 1.5, sm: 2 },
           py: 1.5,
@@ -277,7 +281,7 @@ export default function StudentSetupDrawer({
           borderColor: 'divider',
         }}
       >
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, flex: 1 }}>
           <Avatar
             sx={{ bgcolor: 'action.selected', color: 'text.secondary', width: 44, height: 44 }}
           >
@@ -293,13 +297,18 @@ export default function StudentSetupDrawer({
             >
               {activeStudent.studentName}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
               {activeStudent.applicationNumber} · {activeStudent.standardName} /{' '}
               {activeStudent.divisionName}
             </Typography>
           </Box>
         </Stack>
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          alignItems="center"
+          sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+        >
           <Label color={status.color} variant="outlined">
             {status.label}
           </Label>
@@ -318,7 +327,7 @@ export default function StudentSetupDrawer({
           <IconButton
             aria-label="Close Student Setup"
             onClick={onClose}
-            disabled={primaryActionLoading}
+            disabled={drawerBusy}
             sx={{ minWidth: 44, minHeight: 44 }}
           >
             <Iconify icon="mdi:close" width={20} />
@@ -329,7 +338,7 @@ export default function StudentSetupDrawer({
       {taskView === 'readiness' && (
         <CustomTabs
           value={view}
-          onChange={(_event, nextView: DrawerView) => setView(nextView)}
+          onChange={onViewChange}
           guardUnsavedChanges={false}
           variant="scrollable"
           scrollButtons="auto"
@@ -337,34 +346,20 @@ export default function StudentSetupDrawer({
           aria-label="Student onboarding case sections"
           sx={{ px: { xs: 0.5, sm: 1 }, borderBottom: '1px solid', borderColor: 'divider' }}
         >
-          {activeStudent.source === 'onboarding-case' && (
+          {DRAWER_TABS.filter(
+            (tab) =>
+              (tab.value !== 'tasks' || activeStudent.source === 'onboarding-case') &&
+              (tab.value !== 'history' || activeStudent.activity.length > 0)
+          ).map((tab) => (
             <Tab
-              id="student-case-tasks-tab"
-              aria-controls="student-case-tasks-panel"
-              value="tasks"
-              label="Tasks"
+              key={tab.value}
+              id={`student-case-${tab.value}-tab`}
+              aria-controls={`student-case-${tab.value}-panel`}
+              value={tab.value}
+              label={tab.label}
+              disabled={drawerBusy}
             />
-          )}
-          <Tab
-            id="student-case-details-tab"
-            aria-controls="student-case-details-panel"
-            value="details"
-            label="Details"
-          />
-          <Tab
-            id="student-case-checks-tab"
-            aria-controls="student-case-checks-panel"
-            value="checks"
-            label="Checks"
-          />
-          {activeStudent.activity.length > 0 && (
-            <Tab
-              id="student-case-history-tab"
-              aria-controls="student-case-history-panel"
-              value="history"
-              label="History"
-            />
-          )}
+          ))}
         </CustomTabs>
       )}
 
@@ -372,42 +367,6 @@ export default function StudentSetupDrawer({
         ref={scrollRef}
         sx={{ p: { xs: 1.5, sm: 2 }, flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}
       >
-        {taskView === 'readiness' && capturedFieldsQuery.data?.requirementsNeedReview && (
-          <Stack spacing={1} sx={{ mb: 1.5 }}>
-            <Alert severity="info">
-              Review this Offering&apos;s current requirements before preparing this existing
-              onboarding case.
-            </Alert>
-            {reviewFailure && <Alert severity="error">{reviewFailure}</Alert>}
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={!canManage || !capturedFieldsQuery.data.concurrencyStamp}
-              loading={reviewState.isLoading}
-              onClick={async () => {
-                const item = capturedFieldsQuery.data;
-                if (!item || !canManage) return;
-                try {
-                  await reviewRequirements({
-                    id: activeStudent.id,
-                    concurrencyStamp: item.concurrencyStamp,
-                  }).unwrap();
-                  setReviewFailure(undefined);
-                  shikshaMitraToast.success({
-                    message: 'Offering requirements reviewed and saved for this case.',
-                  });
-                } catch (error) {
-                  setReviewFailure(
-                    parseApiProblemDetail(error).detail ||
-                      'Requirements could not be reviewed. Refresh and retry.'
-                  );
-                }
-              }}
-            >
-              Review Offering requirements
-            </Button>
-          </Stack>
-        )}
         {taskView !== 'readiness' ? (
           <Stack spacing={1.5}>
             {taskView === 'fees' ? (
@@ -426,23 +385,9 @@ export default function StudentSetupDrawer({
               >
                 <StudentOnboardingPortalAccounts
                   key={activeStudent.id}
-                  profileOwners={
-                    !capturedFieldsQuery.isError &&
-                    capturedFieldsQuery.currentData?.id === activeStudent.id
-                      ? (capturedFieldsQuery.currentData.portalAccountOwners ?? undefined)
-                      : undefined
-                  }
-                  profilesLoading={capturedFieldsQuery.isFetching}
-                  profilesError={capturedFieldsQuery.isError}
-                  onRefreshProfiles={() => capturedFieldsQuery.refetch()}
-                  student={{
-                    ...activeStudent,
-                    concurrencyStamp:
-                      capturedFieldsQuery.currentData?.id === activeStudent.id
-                        ? capturedFieldsQuery.currentData.concurrencyStamp
-                        : activeStudent.concurrencyStamp,
-                  }}
+                  student={activeStudent}
                   canManage={canManage}
+                  onBusyChange={setCredentialsBusy}
                 />
               </SectionCard>
             ) : (
@@ -560,7 +505,12 @@ export default function StudentSetupDrawer({
                     )}
                   </Box>
                   {readiness.requiredCount > 0 && (
-                    <Button size="small" variant="text" onClick={() => setView('checks')}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      disabled={primaryActionLoading}
+                      onClick={() => setView('details')}
+                    >
                       {readiness.passedCount} of {readiness.requiredCount} checks passed
                     </Button>
                   )}
@@ -629,23 +579,9 @@ export default function StudentSetupDrawer({
                       <AccordionDetails>
                         <StudentOnboardingPortalAccounts
                           key={activeStudent.id}
-                          profileOwners={
-                            !capturedFieldsQuery.isError &&
-                            capturedFieldsQuery.currentData?.id === activeStudent.id
-                              ? (capturedFieldsQuery.currentData.portalAccountOwners ?? undefined)
-                              : undefined
-                          }
-                          profilesLoading={capturedFieldsQuery.isFetching}
-                          profilesError={capturedFieldsQuery.isError}
-                          onRefreshProfiles={() => capturedFieldsQuery.refetch()}
-                          student={{
-                            ...activeStudent,
-                            concurrencyStamp:
-                              capturedFieldsQuery.currentData?.id === activeStudent.id
-                                ? capturedFieldsQuery.currentData.concurrencyStamp
-                                : activeStudent.concurrencyStamp,
-                          }}
+                          student={activeStudent}
                           canManage={canManage}
+                          onBusyChange={setCredentialsBusy}
                         />
                       </AccordionDetails>
                     </Accordion>
@@ -730,6 +666,7 @@ export default function StudentSetupDrawer({
                         size="small"
                         startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
                         onClick={onAssignDivision}
+                        disabled={primaryActionLoading}
                       >
                         {hasAssignedDivision(activeStudent) ? 'Change Division' : 'Assign Division'}
                       </Button>
@@ -738,6 +675,7 @@ export default function StudentSetupDrawer({
                         size="small"
                         startIcon={<Iconify icon="mdi:identifier" width={18} />}
                         onClick={onAssignGrNumber}
+                        disabled={primaryActionLoading}
                       >
                         {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
                       </Button>
@@ -746,6 +684,7 @@ export default function StudentSetupDrawer({
                         size="small"
                         startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
                         onClick={onAssignRollNumber}
+                        disabled={primaryActionLoading}
                       >
                         {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
                           ? 'Change Roll No.'
@@ -827,17 +766,6 @@ export default function StudentSetupDrawer({
                     )}
                   </AccordionDetails>
                 </Accordion>
-              </Stack>
-            </Box>
-
-            <Box
-              id="student-case-checks-panel"
-              role="tabpanel"
-              aria-labelledby="student-case-checks-tab"
-              hidden={view !== 'checks'}
-              sx={{ display: view === 'checks' ? 'block' : 'none' }}
-            >
-              <Stack spacing={1.5}>
                 <SectionCard
                   icon="mdi:clipboard-check-outline"
                   title="Readiness & Activation"
@@ -908,6 +836,7 @@ export default function StudentSetupDrawer({
                                   href={`/student/profile?student=${encodeURIComponent(activeStudent.studentId)}&tab=general`}
                                   variant="text"
                                   size="small"
+                                  disabled={primaryActionLoading}
                                 >
                                   Open student record
                                 </Button>
@@ -920,6 +849,7 @@ export default function StudentSetupDrawer({
                                   color="primary"
                                   size="small"
                                   aria-label={`Record approval for ${check.label}`}
+                                  disabled={primaryActionLoading}
                                   onClick={() => setWaiverCheck(check)}
                                 >
                                   Record approval
@@ -934,6 +864,7 @@ export default function StudentSetupDrawer({
                                   color="warning"
                                   size="small"
                                   aria-label={`Review exception for ${check.label}`}
+                                  disabled={primaryActionLoading}
                                   onClick={() => setWaiverCheck(check)}
                                 >
                                   Review exception
@@ -948,6 +879,7 @@ export default function StudentSetupDrawer({
                       <Button
                         variant="text"
                         size="small"
+                        disabled={primaryActionLoading}
                         onClick={() => setShowPassedChecks((current) => !current)}
                         sx={{ alignSelf: 'flex-start' }}
                       >
@@ -1033,7 +965,7 @@ export default function StudentSetupDrawer({
             size="small"
             startIcon={<Iconify icon="basil:cross-solid" width={18} />}
             onClick={onClose}
-            disabled={primaryActionLoading}
+            disabled={drawerBusy}
           >
             Close
           </Button>
@@ -1045,7 +977,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon={primaryAction.icon} width={18} />}
                 loading={primaryActionLoading}
-                disabled={!canRunPrimaryAction}
+                disabled={credentialsBusy || !canRunPrimaryAction}
                 onClick={() => {
                   if (canOpenActivation) {
                     setConfirmActivation(true);
