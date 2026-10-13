@@ -18,7 +18,7 @@ vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 vi.mock('src/redux/hr/employeeApi', () => ({
   useGetEmployeeByIdQuery: () => ({ currentData: mocks.employee }),
-  useLazyGetEmployeeQuery: vi.fn(),
+  useLazyGetEmployeeOptionsQuery: () => [vi.fn()],
 }));
 vi.mock('src/redux/customQueryAndMutation', () => ({ default: () => [vi.fn()] }));
 vi.mock('src/redux/hr/employee-salary-structure-api', () => ({

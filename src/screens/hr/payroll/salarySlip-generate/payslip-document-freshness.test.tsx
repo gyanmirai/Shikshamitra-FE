@@ -27,7 +27,7 @@ vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => n
 vi.mock('@mui/x-date-pickers', () => ({ DatePicker: () => null }));
 vi.mock('src/redux/hr/employeeApi', async (importOriginal) => ({
   ...await importOriginal<typeof import('src/redux/hr/employeeApi')>(),
-  useLazyGetEmployeeQuery: () => [vi.fn()],
+  useLazyGetEmployeeOptionsQuery: () => [vi.fn()],
 }));
 vi.mock('src/components/paginated-search-select', () => ({
   PaginatedSearchSelect: ({ onChange }: { onChange: (event: null, value: { id: string; label: string }) => void }) =>
