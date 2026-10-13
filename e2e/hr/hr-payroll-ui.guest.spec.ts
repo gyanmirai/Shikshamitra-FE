@@ -326,6 +326,7 @@ test.describe('Payroll interface consistency', () => {
     await mockPayroll(page, { esiEnabled: true, denyCalculation: true });
     await page.goto('/hr/payroll/setting/statutory-schemes');
     await expect(page.getByLabel('ESIC eligibility basis', { exact: true })).toBeDisabled();
+    await expect(page.getByRole('switch', { name: 'Enable ESIC for payroll' })).toBeDisabled();
     await expect(
       page.getByRole('switch', { name: 'Use administrator rate override' })
     ).toBeDisabled();
@@ -346,6 +347,15 @@ test.describe('Payroll interface consistency', () => {
       await page.setViewportSize({ width, height: 900 });
       await mockPayroll(page, { esiEnabled: true });
       await page.goto('/hr/payroll/setting/statutory-schemes');
+      const enabled = page.getByRole('switch', { name: 'Enable ESIC for payroll' });
+      await expect(enabled).toHaveAccessibleDescription(
+        'Activate statutory ESIC calculations for eligible employees in payroll.'
+      );
+      await expect(page.getByText('Active', { exact: true })).toBeVisible();
+      await enabled.uncheck();
+      await expect(page.getByText('Inactive', { exact: true })).toBeVisible();
+      await enabled.check();
+      await expect(page.getByText('Active', { exact: true })).toBeVisible();
       const basis = page.getByLabel('ESIC calculation basis', { exact: true });
       const eligibility = page.getByRole('combobox', { name: /^ESIC eligibility basis/ });
       await expect(basis).toHaveText('Payable included salary components');

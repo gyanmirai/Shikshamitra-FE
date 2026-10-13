@@ -108,7 +108,9 @@ describe('Compact ESIC settings', () => {
     expect(screen.getByText('Applies to current and future unlocked payroll.')).toBeVisible();
     expect(screen.queryByRole('button', { name: /preview|schedule/i })).toBeNull();
     expect(screen.queryByText(/Employees needing attention/)).toBeNull();
-    fireEvent.click(screen.getByRole('switch', { name: 'Calculate ESIC in payroll' }));
+    expect(screen.getByText('Active', { exact: true })).toBeVisible();
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable ESIC for payroll' }));
+    expect(screen.getByText('Inactive', { exact: true })).toBeVisible();
     expect(screen.queryByLabelText('ESIC registration number')).toBeNull();
   });
   it('saves directly with concurrency and idempotency, without confirmation', async () => {
@@ -185,7 +187,7 @@ describe('Compact ESIC settings', () => {
   it('keeps school-scoped configuration read only for restricted HR users', () => {
     mocks.settings.hasSchoolWideScope = false;
     render(<EsiStatutorySettings />);
-    expect(screen.getByRole('switch', { name: 'Calculate ESIC in payroll' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Enable ESIC for payroll' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
   });
 });

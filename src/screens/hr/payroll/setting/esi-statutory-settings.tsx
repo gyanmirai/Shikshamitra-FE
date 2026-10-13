@@ -28,6 +28,7 @@ import {
 import {
   Box,
   Grid,
+  Chip,
   Stack,
   Alert,
   Button,
@@ -37,7 +38,6 @@ import {
   TextField,
   Accordion,
   Typography,
-  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -216,20 +216,63 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
               sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
             }}
           >
-            <Grid size={{ xs: 12, sm: 6 }} sx={{ display: 'flex', alignItems: 'center' }}>
-              <FormControlLabel
-                label="Calculate ESIC in payroll"
-                control={
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                justifyContent="space-between"
+                spacing={1}
+                sx={{
+                  px: 1.5,
+                  py: 1,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.neutral',
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography id="esic-payroll-enable-label" variant="subtitle2">
+                    Enable ESIC for payroll
+                  </Typography>
+                  <Typography
+                    id="esic-payroll-enable-description"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    Activate statutory ESIC calculations for eligible employees in payroll.
+                  </Typography>
+                </Box>
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+                >
                   <Switch
                     name="enabled"
                     checked={form.values.enabled}
                     onChange={form.handleChange}
                     disabled={!canEdit || busy}
+                    slotProps={{
+                      input: {
+                        'aria-labelledby': 'esic-payroll-enable-label',
+                        'aria-describedby': 'esic-payroll-enable-description',
+                      },
+                    }}
                   />
-                }
-              />
+                  <Chip
+                    size="small"
+                    label={form.values.enabled ? 'Active' : 'Inactive'}
+                    color={form.values.enabled ? 'success' : 'default'}
+                    variant="soft"
+                    aria-live="polite"
+                    sx={{ height: 22 }}
+                  />
+                </Stack>
+              </Stack>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
               <TextField
                 label="Effective payroll month"
                 type="month"

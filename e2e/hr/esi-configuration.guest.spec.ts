@@ -35,7 +35,7 @@ test('ESIC configuration supports responsive review, keyboard use, loading, and 
   await expect(page.getByRole('heading', { name: 'Statutory Schemes', exact: true })).toBeVisible();
   await expect(page.getByLabel('Loading ESIC settings')).toBeVisible();
   releaseLoading();
-  await expect(page.getByRole('switch', { name: 'Calculate ESIC in payroll' })).toBeEnabled();
+  await expect(page.getByRole('switch', { name: 'Enable ESIC for payroll' })).toBeEnabled();
   await page.unroute(endpoint);
 
   for (const width of [390, 768, 1440]) {
@@ -48,7 +48,7 @@ test('ESIC configuration supports responsive review, keyboard use, loading, and 
     await page.screenshot({ path: `test-results/esic-${width}.png`, fullPage: true });
   }
 
-  const toggle = page.getByRole('switch', { name: 'Calculate ESIC in payroll' });
+  const toggle = page.getByRole('switch', { name: 'Enable ESIC for payroll' });
   await toggle.focus();
   await page.keyboard.press('Space');
   await expect(toggle).not.toBeChecked();
