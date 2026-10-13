@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -423,3 +423,26 @@ The editor keeps Calculate salary and Save salary in its persistent footer and p
 ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
 Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
 One-time adjustments remain in monthly payroll.
+
+## PF enrollment and ESIC calculation settings
+
+Salary setup retains the Gross/CTC choice and one monthly amount.
+Authorized HR staff record previous PF membership, enrollment, and voluntary consent evidence during onboarding or later salary updates.
+The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
+The PF settings page records school establishment coverage with an effective month and evidence reference.
+Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
+
+ESIC settings provide an effective month, independently selectable ESIC eligibility and calculation bases, and optional documented employee/employer rate overrides.
+Eligibility uses the full-month salary under the selected included-components, Gross, or Basic source.
+The calculation basis chooses the payable salary source after attendance adjustments.
+Changing one basis preserves the other choice.
+The compact form pairs both selectors and shows default contribution rates inline.
+Selecting Basic for either basis reveals one shared Basic salary component selector; its selection is retained until neither basis uses Basic.
+Salary-basis guidance is available through a keyboard-accessible help control; documented rate overrides keep their warning and evidence fields visible.
+Calculation editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
+Read-only users retain the compact settings and impact preview without enabled calculation controls.
+Basic uses a school earning component marked Basic in the salary template, including percentage-of-Gross formulas such as 60 percent.
+The settings page explains that other statutory included wages and add-back still apply.
+Valid unsaved settings request a debounced draft impact preview; saving retains the concurrency token and idempotency key across retries.
+Run Payroll displays rate-override evidence from the saved calculation snapshot and keeps employee deductions separate from employer contributions.
+See the [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#pf-enrollment-and-esic-calculation-settings) for eligibility, effective dates, rates, and immutable payroll rules.

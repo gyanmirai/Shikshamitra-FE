@@ -3,14 +3,30 @@ import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import type { EsiComponentTreatment } from './statutory-scheme-api';
 
+export type EsiSalaryBasis = 'CLASSIFIED_EARNINGS' | 'GROSS' | 'BASIC_COMPONENT';
+export type EsiCalculationSettings = {
+  eligibilityBasis: EsiSalaryBasis;
+  calculationBasis: EsiSalaryBasis;
+  basicComponentId?: string | null;
+  employeePercentage?: number | null;
+  employerPercentage?: number | null;
+  overrideReason?: string | null;
+  evidenceReference?: string | null;
+};
 export type EsiConfigurationDraft = {
+  effectiveMonth?: string;
+  calculationSettings: EsiCalculationSettings;
   concurrencyStamp: string;
   enabled: boolean;
   registrationNumber: string;
   coveredSince: string | null;
   treatments: Pick<EsiComponentTreatment, 'componentId' | 'treatment'>[];
 };
-export type EsiConfigurationVersion = Omit<EsiConfigurationDraft, 'treatments' | 'registrationNumber'> & {
+export type EsiConfigurationVersion = Omit<
+  EsiConfigurationDraft,
+  'treatments' | 'registrationNumber' | 'calculationSettings'
+> & {
+  calculationSettings?: EsiCalculationSettings;
   registrationNumber: string | null;
   effectiveMonth: string;
   id: string;

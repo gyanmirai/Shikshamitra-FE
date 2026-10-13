@@ -28,6 +28,7 @@ import {
 import {
   Box,
   Grid,
+  Chip,
   Stack,
   Alert,
   Button,
@@ -37,13 +38,13 @@ import {
   TextField,
   Accordion,
   Typography,
-  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
 import EsiOverrideDialog from './esi-override-dialog';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
+import { EsiCalculationFields } from './esi-calculation-fields';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
 import { EsiConfigurationEmployees } from './esi-configuration-employees';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
@@ -118,7 +119,8 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
   const canEdit =
     settings.hasSchoolWideScope &&
     hasGrantedPermission(permissions, actions.edit) &&
-    hasGrantedPermission(permissions, actions.activate);
+    hasGrantedPermission(permissions, actions.activate) &&
+    hasGrantedPermission(permissions, actions.configureCalculation);
   const canManageEnrollment = hasGrantedPermission(permissions, actions.manageEnrollment);
   const canApproveOverride = hasGrantedPermission(permissions, actions.approveOverride);
   const [save, saveState] = useSaveEsiConfigurationMutation();
@@ -167,13 +169,26 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
   }, [form.dirty]);
-  const month = settings.suggestedEffectiveMonth;
+  const [previewDraft, setPreviewDraft] = useState<EsiConfigurationDraft | undefined>();
+  useEffect(() => {
+    const timer = setTimeout(
+      () =>
+        setPreviewDraft(
+          form.dirty && Object.keys(validateConfiguration(form.values)).length === 0 && canEdit
+            ? configurationPayload(form.values)
+            : undefined
+        ),
+      500
+    );
+    return () => clearTimeout(timer);
+  }, [form.values, form.dirty, canEdit]);
+  const month = form.values.effectiveMonth || settings.suggestedEffectiveMonth;
   const effectiveOn = `${month}-01`;
   const rules = useGetEsiRuleQuery(effectiveOn, { skip: !form.values.enabled });
   const treatments = useGetEsiComponentTreatmentsQuery(effectiveOn, { skip: !form.values.enabled });
   const attention = usePreviewEsiImpactQuery(
-    { monthYear: toApiMonth(month), pageSize: 10 },
-    { skip: !settings.current?.enabled }
+    { monthYear: toApiMonth(month), pageSize: 10, configurationDraft: previewDraft },
+    { skip: !form.values.enabled || Boolean(previewDraft && previewDraft.effectiveMonth !== month) }
   );
   const refreshPreview = async () => {
     if (settings.current?.enabled) await attention.refetch();
@@ -196,21 +211,95 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
           {error && <Alert severity="error">{error}</Alert>}
           <SectionCard
             title="ESIC"
+            gridProps={{ spacing: 2 }}
             paperProps={{
               sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
             }}
           >
-            <Grid size={12}>
-              <FormControlLabel
-                label="Calculate ESIC in payroll"
-                control={
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+                justifyContent="space-between"
+                spacing={1}
+                sx={{
+                  px: 1.5,
+                  py: 1,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.neutral',
+                }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography id="esic-payroll-enable-label" variant="subtitle2">
+                    Enable ESIC for payroll
+                  </Typography>
+                  <Typography
+                    id="esic-payroll-enable-description"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    Activate statutory ESIC calculations for eligible employees in payroll.
+                  </Typography>
+                </Box>
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  alignItems="center"
+                  sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+                >
                   <Switch
                     name="enabled"
                     checked={form.values.enabled}
                     onChange={form.handleChange}
                     disabled={!canEdit || busy}
+                    slotProps={{
+                      input: {
+                        'aria-labelledby': 'esic-payroll-enable-label',
+                        'aria-describedby': 'esic-payroll-enable-description',
+                      },
+                    }}
                   />
-                }
+                  <Chip
+                    size="small"
+                    label={form.values.enabled ? 'Active' : 'Inactive'}
+                    color={form.values.enabled ? 'success' : 'default'}
+                    variant="soft"
+                    aria-live="polite"
+                    sx={{ height: 22 }}
+                  />
+                </Stack>
+              </Stack>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
+              <TextField
+                label="Effective payroll month"
+                type="month"
+                size="small"
+                fullWidth
+                value={form.values.effectiveMonth ?? ''}
+                disabled={!canEdit || busy}
+                slotProps={{ inputLabel: { shrink: true } }}
+                error={Boolean(form.errors.effectiveMonth)}
+                helperText={form.errors.effectiveMonth}
+                onChange={(event) => {
+                  const effectiveMonth = event.target.value;
+                  const version =
+                    settings.history.find(
+                      (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
+                    ) ?? settings.current;
+                  form.setFieldValue('effectiveMonth', effectiveMonth);
+                  if (version) form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <EsiCalculationFields
+                form={form}
+                disabled={!canEdit || busy}
+                components={treatments.data ?? []}
+                rule={rules.data}
               />
             </Grid>
             {form.values.enabled && (
@@ -266,10 +355,9 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       {formatEsiCurrency(rules.data.standardWageCeiling)}; persons with disability:{' '}
                       {formatEsiCurrency(rules.data.disabilityWageCeiling)}. Eligibility and
                       contribution-period continuity are determined from staff facts and payroll
-                      history. Each share is rounded up to the next rupee. Staff with average
-                      daily wages up to{' '}
-                      {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)} are exempt
-                      from the staff share; the employer share still applies.
+                      history. Each share is rounded up to the next rupee. Staff with average daily
+                      wages up to {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)}{' '}
+                      are exempt from the staff share; the employer share still applies.
                     </Typography>
                   ) : (
                     <Skeleton />
@@ -346,6 +434,17 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
             </>
           )}
 
+          {form.dirty &&
+            previewDraft &&
+            attention.data &&
+            typeof attention.data.summary.employeeContributionTotal === 'number' && (
+              <Alert severity={attention.isError ? 'error' : 'info'}>
+                {attention.isFetching
+                  ? 'Updating draft impact…'
+                  : `Draft impact: ${attention.data.summary.coveredEmployeeCount} staff covered. Employee ESIC ${formatEsiCurrency(attention.data.summary.employeeContributionTotal)}, employer ESIC ${formatEsiCurrency(attention.data.summary.employerContributionTotal)}.`}{' '}
+                Staff issues remain visible for review before payroll locking.
+              </Alert>
+            )}
           {settings.history.length > 0 && (
             <Accordion disableGutters>
               <AccordionSummary expandIcon={<ExpandMore />}>
@@ -376,8 +475,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       setEmployees(employees === 'needsAttention' ? null : 'needsAttention')
                     }
                   >
-                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention}
-                    )
+                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention})
                   </Button>
                 )}
                 <Button

@@ -257,7 +257,7 @@ export function EsiEnrollmentDrawer({
               <Grid container spacing={1.25}>
                 {[
                   ['Coverage', employee?.coverageDecisionLabel || 'Not available'],
-                  ['ESI wages', formatEsiCurrency(employee?.statutoryWages || 0)],
+                  ['Salary used for ESIC', formatEsiCurrency(employee?.statutoryWages || 0)],
                   ['Staff deduction', formatEsiCurrency(employee?.employeeContribution || 0)],
                   ['Employer contribution', formatEsiCurrency(employee?.employerContribution || 0)],
                 ].map(([label, value]) => (

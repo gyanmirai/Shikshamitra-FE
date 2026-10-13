@@ -189,13 +189,19 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('keeps the PF label, description and keyboard toggle accessible without help changing the draft', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    const pfSwitch = screen.getByRole('switch', { name: 'PF applicable' });
+    const pfSwitch = screen.getByRole('switch', { name: 'PF enrollment' });
     expect(pfSwitch).toHaveAccessibleDescription('Deduct Provident Fund for this employee');
-    expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
 
-    await user.click(screen.getByText('PF applicable', { exact: true }));
+    await user.click(screen.getByText('PF enrollment', { exact: true }));
     expect(pfSwitch).toBeChecked();
-    expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     await user.click(screen.getByRole('button', { name: 'About PF applicability' }));
     expect(pfSwitch).toBeChecked();
     await user.click(pfSwitch);

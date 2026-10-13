@@ -17,7 +17,8 @@ export default function PermissionActionNotes({ action }: { action: MatrixAction
           name.startsWith('HR.PayrollManagement.Settings.StatutorySchemes.')
         ) && (
           <Typography variant="caption" color="text.secondary">
-            Includes scheme edits, activation, enrollment and override approvals.
+            Includes scheme edits, activation, enrollment, override approvals and administrator
+            calculation settings.
           </Typography>
         )}
       {!action.editable && (

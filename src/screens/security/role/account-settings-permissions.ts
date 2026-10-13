@@ -19,7 +19,13 @@ export const ACCOUNT_SETTING_ACTIONS: PermissionType[] = [
 export const isAccountSettingPermission = (name: string = '') => ACCOUNT_SETTING_ROOT.test(name);
 
 const STATUTORY_SCHEME_ROOT = 'HR.PayrollManagement.Settings.StatutorySchemes';
-const STATUTORY_SCHEME_EDIT_ACTIONS = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'];
+const STATUTORY_SCHEME_EDIT_ACTIONS = [
+  'Edit',
+  'Activate',
+  'ManageEnrollment',
+  'ApproveOverride',
+  'ConfigureCalculation',
+];
 export const isStatutorySchemePermission = (name: string = '') =>
   name === STATUTORY_SCHEME_ROOT || name === `${STATUTORY_SCHEME_ROOT}.View`;
 

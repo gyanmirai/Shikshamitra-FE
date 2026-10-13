@@ -122,7 +122,21 @@ export type SalaryTemplateEsiPreview = {
   issueCodes: string[];
 };
 
+export type PfEnrollment = {
+  membership: 'UNKNOWN' | 'EXISTING_MEMBER' | 'NOT_MEMBER';
+  consentReference?: string | null;
+};
+export type PfEligibility = {
+  status: string;
+  wages: number;
+  coverageCeiling: number;
+  enrollmentRequired: boolean;
+  canSave: boolean;
+  issueCode?: string | null;
+};
 export type SalaryTemplateCalculation = {
+  pfEnrollment?: PfEnrollment;
+  pfEligibility?: PfEligibility;
   templateId: string;
   templateVersionId: string;
   templateVersion: number;
@@ -168,6 +182,7 @@ export const buildSalaryTemplateCalculationRequest = ({
   monthlyAmount: number;
   effectiveMonth: string;
   employeeId?: string | null;
+  pfEnrollment?: PfEnrollment;
   pfApplicable: boolean;
   pfRuleId?: string | null;
   overrides?: SalaryRuleOverride[];

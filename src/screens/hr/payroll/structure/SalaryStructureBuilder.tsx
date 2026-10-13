@@ -4,6 +4,7 @@ import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type {
   SalaryBasis,
+  PfEnrollment,
   SalaryRuleOverride,
   SalaryTemplateCalculation,
 } from 'src/redux/hr/salary-template-api';
@@ -36,6 +37,7 @@ import {
   Box,
   Grid,
   Chip,
+  Stack,
   Alert,
   Paper,
   Button,
@@ -142,6 +144,7 @@ export function SalaryStructureBuilder({
   const [monthlyAmount, setMonthlyAmount] = useState(
     Number(formik.values.quotedMonthlyAmount || 0)
   );
+  const [pfEnrollment, setPfEnrollment] = useState<PfEnrollment>({ membership: 'UNKNOWN' });
   const [pfApplicable, setPfApplicable] = useState(false);
   const [pfRuleId, setPfRuleId] = useState('');
   const [customizing, setCustomizing] = useState(false);
@@ -206,6 +209,9 @@ export function SalaryStructureBuilder({
       setSalaryBasis(source.salaryBasis);
       setEffectiveMonth(source.effectiveMonth.slice(0, 7));
       setMonthlyAmount(source.quotedMonthlyAmount);
+      setPfEnrollment(
+        source.pfEnrollment ?? { membership: source.pfRuleId ? 'EXISTING_MEMBER' : 'UNKNOWN' }
+      );
       setPfApplicable(Boolean(source.pfRuleId));
       setPfRuleId(source.pfRuleId || '');
       setOverrides(source.overrides || []);
@@ -238,6 +244,7 @@ export function SalaryStructureBuilder({
     salaryBasis,
     effectiveMonth,
     monthlyAmount,
+    pfEnrollment,
     pfApplicable,
     pfRuleId,
     overrides: customizing ? overrides : [],
@@ -298,6 +305,7 @@ export function SalaryStructureBuilder({
         monthlyAmount,
         effectiveMonth: monthlyPayload(effectiveMonth),
         employeeId: employeeId || null,
+        pfEnrollment,
         pfApplicable,
         pfRuleId: pfApplicable ? pfRuleId : null,
         overrides: customizing ? overrides : [],
@@ -347,6 +355,7 @@ export function SalaryStructureBuilder({
           salaryBasis,
           monthlyAmount,
           effectiveMonth: monthlyPayload(effectiveMonth),
+          pfEnrollment,
           pfApplicable,
           pfRuleId: pfApplicable ? pfRuleId : null,
           statutoryProfile: 'IN-GJ',
@@ -487,11 +496,13 @@ export function SalaryStructureBuilder({
     ['BASIC', 'DEARNESS_ALLOWANCE', 'ORDINARY'].includes(rule.semanticType)
   );
   const statutoryBlocked = calculation
-    ? !calculation.employeeStateInsurance.canCalculate ||
+    ? calculation.pfEligibility?.canSave === false ||
+      !calculation.employeeStateInsurance.canCalculate ||
       calculation.employeeStateInsurance.issueCodes.some(
         (code) =>
-          code !== 'ESI_INSURANCE_NUMBER_REQUIRED' ||
-          !calculation.employeeStateInsurance.registrationPending
+          code !== 'ESI_RATE_OVERRIDE' &&
+          (code !== 'ESI_INSURANCE_NUMBER_REQUIRED' ||
+            !calculation.employeeStateInsurance.registrationPending)
       )
     : false;
   const amountInvalid = !Number.isFinite(monthlyAmount) || monthlyAmount <= 0;
@@ -511,7 +522,11 @@ export function SalaryStructureBuilder({
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
   else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
   else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
-  else if (statutoryBlocked) footerStatus = 'Resolve ESIC details before saving';
+  else if (statutoryBlocked)
+    footerStatus =
+      calculation?.pfEligibility?.canSave === false
+        ? 'Resolve PF enrollment before saving'
+        : 'Resolve ESIC details before saving';
   else if (savedSignature === signature && calculationCurrent) footerStatus = 'Saved';
   else if (calculationCurrent) {
     footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Ready to save';
@@ -728,7 +743,15 @@ export function SalaryStructureBuilder({
               <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                 <Switch
                   checked={pfApplicable}
-                  disabled={!canManage || busy}
+                  disabled={
+                    !canManage ||
+                    busy ||
+                    Boolean(
+                      calculation?.pfEligibility?.enrollmentRequired &&
+                      calculationCurrent &&
+                      pfApplicable
+                    )
+                  }
                   onChange={(_, checked) => {
                     setPfApplicable(checked);
                     if (!checked) setPfRuleId('');
@@ -751,7 +774,7 @@ export function SalaryStructureBuilder({
                       variant="body2"
                       sx={{ fontWeight: 600, cursor: 'pointer' }}
                     >
-                      PF applicable
+                      PF enrollment
                     </Typography>
                     <Tooltip title="The selected PF rule determines the provident fund contributions in the salary calculation.">
                       <IconButton size="small" aria-label="About PF applicability">
@@ -795,6 +818,51 @@ export function SalaryStructureBuilder({
           </Grid>
         </Grid>
 
+        <Stack spacing={1}>
+          <TextField
+            select
+            size="small"
+            fullWidth
+            label="Previous PF membership"
+            value={pfEnrollment.membership}
+            disabled={!canManage || busy}
+            onChange={(event) => {
+              setPfEnrollment((value) => ({
+                ...value,
+                membership: event.target.value as PfEnrollment['membership'],
+              }));
+              setCalculation(null);
+            }}
+          >
+            <MenuItem value="UNKNOWN">Needs review</MenuItem>
+            <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
+            <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
+          </TextField>
+          {pfApplicable && pfEnrollment.membership === 'NOT_MEMBER' && (
+            <TextField
+              size="small"
+              fullWidth
+              label="Employee consent reference"
+              value={pfEnrollment.consentReference ?? ''}
+              disabled={!canManage || busy}
+              helperText="Required for voluntary enrollment above the coverage ceiling."
+              onChange={(event) => {
+                setPfEnrollment((value) => ({ ...value, consentReference: event.target.value }));
+                setCalculation(null);
+              }}
+            />
+          )}
+          {calculation?.pfEligibility && (
+            <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
+              PF: {contractLabel(calculation.pfEligibility.status)}. PF wages:{' '}
+              {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage ceiling:{' '}
+              {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
+              {calculation.pfEligibility.issueCode
+                ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
+                : ''}
+            </Alert>
+          )}
+        </Stack>
         <Divider />
         <Box
           display="flex"
