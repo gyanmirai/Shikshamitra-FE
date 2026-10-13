@@ -1,32 +1,30 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { EmployeeOptionsResponse } from 'src/redux/hr/employeeApi';
+import type { EmployeeOption } from 'src/screens/hr/leave-request/leave-request.utils';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { isApplicableToMonth } from 'src/screens/hr/employee/salary-utils';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Grid, Card, Alert, Paper, Button, Typography } from '@mui/material';
-import { useLazyGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { useGetEmployeeSalaryStructureQuery } from 'src/redux/hr/employee-salary-structure-api';
 import { useGetEffectiveCompensationRevisionQuery } from 'src/redux/hr/compensation-revision-api';
+import { useGetEmployeeByIdQuery, useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import {
   staffPayrollEditHref,
   staffPayrollProfileHref,
 } from 'src/screens/hr/employee/payroll-profile-utils';
-import {
-  type EmployeeOption,
-  buildEmployeeSelectOptions,
-} from 'src/screens/hr/leave-request/leave-request.utils';
 
 import { salaryEditorHref } from './salary-editor-navigation';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
@@ -102,8 +100,15 @@ const EmployeeSalaryStructureContent = () => {
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetEmployeeQuery,
+    currentQueryAndMutation: useLazyGetEmployeeOptionsQuery,
   });
+  const fetchEmployees = useCallback(async (query: string, page: number) => {
+    const result: EmployeeOptionsResponse = await getEmployees({ page, pageSize: 25, search: query.trim(), status: 'Active' }).unwrap();
+    return {
+      data: result.items.map((item) => ({ id: item.id, label: item.fullName, status: item.status })),
+      hasMore: result.hasMore,
+    };
+  }, [getEmployees]);
 
   const employeeId = selectedEmployee?.id ?? '';
 
@@ -186,25 +191,8 @@ const EmployeeSalaryStructureContent = () => {
         <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
             label="Staff"
-            fetchOptions={async (query, page) => {
-              if (page > 1) return { data: [], hasMore: false };
-              const res = await getEmployees({
-                page: 1,
-                pageSize: 500,
-                search: query,
-              }).unwrap();
-              const items: EmployeeOption[] = (Array.isArray(res) ? res : res?.items || []).map(
-                (item: any) => ({
-                  label: item.fullName,
-                  id: item.id,
-                  status: item.status ?? item.employeeStatusType,
-                })
-              );
-              return {
-                data: buildEmployeeSelectOptions(items, true),
-                hasMore: false,
-              };
-            }}
+            fetchOptions={fetchEmployees}
+            filterOptions={(options) => options}
             value={selectedEmployee}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             renderOption={(prop, option: any) => (

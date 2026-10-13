@@ -15,8 +15,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Stack, Alert, Button, Skeleton, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 import { useGetEmployeeSalarySlipQuery, useLazyGetEmployeeSalarySlipPreviewPdfQuery } from 'src/redux/runPayroll/runPayrollApi';
@@ -58,7 +58,14 @@ export default function PaySlipGenerationScreen() {
   const canReviewCorrection = canCorrect && hasGrantedPermission(permissions, `${hrPermissions.payroll.runPayroll}.Add`);
   const canApplyCorrection = canCorrect && hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
   const [correctionDocument, setCorrectionDocument] = useState<PayslipDocument | null>(null);
-  const [searchEmployees] = useLazyGetEmployeeQuery();
+  const [searchEmployees] = useLazyGetEmployeeOptionsQuery();
+  const fetchEmployees = useCallback(async (query: string, page: number) => {
+    const result = await searchEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
+    return {
+      data: result.items.map((item) => ({ id: item.id, label: item.fullName })),
+      hasMore: result.hasMore,
+    };
+  }, [searchEmployees]);
   const selection = buildPayslipSelection(employee?.id, month);
   const args = selection && canView ? { employeeId: selection.employeeId, monthYear: selection.monthYear } : skipToken;
   const slips = useGetEmployeeSalarySlipQuery(args);
@@ -204,11 +211,8 @@ export default function PaySlipGenerationScreen() {
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <PaginatedSearchSelect id="payslip-staff-member" label="Staff member" value={employee} size="small"
             sx={{ width: { xs: '100%', md: 320 } }} minChars={2} debounceMs={400}
-            fetchOptions={async (query, page) => {
-              const result = await searchEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
-              return { data: result.items.map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName })),
-                hasMore: result.currentPage !== result.totalPages };
-            }} onChange={(_, value) => setEmployee(value)} getOptionLabel={(option: { label: string }) => option.label}
+            fetchOptions={fetchEmployees} filterOptions={(options) => options}
+            onChange={(_, value) => setEmployee(value)} getOptionLabel={(option: { label: string }) => option.label}
             isOptionEqualToValue={(option, value) => option.id === value.id} />
           <DatePicker label="Pay period" views={['month', 'year']} value={month} onChange={setMonth}
             slotProps={{ textField: { size: 'small' } }} sx={{ width: { xs: '100%', md: 220 } }} />

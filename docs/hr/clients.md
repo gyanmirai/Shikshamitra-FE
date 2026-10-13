@@ -86,6 +86,10 @@ The durable payroll preview client is a pending coordinated release and requires
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
 Only the requested employee page is fetched, and the backend summary remains unfiltered.
+Payroll Structure and Payslips staff pickers use `getEmployeeOptions` at `/employees/options`, returning only ID, name, status, and `hasMore`.
+Payroll Structure requests 25 active staff per page; Payslips requests 10 staff per page without a status filter so historical staff remain selectable.
+Both pickers use server search results directly and stable fetch callbacks to preserve the search debounce across renders.
+The shared picker invalidates earlier requests as soon as input changes, blocks pagination until the first page resolves, cancels scheduled searches on unmount, and offers retry for failed pages while retaining completed pages.
 The workbench keeps the last completed page visible during recalculation and disables review, adjustment, and locking until current results are available.
 Salary calculation errors use the shared problem-details parser so allocation discrepancies include the server's gross, allocated amount, and difference.
 

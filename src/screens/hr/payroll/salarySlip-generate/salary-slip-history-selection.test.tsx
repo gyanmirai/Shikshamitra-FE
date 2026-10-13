@@ -26,7 +26,7 @@ vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn(), 
 vi.mock('src/components/custom-breadcrumbs', () => ({ CustomBreadcrumbs: () => null }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('@mui/x-date-pickers', () => ({ DatePicker: () => null }));
-vi.mock('src/redux/hr/employeeApi', () => ({ useLazyGetEmployeeQuery: () => [vi.fn()] }));
+vi.mock('src/redux/hr/employeeApi', () => ({ useLazyGetEmployeeOptionsQuery: () => [vi.fn()] }));
 vi.mock('src/components/paginated-search-select', () => ({
   PaginatedSearchSelect: ({ onChange, id }: { id?: string; onChange: (event: null, value: { id: string; label: string }) => void }) => <>
     <input id={id} aria-label="Staff member" readOnly />
