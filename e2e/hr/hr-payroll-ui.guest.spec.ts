@@ -270,13 +270,20 @@ test.describe('Payroll interface consistency', () => {
   }) => {
     await mockPayroll(page, { esiEnabled: true });
     await page.goto('/hr/payroll/setting/statutory-schemes');
-    await page.getByLabel('ESIC wage basis', { exact: true }).click();
-    await page.getByRole('option', { name: 'Basic component', exact: true }).click();
-    await page.getByRole('combobox', { name: 'Basic component', exact: true }).click();
+    await page.getByLabel('ESIC eligibility basis', { exact: true }).click();
+    await page.getByRole('option', { name: 'Basic salary', exact: true }).click();
+    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveValue(
+      'Payable basic salary'
+    );
+    await expect(page.getByLabel('ESIC calculation basis', { exact: true })).toHaveAttribute(
+      'readonly',
+      ''
+    );
+    await page.getByRole('combobox', { name: 'Basic salary component', exact: true }).click();
     await page.getByRole('option', { name: 'School Basic', exact: true }).click();
     await page.getByRole('switch', { name: 'Use administrator rate override' }).check();
-    await page.getByLabel('Employee ESIC percentage', { exact: true }).fill('0.5');
-    await page.getByLabel('Employer ESIC percentage', { exact: true }).fill('4');
+    await page.getByLabel('Employee ESIC rate (%)', { exact: true }).fill('0.5');
+    await page.getByLabel('Employer ESIC rate (%)', { exact: true }).fill('4');
     await page.getByLabel('Rate override reason', { exact: true }).fill('Synthetic policy review');
     const previewRequest = page.waitForRequest(
       (request) =>
@@ -318,13 +325,13 @@ test.describe('Payroll interface consistency', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockPayroll(page, { esiEnabled: true, denyCalculation: true });
     await page.goto('/hr/payroll/setting/statutory-schemes');
-    await expect(page.getByLabel('ESIC wage basis', { exact: true })).toBeDisabled();
+    await expect(page.getByLabel('ESIC eligibility basis', { exact: true })).toBeDisabled();
     await expect(
       page.getByRole('switch', { name: 'Use administrator rate override' })
     ).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0);
     await expect(
-      page.getByText(/Other required wages and statutory add-back still apply/)
+      page.getByText(/Other statutory inclusions and adjustments still apply/)
     ).toBeVisible();
     expect(
       await page.locator('body').evaluate((element) => element.scrollWidth <= window.innerWidth)

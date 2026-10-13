@@ -49,33 +49,53 @@ export function EsiCalculationFields({ form, disabled, settings, components, rul
           if (version) form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
         }}
       />
-      <TextField
-        label="ESIC wage basis"
-        select
-        size="small"
-        fullWidth
-        value={config.wageBasis}
-        disabled={disabled || !form.values.enabled}
-        onChange={(event) =>
-          update({
-            wageBasis: event.target.value as EsiCalculationSettings['wageBasis'],
-            basicComponentId: null,
-          })
-        }
-      >
-        <MenuItem value="CLASSIFIED_EARNINGS">Classified earnings</MenuItem>
-        <MenuItem value="GROSS">Gross salary</MenuItem>
-        <MenuItem value="BASIC_COMPONENT">Basic component</MenuItem>
-      </TextField>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <TextField
+          label="ESIC eligibility basis"
+          select
+          size="small"
+          fullWidth
+          value={config.wageBasis}
+          disabled={disabled || !form.values.enabled}
+          onChange={(event) =>
+            update({
+              wageBasis: event.target.value as EsiCalculationSettings['wageBasis'],
+              basicComponentId: null,
+            })
+          }
+        >
+          <MenuItem value="CLASSIFIED_EARNINGS">Included salary components</MenuItem>
+          <MenuItem value="GROSS">Gross salary</MenuItem>
+          <MenuItem value="BASIC_COMPONENT">Basic salary</MenuItem>
+        </TextField>
+        <TextField
+          label="ESIC calculation basis"
+          size="small"
+          fullWidth
+          disabled={!form.values.enabled}
+          value={
+            {
+              CLASSIFIED_EARNINGS: 'Payable included salary components',
+              GROSS: 'Payable gross salary',
+              BASIC_COMPONENT: 'Payable basic salary',
+            }[config.wageBasis]
+          }
+          slotProps={{ input: { readOnly: true } }}
+          helperText="Derived from the eligibility basis after attendance adjustments."
+        />
+      </Stack>
       {form.values.enabled && config.wageBasis === 'BASIC_COMPONENT' && (
         <TextField
-          label="Basic component"
+          label="Basic salary component"
           select
           size="small"
           fullWidth
           disabled={disabled}
           value={config.basicComponentId ?? ''}
           {...errorFor('basicComponentId')}
+          helperText={
+            errors.basicComponentId || 'Use a component marked Basic in the salary template.'
+          }
           onChange={(event) => update({ basicComponentId: event.target.value })}
         >
           <MenuItem value="">Choose a component</MenuItem>
@@ -88,9 +108,8 @@ export function EsiCalculationFields({ form, disabled, settings, components, rul
       )}
       {form.values.enabled && (
         <Alert severity="info">
-          Eligibility uses full-month statutory wages. Contributions use payable wages after
-          attendance. Basic must be marked as Basic in the salary template. Other required wages and
-          statutory add-back still apply.
+          Eligibility uses full-month salary. Calculation uses payable salary after attendance
+          adjustments. Other statutory inclusions and adjustments still apply.
         </Alert>
       )}
       {form.values.enabled && (
@@ -125,8 +144,8 @@ export function EsiCalculationFields({ form, disabled, settings, components, rul
                     key={key}
                     label={
                       key === 'employeePercentage'
-                        ? 'Employee ESIC percentage'
-                        : 'Employer ESIC percentage'
+                        ? 'Employee ESIC rate (%)'
+                        : 'Employer ESIC rate (%)'
                     }
                     type="number"
                     size="small"

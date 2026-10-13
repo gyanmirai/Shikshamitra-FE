@@ -97,8 +97,8 @@ export function EsiStatutoryEmployees({
       },
       {
         id: 'statutoryWages',
-        label: 'ESI wages',
-        minWidth: 120,
+        label: 'Salary used for ESIC',
+        minWidth: 175,
         align: 'right',
         isFilter: false,
         render: (value) => formatEsiCurrency(value),

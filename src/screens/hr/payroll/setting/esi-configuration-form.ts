@@ -30,7 +30,7 @@ export function validateConfiguration(
     errors.effectiveMonth = 'Choose an effective month.';
   const config = values.calculationSettings;
   if (config?.wageBasis === 'BASIC_COMPONENT' && !config.basicComponentId)
-    errors.calculationSettings = { basicComponentId: 'Choose the Basic component.' };
+    errors.calculationSettings = { basicComponentId: 'Choose the Basic salary component.' };
   if (config?.employeePercentage != null || config?.employerPercentage != null) {
     const configurationErrors: Record<string, string> = {};
     (['employeePercentage', 'employerPercentage'] as const).forEach((key) => {

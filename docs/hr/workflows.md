@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -432,7 +432,10 @@ The salary calculation returns the enrollment decision and blocks saving when re
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 
-ESIC settings provide an effective month, classified earnings/Gross/Basic basis, and optional documented employee/employer rate overrides.
+ESIC settings provide an effective month, an ESIC eligibility basis, a derived ESIC calculation basis, and optional documented employee/employer rate overrides.
+Eligibility uses the full-month salary under the selected included-components, Gross, or Basic source.
+The calculation basis displays the payable salary under the same source after attendance adjustments.
+The displayed calculation basis is read-only and does not introduce an independent policy setting.
 Calculation editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
 Read-only users retain the compact settings and impact preview without enabled calculation controls.
 Basic uses a school earning component marked Basic in the salary template, including percentage-of-Gross formulas such as 60 percent.
