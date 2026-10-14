@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useState, useEffect } from 'react';
@@ -108,43 +107,36 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
       data-testid="hr-dashboard-shell"
       sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0, pb: 2 }}
     >
-      <CustomBreadcrumbs
-        slotProps={{
-          action: { alignSelf: { xs: 'flex-end', md: 'center' } },
-          heading: {},
-          moreLink: {},
-          breadcrumbs: { '& .MuiBreadcrumbs-li:last-child > div': { color: 'text.primary' } },
-        }}
-        heading="HR Dashboard"
-        headingComponent="h1"
-        description="Workforce, leave, onboarding and appraisals within your permitted scope."
-        links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'HR Dashboard' }]}
-        action={
-          canView && (
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={refresh}
-              disabled={overview.isFetching}
-              startIcon={<Iconify icon="mdi:refresh" />}
-              aria-label="Refresh HR dashboard"
-              sx={{ minWidth: 110 }}
-            >
-              {overview.isFetching ? 'Refreshing…' : 'Refresh'}
-            </Button>
-          )
-        }
-      />
-      {!canView || accessDenied ? (
-        <Alert severity="warning">You do not have permission to view the HR dashboard.</Alert>
-      ) : (
-        <>
+      <Box data-testid="hr-dashboard-header">
+        <CustomBreadcrumbs
+          layout="inline"
+          heading="HR Dashboard"
+          headingComponent="h1"
+          description="Workforce, leave, onboarding and appraisals within your permitted scope."
+          links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'HR Dashboard' }]}
+          action={
+            canView && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={refresh}
+                disabled={overview.isFetching}
+                startIcon={<Iconify icon="mdi:refresh" />}
+                aria-label="Refresh HR dashboard"
+                sx={{ minWidth: 110 }}
+              >
+                {overview.isFetching ? (loading ? 'Loading…' : 'Refreshing…') : 'Refresh'}
+              </Button>
+            )
+          }
+        />
+        {canView && !accessDenied && (
           <Box>
-            <Stack direction="row" useFlexGap flexWrap="wrap" gap={1.5} sx={{ px: 1, py: 0.5 }}>
-              <Typography variant="body2">
+            <Stack direction="row" useFlexGap flexWrap="wrap" gap={0.75} sx={{ px: 1, pb: 0.5 }}>
+              <Typography variant="caption">
                 {formatSchoolDate(data?.asOfDate || indiaToday())} · IST
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="caption" color="text.secondary">
                 {data?.scopeLabel || 'Your permitted staff scope'}
               </Typography>
               <Typography
@@ -155,20 +147,34 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
                 {data
                   ? `${overview.isError ? 'Stale · ' : ''}Updated ${formatUpdatedAt(data.generatedAt)} IST`
                   : loading
-                    ? 'Loading current data…'
+                    ? 'Loading dashboard…'
                     : 'Update time unavailable'}
               </Typography>
             </Stack>
             <Box sx={{ height: 2 }}>
               {overview.isFetching && canView && (
-                <LinearProgress aria-label="Refreshing dashboard data" sx={{ height: 2 }} />
+                <LinearProgress
+                  aria-label={loading ? 'Loading dashboard data' : 'Refreshing dashboard data'}
+                  sx={{
+                    height: 2,
+                    '@media (prefers-reduced-motion: reduce)': {
+                      '& .MuiLinearProgress-bar': { animation: 'none' },
+                    },
+                  }}
+                />
               )}
             </Box>
           </Box>
+        )}
+      </Box>
+      {!canView || accessDenied ? (
+        <Alert severity="warning">You do not have permission to view the HR dashboard.</Alert>
+      ) : (
+        <>
           {legacyNotice && (
             <Alert severity="info" onClose={() => setLegacyNotice(false)}>
-              Staff filters are no longer used on this dashboard. Find and filter records in
-              Staff Directory or Attendance.
+              Staff filters are no longer used on this dashboard. Find and filter records in Staff
+              Directory or Attendance.
             </Alert>
           )}
           {overview.isError && (
@@ -187,61 +193,11 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
                 onDate={selectDate}
                 canViewAttendance={canViewAttendance}
                 canViewPayroll={canViewPayroll}
-                canOpenPayroll={
-                  granted(dashboardPermissions.openPayroll) &&
-                  data?.capabilities.canOpenPayroll === true
-                }
-                canMarkAttendance={
-                  granted(dashboardPermissions.markAttendanceView) &&
-                  granted(dashboardPermissions.markAttendance) &&
-                  data?.capabilities.canMarkAttendance === true
-                }
               />
               {data && !availableModules && (
                 <Alert severity="info">
                   No HR summaries are available with your current permissions.
                 </Alert>
-              )}
-              {data && (
-                <Stack
-                  direction="row"
-                  useFlexGap
-                  flexWrap="wrap"
-                  gap={1}
-                  sx={{ px: 1, alignItems: 'center' }}
-                >
-                  {((data.capabilities.canAddEmployees &&
-                    granted(dashboardPermissions.addEmployees) &&
-                    visible.workforce) ||
-                    granted(dashboardPermissions.reports)) && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-                      Quick actions
-                    </Typography>
-                  )}
-                  {data.capabilities.canAddEmployees &&
-                    granted(dashboardPermissions.addEmployees) &&
-                    visible.workforce && (
-                      <Button
-                        component={RouterLink}
-                        href={`${hrPaths.employee.list}?mode=form`}
-                        size="small"
-                        variant="outlined"
-                        startIcon={<Iconify icon="mdi:plus" />}
-                      >
-                        Add Staff
-                      </Button>
-                    )}
-                  {granted(dashboardPermissions.reports) && (
-                    <Button
-                      component={RouterLink}
-                      href={hrPaths.reports}
-                      size="small"
-                      variant="outlined"
-                    >
-                      HR Reports
-                    </Button>
-                  )}
-                </Stack>
               )}
             </>
           )}
@@ -259,7 +215,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
           clipPath: 'inset(50%)',
         }}
       >
-        {announcement}
+        {loading ? 'Loading dashboard…' : announcement}
       </Box>
     </Box>
   );

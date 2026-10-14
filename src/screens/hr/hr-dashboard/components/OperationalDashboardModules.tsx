@@ -6,12 +6,16 @@ import type {
   DashboardSectionState,
 } from 'src/redux/hr/hrOperationalDashboardApi';
 
-import { hrPaths } from 'src/constants/hr-menus';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
-import { Box, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Stack, Typography } from '@mui/material';
 
-import { formatCount, formatSchoolDate } from '../operational-dashboard-state';
+import { DashboardSkeleton } from './OperationalDashboardSkeletons';
+import {
+  formatCount,
+  formatSchoolDate,
+  getModulePriorityCue,
+} from '../operational-dashboard-state';
 
 export type ModuleVisibility = {
   workforce: boolean;
@@ -20,7 +24,7 @@ export type ModuleVisibility = {
   appraisal: boolean;
 };
 
-function ModuleDetail({ label, value }: { label: string; value: string | number }) {
+function ModuleDetail({ label, value }: { label: string; value: ReactNode }) {
   return (
     <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
       <Typography component="dt" variant="body2" color="text.secondary">
@@ -44,9 +48,8 @@ function ModuleCard({
   count,
   label,
   children,
-  href,
-  action,
   reason,
+  detailLabels,
 }: {
   title: string;
   icon: string;
@@ -54,9 +57,8 @@ function ModuleCard({
   count?: number;
   label: string;
   children?: ReactNode;
-  href?: string;
-  action: string;
   reason?: string | null;
+  detailLabels?: string[];
 }) {
   if (state === 'Forbidden') return null;
   const available = state === 'Available' && count !== undefined;
@@ -64,6 +66,7 @@ function ModuleCard({
     <Paper
       component="section"
       aria-label={title}
+      aria-busy={state === undefined}
       variant="outlined"
       sx={{
         p: 2,
@@ -81,9 +84,11 @@ function ModuleCard({
         </Typography>
       </Stack>
       {state === undefined ? (
-        <Box aria-label={`Loading ${title}`}>
-          <Skeleton width="40%" height={36} />
-          <Skeleton width="80%" />
+        <Box>
+          <DashboardSkeleton aria-hidden="true" width={64} height={40} />
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
         </Box>
       ) : (
         <Box>
@@ -105,31 +110,34 @@ function ModuleCard({
       )}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         {state === undefined ? (
-          <Stack spacing={0.5}>
-            <Skeleton />
-            <Skeleton width="70%" />
+          <Stack aria-hidden="true" spacing={0.5}>
+            {detailLabels ? (
+              detailLabels.map((detail) => (
+                <Stack
+                  key={detail}
+                  direction="row"
+                  justifyContent="space-between"
+                  gap={1}
+                  alignItems="center"
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {detail}
+                  </Typography>
+                  <DashboardSkeleton width={32} height={16} sx={{ flexShrink: 0 }} />
+                </Stack>
+              ))
+            ) : (
+              <>
+                <DashboardSkeleton height={24} width={130} />
+                <DashboardSkeleton variant="text" height={22} width="95%" />
+                <DashboardSkeleton variant="text" height={22} width="75%" />
+              </>
+            )}
           </Stack>
         ) : available ? (
           children
         ) : null}
       </Box>
-      {(state === undefined || href) && (
-        <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5 }}>
-          {state === undefined ? (
-            <Skeleton variant="rounded" width={130} height={30} />
-          ) : href ? (
-            <Button
-              component={RouterLink}
-              href={href}
-              size="small"
-              variant="outlined"
-              endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
-            >
-              {action}
-            </Button>
-          ) : null}
-        </Box>
-      )}
     </Paper>
   );
 }
@@ -141,6 +149,12 @@ export default function OperationalDashboardModules({
   data?: OperationalOverview;
   visible: ModuleVisibility;
 }) {
+  const leaveCue = getModulePriorityCue('leave', data?.leaveState, data?.leave?.pendingRequests);
+  const appraisalCue = getModulePriorityCue(
+    'appraisal',
+    data?.appraisalState,
+    data?.appraisal?.overdueCount
+  );
   return (
     <Box
       data-testid="hr-module-overview"
@@ -161,8 +175,7 @@ export default function OperationalDashboardModules({
           state={data?.workforceState}
           count={data?.workforce?.activeStaff}
           label="active staff"
-          href={hrPaths.employee.list}
-          action="Open Staff Directory"
+          detailLabels={['Teaching', 'Non-teaching', 'Joined this month']}
         >
           <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
             <ModuleDetail label="Teaching" value={data?.workforce?.teaching ?? 0} />
@@ -178,14 +191,19 @@ export default function OperationalDashboardModules({
           state={data?.leaveState}
           count={data?.leave?.pendingRequests}
           label="requests awaiting a decision"
-          href={hrPaths.leaveManagement.approvals}
-          action="Review Requests"
         >
-          <Typography variant="body2" color="text.secondary">
-            {data?.leave?.pendingRequests === 0
-              ? 'No requests awaiting a decision.'
-              : 'Current requests within your permitted approval scope.'}
-          </Typography>
+          <Stack spacing={0.75} alignItems="flex-start">
+            {leaveCue && (
+              <Label color={leaveCue.color} sx={{ color: 'text.primary' }}>
+                {leaveCue.label}
+              </Label>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {data?.leave?.pendingRequests === 0
+                ? 'No requests awaiting a decision.'
+                : 'Current requests within your permitted approval scope.'}
+            </Typography>
+          </Stack>
         </ModuleCard>
       )}
       {visible.onboarding && (
@@ -195,8 +213,7 @@ export default function OperationalDashboardModules({
           state={data?.onboardingState}
           count={data?.onboarding?.readyCount}
           label="ready for onboarding"
-          href={data?.capabilities.canOpenOnboarding ? hrPaths.employee.onboarding : undefined}
-          action="Open Onboarding"
+          detailLabels={['Applications in progress']}
           reason={data?.onboardingUnavailableReason}
         >
           <Stack component="dl" sx={{ m: 0 }}>
@@ -214,11 +231,21 @@ export default function OperationalDashboardModules({
           state={data?.appraisalState}
           count={data?.appraisal?.pendingCount}
           label="appraisals to complete"
-          href={`${hrPaths.professionalManagement.reviews}?cycleId=all`}
-          action="Open Appraisals"
+          detailLabels={['Overdue', 'Next deadline']}
         >
           <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
-            <ModuleDetail label="Overdue" value={data?.appraisal?.overdueCount ?? 0} />
+            {appraisalCue ? (
+              <ModuleDetail
+                label="Status"
+                value={
+                  <Label color={appraisalCue.color} sx={{ color: 'text.primary' }}>
+                    {appraisalCue.label}
+                  </Label>
+                }
+              />
+            ) : (
+              <ModuleDetail label="Overdue" value={data?.appraisal?.overdueCount ?? 0} />
+            )}
             <ModuleDetail
               label="Next deadline"
               value={
