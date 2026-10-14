@@ -2,6 +2,7 @@
 
 import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSlider } from 'src/components/form-slider';
@@ -51,16 +52,18 @@ const HRNotificationScreen = () => {
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+    >
       {dialog.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for staff, attendance, and leave management."
           links={[
-            { name: 'HR/Staff', href: '/hr/dashboard' },
+            { name: 'HR/Staff', href: hrPaths.dashboard },
             {
               name: 'Notification',
-              href: '/hr/notification',
+              href: hrPaths.notification,
               onClick(e) {
                 dialog.onFalse();
               },
@@ -75,20 +78,13 @@ const HRNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification"
           description="Configure notifications for staff, attendance, and leave management."
-          links={[
-            { name: 'HR/Staff', href: '/hr/dashboard' },
-            { name: 'Notification', href: '/hr/notification' },
-          ]}
+          links={[{ name: 'HR/Staff', href: hrPaths.dashboard }, { name: 'Notification' }]}
           sx={{ px: 1 }}
         />
       )}
 
       {/* Tabs */}
-      <Paper
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
+      <Paper sx={{ flexShrink: 0 }}>
         {!dialog.value && (
           <CustomTabs
             value={searchParams.tab}
@@ -99,9 +95,20 @@ const HRNotificationScreen = () => {
             }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
             role="tablist"
+            aria-label="Notification settings"
+            variant="scrollable"
+            scrollButtons="auto"
           >
             {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+              <Tab
+                key={tab.value}
+                id={`hr-notification-tab-${tab.value}`}
+                aria-controls="hr-notification-panel"
+                value={tab.value}
+                label={tab.label}
+                icon={tab.icon}
+                iconPosition="start"
+              />
             ))}
           </CustomTabs>
         )}
@@ -116,7 +123,12 @@ const HRNotificationScreen = () => {
           sx: { p: 0, minHeight: 0 },
         }}
       >
-        <Paper sx={{ height: '100%' }}>
+        <Paper
+          id="hr-notification-panel"
+          role="tabpanel"
+          aria-labelledby={`hr-notification-tab-${searchParams.tab}`}
+          sx={{ height: '100%', minHeight: 0, minWidth: 0 }}
+        >
           {currentActiveComponent?.component && (
             <currentActiveComponent.component dialog={dialog} setIsViewMode={setIsViewMode} />
           )}

@@ -134,7 +134,9 @@ const HrSetting = () => {
     [confirm, dialog]
   );
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+    >
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -192,6 +194,12 @@ const HrSetting = () => {
       />
       <CustomBreadcrumbs
         heading="Document Types"
+        slotProps={{
+          action: { justifyContent: 'flex-end', alignSelf: { xs: 'flex-end', md: 'center' } },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Staff', href: hrPaths.employee.list },
@@ -201,14 +209,8 @@ const HrSetting = () => {
         sx={{ px: 1 }}
         description="Add, update or delete documents associated with a staff member."
         action={
-          <Button
-            sx={{ px: '32px' }}
-            startIcon={<Add />}
-            variant="contained"
-            onClick={dialog.onTrue}
-            size="small"
-          >
-            Document
+          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
+            Add Document
           </Button>
         }
       />
@@ -216,26 +218,21 @@ const HrSetting = () => {
       <CustomizableTable
         noDataText={
           <>
-            No Document Found{' '}
-            <Box
-              onClick={() => {
-                dialog.onTrue();
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
+            No document types configured.
+            <Button
+              size="small"
+              variant="outlined"
+              color="primary"
+              sx={{ display: 'flex', mx: 'auto', mt: 1 }}
+              onClick={dialog.onTrue}
             >
               Add Document
-            </Box>
+            </Button>
           </>
         }
         tableId="documents"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading || isFetching}
         columns={columns}
         data={tableData || []}

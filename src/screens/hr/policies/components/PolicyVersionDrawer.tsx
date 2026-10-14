@@ -361,10 +361,15 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setRestoreVersion(null)} disabled={isPolicyOperationActive}>
+        <Button
+          size="small"
+          onClick={() => setRestoreVersion(null)}
+          disabled={isPolicyOperationActive}
+        >
           Cancel
         </Button>
         <Button
+          size="small"
           variant="contained"
           loading={restoreVersionState.isLoading || isPolicyOperationActive}
           disabled={

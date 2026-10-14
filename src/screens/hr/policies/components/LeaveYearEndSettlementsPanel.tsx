@@ -366,6 +366,7 @@ export function LeaveYearEndSettlementsPanel() {
         }
         action={
           <LoadingButton
+            size="small"
             variant="contained"
             color="warning"
             loading={finalizeState.isLoading}

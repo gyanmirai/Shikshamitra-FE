@@ -170,10 +170,11 @@ export function PayrollProfileDetailsEditor({
         <Stack spacing={1} sx={{ p: 2 }}>
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={close} disabled={busy}>
+            <Button size="small" onClick={close} disabled={busy}>
               Cancel
             </Button>
             <Button
+              size="small"
               type="submit"
               variant="contained"
               color="inherit"

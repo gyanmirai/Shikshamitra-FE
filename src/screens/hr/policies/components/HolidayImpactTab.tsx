@@ -162,6 +162,7 @@ export function HolidayImpactTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
           slotProps={{ textField: { size: 'small' } }}
         />
         <Button
+          size="small"
           variant="text"
           onClick={() =>
             setHolidayFilters((current) => ({ ...current, month: '', fromDate: '', toDate: '' }))

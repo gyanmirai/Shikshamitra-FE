@@ -260,6 +260,7 @@ const AttendanceDashboardScreen = () => {
           </Grid>
 
           <Button
+            size="small"
             href="/hr/manual-attendance"
             variant="contained"
             startIcon={<Iconify icon="solar:calendar-mark-linear" />}

@@ -27,17 +27,11 @@ export function PolicySetupAlert({
       action={
         canOpen && (href || onOpen) ? (
           onOpen ? (
-            <Button color="inherit" size="small" sx={{ minHeight: 44 }} onClick={onOpen}>
+            <Button color="inherit" size="small" onClick={onOpen}>
               Open {label}
             </Button>
           ) : (
-            <Button
-              component={Link}
-              href={href!}
-              color="inherit"
-              size="small"
-              sx={{ minHeight: 44 }}
-            >
+            <Button component={Link} href={href!} color="inherit" size="small">
               Open {label}
             </Button>
           )

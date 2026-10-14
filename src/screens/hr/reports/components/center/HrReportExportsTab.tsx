@@ -70,7 +70,7 @@ export function HrReportExportsTab({
   currentUserId,
   permissions,
   dateFilter = { preset: 'all', fromDate: '', toDate: '' },
-  onDateFilterChange = () => { },
+  onDateFilterChange = () => {},
   onDownload,
   onExportAction,
 }: HrReportExportsTabProps) {
@@ -155,6 +155,7 @@ export function HrReportExportsTab({
                 <span>
                   <IconButton
                     data-testid="hr-report-export-download-button"
+                    aria-label={`Download ${getHrReportExportFileName(row)}`}
                     size="small"
                     disabled={actionsDisabled || !isDownloadable || isDownloading}
                     onClick={(event) => {
@@ -168,12 +169,13 @@ export function HrReportExportsTab({
                 </span>
               </Tooltip>
               {permissions.canExport &&
-                isOwnedByCurrentUser &&
-                (row.status === 'Queued' || row.status === 'Running') ? (
+              isOwnedByCurrentUser &&
+              (row.status === 'Queued' || row.status === 'Running') ? (
                 <Tooltip title="Cancel export">
                   <span>
                     <IconButton
                       data-testid="hr-report-export-cancel-button"
+                      aria-label="Cancel export"
                       size="small"
                       disabled={actionsDisabled}
                       onClick={(event) => {
@@ -208,12 +210,13 @@ export function HrReportExportsTab({
                 </Tooltip>
               ) : null}
               {permissions.canExport &&
-                isOwnedByCurrentUser &&
-                (row.status === 'Failed' || row.status === 'Cancelled') ? (
+              isOwnedByCurrentUser &&
+              (row.status === 'Failed' || row.status === 'Cancelled') ? (
                 <Tooltip title="Retry export">
                   <span>
                     <IconButton
                       data-testid="hr-report-export-retry-button"
+                      aria-label="Retry export"
                       size="small"
                       disabled={actionsDisabled}
                       onClick={(event) => {
@@ -232,6 +235,7 @@ export function HrReportExportsTab({
                   <span>
                     <IconButton
                       data-testid="hr-report-export-regenerate-button"
+                      aria-label="Regenerate export"
                       size="small"
                       disabled={actionsDisabled}
                       onClick={(event) => {
@@ -250,6 +254,7 @@ export function HrReportExportsTab({
                   <span>
                     <IconButton
                       data-testid="hr-report-export-share-button"
+                      aria-label="Share export"
                       size="small"
                       disabled={actionsDisabled}
                       onClick={(event) => {
@@ -267,6 +272,7 @@ export function HrReportExportsTab({
                 <span>
                   <IconButton
                     data-testid="hr-report-export-details-button"
+                    aria-label="View export details"
                     size="small"
                     disabled={actionsDisabled}
                     onClick={(event) => {
@@ -363,8 +369,8 @@ export function HrReportExportsTab({
                 )}
                 helperText={
                   dateFilter.fromDate &&
-                    dateFilter.toDate &&
-                    dateFilter.toDate < dateFilter.fromDate
+                  dateFilter.toDate &&
+                  dateFilter.toDate < dateFilter.fromDate
                     ? 'To date must be on or after from date.'
                     : undefined
                 }
@@ -395,10 +401,10 @@ export function HrReportExportsTab({
             cursor: 'pointer',
             ...(row.id === highlightedExportId
               ? {
-                '& td': {
-                  bgcolor: 'action.hover',
-                },
-              }
+                  '& td': {
+                    bgcolor: 'action.hover',
+                  },
+                }
               : {}),
           },
         })}

@@ -714,6 +714,7 @@ const AttendanceImportHistoryScreen = () => {
           return (
             <CustomTooltip title={isLocked ? 'Unlock' : 'Lock'} arrow placement="left">
               <IconButton
+                aria-label={`${isLocked ? 'Unlock' : 'Lock'} attendance import`}
                 onClick={() => handleToggleLock(row as AttendanceImportItem)}
                 sx={{
                   p: 0.6,
@@ -726,7 +727,7 @@ const AttendanceImportHistoryScreen = () => {
               >
                 <Iconify
                   icon={isLocked ? 'mdi:lock-outline' : 'mdi:lock-open-outline'}
-                  sx={{ width: 20, height: 20, color: '#fff' }}
+                  sx={{ width: 20, height: 20, color: 'common.white' }}
                 />
               </IconButton>
             </CustomTooltip>
@@ -1348,6 +1349,7 @@ const ImportDetailDialog = ({
               <CustomTooltip title="Save" arrow placement="top">
                 <IconButton
                   size="small"
+                  aria-label={`Save ${label}`}
                   color="primary"
                   onClick={() => {
                     commitTimeEdit(editingCell);
@@ -1358,7 +1360,12 @@ const ImportDetailDialog = ({
                 </IconButton>
               </CustomTooltip>
               <CustomTooltip title="Cancel" arrow placement="top">
-                <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
+                <IconButton
+                  size="small"
+                  aria-label={`Cancel ${label} edit`}
+                  onClick={() => setEditingCell(null)}
+                  sx={{ p: 0.4 }}
+                >
                   <Iconify icon="eva:close-fill" width={16} />
                 </IconButton>
               </CustomTooltip>
@@ -1374,6 +1381,7 @@ const ImportDetailDialog = ({
             sx={{
               '& .edit-btn': { opacity: 0, transition: 'opacity 0.15s' },
               '&:hover .edit-btn': { opacity: 1 },
+              '&:focus-within .edit-btn': { opacity: 1 },
             }}
           >
             <Typography variant="body2">{value || '—'}</Typography>
@@ -1382,6 +1390,7 @@ const ImportDetailDialog = ({
                 <IconButton
                   className="edit-btn"
                   size="small"
+                  aria-label={`Edit ${label}`}
                   onClick={() =>
                     setEditingCell({
                       rowId: row.id,

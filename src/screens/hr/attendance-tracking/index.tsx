@@ -56,12 +56,7 @@ import {
 } from '@mui/material';
 
 type RegisterStatus =
-  | 'NotMarked'
-  | 'Present'
-  | 'HalfDay'
-  | 'Absent'
-  | 'HalfDayLeave'
-  | 'FullDayLeave';
+  'NotMarked' | 'Present' | 'HalfDay' | 'Absent' | 'HalfDayLeave' | 'FullDayLeave';
 type PayrollState = 'All' | 'Editable' | 'Locked';
 type ExceptionFilter = 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
 
@@ -284,11 +279,21 @@ const AttendanceTrackingScreen = () => {
     const start = dashboardParams.get('startDate');
     const end = dashboardParams.get('endDate');
     const employeeId = dashboardParams.get('employeeId');
-    if (start && end && dayjs(start).isValid() && dayjs(end).isValid() &&
-      dayjs(start).format('YYYY-MM-DD') === start && dayjs(end).format('YYYY-MM-DD') === end &&
-      !dayjs(end).isBefore(dayjs(start), 'day')) {
-      setFilters((previous) => ({ ...previous, startDate: dayjs(start), endDate: dayjs(end),
-        employeeId: employeeId && /^[a-f0-9-]{36}$/i.test(employeeId) ? employeeId : '' }));
+    if (
+      start &&
+      end &&
+      dayjs(start).isValid() &&
+      dayjs(end).isValid() &&
+      dayjs(start).format('YYYY-MM-DD') === start &&
+      dayjs(end).format('YYYY-MM-DD') === end &&
+      !dayjs(end).isBefore(dayjs(start), 'day')
+    ) {
+      setFilters((previous) => ({
+        ...previous,
+        startDate: dayjs(start),
+        endDate: dayjs(end),
+        employeeId: employeeId && /^[a-f0-9-]{36}$/i.test(employeeId) ? employeeId : '',
+      }));
     }
   }, [dashboardParams]);
   const [employeeSearch, setEmployeeSearch] = useState('');
@@ -309,8 +314,10 @@ const AttendanceTrackingScreen = () => {
   });
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
   // A dashboard link carries an explicit date; let the register resolve that date's calendar.
-  const academicYearId = dashboardParams.get('employeeId') && dashboardParams.get('startDate')
-    ? undefined : currentYear?.id;
+  const academicYearId =
+    dashboardParams.get('employeeId') && dashboardParams.get('startDate')
+      ? undefined
+      : currentYear?.id;
   const { options: stages } = useAcademicOrganizationOptions(academicYearId);
   const employeeLookupSearch =
     selectedEmployeeOption && employeeSearch === getEmployeeOptionLabel(selectedEmployeeOption)
@@ -361,7 +368,9 @@ const AttendanceTrackingScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
-    options: { skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId) },
+    options: {
+      skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId),
+    },
   });
 
   const [adjustAttendance, { isLoading: isAdjusting }] = useQueryAndMutation({
@@ -379,7 +388,11 @@ const AttendanceTrackingScreen = () => {
     if (!filters.employeeId || selectedEmployeeOption?.id === filters.employeeId) return;
     const row = rows.find((item) => item.employeeId === filters.employeeId);
     if (!row) return;
-    const option = { id: row.employeeId, employeeName: row.employeeName, employeeCode: row.employeeCode };
+    const option = {
+      id: row.employeeId,
+      employeeName: row.employeeName,
+      employeeCode: row.employeeCode,
+    };
     setSelectedEmployeeOption(option);
     setEmployeeSearch(getEmployeeOptionLabel(option));
   }, [rows, filters.employeeId, selectedEmployeeOption?.id]);
@@ -494,9 +507,9 @@ const AttendanceTrackingScreen = () => {
         ? { attendanceId: row.attendanceId }
         : { employeeId: row.employeeId, attendanceDate: row.attendanceDate }
       : {
-        attendanceIds: editableSelectedIds,
-        employeeDates: editableSelectedEmployeeDates,
-      }),
+          attendanceIds: editableSelectedIds,
+          employeeDates: editableSelectedEmployeeDates,
+        }),
     statusWire: editableStatusMeta(draft.status).wire,
     inTime: toWireTime(draft.inTime),
     outTime: toWireTime(draft.outTime),
@@ -798,10 +811,10 @@ const AttendanceTrackingScreen = () => {
         rowProps={(row) => ({
           sx: row.isHoliday
             ? {
-              bgcolor: 'action.hover',
-              color: 'text.secondary',
-              '& td': { bgcolor: 'action.hover' },
-            }
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                '& td': { bgcolor: 'action.hover' },
+              }
             : undefined,
         })}
         isLoading={false}
@@ -1038,6 +1051,7 @@ const AttendanceTrackingScreen = () => {
           <span>
             <IconButton
               size="small"
+              aria-label={`Adjust attendance for ${row.employeeName || 'staff member'}`}
               disabled={getEditableDayIds(row).length === 0}
               onClick={() => {
                 toggleGroupSelection(row, true);
@@ -1237,11 +1251,21 @@ const AttendanceTrackingScreen = () => {
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+      }}
+    >
       <CustomBreadcrumbs
         heading="Attendance Register"
+        description="Review staff attendance and resolve exceptions for the selected period."
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Attendance Register' },
         ]}
@@ -1417,7 +1441,12 @@ const AttendanceTrackingScreen = () => {
                     <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
                   ),
                   endAdornment: filters.search && (
-                    <IconButton size="small" onClick={() => setFilter('search', '')} edge="end">
+                    <IconButton
+                      size="small"
+                      aria-label="Clear staff search"
+                      onClick={() => setFilter('search', '')}
+                      edge="end"
+                    >
                       <ClearIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                   ),
@@ -1628,14 +1657,16 @@ const AttendanceTrackingScreen = () => {
           setPage(nextPage);
           setPageSize(nextPageSize);
         }}
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{
           sx: {
-            maxHeight: 'none',
-            overflowY: 'visible',
+            height: 1,
+            minHeight: 0,
+            overflowY: 'auto',
             overflowX: 'auto',
             '& .simplebar-content-wrapper': {
               overflowX: 'auto !important',
-              overflowY: 'visible !important',
+              overflowY: 'auto !important',
             },
             '& .simplebar-content': {
               minWidth: '100%',
