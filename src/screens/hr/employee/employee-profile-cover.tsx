@@ -33,6 +33,7 @@ export function EmployeeProfileCover({
     >
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <IconButton
+          aria-label="Back to staff directory"
           sx={{ height: '40px', width: '40px', p: 0 }}
           onClick={() => setSearchParams({ employee: '' })}
         >

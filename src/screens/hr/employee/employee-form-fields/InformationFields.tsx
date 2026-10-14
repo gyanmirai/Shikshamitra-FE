@@ -1,6 +1,5 @@
 'use client';
 
-
 import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
@@ -49,10 +48,10 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-import { PolicySetupAlert } from '../../policies/components/PolicySetupAlert';
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
+import { PolicySetupAlert } from '../../policies/components/PolicySetupAlert';
 
 import type { FieldsType } from './types';
 
@@ -282,7 +281,12 @@ export const CardActions = ({
             transition={{ duration: 0.3 }}
           >
             <CustomTooltip title="Edit" placement="top">
-              <IconButton onClick={isEdit.onTrue} color="default">
+              <IconButton
+                size="small"
+                aria-label="Edit staff information"
+                onClick={isEdit.onTrue}
+                color="default"
+              >
                 <Iconify icon="solar:pen-bold" />
               </IconButton>
             </CustomTooltip>
@@ -301,6 +305,8 @@ export const CardActions = ({
           >
             <CustomTooltip title="Save" placement="top">
               <IconButton
+                size="small"
+                aria-label="Save staff information"
                 onClick={async () => {
                   const isValid = await onSave();
                   if (typeof isValid === 'boolean' && !isValid) return;
@@ -322,6 +328,8 @@ export const CardActions = ({
 
             <CustomTooltip title="Cancel" placement="top">
               <IconButton
+                size="small"
+                aria-label="Cancel staff information changes"
                 onClick={() => {
                   onCancel();
                   isEdit.onFalse();

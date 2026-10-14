@@ -20,7 +20,7 @@ export function HrSubstitutionAction({ employee, dirty, disabled, onArrange }: P
     <Button
       size="small"
       variant="outlined"
-      sx={{ minHeight: 44, whiteSpace: 'nowrap' }}
+      sx={{ whiteSpace: 'nowrap' }}
       disabled={disabled}
       onClick={() => onArrange(employee)}
       aria-label={`${dirty ? 'Save attendance and arrange' : 'Arrange'} substitution for ${employee.fullName || employee.id}`}

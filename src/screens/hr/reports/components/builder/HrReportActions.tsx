@@ -137,6 +137,7 @@ export function HrReportActions({
           <Tooltip title="Duplicate template">
             <IconButton
               data-testid="hr-report-duplicate-template-button"
+              aria-label="Duplicate report template"
               size="small"
               onClick={onDuplicateTemplate}
             >
@@ -147,6 +148,7 @@ export function HrReportActions({
             <Tooltip title="Delete template">
               <IconButton
                 data-testid="hr-report-delete-template-button"
+                aria-label="Delete report template"
                 size="small"
                 onClick={onDeleteTemplate}
               >

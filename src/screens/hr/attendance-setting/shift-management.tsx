@@ -10,6 +10,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -87,49 +88,47 @@ const ShiftManagement = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+    >
       <CustomBreadcrumbs
         heading="Shift Management"
-        description="Configure shift timings used by attendance evaluation."
+        slotProps={{
+          action: { justifyContent: 'flex-end', alignSelf: { xs: 'flex-end', md: 'center' } },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
+        description="Configure shift timings used by attendance evaluation. Manage advanced attendance rules in Policies & Rules."
         links={[
-          { name: 'Hr', href: '/hr/dashboard/' },
-          { name: 'Attendance Management' },
-          { name: 'Setting' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Shift Management' },
         ]}
         action={
-          <Button
-            sx={{ width: '160px' }}
-            startIcon={<Add />}
-            variant="contained"
-            size="small"
-            onClick={shiftDialog.onTrue}
-          >
-            Shift Rule
+          <Button startIcon={<Add />} variant="contained" size="small" onClick={shiftDialog.onTrue}>
+            Add Shift
           </Button>
         }
       />
 
       <CustomizableTable
         tableId="hr-attendance-shift-management"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}
         noDataText={
           <>
-            No Shift Management Data Found{' '}
-            <Box
+            No shifts configured.
+            <Button
+              size="small"
+              variant="outlined"
+              color="primary"
+              sx={{ display: 'flex', mx: 'auto', mt: 1 }}
               onClick={shiftDialog.onTrue}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
             >
-              Shift
-            </Box>
+              Add Shift
+            </Button>
           </>
         }
         columns={[
@@ -202,6 +201,7 @@ const ShiftManagement = () => {
       />
 
       <CustomDialog
+        hasForm={false}
         maxWidth="sm"
         title={editData ? 'Update Shift Rule' : 'Add Shift Rule'}
         handleClose={closeDialog}

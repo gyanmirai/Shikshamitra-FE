@@ -227,7 +227,14 @@ export function PayrollProfileWorkspace({
         ) : salary.isLoading ? (
           <Skeleton height={150} variant="rounded" />
         ) : salary.isError ? (
-          <Alert severity="error" action={<Button onClick={() => salary.refetch()}>Retry</Button>}>
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => salary.refetch()}>
+                Retry
+              </Button>
+            }
+          >
             Unable to load salary.
           </Alert>
         ) : salary.data ? (
@@ -263,7 +270,11 @@ export function PayrollProfileWorkspace({
           ) : revisions.isError ? (
             <Alert
               severity="warning"
-              action={<Button onClick={() => revisions.refetch()}>Retry</Button>}
+              action={
+                <Button size="small" onClick={() => revisions.refetch()}>
+                  Retry
+                </Button>
+              }
             >
               Scheduled salary changes could not be loaded.
             </Alert>
@@ -316,7 +327,11 @@ export function PayrollProfileWorkspace({
         ) : policies.isError ? (
           <Alert
             severity="error"
-            action={<Button onClick={() => policies.refetch()}>Retry</Button>}
+            action={
+              <Button size="small" onClick={() => policies.refetch()}>
+                Retry
+              </Button>
+            }
           >
             Unable to resolve policies. Retry to see the applicable assignment.
           </Alert>
@@ -362,7 +377,14 @@ export function PayrollProfileWorkspace({
       {details.isLoading ? (
         <Skeleton height={200} variant="rounded" />
       ) : details.isError && (!detailsContent || !details.data) ? (
-        <Alert severity="error" action={<Button onClick={() => details.refetch()}>Retry</Button>}>
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => details.refetch()}>
+              Retry
+            </Button>
+          }
+        >
           Unable to load payroll profile details.
         </Alert>
       ) : detailsContent ? (

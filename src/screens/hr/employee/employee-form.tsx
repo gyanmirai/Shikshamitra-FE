@@ -1131,6 +1131,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
         content="Unsaved staff changes will be lost."
         action={
           <Button
+            size="small"
             color="warning"
             onClick={() => {
               const href = pendingPolicyRoute;

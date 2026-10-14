@@ -61,7 +61,11 @@ export function HrSubstitutionDrawer({ employee, date, onClose }: Props) {
         ) : availability.isError ? (
           <Alert
             severity="error"
-            action={<Button onClick={() => availability.refetch()}>Retry</Button>}
+            action={
+              <Button size="small" onClick={() => availability.refetch()}>
+                Retry
+              </Button>
+            }
           >
             Teacher absence could not be loaded.
           </Alert>
@@ -71,7 +75,7 @@ export function HrSubstitutionDrawer({ employee, date, onClose }: Props) {
             then try again.
           </Alert>
         )}
-        <Button sx={{ mt: 2 }} onClick={onClose} disabled={availability.isFetching}>
+        <Button size="small" sx={{ mt: 2 }} onClick={onClose} disabled={availability.isFetching}>
           Close
         </Button>
       </Box>

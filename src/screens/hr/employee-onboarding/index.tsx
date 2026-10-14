@@ -49,17 +49,6 @@ import {
   shouldClearEmployeeRoleSelection,
 } from 'src/screens/hr/employee/employee-role-options';
 import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
-import {
   Box,
   Card,
   Chip,
@@ -91,6 +80,17 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
 import { resolveCurrentEmployeeApplication } from './employee-application-query-state';
@@ -602,6 +602,7 @@ function EmployeeOnboardingDetailView({
       >
         <CustomBreadcrumbs
           heading="Staff Onboarding"
+          description="Review candidate information and complete staff enrollment."
           links={[
             { name: 'HR/Staff', href: hrPaths.dashboard },
             { name: 'Staff' },
@@ -1111,7 +1112,7 @@ function FinalizeDialog({
     validationSchema: Yup.object({}),
     validateOnChange: true,
     validateOnBlur: true,
-    onSubmit: () => { },
+    onSubmit: () => {},
   });
 
   // convenience alias
@@ -1284,9 +1285,9 @@ function FinalizeDialog({
           },
           ...(form.isTeaching
             ? {
-              academicYearId: currentYear!.id,
-              academicScopes: academicPermissionScopeRows.scopeRows,
-            }
+                academicYearId: currentYear!.id,
+                academicScopes: academicPermissionScopeRows.scopeRows,
+              }
             : {}),
           familyInfo: application.familyInfo || null,
           additionalInfo: application.additionalInfo || null,
@@ -1296,9 +1297,7 @@ function FinalizeDialog({
         },
       }).unwrap();
 
-      const employeeId = String(
-        result.employee.id || result.application.finalizedEmployeeId || ''
-      );
+      const employeeId = String(result.employee.id || result.application.finalizedEmployeeId || '');
       if (!employeeId) {
         throw new Error('The staff was created, but the staff id was not returned.');
       }
@@ -2789,22 +2788,31 @@ export default function EmployeeOnboardingScreen() {
           <Alert severity="warning">
             <Typography variant="subtitle2">Payroll setup required</Typography>
             <Typography variant="body2">
-              {finalizedEmployee?.name || 'The staff'} is inactive. Set up a valid salary, then activate the staff as a separate action.
+              {finalizedEmployee?.name || 'The staff'} is inactive. Set up a valid salary, then
+              activate the staff as a separate action.
             </Typography>
           </Alert>
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button
-          href={finalizedEmployee ? `${hrPaths.employee.list}?employee=${finalizedEmployee.id}` : undefined}
-          sx={{ minHeight: 44 }}
+          size="small"
+          href={
+            finalizedEmployee
+              ? `${hrPaths.employee.list}?employee=${finalizedEmployee.id}`
+              : undefined
+          }
         >
           View staff
         </Button>
         <Button
-          href={finalizedEmployee ? `${hrPaths.payroll.structure}?employeeId=${finalizedEmployee.id}&setup=salary` : undefined}
+          size="small"
+          href={
+            finalizedEmployee
+              ? `${hrPaths.payroll.structure}?employeeId=${finalizedEmployee.id}&setup=salary`
+              : undefined
+          }
           variant="contained"
-          sx={{ minHeight: 44 }}
         >
           Set up salary
         </Button>
@@ -2832,6 +2840,7 @@ export default function EmployeeOnboardingScreen() {
       }
       action={
         <LoadingButton
+          size="small"
           color="error"
           variant="contained"
           loading={deleteLoading}
@@ -3092,7 +3101,6 @@ export default function EmployeeOnboardingScreen() {
             startIcon={<Iconify icon="mdi:link-plus" />}
             onClick={() => setInviteOpen(true)}
             data-testid="employee-onboarding-create-invite"
-            sx={{ px: '24px' }}
           >
             Create invite
           </Button>

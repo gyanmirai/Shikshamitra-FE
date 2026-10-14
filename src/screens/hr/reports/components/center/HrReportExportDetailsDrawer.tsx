@@ -113,7 +113,7 @@ export function HrReportExportDetailsDrawer({
                 {getHrReportExportLineageLabel(job)}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose}>
+            <IconButton size="small" aria-label="Close export details" onClick={onClose}>
               <Iconify icon="solar:close-circle-bold" />
             </IconButton>
           </Stack>

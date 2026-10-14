@@ -3,6 +3,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
+import { hrPaths } from 'src/constants/hr-menus';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -18,17 +19,20 @@ const HrAttendanceNotificationScreen = () => {
     : notificationHistory?.items || [];
 
   return (
-    <Box>
+    <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Notifications History"
+        description="Review delivery status for staff attendance notifications."
         links={[
-          { name: 'HR' },
-          { name: 'Attendance Management' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Attendance Management', href: hrPaths.attendance.dashboard },
           { name: 'Notifications History' },
         ]}
       />
       <CustomizableTable
         tableId="hr-attendance-notification"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}
         noDataText="No attendance notification history found."
         columns={[

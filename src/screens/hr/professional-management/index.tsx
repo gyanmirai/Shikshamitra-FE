@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
 import CustomDialog from 'src/components/customDialog';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -187,8 +188,8 @@ const ProfessionalManagementScreen = ({
     performanceWorkspaceSubmodules.find((item) => item.value === workspace) ||
     performanceWorkspaceSubmodules[0];
   const breadcrumbLinks = [
-    { name: 'HR' },
-    { name: 'Performance Management' },
+    { name: 'HR/Staff', href: hrPaths.dashboard },
+    { name: 'Performance Management', href: hrPaths.professionalManagement.overview },
     ...('parentLabel' in currentWorkspace ? [{ name: currentWorkspace.parentLabel }] : []),
     { name: currentWorkspace.label },
   ];
@@ -197,6 +198,8 @@ const ProfessionalManagementScreen = ({
     <Box
       sx={{
         height: '100%',
+        minHeight: 0,
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.default',
@@ -750,6 +753,7 @@ function GuidedSetupTab() {
                   ))}
                 </TextField>
                 <Button
+                  size="small"
                   variant="contained"
                   disabled={createTemplateState.isLoading}
                   startIcon={<Iconify icon="mdi:playlist-plus" />}
@@ -789,6 +793,7 @@ function GuidedSetupTab() {
                 />
                 {isDuplicateCycle && <Alert severity="warning">{duplicateCycleMessage}</Alert>}
                 <Button
+                  size="small"
                   variant="contained"
                   color="success"
                   disabled={
@@ -1715,6 +1720,7 @@ function TemplateBuilderDialog({
         ))}
 
         <Button
+          size="small"
           variant="outlined"
           startIcon={<Iconify icon="mdi:plus" />}
           sx={{
@@ -1746,8 +1752,11 @@ function TemplateBuilderDialog({
           bgcolor: 'background.paper',
         }}
       >
-        <Button onClick={onClose}>Cancel</Button>
+        <Button size="small" onClick={onClose}>
+          Cancel
+        </Button>
         <Button
+          size="small"
           variant="contained"
           disabled={
             !name.trim() ||
@@ -2434,6 +2443,7 @@ function SqaaAuditPackSection() {
             ))}
           </TextField>
           <Button
+            size="small"
             variant="contained"
             onClick={handleExport}
             disabled={exportState.isFetching}
@@ -2685,8 +2695,11 @@ function CycleDialog({
         />
       </Stack>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button size="small" onClick={onClose}>
+          Cancel
+        </Button>
         <Button
+          size="small"
           variant="contained"
           disabled={!name.trim() || isCyclePeriodInvalid}
           onClick={() => {
@@ -3153,12 +3166,13 @@ function ReviewWorkspace({
             sx={{ '& .MuiButton-root': { flexShrink: 0 } }}
           >
             {capabilities.canSaveDraft && (
-              <Button variant="outlined" onClick={handleSaveDraft}>
+              <Button size="small" variant="outlined" onClick={handleSaveDraft}>
                 Save Draft
               </Button>
             )}
             {capabilities.canSubmitStage && (
               <Button
+                size="small"
                 data-testid="performance-submit-stage"
                 variant="contained"
                 onClick={handleSubmitStage}
@@ -3168,6 +3182,7 @@ function ReviewWorkspace({
             )}
             {capabilities.canAddObservation && (
               <Button
+                size="small"
                 variant="contained"
                 onClick={async () => {
                   try {
@@ -3195,6 +3210,7 @@ function ReviewWorkspace({
             )}
             {capabilities.canAddFeedback && (
               <Button
+                size="small"
                 variant="outlined"
                 onClick={async () => {
                   try {
@@ -3216,6 +3232,7 @@ function ReviewWorkspace({
             )}
             {capabilities.canAddDevelopmentPlan && (
               <Button
+                size="small"
                 variant="outlined"
                 onClick={async () => {
                   try {
@@ -3238,6 +3255,7 @@ function ReviewWorkspace({
             )}
             {capabilities.canFinalizeOutcome && (
               <Button
+                size="small"
                 color="success"
                 variant="contained"
                 onClick={async () => {
@@ -3334,8 +3352,15 @@ function EvidenceDialog({
         />
       </Stack>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" disabled={isSaving || !form.title.trim()} onClick={onSave}>
+        <Button size="small" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          size="small"
+          variant="contained"
+          disabled={isSaving || !form.title.trim()}
+          onClick={onSave}
+        >
           Save Evidence
         </Button>
       </DialogActions>
