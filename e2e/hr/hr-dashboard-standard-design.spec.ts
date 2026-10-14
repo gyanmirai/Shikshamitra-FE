@@ -100,6 +100,12 @@ async function mockDashboard(
     normal?: boolean;
     onboardingUnavailable?: boolean;
     failSections?: boolean;
+    payroll?: {
+      savedStaffCount?: number;
+      reviewedCount?: number;
+      lockedCount?: number;
+      pendingCount?: number;
+    };
   } = {}
 ) {
   const permissions = options.permissions || fullPermissions;
@@ -155,6 +161,23 @@ async function mockDashboard(
       }),
     });
   });
+
+  await page.route('**/api/host/session-context**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        accountMode: 'tenant',
+        tenantId: 'hr-dashboard-test-tenant',
+        setupCompleted: true,
+        canManageSetup: false,
+        canViewTenants: false,
+        canCreateTenants: false,
+        canUpdateTenants: false,
+        canManageTenantStatus: false,
+      }),
+    })
+  );
 
   await page.route('**/api/abp/application-configuration**', async (route) => {
     await route.fulfill({
@@ -296,6 +319,7 @@ async function mockDashboard(
           lockedCount: options.empty ? 0 : 20,
           pendingCount: options.empty ? 0 : 18,
           lastUpdatedAt: options.savedPayrollAt || '2026-10-01T22:45:00Z',
+          ...options.payroll,
         },
       }),
     });
@@ -312,8 +336,246 @@ async function noOverflow(page: Page) {
     .toBe(true);
 }
 
+async function secondaryCardsAlign(page: Page, width: number) {
+  const attendance = await page
+    .getByRole('region', { name: 'Seven-day staff attendance' })
+    .boundingBox();
+  const payroll = await page.getByRole('region', { name: 'Payroll progress' }).boundingBox();
+  if (width >= 1200) {
+    expect(Math.abs(attendance!.y - payroll!.y)).toBeLessThanOrEqual(1);
+    expect(Math.abs(attendance!.height - payroll!.height)).toBeLessThanOrEqual(1);
+  } else {
+    expect(payroll!.y).toBeGreaterThanOrEqual(attendance!.y + attendance!.height);
+  }
+}
+
 test.describe('HR module overview dashboard', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
+
+  for (const width of [390, 1440]) {
+    test(`minimal attendance and compact header at ${width}px @critical @accessibility`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await mockDashboard(page);
+      await page.goto('/hr/dashboard?date=2026-10-01');
+      const attendance = page.getByRole('region', { name: 'Seven-day staff attendance' });
+      await expect(attendance.getByText('/ 126 staff present', { exact: true })).toBeVisible();
+      await expect(attendance.getByRole('button')).toHaveCount(0);
+      const summary = attendance.locator('dl');
+      await expect(summary).toContainText('Absent:18');
+      await expect(summary).toContainText('Not marked:18');
+      await expect(summary).toContainText('Needs setup:18');
+      await expect(attendance.getByText(/Needs review: 18 staff/)).toBeVisible();
+      await expect(
+        attendance.getByRole('list', { name: 'Daily present staff counts' }).getByRole('listitem')
+      ).toHaveCount(7);
+      await expect(attendance.locator('.highcharts-series')).toHaveCount(1);
+      const header = await page.getByTestId('hr-dashboard-header').boundingBox();
+      const modules = await page.getByTestId('hr-module-overview').boundingBox();
+      expect(modules!.y - header!.y - header!.height).toBeLessThanOrEqual(8);
+      if (width >= 1200) expect(header!.height).toBeLessThanOrEqual(82);
+      await secondaryCardsAlign(page, width);
+      await noOverflow(page);
+      const accessibility = await new AxeBuilder({ page })
+        .include('[data-testid="hr-dashboard-shell"]')
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze();
+      expect(accessibility.violations).toEqual([]);
+    });
+  }
+
+  test('payroll guidance distinguishes saved record states and unavailable data @critical', async ({
+    page,
+  }) => {
+    await mockDashboard(page);
+    await page.goto('/hr/dashboard');
+    const payroll = page.getByRole('region', { name: 'Payroll progress' });
+    await expect(
+      payroll.getByText('18 staff members awaiting review.', { exact: true })
+    ).toBeVisible();
+    await expect(payroll.getByText('Review pending', { exact: true })).toBeVisible();
+    for (const scenario of [
+      {
+        savedStaffCount: 1,
+        reviewedCount: 0,
+        lockedCount: 0,
+        pendingCount: 1,
+        message: '1 staff member awaiting review.',
+      },
+      {
+        savedStaffCount: 10,
+        reviewedCount: 5,
+        lockedCount: 5,
+        pendingCount: 0,
+        message: '5 reviewed records remain unlocked.',
+      },
+      {
+        savedStaffCount: 10,
+        reviewedCount: 0,
+        lockedCount: 10,
+        pendingCount: 0,
+        message: 'All saved records are locked.',
+      },
+      {
+        savedStaffCount: 123456,
+        reviewedCount: 0,
+        lockedCount: 0,
+        pendingCount: 123456,
+        message: '1,23,456 staff members awaiting review.',
+      },
+    ]) {
+      const { message, ...payrollCounts } = scenario;
+      await mockDashboard(page, { payroll: payrollCounts });
+      await page.reload();
+      await expect(payroll.getByText(message, { exact: true })).toBeVisible();
+      await noOverflow(page);
+    }
+    await mockDashboard(page, { failSections: true });
+    await page.reload();
+    await expect(
+      payroll.getByText('Payroll progress is unavailable. Refresh to retry.')
+    ).toBeVisible();
+    await expect(
+      payroll.getByText(/awaiting review|All saved records are locked|remain unlocked/)
+    ).toHaveCount(0);
+    await expect(page.getByText('Awaiting decision', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('1 overdue', { exact: true })).toHaveCount(0);
+    await mockDashboard(page, { empty: true });
+    await page.reload();
+    await expect(
+      payroll.getByText('No saved payroll records for this month.', { exact: true })
+    ).toBeVisible();
+    await expect(page.getByText('Awaiting decision', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('1 overdue', { exact: true })).toHaveCount(0);
+  });
+
+  for (const width of [390, 768, 1440]) {
+    for (const mode of ['light', 'dark']) {
+      test(`${mode} slow loading at ${width}px retains content geometry @visual @accessibility`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 1000 });
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.addInitScript((themeMode) => {
+          localStorage.setItem('theme-mode', themeMode);
+          localStorage.setItem('app-settings', JSON.stringify({ colorScheme: themeMode }));
+        }, mode);
+        await mockDashboard(page);
+        let release!: () => void;
+        const pendingResponse = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await page.route('**/api/hr/dashboard/overview?**', async (route) => {
+          await pendingResponse;
+          await route.fallback();
+        });
+        try {
+          await page.goto('/hr/dashboard');
+          await expect(page.getByRole('status')).toHaveText('Loading dashboard…');
+          await expect(page.getByRole('button', { name: 'Refresh HR dashboard' })).toHaveText(
+            'Loading…'
+          );
+          await expect(
+            page.getByRole('progressbar', { name: 'Loading dashboard data' })
+          ).toBeVisible();
+          await expect(page.getByTestId('hr-module-overview').getByRole('link')).toHaveCount(0);
+          await expect(page.getByTestId('attendance-skeleton')).toHaveAttribute(
+            'aria-hidden',
+            'true'
+          );
+          await expect(page.getByTestId('payroll-skeleton')).toHaveAttribute('aria-hidden', 'true');
+          const regions = page.getByTestId('hr-dashboard-shell').getByRole('region');
+          for (const region of await regions.all())
+            await expect(region).toHaveAttribute('aria-busy', 'true');
+          const loadingHeights = await Promise.all(
+            (await regions.all()).map((region) =>
+              region.evaluate((element) => element.getBoundingClientRect().height)
+            )
+          );
+          const skeletons = page.getByTestId('hr-dashboard-shell').locator('.MuiSkeleton-root');
+          expect(
+            await skeletons.evaluateAll((elements) =>
+              elements.every(
+                (element) =>
+                  getComputedStyle(element).animationName === 'none' &&
+                  getComputedStyle(element, '::after').animationName === 'none'
+              )
+            )
+          ).toBe(true);
+          await noOverflow(page);
+          await secondaryCardsAlign(page, width);
+          const accessibility = await new AxeBuilder({ page })
+            .include('[data-testid="hr-dashboard-shell"]')
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+            .analyze();
+          expect(accessibility.violations).toEqual([]);
+          await page.screenshot({
+            path: `.artifacts/hr-loading-${mode}-${width}.png`,
+            fullPage: true,
+          });
+          release();
+          await expect(
+            page.getByRole('region', { name: 'Workforce' }).getByText('126', { exact: true })
+          ).toBeVisible();
+          for (const region of await regions.all())
+            await expect(region).toHaveAttribute('aria-busy', 'false');
+          const loadedHeights = await Promise.all(
+            (await regions.all()).map((region) =>
+              region.evaluate((element) => element.getBoundingClientRect().height)
+            )
+          );
+          loadedHeights.forEach((height, index) =>
+            expect(
+              Math.abs(height - loadingHeights[index]),
+              `region ${index}: loading ${loadingHeights[index]}, loaded ${height}`
+            ).toBeLessThanOrEqual(index === 5 ? 44 : 32)
+          );
+          await expect(page.getByTestId('attendance-skeleton')).toHaveCount(0);
+          await expect(page.getByTestId('payroll-skeleton')).toHaveCount(0);
+          await secondaryCardsAlign(page, width);
+          await noOverflow(page);
+        } finally {
+          release();
+        }
+      });
+    }
+  }
+
+  test('background refresh retains loaded summaries without skeletons @critical', async ({
+    page,
+  }) => {
+    await mockDashboard(page);
+    await page.goto('/hr/dashboard');
+    const workforce = page.getByRole('region', { name: 'Workforce' });
+    await expect(workforce.getByText('126', { exact: true })).toBeVisible();
+    let release!: () => void;
+    const pendingResponse = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route('**/api/hr/dashboard/overview?**', async (route) => {
+      await pendingResponse;
+      await route.fallback();
+    });
+    try {
+      await page.getByRole('button', { name: 'Refresh HR dashboard' }).click();
+      await expect(page.getByRole('button', { name: 'Refresh HR dashboard' })).toHaveText(
+        'Refreshing…'
+      );
+      await expect(
+        page.getByRole('progressbar', { name: 'Refreshing dashboard data' })
+      ).toBeVisible();
+      await expect(workforce.getByText('126', { exact: true })).toBeVisible();
+      await expect(page.getByTestId('hr-dashboard-shell').locator('.MuiSkeleton-root')).toHaveCount(
+        0
+      );
+      release();
+      await expect(page.getByRole('button', { name: 'Refresh HR dashboard' })).toBeEnabled();
+    } finally {
+      release();
+    }
+  });
 
   for (const width of [390, 768, 1366, 1440]) {
     for (const mode of ['light', 'dark']) {
@@ -350,17 +612,9 @@ test.describe('HR module overview dashboard', () => {
             'none'
           );
         }
-        for (const action of await modules.getByRole('link').all()) {
-          const bounds = await action.boundingBox();
-          expect(Math.round(bounds!.height)).toBe(30);
-          await expect(action).toHaveClass(/MuiButton-outlined/);
-        }
-        if (width >= 1200) {
-          const payrollBounds = await page
-            .getByRole('region', { name: 'Payroll progress' })
-            .boundingBox();
-          expect(payrollBounds!.y + payrollBounds!.height).toBeLessThan(844);
-        }
+        await expect(modules.getByRole('link')).toHaveCount(0);
+        await expect(modules.getByRole('button')).toHaveCount(0);
+        await secondaryCardsAlign(page, width);
         await expect(
           page
             .getByRole('region', { name: 'Payroll progress' })
@@ -398,13 +652,13 @@ test.describe('HR module overview dashboard', () => {
     await page.goto('/hr/dashboard?date=2026-10-01');
     const workforce = page.getByRole('region', { name: 'Workforce' });
     await expect(workforce.getByText('126', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Previous attendance day' }).click();
+    await page.getByLabel('Attendance date', { exact: true }).fill('2026-09-30');
     await expect(page).toHaveURL(/date=2026-09-30/);
     await expect(workforce.getByText('126', { exact: true })).toBeVisible();
     await page.reload();
     await expect(page.getByLabel('Attendance date', { exact: true })).toHaveValue('2026-09-30');
-    await page.getByRole('button', { name: 'Today', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Today', exact: true })).toBeDisabled();
+    await page.getByLabel('Attendance date', { exact: true }).fill('2026-10-01');
+    await expect(page).toHaveURL(/date=2026-10-01/);
     await expect(workforce.getByText('126', { exact: true })).toBeVisible();
   });
 
@@ -422,29 +676,43 @@ test.describe('HR module overview dashboard', () => {
     await expect(page.getByText(/Staff filters are no longer used/)).toHaveCount(0);
   });
 
-  test('module actions use existing workflow links @critical', async ({ page }) => {
+  test('standard breadcrumbs and read-only overview have no workflow actions @critical', async ({
+    page,
+  }) => {
     await mockDashboard(page);
     await page.goto('/hr/dashboard');
-    await expect(page.getByRole('link', { name: 'Open Staff Directory' })).toHaveAttribute(
+    const shell = page.getByTestId('hr-dashboard-shell');
+    await expect(shell.getByRole('heading', { level: 1, name: 'HR Dashboard' })).toBeVisible();
+    await expect(shell.locator('[data-layout="inline"]')).toBeVisible();
+    const breadcrumbs = shell.getByRole('navigation');
+    await expect(breadcrumbs.getByRole('link', { name: 'HR/Staff', exact: true })).toHaveAttribute(
       'href',
-      '/hr/employee'
+      '/hr/dashboard'
     );
-    await expect(page.getByRole('link', { name: 'Review Requests' })).toHaveAttribute(
-      'href',
-      '/hr/leave-approvals'
+    await expect(breadcrumbs.getByText('HR Dashboard', { exact: true })).toBeVisible();
+    await expect(breadcrumbs.getByRole('link', { name: 'HR Dashboard', exact: true })).toHaveCount(
+      0
     );
-    await expect(page.getByRole('link', { name: 'Open Appraisals' })).toHaveAttribute(
-      'href',
-      '/hr/professional-management/reviews?cycleId=all'
-    );
-    await expect(page.getByRole('link', { name: 'Open Payroll' })).toHaveAttribute(
-      'href',
-      '/hr/payroll/run-payroll?month=2026-10'
-    );
-    await expect(page.getByRole('link', { name: 'Add Staff' })).toHaveAttribute(
-      'href',
-      '/hr/employee?mode=form'
-    );
+    await expect(shell.getByText('Quick actions', { exact: true })).toHaveCount(0);
+    for (const label of [
+      'Open Staff Directory',
+      'Review Requests',
+      'Open Onboarding',
+      'Open Appraisals',
+      'Open Attendance',
+      'Mark Attendance',
+      'Open Payroll',
+      'Add Staff',
+      'HR Reports',
+    ]) {
+      await expect(shell.getByRole('link', { name: label, exact: true })).toHaveCount(0);
+      await expect(shell.getByRole('button', { name: label, exact: true })).toHaveCount(0);
+    }
+    await expect(shell.getByRole('button', { name: 'Refresh HR dashboard' })).toBeVisible();
+    await expect(shell.getByLabel('Attendance date', { exact: true })).toBeVisible();
+    await expect(
+      shell.getByRole('region', { name: 'Seven-day staff attendance' }).getByRole('button')
+    ).toHaveCount(0);
   });
 
   test('partial permissions and restricted onboarding remain honest @permission', async ({
@@ -524,17 +792,18 @@ test.describe('HR module overview dashboard', () => {
     await expect(page.getByText('No saved payroll records for this month.')).toBeVisible();
   });
 
-  test('chart counts are keyboard reachable with reduced motion @accessibility', async ({
-    page,
-  }) => {
+  test('attendance trend is accessible without extra controls @accessibility', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await mockDashboard(page);
     await page.goto('/hr/dashboard?date=2026-10-01');
-    const day = page.getByRole('button', { name: /^1 Oct 2026:.*126 total staff$/ });
-    await day.focus();
-    await expect(day).toBeFocused();
-    await expect(day).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('tooltip')).toBeVisible();
+    const trend = page.getByRole('list', { name: 'Daily present staff counts' });
+    await expect(trend.getByRole('listitem')).toHaveCount(7);
+    await expect(trend.getByRole('listitem').last()).toHaveText(
+      '1 Oct 2026: 18 of 126 staff present'
+    );
+    const date = page.getByLabel('Attendance date', { exact: true });
+    await date.focus();
+    await expect(date).toBeFocused();
     await noOverflow(page);
   });
 });

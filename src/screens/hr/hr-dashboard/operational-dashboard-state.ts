@@ -1,5 +1,9 @@
 import type { LabelColor } from 'src/components/label/types';
-import type { DailyStaffStatus } from 'src/redux/hr/hrOperationalDashboardApi';
+import type {
+  DailyStaffStatus,
+  OperationalOverview,
+  DashboardSectionState,
+} from 'src/redux/hr/hrOperationalDashboardApi';
 
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 
@@ -54,6 +58,37 @@ export const formatSchoolTime = (value: string) =>
     minute: '2-digit',
   }).format(new Date(value));
 export const formatCount = (value: number) => new Intl.NumberFormat('en-IN').format(value);
+
+export function getModulePriorityCue(
+  module: 'leave' | 'appraisal',
+  state: DashboardSectionState | undefined,
+  count: number | undefined
+): { label: string; color: LabelColor } | null {
+  if (state !== 'Available' || count === undefined || count <= 0) return null;
+  return module === 'leave'
+    ? { label: 'Awaiting decision', color: 'info' }
+    : { label: `${formatCount(count)} overdue`, color: 'warning' };
+}
+
+export function getPayrollGuidance(
+  state: DashboardSectionState | undefined,
+  payroll: OperationalOverview['payroll']
+): { message: string; color: LabelColor } | null {
+  if (state !== 'Available' || !payroll) return null;
+  if (payroll.savedStaffCount === 0)
+    return { message: 'No saved payroll records for this month.', color: 'default' };
+  if (payroll.pendingCount > 0)
+    return {
+      message: `${formatCount(payroll.pendingCount)} staff ${payroll.pendingCount === 1 ? 'member' : 'members'} awaiting review.`,
+      color: 'info',
+    };
+  if (payroll.lockedCount === payroll.savedStaffCount)
+    return { message: 'All saved records are locked.', color: 'default' };
+  return {
+    message: `${formatCount(payroll.reviewedCount)} reviewed ${payroll.reviewedCount === 1 ? 'record remains' : 'records remain'} unlocked.`,
+    color: 'default',
+  };
+}
 export const previousSchoolDay = (date: string) => {
   const day = new Date(`${date}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() - 1);
