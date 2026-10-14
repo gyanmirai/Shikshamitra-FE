@@ -34,8 +34,8 @@ export function EsiCalculationFields({ form, disabled, components, rule }: Props
   const errors: FormikErrors<EsiCalculationSettings> = form.errors.calculationSettings ?? {};
   const update = (change: Partial<EsiCalculationSettings>) => {
     const next = { ...config, ...change };
-    if (next.eligibilityBasis !== 'BASIC_COMPONENT' && next.calculationBasis !== 'BASIC_COMPONENT')
-      next.basicComponentId = null;
+    if (next.eligibilityBasis !== 'COMPONENT') next.eligibilityComponentId = null;
+    if (next.calculationBasis !== 'COMPONENT') next.calculationComponentId = null;
     return form.setFieldValue('calculationSettings', next);
   };
   const errorFor = (key: keyof EsiCalculationSettings) => ({
@@ -51,9 +51,9 @@ export function EsiCalculationFields({ form, disabled, components, rule }: Props
           title={
             <Box sx={{ p: 1.5 }}>
               Choose eligibility and calculation bases independently. Eligibility uses full-month
-              salary. Calculation uses payable salary after attendance adjustments. Basic must use a
-              component marked Basic in the salary template. Other statutory inclusions and
-              adjustments still apply.
+              salary. Calculation uses payable salary after attendance adjustments. A selected
+              component is used alone. Statutory reconciliation differences remain visible in
+              payroll review.
             </Box>
           }
         >
@@ -81,32 +81,45 @@ export function EsiCalculationFields({ form, disabled, components, rule }: Props
           >
             <MenuItem value="CLASSIFIED_EARNINGS">Included salary components</MenuItem>
             <MenuItem value="GROSS">Gross salary</MenuItem>
-            <MenuItem value="BASIC_COMPONENT">Basic salary</MenuItem>
+            <MenuItem value="COMPONENT">Salary component</MenuItem>
           </TextField>
         ))}
       </Stack>
-      {form.values.enabled &&
-        (config.eligibilityBasis === 'BASIC_COMPONENT' ||
-          config.calculationBasis === 'BASIC_COMPONENT') && (
-          <TextField
-            label="Basic salary component"
-            select
-            size="small"
-            fullWidth
-            disabled={disabled}
-            value={config.basicComponentId ?? ''}
-            {...errorFor('basicComponentId')}
-            helperText={errors.basicComponentId || 'Used wherever Basic salary is selected.'}
-            onChange={(event) => update({ basicComponentId: event.target.value })}
-          >
-            <MenuItem value="">Choose a component</MenuItem>
-            {components.map((component) => (
-              <MenuItem key={component.componentId} value={component.componentId}>
-                {component.componentName}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
+      {form.values.enabled && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          {(['eligibility', 'calculation'] as const).map((kind) => {
+            const basisKey = kind === 'eligibility' ? 'eligibilityBasis' : 'calculationBasis';
+            const componentKey =
+              kind === 'eligibility' ? 'eligibilityComponentId' : 'calculationComponentId';
+            return config[basisKey] === 'COMPONENT' ? (
+              <TextField
+                key={kind}
+                label={`ESIC ${kind} component`}
+                select
+                size="small"
+                fullWidth
+                disabled={disabled}
+                value={config[componentKey] ?? ''}
+                {...errorFor(componentKey)}
+                helperText={
+                  errors[componentKey] ||
+                  (kind === 'eligibility'
+                    ? 'Full-month component value.'
+                    : 'Only this payable component is used.')
+                }
+                onChange={(event) => update({ [componentKey]: event.target.value })}
+              >
+                <MenuItem value="">Choose a salary component</MenuItem>
+                {components.map((component) => (
+                  <MenuItem key={component.componentId} value={component.componentId}>
+                    {component.componentName}
+                  </MenuItem>
+                ))}
+              </TextField>
+            ) : null;
+          })}
+        </Stack>
+      )}
       {form.values.enabled && (
         <>
           <Stack

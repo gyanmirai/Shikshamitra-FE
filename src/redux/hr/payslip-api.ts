@@ -31,7 +31,31 @@ export type PayslipDelivery = {
   startedAt: string | null;
   completedAt: string | null;
 };
+export type SalaryDocumentPresentation = {
+  layout: 'Compact' | 'Detailed';
+  logoBlobName?: string | null;
+  showStaffDetails: boolean;
+  showBankDetails: boolean;
+  showAttendance: boolean;
+  showEarningsBreakdown: boolean;
+  showZeroDeductions: boolean;
+  statementColumns: string[];
+  registerColumns: string[];
+};
+export const defaultSalaryDocumentPresentation: SalaryDocumentPresentation = {
+  layout: 'Detailed',
+  logoBlobName: null,
+  showStaffDetails: true,
+  showBankDetails: true,
+  showAttendance: true,
+  showEarningsBreakdown: true,
+  showZeroDeductions: false,
+  statementColumns: [],
+  registerColumns: [],
+};
 export type PayslipSettings = {
+  presentation?: SalaryDocumentPresentation;
+  presentationVersionId?: string;
   schoolName: string;
   schoolAddress: string;
   automaticEmail: boolean;
@@ -80,36 +104,71 @@ export const payslipApi = api.injectEndpoints({
       query: (documentId) => ({ url: '/payroll/payslip-corrections', params: { documentId } }),
       providesTags: [...tags, employeeType.runPayroll],
     }),
-    startPayslipCorrection: builder.mutation<PayslipCorrection, { documentId: string; idempotencyKey: string; reason: string }>({
+    startPayslipCorrection: builder.mutation<
+      PayslipCorrection,
+      { documentId: string; idempotencyKey: string; reason: string }
+    >({
       query: (body) => ({ url: '/payroll/payslip-corrections', method: 'POST', body }),
       invalidatesTags: tags,
     }),
-    calculatePayslipCorrection: builder.mutation<PayslipCorrection, CorrectionAction & { attendance: PayslipCorrectionAttendance[] }>({
-      query: ({ id, ...body }) => ({ url: `/payroll/payslip-corrections/${id}/calculate`, method: 'POST', body }),
+    calculatePayslipCorrection: builder.mutation<
+      PayslipCorrection,
+      CorrectionAction & { attendance: PayslipCorrectionAttendance[] }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/payroll/payslip-corrections/${id}/calculate`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: tags,
     }),
     reviewPayslipCorrection: builder.mutation<PayslipCorrection, CorrectionAction>({
-      query: ({ id, ...body }) => ({ url: `/payroll/payslip-corrections/${id}/review`, method: 'POST', body }),
+      query: ({ id, ...body }) => ({
+        url: `/payroll/payslip-corrections/${id}/review`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: tags,
     }),
     cancelPayslipCorrection: builder.mutation<PayslipCorrection, CorrectionAction>({
-      query: ({ id, ...body }) => ({ url: `/payroll/payslip-corrections/${id}/cancel`, method: 'POST', body }),
+      query: ({ id, ...body }) => ({
+        url: `/payroll/payslip-corrections/${id}/cancel`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: tags,
     }),
     applyPayslipCorrection: builder.mutation<PayslipCorrection, CorrectionAction>({
-      query: ({ id, ...body }) => ({ url: `/payroll/payslip-corrections/${id}/apply`, method: 'POST', body }),
+      query: ({ id, ...body }) => ({
+        url: `/payroll/payslip-corrections/${id}/apply`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: [...tags, employeeType.runPayroll],
     }),
-    settlePayslipCorrection: builder.mutation<PayslipCorrection, CorrectionAction & { targetMonth: string; previewRunId: string }>({
-      query: ({ id, ...body }) => ({ url: `/payroll/payslip-corrections/${id}/settle`, method: 'POST', body }),
+    settlePayslipCorrection: builder.mutation<
+      PayslipCorrection,
+      CorrectionAction & { targetMonth: string; previewRunId: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/payroll/payslip-corrections/${id}/settle`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: [...tags, employeeType.runPayroll],
     }),
-    getPayslipDocuments: builder.query<PayslipDocument[], { employeeId: string; monthYear: string }>({
+    getPayslipDocuments: builder.query<
+      PayslipDocument[],
+      { employeeId: string; monthYear: string }
+    >({
       query: (params) => ({ url: '/payroll/payslip-documents', params }),
       providesTags: tags,
     }),
     getPayslipDocumentPdf: builder.query<Blob, string>({
-      query: (id) => ({ url: `/payroll/payslip-documents/${id}/pdf`, responseHandler: (response) => response.blob() }),
+      query: (id) => ({
+        url: `/payroll/payslip-documents/${id}/pdf`,
+        responseHandler: (response) => response.blob(),
+      }),
     }),
     getPayslipDeliveries: builder.query<PayslipDelivery[], string>({
       query: (salarySlipId) => ({ url: '/payroll/payslip-deliveries', params: { salarySlipId } }),
@@ -119,27 +178,52 @@ export const payslipApi = api.injectEndpoints({
       query: (body) => ({ url: '/payroll/payslip-deliveries', method: 'POST', body }),
       invalidatesTags: tags,
     }),
+    uploadPayslipLogo: builder.mutation<{ blobName: string }, File>({
+      query: (file) => {
+        const body = new FormData();
+        body.append('file', file);
+        return { url: '/payroll/payslip-settings/logo', method: 'POST', body };
+      },
+    }),
     getPayslipSettings: builder.query<PayslipSettings, void>({
-      query: () => '/payroll/payslip-settings', providesTags: tags,
+      query: () => '/payroll/payslip-settings',
+      providesTags: tags,
     }),
     savePayslipSettings: builder.mutation<PayslipSettings, PayslipSettings>({
-      query: (body) => ({ url: '/payroll/payslip-settings', method: 'PUT', body }), invalidatesTags: tags,
+      query: (body) => ({ url: '/payroll/payslip-settings', method: 'PUT', body }),
+      invalidatesTags: tags,
     }),
-    recordPayslipPayment: builder.mutation<void, { documentId: string; idempotencyKey: string; paidAt: string; reference: string }>({
+    recordPayslipPayment: builder.mutation<
+      void,
+      { documentId: string; idempotencyKey: string; paidAt: string; reference: string }
+    >({
       query: (body) => ({ url: '/payroll/payslip-documents/payment', method: 'POST', body }),
       invalidatesTags: [...tags, employeeType.runPayroll],
     }),
-    replacePayslipFacts: builder.mutation<PayslipDocument, { documentId: string; idempotencyKey: string; reason: string }>({
+    replacePayslipFacts: builder.mutation<
+      PayslipDocument,
+      { documentId: string; idempotencyKey: string; reason: string }
+    >({
       query: (body) => ({ url: '/payroll/payslip-documents/replace-facts', method: 'POST', body }),
       invalidatesTags: tags,
     }),
   }),
 });
 export const {
-  useGetPayslipCorrectionsQuery, useStartPayslipCorrectionMutation, useCalculatePayslipCorrectionMutation,
-  useReviewPayslipCorrectionMutation, useCancelPayslipCorrectionMutation, useApplyPayslipCorrectionMutation,
+  useGetPayslipCorrectionsQuery,
+  useStartPayslipCorrectionMutation,
+  useCalculatePayslipCorrectionMutation,
+  useReviewPayslipCorrectionMutation,
+  useCancelPayslipCorrectionMutation,
+  useApplyPayslipCorrectionMutation,
   useSettlePayslipCorrectionMutation,
-  useGetPayslipDocumentsQuery, useLazyGetPayslipDocumentPdfQuery, useGetPayslipDeliveriesQuery,
-  useSendPayslipMutation, useGetPayslipSettingsQuery, useSavePayslipSettingsMutation, useRecordPayslipPaymentMutation,
+  useGetPayslipDocumentsQuery,
+  useLazyGetPayslipDocumentPdfQuery,
+  useGetPayslipDeliveriesQuery,
+  useSendPayslipMutation,
+  useGetPayslipSettingsQuery,
+  useSavePayslipSettingsMutation,
+  useRecordPayslipPaymentMutation,
   useReplacePayslipFactsMutation,
+  useUploadPayslipLogoMutation,
 } = payslipApi;

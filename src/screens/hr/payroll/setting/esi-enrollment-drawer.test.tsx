@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   error: vi.fn(),
   fetching: false,
+  profileQuery: {} as any,
+  saveProfile: vi.fn(),
   data: {
     employeeId: 'employee-1',
     status: 'PendingReview',
@@ -25,10 +27,36 @@ vi.mock('src/redux/hr/statutory-scheme-api', () => ({
   useGetEsiOverridesQuery: () => ({ data: [] }),
   useUpdateEsiEnrollmentMutation: () => [mocks.save, { isLoading: false }],
 }));
+vi.mock('src/redux/hr/statutory-profile-api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('src/redux/hr/statutory-profile-api')>()),
+  useGetStaffStatutoryProfileQuery: () => mocks.profileQuery,
+  useSaveStaffStatutoryProfileMutation: () => [mocks.saveProfile, { isLoading: false }],
+}));
 beforeEach(() => {
   mocks.save.mockReset();
   mocks.error.mockReset();
   mocks.fetching = false;
+  mocks.profileQuery = {
+    currentData: {
+      employeeId: 'employee-1',
+      effectiveMonth: '2026-10',
+      concurrencyStamp: 'stamp-1',
+      canViewPf: true,
+      canViewEsic: true,
+      canManagePf: true,
+      canManageEsic: true,
+      profile: {
+        applyPf: true,
+        pfNumber: '7',
+        uanNumber: '',
+        pfDisabledReason: '',
+        applyEsic: true,
+        esicInsuranceNumber: '1234567890',
+        esicDisabledReason: '',
+      },
+    },
+    isFetching: false,
+  };
   mocks.data = {
     employeeId: 'employee-1',
     status: 'PendingReview',
@@ -37,7 +65,7 @@ beforeEach(() => {
     employerShareReliefEligible: false,
   };
 });
-function setup(onSaved = async () => undefined) {
+function setup(onSaved = async () => undefined, showStatutoryEditor = false) {
   const close = vi.fn();
   const store = configureStore({ reducer: { confirmPopup: () => ({ isChanges: false }) } });
   const view = () => (
@@ -49,6 +77,7 @@ function setup(onSaved = async () => undefined) {
           employeeName: 'Review Staff',
           employeeIdentifier: 'E1',
         }}
+        showStatutoryEditor={showStatutoryEditor}
         canManageEnrollment
         canApproveOverride={false}
         onClose={close}
@@ -60,8 +89,8 @@ function setup(onSaved = async () => undefined) {
   return { close, ...result, refresh: () => result.rerender(view()) };
 }
 function edit() {
-  fireEvent.change(screen.getByLabelText(/ESIC insurance number/), {
-    target: { value: '9876543210' },
+  fireEvent.change(screen.getByLabelText('Notes'), {
+    target: { value: 'Synthetic coverage note' },
   });
 }
 it.each(['Close staff ESIC details', 'Cancel'])(
@@ -72,7 +101,7 @@ it.each(['Close staff ESIC details', 'Cancel'])(
     fireEvent.click(screen.getByRole('button', { name }));
     expect(close).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(screen.getByLabelText(/ESIC insurance number/)).toHaveValue('9876543210');
+    expect(screen.getByLabelText('Notes')).toHaveValue('Synthetic coverage note');
     fireEvent.click(screen.getByRole('button', { name }));
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(close).toHaveBeenCalledOnce();
@@ -95,10 +124,10 @@ it('blocks dismissal during initial loading', () => {
 it('preserves edits when background data refreshes', () => {
   const { refresh } = setup();
   edit();
-  mocks.data = { ...mocks.data, insuranceNumber: '2222222222' };
+  mocks.data = { ...mocks.data, statusReason: 'Refreshed coverage note' };
   mocks.fetching = true;
   refresh();
-  expect(screen.getByLabelText(/ESIC insurance number/)).toHaveValue('9876543210');
+  expect(screen.getByLabelText('Notes')).toHaveValue('Synthetic coverage note');
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(screen.getByRole('button', { name: 'Keep editing' })).toBeVisible();
 });
@@ -118,14 +147,14 @@ it('blocks competing saves and dismissal until a save finishes', async () => {
   fireEvent.click(save);
   expect(close).not.toHaveBeenCalled();
   expect(mocks.save).toHaveBeenCalledOnce();
+  expect(mocks.save.mock.calls[0][0].body).not.toHaveProperty('insuranceNumber');
   finish({});
   await waitFor(() => expect(close).toHaveBeenCalledOnce());
 });
 it.each(['escape', 'backdrop'])('guards %s dismissal', (method) => {
   const { close } = setup();
   edit();
-  if (method === 'escape')
-    fireEvent.keyDown(screen.getByLabelText(/ESIC insurance number/), { key: 'Escape' });
+  if (method === 'escape') fireEvent.keyDown(screen.getByLabelText('Notes'), { key: 'Escape' });
   else fireEvent.click(document.querySelector('.MuiBackdrop-root')!);
   expect(close).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: 'Keep editing' })).toBeVisible();
@@ -137,7 +166,7 @@ it('preserves the draft after a failed save', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Save enrollment' }));
   await waitFor(() => expect(mocks.error).toHaveBeenCalledOnce());
   expect(close).not.toHaveBeenCalled();
-  expect(screen.getByLabelText(/ESIC insurance number/)).toHaveValue('9876543210');
+  expect(screen.getByLabelText('Notes')).toHaveValue('Synthetic coverage note');
 });
 it('closes after success even when the follow-up refresh fails', async () => {
   mocks.save.mockReturnValue({ unwrap: () => Promise.resolve({}) });
@@ -151,4 +180,17 @@ it('closes after success even when the follow-up refresh fails', async () => {
   expect(mocks.error).toHaveBeenCalledWith(
     expect.objectContaining({ message: expect.stringContaining('Enrollment saved.') })
   );
+});
+
+it('blocks coverage saves and guards closing while the shared registration editor is dirty', async () => {
+  const { close } = setup(async () => undefined, true);
+  fireEvent.change(screen.getByLabelText('ESIC insurance number'), {
+    target: { value: 'UPDATED1234' },
+  });
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Save enrollment' })).toBeDisabled()
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(close).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Keep editing' })).toBeVisible();
 });

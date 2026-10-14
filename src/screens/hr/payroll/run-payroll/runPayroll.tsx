@@ -68,6 +68,8 @@ import { usePayrollPreviewRun } from './use-payroll-preview-run';
 import { SalaryDetailsTableCard } from './salary-details-table-card';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
+import { staffPayrollEditHref } from '../../employee/payroll-profile-utils';
+import { PayrollRegistrationReadiness } from './payroll-registration-readiness';
 import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
@@ -1062,6 +1064,7 @@ const RunPayroll = () => {
         sx={{ flexWrap: 'wrap', mb: 1 }}
       />
 
+      <PayrollRegistrationReadiness month={selectedMonthKey} />
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         flexWrap="wrap"
@@ -1249,6 +1252,7 @@ const RunPayroll = () => {
                     loading={markLoading}
                     disabled={!preview.isCurrent || !selectedPendingIds.length}
                     startIcon={<Iconify icon="solar:check-circle-bold" />}
+                    title="Acknowledges the displayed payroll warnings for these rows."
                     onClick={() =>
                       runReviewMutation(
                         markReviewed,
@@ -1792,6 +1796,24 @@ const RunPayroll = () => {
                         </Box>
                       ) : (
                         <Stack spacing={1.5}>
+                          {activeRow.issueCodes.some((code) =>
+                            [
+                              'PF_APPLY_DISABLED',
+                              'PF_NUMBER_MISSING',
+                              'ESI_APPLY_DISABLED',
+                              'ESI_NUMBER_MISSING',
+                            ].includes(code)
+                          ) && (
+                            <Button
+                              component={RouterLink}
+                              href={staffPayrollEditHref(activeRow.id)}
+                              size="small"
+                              variant="outlined"
+                              sx={{ alignSelf: 'flex-start' }}
+                            >
+                              Review statutory registration
+                            </Button>
+                          )}
                           {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
                             const codes = activeRow.issueCodes.filter(
                               (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity

@@ -149,12 +149,6 @@ export function PayrollProfileDetailsEditor({
               {field('bankDetails.ifscCode', 'IFSC code *')}
             </Grid>
           </FormSectionCard>
-          <FormSectionCard icon="mdi:card-account-details-outline" title="Statutory identifiers">
-            <Grid container spacing={1}>
-              {field('statutoryIdentifiers.epfNumber', 'EPF number')}
-              {field('statutoryIdentifiers.uanNumber', 'UAN number')}
-            </Grid>
-          </FormSectionCard>
           <FormSectionCard icon="mdi:clock-outline" title="Attendance integration">
             <Grid container spacing={1}>
               {field('attendanceIntegration.punchId', 'Punch ID')}

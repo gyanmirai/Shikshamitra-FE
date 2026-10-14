@@ -5,6 +5,7 @@ export type LeaveAccrualPolicyType = 'Monthly' | 'Yearly';
 export type ILeavePolicyRule = {
   id?: string;
   paidType: LeavePaidType | string;
+  payrollCategory?: 'PAID' | 'CL' | 'UNPAID';
   entitlementMode?: LeaveEntitlementMode | string;
   accrualPolicyType?: LeaveAccrualPolicyType | string;
   leaveCount?: number | null;

@@ -189,7 +189,10 @@ export const statutorySchemeApi = api.injectEndpoints({
     }),
     updateEsiEnrollment: builder.mutation<
       EsiEnrollment,
-      { employeeId: string; body: Omit<EsiEnrollment, 'id' | 'employeeId' | 'schemeCode'> }
+      {
+        employeeId: string;
+        body: Omit<EsiEnrollment, 'id' | 'employeeId' | 'schemeCode' | 'insuranceNumber'>;
+      }
     >({
       query: ({ employeeId, body }) => ({
         url: `${esiStatutoryEndpoint}/employees/${employeeId}/enrollment`,

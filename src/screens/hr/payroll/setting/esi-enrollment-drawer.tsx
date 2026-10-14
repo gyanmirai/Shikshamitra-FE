@@ -36,13 +36,13 @@ import {
 } from '@mui/material';
 
 import { formatEsiCurrency } from './esi-statutory-utils';
+import { StatutoryProfileEditor } from '../../employee/statutory-profile-editor';
 
-type EnrollmentForm = Omit<EsiEnrollment, 'id' | 'employeeId' | 'schemeCode'>;
+type EnrollmentForm = Omit<EsiEnrollment, 'id' | 'employeeId' | 'schemeCode' | 'insuranceNumber'>;
 
 const EMPTY_FORM: EnrollmentForm = {
   status: 'PendingReview',
   wageCeilingCategory: 'Standard',
-  insuranceNumber: '',
   coveredFrom: '',
   coveredTo: '',
   contributionPeriodEnd: '',
@@ -70,6 +70,7 @@ type EsiEnrollmentDrawerProps = {
   canApproveOverride: boolean;
   onClose: () => void;
   onSaved: () => Promise<unknown>;
+  showStatutoryEditor?: boolean;
   onAddOverride?: () => void;
   onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
@@ -82,6 +83,7 @@ export function EsiEnrollmentDrawer({
   onClose,
   onSaved,
   onAddOverride,
+  showStatutoryEditor = true,
   onEditorStateChange,
 }: EsiEnrollmentDrawerProps) {
   const employeeId = employee?.employeeId || '';
@@ -95,11 +97,17 @@ export function EsiEnrollmentDrawer({
   const initializedEmployee = useRef('');
   const baseline = useRef<EnrollmentForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const busy = saving || updateState.isLoading || (!enrollmentData && enrollmentQuery.isFetching);
-  const dirty =
+  const [statutoryState, setStatutoryState] = useState({ dirty: false, busy: false });
+  const busy =
+    statutoryState.busy ||
+    saving ||
+    updateState.isLoading ||
+    (!enrollmentData && enrollmentQuery.isFetching);
+  const coverageDirty =
     open &&
     initializedEmployee.current === employeeId &&
     JSON.stringify(form) !== JSON.stringify(baseline.current);
+  const dirty = coverageDirty || statutoryState.dirty;
   const { requestNavigation, confirmation } = useUnsavedNavigation(dirty);
   useEffect(() => {
     onEditorStateChange?.({ dirty: open && dirty, busy: open && busy });
@@ -125,7 +133,6 @@ export function EsiEnrollmentDrawer({
     const initial: EnrollmentForm = {
       status: data.status,
       wageCeilingCategory: data.wageCeilingCategory,
-      insuranceNumber: data.insuranceNumber || '',
       coveredFrom: data.coveredFrom?.slice(0, 10) || '',
       coveredTo: data.coveredTo?.slice(0, 10) || '',
       contributionPeriodEnd: data.contributionPeriodEnd?.slice(0, 10) || '',
@@ -140,23 +147,20 @@ export function EsiEnrollmentDrawer({
   }, [employeeId, enrollmentData, open]);
 
   const isCovered = form.status !== 'RegistrationPending';
-  const isRegistrationPending = form.status === 'RegistrationPending';
-  const showCoverageFields = true;
   const showPwdRelief = form.wageCeilingCategory === 'PersonWithDisability';
   const reliefInvalid =
     form.employerShareReliefEligible &&
     (!form.employerShareReliefFrom || !form.disabilityEvidenceReference?.trim());
-  const formInvalid = (isCovered && !form.insuranceNumber?.trim()) || reliefInvalid;
+  const formInvalid = reliefInvalid;
 
   const save = async () => {
-    if (!employee || formInvalid || busy) return;
+    if (!employee || formInvalid || busy || statutoryState.dirty) return;
     setSaving(true);
     try {
       await updateEnrollment({
         employeeId: employee.employeeId,
         body: {
           ...form,
-          insuranceNumber: form.insuranceNumber?.trim() || null,
           coveredFrom: form.coveredFrom || null,
           coveredTo: form.coveredTo || null,
           contributionPeriodEnd: isCovered ? form.contributionPeriodEnd || null : null,
@@ -276,9 +280,22 @@ export function EsiEnrollmentDrawer({
 
           {employee?.statutoryWages !== undefined && <Divider />}
 
+          {showStatutoryEditor && open && employeeId && (
+            <Box sx={{ mb: 2 }}>
+              <StatutoryProfileEditor
+                employeeId={employeeId}
+                guardNavigation={false}
+                onEditorStateChange={setStatutoryState}
+                onSaved={() => {
+                  enrollmentQuery.refetch();
+                  onSaved();
+                }}
+              />
+            </Box>
+          )}
           <Box>
             <Typography variant="subtitle1" gutterBottom>
-              Enrollment
+              Coverage details
             </Typography>
             {!enrollmentData && enrollmentQuery.isFetching ? (
               <Box display="grid" gap={1}>
@@ -301,23 +318,6 @@ export function EsiEnrollmentDrawer({
             ) : null}
             {enrollmentData ? (
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControlLabel
-                    label="Registration pending"
-                    control={
-                      <Switch
-                        disabled={!canManageEnrollment || busy}
-                        checked={isRegistrationPending}
-                        onChange={(_, checked) =>
-                          setForm((current) => ({
-                            ...current,
-                            status: checked ? 'RegistrationPending' : 'PendingReview',
-                          }))
-                        }
-                      />
-                    }
-                  />
-                </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth size="small" disabled={!canManageEnrollment || busy}>
                     <InputLabel>Wage ceiling category</InputLabel>
@@ -346,31 +346,6 @@ export function EsiEnrollmentDrawer({
                     </Select>
                   </FormControl>
                 </Grid>
-
-                {showCoverageFields ? (
-                  <Grid size={{ xs: 12 }}>
-                    <TextField
-                      fullWidth
-                      required={isCovered}
-                      disabled={!canManageEnrollment || busy}
-                      label="ESIC insurance number"
-                      size="small"
-                      value={form.insuranceNumber}
-                      error={isCovered && !form.insuranceNumber?.trim()}
-                      helperText={
-                        isRegistrationPending
-                          ? 'Required before activation or covered payroll finalization.'
-                          : undefined
-                      }
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          insuranceNumber: event.target.value,
-                        }))
-                      }
-                    />
-                  </Grid>
-                ) : null}
 
                 {showPwdRelief ? (
                   <>
@@ -532,6 +507,11 @@ export function EsiEnrollmentDrawer({
               bottom: 0,
             }}
           >
+            {statutoryState.dirty && (
+              <Typography variant="caption" color="text.secondary" sx={{ width: 1 }}>
+                Save registration details above before updating coverage.
+              </Typography>
+            )}
             <Button size="small" onClick={close} disabled={busy}>
               Cancel
             </Button>
@@ -539,7 +519,13 @@ export function EsiEnrollmentDrawer({
               variant="contained"
               size="small"
               onClick={save}
-              disabled={formInvalid || busy || !enrollmentData || enrollmentQuery.isError}
+              disabled={
+                formInvalid ||
+                busy ||
+                statutoryState.dirty ||
+                !enrollmentData ||
+                enrollmentQuery.isError
+              }
             >
               {updateState.isLoading ? 'Saving…' : 'Save enrollment'}
             </Button>

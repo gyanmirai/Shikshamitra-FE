@@ -9,6 +9,7 @@ export type HrReportFilter = {
   statuses?: number[];
   genderType?: number;
   month?: string;
+  includeDrafts?: boolean;
   componentNames?: string[];
   dateField?: string;
   fromDate?: string;
@@ -101,6 +102,8 @@ export type HrReportPreview = {
   columns: HrReportColumn[];
   rows: Record<string, string | null>[];
   normalizedFilters: HrReportFilter;
+  totals?: Record<string, number>;
+  totalsLabel?: string;
   queryWarnings?: string[];
   chart?: HrReportChartPreview;
 };
