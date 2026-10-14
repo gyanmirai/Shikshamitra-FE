@@ -89,8 +89,8 @@ npm run ts
 ## Coverage map
 
 For the module overview dashboard, run `operational-dashboard-state.test.ts`, professional-management utilities, permission catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
-The browser suite covers four primary modules, exact partial grants, scoped onboarding, workflow shortcuts, date changes and reload, retired URL keys, complete IST payroll timestamps, empty and failed sections, read-only refresh, and revoked access.
-Verify the actual active light or dark theme at 390, 768, 1366, and 1440 pixels, with keyboard attendance tooltips, reduced motion, and no page overflow.
+The browser suite covers four primary modules, exact partial grants, scoped onboarding, absence of workflow shortcuts, date changes and reload, retired URL keys, complete IST payroll timestamps, empty and failed sections, read-only refresh, and revoked access.
+Verify the actual active light or dark theme at 390, 768, 1366, and 1440 pixels, with keyboard date input, accessible trend counts, reduced motion, and no page overflow.
 Module counts come from overview data and must not request or depend on a staff page.
 Backend tests prove counts beyond 100 records, distinct appraisal deadlines, tenant isolation, and review drill-down scope.
 Finish with signed-in local Codex browser checks against the real backend for existing authorized HR, principal, and supervisor accounts.
@@ -646,3 +646,15 @@ Run SalaryStructureBuilder.test.tsx, esi-configuration-form.test.ts, payslip-set
 Run focused ESLint, TypeScript, HR docs validation and security regressions.
 Use an authenticated local backend for the final Codex-browser smoke at 390, 768 and 1440 pixel widths.
 Inspect application-rendered monthly PDFs, inclusive statements, missing months and register totals with anonymized data.
+
+## Operational dashboard decision cue checks
+
+Run `operational-dashboard-state.test.ts` for selective cue colours, unavailable data, payroll guidance precedence, and singular/plural and Indian-number formatting.
+Run `e2e/hr/hr-dashboard-standard-design.spec.ts` for loading geometry, selective priority cues, compact header spacing, minimal attendance, payroll messages, stale data, permissions, and keyboard behaviour.
+Verify attendance has one chart series, no buttons, compact daily status counts, and an accessible seven-day trend list.
+Check Needs review stays separate from status totals and the date input survives URL reload.
+Cover no saved payroll records, pending reviews, fully locked records, reviewed-but-unlocked records, missing sections, and large counts.
+Verify light/dark themes, reduced motion, desktop card edge alignment, mobile stacking, and absence of document-level horizontal overflow.
+Assert standard inline breadcrumbs and the absence of card workflow buttons, Mark Attendance, Open Payroll, and the bottom quick-action row.
+Keep view-control coverage for refresh and the date input.
+Finish automated checks with a Codex in-app browser visual review of the loading and loaded components.

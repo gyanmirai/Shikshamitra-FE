@@ -133,23 +133,23 @@ The English-only `/hr/dashboard` requires the exact `HR.Dashboard.View` grant fo
 The shared HR heading and breadcrumbs remain visible during loading, empty results, failed reads, and refreshes.
 Workforce, Leave approvals, Onboarding, and Appraisals form the primary module grid, followed by one seven-day attendance chart and saved payroll progress.
 The grid uses four columns on desktop, two on tablet, and one on mobile, with neutral leading icons, outlined MUI Paper surfaces, theme typography, and consistent section spacing.
-Module details use aligned labels and values, and workflow links use the shared small outlined button style without local height or padding overrides.
-Attendance day selectors retain 44 px touch targets and visible keyboard focus, with one shared Present / total explanation beneath the graph.
+Module details use aligned labels and values without workflow buttons or footer links.
+The attendance date field sits beside the section heading, above a single Present-count chart and compact read-only daily counts.
 Staff Directory and existing module workflows own detailed tables and decisions.
 Current scope, current IST date, and the backend generation timestamp appear above the grid.
-Only the attendance date changes through the date field, Previous day, and Today controls, with its selected date retained in the URL.
+Only attendance changes through the date field, with the selected date retained in the URL.
 All other module summaries remain current even when attendance shows a historical date.
 Obsolete staff-filter and chart-view URL keys are removed with a dismissible explanation.
 Scoped onboarding shows Unavailable with its backend explanation and no shortcut.
 Unavailable and failed summaries do not display zero, while real empty results do.
-Attendance day buttons expose all seven counts through keyboard-accessible descriptions and tooltips.
-Unmarked attendance stays neutral, and setup and review counts remain separate.
+The selected date shows the full status breakdown, and a screen-reader list exposes present/total counts for all seven days.
+Attendance counts stay neutral, and overlapping review flags remain separate from status totals.
 Payroll progress uses saved counts, and its complete saved timestamp converts to IST before formatting.
 Refresh performs a read, reserves progress space, and announces explicit results without announcing each background poll.
 Operational reads refresh every 60 seconds while focused, on focus return, and after relevant cache invalidations.
 Failed refreshes retain the last successful data with a stale label, while access denial clears displayed data.
 Identity, tenant, or grant changes remount the dashboard with a separate cache identity and zero unused cache retention.
-Module shortcuts use existing authorized workflows, and the appraisal shortcut opens all cycles through `cycleId=all`.
+The dashboard is read-only and does not expose module shortcuts, Mark Attendance, Open Payroll, Add Staff, or HR Reports actions.
 Appraisal list, detail, and evidence queries use the same access identity and clear results after failed reads.
 Role names never substitute for a permission, and backend capabilities and section states constrain displayed content.
 Backend rules remain canonical in [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#operational-hr-dashboard).
@@ -473,3 +473,18 @@ Identity, totals and all nonzero deductions remain mandatory.
 
 Staff Edit Payroll saves its statutory draft before bank changes through Save and Save & Next.
 Its navigation guard and busy state include both editors.
+
+## Operational dashboard decision cues
+
+The active `/hr/dashboard` screen consumes `hrOperationalDashboardApi.ts` and uses exact permissions and backend scope to determine visible cards and actions.
+Pending leave requests use an informational Awaiting decision label, while positive overdue appraisal counts use a warning label.
+Attendance uses one read-only seven-day Present chart, a selected-day present/total count, and a compact status summary.
+The date input sits beside the section heading; the dashboard has no day navigation buttons, chart selectors, highlighted attendance tiles, legend, or expandable details.
+A screen-reader list exposes each day's present and total counts without extra interactive controls.
+Needs review remains a separate count because it can overlap attendance statuses.
+Payroll guidance describes saved records only and distinguishes absent records, pending reviews, fully locked records, and reviewed records that remain unlocked.
+The guidance does not imply payroll readiness, payment completion, or authority to lock records.
+Refresh and the attendance date input are viewing controls only.
+Date, scope, and freshness use a compact caption row grouped with the standard breadcrumb header.
+The dashboard uses the shared inline CustomBreadcrumbs defaults without local colour or action-alignment overrides.
+Loading uses matching placeholders, while failed, unavailable, and forbidden summaries do not display actionable counts or completion messages.

@@ -4,6 +4,7 @@ import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { stylesMode } from 'src/theme/styles';
 import { RouterLink } from 'src/routes/components';
 
 import type { BreadcrumbsLinkProps } from './types';
@@ -29,6 +30,7 @@ export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props)
     minHeight: isInteractive ? 44 : 'auto',
     transition: 'color 0.2s ease-in-out, background-color 0.2s ease-in-out',
     fontWeight: activeLast ? 600 : 400,
+    ...(activeLast && { [stylesMode.dark]: { color: 'primary.light' } }),
     '&:hover': {
       color: 'primary.main',
       textDecoration: 'none',
