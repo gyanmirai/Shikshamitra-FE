@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,7 +12,7 @@ audience: humans-and-agents
 
 The active screen at `/finance/settings/create-fee-structure` uses one class workspace for viewing and editing draft/published structures. This implementation covers configuration only. It does not change Fee Structure Assignment, demands, collections or refunds.
 
-The [UI and language proposal](fee-structure-ui-redesign.md) specifies the next presentation pass for the three workspace steps and policy coverage dialog.
+The workspace uses a visible structure list beside the three-step editor. At narrower widths the same list opens in a drawer. Structure navigation preserves each mounted editor's unsaved values and saved step. The earlier [UI and language proposal](fee-structure-ui-redesign.md) supplies background; the active layout is described here.
 
 Backend rules, exact permissions, migration and API contracts are owned by [the backend implementation reference](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
 
@@ -31,21 +31,27 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 
 ## Common components and interaction rules
 
-| Surface | Component/pattern |
-|---|---|
-| Workspace list and head/schedule/coverage tables | `CustomizableTable` |
-| Policy, Fee Head and version choices | `CustomSelect` |
-| Full-screen workspace | Unmodified shared `CustomDialog` with `fullScreen`, following the timetable workspace |
-| Horizontal class navigation | Unmodified shared `CustomTabs` with scroll buttons; the owning form guards dirty class switches |
-| Guided setup (Fee heads & terms, Policies, Review & publish) | Unmodified shared `CustomStepperWithFormik` owns navigation, scrolling and action footer; Fee Heads remain together in one table |
-| Installment editor | `CustomDialog` + `DialogScrollContent` |
-| Publication, revision, delete, discard and term replacement | `ConfirmDialog` |
-| Row removal | `ThreeDotsActions` |
-| Status | `Label`, theme palette tokens |
-| Feedback | `shikshaMitraToast`, MUI Alert and small controls |
-| API hooks | `useQueryAndMutation` |
+| Surface                                                      | Component/pattern                                                                                                                                   |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace list and head/schedule/coverage tables             | `CustomizableTable`                                                                                                                                 |
+| Fee Head and payment-term choices                            | `CustomSelect`                                                                                                                                      |
+| Structure navigation                                         | MUI `ListItemButton`, `Scrollbar`, `Label`; responsive MUI `Drawer`                                                                                 |
+| Policy selection                                             | Searchable `CustomizableTable` inside `CustomDialog` + `DialogScrollContent`                                                                        |
+| Full-screen workspace                                        | Unmodified shared `CustomDialog` with `fullScreen`, following the timetable workspace                                                               |
+| Horizontal class navigation                                  | Unmodified shared `CustomTabs` with scroll buttons; the owning form guards dirty class switches                                                     |
+| Guided setup (Fee heads & terms, Policies, Review & publish) | Shared `CustomStepperWithFormik` owns navigation, scrolling and action footer, reusing the editor's one Formik instance and Yup schema              |
+| Fee-head editing                                             | Overview table opens a focused `FormSectionCard`; MUI fields, `ShakingTextField`, and `NumericFormatCustom` retain exact configured decimal amounts |
+| Policy sections                                              | `FormSectionCard` with pinned-version identity, accessible help, View/Change/Remove actions, and available exact-version coverage                   |
+| Installment editor                                           | `CustomDialog` + `DialogScrollContent`                                                                                                              |
+| Publication, revision, delete, discard and term replacement  | `ConfirmDialog`                                                                                                                                     |
+| Row and structure actions                                    | `AdaptiveThreeDotsActions`; compact row actions and secondary header actions in overflow                                                            |
+| Status                                                       | `Label`, theme palette tokens                                                                                                                       |
+| Feedback                                                     | `shikshaMitraToast`, MUI Alert and small controls                                                                                                   |
+| API hooks                                                    | `useQueryAndMutation`                                                                                                                               |
 
 Stepper navigation preserves the parent candidate without a leave prompt. The nested schedule dialog opts out of the global leave prompt through `guardUnsavedChanges={false}`. Leaving the workspace or switching class uses the shared confirmation dialog and the actual aggregate dirty state.
+
+Fee-head columns allocate flexible width to the name, bounded width to pricing and payment-term identity, right alignment to amounts, and a compact sticky Actions column. Policy coverage uses proportional column widths. Installments are grouped by fee head so its name and term version appear once per group; demand date and allocation percentage remain available through Show Details. All setup/review tables disable irrelevant sorting/filtering. Readiness keeps every server blocker visible and offers navigation to the relevant step; policy mismatch guidance is also shown on Policies when exact-version coverage is available.
 
 Metadata list pagination/search uses the server. Empty, loading and error states are distinct. Settings refresh preserves unsaved changes and invalidates the previous readiness result. Parent refetch never overwrites a dirty card. Out-of-order previews are discarded using an editor generation counter. Publication is disabled for an unsaved or unreviewed draft.
 
@@ -61,7 +67,7 @@ Display validation messages from both ABP `error.data.Errors` and the host's Pro
 
 Policy selectors are editable only in an authorized draft edit session. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
 
-The active path uses `FeeStructureWorkspaceCard.tsx` and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
+The active path uses `FeeStructureWorkspaceCard.tsx`, `FeeStructureHeadsStep.tsx`, `FeeStructurePoliciesStep.tsx`, `FeeStructureReviewStep.tsx`, `useFeeStructureWorkspaceForm.ts`, and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
 
 ## Edge cases to verify
 
@@ -97,20 +103,19 @@ On 2026-09-09, the nine focused frontend tests, TypeScript checking and focused 
 
 Finance documentation validation passes. The repository-wide frontend documentation command still reports pre-existing issues outside this module, including `docs/testing`; this change does not repair unrelated documentation.
 
-
 ## Individual settings integration (2026-09-10)
 
 `hooks/useFeeStructureLookups.ts` composes owning API hooks, with their own caches and permission checks. Context contains no catalogs. Active Fee Heads load by academic year; published Payment Term choices load by year/board; policy lists load when Policies is opened, or immediately for new-draft defaults. Each catalog traverses bounded 100-row pages, and the common selector searches the resulting complete list. Each family's Retry/Refresh action is independent. Term installment details load only for the schedule being opened.
 
-Only active current policy snapshots appear as new choices. An attached older version is rendered as a retained disabled option with its saved name/version; it is never upgraded on GET. Policy choices display Default when appropriate. Payment Term selections use `publishedVersionId`, never a working draft's current version. Changing a selection changes only the local structure candidate, never policy/term master data.
+Only active current policy snapshots appear as new choices. An attached older policy version retains its saved name/version on the policy card; an older payment term remains a retained disabled selector option. Neither is upgraded on GET. Policy choices display Default when appropriate. Payment Term selections use `publishedVersionId`, never a working draft's current version. Changing a selection changes only the local structure candidate, never policy/term master data.
 
 Default initialization waits for a complete successful family list and requires exactly one attachable current default plus attachment permission. It runs once per family on a new unsaved draft. No default leaves an empty field; multiple defaults require explicit choice. Manual selection/clear marks the family handled, including while another request is pending. Existing drafts, revisions and published records never receive defaults. A failed lookup preserves input and exposes retry; it does not silently select another policy.
 
-The subject creation form is the validation reference: name/amount errors appear after blur or Save, guidance stays under the owning field, and the name uses shared `ShakingTextField`. Policy requiredness is field guidance, never a fake dropdown option. Collection is validated on the Policies step before proceeding to Review and remains required at publication; Refund and Proration remain optional. Concession is no longer selected or required here. Receipt Book has no control or new request field.
+The subject creation form is the validation reference: name/amount errors appear after blur or Save, guidance stays under the owning field, and the fields use shared `ShakingTextField`. Policy requiredness is visible on the policy card. Collection is validated on the Policies step before proceeding to Review and remains required at publication; Refund remains optional. Proration and Concession are not selected or required here. Receipt Book has no control or new request field.
 
 `buildStructureChanges` compares the immutable saved baseline and sends only changed fields. Head operations use saved line IDs; clearing a policy sends a null family; schedule replacement is explicit and atomic. A no-op causes no request. Request IDs remain stable for an identical retry. A changed command uses a different request ID. Canonical response replaces the local candidate and class cache, preserving new IDs/stamps.
 
-All added Fee Heads remain visible in the existing common table, with amount/term/charge controls and a local schedule dialog. Section tabs preserve unsaved edits. Policy-only heads never create rows; backend Review explains overlap and conflicting scope.
+All added Fee Heads appear in the common overview table. Edit/View opens a focused form for pricing, amounts, terms, optionality, and the existing schedule dialog. The shared stepper preserves Formik values. Policy-only heads never create rows; backend Review explains overlap and conflicting scope.
 
 ### Additional regression cases
 
@@ -123,7 +128,6 @@ All added Fee Heads remain visible in the existing common table, with amount/ter
 - Unknown fields, missing pair values, foreign line IDs and repeated line operations are rejected atomically.
 - Empty draft with a default selected-head Refund Policy remains savable, but publication requires overlap.
 
-
 ## Verification update - 2026-09-10
 
 The five-file focused frontend run passed 19 tests. A subsequent focused model run passed all nine model tests, including the additional duplicate-name regression (20 distinct frontend tests covered across these runs). Coverage includes partial request payloads, explicit clears, preserved pins, defaults, pagination completion, stale data, incomplete lists, common tab navigation and real shared-select search. TypeScript and focused lint checks pass.
@@ -131,7 +135,6 @@ The five-file focused frontend run passed 19 tests. A subsequent focused model r
 Browser checks used the actual editor with synthetic fixture responses: current/default policy badges, explicit clear across tabs, Fee Head tabs, amount validation on blur, searchable Fee Heads, and selected term schedule rendering. Desktop light mode and 390px dark mode were inspected. Published term labels retain the saved names/version labels. No signed-in full-stack browser test or financial transaction was performed.
 
 The backend must be rebuilt/restarted alongside this frontend: the new context/PATCH routes and additive current/published version fields are required. The earlier revision migration remains a separate deployment prerequisite where it has not already been applied; this task did not execute it.
-
 
 ## Required Fee Head fields and default Payment Terms
 
@@ -147,7 +150,6 @@ New editor rows retain the existing false default; no database migration or back
 - Keep available choices interactive during a failed refresh. Display the existing retry warning and retain saved pins. Do not infer defaults from a failed or incomplete catalog. Permission-denied and read-only/published controls remain disabled.
 - If the catalog has no eligible terms, explain that a Payment Term must be published for the same academic year and board. Save/Review blocks until each row has both the term ID and published version ID.
 - Existing unavailable or older pins remain visible for review; the backend decides their publication eligibility. Changes still use the targeted PATCH contract and never advance a historical version automatically.
-
 
 ## Contextual policy impact
 

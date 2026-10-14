@@ -1004,6 +1004,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | `filterType`     | Set the default filter type according to the field: `string`, `number`, `date`, `dateTime`, `enum`, or `formattedNumber`.                                         |
 | Status column    | Always set `sticky: true`, normally use `stickyPosition: 'right'`, set `filterType: 'enum'` when filterable, and render the value with `Label`.                   |
 | Action column    | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; always use the shared `ThreeDotsActions` component for its row actions. |
+| View destination | Set `ThreeDotsActions.viewHref` for a profile/detail destination with native link semantics; keep `viewLabel` specific to the row. Existing `handleViewClick` consumers remain supported. |
 | Direct actions   | Show at most three frequent row actions directly. Use built-in view/edit/delete props first and `directActions` for a feature-specific `mdi:` action; place every remaining action in the three-dot menu. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
@@ -1109,6 +1110,7 @@ When the API provides paging, search, sorting, or filtering, connect those capab
 - Keep at most three direct icons before the three-dot control. Configure feature-specific direct icons through `directActions` with a stable id, specific label, `mdi:` icon, disabled state, and handler; keep less-frequent actions in `actions`.
 - Give row actions specific accessible labels that identify the affected record, such as `Edit Spring admission cycle`, rather than repeating generic labels when the row context is available.
 - Stop row-action events from triggering row navigation; `ThreeDotsActions` handles event propagation for its built-in actions.
+- When View navigates to another workspace, use `viewHref` so modifier-click and opening a new tab retain native link behavior; do not prevent the link's default action. A disabled View renders as a disabled button without a destination.
 - Hide or disable actions according to the screen’s permission and record-state rules, but do not treat hidden controls as authorization; backend permission checks remain authoritative.
 - Shape API data into view-specific rows before passing it to `CustomizableTable`; do not spread raw API records into cells when the view requires formatted labels, dates, amounts, or derived values.
 - Keep raw values available when needed for sorting, filtering, actions, or export, while rendering the user-facing formatted value through the column `render` function.

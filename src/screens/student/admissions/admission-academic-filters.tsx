@@ -1,12 +1,13 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useEffect, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Paper, Stack, Alert, Button } from '@mui/material';
+import { Box, Paper, Stack, Alert, Button } from '@mui/material';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -66,12 +67,16 @@ export function AdmissionAcademicFilters({
   standardId,
   onChange,
   onClear,
+  filterAction,
+  disabled = false,
 }: {
   boardId: string;
   mediumId: string;
   standardId: string;
   onChange: (key: 'board' | 'medium' | 'class', value: string) => void;
   onClear?: () => void;
+  filterAction?: ReactNode;
+  disabled?: boolean;
 }) {
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const hierarchy = useGetAcademicOrganizationOptionsQuery(
@@ -91,7 +96,7 @@ export function AdmissionAcademicFilters({
   );
 
   useEffect(() => {
-    if (!hierarchy.currentData) return;
+    if (disabled || !hierarchy.currentData) return;
     if (!boards.some((item) => item.id === boardId)) {
       if (boards[0]) onChange('board', boards[0].id);
       return;
@@ -110,6 +115,7 @@ export function AdmissionAcademicFilters({
   }, [
     boardId,
     boards,
+    disabled,
     classes.currentData,
     hierarchy.currentData,
     mediumId,
@@ -125,12 +131,26 @@ export function AdmissionAcademicFilters({
         <Alert severity="info">Select an academic year to view admissions.</Alert>
       )}
       {hierarchy.isError && (
-        <Alert severity="error" action={<Button onClick={() => hierarchy.refetch()}>Retry</Button>}>
+        <Alert
+          severity="error"
+          action={
+            <Button disabled={disabled} onClick={() => hierarchy.refetch()}>
+              Retry
+            </Button>
+          }
+        >
           Could not load Board and Medium options.
         </Alert>
       )}
       {classes.isError && mediumId && (
-        <Alert severity="error" action={<Button onClick={() => classes.refetch()}>Retry</Button>}>
+        <Alert
+          severity="error"
+          action={
+            <Button disabled={disabled} onClick={() => classes.refetch()}>
+              Retry
+            </Button>
+          }
+        >
           Could not load Class options.
         </Alert>
       )}
@@ -144,7 +164,7 @@ export function AdmissionAcademicFilters({
             options={boards}
             value={boardId}
             isLoading={hierarchy.isFetching}
-            disabled={!academicYearId || hierarchy.isError}
+            disabled={disabled || !academicYearId || hierarchy.isError}
             onChange={(value) => onChange('board', String(value))}
           />
           <CustomSelect
@@ -155,7 +175,7 @@ export function AdmissionAcademicFilters({
             options={mediums}
             value={mediumId}
             isLoading={hierarchy.isFetching}
-            disabled={!boardId || hierarchy.isError}
+            disabled={disabled || !boardId || hierarchy.isError}
             onChange={(value) => onChange('medium', String(value))}
           />
           <CustomSelect
@@ -169,13 +189,31 @@ export function AdmissionAcademicFilters({
               readAcademicFilterIds(standardId).length ? readAcademicFilterIds(standardId) : [ALL]
             }
             isLoading={classes.isFetching}
-            disabled={!mediumId || classes.isError}
+            disabled={disabled || !mediumId || classes.isError}
             onChange={(value) => onChange('class', academicMultipleFilterValue(standardId, value))}
           />
           {onClear && standardId && (
-            <Button variant="text" size="small" onClick={onClear} sx={{ flexShrink: 0 }}>
+            <Button
+              variant="text"
+              size="small"
+              disabled={disabled}
+              onClick={onClear}
+              sx={{ flexShrink: 0 }}
+            >
               Clear academic filters
             </Button>
+          )}
+          {filterAction && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                flexShrink: 0,
+              }}
+            >
+              {filterAction}
+            </Box>
           )}
         </Stack>
       </Paper>

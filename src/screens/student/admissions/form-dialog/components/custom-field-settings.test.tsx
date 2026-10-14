@@ -68,6 +68,36 @@ function expectTechnicalEditorsHidden() {
 }
 
 describe('Admission Form Builder custom field settings', () => {
+  it('shows Always visible by default and restores it without retaining a condition', async () => {
+    const user = userEvent.setup();
+    const date = { ...newField('section-1', 1, 5), code: 'DATE_OF_BIRTH', label: 'Date of birth' };
+    renderSettings(0, undefined, {}, [date]);
+    const before = currentField();
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    const selector = screen.getByRole('combobox', { name: /Show field when/ });
+    expect(selector).toHaveTextContent('Always visible');
+    expect(currentField()).toEqual(before);
+    await user.click(selector);
+    await user.click(screen.getByRole('option', { name: 'Date of birth' }));
+    expect(JSON.parse(currentField().visibilityRuleJson).field).toBe('DATE_OF_BIRTH');
+    await user.click(selector);
+    await user.click(screen.getByRole('option', { name: 'Always visible' }));
+    expect(selector).toHaveTextContent('Always visible');
+    expect(currentField()).toEqual(before);
+    expect(screen.queryByRole('combobox', { name: 'Condition' })).not.toBeInTheDocument();
+  });
+
+  it('shows Always visible when the form has no other condition fields', async () => {
+    const user = userEvent.setup();
+    renderSettings(0);
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    const selector = screen.getByRole('combobox', { name: /Show field when/ });
+    expect(selector).toHaveTextContent('Always visible');
+    await user.click(selector);
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+    expect(screen.getByRole('option', { name: 'Always visible' })).toBeVisible();
+  });
+
   it.each(CREATABLE_FIELD_TYPES)(
     'edits Basic settings with directly available More options and Rules for %s',
     async (_label, fieldType) => {

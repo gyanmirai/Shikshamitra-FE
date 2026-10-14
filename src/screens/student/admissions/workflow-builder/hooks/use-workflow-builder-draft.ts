@@ -132,15 +132,40 @@ export function useWorkflowBuilderDraft(
       (item) =>
         isApplicationStageType(item.type) && item.isRuntimeReady && item.isSelectable !== false
     );
-    if (!metadata) return;
+    if (!metadata) return false;
     setEditingStage(
       createStage(metadata, stages.length, !stages.some((stage) => stage.isEntryStage), stages)
     );
     setStageDrawerOpen(true);
+    return true;
   };
-  const saveStage = (stage: AdmissionWorkflowStage, autoConnect = true) => {
+  const saveStage = (stage: AdmissionWorkflowStage, autoConnect = true, nextStepFrom?: string) => {
     recordHistory();
-    if (autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0) {
+    const source = stages.find((item) => item.id === nextStepFrom);
+    if (
+      source &&
+      isApplicationStageType(source.stageType) &&
+      isApplicationStageType(stage.stageType) &&
+      !source.isTerminalStage &&
+      !stage.isEntryStage &&
+      !stages.some((item) => item.id === stage.id) &&
+      !transitions.some((item) => item.fromStageId === source.id && item.isDefault)
+    ) {
+      const next: AdmissionWorkflowTransition = {
+        id: crypto.randomUUID(),
+        fromStageId: source.id,
+        toStageId: stage.id,
+        priority:
+          Math.max(
+            -1,
+            ...transitions
+              .filter((item) => item.fromStageId === source.id)
+              .map((item) => item.priority)
+          ) + 1,
+        isDefault: true,
+      };
+      setTransitions((current) => [...current, next]);
+    } else if (autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0) {
       const next = getSequentialAppendRoute(stages, transitions, stage);
       if (next) setTransitions((current) => [...current, next]);
     }

@@ -59,7 +59,7 @@ const cloneInitialSettings = (
   },
   onboardingProfiles: settings.onboardingProfiles.map((profile): OnboardingProfile => ({
     ...profile,
-    offeringIds: [...(profile.offeringIds ?? [])],
+    ...(Array.isArray(profile.offeringIds) ? { offeringIds: [...profile.offeringIds] } : {}),
     admissionRoutes: [...profile.admissionRoutes],
     applicability: {
       ...profile.applicability,

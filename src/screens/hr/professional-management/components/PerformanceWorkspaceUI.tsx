@@ -68,7 +68,6 @@ export function PerformanceWorkspaceShell({ children }: WorkspaceShellProps) {
         minWidth: 0,
         flex: 1,
         minHeight: 0,
-        height: { xs: 'auto', md: 'calc(100vh - 220px)' },
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -101,7 +100,7 @@ export function PerformanceTablePanel({ children, minHeight = 360, sx }: TablePa
     <Box
       sx={{
         minWidth: 0,
-        minHeight,
+        minHeight: { xs: minHeight, md: 0 },
         flex: 1,
         height: '100%',
         display: 'flex',

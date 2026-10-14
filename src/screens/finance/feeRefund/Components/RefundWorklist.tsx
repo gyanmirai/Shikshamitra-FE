@@ -1,19 +1,24 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IParams } from 'src/components/customizabaleTable/types';
 import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
+import { fDate } from 'src/utils/format-time';
+import { fNumber } from 'src/utils/format-number';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
-import { Box, Tab, Card, Tabs, Tooltip, IconButton, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetFeeRefundsQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+
+import { serializeRefundWorklistFilters } from './refundWorklistFilters';
 
 import type { IStudentFeeData } from '../type';
 
@@ -59,6 +64,7 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     medium: item.educationMediumName ?? '',
     class: item.standardName ?? '',
     division: item.divisionName ?? '',
+    classDivision: `${item.standardName || '—'} / ${item.divisionName || '—'}`,
     grNo: String(item.studentGrNo ?? ''),
     rollNo: String(item.studentRollNo ?? ''),
     totalPaidFees: 0,
@@ -66,7 +72,7 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     refundAmount: item.approvedAmount || item.calculatedAmount,
     refundMethod: item.refundMethod ?? '',
     status: item.status,
-    requestDate: new Date(item.submittedAt || item.creationTime).toLocaleDateString('en-IN'),
+    requestDate: item.submittedAt || item.creationTime,
     _refundRequestId: item.id,
     _studentId: item.studentId,
     _availableActions: item.availableActions,
@@ -99,8 +105,26 @@ export default function RefundWorklist({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const serializedFilters = useMemo(
+    () => serializeRefundWorklistFilters(columnFilters),
+    [columnFilters]
+  );
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data, isLoading, isFetching, isError, refetch } = useGetFeeRefundsQuery(
+  useEffect(() => {
+    setPage(0);
+  }, [
+    currentYear?.id,
+    filters.filterPayload?.educationMediumId,
+    filters.filterPayload?.standardId,
+    filters.filterPayload?.divisionId,
+  ]);
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+    isError,
+  } = useGetFeeRefundsQuery(
     {
       academicYearId: currentYear?.id,
       academicMediumId: filters.filterPayload?.educationMediumId,
@@ -110,6 +134,7 @@ export default function RefundWorklist({
       legacyHistory: status === -1,
       workflowVersion: status === -1 ? 0 : 1,
       search,
+      filters: serializedFilters,
       skipCount: page * pageSize,
       maxResultCount: pageSize,
     },
@@ -126,6 +151,7 @@ export default function RefundWorklist({
       legacyHistory: entry.value === -1,
       workflowVersion: entry.value === -1 ? 0 : 1,
       search,
+      filters: serializedFilters,
       skipCount: 0,
       maxResultCount: 1,
     },
@@ -162,13 +188,7 @@ export default function RefundWorklist({
     name: string,
     icon: string,
     handler: (row: IStudentFeeData) => void
-  ) => (
-    <Tooltip key={name} title={name}>
-      <IconButton aria-label={`${name} for ${row.name}`} size="small" onClick={() => handler(row)}>
-        <Iconify icon={icon} width={20} />
-      </IconButton>
-    </Tooltip>
-  );
+  ) => ({ id: name, label: `${name} for ${row.name}`, icon, onClick: () => handler(row) });
 
   return (
     <Box sx={{ display: 'flex', flex: 1, minHeight: 0, flexDirection: 'column', gap: 1 }}>
@@ -192,12 +212,13 @@ export default function RefundWorklist({
           classesLoading={filters.classesLoading}
         />
       </Card>
-      <Card sx={{ px: 2 }}>
+      <Card sx={{ px: 1 }}>
         <Tabs
           value={status}
           onChange={(_, value) => {
             setStatus(value);
             setPage(0);
+            setColumnFilters((current) => current.filter((filter) => filter.column !== 'status'));
           }}
           variant="scrollable"
         >
@@ -221,32 +242,88 @@ export default function RefundWorklist({
           tableTitle="Fee refunds"
           data={rows}
           columns={[
-            { id: '_voucherNumber', label: 'Refund no.', minWidth: 135 },
+            {
+              id: '_voucherNumber',
+              label: 'Refund no.',
+              minWidth: 135,
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
+            },
             {
               id: 'name',
               label: 'Student',
               minWidth: 180,
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
               render: (value, row) => (
                 <Typography variant="body2">
                   {value} {row.grNo ? `(${row.grNo})` : ''}
                 </Typography>
               ),
             },
-            { id: '_receiptNumber', label: 'Original receipt', minWidth: 150 },
+            {
+              id: 'classDivision',
+              label: 'Class / Division',
+              minWidth: 150,
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
+            },
+            {
+              id: '_receiptNumber',
+              label: 'Original receipt',
+              minWidth: 150,
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
+            },
             {
               id: 'refundAmount',
               label: 'Amount',
               minWidth: 125,
-              render: (value) =>
-                value == null ? '-' : `₹${Number(value).toLocaleString('en-IN')}`,
+              filterType: 'formattedNumber',
+              isFilter: true,
+              isSort: false,
+              render: (value) => (value == null ? '—' : `₹${fNumber(value)}`),
             },
-            { id: 'refundMethod', label: 'Method', minWidth: 130 },
+            {
+              id: 'refundMethod',
+              label: 'Method',
+              minWidth: 130,
+              filterType: 'string',
+              isFilter: true,
+              isSort: false,
+            },
+            {
+              id: 'requestDate',
+              label: 'Requested',
+              minWidth: 115,
+              filterType: 'date',
+              isFilter: true,
+              isSort: false,
+              render: (value) => (value ? fDate(value, 'DD-MM-YYYY') : '—'),
+            },
             {
               id: 'status',
               label: 'Status',
               minWidth: 125,
               sticky: true,
-              isFilter: false,
+              stickyPosition: 'right',
+              filterType: 'enum',
+              isFilter: true,
+              isSort: false,
+              enumOptions:
+                status === -1
+                  ? Object.entries(historicalLabels).map(([value, label]) => ({
+                      value: Number(value),
+                      label,
+                    }))
+                  : STATUSES.filter((entry) => entry.value !== -1).map(({ value, label }) => ({
+                      value,
+                      label,
+                    })),
               render: (value, row) => {
                 const entry = STATUSES.find((item) => item.value === value);
                 return (
@@ -267,53 +344,44 @@ export default function RefundWorklist({
                 );
               },
             },
-            { id: 'requestDate', label: 'Requested', minWidth: 115 },
             {
               id: 'actions',
               label: 'Actions',
               sticky: true,
+              stickyPosition: 'right',
               isFilter: false,
               isSort: false,
               excludeFromExport: true,
               minWidth: 150,
               render: (_, row) => {
                 const actions: string[] = row._availableActions ?? [];
+                const refund = row as IStudentFeeData;
                 return (
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    {action(row as IStudentFeeData, 'View', 'carbon:view-filled', onView)}
-                    {actions.includes('approve') &&
-                      action(row as IStudentFeeData, 'Approve', 'mdi:approve', onApprove)}
-                    {actions.includes('reject') &&
-                      action(row as IStudentFeeData, 'Reject', 'entypo:cross', onReject)}
-                    {actions.includes('recordPayout') &&
-                      action(
-                        row as IStudentFeeData,
-                        'Record payment',
-                        'mdi:bank-transfer-out',
-                        onRecord
-                      )}
-                    {actions.includes('confirmPayout') &&
-                      action(
-                        row as IStudentFeeData,
-                        'Confirm outcome',
-                        'mdi:check-circle-outline',
-                        onVerify
-                      )}
-                    {actions.includes('createReplacement') &&
-                      action(
-                        row as IStudentFeeData,
-                        'Create linked request',
-                        'mdi:content-copy',
-                        onReplace
-                      )}
-                    {actions.includes('returnPayout') &&
-                      action(
-                        row as IStudentFeeData,
-                        'Record returned payment',
-                        'mdi:undo-variant',
-                        onReturn
-                      )}
-                  </Box>
+                  <AdaptiveThreeDotsActions
+                    moreLabel={`More refund actions for ${row.name}`}
+                    placement="right-top"
+                    actions={[
+                      action(refund, 'View', 'mdi:eye', onView),
+                      ...(actions.includes('approve')
+                        ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
+                        : []),
+                      ...(actions.includes('reject')
+                        ? [action(refund, 'Reject', 'mdi:close', onReject)]
+                        : []),
+                      ...(actions.includes('recordPayout')
+                        ? [action(refund, 'Record payment', 'mdi:bank-transfer-out', onRecord)]
+                        : []),
+                      ...(actions.includes('confirmPayout')
+                        ? [action(refund, 'Confirm outcome', 'mdi:check-circle-outline', onVerify)]
+                        : []),
+                      ...(actions.includes('createReplacement')
+                        ? [action(refund, 'Create linked request', 'mdi:content-copy', onReplace)]
+                        : []),
+                      ...(actions.includes('returnPayout')
+                        ? [action(refund, 'Record returned payment', 'mdi:undo-variant', onReturn)]
+                        : []),
+                    ]}
+                  />
                 );
               },
             },
@@ -323,6 +391,12 @@ export default function RefundWorklist({
           serverSide
           serverSidePagination
           serverSideSearch
+          serverSideFilter
+          filters={columnFilters}
+          onServerFilter={(nextFilters) => {
+            setColumnFilters(nextFilters);
+            setPage(0);
+          }}
           totalCount={data?.totalCount ?? 0}
           page={page}
           rowsPerPage={pageSize}

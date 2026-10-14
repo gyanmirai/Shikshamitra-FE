@@ -36,14 +36,14 @@ it('loads the protected profile and passes its canonical GUID to both real Docum
   renderStudentProfile();
   expect(screen.getByRole('status')).toHaveTextContent('Loading student profile');
   expect(screen.queryByRole('tab', { name: 'Documents' })).not.toBeInTheDocument();
-  expect(await screen.findByText('Patel Aanya')).toBeInTheDocument();
-  expect(screen.getByText('GR-2026-00123')).toBeInTheDocument();
-  expect(screen.getByText('Grade 5-A')).toBeInTheDocument();
-  expect(screen.getByText('English')).toBeInTheDocument();
+  expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
+  expect(screen.getAllByText('GR-2026-00123').length).toBeGreaterThan(0);
+  expect(screen.getByText('Grade 5 · A')).toBeInTheDocument();
+  expect(screen.getAllByText('English').length).toBeGreaterThan(0);
   expect(requests).toEqual([`profile:${profileStudentId}`]);
   await userEvent.click(screen.getByRole('tab', { name: 'Documents' }));
   expect(
-    await screen.findByText('No admission evidence is linked to this student.')
+    await screen.findByText('No documents are available for this student.')
   ).toBeInTheDocument();
   await waitFor(() =>
     expect(requests).toEqual(
@@ -67,7 +67,7 @@ it('keeps tabs unmounted on a failed read and retries the actual profile request
   expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
   expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-  expect(await screen.findByText('Patel Aanya')).toBeInTheDocument();
+  expect(await screen.findByText('Aanya Patel')).toBeInTheDocument();
   expect(attempts).toBe(2);
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
@@ -107,14 +107,13 @@ it('keeps protected section queries unmounted during summary-only provisioning',
       return HttpResponse.json({ data: [] });
     })
   );
-  renderStudentProfile();
+  renderStudentProfile(profileStudentId, [
+    'Students.Records.StudentList.View',
+    'Students.Admissions.Documents.View',
+    'Students.Onboarding.View',
+  ]);
   expect(await screen.findByRole('heading', { name: 'Student summary' })).toBeVisible();
   expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Open Student Onboarding' })).toBeVisible();
   expect(protectedRequests).toEqual([]);
 });
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => '/student/profile',
-}));

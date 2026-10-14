@@ -7,7 +7,7 @@ import { buildAdmissionPipelineColumns } from './admission-pipeline-columns';
 
 const columns = buildAdmissionPipelineColumns((id) => `/application/${id}`);
 const renderCell = (id: string, row: Record<string, unknown>) =>
-  render(<>{columns.find((column) => column.id === id)!.render!('-', row)}</>);
+  render(<>{columns.find((column) => column.id === id)!.render!(row[id] ?? '-', row)}</>);
 const exportCell = (id: string, row: Record<string, unknown>) =>
   getCellValueForExport(
     row,
@@ -17,6 +17,26 @@ const exportCell = (id: string, row: Record<string, unknown>) =>
 afterEach(() => vi.restoreAllMocks());
 
 describe('Pipeline missing-source recovery', () => {
+  it('keeps direct application identity and navigation without requiring an Inquiry', () => {
+    const row = {
+      id: 'direct-app',
+      applicationNumber: 'APP-7',
+      applicantName: 'QA direct applicant',
+      inquiryId: null,
+      inquiryNumber: null,
+      openFollowUpCount: 0,
+    };
+    renderCell('applicantName', row);
+    renderCell('nextFollowUpAt', row);
+    renderCell('actions', row);
+    expect(screen.getByText('QA direct applicant')).toBeInTheDocument();
+    expect(screen.getByText('No inquiry follow-ups')).toBeInTheDocument();
+    expect(screen.queryByText(/Inquiry unavailable/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Continue APP-7' })).toHaveAttribute(
+      'href',
+      '/application/direct-app'
+    );
+  });
   it('shows honest fallback labels despite the shared table dash placeholder', () => {
     renderCell('currentStageName', { currentStageName: null });
     renderCell('assignedCounsellorName', { assignedCounsellorName: null });
@@ -47,7 +67,7 @@ describe('Pipeline missing-source recovery', () => {
       inquiryNumber: null,
     });
     renderCell('actions', { id: 'legacy-app', applicationNumber: 'APP-1' });
-    expect(screen.getByText(/Inquiry unavailable/)).toBeInTheDocument();
+    expect(screen.getByText('Legacy applicant')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Continue APP-1' })).toHaveAttribute(
       'href',
       '/application/legacy-app'

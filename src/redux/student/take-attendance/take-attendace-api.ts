@@ -6,7 +6,10 @@ import type {
   AttendanceMark,
   AttendanceScope,
   AttendanceFilter,
+  AttendanceContext,
+  AttendanceWorkspace,
   AttendanceMarkResult,
+  AttendanceWorkspaceFilter,
   AttendanceCorrectionRequest,
 } from './attendance-types';
 
@@ -31,6 +34,21 @@ export const normalizeAttendanceDay = (day: AttendanceDay): AttendanceDay => ({
 
 export const StudentTakeAttendanceApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAttendanceContext: builder.query<AttendanceContext, { academicYearId: string }>({
+      query: (params) => ({ url: '/students/attendance/context', params }),
+      providesTags: [
+        { type: studentTakeAttendanceType.studentTakeAttendance, id: 'CONTEXT' },
+        studentType.student,
+      ],
+    }),
+    getAttendanceWorkspace: builder.query<AttendanceWorkspace, AttendanceWorkspaceFilter>({
+      query: (params) => ({ url: '/students/attendance/workspace', params }),
+      providesTags: [
+        { type: studentTakeAttendanceType.studentTakeAttendance, id: 'WORKSPACE' },
+        { type: studentTakeAttendanceType.studentTakeAttendance, id: 'ROSTER' },
+        studentType.student,
+      ],
+    }),
     requestAttendanceCorrection: builder.mutation<
       { id: string; status: 'Pending' | 'Applied' },
       AttendanceCorrectionRequest
@@ -45,6 +63,7 @@ export const StudentTakeAttendanceApi = api.injectEndpoints({
                 id: attendanceDayCacheId(args),
               },
               { type: studentTakeAttendanceType.studentTakeAttendance, id: 'REPORTS' },
+              { type: studentTakeAttendanceType.studentTakeAttendance, id: 'WORKSPACE' },
               { type: studentTakeAttendanceType.studentTakeAttendance, id: 'CORRECTIONS' },
               studentType.student,
             ],
@@ -68,6 +87,7 @@ export const StudentTakeAttendanceApi = api.injectEndpoints({
                 id: attendanceDayCacheId(args),
               },
               { type: studentTakeAttendanceType.studentTakeAttendance, id: 'REPORTS' },
+              { type: studentTakeAttendanceType.studentTakeAttendance, id: 'WORKSPACE' },
               studentType.student,
             ],
     }),
@@ -81,6 +101,7 @@ export const StudentTakeAttendanceApi = api.injectEndpoints({
                 type: studentTakeAttendanceType.studentTakeAttendance,
                 id: attendanceDayCacheId(args),
               },
+              { type: studentTakeAttendanceType.studentTakeAttendance, id: 'WORKSPACE' },
             ],
     }),
     unlockAttendance: builder.mutation<void, AttendanceScope>({
@@ -99,6 +120,8 @@ export const StudentTakeAttendanceApi = api.injectEndpoints({
   overrideExisting: false,
 });
 export const {
+  useGetAttendanceContextQuery,
+  useGetAttendanceWorkspaceQuery,
   useRequestAttendanceCorrectionMutation,
   useGetAttendanceByFilterQuery,
   useMarkAttendanceMutation,

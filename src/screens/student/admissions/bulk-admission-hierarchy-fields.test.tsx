@@ -86,6 +86,67 @@ describe('bulk offering class fields', () => {
     );
   });
 
+  it('selects every eligible class across school levels and clears the bulk selection', async () => {
+    const user = userEvent.setup();
+    renderAvailability({ configuredClassIds: ['class-1'] });
+    await user.click(screen.getByRole('combobox', { name: 'Class *' }));
+    await user.click(screen.getByRole('option', { name: 'Class 2' }));
+    await user.click(screen.getByRole('option', { name: 'Select all classes' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('available-selection')).toHaveTextContent('["class-2","class-9"]')
+    );
+    expect(screen.getByRole('option', { name: 'Class 1 Offering already exists' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('combobox', { name: 'Class *' })).not.toHaveTextContent(
+      'Deselect all classes'
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Class *' }));
+    await user.click(screen.getByRole('option', { name: 'Deselect all classes' }));
+    await waitFor(() => expect(screen.getByTestId('available-selection')).toHaveTextContent('[]'));
+    expect(screen.getByRole('option', { name: 'Select all classes' })).toBeVisible();
+  });
+
+  it('resets all selected classes when changing medium and does not retain the bulk option', async () => {
+    const user = userEvent.setup();
+    renderAvailability({
+      hierarchy: [
+        ...hierarchy,
+        {
+          ...hierarchy[0],
+          id: 'primary-hindi',
+          mediumId: 'medium-2',
+          mediumName: 'Hindi',
+        },
+      ],
+    });
+    await user.click(screen.getByRole('combobox', { name: 'Class *' }));
+    await user.click(screen.getByRole('option', { name: 'Select all classes' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('available-selection')).toHaveTextContent(
+        '["class-1","class-2","class-9"]'
+      )
+    );
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('combobox', { name: 'Medium *' }));
+    await user.click(screen.getByRole('option', { name: 'Hindi' }));
+    await waitFor(() => expect(screen.getByTestId('available-selection')).toHaveTextContent('[]'));
+  });
+
+  it('keeps an empty class list empty without offering a bulk selection', async () => {
+    const user = userEvent.setup();
+    renderAvailability({ standards: [] });
+    await user.click(screen.getByRole('combobox', { name: 'Class *' }));
+    expect(screen.queryByRole('option', { name: 'Select all classes' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'No data available' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByTestId('available-selection')).toHaveTextContent('[]');
+  });
+
   it('explains when every class is configured without hiding those options', async () => {
     const user = userEvent.setup();
     renderAvailability({ configuredClassIds: standards.map((item) => item.id) });

@@ -29,8 +29,6 @@ type Props = {
   onSaveStage: (stage: AdmissionWorkflowStage) => void;
   onSaveTransition: (transition: AdmissionWorkflowTransition) => void;
   onDeleteStage: (stageId: string) => void;
-  onAddPath?: (stage: AdmissionWorkflowStage) => void;
-  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
 };
 
 export function WorkflowBuilderEditors({
@@ -50,8 +48,6 @@ export function WorkflowBuilderEditors({
   onSaveStage,
   onSaveTransition,
   onDeleteStage,
-  onAddPath,
-  onEditPath,
 }: Props) {
   const connectedTransitions = stageToDelete
     ? transitions.filter(
@@ -68,12 +64,9 @@ export function WorkflowBuilderEditors({
         stageTypes={stageTypes}
         forms={forms}
         stages={stages}
-        transitions={transitions}
         readOnly={readOnly}
         onClose={onCloseStage}
         onSave={onSaveStage}
-        onAddPath={onAddPath}
-        onEditPath={onEditPath}
       />
       <AdmissionWorkflowTransitionDrawer
         open={transitionOpen}

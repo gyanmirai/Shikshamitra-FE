@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   AdmissionWorkflowStage,
-  AdmissionWorkflowTransition,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -12,7 +11,6 @@ import { FormSectionCard } from 'src/components/form-section-card';
 import { WorkflowStageForm } from './workflow-stage-form';
 import { WorkflowStageBasics } from './workflow-stage-basics';
 import { WorkflowStageBehavior } from './workflow-stage-behavior';
-import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
 import { WorkflowPaymentSettings } from './workflow-payment-settings';
 import { WorkflowFormStageFields } from './workflow-form-stage-fields';
 import { WorkflowDocumentSettings } from './workflow-document-settings';
@@ -25,28 +23,15 @@ type Props = {
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
   stages: AdmissionWorkflowStage[];
-  transitions?: AdmissionWorkflowTransition[];
   formDefinitionId: string;
   formDetailsLoading?: boolean;
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
-  onAddPath?: (stage: AdmissionWorkflowStage) => void;
-  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
-  routeEditingDisabled?: boolean;
 };
 
 export function WorkflowStageFields(props: Props) {
-  const {
-    formik,
-    metadata,
-    readOnly,
-    stages,
-    transitions,
-    routeEditingDisabled,
-    onAddPath,
-    onEditPath,
-  } = props;
+  const { formik, metadata, readOnly, stages } = props;
   if (formik.values.stageType === 1) return <WorkflowFormStageFields {...props} />;
   const available = (key: string) => metadata?.supportedConfiguration?.includes(key) === true;
   const policy = () => {
@@ -98,17 +83,6 @@ export function WorkflowStageFields(props: Props) {
           stages={stages}
           readOnly={readOnly}
         />
-        <FormSectionCard title="Next step" icon="mdi:arrow-right">
-          <WorkflowStageNextSteps
-            stage={formik.values}
-            stages={stages}
-            transitions={transitions}
-            readOnly={readOnly}
-            routeEditingDisabled={routeEditingDisabled}
-            onAddPath={onAddPath}
-            onEditPath={onEditPath}
-          />
-        </FormSectionCard>
       </>
     </Stack>
   );

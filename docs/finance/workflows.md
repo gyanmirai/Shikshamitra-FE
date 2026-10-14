@@ -25,6 +25,16 @@ The Fee Category table applies category name and description text filters, fee-h
 
 Charge authoring keeps academic scope and selected students in the form. Search and quick filters narrow results without removing selections; Select All applies to matching results, and All students in scope remains the complete eligible academic scope. Failed reloads preserve selections and offer retry. Invalid selections are removed only after an authoritative scope load and a visible notice. The persistent footer checks the canonical Add/Update grant, required values and audience. Successful creation returns to the list as Pending; Cancel and back use the unsaved-changes guard. Fee Structure Policies validate Collection before Next/Review while retaining optional Refund and incomplete draft saves.
 
+## Accounts setting forms and history
+
+Income Category, Expense Category, and Bank Accounts use the shared Accounts
+version-history dialog. It shows the selected record and type, newest-first
+versions, actor and local time zone, and labeled Before/After values. Bank account
+numbers stay masked. Missing legacy audit details are identified explicitly;
+loading, no history, and request errors have separate states, with Retry on errors.
+The dialog body scrolls independently of its header and Close footer. Category
+and bank-account forms use the same section cards as Academic Subject forms.
+
 ## Accounts source activity
 
 `/finance/accounts/activity` shows final fee and charge receipts alongside
@@ -320,3 +330,10 @@ discard restores defaults on Create and saved source values on Edit/Duplicate.
 Collection, concession, refund and proration editors, fee-head overrides and policy details no longer show a selectable rounding field. The client sends the system RoundUp rule (RoundUpRupee for proration), and the server remains authoritative for amounts and caps. Shared monetary formatters round upward and show no decimal places, including receipts, library charges, admission payments, transport amounts and payroll displays. Percentages retain fractional precision.
 
 Installment previews use server amounts: ordinary installments discard fractional shares and the last installment receives the remainder, preserving the rounded fee total. See the [backend monetary rules](../../../Shikshamitra-BE/docs/modules/finance/product.md#whole-rupee-monetary-rules) for calculation order, caps and historical compatibility.
+
+The Fee Structure payment-term dialog shows every installment in sequence with aligned date,
+allocation, and read-only INR amount columns. Its local amount preview uses the fixed fee-head
+amount and current allocations with the same whole-rupee/remainder rule; it does not save amounts.
+Incomplete or invalid allocations display an em dash until corrected. Variable fee amounts remain
+`Calculated during assignment`. The footer stays reachable while the schedule scrolls, and changes
+apply only to the owning Fee Structure; the published Payment Term is preserved.

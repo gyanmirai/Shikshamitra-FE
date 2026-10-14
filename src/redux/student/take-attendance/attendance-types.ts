@@ -1,4 +1,29 @@
 import type { AttendanceStatus } from 'src/enums/student-attendace-status';
+import type { StudentDirectoryOptions } from 'src/redux/student/records/student-records-types';
+
+export interface AttendanceContext {
+  isAdmin: boolean;
+  schoolToday: string;
+  canManageLock: boolean;
+  options: StudentDirectoryOptions;
+  assignedClasses: { standardId: string; divisionId: string }[];
+}
+export interface AttendanceWorkspaceFilter {
+  academicYearId: string;
+  date: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  divisionId?: string;
+  search?: string;
+  sorting?: string;
+  skipCount: number;
+  maxResultCount: number;
+}
+export interface AttendanceWorkspace {
+  items: AttendanceStudent[];
+  totalCount: number;
+}
 
 export interface AttendanceFilter {
   AcademicYearId: string;
@@ -46,6 +71,8 @@ export interface AttendanceDay {
   revision?: string | null;
   rosterRevision: string;
   canMark: boolean;
+  canSubmit?: boolean;
+  canLock?: boolean;
   isExpected: boolean;
   notExpectedReason?: string | null;
   policy: AttendancePolicySummary;

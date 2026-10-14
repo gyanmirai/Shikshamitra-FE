@@ -116,36 +116,22 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
     if (published) router.push(studentPaths.enrollment.settings.workflows);
   };
   const openAddTransition = (stage: AdmissionWorkflowStage) => {
+    if (
+      readOnly ||
+      stage.isTerminalStage ||
+      commands.updateState.isLoading ||
+      commands.publishState.isLoading
+    )
+      return;
     const outgoing = draft.transitions.filter((item) => item.fromStageId === stage.id);
     if (outgoing.some((item) => item.isDefault)) return;
-    const destination =
-      draft.stages.find((item) => item.id !== stage.id && item.displayOrder > stage.displayOrder) ??
-      draft.stages.find((item) => item.id !== stage.id);
-    if (!destination) {
-      const canAddDestination = (stageTypesQuery.data ?? []).some(
-        (item) => item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false
-      );
-      if (!canAddDestination) {
-        shikshaMitraToast.warning({
-          message: 'No selectable stage type is available for a route destination.',
-        });
-        return;
-      }
-      setPendingRouteSourceId(stage.id);
-      draft.addStage(stageTypesQuery.data ?? []);
-      shikshaMitraToast.info({
-        message: 'Add the destination stage. The route editor will open after you save it.',
+    if (!draft.addStage(stageTypesQuery.data ?? [])) {
+      shikshaMitraToast.warning({
+        message: 'No selectable stage type is available for the next stage.',
       });
       return;
     }
-    draft.setEditingTransition({
-      id: '',
-      fromStageId: stage.id,
-      toStageId: destination.id,
-      priority: Math.max(-1, ...outgoing.map((item) => item.priority)) + 1,
-      isDefault: !outgoing.some((item) => item.isDefault),
-    });
-    draft.setTransitionDrawerOpen(true);
+    setPendingRouteSourceId(stage.id);
   };
   const openEditTransition = (transition: AdmissionWorkflowTransition) => {
     draft.setEditingTransition(transition);
@@ -308,23 +294,9 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         }}
         onCloseDelete={() => draft.setStageToDelete(null)}
         onSaveStage={(stage) => {
-          const routeSourceId = pendingRouteSourceId;
-          const isNewStage = !draft.stages.some((item) => item.id === stage.id);
-          draft.saveStage(stage, !routeSourceId);
-          if (!routeSourceId || !isNewStage) return;
-          const outgoing = draft.transitions.filter((item) => item.fromStageId === routeSourceId);
-          draft.setEditingTransition({
-            id: '',
-            fromStageId: routeSourceId,
-            toStageId: stage.id,
-            priority: Math.max(-1, ...outgoing.map((item) => item.priority)) + 1,
-            isDefault: !outgoing.some((item) => item.isDefault),
-          });
-          draft.setTransitionDrawerOpen(true);
+          draft.saveStage(stage, !pendingRouteSourceId, pendingRouteSourceId ?? undefined);
           setPendingRouteSourceId(null);
         }}
-        onAddPath={openAddTransition}
-        onEditPath={openEditTransition}
         onSaveTransition={draft.saveTransition}
         onDeleteStage={draft.deleteStage}
       />

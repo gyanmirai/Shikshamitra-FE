@@ -1,7 +1,7 @@
 import type { StudentOnboardingFilterOptions } from 'src/redux/student/onboarding/student-onboarding-types';
 
-import { Paper, Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { Paper, Stack, Switch, FormControlLabel } from '@mui/material';
 import {
   readAcademicFilterIds,
   academicMultipleFilterValue,
@@ -21,6 +21,8 @@ export function StudentSetupFilters({
   onMediumChange,
   onStandardChange,
   onDivisionChange,
+  todayOnly,
+  onTodayChange,
 }: {
   options?: StudentOnboardingFilterOptions;
   isLoading?: boolean;
@@ -33,6 +35,8 @@ export function StudentSetupFilters({
   onMediumChange: (value: string) => void;
   onStandardChange: (value: string) => void;
   onDivisionChange: (value: string) => void;
+  todayOnly?: boolean;
+  onTodayChange?: (value: boolean) => void;
 }) {
   const mediums = (options?.mediums ?? []).filter((item) => item.parentId === selectedBoardId);
   const standards = (options?.standards ?? []).filter((item) => item.parentId === selectedMediumId);
@@ -43,7 +47,11 @@ export function StudentSetupFilters({
   );
 
   return (
-    <Paper variant="outlined" sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}>
+    <Paper
+      variant="outlined"
+      data-testid="student-setup-academic-filters"
+      sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}
+    >
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
         <CustomSelect
           fullWidth
@@ -108,6 +116,20 @@ export function StudentSetupFilters({
           valueKey="id"
           disabled={disabled || !selectedMediumId}
         />
+        {onTodayChange && (
+          <FormControlLabel
+            sx={{ m: 0, flexShrink: 0, alignSelf: { lg: 'center' } }}
+            control={
+              <Switch
+                size="small"
+                checked={Boolean(todayOnly)}
+                disabled={disabled || isLoading}
+                onChange={(_event, checked) => onTodayChange(checked)}
+              />
+            }
+            label="Entered onboarding today"
+          />
+        )}
       </Stack>
     </Paper>
   );

@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-06
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,7 +12,25 @@ audience: humans-and-agents
 
 The Fees → Refunds worklist shows Pending, Approved, Processed, Rejected, and Failed tabs. Search, academic/class/division filters, and pagination are server driven. Each row shows only the actions returned by the API for the signed-in user.
 
-The request form previews the refundable amount, then uses one **Submit refund request** action. The server recalculates on submission. A Failed request can open a linked replacement form with the source allocations filled in; staff must choose and review payment details again.
+The table orders Refund no., Student, Class / Division, Original receipt, Amount, Method,
+Requested, Status, and Actions. Each data column has the shared header filter; Status and
+Actions stay pinned on the right. Class / Division shows both names, with `—` for a missing
+value. Amount filters compare the numeric amount, and Requested uses calendar-day filters
+with the browser's local timezone. `refundWorklistFilters.ts` serializes these filters into
+the list API's `filters` query parameter; the server filters before counting and paging.
+Alternatives on one column use OR and different columns use AND. Counts use the same
+column filters. Switching status tabs clears only the status column filter so current and
+History status labels cannot cross workflows. Row actions use the shared adaptive menu,
+with at most two direct actions and the remaining actions in its overflow menu.
+
+Validate the date/status request mapping with
+`src/screens/finance/feeRefund/Components/refundWorklistFilters.test.ts`. In the in-app
+browser, check every column's filter menu, filtered counts across multiple pages, clear
+filters, History status labels, narrow-screen scrolling, and the pinned right columns.
+
+The request form uses shared Student information, Refund details, and Refund payment details sections, with optional guidance in accessible heading tooltips and one **Submit** action in the stable footer. Refund details shows the resolved policy name and server-returned maximum refundable amount beside the full/partial controls. The fee allocation table retains paid, refunded, refundable, and receipt information; duplicate summary cards, utilization progress, and instructional banners are omitted. The request captures the allowed payout method, required recipient details, and a single optional Refund reason; payment remarks, instrument details, school account, and payout dates belong to payment recording. The server recalculates on submission. A Failed request can open a linked replacement form with the source allocations filled in; staff must choose and review payment details again.
+
+Full-refund selections stay within the server policy limit, and a policy that disallows partial refunds resets a partial selection to full. Eligibility loading retains entered amounts and never reuses a previous student's response. The method selector and submission both enforce the policy's allowed methods; legacy drafts use their saved method snapshot. Checking or saving locks the form using the shared busy overlay.
 
 Approved refunds first show **Record payment**. After recording, they show **Confirm outcome**. An uncertain bank, UPI, cheque, or demand draft result remains Approved and says **Awaiting verification**. Cash uses the same steps with one staff-entered signed handover receipt or document reference; the system generates its unique transaction reference. Confirm paid moves the request to Processed; Mark failed moves it to Failed. A confirmed non-cash return is recorded from the Processed row.
 

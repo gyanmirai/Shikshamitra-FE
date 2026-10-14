@@ -113,7 +113,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     },
     {
       id: 'applicantName',
-      label: 'Applicant',
+      label: 'Student Name',
       minWidth: 220,
       sticky: true,
       stickyPosition: 'left',
@@ -122,7 +122,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     },
     {
       id: 'admissionOfferingId',
-      label: 'Admission interest',
+      label: 'Class',
       minWidth: 190,
       filterType: 'enum',
       enumOptions: options.offeringOptions,

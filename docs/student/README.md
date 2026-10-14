@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-11
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,17 +11,22 @@ audience: humans-and-agents
 # Understand Student frontend integration
 
 TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
-General admissions start from qualified inquiries; RTE, Management and Staff can start through their configured special Registration offerings. Pipeline projects inquiry-linked application progress from the existing workflow.
-Pipeline owns active inquiry-linked cases before Admission Decision; Applications owns cases that have entered Decision, including later correction work.
+General admissions start from qualified inquiries; RTE, Management and Staff can start through their configured special Registration offerings.
+Pipeline owns active Inquiry-linked cases and started special registrations before Admission Decision; Applications owns cases that have entered Decision, including later correction work.
 Both open the shared full-page Applicant 360 workspace with phase-aware menu ancestry and safe return context.
 Applications uses the common searchable table, server paging and sorting, applicant/reference identity, contact/class context, status labels and permission-aware actions.
 Finalization preserves workflow rules, permission checks and Finance/Onboarding ownership.
 Finalization creates an Onboarding case; Onboarding owns enrollment activation.
 The finalized decision panel shows the saved admission summary, live Onboarding handover, fee/stage evidence and decision history; guidance is disclosed through its information icon.
-Student Onboarding uses a persisted Student Setup worklist with Readiness, GR Number, Roll Number, Division, Fees, and Credentials tabs.
-Readiness & Access links Admission Offerings to activation requirements and login-email choices; Numbering & Placement contains GR and Roll settings.
+Student Onboarding uses a persisted Student Setup worklist with Readiness, Division, GR Number, Roll Number, Fees, and Credentials tabs.
+Onboarding Settings combines Portal Access, GR Number and Roll Number in three URL-backed tabs.
+Portal Access contains only student and parent/guardian login requirements; new schools default to Student No and Parent/Guardian Yes while existing saved choices remain intact.
+Pending cases inherit admission requirements automatically; activated and completed cases preserve their saved snapshots.
 Fees selects and confirms an existing published fee structure through Onboarding without assigning dues, collecting money, or requiring payment settlement.
 Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.
+Credentials selects the account type and saved email, then uses one Send Credentials command for safe account preparation and durable email delivery, with a Recipient choice only when needed.
+Student List uses the selected header year, four visible academic selectors and Active/Former inside Filters, with a compact server-backed table and preserved profile navigation context.
+Student Profile has Overview, Details, Documents and History. Details renders the retained offering Registration form with inline edits; immediate saves update current values and create an audit entry while preserving submitted originals. Inquiry remains in Admissions.
 Division-wide GR and Roll locks protect those identifiers without locking placement, and task drawers display only the selected task.
 See [workflows.md](./workflows.md) and [testing.md](./testing.md) for the current flow and verification limits.
 

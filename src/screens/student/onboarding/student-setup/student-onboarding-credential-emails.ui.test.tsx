@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   documents: {} as any,
   accounts: {} as any,
   handoffs: {} as any,
+  credentials: {} as any,
+  sendCredentials: vi.fn(),
   provision: vi.fn(),
   send: vi.fn(),
   upload: vi.fn(),
@@ -49,14 +51,52 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentPortalAccountsQuery: () => mocks.accounts,
   useGetStudentOnboardingServiceHandoffsQuery: () => mocks.handoffs,
   useProvisionStudentPortalAccountMutation: () => [mocks.provision, { isLoading: false }],
+  useGetStudentOnboardingCredentialsQuery: () => mocks.credentials,
+  useSendStudentOnboardingCredentialsMutation: () => [
+    mocks.sendCredentials,
+    { isLoading: mocks.sending },
+  ],
 }));
 beforeEach(() => {
   mocks.send.mockReset();
   mocks.provision.mockReset();
+  mocks.sendCredentials.mockReset();
   mocks.override.mockReset();
   mocks.upload.mockReset();
   mocks.upload.mockReturnValue({ unwrap: () => Promise.resolve({}) });
   mocks.sending = false;
+  mocks.credentials = {
+    data: {
+      caseId: 'case-1',
+      concurrencyStamp: 'credential-workspace-stamp',
+      recipients: [
+        {
+          accountType: 'guardian',
+          relationship: 'father',
+          name: 'Parent',
+          email: 'parent@example.com',
+          canSend: true,
+          delivery: {
+            accountType: 'guardian',
+            status: 'Failed',
+            message: 'Sending failed',
+            attemptCount: 1,
+          },
+        },
+      ],
+    },
+    refetch: vi.fn(),
+  };
+  mocks.sendCredentials.mockImplementation(() => ({
+    unwrap: () =>
+      Promise.resolve({
+        ...mocks.credentials.data,
+        recipients: mocks.credentials.data.recipients.map((recipient: any) => ({
+          ...recipient,
+          delivery: { ...recipient.delivery, status: 'Pending' },
+        })),
+      }),
+  }));
   mocks.accounts = {
     data: [
       {
@@ -141,8 +181,7 @@ describe('Onboarding credential email recovery', () => {
     ).not.toBeInTheDocument();
     expect(mocks.send).not.toHaveBeenCalled();
   });
-  it('keeps linked account status and failed email retry without displaying account creation fields', async () => {
-    mocks.send.mockReturnValue({ unwrap: () => Promise.resolve({ status: 'Pending' }) });
+  it('retries an existing account through the one-click workspace without separate provisioning fields', async () => {
     render(
       <StudentOnboardingPortalAccounts
         canManage
@@ -155,40 +194,50 @@ describe('Onboarding credential email recovery', () => {
         }}
       />
     );
-    expect(screen.getByText('Student: student@example.com — Linked.')).toBeInTheDocument();
-    expect(screen.getByText('Guardian: parent@example.com — Linked.')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent@example.com')
+    );
     expect(screen.getByText('Failed')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: /Profile email/ })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Create and link account' })
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Retry email' }));
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Credentials' }));
     await waitFor(() =>
-      expect(mocks.send).toHaveBeenCalledWith({
+      expect(mocks.sendCredentials).toHaveBeenCalledWith({
         id: 'case-1',
         accountType: 'guardian',
-        concurrencyStamp: 'case-stamp',
+        relationship: 'father',
+        expectedEmail: 'parent@example.com',
+        concurrencyStamp: 'credential-workspace-stamp',
       })
     );
     expect(mocks.provision).not.toHaveBeenCalled();
   });
-  it('retains account creation fields when a required account is missing', () => {
-    mocks.accounts.data = mocks.accounts.data.filter(
-      (account: { accountType: string }) => account.accountType !== 'guardian'
-    );
+  it('uses the same Send Credentials action when the account has not yet been created', async () => {
+    mocks.credentials.data.recipients[0].delivery = null;
     render(
       <StudentOnboardingPortalAccounts
         canManage
         student={{
           ...studentOnboardingTestData[0],
+          id: 'case-1',
           studentEnrollmentId: 'enrollment-1',
           backendStatus: 3,
         }}
       />
     );
-    expect(screen.getByRole('textbox', { name: /Profile email/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create and link account' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Retry email' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent@example.com')
+    );
+    expect(screen.getByRole('button', { name: 'Send Credentials' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'Create and link account' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Credentials' }));
+    await waitFor(() => expect(mocks.sendCredentials).toHaveBeenCalledOnce());
+    expect(mocks.provision).not.toHaveBeenCalled();
   });
   it('retries through the case boundary with its stamp and never exposes a password', async () => {
     mocks.send.mockReturnValue({ unwrap: () => Promise.resolve({ status: 'Pending' }) });

@@ -31,7 +31,7 @@ export function AssessmentSessionTable({
 }: Props) {
   const now = Date.now();
   const columns: IColumn[] = [
-    { id: 'name', label: 'Session', minWidth: 180, isFilter: true },
+    { id: 'name', label: 'Slot Name', sticky: true, minWidth: 180, isFilter: true },
     {
       id: 'startsAt',
       label: 'Starts',
@@ -56,6 +56,7 @@ export function AssessmentSessionTable({
     {
       id: 'isCancelled',
       label: 'Status',
+      sticky: true,
       render: (_: unknown, row) => {
         const session = row as AssessmentSession;
         const status = session.isCancelled
@@ -71,6 +72,7 @@ export function AssessmentSessionTable({
     {
       id: 'actions',
       label: 'Actions',
+      sticky: true,
       isSort: false,
       excludeFromExport: true,
       minWidth: 170,

@@ -43,13 +43,6 @@ export function FormStageBehaviorSettings({ policy, disabled, onChange }: Props)
       <FormSectionCard title="Advanced submission settings" icon="mdi:tune">
         <Stack spacing={1.5}>
           <SwitchRow
-            label="Allow late submission"
-            description="Let applicants submit after a configured deadline. Without a deadline, submissions remain open."
-            checked={policy.allowLateSubmission}
-            disabled={disabled}
-            onChange={(checked) => onChange({ allowLateSubmission: checked })}
-          />
-          <SwitchRow
             label="Allow corrections"
             description="Let applicants make corrections after review."
             checked={policy.allowCorrectionRequests}

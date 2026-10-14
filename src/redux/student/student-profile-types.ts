@@ -16,6 +16,18 @@ export type StudentRecordProfile = {
   status: number;
   dateOfBirth: string | null;
   gender: number | null;
+  academicYearId?: string | null;
+  admissionOnboarding?: {
+    applicationId: string;
+    applicationNumber: string;
+    academicYearId: string;
+    finalizedAt?: string | null;
+    onboardingCaseId: string;
+    status: string;
+    activatedAt?: string | null;
+    completedAt?: string | null;
+    credentialsStatus?: string | null;
+  }[];
   recordsAccess?: 'Full' | 'Summary';
   entrySource?: 'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'Provisioning';
   placementEditable?: boolean;

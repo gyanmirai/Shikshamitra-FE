@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-11
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -48,6 +48,10 @@ The backend remains authoritative for stale concurrency, lifecycle transitions, 
 
 Admissions Inquiries, Pipeline, Applications, Assessments, and Admission Offering use one Board and one Medium, with no All option for either. Empty or invalid parent selections default to an available school option; changing a parent resets its descendants. Class supports multiple selections within the selected Medium. Student Setup uses the same parent rules and supports multiple classes and divisions, with class names included in division labels. Class and Division retain All options within the selected academic scope. Clear filters retains Board and Medium; URL selections survive reload. Identifier locks still require exactly one Division. The retained Review queue component uses the shared filters, but `/student/admissions/reviews` currently has no active route.
 
+## Certificate workspace
+
+Certificates uses the compact icon tabs from Student Setup, with the Generated month picker on the right of the same bar (stacked within that bar on narrow screens). The page header offers a small Create certificate action; Configure template is not shown here. Certificate creation defaults to the first school level, class and division under the selected Board/Medium. Changing a parent selects the first available descendants and clears selected students. Creation, preview, batch review and certificate-action dialogs use the shared dialog shell, Title Case headings, title information tooltips and small footer buttons with leading icons.
+
 ## Configuration workflow
 
 1. In **Admission Periods**, an administrator creates or selects the admission cycle that controls the intake window.
@@ -66,9 +70,9 @@ The dedicated `/student/admissions/settings/workflows/[id]` builder shows number
 
 Administrators set Entry stage and End of journey in Stage behavior. When another stage is already the entry, the Entry toggle is hidden; the current entry keeps its toggle so staff can explicitly release it before choosing another eligible stage. Entry retains the stage-type capability restriction, while ending is available for all stage types. Saved ending flags survive a type change. Completing an ending stage ends the journey after its completion requirements pass; ending stages have no outgoing routes. Read-only workflows keep these controls locked.
 
-Stage configuration is one continuous form with Stage details, stage-specific settings, Stage behavior and Next step in existing rounded cards. Form completion and Assessment setup contain shared accordions, initially expanded; errors and unavailable-data feedback keep the affected section open. There is no Stage details/Completion rules stepper. Next step preserves the usual-path summary and offers Change for its destination. Special outcome creation and condition editing are removed from the active builder. Existing conditional paths remain visible and read-only. Dirty stage changes must be applied before editing routes. Form, Assessment and Documents use managed settings by default; Payment explains Finance fee-structure confirmation. Stage codes remain internal. Apply changes validates the full form and updates the local journey; Save draft persists it. Back protects unsaved changes. Small Back and Apply changes align on the right. Type changes confirm before clearing process settings and the attached form; names and instructions remain. Published versions remain read-only.
+Stage configuration is one continuous form with Stage details, stage-specific settings and Stage behavior in existing rounded cards. The Next step card is removed from all five stage-type settings. Form completion and Assessment setup contain shared accordions, initially expanded; errors and unavailable-data feedback keep the affected section open. There is no Stage details/Completion rules stepper. Special outcome creation and condition editing are removed from the active builder. Existing conditional paths remain visible and read-only on journey cards. Form, Assessment and Documents use managed settings by default; Payment explains Finance fee-structure confirmation. Stage codes remain internal. Apply changes validates the full form and updates the local journey; Save draft persists it. Back protects unsaved changes. Small Back and Apply changes align on the right. Type changes confirm before clearing process settings and the attached form; names and instructions remain. Published versions remain read-only.
 
-**Choose next step** appears only when a stage has no usual path. Its drawer contains the destination selector and preserves the existing single-default-route and duplicate-destination validation. It does not expose outcome choices, application-field rules, comparisons, values or advanced route order, and no longer fetches form schemas for route editing. Saved conditional routes retain their original rules and can be viewed without being edited or deleted through route controls. New Standard admission workflows remain linear: passed or waived assessments can continue; failed, absent or retake outcomes remain at Assessment, where staff may arrange an allowed retake or use End journey to record a withdrawal. End journey does not record rejection. Appending stages auto-connects only an unsaved, simple linear journey; saved and branched journeys retain their paths.
+**Choose next step** appears on a journey card only when a stage has no usual path. It opens the normal Add stage settings; Apply changes adds the new stage and its default connection together, without opening a route drawer or linking back to an existing earlier stage. One Undo/Redo reverses/restores both changes. Cancel leaves the journey unchanged. Existing default routes are never overwritten, and editing an existing usual destination remains available in its journey action menu. Saved conditional routes retain their original rules and can be viewed without being edited or deleted through route controls. New Standard admission workflows remain linear: passed or waived assessments can continue; failed, absent or retake outcomes remain at Assessment, where staff may arrange an allowed retake or use End journey to record a withdrawal. End journey does not record rejection. The separate Add stage action still auto-connects only an unsaved, simple linear journey; saved and branched journeys retain their paths unless Choose next step is explicitly used.
 
 The selectable stage types are Form, Assessment, Payment, Document verification, and Admission decision. Eligibility, Review, and Offer setup and working actions are removed. Payment confirmation does not record money or claim payment settlement; actual fee assignment and collection remain Finance/Onboarding-owned.
 
@@ -99,7 +103,7 @@ show the Offering identity, linked Application count, and the effect on new and 
 
 Bulk Preview presents each class in a neutral outlined card with its generated code, creation status and class checks. Shared configuration checks appear once beneath their controlling field labels. Edit selection or Back returns to the preserved form choices and displays server feedback below the corresponding controls. Required inputs carry stars; workflow/form requirements remain conditional on activation, and the heading info icon explains inactive preparation. No setup — manual assignment remains visibly selected both initially and after clearing a setup; it clears both profile IDs without making assignment mandatory. Setup-load failures retain an inline error and Retry action.
 
-Bulk Class options that already have an Offering for the selected cycle, academic/campus scope and admission type stay visible but disabled with **Offering already exists**, using the shared select's disabled-option pattern. General and RTE can therefore have separate offerings for the same cycle and class; the same type cannot be duplicated.
+Bulk Class options that already have an Offering for the selected cycle, academic/campus scope and admission type stay visible but disabled with **Offering already exists**, using the shared select's disabled-option pattern. **Select all classes** selects only eligible classes in the current medium; when all eligible classes are selected, **Deselect all classes** clears them. These actions never persist the synthetic menu option as a class ID. Changing Board or Medium keeps the existing dependent selection reset. General and RTE can therefore have separate offerings for the same cycle and class; the same type cannot be duplicated.
 Changing the cycle refreshes these choices and retains only selected classes that remain available; workflow, form and intake selections are preserved.
 The Class field and Preview wait for the complete lookup; a failed check shows field-level feedback and Retry class check instead of treating every class as available.
 Changing Admission type derives its default entry route, clears selected classes and incompatible workflow/inquiry configuration, and refreshes the class check. Counsellor routing is retained. When all classes are configured, the field names the admission type for which no classes remain. Edit and clone retain saved routing unless the type is explicitly changed; used offering identity remains locked.
@@ -124,28 +128,47 @@ Inquiry rows expose separate Edit, Follow-up, and Move to next stage actions. Fo
 
 ## Student Onboarding configuration
 
-Configure the academic structure and Admission Offering before authoring onboarding rules.
+Configure the academic structure and Admission Offering before preparing students in Onboarding.
 
-1. Select the academic year in the Student header and add a named **Readiness & Access** rule linked to Admission Offerings.
-2. Review the selected Offerings' Board/Medium/Class and workflow requirements; School Level is removed from this rule editor.
-3. Choose required approval and student/guardian login emails, then save the rule; failed or unavailable Offering lookup blocks saving until resolved.
-   The available Offering lookup belongs to Onboarding, so configuring this rule does not require access to the Admissions Offering editor.
-4. In **Numbering & Placement**, configure GR or Roll separately; new series start as Draft and require Publish before use.
+1. Select the academic year in the Student header and open **Onboarding Settings**.
+2. In **Portal Access**, choose whether student and parent/guardian logins are required.
+   New schools default to Student No and Parent/Guardian Yes; existing saved choices and delivery preferences remain intact.
+3. Admission and its published workflow supply the common readiness and document requirements automatically, without a named readiness rule or Offering linkage.
+4. In the **GR Number** or **Roll Number** settings tab, configure numbering separately; new series start as Draft and require Publish before use.
    GR applicability uses Board/Medium/Class and retains School Level for GSEB; Roll uses Board/Medium/Class.
    The removed scope/reset/format/effective-date controls and Division Changes menu are not prerequisites.
-5. Finalize the accepted application and open its case in **Readiness**; new cases retain the Offering requirement snapshot.
-   Existing unactivated cases with **Review Offering requirements** must complete that explicit review before activation.
+5. Finalize the accepted application and open its case in **Readiness**.
+   New and existing pending cases adopt common admission requirements and current saved account choices automatically, while keeping published document policies frozen.
+   Activated, completed and cancelled cases retain their historical snapshots.
 6. Use the pending count by hover, keyboard focus or tap, then choose a task to open the same case in its contextual tab/drawer.
    **Today** means cases that entered Onboarding today, rather than all students created today.
-7. Verify required documents, reserve Division, prepare GR and Roll separately, confirm an existing published fee structure in **Fees**, and obtain required approval.
+7. Verify required documents, reserve Division, prepare GR and Roll separately, and confirm an existing published fee structure in **Fees**.
    Fees selects optional heads where supported and confirms the admission snapshot without collecting money or opening a Finance assignment drawer.
 8. Activate after a fresh backend eligibility preview, then find the active enrollment in Student Records.
 9. Complete required account creation/linking and enabled credential-email sending in **Credentials** after activation using the saved automatic/manual mode.
    An account or email failure remains pending access work on the active enrollment and can be retried by an authorized user.
 
-GR and Roll drawers contain only their own inputs; a GR action never opens the Roll form or requires a Roll preview.
+Student Setup orders its tabs as Readiness, Division, GR Number, Roll Number, Fees and Credentials.
+Readiness has no student-selection checkboxes, and Entered onboarding today sits inside the academic filters card.
+Student drawers combine Details and Checks into Details & Checks, retaining Tasks and History.
+
+Division, GR, Roll, Fees and Credentials use one scope button instead of a Students dropdown.
+Click **All Students** to show all rows; the button then becomes **Remaining Students**, which returns to pending rows (unassigned students in Division).
+The compact row keeps only the task heading, pending count and controls; static descriptions, policy badges and selection guidance are omitted.
+All buttons stay aligned on one line, with contained horizontal scrolling on narrow screens rather than document overflow; required manual-change reasons and validation remain visible when applicable.
+GR, Roll and Division tables have no separate Select all visible button or Actions column; the student-name button still opens the case.
+Auto operates on eligible students on the current page, or selected Division rows when exactly one Class is selected.
+Division checkboxes appear only with that single-Class filter; selecting multiple classes or changing the worklist clears selection.
+Auto Division requires an explicit target with current server capacity checks; it does not invent an automatic placement policy or Division lock.
+Manual opens eligible table cells and saves only changed rows, with the published manual-entry rules and existing-number change reasons enforced.
+Each case is refreshed and saved sequentially; saved rows are not repeated after a partial failure, while failed edits remain available for review.
+Concurrent changes are not overwritten: cancel editing and reopen Manual to review the latest values before entering a new correction.
+Drafts are protected when changing filters, page, scope or tabs, and an external academic-scope change blocks saving the old draft.
+Fees and Credentials retain their per-student Review actions without selection checkboxes or Auto/Manual controls.
+
+The retained per-student GR and Roll dialogs contain only their own inputs; a GR action never opens the Roll form or requires a Roll preview.
 Roll numbering starts at 1 within each Class/Division/year, so Class 5-A and 5-B may each contain Roll 1.
-Select a Division in GR or Roll and lock that identifier for its students; Division placement itself remains editable.
+Select exactly one Division in GR or Roll and use Lock/Unlock in the assignment toolbar for that identifier's whole Division/year group, including off-page students; Division placement itself remains editable.
 An administrator with the required Repair capability can unlock with a reason, while a new student in a locked group receives the next automatic identifier.
 Changing an existing GR requires a reason; first assignment does not.
 Postactivation identifier corrections belong to Student Records.
@@ -207,7 +230,7 @@ Publishing checks in the review are advisory and do not add a separate draft-sav
 | **Add field**      | Open the field palette on narrow screens; on desktop the palette remains beside the canvas. Repeated additions keep the palette available.                                         |
 | **Field settings** | Select a field to open the right drawer. Basic groups field details, answer options, and guidance in section cards; Rules exposes visibility conditions and location dependencies. |
 
-Field settings has only **Basic** and **Rules** tabs and reuses HR section cards. Visibility conditions are always visible; Advanced rules and Data editors are absent. Existing binding, validation, and conditional-required metadata stays intact when editing other settings. Redundant helper copy is removed, while field errors and compatibility warnings remain visible. The heading's info tooltip explains that changes belong to the draft until saved. The shared scrollbar owns the drawer body, with the heading and Done action fixed.
+Field settings has only **Basic** and **Rules** tabs and reuses HR section cards. Visibility conditions are always visible; Advanced rules and Data editors are absent. The settings drawer shares the wizard's modal layer so newly opened select menus remain above it and accept pointer and keyboard selection. **Show field when** displays **Always visible** when no condition is saved; selecting it clears the rule without persisting a selector placeholder. Every other configured field, including dates and fields in other sections, remains selectable. Existing binding, validation, and conditional-required metadata stays intact when editing other settings. Redundant helper copy is removed, while field errors and compatibility warnings remain visible. The heading's info tooltip explains that changes belong to the draft until saved. The shared scrollbar owns the drawer body, with the heading and Done action fixed.
 
 Within **Build form**, desktop shows a wider student-field palette beside the selected step's section cards. Its compact search keeps the label inside until a query is entered, with adjacent category expand and add controls. The step navigation uses the same outlined card surface as the form sections and the active step number and label indicate selection without a gray background. On desktop, its card fills the available height; only the step list scrolls, while **Add step** stays in a fixed footer. Narrow screens retain compact horizontal step navigation; **Add section**, **Grid layout**, and **Preview** share the right side of the canvas toolbar. The More menu is absent. Step names and their edit/delete actions live only in the left navigation, while section headings edit in their cards. Sections and fields reuse the Admissions action menu with **Edit** and **Delete**, anchored below the three-dot trigger with a matching arrow. Section accordions stay clipped within their rounded card boundary in both expanded and collapsed states. Build form uses the HR form footer placement: Back, Save draft, and Continue stay attached beneath the field canvas on desktop, beside the step navigation; smaller screens retain one reachable footer beneath the active workspace, and Preview keeps those same actions. Sections start expanded and use a chevron beside their actions to collapse the field area without changing the draft. Selecting a collapsed section, adding a field, or reporting submitted section errors reveals its contents. Each field has a compact rounded outline around its label, preview, and actions; selection and hover retain a white surface with a stronger outline and selection caption. Four-column layouts use full-width previews with controls above the label at desktop sizes. Field actions and reorder handles appear on hover or keyboard focus and remain visible on touch screens. Advanced section/step settings and new repeatable-section controls are absent; previously saved visibility and repeatable rules retain their metadata and runtime behavior. Field settings open in a right drawer; narrower screens use **Student fields** and **Your form** tabs. Custom questions begin with a name, type and required state, with existing Student field suggestions before creation. A full-width **Add custom field** button follows the controls, and the outlined **More field formats** disclosure reveals presets and other field types. Choice questions accept one option per line and retain the visual option editor for later changes.
 The Student fields palette groups the 107 server-provided choices, searches names and groups, and marks a linked field as **Added** when it is already used anywhere in the form. The catalogue includes Student photo, optional Aadhaar/PAN numbers, single-parent/single-child flags, sibling selection and permanent-address country. Sibling selection reuses the shared searchable selector with bounded server pages and restores the names of saved selections separately; a failed lookup retains the answer. **Current address pack** and **Permanent address pack** live inside **Contact and addresses** and add the dependent country, state and city fields together. Adding a category or address pack fills the selected empty section, retaining its identity and saved rules; a populated section is kept and the pack creates another section in the same step. Location fields reuse the employee form's shared selectors; changing a parent clears dependent selections. Photo uses the shared avatar uploader and accepts JPEG/PNG up to 2 MB. Six Financial assistance suggestions remain excluded. Supported predefined values populate a new Student's structured profile at finalization; other answers remain captured admission details. Existing Student changes require an explicit finalization choice and respect Student Records and Identity Compliance ownership. Onboarding case details display captured values for staff review.
@@ -228,11 +251,21 @@ Saving persists a draft; publishing remains a separate form-list action.
 6. Staff with Inquiry Manage and Communication Add permission can use language-aware acknowledgement, follow-up, or application-link templates. Creation can immediately create/send the acknowledgement when selected; Communication Send controls immediate delivery, while provider, consent, approval, retry, and delivery tracking remain in Communication.
 7. The counselor reviews Applicant 360 and starts an application only for an offering whose computed availability is `Open`. Opening Applicant 360 from an inquiry carries that exact inquiry into application start so the handoff is traceable and the inquiry is locked after conversion.
 
-Pipeline is the active inquiry-linked application worklist before Admission Decision.
+Pipeline is the active worklist for Inquiry-linked applications and started special registrations before Admission Decision.
+Special registrations show Direct registration instead of an Inquiry reference and have no Inquiry follow-ups. On first Decision entry, ownership transfers permanently to Applications, including later corrections.
 It shows the current application counsellor, actual stage/status, existing workflow next-action guidance, stage entry time, configured due date and retained open follow-ups.
 Case defaults come from the server; changing My/All cases never expands the user's authorized academic scope.
 Counsellor and stage choices come from full scoped results rather than the current page.
+Board, Medium and Class stay in the academic row; Filters opens Cases, Counsellor, Current step and Status in the shared popover.
+Apply Filters submits all four operational choices together; Clear removes only those criteria and preserves academic scope, search, sort and page size.
+The server's My/All default remains implicit until changed, and My cases disables the separate Counsellor choice.
 Academic filters, search, sort and pagination are shareable in the URL; academic-year changes reset hierarchy and page.
+With exact Applications View and Add access, staff can select eligible admissions on the current page and choose Assign / change counsellor; Select all applies only to that page.
+The shared dialog offers counsellors eligible for every selected offering, explains the linked-inquiry and scheduled-follow-up handover, and accepts an optional reason.
+Submission rereads each application and uses its latest concurrency stamp in the existing single-record command, skipping applications already assigned to the chosen counsellor.
+Runtime-backed and direct applications also verify the existing workflow read; cancelled, failed or unverifiable runtime cases cannot be submitted through this bulk action.
+Successes are removed from selection; failed rows and their reasons remain for retry, with a fresh owner check preventing duplicate assignment after an uncertain result.
+Changing tenant, user, academic scope, filters, search, sort or page clears selection and stops remaining commands; an already-sent command may still complete.
 The application workspace remains authoritative for readiness, blocking reasons and workflow commands.
 Continue opens the shared full-page Applicant 360 with validated list return context.
 Entering Admission Decision switches its menu ancestry and return list to Applications when the current queries settle and no unsaved or busy editor remains.
@@ -253,7 +286,7 @@ Inquiry capture and qualification are owned by the Inquiries workspace before th
 The **Intake & Assignment** settings page combines Inquiry handling (allowed sources, contact and qualification deadlines, follow-up defaults) with Counsellor routing (staff pool, active-case capacity, fallback manager) in reusable admission intake setups. Selecting a setup on an Offering stores and validates both profile references. Leaving both empty permits activation when its other readiness checks pass; staff can manually assign from active Admissions Counselor users with access to that Offering. Configured pools retain their eligibility and capacity rules.
 The settings page opens on a searchable, customizable setup table. **Create intake setup** opens a full-height right-side drawer with three steps for Inquiry handling, Counsellor routing, and review while retaining the table context. Edit uses the same drawer. Desktop review cards stretch to equal content-driven heights and stack naturally on narrow screens. Archived rows retain a disabled Edit action with a restore explanation and an enabled Restore action. Archive is disabled while active Offerings or operational links use the setup. Restore requires confirmation and the latest concurrency stamp, makes the setup editable and available for selections again, and preserves profile IDs and rules without reactivating historical Offerings or links. Stale restore attempts expose Reload latest; failed requests preserve the confirmation for retry. Allowed sources and Counsellor pool use shared checkbox multi-selects that remain open while selecting several values. Pool chips use the neutral gray style. Both pool and fallback choices request only active admission-access users assigned the canonical Admissions Counselor role. Review shows selected source and staff names, section-level Edit actions, and Review & update when editing. Unsaved-discard, shared-use confirmation, and stale-version reload protection remain available. Duplicate inquiry, Before application starts, Sources needing details, and the hidden email/date-of-birth requirement switches are removed from both setup and legacy profile editors. Allowed sources remains available; source details are optional. Opening an editor refreshes the eligible staff lookup; failed lookups disable routing selection and expose Retry without clearing the draft. The Public inquiry links tab lists links in a separate table and opens its creation form in a drawer.
 
-Choosing a link's admission period loads compatible setup/form pairs from the public-link options endpoint. The form selector shows a labelled skeleton while published forms or period-compatible routing options load, then shows linked published Inquiry forms; the setup selector then shows matching setups. Changing the period clears both routing selections while preserving the link details. Loading, failed, and empty compatibility reads block creation; Retry and Refresh offerings preserve the draft. An `OfferingRequired` response also refreshes compatibility and shows corrective guidance, including when an older server returns generic business-rule text. Configuration and permission ownership remain in the [backend Student workflow](../../../Shikshamitra-BE/docs/modules/student/workflows.md).
+Choosing a link's admission period loads compatible setup/form pairs from the public-link options endpoint. The form selector shows a labelled skeleton while published forms or period-compatible routing options load, then shows linked published Inquiry forms; the setup selector then shows matching setups. If a successful lookup has no compatible form, opening Published inquiry form shows the project info toast asking staff to create or attach a published Inquiry form to an active Inquiry/Both Offering in this period. No empty menu or large prerequisite information banner opens; a compact Refresh offerings action remains. Changing the period clears both routing selections while preserving the link details. Loading, failed, and empty compatibility reads block creation; Retry and Refresh offerings preserve the draft. An `OfferingRequired` response also refreshes compatibility and shows corrective guidance, including when an older server returns generic business-rule text. Configuration and permission ownership remain in the [backend Student workflow](../../../Shikshamitra-BE/docs/modules/student/workflows.md).
 Entry mode may be Inquiry first, Direct registration, or Inquiry or direct. A direct registration with no manually selected owner uses the Offering's assignment profile. The assigned counsellor is the student's journey owner across application stages and becomes the onboarding case owner at finalization. Application Details and Applicant 360 show that owner. Authorized stage specialists may perform their own checks without replacing the owner. Staff can change the journey owner during inquiry or through the dedicated application assignment action; scheduled inquiry follow-ups move to the new owner. Onboarding has its own owner-change action and audit event.
 Staff can capture a lead before an Offering is known under a published admission cycle, then confirm a matching open Offering in the management drawer. In **Intake & Assignment**, an administrator can also create a separate public link for a website, QR campaign, referral, or school fair. The link fixes the period, published Inquiry form and source; its intake setup is optional. A selected setup supplies automatic routing. **No setup — manual assignment** keeps submitted inquiries Unassigned, including when the selected Offering has automatic routing. Manual links require a compatible active Offering and published Inquiry form, with no setup match required; configured links also require matching setup and eligible owners. The generated URL is shown once, can expire, and can be revoked. The public form uses the selected Offering's published Inquiry form and requires contact consent.
 Historical managed Inquiry versions keep their stored snapshots, deadlines, assignment policy, and audit history. Effective policy reads normalize retired requirements: contact and qualification are optional before application start, and policy-level email, date-of-birth, and source-detail requirements do not block capture. Automatic duplicate detection still offers opening an existing inquiry or linking an eligible sibling; creating a separate family for an actual duplicate requires a reason. Published form requirements and Allowed sources remain authoritative. See the [backend Inquiry rules](../../../Shikshamitra-BE/docs/modules/student/product.md).
@@ -303,6 +336,44 @@ The page uses small themed actions, a header More menu and the shared document v
 
 The runtime screen and field adapter are `admission-application-detail.tsx` and `admission-runtime-field.tsx`.
 
+## Daily Attendance alignment
+
+Daily Attendance uses the same active Student List population and Board, Medium, Class and Division filters in the selected global academic year. Admins begin with a paged read-only student table; marking requires one class and division. Teachers with one active assignment open that register automatically. Assignment, permission and academic scope remain server-enforced.
+
+The rightmost sticky Attendance column contains Present, Absent, Pending and policy-enabled Half-day icons. Absent rows expose optional inline remarks in Details (maximum 500 characters). There is no Edit/Actions column or Draft breadcrumb badge. Ineligible students remain visible with a reason and disabled marking; they do not count as pending expected attendance.
+
+Save draft permits partial marking. Submit attendance requires the complete eligible register, including rows outside the current search or page. Admin Lock is separate and applies to a submitted reviewed register. Mark pending as Present acts on eligible pending rows across the class while preserving saved marks, approved leave and rows requiring review. Existing correction safeguards remain; this change adds no correction queue, menu or Student List shortcut.
+
+## Student List and profile
+
+### Find an activated student and review the record
+
+1. Complete configured Admissions and finalize to create or link the permanent Student and its Onboarding case.
+2. Continue preparation in Onboarding until enrollment activation; a finalized-only case stays in Onboarding rather than Student List.
+3. Open Student Records → Student List in the global header year; Active is the default population, with Former available inside Filters.
+4. Narrow by Board, Medium, Class and Division; server search, sorting and pagination preserve that academic/population context.
+5. Open the Student name or View link; Overview shows permanent identity, selected-year placement and linked admission/onboarding milestones.
+6. Use Details, Documents or History without losing list context; related school/service views remain reachable through Related.
+
+Activated students remain discoverable while credential preparation or email work is pending in Onboarding.
+Former students retain their permanent identity and selected-year history.
+Approved historical records retain their existing eligibility path; missing admission or onboarding evidence is displayed as unavailable rather than synthesized.
+Student List keeps Student, GR number, Class / Division, Roll number, Status and Actions as its compact core columns; school-specific fields appear only in the profile.
+
+### Edit the retained offering form and review audit history
+
+Overview uses equal-height desktop cards with thin dividers and leaves Class/Division, Roll, GR and Medium in the identity header rather than repeating them in cards. Cards stack naturally on narrow screens.
+Details displays the retained offering Registration form in its original field order and configured grid, including supported mapped and custom fields. Edit details opens the same form inline. Policy-masked fields and protected identifiers, placement, file/photo or read-only fields cannot be changed through this form.
+Editing a school form later does not add its new questions to existing profiles or reinterpret their original submissions.
+Admission/onboarding milestones remain on Overview; the separate Admission & Onboarding tab has been removed. Inquiry remains in its existing Admissions workspace.
+
+Save requires a reason, validates conditional fields and applies allowed changes immediately through the dedicated audited profile endpoint without an approval step or page redirect. Existing role/field access and optimistic concurrency still apply. Failed saves retain the draft, Back/navigation use the same discard guard, and an in-progress edit retains its academic context during a global-year change.
+History shows audit events with actor, timestamp, reason, outcome and field before/after details. Prior pending/rejected requests retain their real state; generic Changes approval policy remains unchanged. No enrollment-history table is rendered.
+The original submitted Registration form is read-only and remains unchanged by a current-value correction.
+If an edited condition hides a question, its current value is retained and becomes visible again when its condition applies.
+Returning-admission differences are offered for explicit review; opening the profile or newer source does not silently overwrite current Student values.
+Backend Records services own approval authority, value compatibility, snapshots, persistence and source integrity; see [Records product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#permanent-student-records-behavior).
+
 ## Integration rules
 
 Applicant 360 is the full-page application workspace showing the frozen journey and the selected stage. The Next action card and offering code in the applicant heading are omitted. Application name/reference links and legacy bookmarks reach the same workspace with safe return context. Review Application Form, Application History and Notes & Follow-ups remain available in its More menu. Notes require applicant View/Add grants; follow-ups require application View and the server's canManageFollowUps capability for commands. Sources load only when the drawer opens and only with their corresponding view access. Applicant notes and inquiry-backed application follow-ups retain their existing separate endpoints and concurrency rules. An application without a source inquiry can still show authorized notes. New workflows use the supported stage workspaces; historical Seat compatibility remains. Retired Eligibility, Review and Offer operations remain unavailable.
@@ -317,7 +388,7 @@ Uploads are collected at the active Document verification stage. Early Form-stag
 
 Document action dialogs preserve the selected evidence and application stamp while editing, keep entered values on failure, and use the local `CustomDialog.guardUnsavedChanges` behavior without clearing a dirty application form. Replacement behavior is explained before saving. The existing workflow advance action is available only when the backend reports `canComplete` and the user has advancement permission.
 
-Once admission finalization links evidence to a Student record, the existing student profile **Documents** tab can show **Admission evidence**. `studentProfile/student-admission-evidence-panel.tsx` groups retained versions by their source application, stage, and requirement. It requires both student-record and admission-document view access; authorized downloads retain the student scope. This panel is read-only and leaves normal student document collection in place.
+Once admission finalization links evidence to a Student record, **Documents** merges that evidence with ordinary documents in one shared table. The separate Admission evidence card is removed. Retained versions, original checks and reviews open in their existing read-only detail view; authorized downloads retain student scope. Ordinary uploads require Student List Add and the document owner's registration-stage eligibility, so they are disabled for active/former records.
 
 The profile first loads its protected record summary and checks that the returned Student GUID matches the requested identity. Tabs mount only after that read succeeds. A failed profile request shows a clear error and Retry instead of empty identity fields; the Documents tab then reads normal documents and retained admission evidence for the resolved student.
 
@@ -327,10 +398,17 @@ Add new admission behavior only after extending and validating the owning backen
 
 ## Onboarding account email workflow
 
-Readiness & Access offers student and parent/guardian login-email choices and automatic/manual provisioning, with credential release after activation.
+Portal Access offers only student and parent/guardian login requirements; saved delivery and automatic/manual provisioning choices remain compatible, with credential release after activation.
 The simplified drawer hides separate account-preparation and release-timing controls; enabled email recipients still require their corresponding account preparation.
 
-Credentials shows persistent Pending/Sent/Failed/Blocked sending states and authorized send/retry actions.
+Credentials shows Account type, the selected person's read-only saved Email and one Send Credentials action.
+One parent recipient is selected automatically; multiple legal parent recipients expose a Recipient selector.
+Send creates or safely reuses the account and queues the selected email through one backend command.
+Only the selected recipient's status or actionable block is displayed; verification checkboxes, separate Create/link actions and repeated Disabled policy rows are removed.
+Saved account requirements and readiness remain authoritative; an explicit manual Send requests the selected email without changing the school's automatic-email preferences.
+Missing email is corrected in Student Records rather than entered as an arbitrary delivery address.
+Refresh, initial loading, recoverable errors, permission blocks and failed-send retry preserve the compact form; a pending send prevents drawer dismissal or tab changes.
+Completion-timed requests remain Queued until the backend confirms onboarding completion.
 Sent means sender acceptance, not inbox delivery, and a failed request does not deactivate the enrollment.
 Existing sibling parent accounts retain their password, and the staff interface never displays passwords.
 Readiness reuses the Offering workflow document checklist, including original-record and upload/review actions, with no waiver or override action.
@@ -361,8 +439,15 @@ Selecting a completed Entrance assessment in Applicant 360 uses that same table 
 Inline result drafts retain the reviewed attempt concurrency stamp across refreshes, remain available after failed writes/background reads, and participate in Applicant 360 discard/navigation guards. No extra admission transition runs automatically. Mobile table scrolling is contained; the status column scrolls on mobile to leave room for marks and Save.
 
 An empty fee candidate list shows the shared empty state, Finance ownership explanation and Check again. Open Finance is navigation only, appears only with the exact Fee Structure View permission, and opens separately to retain the admission context. It does not create, publish, assign or collect fees.
+
 ## Correcting a guardian credential email
 
-Credentials requires explicit Father, Mother or Other guardian selection and uses that person's saved profile email. Authorized Records editors can open Correct saved profile email; this uses the normal audited Records change flow. If review is required, follow Review correction in Changes & Approvals and wait for a different authorized reviewer. Refresh the saved profile after the change is applied and confirm mailbox ownership before creating/linking the account.
+Credentials uses the selected Father, Mother or Other guardian's saved profile email; the Recipient selector is shown only when a choice is needed.
+When the email is missing, authorized Records editors can open Correct saved profile email through the normal audited Records change flow.
+If review is required, follow Review correction in Changes & Approvals and wait for a different authorized reviewer.
+Refresh after the change is applied, review the correct recipient and use Send Credentials.
+The account owner verifies their own mailbox and chooses a password through the secure setup link; staff do not attest mailbox verification in this form.
 
-If parent delivery is disabled in an activated case's reviewed snapshot, an authorized Onboarding editor can enable parent email for that case with a reason. This correction preserves the other pinned requirements and school settings and does not send an email. Account provisioning and credential delivery remain separate actions with their existing eligibility and identity checks.
+Manual Send is allowed even when automatic email is Off, while preserving the school's settings and the case snapshot.
+Missing required access, permission, recipient or readiness still produces one actionable message.
+The legacy audited case-only correction API remains available to its existing authorized consumers but is not part of the simplified Send flow.

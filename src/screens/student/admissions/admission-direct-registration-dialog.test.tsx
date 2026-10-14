@@ -40,13 +40,17 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
 vi.mock('@mui/x-date-pickers', () => ({
   DatePicker: ({
     onChange,
+    slotProps,
   }: {
     onChange: (value: { isValid: () => boolean; format: () => string }) => void;
+    slotProps?: { textField?: { error?: boolean } };
   }) => (
-    <input
-      aria-label="Date of birth"
-      onChange={(event) => onChange({ isValid: () => true, format: () => event.target.value })}
-    />
+    <div aria-invalid={slotProps?.textField?.error || undefined}>
+      <input
+        aria-label="Date of birth"
+        onChange={(event) => onChange({ isValid: () => true, format: () => event.target.value })}
+      />
+    </div>
   ),
 }));
 vi.mock('src/components/custom-select', () => ({
@@ -282,7 +286,7 @@ describe('Special direct-registration entry', () => {
     expect(screen.getByRole('button', { name: 'Start registration' })).toBeDisabled();
   });
   it.each([2, 3])(
-    'includes legacy Both offerings for type %s and preserves paging when the first page is inquiry-first only',
+    'requests server-filtered legacy Both offerings for type %s on the first page',
     async (track) => {
       const inquiryOffering = {
         ...offering,
@@ -300,8 +304,8 @@ describe('Special direct-registration entry', () => {
       };
       state.loadOfferings.mockImplementation((input) => ({
         unwrap: async () => ({
-          totalCount: 26,
-          items: input.skipCount ? [legacyOffering] : [inquiryOffering],
+          totalCount: input.forSpecialRegistration ? 1 : 26,
+          items: input.forSpecialRegistration ? [legacyOffering] : [inquiryOffering],
         }),
       }));
       renderDrawer();
@@ -312,26 +316,34 @@ describe('Special direct-registration entry', () => {
       });
       await waitFor(() =>
         expect(state.loadOfferings).toHaveBeenLastCalledWith(
-          expect.objectContaining({ track, entryMode: undefined })
+          expect.objectContaining({ track, entryMode: undefined, forSpecialRegistration: true })
         )
       );
       expect(screen.queryByRole('option', { name: inquiryOffering.name })).not.toBeInTheDocument();
-      fireEvent.click(await screen.findByRole('button', { name: 'More Admission offering' }));
       await screen.findByRole('option', { name: legacyOffering.name });
       fireEvent.change(screen.getByLabelText('Admission offering'), {
         target: { value: legacyOffering.id },
       });
       expect(screen.getByRole('button', { name: 'Start registration' })).toBeEnabled();
       expect(state.loadOfferings).toHaveBeenLastCalledWith(
-        expect.objectContaining({ track, skipCount: 25 })
+        expect.objectContaining({ track, skipCount: 0 })
       );
     }
   );
+  it('focuses the editable date field when its invalid picker group is the first error', async () => {
+    renderDrawer();
+    await selectOffering();
+    fireEvent.change(screen.getAllByLabelText(/First name/)[0], { target: { value: 'Riya' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
+    await waitFor(() => expect(screen.getByLabelText('Date of birth')).toHaveFocus());
+    expect(state.start).not.toHaveBeenCalled();
+  });
   it('blocks invalid identity and unchecked family submissions; succeeds only after API returns an application', async () => {
     renderDrawer();
     await selectOffering();
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText('Applicant first name is required.');
+    await waitFor(() => expect(screen.getAllByLabelText(/First name/)[0]).toHaveFocus());
     expect(state.start).not.toHaveBeenCalled();
     fillApplicant();
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));

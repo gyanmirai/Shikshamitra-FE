@@ -445,7 +445,7 @@ const HrEmployee = () => {
   return (
     <Box
       data-testid="hr-employee-page"
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
     >
       {open ? (
         <Box data-testid="hr-employee-form" display="flex" flexDirection="column" height="100%">
@@ -470,7 +470,9 @@ const HrEmployee = () => {
                 severity="error"
                 action={
                   canOpenEdit ? (
-                    <Button onClick={() => requestedEdit.refetch()}>Retry</Button>
+                    <Button size="small" onClick={() => requestedEdit.refetch()}>
+                      Retry
+                    </Button>
                   ) : undefined
                 }
               >
@@ -495,6 +497,12 @@ const HrEmployee = () => {
           {' '}
           <CustomBreadcrumbs
             heading="Staff Directory"
+            slotProps={{
+              action: { justifyContent: 'flex-end', alignSelf: { xs: 'flex-end', md: 'center' } },
+              heading: {},
+              moreLink: {},
+              breadcrumbs: {},
+            }}
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
               { name: 'Staff' },
@@ -507,7 +515,6 @@ const HrEmployee = () => {
                 size="small"
                 startIcon={<Add />}
                 onClick={() => setOpen(true)}
-                sx={{ px: '32px' }}
               >
                 Add Staff
               </Button>
@@ -588,28 +595,23 @@ const HrEmployee = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Staff Found{' '}
-                <Box
-                  onClick={() => {
-                    setOpen(true);
-                  }}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      textDecoration: 'underline',
-                    },
-                  }}
+                No staff match the selected filters.
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  sx={{ display: 'flex', mx: 'auto', mt: 1 }}
+                  onClick={() => setOpen(true)}
                 >
                   Add Staff
-                </Box>
+                </Button>
               </>
             }
             onSendNotification={handlerSendNotification}
             isLoading={isLoading || isFetching}
             tableId="employee-table"
+            wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+            tableContainerProps={{ sx: { height: 1 } }}
             serverSidePagination
             totalCount={employee?.totalCount}
             maxServerRowsPerPage={500}
@@ -672,16 +674,17 @@ const HrEmployee = () => {
         </DialogContent>
         <DialogActions>
           <Button
+            size="small"
             href={
               createdEmployee
                 ? `${hrPaths.employee.list}?employee=${createdEmployee.id}`
                 : undefined
             }
-            sx={{ minHeight: 44 }}
           >
             View staff
           </Button>
           <Button
+            size="small"
             component={RouterLink}
             href={
               createdEmployee
@@ -692,7 +695,6 @@ const HrEmployee = () => {
                 : hrPaths.employee.list
             }
             variant="contained"
-            sx={{ minHeight: 44 }}
           >
             Set up salary
           </Button>

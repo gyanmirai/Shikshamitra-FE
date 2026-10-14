@@ -13,6 +13,8 @@ import {
 
 import type { FieldSettingsProps } from '../types/field-settings';
 
+const ALWAYS_VISIBLE = '__always_visible__';
+
 const CONDITIONS = [
   ['Equals', 'is equal to'],
   ['NotEquals', 'is not equal to'],
@@ -105,15 +107,15 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
       <CustomSelect
         size="small"
         label="Show field when"
-        value={rule?.field ?? ''}
+        value={rule?.field ?? ALWAYS_VISIBLE}
         options={[
-          { value: '', label: 'Always visible' },
+          { value: ALWAYS_VISIBLE, label: 'Always visible' },
           ...(currentFieldIsMissing
             ? [{ value: rule?.field ?? '', label: `${rule?.field} (field not found)` }]
             : []),
           ...otherFields.map((item) => ({ value: item.code, label: item.label })),
         ]}
-        onChange={(value) => updateRule({ field: String(value) })}
+        onChange={(value) => updateRule({ field: value === ALWAYS_VISIBLE ? '' : String(value) })}
       />
       {rule?.field && (
         <>

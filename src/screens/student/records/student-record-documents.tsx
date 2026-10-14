@@ -544,10 +544,10 @@ function RecordDocuments({
           aria-label={fixedKind === 'ids' ? pageTitle : undefined}
           sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
         >
-          <RecordDocumentFilters
+          {fixedKind !== 'ids' && <RecordDocumentFilters
             kind={kind}
             busy={busy}
-            canIssue={canIssue && fixedKind !== 'ids'}
+            canIssue={canIssue}
             showCertificateTypeSelect={fixedKind !== 'certificates'}
             showCertificateBatch={fixedKind === 'certificates'}
             legacyEntryHref={fixedKind === 'certificates' && hasGrantedPermission(permissions, [
@@ -607,8 +607,7 @@ function RecordDocuments({
               );
               setCertificatePreview(null);
               setTransitionId('');
-              if (student && (fixedKind === 'certificates' ||
-                (kind === 'ids' && fixedKind !== 'ids'))) {
+              if (student && (fixedKind === 'certificates' || kind === 'ids')) {
                 setBatch((previous) =>
                   previous.some((s) => s.studentId === student.studentId)
                     ? previous
@@ -646,7 +645,7 @@ function RecordDocuments({
             )}
             onPreview={prepare}
             onIssue={issue}
-          />
+          />}
           {certificateType === 3 &&
             kind === 'certificates' &&
             !hasGrantedPermission(permissions, 'Students.Records.Transitions.View') && (
@@ -752,7 +751,9 @@ function RecordDocuments({
                 ? fixedKind === 'certificates'
                   ? `No ${certificateTab.label.toLowerCase()} certificates have been issued for this student.`
                   : 'No documents have been issued for this student.'
-                : 'Select a student to see issued history.'
+                : fixedKind === 'ids'
+                  ? 'No student I-Cards to display.'
+                  : 'Select a student to see issued history.'
             }
             wrapperProps={{
               sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },

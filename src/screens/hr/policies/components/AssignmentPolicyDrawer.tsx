@@ -2,8 +2,14 @@
 
 import React from 'react';
 import dayjs from 'dayjs';
+import { useRouter } from 'src/routes/hooks';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   Box,
   Chip,
@@ -12,28 +18,21 @@ import {
   Stack,
   Button,
   Switch,
+  Dialog,
   Divider,
   MenuItem,
   TableRow,
   TableCell,
   TextField,
   Typography,
-  Autocomplete,
-  FormControlLabel,
-  Dialog,
   DialogTitle,
+  Autocomplete,
   DialogContent,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
 
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
-import { EmployeeStatusType } from 'src/enums/employee-status-type';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useRouter } from 'src/routes/hooks';
-import { hrPaths } from 'src/constants/hr-menus';
 import { PolicySetupAlert } from './PolicySetupAlert';
-
 import {
   toLabel,
   formatRange,
@@ -640,8 +639,11 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
         <DialogTitle>Discard changes?</DialogTitle>
         <DialogContent>Unsaved assignment changes will be lost.</DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDiscard(false)}>Keep editing</Button>
+          <Button size="small" onClick={() => setConfirmDiscard(false)}>
+            Keep editing
+          </Button>
           <Button
+            size="small"
             color="warning"
             disabled={isPolicyOperationActive}
             onClick={() => {

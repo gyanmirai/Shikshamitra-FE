@@ -12,12 +12,14 @@ import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-q
 import type {
   StudentOnboardingCase,
   StudentCredentialEmail,
+  SendStudentCredentials,
   StudentIdentifierSeries,
   StudentOnboardingPolicy,
   StudentOnboardingCasePage,
   StudentOnboardingAnalytics,
   StudentOnboardingDocuments,
   StudentOnboardingListInput,
+  StudentCredentialsWorkspace,
   StudentOnboardingStepStatus,
   SaveStudentOnboardingSettings,
   UpsertStudentOnboardingPolicy,
@@ -269,6 +271,43 @@ export const studentOnboardingApi = api.injectEndpoints({
       providesTags: (_result, _error, id) => [
         { type: studentOnboardingType.onboardingCaseDetail, id },
       ],
+    }),
+    getStudentOnboardingCredentials: builder.query<StudentCredentialsWorkspace, string>({
+      query: (id) => `/student/onboarding/${id}/credentials`,
+      transformResponse: (
+        response: Result<StudentCredentialsWorkspace> | StudentCredentialsWorkspace
+      ) => unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    sendStudentOnboardingCredentials: builder.mutation<
+      StudentCredentialsWorkspace,
+      SendStudentCredentials
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/credentials`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentCredentialsWorkspace> | StudentCredentialsWorkspace
+      ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            studentOnboardingApi.util.updateQueryData(
+              'getStudentOnboardingCredentials',
+              id,
+              () => data
+            )
+          );
+        } catch {
+          // Unknown or failed writes are never retried or presented as successful.
+        }
+      },
+      invalidatesTags: (_result, error, { id }) => (error ? [] : caseTags(id)),
     }),
     sendStudentCredentialEmail: builder.mutation<
       StudentCredentialEmail,
@@ -668,7 +707,15 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (
         response: Result<StudentOnboardingSettingsRecord> | StudentOnboardingSettingsRecord
       ) => unwrap(response),
-      invalidatesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: studentOnboardingType.onboardingSettings, id: 'SCOPES' },
+              { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+              { type: studentOnboardingType.onboardingCaseDetail },
+              { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+            ],
     }),
     deleteStudentOnboardingSettings: builder.mutation<
       void,
@@ -679,7 +726,15 @@ export const studentOnboardingApi = api.injectEndpoints({
         method: 'DELETE',
         params: { concurrencyStamp },
       }),
-      invalidatesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: studentOnboardingType.onboardingSettings, id: 'SCOPES' },
+              { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+              { type: studentOnboardingType.onboardingCaseDetail },
+              { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+            ],
     }),
     getStudentIdentifierSeries: builder.query<StudentIdentifierSeries[], string>({
       query: (academicYearId) => ({
@@ -799,6 +854,8 @@ export const {
   useGetStudentOnboardingFeeCandidatesQuery,
   useConfirmStudentOnboardingFeeStructureMutation,
   useGetStudentCredentialEmailsQuery,
+  useGetStudentOnboardingCredentialsQuery,
+  useSendStudentOnboardingCredentialsMutation,
   useSendStudentCredentialEmailMutation,
   useOverrideStudentOnboardingDocumentsMutation,
   useGetStudentPortalAccountsQuery,
@@ -808,8 +865,10 @@ export const {
   useGetAvailableOnboardingCampusesQuery,
   useGetStudentOnboardingAnalyticsQuery,
   useGetStudentOnboardingCaseQuery,
+  useLazyGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingPlacementOptionsQuery,
   useGetAvailableStudentIdentifierSeriesQuery,
+  useLazyGetAvailableStudentIdentifierSeriesQuery,
   useRefreshStudentOnboardingReadinessMutation,
   useAssignStudentOnboardingOwnerMutation,
   useSetStudentOnboardingRouteMutation,

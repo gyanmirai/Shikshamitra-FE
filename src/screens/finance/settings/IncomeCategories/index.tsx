@@ -4,19 +4,17 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
+import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   incomeCategoryApi,
   useGetIncomeCategoriesQuery,
@@ -153,25 +151,9 @@ const FinanceIncomeCategoriesScreen = () => {
             setSelectedIncomeCategory(null);
           }, 200);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedIncomeCategory ? 'Update Income Category' : 'Add Income Category'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedIncomeCategory
-                  ? 'This modal allows the user to add all required details and create a new income category.'
-                  : 'This modal allows the user to add all required details and create a new income category.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedIncomeCategory ? 'Edit Income Category' : 'Add Income Category'}
+        titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        maxWidth="sm"
       >
         <IncomeCategoryForm
           open={addIncomeCategoryDialog}

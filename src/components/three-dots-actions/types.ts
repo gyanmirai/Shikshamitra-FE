@@ -32,6 +32,8 @@ export interface ThreeDotsActionsOptions {
   showThreeDots?: boolean;
   viewIcon?: string;
   viewLabel?: string;
+  /** Use native link semantics for a profile/detail destination. */
+  viewHref?: string;
   editLabel?: string;
   deleteLabel?: string;
   moreLabel?: string;

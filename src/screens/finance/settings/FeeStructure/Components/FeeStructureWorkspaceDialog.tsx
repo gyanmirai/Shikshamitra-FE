@@ -45,7 +45,10 @@ export default function FeeStructureWorkspaceDialog({
               component="span"
               sx={{ display: 'block', typography: 'caption', color: 'text.secondary', mt: 0.5 }}
             >
-              {editData.name} · {editData.academicYearName}
+              {editData.name}
+              {editData.academicYearName &&
+                !editData.name.includes(editData.academicYearName) &&
+                ` · ${editData.academicYearName}`}
             </Box>
           </Box>
         }

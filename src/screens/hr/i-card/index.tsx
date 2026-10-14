@@ -38,13 +38,13 @@ import {
   Button,
   Checkbox,
   TextField,
-  type TextFieldProps,
   ButtonBase,
   IconButton,
   Typography,
   ToggleButton,
   FormControlLabel,
   ToggleButtonGroup,
+  type TextFieldProps,
 } from '@mui/material';
 import {
   useGetEmployeeICardTemplatesQuery,
@@ -168,11 +168,14 @@ function DebouncedColorPicker({
     setLocalValue(value);
   }, [value]);
 
-  useEffect(() => () => {
+  useEffect(
+    () => () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-    }, []);
+    },
+    []
+  );
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextColor = event.target.value;
@@ -1387,6 +1390,7 @@ const EmployeeICardBuilder = ({
                 {currentStep === 1 && (
                   <Stack spacing={2}>
                     <Button
+                      size="small"
                       component="label"
                       variant="outlined"
                       startIcon={<Iconify icon="solar:upload-linear" />}
@@ -1722,6 +1726,7 @@ const EmployeeICardBuilder = ({
                       label="Exclude staff missing photo, phone, or designation"
                     />
                     <Button
+                      size="small"
                       variant="contained"
                       disabled={isSaving || isExporting || state.selectedEmployeeIds.length === 0}
                       onClick={handleExport}
@@ -1922,8 +1927,6 @@ const DesignerCanvas = ({
           ? 'right'
           : null
     : null;
-
-
 
   return (
     <Grid container spacing={2}>

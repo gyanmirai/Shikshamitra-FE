@@ -3,13 +3,15 @@ import type { IData } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import { useAssignmentStudentsQuery } from 'src/redux/finance/studentFeeAssignment';
-import { Box, Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   ALL_CLASS_OPTION,
@@ -70,6 +72,18 @@ export default function FeeStructureAssignTable({
     context.selectedMedium,
     search,
   ]);
+  useEffect(() => {
+    if (!query.currentData) return;
+    const eligibleIds = new Set(
+      query.currentData.items
+        .filter((student) => student.isActive && !student.isFeeStructureAssigned)
+        .map((student) => student.studentId)
+    );
+    setSelected((previous) => {
+      const next = previous.filter((student) => eligibleIds.has(student.studentId));
+      return next.length === previous.length ? previous : next;
+    });
+  }, [query.currentData]);
   const rows = (query.currentData?.items ?? []).map((student) => ({
     ...student,
     id: student.enrollmentId,
@@ -128,16 +142,29 @@ export default function FeeStructureAssignTable({
         </Alert>
       )}
       {selected.length > 0 && canAssign && (
-        <Box>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ px: 1 }}
+        >
+          <Typography variant="body2">
+            {selected.length} student{selected.length === 1 ? '' : 's'} selected
+          </Typography>
           <Button
             size="small"
             startIcon={<Iconify icon="mdi:account-multiple-plus-outline" />}
             variant="contained"
             onClick={() => onBulkAssign?.(selected, standardId ?? '')}
           >
-            Assign structure ({selected.length})
+            Assign structure
           </Button>
-        </Box>
+          <Button size="small" onClick={() => setSelected([])}>
+            Clear selection
+          </Button>
+        </Stack>
       )}
       <CustomizableTable
         tableId="fee-structure-assignment"
@@ -161,74 +188,123 @@ export default function FeeStructureAssignTable({
           setSelected([]);
         }}
         serverSideSearch
+        searchFieldProps={{
+          placeholder: 'Search students by name',
+          label: '',
+          inputProps: { 'aria-label': 'Search students by name' },
+        }}
         onServerSearch={(value) => setSearch(value)}
         columns={[
           ...(canAssign
             ? [
-              {
-                id: 'select',
-                label: '',
-                width: 64,
-                isSort: false,
-                renderColumn: () => (
-                  <Checkbox
-                    inputProps={{ 'aria-label': 'Select eligible students on this page' }}
-                    checked={eligible.length > 0 && selected.length === eligible.length}
-                    onChange={(_, checked) => setSelected(checked ? eligible : [])}
-                  />
-                ),
-                render: (_value: unknown, rawRow: IData) => {
-                  const row = rawRow as IFeeStructureData & { isActive?: boolean };
-                  return (
+                {
+                  id: 'select',
+                  label: '',
+                  width: 64,
+                  isSort: false,
+                  renderColumn: () => (
                     <Checkbox
-                      inputProps={{ 'aria-label': `Select ${row.studentName}` }}
-                      checked={selected.some((s) => s.studentId === row.studentId)}
-                      disabled={!row.isActive || row.isFeeStructureAssigned}
-                      onChange={(_, checked) =>
-                        setSelected((previous) =>
-                          checked
-                            ? [...previous, row]
-                            : previous.filter((s) => s.studentId !== row.studentId)
-                        )
-                      }
+                      inputProps={{
+                        'aria-label': 'Select eligible students on this page',
+                        'aria-checked':
+                          selected.length > 0 && selected.length < eligible.length
+                            ? 'mixed'
+                            : eligible.length > 0 && selected.length === eligible.length,
+                      }}
+                      checked={eligible.length > 0 && selected.length === eligible.length}
+                      indeterminate={selected.length > 0 && selected.length < eligible.length}
+                      disabled={eligible.length === 0}
+                      onChange={(_, checked) => setSelected(checked ? eligible : [])}
                     />
-                  );
+                  ),
+                  render: (_value: unknown, rawRow: IData) => {
+                    const row = rawRow as IFeeStructureData & { isActive?: boolean };
+                    return (
+                      <Checkbox
+                        inputProps={{ 'aria-label': `Select ${row.studentName}` }}
+                        checked={selected.some((s) => s.studentId === row.studentId)}
+                        disabled={!row.isActive || row.isFeeStructureAssigned}
+                        onChange={(_, checked) =>
+                          setSelected((previous) =>
+                            checked
+                              ? [...previous, row]
+                              : previous.filter((s) => s.studentId !== row.studentId)
+                          )
+                        }
+                      />
+                    );
+                  },
                 },
-              },
-            ]
+              ]
             : []),
-          { id: 'studentName', label: 'Student', minWidth: 220 },
+          {
+            id: 'studentName',
+            label: 'Student',
+            minWidth: 220,
+            isSort: false,
+            filterType: 'string',
+          },
           {
             id: 'isActive',
             label: 'Enrollment',
-            render: (value: unknown) => (value ? 'Active' : 'Inactive — review required'),
+            isSort: false,
+            isFilter: false,
+            render: (value: unknown) => (
+              <Label color={value ? 'success' : 'warning'}>
+                {value ? 'Active' : 'Inactive — review required'}
+              </Label>
+            ),
           },
           {
             id: 'isFeeStructureAssigned',
-            label: 'Assignment for selected year',
-            render: (value: unknown) => (value ? 'Assigned' : 'Unassigned'),
+            label: 'Assignment',
+            minWidth: 140,
+            sticky: true,
+            stickyPosition: 'right',
+            isSort: false,
+            isFilter: false,
+            render: (value: unknown) => (
+              <Label color={value ? 'success' : 'default'}>
+                {value ? 'Assigned' : 'Unassigned'}
+              </Label>
+            ),
           },
           {
             id: 'action',
-            label: 'Action',
+            label: 'Actions',
+            width: 80,
+            align: 'right',
             isSort: false,
+            isFilter: false,
             sticky: true,
             stickyPosition: 'right',
             render: (_value: unknown, rawRow: IData) => {
               const row = rawRow as IFeeStructureData & { isActive?: boolean };
               return row.isFeeStructureAssigned || canAssign ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={
-                    <Iconify icon={row.isFeeStructureAssigned ? 'mdi:eye-outline' : 'mdi:plus'} />
+                <ThreeDotsActions
+                  showThreeDots={false}
+                  showViewIcon={row.isFeeStructureAssigned}
+                  viewIcon="mdi:eye-outline"
+                  viewLabel={`View assignment for ${row.studentName}`}
+                  handleViewClick={() => onAssignStructure(row)}
+                  directActions={
+                    row.isFeeStructureAssigned
+                      ? []
+                      : [
+                          {
+                            id: 'assign',
+                            icon: 'mdi:plus',
+                            label: `Assign structure to ${row.studentName}`,
+                            disabled: !row.isActive,
+                            tooltip: row.isActive
+                              ? `Assign structure to ${row.studentName}`
+                              : 'Activate this student’s enrollment before assigning fees.',
+                            onClick: () => onAssignStructure(row),
+                          },
+                        ]
                   }
-                  disabled={!row.isFeeStructureAssigned && !row.isActive}
-                  onClick={() => onAssignStructure(row)}
-                  aria-label={`${row.isFeeStructureAssigned ? 'View assignment for' : 'Assign structure to'} ${row.studentName}`}
-                >
-                  {row.isFeeStructureAssigned ? 'View assignment' : 'Assign structure'}
-                </Button>
+                  sx={{ justifyContent: 'flex-end' }}
+                />
               ) : null;
             },
           },

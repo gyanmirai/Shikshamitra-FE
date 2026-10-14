@@ -48,13 +48,23 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
-    getStudentById: builder.query<StudentRecordProfile | null, string>({
-      query: (id) => ({
-        url: `/students/records/${encodeURIComponent(id)}/profile`,
+    getStudentById: builder.query<
+      StudentRecordProfile | null,
+      string | { studentId: string; academicYearId?: string }
+    >({
+      query: (input) => ({
+        url: `/students/records/${encodeURIComponent(typeof input === 'string' ? input : input.studentId)}/profile`,
+        params: typeof input === 'string' ? undefined : { academicYearId: input.academicYearId },
         method: 'GET',
       }),
       transformResponse: unwrapStudentRecordProfile,
-      providesTags: [studentType.student],
+      providesTags: (_result, _error, input) => [
+        studentType.student,
+        {
+          type: studentType.student,
+          id: `RECORDS-PROFILE-${typeof input === 'string' ? input : input.studentId}`,
+        },
+      ],
     }),
     getStudentsByDivision: builder.query({
       query: (

@@ -3,41 +3,117 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-13
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
 
-## Student scope repair verification (2026-10-12)
+## Finance scope cleanup (2026-10-13)
 
-The Attendance RTK Query adapter prefers canonical `grNumber` and preserves legacy numeric `grNo` compatibility for display and search. The component fixture now supplies the full scoped Board/Medium/School level/Class/Division hierarchy, so its tests exercise the Attendance register rather than stop at missing selection data. Focused Attendance UI/API and scope regressions passed 56/56; full-project TypeScript and focused zero-warning ESLint passed.
+Local Finance collection, receipt and refund extensions were removed. The Payment stage and Onboarding Fees retain existing published fee-structure selection and confirmation; they expose no embedded collection action. Finance source and clients match the current branch baseline.
 
-Supporting headless Playwright used normal HOD sign-in on port 3000, forwarding browser API requests to the rebuilt local API on port 5001 with actual responses. Five checks passed: sign-in, outside Beta Admission denial, Alpha-only Attendance, canonical `QAS26-000001` display, and Alpha-only Directory. Screenshots and results are ignored under `.artifacts/student-e2e-20261012/repair-browser-*`. Original port 5000 still used the earlier build. Codex browser control timed out, so final Codex-browser acceptance is not claimed.
+The focused 11-file frontend run passed 117 tests, and `npm run ts` passed. Scoped source ESLint, Student documentation and whitespace checks passed. Full docs validation still reports 27 unchanged issues in `docs/testing/`. Authenticated browser validation was not run because no local frontend/API was listening.
 
-The broader security regression passed 108/109. Its deployment-wiring test fails because the existing deployment workflow lacks the reusable security dependency; that workflow was preserved. The earlier broad Student-suite failures remain separate from these focused repairs. Backend scope and timestamp behavior are documented in [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#student-scope-repairs-2026-10-12). Temporary HOD scope was restored and same-token denial verified; no credentials or browser authentication state were saved to disk. The repair report is `.artifacts/student-e2e-20261012/student-user-scope-repair-report.html`.
+The frontend log, both repository backups and preservation audit are under `D:/CodexArtifacts/student-finance-scope-cleanup-20261013-1791913960166/`. This is local source and component-test evidence; no database migration, payment, email or deployment was performed for this cleanup.
 
-## Local Student scope end-to-end QA (2026-10-12)
+## Unified Onboarding Settings (2026-10-13)
 
-Actual DDVS API writes created two synthetic applicants, completed Form, Assessment, Fee Selection, Document Verification and Decision, finalized Admissions, and activated both Onboarding cases without student/guardian login accounts. Alpha was moved through an independently approved Records placement request into a dedicated QA division before Attendance writes, so existing students were not marked. Attendance draft, submit, lock, independent correction approval, leave-credit reconciliation, directory filtering and a generated Excel export were verified. Backend behavior and scope defects are recorded in [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#local-student-scope-end-to-end-qa-2026-10-12).
+The final focused nine-file gate passed **75/75 tests** with one worker. It covers the unified menu and legacy route aliases, the three URL-backed tabs, persisted settings/context, Portal Access permission/loading/error/save states, numbering editors, Student Setup and onboarding API invalidation. The 14 API cases drain settings refetches before cleanup, avoiding requests leaking into the next scenario. Portal Access plus the shared unsaved-navigation hook also passed 11 cases, including keep/discard and ordinary versus modifier-click navigation; overlapping reruns must not be summed.
 
-Supporting headless Playwright checks used an isolated browser context with the installed Chrome executable and normal HOD sign-in. They reproduced the outside-division finalized Admission identity and the missing prefixed GR number in Attendance; Directory included Alpha and excluded Beta. Screenshots and the report are ignored under `.artifacts/student-e2e-20261012/`. The Codex in-app browser control tool was unavailable, so these are supporting browser checks, not final Codex-browser acceptance. No authentication state or credentials were saved to disk.
+Scoped ESLint and formatting checks passed. Full repository TypeScript checking remains blocked by the existing unrelated `gradebook.tsx:546` missing `student` prop; no onboarding type error was reported. Student documentation and whitespace checks are separate gates.
 
-Full-project TypeScript validation passed. The focused scope hook, hierarchy utility and Student academic-year tests passed 29/29. The isolated Attendance component suite failed 23/24: its mocked scope hook returns an academic year without `boards`, leaving the screen at the Board/Medium selection boundary. The broad Student suite was interrupted after stalling and also reported failures in public inquiry links, Applicant 360, cycle dialogs, legacy Student List filters and the production-mock guard. These failures remain unresolved; no whole-Student green result is claimed. Local fixtures and configuration remain for reproduction; temporary HOD/Admin permission overrides and every temporary active scope were restored and verified.
+Authenticated local verification used the task-owned frontend on `127.0.0.1:3001` and isolated backend on `localhost:5001`, with startup migrations and test-login seeding disabled. It verified the exact Portal Access / GR Number / Roll Number tabs, preserved DDVS saved Student/Parent choices, an actual save and reload, and restoration of the original choices. Dirty navigation kept the draft until explicit discard. GR and Roll editors used the existing drawer and dependent Board/Medium/Class selectors; temporary drafts were discarded without saving a numbering rule.
 
-Commands run from this repository:
+The final backend used the same Domain/Application hashes as the passing integration tests. Repeated settings save/reload preserved and then restored both original required-login flags. The legacy Numbering & Placement URL redirected to the GR tab; a transient session/configuration read failed, then the existing Retry recovered the saved table. Browser Back/Forward restored GR/Roll selection from the URL. The fresh Student Setup read retained its four cases and showed Vinay ready with ten passed checks, while the historical completed case retained its saved account choices.
 
-```powershell
-node --max-old-space-size=8192 ./node_modules/typescript/bin/tsc --noEmit --incremental
-node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/hooks/use-student-academic-scope.test.tsx src/utils/academicHierarchyUtils.test.ts src/layouts/components/global-academic-search/student-academic-years.test.ts --pool=threads --maxWorkers=1
-node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/attendance/take-attendance/index.test.tsx --pool=threads --maxWorkers=1
-node scripts/docs/validate-docs.mjs --module student
-```
+The final Vinay task drawer also loaded the accepted admission document, confirmed fee snapshot without the retired Offering-review banner. This was read-only inspection, not a collection or activation. After verification, the task-owned QA processes and tab were closed, the viewport was reset and only QA-generated `next-env.d.ts` / `tsconfig.json` additions were restored. Normal development processes remained running and require their own rebuild/restart to load the latest backend source.
+
+At 1440×900, 768×1024 and 390×844, document width matched viewport width. Portal cards stacked, footer actions remained reachable, and the mobile Roll drawer filled the viewport. Screenshots are under `D:/CodexOnboardingValidation-20261013/browser/`. The existing Vinay case showed automatic document/fee requirements and readiness without the retired Offering-rule link/review warning. No real student activation, portal identity, credential email or monetary transaction was performed in these browser checks; the backend synthetic lifecycle gate covers activation and account completion separately.
+
+This is local verification, not staging, deployment or inbox-delivery evidence. The existing normal frontend/backend processes were not replaced by the isolated helpers.
+
+## Special Registration offering lookup and drawer (2026-10-12)
+
+`admission-direct-registration-options.integration.test.tsx` uses the real paginated selector: it covers server eligibility before paging, class-name server search without a second label-only filter, cycle prerequisites, loading/error/Retry, and refreshing an empty RTE list without losing entered details. `admission-direct-registration-dialog.test.tsx` retains special-track/Both routing, paging, validation/focus, family choice/stale lookup, idempotent retries, request locking and discard checks. Run both suites with one worker; backend lookup/count/date coverage is documented in [backend Student testing](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+The focused five-suite gate passed 39/39 tests: 20 drawer/real-selector cases plus Pipeline columns, workspace and URL-state regressions. Browser checks exposed a non-focusable Date picker error group and a stale Offering validation error after dependent identity resets; both new regressions failed before the fixes. Focus now reaches the editable date section, and cycle/type/Offering/family resets validate one consistent Formik state. The corrected real-dropdown pagination and class-search tests also failed before their respective fixes. Logs are under `.artifacts/special-registration/`. Focused ESLint, Prettier and the scoped TypeScript check passed; the scoped config includes eight changed/consumer/test files plus the project environment, theme and test augmentations. The latest full repository TypeScript attempt exhausted Node's 4 GiB heap. Global docs validation reports existing issues outside Student; module validation is separate.
+
+Local data diagnosis: the selected period initially contained only General/Inquiry offerings. Creating and publishing a synthetic Form-first workflow without Assessment, creating and activating `ADM-RTE-CLASS-1`, then checking a synthetic guardian and starting registration created `APP-2026-000006` at Admission Form. This first configuration/start proof preceded the source fix.
+
+Authenticated updated-drawer checks on 2026-10-12 covered 1440×900, 768×1024 and 390×844. Document widths matched each viewport; the desktop/tablet drawer stayed 680 px wide and mobile filled 390 px. Offering/Applicant/Primary guardian cards were compared with the live Add Offering drawer. SimpleBar owns body scrolling, the title and actions remain visible, mobile fields stack, date validation focuses Day, and selected Offering validation clears before blur. Class search, filtered-empty guidance, RTE/Management/Staff resets, Refresh Choices preserving entered data, required fields, dirty-close protection and family lookup were checked. Family lookup and registration saves disabled conflicting controls while busy. An actual API outage also showed the recoverable choices error.
+
+Starting the synthetic `QA RTE UI Verification` from the mobile drawer created `APP-2026-000007` (`3a2442b9-ef34-0b8a-9d87-fc904ac3bf99`). Desktop reload preserved the applicant name, DOB, gender and guardian mobile in Draft/Admission Form, and the existing phase guard routed it to Pipeline Applicant 360. No approval, finalization, accounts or email were performed. Screenshots and viewport measurements are under `.artifacts/special-registration/`.
+
+The live Pipeline list exposed a separate existing Inquiry-only predicate that hid this direct draft. The user authorized including started special registrations; nullable Inquiry handling, direct-row labels and the existing permanent Decision handover are covered by source/regression changes.
+After the user rebuilt and restarted the local Host, authenticated browser verification showed both RTE drafts (`APP-2026-000006` and `APP-2026-000007`) alongside the two existing Inquiry-linked cases in Pipeline, with **Direct registration**, **No inquiry follow-ups** and the correct Admission Form next action.
+Guardian-mobile search returned only `APP-2026-000007`; mobile Continue opened its saved Draft/Form workspace, and Back retained academic filters and search. Clear search restored all four rows.
+Applications contained only its three existing Decision-phase cases and excluded both pre-decision RTE drafts. Decision entry and later correction ownership were verified by backend tests; no live admission decision was made.
+The final drawer loaded and selected `ADM-RTE-CLASS-1` against the refreshed API at 1440×900 and 390×844 without document overflow. Its temporary draft was discarded through the normal confirmation, and the viewport was restored.
+Proof files include `final-desktop.png`, `final-mobile.png`, `pipeline-direct-desktop.png`, `pipeline-direct-mobile.png`, `pipeline-continue-mobile.png` and `applications-boundary-desktop.png` under `.artifacts/special-registration/`.
+The first local Pipeline/options and list reads after restart returned HTTP 200 in 44.25 and 44.79 seconds; the later guardian-mobile search returned HTTP 200 in 1.84 seconds. The cause of the initial latency was not established and remains a performance follow-up. These completed local checks do not certify staging, production performance or deployment.
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
 
-## Staff Academic UserScope checks (2026-10-09)
+## Daily Attendance alignment (2026-10-12)
+
+The final focused Attendance and attendance-tracking contract run passed 64 tests across six files. Scoped ESLint, formatting, diff checks and Student documentation validation passed. Full TypeScript checking reports only the existing Gradebook `Academic` component missing its required `student` prop at `gradebook.tsx:546`; no Attendance type errors were reported.
+
+Authenticated localhost acceptance used the final compiled backend. Student List and Attendance showed the same three active students. Selecting CBSE, English, Class 1 and A enabled the class register. Half-day and Absent Details remarks were saved as a partial draft and remained after a full reload with class filters preserved. The local verification marks and remark were restored to their original Pending/empty values. Submit stayed disabled while a student remained Pending; no browser Submit or Lock was performed. Backend acceptance passed 29 API/contract checks. The broader Directory application gate passed six and failed three existing provisioning assertions; source/fixture comparison confirmed those failures were not introduced by query extraction.
+
+Responsive browser checks covered desktop and 390px mobile: the document had no horizontal overflow, the Attendance column stayed sticky at the right, and mobile icon targets measured 44px. The mobile page scrolls naturally with a practical table minimum per DESIGN.md. Browser screenshots and test reports are retained under `D:\CodexArtifacts\attendance-workspace-20261012-01a12f8b`. These are local checks, not staging or deployment evidence.
+
+## Student Profile form, documents and audit refinement (2026-10-13)
+
+Focused frontend coverage totals **111 unique passing cases across 12 files**. The main profile/form/audit run passed 77 cases; Documents, its table model and private API adapters passed 28; the form/audit rerun passed 17, including one additional snapshot-dependency regression. The final validation/form/navigation rerun passed 39 cases, including five additional required structured-value regressions. These are combined focused results, not a single repository-wide run.
+
+Coverage includes immediate inline form saves with typed mapped/custom answers, unchanged original evidence, validation and newly required conditional fields, retained hidden answers, permission masks, protected/read-only fields, failed-save draft retention, Back navigation and academic-year draft protection, audit comparisons and pagination, merged document evidence, private JSON download/upload adapters, source-specific retry, and registration-only document uploads.
+
+Affected-source TypeScript checked **134 files with zero diagnostics** after the final validation and responsive changes. Relevant changed-file ESLint, formatting, Student documentation validation and whitespace checks passed. These checks do not establish a full frontend build or repository-wide test pass.
+
+Backend focused gates passed 18 final inline-save/authorization cases, 27 existing custom-record regression cases from the earlier gate, and three fresh HTTP controller/DTO contract cases. Fresh Application, HttpApi and Host builds passed using serialized isolated outputs; analyzers were disabled and the unchanged EF build output was reused. No dependency or migration was added. These are focused build/test gates, not a full solution test run.
+
+Authenticated local browser checks covered 1440 × 900, 768 × 1024 and 390 × 844. Final desktop overview cards measured 347 px each; tablet/mobile cards stack naturally. Document width matched each viewport without horizontal page overflow. Class/Division, GR/Roll numbers and Medium appear in the header rather than repeating inside overview cards. The actual frozen `Admission application` Version 1 appears as form controls in Details, with configured sections and fields rather than fixed profile cards.
+
+On synthetic student Aarav Rajesh Sharma, Back opened the unsaved-change confirmation and an empty reason showed validation before saving. A changed Academic notes answer saved directly with HTTP 200, stayed in Details, and survived reload. History showed Applied, Admin DDVS, timestamps, the reason and the correct before/after answer in its in-profile drawer. A second direct save restored the test note; current-profile reload and the original-answer SHA256 check passed. Both test audit entries remain immutable; the pre-existing pending family correction was not approved or changed.
+
+The Documents table contains the retained Transfer and Birth certificates. Its in-profile review and scoped PDF download were verified; mobile/tablet row and pagination icon targets measure 44 px, with readable names and visible paging controls. Evidence screenshots are retained under `.artifacts/student-profile-refinement-20261013/`; isolated backend test/build reports and the original-answer hash are under `D:\codex-artifacts\`. These are local checks, not staging or deployment acceptance. No permission grant, school policy, migration, account creation or email delivery was performed in this revision.
+
+## Student List and profile alignment (2026-10-12)
+
+Current focused frontend coverage totals 89 passing tests across 14 files. The combined run and focused reruns cover the final fixtures and regressions; the last model/profile-flow rerun passed 26 cases, including three location-display regressions. The list/shared-action command is:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/records/student-directory.test.tsx src/components/three-dots-actions/index.test.tsx src/screens/student/records/records-url-state.test.ts --pool=threads
+```
+
+This run covers four visible academic selectors, population draft/apply/cancel/reset inside Filters, server request/context restoration, real profile links, the authoritative global year and skipped incomplete requests, current rows during refetch, exclusive errors/access denial, compact sticky columns and historical-entry permissions.
+Shared-action tests cover native View link semantics, modifier-click without row bubbling and disabled View without an exposed link.
+Profile and correction tests cover protected identity boundaries, URL-backed tabs, original/current values, actual credential states, immutable draft snapshots, typed repeats, conditional retention, returning-source review, loading/error/retry, existing approval requests, Records-bound option lookup and default Admissions provider compatibility. Pending diffs resolve proposed labels, retry failed lookups and batch a 40-ID before/after set without exposing GUIDs or losing labels.
+Affected-source TypeScript checked 125 files with zero diagnostics; this is not a repository-wide typecheck. Backend persistence, approval and tenant/source masking require the separate backend integration checks below.
+Relevant changed-file ESLint, formatting, Student documentation validation and whitespace checks passed. A further Directory/shared-table export rerun passed 18 tests after the mobile spacing refinement. At 390 px, compact widths preserve readable names and pinned Status/Actions; the shared filtered-empty state keeps its recovery action visible.
+
+Authenticated local browser checks used the tested backend at 1440 × 900, 768 × 1024 and 390 × 844. The list retains only Board, Medium, Class and Division above the table, with Active/Former inside Filters and no helper paragraph below its heading. Checks covered the three active records, Former and search empty-state recovery, retained list context, profile tabs, original Registration and linked Onboarding, readable location names, hidden empty sections and the existing Documents surface. Profile Overview correctly keeps an activated student Active when portal credentials have failed. All three viewport sizes had no document horizontal overflow; mobile table Status/Actions and correction footer remained reachable.
+
+The custom correction drawer showed required-field and reason feedback, then the existing dirty-close confirmation. The draft was discarded and the saved value remained unchanged. An existing pending request showed its actor, date, reason and before/after values without being approved or edited. Persistent corrections, approval/rejection, source versions and masking are covered by backend integration checks, rather than a new browser write journey. Screenshots are retained in `.artifacts/student-records-ui`.
+
+With the user's explicit approval, the tested localhost API was started and only the additive Student Record Custom Profiles migration was applied locally. Release requires the corresponding backend migration and normal staging acceptance. Full-repository build/typecheck, staging and production acceptance were not performed for this change.
+
+Complete the following staging acceptance checks against the combined source and running backend before release:
+
+- Verify a finalized-only case stays in Onboarding and activation adds it to Active Student List even with pending credentials.
+- Verify Former, approved historical/imported records and selected-year placement without duplicate permanent identities or fabricated history.
+- Verify profile Overview, Details, Admission & Onboarding, Documents and History links across reload, Back/Forward and new tabs, retaining the list's filters/search/sort/page.
+- Verify original Registration answers remain read-only, current structured/custom values follow masks, no Inquiry answers are copied, and no custom values enter list search/export.
+- Verify frozen form versions after school-schema changes, explicit false/zero, unanswered fields, repeatable sections and retained conditional values after hide/show.
+- Verify custom reason/field validation, dirty-close/busy guards, failed-save draft retention, approval/rejection/conflict and original-versus-current history after reload.
+- Verify returning-admission differences require explicit review and stale snapshots or repeated submits do not overwrite current data.
+- Verify loading, zero records, search/filter no-results, access denial and Retry at 390×844, 768×1024 and 1440×900, with table scrolling and no document horizontal overflow.
+
+Use the actual backend [Student validation](../../../Shikshamitra-BE/docs/modules/student/testing.md) for approval, privacy, persistence and lifecycle evidence; frontend checks do not replace it.
+
+## Admission offering cycle-date inheritance (2026-10-11)
 
 The Student browser workspace uses the logged-in staff member's existing Academic UserScope. The final focused Vitest run passed 63 tests across nine files: staff hierarchy pruning and failure handling, attendance draft/navigation behavior, Academic hierarchy utilities, Student dashboard, global year selection, Admissions filters, and Student Setup filters. Full-project `npm run ts` and changed-file ESLint with `--max-warnings=0` passed. Student documentation validation and `git diff --check` passed. Browser verification was omitted at the user's request; no authenticated browser acceptance is claimed.
 
@@ -49,14 +125,14 @@ Management and certificate student queries wait for a placement present in the f
 
 Authenticated Codex in-app browser checks used the existing DDVS Admin account, which displays school-wide access. The local API host and Application assembly were rebuilt on October 10, after the Student scope source changes. This run supplements the automated checks above.
 
-| Check | Observed result |
-| --- | --- |
-| Student dashboard and year selection | Dashboard loaded; the global header contained Academic Year only. Switching to 2025-2026 refreshed the displayed year and summaries. Reload returned the header to 2026-2027. |
-| Directory filters | Board and dependent Medium choices loaded. Applying CBSE / English updated the URL; those URL filters survived reload. The directory showed its filtered-empty state. |
-| Daily Attendance | CBSE / English / Primary / Class 1 / A loaded three roster rows. Save and Submit remained disabled with `Calendar not configured` and unconfirmed attendance start dates. |
-| Invalid medium bookmark | An explicit nonexistent medium cleared the roster and disabled dependent selectors, Save and Submit. It did not fall back to the first medium. Restoring the valid bookmark reloaded the three rows. |
-| Board change | Selecting GSEB cleared the previous school level, class and division from the URL and removed the previous roster. |
-| Settings and Admissions | Attendance settings, Admissions Applications and Student Records settings loaded. No console errors were captured in the inspected tab. |
+| Check                                | Observed result                                                                                                                                                                                      |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Student dashboard and year selection | Dashboard loaded; the global header contained Academic Year only. Switching to 2025-2026 refreshed the displayed year and summaries. Reload returned the header to 2026-2027.                        |
+| Directory filters                    | Board and dependent Medium choices loaded. Applying CBSE / English updated the URL; those URL filters survived reload. The directory showed its filtered-empty state.                                |
+| Daily Attendance                     | CBSE / English / Primary / Class 1 / A loaded three roster rows. Save and Submit remained disabled with `Calendar not configured` and unconfirmed attendance start dates.                            |
+| Invalid medium bookmark              | An explicit nonexistent medium cleared the roster and disabled dependent selectors, Save and Submit. It did not fall back to the first medium. Restoring the valid bookmark reloaded the three rows. |
+| Board change                         | Selecting GSEB cleared the previous school level, class and division from the URL and removed the previous roster.                                                                                   |
+| Settings and Admissions              | Attendance settings, Admissions Applications and Student Records settings loaded. No console errors were captured in the inspected tab.                                                              |
 
 No student, attendance, policy, permission or scope assignments were saved. The ignored `.artifacts/student-scope-browser-2026-10-10/invalid-medium.jpg` captures the invalid-medium result without student details. Browser Back did not change the invalid bookmark during this run; recovery was verified by navigating to the saved valid URL. A class- or division-restricted staff session was not available in this run, so live sibling-record denial, scope revocation and restricted-role write behavior remain unverified in the browser; the focused backend and frontend tests above cover those boundaries.
 
@@ -151,7 +227,7 @@ A follow-up on 2026-10-03 searched the signed-in DDVS Student Directory with For
 ## Onboarding integration checks
 
 Run focused task-drawer, operation, model and API tests with one worker, then TypeScript and changed-file lint.
-Browser acceptance for the current flow must verify six tabs, Offering-linked rule save/reload, Today filtering, pending-task navigation, focused drawers, independent GR/Roll operations, group identifier locks, fee-structure confirmation and postactivation Credentials.
+Browser acceptance for the current flow must verify the six Student Setup task tabs, the three URL-backed Onboarding Settings tabs, portal-choice save/reload, Today filtering, pending-task navigation, focused drawers, independent GR/Roll operations, group identifier locks, fee-structure confirmation and postactivation Credentials.
 Check desktop/tablet/mobile layouts, the active student's Student Records visibility after reload, and appropriate View/Edit/Repair behavior.
 Unit tests do not replace those browser checks.
 
@@ -245,19 +321,57 @@ For browser validation, use the Codex in-app browser after automated checks when
 
 ## Student Onboarding configuration checks
 
+Student Setup worklist acceptance also covers the ordered six tabs, Today inside academic filters, the merged Details & Checks drawer and absent Readiness/Fees/Credentials selection controls.
+Verify the single-Class-only Division checkbox rule, the All Students/Remaining Students scope button, real inline GR/Roll/Division editing, explicit Auto Division target, server-capacity errors and toolbar-wide identifier locks.
+Run the assignment-model, assignment-hook, table, toolbar, screen, Auto-dialog and identifier-lock suites with one worker on constrained Windows hosts.
+Cover changed-only saves, partial failure retention, no repeated successful writes, ambiguous/absent GR series, published manual policies, exact Roll preview/stamp, placement drift, dirty navigation and changed academic scope.
+The matching backend worklist suites verify that column filters, scope, counts and stable sorting apply before paging, including PostgreSQL query translation.
+Automated component/API checks, saved-data checks and responsive authenticated browser checks are distinct evidence; do not infer deployment from any local result.
+
+### Compact task controls (2026-10-13)
+
+The Division, GR, Roll, Fees and Credentials controls now contain only the heading, pending count and one-line actions, with an All Students/Remaining Students button replacing the Students dropdown.
+The full focused Onboarding/API gate passed **276/276 tests across 22 files** with the command below; the final toolbar/screen rerun passed **47/47** after a test-only iteration-style lint correction.
+An intervening rerun had one existing selection-reset scenario time out under memory contention, without an assertion failure; the final rerun used `--testTimeout=60000 --hookTimeout=60000` and passed.
+Four affected source/test files passed ESLint with zero warnings and Prettier; the 24-file scoped TypeScript check passed with zero diagnostics. These are scoped checks, not a new full-repository typecheck or backend/deployment gate.
+Authenticated desktop browser checks verified Division's all/pending/all row changes and GR's five aligned buttons, including Lock/Unlock. Roll's five controls stayed 30 px high on one line at 768 × 1024 and 390 × 844; the action region scrolled horizontally without document overflow, and keyboard ArrowRight advanced its scroll position.
+Fees also showed only its heading, pending count and the scope button, with no Auto/Manual controls and no document overflow. The final Credentials navigation returned to Dashboard, and its direct-link retry remained in the shared loading/session boundary; fresh Credentials browser acceptance is unverified, while all five views are covered by the passing component tests.
+No assignment, lock, activation, fee collection, account or email was saved. The browser encountered transient RSC/session fetch failures and native snapshot timeouts; DOM controls recovered for the responsive checks.
+Evidence is `.artifacts/onboarding-setup-20261013/gr-compact-desktop.jpg`, `roll-compact-tablet.jpg` and `roll-compact-mobile.jpg`.
+
+### Earlier setup simplification verification
+
+Local Student Setup verification on 2026-10-13 passed **259/259 tests across 22 files**:
+
+```powershell
+node --max-old-space-size=3072 node_modules/vitest/vitest.mjs run src/screens/student/onboarding/student-setup src/redux/student/onboarding/student-onboarding-api.test.ts --maxWorkers=1 --no-file-parallelism --testTimeout=20000 --hookTimeout=20000
+```
+
+The longer test timeout accommodates resource contention on the Windows development host; an earlier run had five timeout-only failures, not assertion failures.
+Focused ESLint passed with `--max-warnings 0` for the 24 changed source/test files, and the same 24-file TypeScript check passed with zero diagnostics.
+The full-repository TypeScript attempt exhausted its 4 GiB heap; this is not a full-project typecheck pass.
+Student documentation validation passed; all-module validation remains blocked by 27 existing `docs/testing` structure/frontmatter issues.
+Authenticated in-app-browser checks covered tab order, the Today filter location, single-Class Division selection and its absence for All classes, inline GR/Roll/Division controls, required-field feedback, discarded unsaved drafts, merged Details & Checks, Fees/Credentials without selection or Auto/Manual, reload, Back/Forward and modifier-click task links.
+The 390 × 844, 768 × 1024 and 1440 × 900 viewports had no document-level horizontal overflow; mobile workspace/table keyboard scrolling and the drawer's non-overlapping header were checked.
+No student assignment, activation, fee collection, portal provisioning or email was saved during these browser checks. Assignment-controller tests verify write payloads, fresh-state guards, partial failures and retry retention; the new backend gates validate worklist reads, not a live saved assignment.
+Finance frontend files matched the pre-change SHA-256 aggregate across 658 files; existing Finance changes were preserved, not reverted.
+The responsive/browser evidence above was captured before a concurrent shared development-server restart. The final recheck encountered an external-cache React resolution error: workspace `react/jsx-runtime` resolved, but the generated cache under `D:/codex-artifacts/profile-refinement-20261013` had no dependency ancestor.
+A missing cache-local `node_modules` junction was added to the existing workspace dependencies without changing source/configuration or stopping the shared server. The runtime error cleared and authorized sign-in reached Dashboard, but a subsequent Setup navigation returned to Login; no fresh final-session Setup acceptance is claimed.
+The normal backend Host was not rebuilt/restarted for this worklist query change. Latest backend filters/sorting were verified in the isolated Application/PostgreSQL test hosts; normal-host saved assignments, full release gates and deployment remain separate checks.
+
 ```powershell
 npx vitest run src/redux/student/onboarding/student-onboarding-api.test.ts src/screens/student/onboarding/setting/onboarding-academic-applicability.test.ts src/screens/student/onboarding/setting/onboarding-policy-settings.ui.test.tsx src/screens/student/onboarding/student-setup/student-onboarding-case-operations.ui.test.tsx src/screens/student/onboarding/student-setup/student-setup-drawer.ui.test.tsx
 npx eslint src/redux/student/onboarding/student-onboarding-api.ts src/screens/student/onboarding/setting/onboarding-academic-applicability.tsx src/screens/student/onboarding/setting/onboarding-policy-settings.tsx src/screens/student/onboarding/student-setup/student-onboarding-case-operations.tsx
 npm run ts
 ```
 
-Verify that Settings exposes Readiness & Access and Numbering & Placement, with only GR/Roll tabs in Numbering and no Division Changes menu.
-Readiness rules require selected Admission Offerings and show derived Board/Medium/Class and requirement summaries without School Level controls.
-Check failed Offering lookup/retry, unavailable Offering IDs, duplicate linked rules, Onboarding permission-denied lookup and save/reload.
-Verify an authorized Onboarding settings user can select available Offerings without an Admissions Offering configuration grant.
+Verify one Onboarding Settings menu with Portal Access, GR Number and Roll Number URL-backed tabs; old readiness/numbering routes must open their corresponding tab.
+Portal Access exposes only student and parent/guardian login requirements, with Student No and Parent/Guardian Yes for new schools while preserving saved choices.
+Check failed save/retry with retained drafts, permission denial, save locks, unsaved-change protection and year-scoped save/reload without modifying delivery preferences or archived profiles.
+Pending cases must inherit admission requirements without named rule selection, Offering linkage or a manual review action; activated/terminal case history remains unchanged.
 GR's CBSE form contains Board/Medium/Class; GSEB retains School Level, and Roll contains Board/Medium/Class.
 Check Draft/Publish version handling, conditional manual-entry controls and the absence of removed scope/reset/format/effective-date controls.
-Student Setup must use backend cases and fee confirmation without Finance assignment, collection or first-payment gating.
+Student Setup must use backend cases and fee confirmation; optional embedded Finance collection must retain the shared ledger without first-payment gating.
 Browser acceptance covers 390 × 844, 768 × 1024 and 1440 × 900, plus a live case when suitable authorized school data exists.
 
 The onboarding API contract and model suites cover `Result<T>` unwrapping, server worklist filters and paging parameters, route-owned identifiers, concurrency-safe command bodies, academic-year settings scope, exact lifecycle mapping, blockers, and audit events. The existing configuration suites cover option construction, single-path normalization, applicability specificity and conflicts, Readiness fallback/override resolution, context cloning, settings-drawer behavior, and local bulk-assignment previews. Backend tests remain authoritative for atomic allocation, capacity locking, permission enforcement, activation transactions, audit history, and concurrent administrator changes; frontend tests verify that the UI sends the backend contract without inventing operational state.
@@ -476,6 +590,21 @@ Communication coverage verifies the inquiry-scoped POST payload, language-aware 
 Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry.
 Pipeline menu and route now require Applications View.
 Focused Pipeline tests live in `src/screens/student/admissions/pipeline/`, with application follow-up and safe-return coverage in `src/screens/student/admissions/application-detail/` and the follow-up client contract test in `src/redux/student/admissions/admission-application-follow-ups-api.test.ts`.
+Filter coverage in `src/screens/student/admissions/pipeline/admission-pipeline-more-filters.test.tsx` and `src/screens/student/admissions/admission-academic-filters.test.tsx` checks draft Apply/Close, operational-only Clear, implicit server defaults, My-case counsellor guards, option loading/errors and busy academic controls.
+Selection, bulk-dialog and `use-bulk-pipeline-counsellor.test.tsx` checks cover exact permission guards, current-page eligibility, checkbox/navigation separation, common offering pools, latest stamps, sequential writes, same-owner skips, uncertain retry, partial failures and scope-change cancellation.
+Runtime checks also cover decision entry, cancelled/failed workflows, verification errors, direct registrations without a current stage and legacy inquiry cases without a runtime.
+
+```bash
+npx vitest run src/screens/student/admissions/pipeline src/screens/student/admissions/admission-academic-filters.test.tsx --pool=threads
+```
+
+Browser acceptance must verify Filters beside Board/Medium/Class, retained URL/return context, no implicit cross-page selection, counsellor/follow-up handover after save and reload, a same-owner retry with no duplicate activity, and partial-failure recovery.
+Check loading, error, permission and empty states plus shared popover/table scrolling at 390x844, 768x1024 and 1440x900; test-count and live persistence evidence must be recorded separately from these source checks.
+On 2026-10-13, the focused eight-suite Pipeline/academic-filter run passed 90 tests; full frontend TypeScript, scoped ESLint and Student documentation validation also passed.
+Authenticated in-app browser checks verified Filters placement, Status Apply/Clear with retained academic URL scope, selection reset after a filter change, and layouts at 390x844, 768x1024 and 1440x900.
+Synthetic QA Public Thirteen and QA Offering Thirteen were assigned to the existing school-wide Admin DDVS account; both owners persisted after reload, with their steps and statuses unchanged.
+Repeating that assignment returned **0 assigned, 2 already assigned**, and local API logs contained only the two original successful assignment POSTs for those cases.
+Partial failures and permission/concurrency changes were verified by automated tests; this browser run did not change staff grants or make admission decisions.
 Applicant workspace regressions cover full-page routing, clickable future stages, current-only continuation, completed-form read-only review, saved/dirty fee selection, loading/error recovery, action locks and retained safe list context. Closure tests verify required reasons, server eligibility, permission denial, concurrency payloads and queue/session cache refresh. Shared `use-unsaved-navigation.test.tsx` covers page-leave/browser guards. Document table tests retain download, missing evidence, review and history coverage.
 Fee-selection readiness distinguishes an open inline editor from an in-flight operation: editing disables continuation without the workspace's `Updating application…` overlay. The fee panel regressions cover empty, available, loading and failed candidate reads; reachable Cancel/Retry controls; restored readiness after cancellation; and actual-save locks with error recovery. Browser verification must open Select fee structure on an application with no matching candidates and confirm the empty message, enabled Cancel, disabled confirmation/continuation, and successful reopening without a persistent overlay.
 On 2026-10-10, the focused fee panel, managed-stage and Applicant 360 suites passed 65 tests. Authenticated in-app browser verification reproduced the persistent overlay on `APP-2026-000010` before the fix, then verified the empty-candidate message, enabled Cancel, disabled confirmation/continuation and cancellation/reopening on the updated localhost bundle. No fee selection, Finance configuration or application progression was written during this browser check.
@@ -772,6 +901,16 @@ Drag-and-drop, reorder handles, keyboard reorder sensors and the draft reorder h
 
 Authenticated local browser checks on the same QA Draft at 1440×900, 768×1024 and 390×844 confirmed five stages in saved order, no reorder controls or draggable stages, and no document horizontal overflow. Proof images are `.artifacts/workflow-sequence-ui-11oct/desktop.png`, `tablet.png` and `mobile.png`. No workflow or applicant data was changed during these layout checks.
 
+### Stage settings, inquiry feedback and bulk class selection (2026-10-13)
+
+Ten focused suites passed 107 tests: Form stage drawer, Assessment editor, Payment/Decision editor, draft refresh, builder navigation, next-stage flow, public inquiry links, bulk hierarchy fields, bulk Offering dialog and bulk Offering model. All five stage settings omit Next step. The screen-level next-stage test renders the real builder, stage drawer lifecycle, draft and save commands: Choose next step opens stage settings even when another stage exists; Apply creates a default connection from the chosen source; Save draft persists both; Cancel/discard preserves the graph. Draft tests cover atomic Undo/Redo and default-route/terminal guards. Public-link tests cover mouse and keyboard prerequisite toast, absent information banner, compatible-form recovery through Refresh offerings, unchanged payloads, query failures and validation. Bulk tests cover Select all/Deselect all, exclusion of configured classes, actual IDs only, medium resets, loading/error/empty states. The compact Class value reuses the Document file-format selector's single-line display. Focused TypeScript reported zero diagnostics across 13 files; targeted lint, formatting and documentation checks passed.
+
+Run focused suites through `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run <suite paths> --pool=threads --maxWorkers=1 --no-file-parallelism`. Public-link and screen integration checks used `--testTimeout=20000` during shared-host resource contention; assertions were retained. The screen test mocks unrelated outer surfaces and its settings body while retaining the real stage drawer/Formik/close lifecycle; the five type-specific tests separately render the actual settings.
+
+Authenticated localhost checks created the isolated `QA Stage Controls 13 Oct` Draft (`3a2445e9-4cea-4741-1793-a80f03bf42e1`), added Assessment, used Choose next step to configure Form, applied both, verified one Undo/Redo and saved/reloaded two stages with one usual route. Opening and canceling another next-stage editor preserved that saved graph. The route drawer did not open. The current General Admission period has a compatible Inquiry form: its normal dropdown still works; the empty-offering toast is established by component tests, without creating or changing an Offering to force that state. Bulk Select all selected all 15 eligible GSEB/Gujarati classes, and Deselect all cleared them. A transient lookup error preserved cycle/hierarchy choices and recovered through existing Retry controls. No Offering or public link was created, and no applicant or published workflow was changed.
+
+The stage editor, bulk drawer and public-link drawer were checked at 1440×900, 768×1024 and 390×844 without document horizontal overflow. Proof screenshots are `.artifacts/admission-editor-cleanup-13oct/next-stage-settings.png`, `saved-next-stage.png`, `next-stage-mobile.png`, `select-all-desktop.png`, `select-all-mobile.png` and `inquiry-link-desktop.png`. The QA Draft remains incomplete and unpublished; these checks establish the requested editor behavior and local draft persistence, not a complete student journey or deployment.
+
 ## Intake drawer and restore UI (2026-10-11)
 
 Focused regression passed 43 tests across intake row actions, editor integration/schema, list/concurrency state and real RTK Query wiring. Coverage includes disabled archived Edit, active-usage Archive restrictions, restore confirmation, retry, stale-version reload, cache refresh, drawer entry with retained table context, multi-selects and unsaved Escape/discard protection. Four backend setup integration tests and five HTTP contract tests passed; the isolated Host build succeeded. Affected-source TypeScript validation reported zero diagnostics across six files; diagnostics outside those files were excluded, so this is not a full repository typecheck.
@@ -789,3 +928,16 @@ After rebuilding/restarting the verified localhost Development Host without seed
 The parent credential email rule was enabled only for APP-2026-000002 through the new audited case command. The refreshed UI reports parent email Blocked until the portal account is verified; Student email remains Disabled. No real identity was created and no credential email was requested; SMTP/inbox delivery remains unverified. The original user's Finance tab was untouched.
 
 The final three UI suites cover owner selection, read-only saved contacts, scoped email corrections, approval/conflict feedback, permission guards, required reasons, retry, credential recovery and password-free staff UI. Affected-source TypeScript checks cover 11 files; this is not a full repository check. Focused lint passes. Local mobile review at 390×844 uses the same shared dialog as nearby Onboarding overrides and has no horizontal document overflow. Evidence: `.artifacts/guardian-email-correction-fe-tests.log`, `.artifacts/guardian-email-correction-lint.log`, `.artifacts/guardian-email-typecheck.log`, and screenshots under `.artifacts/guardian-email-ui/`.
+
+## One-click Credentials (2026-10-13)
+
+The final focused four-file run passed 54 tests for the simplified panel, retained legacy email component, owning drawer and new workspace API.
+Coverage includes one/multiple parent emails, hidden missing-email candidates, read-only canonical email, old-case rejection, missing/invalid contacts, loading/refresh/retry, permissions, server errors, stale expected email, one mutation without verification claims, Queued timing messages, controlled retries and drawer dismissal protection.
+The broader 32-file Onboarding run passed 348 tests; four pre-existing retired Offering-readiness screen tests fail because their old fixture renders the current Portal Access route without a Next router.
+No retired settings screen, Finance functionality or unrelated tests were changed to mask that failure.
+Affected-source TypeScript validation passed across seven files; this is not a full repository typecheck.
+Scoped lint, Prettier and Student documentation validation pass.
+
+The in-app localhost browser reached a connection-refused page and its navigation policy blocked further inspection; no current responsive visual acceptance or actual email delivery is claimed.
+The user's existing servers were not stopped or restarted, and no real portal account, password, email or Finance transaction was created by this UI validation.
+Use the latest backend and frontend together before performing authenticated browser acceptance; [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md) owns command/outbox evidence.

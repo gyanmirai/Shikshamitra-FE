@@ -9,12 +9,14 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import * as Yup from 'yup';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -55,6 +57,33 @@ interface AssignmentValues {
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
 const steps = ['Structure', 'Heads and service', 'Policies', 'Review', 'Results'];
+const stepContent = [
+  {
+    title: 'Select a fee structure',
+    icon: 'mdi:file-document-outline',
+    help: 'Choose a published revision for the selected academic year and enrollment. The same revision applies to all selected students.',
+  },
+  {
+    title: 'Configure fee heads',
+    icon: 'mdi:format-list-checks',
+    help: 'Review mandatory fees, include optional heads and enter any student amounts. Service-date changes are available only with the required access.',
+  },
+  {
+    title: 'Review policy selections',
+    icon: 'mdi:shield-check-outline',
+    help: 'Use the fee structure defaults or make a permitted student override with a reason. Collection and refund rules are evaluated in their own workflows.',
+  },
+  {
+    title: 'Review assignments',
+    icon: 'mdi:clipboard-check-outline',
+    help: 'Check the obligation, service periods and installment schedule for each student before confirming. Only successful previews can be assigned.',
+  },
+  {
+    title: 'Assignment results',
+    icon: 'mdi:check-circle-outline',
+    help: 'Successful assignments are preserved. Review remaining students to retry only those that still need attention.',
+  },
+];
 
 // Observe the shared Formik values without creating another form-state owner.
 function AssignmentDirtyState({ dirty }: { dirty: boolean }) {
@@ -303,7 +332,19 @@ export default function AssignmentWorkflow({
         activeStep={activeStep}
         validationSchema={validationSchema}
         showSaveButton={false}
-        isStepClickable={() => false}
+        onCancel={onClose}
+        isStepClickable={(index) =>
+          !busy &&
+          !complete &&
+          committedIds.size === 0 &&
+          activeStep < 4 &&
+          index < activeStep &&
+          index <= 2
+        }
+        onStepClick={(index) => {
+          invalidate();
+          setActiveStep(index);
+        }}
         completedSteps={
           complete ? [0, 1, 2, 3, 4] : Array.from({ length: activeStep }, (_, i) => i)
         }
@@ -427,9 +468,33 @@ export default function AssignmentWorkflow({
                   onChange={setInvalidAmounts}
                 />
               )}
-              <Typography variant="body2" color="text.secondary">
-                {students.length} student{students.length === 1 ? '' : 's'} · {steps[activeStep]}
-              </Typography>
+              <FormSectionHeader
+                icon={stepContent[activeStep].icon}
+                title={stepContent[activeStep].title}
+                descriptionTooltip={stepContent[activeStep].help}
+                action={
+                  <Typography variant="caption" color="text.secondary">
+                    {students.length} student{students.length === 1 ? '' : 's'}
+                  </Typography>
+                }
+              />
+              {activeStep === 4 && (
+                <Alert severity={complete ? 'success' : 'warning'}>
+                  {committedIds.size} committed or already assigned;{' '}
+                  {students.length - committedIds.size} need attention. Successful assignments are
+                  preserved when retrying.
+                </Alert>
+              )}
+              {activeStep === 3 &&
+                preview?.results.some(
+                  (item) => !item.preview && !committedIds.has(item.studentId)
+                ) && (
+                  <Alert severity="warning">
+                    {selectedPreviewItems.length} student
+                    {selectedPreviewItems.length === 1 ? '' : 's'} ready to assign. Expand students
+                    marked Needs attention to review their errors.
+                  </Alert>
+                )}
               {activeStep === 0 && (
                 <>
                   {candidates.isError && (
@@ -481,9 +546,16 @@ export default function AssignmentWorkflow({
                   />
                 </>
               )}
-              {activeStep > 0 && candidate && (
-                <Typography variant="subtitle2">
+              {activeStep < 3 && candidate && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ overflowWrap: 'anywhere' }}
+                >
                   {candidate.name} · revision {candidate.revisionNumber}
+                  {activeStep === 0
+                    ? ` · ${candidate.heads.filter((head) => !head.isOptional).length} mandatory · ${candidate.heads.filter((head) => head.isOptional).length} optional heads`
+                    : ''}
                 </Typography>
               )}
               {activeStep > 0 &&
@@ -498,12 +570,32 @@ export default function AssignmentWorkflow({
                       key={student.studentId}
                       defaultExpanded={students.length === 1 || index === 0}
                       disableGutters
+                      elevation={0}
+                      sx={{ border: 1, borderColor: 'divider', '&::before': { display: 'none' } }}
                     >
                       <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                        <Typography variant="subtitle2">
-                          {student.studentName || `Student ${index + 1}`}
-                          {outcome ? ` · ${outcome.outcome}` : ''}
-                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          useFlexGap
+                          flexWrap="wrap"
+                          sx={{ minWidth: 0 }}
+                        >
+                          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                            {student.studentName || `Student ${index + 1}`}
+                          </Typography>
+                          {outcome && (
+                            <Label color={outcome.result ? 'success' : 'warning'}>
+                              {outcome.outcome === 'AlreadyAssigned'
+                                ? 'Already assigned'
+                                : outcome.outcome}
+                            </Label>
+                          )}
+                          {!outcome && studentPreview?.errorMessage && (
+                            <Label color="warning">Needs attention</Label>
+                          )}
+                        </Stack>
                       </AccordionSummary>
                       <AccordionDetails>
                         <Stack spacing={2}>
@@ -573,13 +665,6 @@ export default function AssignmentWorkflow({
                   );
                 })}
               {error && <Alert severity="error">{error}</Alert>}
-              {activeStep === 4 && (
-                <Alert severity={complete ? 'success' : 'warning'}>
-                  {committedIds.size} committed or already assigned;{' '}
-                  {students.length - committedIds.size} need attention. Successful assignments are
-                  preserved when retrying.
-                </Alert>
-              )}
             </Stack>
           );
         }}

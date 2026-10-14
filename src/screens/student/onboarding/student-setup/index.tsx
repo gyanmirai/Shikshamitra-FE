@@ -2,45 +2,22 @@
 
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
-import type { IData, IParams, IColumn } from 'src/components/customizabaleTable/types';
-import type { StudentOnboardingStatus } from 'src/redux/student/onboarding/student-onboarding-types';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
-import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { useUrlFilterValue } from 'src/hooks/use-url-filter-value';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
   readAcademicFilterIds,
   academicClassFilterInput,
 } from 'src/utils/student-academic-filter-query';
-import {
-  Box,
-  Menu,
-  Alert,
-  Paper,
-  Stack,
-  Avatar,
-  Button,
-  Switch,
-  Tooltip,
-  Divider,
-  Checkbox,
-  MenuItem,
-  IconButton,
-  Typography,
-  ListItemIcon,
-  ListItemText,
-  LinearProgress,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingCasesQuery,
@@ -49,25 +26,19 @@ import {
   useRefreshStudentOnboardingReadinessMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import StudentSetupTable from './student-setup-table';
 import StudentSetupDrawer from './student-setup-drawer';
-import StudentPendingTasks from './student-pending-tasks';
 import { StudentSetupFilters } from './student-setup-academic-filters';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
+import { useStudentSetupAssignment } from './use-student-setup-assignment';
+import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
-import OnboardingBulkActionDialog, {
-  type BulkOnboardingAction,
-} from './onboarding-bulk-action-dialog';
+import StudentSetupAutoAssignmentDialog from './student-setup-auto-assignment-dialog';
+import { mapOnboardingCaseToItem, type StudentOnboardingItem } from './student-onboarding-model';
+import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
 import {
-  accountStatusMeta,
-  getReadinessSummary,
-  onboardingStageMeta,
-  mapOnboardingCaseToItem,
-  type StudentOnboardingItem,
-} from './student-onboarding-model';
-import {
-  hasAssignedDivision,
   studentSetupTaskHref,
   type StudentSetupView,
   parseStudentSetupView,
@@ -105,25 +76,6 @@ const studentSetupTooltip = (
 
 const ALL_STANDARDS = '__all__';
 
-const studentSetupStatusOptions: Array<{ status: StudentOnboardingStatus; label: string }> = [
-  { status: 0, label: onboardingStageMeta['to-prepare'].label },
-  { status: 1, label: onboardingStageMeta['awaiting-approval'].label },
-  { status: 2, label: onboardingStageMeta['ready-to-activate'].label },
-  { status: 3, label: onboardingStageMeta['action-required'].label },
-  { status: 4, label: onboardingStageMeta.completed.label },
-  { status: 5, label: onboardingStageMeta.cancelled.label },
-  { status: 6, label: onboardingStageMeta.provisioning.label },
-];
-
-const studentSetupSortFields: Record<string, string> = {
-  studentName: 'StudentName',
-  placement: 'Placement',
-  divisionTask: 'Placement',
-  rollNumberTask: 'RollNumber',
-  ownerName: 'OwnerName',
-  statusLabel: 'Status',
-};
-
 const textFilterOperators = ['contains', 'equals', 'startsWith', 'endsWith'] as const;
 const numberFilterOperators = ['equals', 'greaterThan', 'lessThan', 'between'] as const;
 
@@ -135,810 +87,41 @@ function getNumberFilterOperator(value: string | null) {
   return numberFilterOperators.find((operator) => operator === value) ?? 'equals';
 }
 
-function StudentSetupTable({
-  rows,
-  isLoading,
-  isError,
-  onRetry,
-  view,
-  taskScope,
-  tableId,
-  tableTitle,
-  noDataText,
-  noDataDescription,
-  onClearWorklistFilters,
-  onOpen,
-  onOpenTask,
-  selectedStudentIds,
-  onToggleSelection,
-  allStudentsSelected,
-  someStudentsSelected,
-  onToggleAll,
-  totalCount,
-  page,
-  rowsPerPage,
-  searchTerm,
-  onPaginationChange,
-  onSearchChange,
-  columnFilters,
-  onColumnFilterChange,
-  sorts,
-  onSortChange,
-  placementOptions,
-  isServerBacked,
-}: {
-  rows: StudentOnboardingItem[];
-  isLoading: boolean;
-  isError: boolean;
-  onRetry: () => void;
-  view: StudentSetupView;
-  taskScope: StudentSetupTaskScope;
-  tableId: string;
-  tableTitle: string;
-  noDataText: string;
-  noDataDescription?: string;
-  onClearWorklistFilters?: () => void;
-  onOpen: (studentId: string) => void;
-  onOpenTask: (studentId: string, view: StudentSetupView) => void;
-  selectedStudentIds: string[];
-  onToggleSelection: (studentId: string) => void;
-  allStudentsSelected: boolean;
-  someStudentsSelected: boolean;
-  onToggleAll: () => void;
-  totalCount: number;
-  page: number;
-  rowsPerPage: number;
-  searchTerm: string;
-  onPaginationChange: (page: number, rowsPerPage: number) => void;
-  onSearchChange: (searchTerm: string) => void;
-  columnFilters: IParams['filters'];
-  onColumnFilterChange: (filters: IParams['filters']) => void;
-  sorts: IParams['sorts'];
-  onSortChange: (sorts: IParams['sorts']) => void;
-  placementOptions: Array<{ label: string; value: string }>;
-  isServerBacked: boolean;
-}) {
-  const [hoveredStudentId, setHoveredStudentId] = useState<string | null>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const keepPendingOpen = useCallback((id: string) => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    setHoveredStudentId(id);
-  }, []);
-  const closePending = useCallback(() => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => setHoveredStudentId(null), 200);
-  }, []);
-  useEffect(
-    () => () => {
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    },
-    []
-  );
-  const tableData = useMemo(
-    () =>
-      rows.map((student) => {
-        const readiness = getReadinessSummary(student);
-        return {
-          ...student,
-          placement: `${student.standardName} / ${student.divisionName}`,
-          identifiers: `GR ${student.grNo ?? student.grPreview ?? 'Pending'} · Roll ${student.rollNo ?? 'Pending'}`,
-          grNumberTask: student.grNo ?? student.grPreview ?? 'Not assigned',
-          rollNumberTask: student.rollNo ?? 'Not assigned',
-          divisionTask: `${student.standardName} / ${student.divisionName}`,
-          readinessProgress: readiness.progress,
-          readinessText: `${readiness.passedCount}/${readiness.requiredCount} checks`,
-          blockerCount: readiness.blockingCount,
-          accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
-          statusLabel: onboardingStageMeta[student.status].label,
-        };
-      }),
-    [rows]
-  );
-
-  const columns = useMemo<IColumn[]>(() => {
-    const allColumns: IColumn[] = [
-      {
-        id: 'selection',
-        label: '',
-        width: 48,
-        sticky: true,
-        stickyPosition: 'left',
-        isFilter: false,
-        isSort: false,
-        excludeFromExport: true,
-        renderColumn: () => (
-          <Checkbox
-            checked={allStudentsSelected}
-            indeterminate={someStudentsSelected}
-            disabled={rows.length === 0}
-            onChange={onToggleAll}
-            inputProps={{ 'aria-label': 'Select all visible students' }}
-          />
-        ),
-        render: (_value, row) => (
-          <Checkbox
-            checked={selectedStudentIds.includes(String(row.id))}
-            onChange={() => onToggleSelection(String(row.id))}
-            inputProps={{ 'aria-label': `Select ${String(row.studentName)}` }}
-          />
-        ),
-      },
-      {
-        id: 'studentName',
-        label: 'Student',
-        filterType: 'string',
-        minWidth: 230,
-        sticky: true,
-        stickyPosition: 'left',
-        render: (value, row) => (
-          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
-            <Avatar
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: 'primary.lighter',
-                color: 'primary.dark',
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              {String(value)
-                .trim()
-                .split(/\s+/)
-                .slice(0, 2)
-                .map((part) => part[0])
-                .join('')
-                .toUpperCase()}
-            </Avatar>
-            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                {value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {row.applicationNumber}
-              </Typography>
-            </Stack>
-          </Stack>
-        ),
-      },
-      {
-        id: 'admissionRoute',
-        label: 'Admission route',
-        minWidth: 160,
-        cellSx: { whiteSpace: 'normal' },
-      },
-      {
-        id: 'placement',
-        label: 'Placement',
-        minWidth: 160,
-        filterType: 'enum',
-        enumOptions: placementOptions,
-        cellSx: { whiteSpace: 'normal' },
-      },
-      {
-        id: 'readinessProgress',
-        label: 'Readiness',
-        minWidth: 170,
-        render: (value, row) => (
-          <Stack spacing={0.5}>
-            <Stack direction="row" justifyContent="space-between" spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                {row.readinessText}
-              </Typography>
-              <Typography variant="caption" fontWeight={700}>
-                {value}%
-              </Typography>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={Number(value)}
-              color={row.blockerCount ? 'warning' : 'success'}
-              aria-label={`${String(row.studentName)} readiness ${String(value)} percent`}
-              sx={{ height: 5, borderRadius: 1 }}
-            />
-            <StudentPendingTasks
-              student={rows.find((student) => student.id === row.id)!}
-              hovered={hoveredStudentId === row.id}
-              onKeepOpen={() => keepPendingOpen(String(row.id))}
-              onLeave={closePending}
-              onOpenTask={(nextView) => onOpenTask(String(row.id), nextView)}
-            />
-          </Stack>
-        ),
-      },
-      {
-        id: 'identifiers',
-        label: 'Identifiers',
-        minWidth: 190,
-        isFilter: false,
-        render: (_value, row) => {
-          const grText =
-            row.grNo !== undefined && row.grNo !== null
-              ? `GR: ${row.grNo}`
-              : row.grPreview
-                ? `GR: ${row.grPreview} (preview)`
-                : 'GR: Pending';
-
-          const rollText =
-            row.rollNo !== undefined && row.rollNo !== null
-              ? `Roll: ${row.rollNo}`
-              : 'Roll: Pending';
-
-          return (
-            <Stack spacing={0.5} alignItems="flex-start">
-              <Label
-                variant="soft"
-                color="default"
-                sx={{
-                  px: 0.75,
-                  height: 22,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  borderRadius: 0.75,
-                }}
-              >
-                {grText}
-              </Label>
-              <Label
-                variant="soft"
-                color="default"
-                sx={{
-                  px: 0.75,
-                  height: 22,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  borderRadius: 0.75,
-                }}
-              >
-                {rollText}
-              </Label>
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'feesTask',
-        label: 'Fee structure',
-        minWidth: 170,
-        render: (_value, row) => (
-          <Label color={row.feeStructureConfirmed ? 'success' : 'warning'}>
-            {row.feeStructureConfirmed ? 'Confirmed' : 'Pending'}
-          </Label>
-        ),
-      },
-      {
-        id: 'grNumberTask',
-        label: 'GR number',
-        minWidth: 180,
-        isFilter: false,
-        render: (_value, row) => {
-          const hasCommittedValue = row.grNo !== undefined && row.grNo !== null;
-          const value = hasCommittedValue ? row.grNo : row.grPreview;
-
-          return (
-            <Stack spacing={0.5} alignItems="flex-start">
-              <Typography variant="body2" fontWeight={hasCommittedValue ? 700 : 500}>
-                {value ?? 'Not assigned'}
-              </Typography>
-              <Label
-                variant="soft"
-                color={hasCommittedValue ? 'success' : row.grPreview ? 'info' : 'warning'}
-              >
-                {hasCommittedValue
-                  ? row.grNumberLocked
-                    ? 'Locked'
-                    : 'Assigned'
-                  : row.grPreview
-                    ? 'Preview only'
-                    : 'Pending'}
-              </Label>
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'rollNumberTask',
-        label: 'Roll number',
-        minWidth: 150,
-        filterType: 'number',
-        render: (_value, row) => {
-          const hasCommittedValue = row.rollNo !== undefined && row.rollNo !== null;
-
-          return (
-            <Stack spacing={0.5} alignItems="flex-start">
-              <Typography variant="body2" fontWeight={hasCommittedValue ? 700 : 500}>
-                {hasCommittedValue ? row.rollNo : 'Not assigned'}
-              </Typography>
-              <Label variant="soft" color={hasCommittedValue ? 'success' : 'warning'}>
-                {hasCommittedValue ? (row.rollNumberLocked ? 'Locked' : 'Assigned') : 'Pending'}
-              </Label>
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'divisionTask',
-        label: 'Current placement',
-        minWidth: 180,
-        filterType: 'enum',
-        enumOptions: placementOptions,
-        render: (_value, row) => {
-          const divisionAssigned = hasAssignedDivision(row as StudentOnboardingItem);
-
-          return (
-            <Stack spacing={0.5} alignItems="flex-start">
-              <Typography variant="body2" fontWeight={600}>
-                {row.standardName} / {row.divisionName || '—'}
-              </Typography>
-              <Label variant="soft" color={divisionAssigned ? 'default' : 'warning'}>
-                {divisionAssigned ? 'Placed' : 'Unassigned'}
-              </Label>
-            </Stack>
-          );
-        },
-      },
-      {
-        id: 'accounts',
-        label: 'Account access',
-        minWidth: 210,
-        render: (_value, row) => (
-          <Stack spacing={0.5} alignItems="flex-start">
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 54 }}>
-                Student
-              </Typography>
-              <Label
-                variant="soft"
-                color={
-                  accountStatusMeta[
-                    row.studentAccountStatus as StudentOnboardingItem['studentAccountStatus']
-                  ].color
-                }
-              >
-                {
-                  accountStatusMeta[
-                    row.studentAccountStatus as StudentOnboardingItem['studentAccountStatus']
-                  ].label
-                }
-              </Label>
-            </Stack>
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 54 }}>
-                Guardian
-              </Typography>
-              <Label
-                variant="soft"
-                color={
-                  accountStatusMeta[
-                    row.guardianAccountStatus as StudentOnboardingItem['guardianAccountStatus']
-                  ].color
-                }
-              >
-                {
-                  accountStatusMeta[
-                    row.guardianAccountStatus as StudentOnboardingItem['guardianAccountStatus']
-                  ].label
-                }
-              </Label>
-            </Stack>
-          </Stack>
-        ),
-      },
-      {
-        id: 'ownerName',
-        label: 'Owner',
-        minWidth: 150,
-        filterType: 'string',
-        render: (value: string) =>
-          value === 'Not assigned' ? (
-            <Label variant="soft" color="default">
-              Not assigned
-            </Label>
-          ) : (
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-              {value}
-            </Typography>
-          ),
-      },
-      {
-        id: 'statusLabel',
-        label: 'Status',
-        width: 156,
-        minWidth: 156,
-        filterType: 'enum',
-        enumOptions: studentSetupStatusOptions.map(({ label }) => ({ label, value: label })),
-        sticky: true,
-        stickyPosition: 'right',
-        render: (_value, row) => (
-          <Label
-            variant="soft"
-            color={onboardingStageMeta[row.status as StudentOnboardingItem['status']].color}
-          >
-            {onboardingStageMeta[row.status as StudentOnboardingItem['status']].label}
-          </Label>
-        ),
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        width: 88,
-        minWidth: 88,
-        align: 'right',
-        isFilter: false,
-        isSort: false,
-        excludeFromExport: true,
-        sticky: true,
-        stickyPosition: 'right',
-        render: (_value, row: IData) => (
-          <Tooltip title={`Review ${String(row.studentName)}`}>
-            <IconButton
-              aria-label={`Review ${String(row.studentName)}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen(String(row.id));
-              }}
-              sx={{ color: 'text.secondary' }}
-            >
-              <Iconify icon="mdi:eye-outline" width={20} />
-            </IconButton>
-          </Tooltip>
-        ),
-      },
-    ];
-
-    const visibleColumns: Record<StudentSetupView, string[]> = {
-      readiness: [
-        'selection',
-        'studentName',
-        'admissionRoute',
-        'placement',
-        'readinessProgress',
-        'identifiers',
-        'accounts',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      'gr-number': [
-        'selection',
-        'studentName',
-        'placement',
-        'grNumberTask',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      'roll-number': [
-        'selection',
-        'studentName',
-        'placement',
-        'rollNumberTask',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      division: [
-        'selection',
-        'studentName',
-        'divisionTask',
-        'rollNumberTask',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      fees: [
-        'selection',
-        'studentName',
-        'placement',
-        'feesTask',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      credentials: [
-        'selection',
-        'studentName',
-        'placement',
-        'accounts',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-    };
-
-    const filterableColumns = new Set(['studentName', 'ownerName', 'statusLabel']);
-    if (taskScope === 'all') filterableColumns.add('rollNumberTask');
-    if (placementOptions.length > 0 && (view !== 'division' || taskScope === 'all')) {
-      filterableColumns.add('placement');
-      filterableColumns.add('divisionTask');
-    }
-
-    return allColumns
-      .filter((column) => visibleColumns[view].includes(column.id))
-      .map((column) => ({
-        ...column,
-        isSort:
-          column.id in studentSetupSortFields &&
-          (taskScope === 'all' || (column.id !== 'rollNumberTask' && column.id !== 'divisionTask')),
-        isFilter: filterableColumns.has(column.id),
-      }));
-  }, [
-    allStudentsSelected,
-    onOpen,
-    onOpenTask,
-    hoveredStudentId,
-    keepPendingOpen,
-    closePending,
-    onToggleAll,
-    onToggleSelection,
-    placementOptions,
-    rows,
-    selectedStudentIds,
-    someStudentsSelected,
-    taskScope,
-    view,
-  ]);
-
-  return (
-    <CustomizableTable
-      rowProps={
-        view === 'readiness'
-          ? (row) => ({
-              onMouseEnter: () => keepPendingOpen(String(row.id)),
-              onMouseLeave: closePending,
-            })
-          : undefined
-      }
-      tableId={tableId}
-      tableTitle={tableTitle}
-      exportLabel="Export current page"
-      columns={columns}
-      data={tableData}
-      isLoading={isLoading}
-      isFilter
-      isSearch
-      serverSide={isServerBacked}
-      serverSidePagination={isServerBacked}
-      serverSideSearch={isServerBacked}
-      serverSideFilter={isServerBacked}
-      serverSideSort={isServerBacked}
-      serverSideSortMode="single"
-      filters={columnFilters}
-      onServerFilter={onColumnFilterChange}
-      sorts={sorts}
-      onServerSort={(_column, nextSorts) => onSortChange(nextSorts)}
-      totalCount={totalCount}
-      page={page - 1}
-      rowsPerPage={rowsPerPage}
-      searchTerm={searchTerm}
-      rowsPerPageOptions={[10, 25, 100]}
-      onServerPagination={onPaginationChange}
-      onServerSearch={onSearchChange}
-      noDataText={
-        <Stack component="span" alignItems="center" spacing={1}>
-          <Box component="span">{noDataText}</Box>
-          {noDataDescription && (
-            <Typography component="span" variant="caption" color="text.secondary">
-              {noDataDescription}
-            </Typography>
-          )}
-          {onClearWorklistFilters && (
-            <Button
-              variant="outlined"
-              color="inherit"
-              size="small"
-              onClick={onClearWorklistFilters}
-            >
-              Clear filters
-            </Button>
-          )}
-        </Stack>
-      }
-      errorContent={
-        isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={onRetry}>
-                Retry
-              </Button>
-            }
-          >
-            Onboarding cases could not be loaded.
-          </Alert>
-        ) : undefined
-      }
-      searchFieldProps={{ placeholder: 'Search...' }}
-      wrapperProps={{ sx: { minWidth: 0, minHeight: 0, flex: 1 } }}
-      tableContainerProps={{ sx: { minWidth: 0, minHeight: 0, height: 1 } }}
-    />
-  );
-}
-
 type StudentSetupAssignmentView = Exclude<StudentSetupView, 'readiness'>;
 
 const assignmentViewMeta: Record<
   StudentSetupAssignmentView,
   {
     title: string;
-    description: string;
-    icon: string;
-    actionLabel: string;
-    pendingScopeLabel: string;
-    allScopeLabel: string;
     pendingEmptyText: string;
   }
 > = {
   fees: {
     title: 'Fee structure confirmation',
-    description: 'Confirm the published fee structure for each student.',
-    icon: 'mdi:receipt-text-outline',
-    actionLabel: 'Confirm Fees',
-    pendingScopeLabel: 'Remaining',
-    allScopeLabel: 'All students',
     pendingEmptyText:
       'No students are waiting for fee structure confirmation. Switch to All students to review confirmed fee structures.',
   },
   credentials: {
     title: 'App credentials',
-    description: 'Prepare app access and send login details after activation.',
-    icon: 'mdi:account-key-outline',
-    actionLabel: 'Manage Credentials',
-    pendingScopeLabel: 'Remaining',
-    allScopeLabel: 'All students',
     pendingEmptyText:
       'No students have pending app access or credential emails. Switch to All students to review app access.',
   },
   'gr-number': {
     title: 'GR number assignment',
-    description:
-      'Assign committed GR numbers to remaining students, or open all students for an authorized change.',
-    icon: 'mdi:identifier',
-    actionLabel: 'Assign GR No.',
-    pendingScopeLabel: 'Remaining',
-    allScopeLabel: 'All students',
     pendingEmptyText:
       'No students are waiting for a GR number. Switch to All students to review existing GR numbers.',
   },
   'roll-number': {
     title: 'Roll number assignment',
-    description: 'Assign Roll numbers starting at 1 within each Class and Division.',
-    icon: 'mdi:format-list-numbered',
-    actionLabel: 'Assign Roll No.',
-    pendingScopeLabel: 'Remaining',
-    allScopeLabel: 'All students',
     pendingEmptyText:
       'No students are waiting for a Roll number. Switch to All students to review existing Roll numbers.',
   },
   division: {
     title: 'Division assignment',
-    description:
-      'Place students without a division or select existing placements that need an authorized change.',
-    icon: 'mdi:google-classroom',
-    actionLabel: 'Assign / Change Division',
-    pendingScopeLabel: 'Unassigned',
-    allScopeLabel: 'All students',
     pendingEmptyText:
       'No students are without a division. Switch to All students to review existing placements.',
   },
 };
-
-const assignmentModeLabel = (mode: 'automatic' | 'manual' | 'both') => {
-  if (mode === 'both') return 'Automatic + manual';
-  return mode === 'automatic' ? 'Automatic only' : 'Manual only';
-};
-
-function StudentSetupAssignmentBar({
-  view,
-  scope,
-  scopeHref,
-  pendingCount,
-  visibleCount,
-  selectedCount,
-  assignmentMode,
-  onSelectAll,
-  onAssign,
-  onClear,
-}: {
-  view: StudentSetupAssignmentView;
-  scope: StudentSetupTaskScope;
-  scopeHref: (scope: StudentSetupTaskScope) => string;
-  pendingCount: number;
-  visibleCount: number;
-  selectedCount: number;
-  assignmentMode?: 'automatic' | 'manual' | 'both';
-  onSelectAll: () => void;
-  onAssign: () => void;
-  onClear: () => void;
-}) {
-  const meta = assignmentViewMeta[view];
-
-  return (
-    <Paper variant="outlined" sx={{ p: 1.25, flexShrink: 0 }}>
-      <Stack direction={{ xs: 'column', lg: 'row' }} alignItems={{ lg: 'center' }} spacing={1.25}>
-        <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ flex: 1, minWidth: 0 }}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: 1,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'action.hover',
-              color: 'text.primary',
-              flexShrink: 0,
-            }}
-          >
-            <Iconify icon={meta.icon} width={20} />
-          </Box>
-          <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
-              <Typography variant="subtitle2">{meta.title}</Typography>
-              <Label variant="soft" color={pendingCount ? 'warning' : 'success'}>
-                {pendingCount} pending
-              </Label>
-              {view === 'gr-number' && assignmentMode && (
-                <Label variant="soft" color="default">
-                  {assignmentModeLabel(assignmentMode)}
-                </Label>
-              )}
-              {view === 'roll-number' && (
-                <Label variant="soft" color="default">
-                  Uses student numbering rules
-                </Label>
-              )}
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              {meta.description}
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-          <Button
-            component={Link}
-            href={scopeHref('pending')}
-            prefetch={false}
-            size="small"
-            variant={scope === 'pending' ? 'contained' : 'outlined'}
-            color={scope === 'pending' ? 'primary' : 'inherit'}
-          >
-            {meta.pendingScopeLabel} ({pendingCount})
-          </Button>
-          <Button
-            component={Link}
-            href={scopeHref('all')}
-            prefetch={false}
-            size="small"
-            variant={scope === 'all' ? 'contained' : 'outlined'}
-            color={scope === 'all' ? 'primary' : 'inherit'}
-          >
-            {meta.allScopeLabel}
-          </Button>
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.25 }} />
-          <Button size="small" variant="outlined" onClick={onSelectAll} disabled={!visibleCount}>
-            Select all visible ({visibleCount})
-          </Button>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon={meta.icon} width={17} />}
-            onClick={onAssign}
-            disabled={!selectedCount}
-          >
-            {meta.actionLabel}
-            {selectedCount ? ` (${selectedCount})` : ''}
-          </Button>
-          {selectedCount ? (
-            <Button size="small" color="inherit" onClick={onClear}>
-              Clear
-            </Button>
-          ) : null}
-        </Stack>
-      </Stack>
-    </Paper>
-  );
-}
 
 export default function StudentSetupScreen() {
   const [drawerTaskView, setDrawerTaskView] = useState<StudentSetupView | null>(null);
@@ -955,13 +138,17 @@ export default function StudentSetupScreen() {
   const focusedCaseId = searchParams.get('case');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(focusedCaseId);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const [bulkAction, setBulkAction] = useState<BulkOnboardingAction | null>(null);
-  const [bulkActionStudents, setBulkActionStudents] = useState<StudentOnboardingItem[]>([]);
+  const [autoAssignment, setAutoAssignment] = useState<{
+    type: StudentAssignmentType;
+    students: StudentOnboardingItem[];
+  } | null>(null);
+  const [lockInteraction, setLockInteraction] = useState(false);
+  const navigationRef = useRef<(action: () => void) => void>((action) => action());
+  const navigate = useCallback((action: () => void) => navigationRef.current(action), []);
   const [assignmentRequest, setAssignmentRequest] = useState<{
     type: StudentAssignmentType;
     studentIds: string[];
   } | null>(null);
-  const [moreActionsAnchor, setMoreActionsAnchor] = useState<HTMLElement | null>(null);
   const [showFilterAlert, setShowFilterAlert] = useState(true);
   const selectedBoardId = readAcademicFilterIds(searchParams.get('board'))[0] ?? '';
   const selectedMediumId = readAcademicFilterIds(searchParams.get('medium'))[0] ?? '';
@@ -1018,32 +205,34 @@ export default function StudentSetupScreen() {
     ) || Boolean(placementDivisionId);
 
   const changeAcademicFilter = useCallback(
-    (key: 'board' | 'medium' | 'class' | 'division', value: string) => {
-      const next = new URLSearchParams(searchParams.toString());
-      [
-        ['class', selectedStandardId],
-        ['division', selectedDivisionId],
-      ].forEach(([selectionKey, selectionValue]) => {
-        if (selectionValue && selectionValue !== ALL_STANDARDS)
-          next.set(selectionKey, selectionValue);
-        else next.delete(selectionKey);
-      });
-      if (key === 'class') setSelectedStandardId(value);
-      if (key === 'division') setSelectedDivisionId(value);
-      else setSelectedDivisionId(ALL_STANDARDS);
-      if (key === 'board' || key === 'medium') setSelectedStandardId(ALL_STANDARDS);
-      if (!value || value === ALL_STANDARDS) next.delete(key);
-      else next.set(key, value);
-      if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
-      if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
-      if (key === 'class') next.delete('division');
-      next.delete('placementDivision');
-      setTablePage(1);
-      setSelectedStudentIds([]);
-      const query = next.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    },
+    (key: 'board' | 'medium' | 'class' | 'division', value: string) =>
+      navigate(() => {
+        const next = new URLSearchParams(searchParams.toString());
+        [
+          ['class', selectedStandardId],
+          ['division', selectedDivisionId],
+        ].forEach(([selectionKey, selectionValue]) => {
+          if (selectionValue && selectionValue !== ALL_STANDARDS)
+            next.set(selectionKey, selectionValue);
+          else next.delete(selectionKey);
+        });
+        if (key === 'class') setSelectedStandardId(value);
+        if (key === 'division') setSelectedDivisionId(value);
+        else setSelectedDivisionId(ALL_STANDARDS);
+        if (key === 'board' || key === 'medium') setSelectedStandardId(ALL_STANDARDS);
+        if (!value || value === ALL_STANDARDS) next.delete(key);
+        else next.set(key, value);
+        if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
+        if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
+        if (key === 'class') next.delete('division');
+        next.delete('placementDivision');
+        setTablePage(1);
+        setSelectedStudentIds([]);
+        const query = next.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      }),
     [
+      navigate,
       pathname,
       router,
       searchParams,
@@ -1054,81 +243,85 @@ export default function StudentSetupScreen() {
     ]
   );
 
-  const clearWorklistFilters = () => {
-    setSelectedStandardId(ALL_STANDARDS);
-    setSelectedDivisionId(ALL_STANDARDS);
-    const next = new URLSearchParams(searchParams.toString());
-    ['class', 'division', 'placementDivision'].forEach((key) => next.delete(key));
-    setTablePage(1);
-    setSelectedStudentIds([]);
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+  const clearWorklistFilters = () =>
+    navigate(() => {
+      setSelectedStandardId(ALL_STANDARDS);
+      setSelectedDivisionId(ALL_STANDARDS);
+      const next = new URLSearchParams(searchParams.toString());
+      ['class', 'division', 'placementDivision'].forEach((key) => next.delete(key));
+      setTablePage(1);
+      setSelectedStudentIds([]);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
 
-  const handleColumnFilterChange = (filters: IParams['filters']) => {
-    const latest = (column: string) => filters.filter((filter) => filter.column === column).at(-1);
-    const statusOption = studentSetupStatusOptions.find(
-      ({ label }) => label === latest('statusLabel')?.value
-    );
-    const placementFilter = latest(activeView === 'division' ? 'divisionTask' : 'placement');
-    const studentFilter = latest('studentName');
-    const ownerFilter = latest('ownerName');
-    const rollFilter = latest('rollNumberTask');
-    const next = new URLSearchParams(searchParams.toString());
-    [
-      'status',
-      'placementDivision',
-      'studentName',
-      'studentNameOp',
-      'ownerName',
-      'ownerNameOp',
-      'rollNumber',
-      'rollMin',
-      'rollMax',
-      'rollOp',
-    ].forEach((key) => next.delete(key));
-    if (statusOption) next.set('status', String(statusOption.status));
-    if (placementFilter?.value) next.set('placementDivision', String(placementFilter.value));
-    if (studentFilter?.value) {
-      next.set('studentName', String(studentFilter.value));
-      next.set('studentNameOp', getTextFilterOperator(studentFilter.type));
-    }
-    if (ownerFilter?.value) {
-      next.set('ownerName', String(ownerFilter.value));
-      next.set('ownerNameOp', getTextFilterOperator(ownerFilter.type));
-    }
-    if (rollFilter) {
-      const operator = getNumberFilterOperator(rollFilter.type);
-      if (operator === 'between' && rollFilter.value && typeof rollFilter.value === 'object') {
-        next.set('rollMin', String(rollFilter.value.min));
-        next.set('rollMax', String(rollFilter.value.max));
-        next.set('rollOp', operator);
-      } else if (Number.isFinite(Number(rollFilter.value))) {
-        next.set('rollNumber', String(rollFilter.value));
-        next.set('rollOp', operator);
+  const handleColumnFilterChange = (filters: IParams['filters']) =>
+    navigate(() => {
+      const latest = (column: string) =>
+        filters.filter((filter) => filter.column === column).at(-1);
+      const statusOption = studentSetupStatusOptions.find(
+        ({ label }) => label === latest('statusLabel')?.value
+      );
+      const placementFilter = latest(activeView === 'division' ? 'divisionTask' : 'placement');
+      const studentFilter = latest('studentName');
+      const ownerFilter = latest('ownerName');
+      const rollFilter = latest('rollNumberTask');
+      const next = new URLSearchParams(searchParams.toString());
+      [
+        'status',
+        'placementDivision',
+        'studentName',
+        'studentNameOp',
+        'ownerName',
+        'ownerNameOp',
+        'rollNumber',
+        'rollMin',
+        'rollMax',
+        'rollOp',
+      ].forEach((key) => next.delete(key));
+      if (statusOption) next.set('status', String(statusOption.status));
+      if (placementFilter?.value) next.set('placementDivision', String(placementFilter.value));
+      if (studentFilter?.value) {
+        next.set('studentName', String(studentFilter.value));
+        next.set('studentNameOp', getTextFilterOperator(studentFilter.type));
       }
-    }
-    setTablePage(1);
-    setSelectedStudentIds([]);
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+      if (ownerFilter?.value) {
+        next.set('ownerName', String(ownerFilter.value));
+        next.set('ownerNameOp', getTextFilterOperator(ownerFilter.type));
+      }
+      if (rollFilter) {
+        const operator = getNumberFilterOperator(rollFilter.type);
+        if (operator === 'between' && rollFilter.value && typeof rollFilter.value === 'object') {
+          next.set('rollMin', String(rollFilter.value.min));
+          next.set('rollMax', String(rollFilter.value.max));
+          next.set('rollOp', operator);
+        } else if (Number.isFinite(Number(rollFilter.value))) {
+          next.set('rollNumber', String(rollFilter.value));
+          next.set('rollOp', operator);
+        }
+      }
+      setTablePage(1);
+      setSelectedStudentIds([]);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
 
-  const handleSortChange = (nextSorts: IParams['sorts']) => {
-    const sort = nextSorts.at(-1);
-    const next = new URLSearchParams(searchParams.toString());
-    if (sort && Object.prototype.hasOwnProperty.call(studentSetupSortFields, sort.column)) {
-      next.set('sort', sort.column);
-      next.set('direction', sort.direction);
-    } else {
-      next.delete('sort');
-      next.delete('direction');
-    }
-    setTablePage(1);
-    setSelectedStudentIds([]);
-    const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  };
+  const handleSortChange = (nextSorts: IParams['sorts']) =>
+    navigate(() => {
+      const sort = nextSorts.at(-1);
+      const next = new URLSearchParams(searchParams.toString());
+      if (sort && Object.prototype.hasOwnProperty.call(studentSetupSortFields, sort.column)) {
+        next.set('sort', sort.column);
+        next.set('direction', sort.direction);
+      } else {
+        next.delete('sort');
+        next.delete('direction');
+      }
+      setTablePage(1);
+      setSelectedStudentIds([]);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
 
   const queryArgs = useMemo(
     () => ({
@@ -1362,15 +555,62 @@ export default function StudentSetupScreen() {
     [onboardingQuery.currentData?.items]
   );
   const sourceRows = liveRows;
-  const displayedRows = sourceRows;
+  const assignmentType =
+    activeView === 'division' || activeView === 'gr-number' || activeView === 'roll-number'
+      ? activeView
+      : undefined;
+  const assignment = useStudentSetupAssignment({
+    rows: liveRows,
+    type: assignmentType,
+    canManage: canManageOnboarding,
+    grAssignmentMode: settings.grNumber.assignmentMode,
+    contextKey: [
+      currentYear?.id ?? '',
+      selectedBoardId,
+      selectedMediumId,
+      selectedStandardId,
+      selectedDivisionId,
+      activeView,
+      activeTaskScope,
+      searchParams.toString(),
+      tablePage,
+      rowsPerPage,
+    ].join(':'),
+    totalCount: onboardingQuery.currentData?.totalCount ?? 0,
+  });
+  const { displayedRows } = assignment;
+  const interactionBusy = assignment.busy || lockInteraction;
+  const { requestNavigation, confirmation } = useUnsavedNavigation(assignment.form.dirty, {
+    blockNavigation: interactionBusy || Boolean(autoAssignment),
+    push: (href) => {
+      assignment.cancel();
+      router.push(href);
+    },
+  });
+  navigationRef.current = (action) =>
+    requestNavigation(() => {
+      assignment.cancel();
+      action();
+    });
+  const showDivisionSelection =
+    activeView === 'division' && readAcademicFilterIds(selectedStandardId).length === 1;
+  const selectableStudents = displayedRows.filter(
+    (row) =>
+      row.source === 'onboarding-case' &&
+      !row.studentEnrollmentId &&
+      ![4, 5, 6].includes(row.backendStatus ?? -1) &&
+      !['completed', 'cancelled', 'provisioning'].includes(row.status)
+  );
+  const assignmentTargets =
+    showDivisionSelection && selectedStudentIds.length
+      ? displayedRows.filter((row) => selectedStudentIds.includes(row.id))
+      : displayedRows;
+  const automaticTargets = assignment.eligible('automatic', assignmentTargets);
+  const manualTargets = assignment.eligible('manual', assignmentTargets);
   const pendingCount =
     activeTaskScope === 'pending'
       ? (onboardingQuery.currentData?.totalCount ?? 0)
       : (pendingCountQuery.currentData?.totalCount ?? 0);
-  const selectedStudents = useMemo(
-    () => sourceRows.filter((student) => selectedStudentIds.includes(student.id)),
-    [selectedStudentIds, sourceRows]
-  );
   const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
   const focusedCaseQuery = useGetStudentOnboardingCaseQuery(focusedCaseId ?? '', {
     skip: !focusedCaseId || Boolean(sourceRows.find((student) => student.id === focusedCaseId)),
@@ -1396,10 +636,10 @@ export default function StudentSetupScreen() {
         ? assignmentStudents[0]
         : null;
   const allStudentsSelected =
-    displayedRows.length > 0 &&
-    displayedRows.every((student) => selectedStudentIds.includes(student.id));
+    selectableStudents.length > 0 &&
+    selectableStudents.every((student) => selectedStudentIds.includes(student.id));
   const someStudentsSelected =
-    displayedRows.some((student) => selectedStudentIds.includes(student.id)) &&
+    selectableStudents.some((student) => selectedStudentIds.includes(student.id)) &&
     !allStudentsSelected;
 
   useEffect(() => {
@@ -1456,27 +696,24 @@ export default function StudentSetupScreen() {
     return `${pathname}?${next.toString()}`;
   };
 
-  const toggleStudent = (studentId: string) => {
-    setSelectedStudentIds((current) =>
-      current.includes(studentId)
-        ? current.filter((id) => id !== studentId)
-        : [...current, studentId]
-    );
-  };
+  const toggleStudent = (studentId: string) =>
+    navigate(() => {
+      setSelectedStudentIds((current) =>
+        current.includes(studentId)
+          ? current.filter((id) => id !== studentId)
+          : [...current, studentId]
+      );
+    });
 
-  const toggleAll = () => {
-    const visibleIds = displayedRows.map((student) => student.id);
-    setSelectedStudentIds((current) =>
-      allStudentsSelected
-        ? current.filter((id) => !visibleIds.includes(id))
-        : Array.from(new Set([...current, ...visibleIds]))
-    );
-  };
-
-  const selectAllVisible = () => {
-    const visibleIds = displayedRows.map((student) => student.id);
-    setSelectedStudentIds((current) => Array.from(new Set([...current, ...visibleIds])));
-  };
+  const toggleAll = () =>
+    navigate(() => {
+      const visibleIds = selectableStudents.map((student) => student.id);
+      setSelectedStudentIds((current) =>
+        allStudentsSelected
+          ? current.filter((id) => !visibleIds.includes(id))
+          : Array.from(new Set([...current, ...visibleIds]))
+      );
+    });
 
   const openAssignment = (type: StudentAssignmentType, studentIds: string[]) => {
     if (!canManageOnboarding) {
@@ -1492,12 +729,6 @@ export default function StudentSetupScreen() {
       return;
     }
     setAssignmentRequest({ type, studentIds });
-  };
-
-  const openBulkWorkflowAction = (action: BulkOnboardingAction) => {
-    setMoreActionsAnchor(null);
-    setBulkActionStudents(selectedStudents);
-    setBulkAction(action);
   };
 
   const runPrimaryCaseAction = async (
@@ -1545,7 +776,7 @@ export default function StudentSetupScreen() {
   };
 
   return (
-    <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
+    <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: { xs: 'auto', md: '100%' } }}>
       <CustomBreadcrumbs
         heading="Student Setup"
         description=" "
@@ -1573,26 +804,6 @@ export default function StudentSetupScreen() {
           The selected onboarding case could not be loaded.
         </Alert>
       )}
-      {activeView === 'readiness' && (
-        <FormControlLabel
-          sx={{ px: 1, m: 0 }}
-          control={
-            <Switch
-              size="small"
-              checked={searchParams.get('today') === 'true'}
-              onChange={(_event, checked) => {
-                const next = new URLSearchParams(searchParams.toString());
-                if (checked) next.set('today', 'true');
-                else next.delete('today');
-                setTablePage(1);
-                router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-              }}
-            />
-          }
-          label="Entered onboarding today"
-        />
-      )}
-
       <Box
         role="tabpanel"
         id={`student-setup-${activeView}-panel`}
@@ -1609,7 +820,20 @@ export default function StudentSetupScreen() {
         <StudentSetupFilters
           options={filterOptionsQuery.currentData}
           isLoading={filterOptionsQuery.isFetching}
-          disabled={!currentYear?.id || filterOptionsQuery.isError}
+          disabled={!currentYear?.id || filterOptionsQuery.isError || interactionBusy}
+          todayOnly={searchParams.get('today') === 'true'}
+          onTodayChange={
+            activeView === 'readiness'
+              ? (checked) =>
+                  navigate(() => {
+                    const next = new URLSearchParams(searchParams.toString());
+                    if (checked) next.set('today', 'true');
+                    else next.delete('today');
+                    setTablePage(1);
+                    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+                  })
+              : undefined
+          }
           selectedBoardId={selectedBoardId}
           selectedMediumId={selectedMediumId}
           selectedStandardId={selectedStandardId}
@@ -1638,151 +862,110 @@ export default function StudentSetupScreen() {
             Select an academic year to load onboarding cases.
           </Alert>
         ) : null}
+        {assignment.contextChanged && (
+          <Alert
+            severity="warning"
+            action={
+              <Button size="small" disabled={interactionBusy} onClick={() => navigate(() => {})}>
+                Cancel editing
+              </Button>
+            }
+          >
+            The academic scope or task changed. Your previous edits are kept for review, but cannot
+            be saved here. Cancel editing to load the current worklist.
+          </Alert>
+        )}
 
         <Box sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}>
           <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, flex: 1 }}>
-            {(activeView === 'gr-number' || activeView === 'roll-number') && (
-              <StudentIdentifierLockControls
-                academicYearId={currentYear?.id}
-                divisionId={
-                  readAcademicFilterIds(selectedDivisionId).length === 1
-                    ? readAcademicFilterIds(selectedDivisionId)[0]
+            {activeView !== 'readiness' && (
+              <StudentSetupAssignmentToolbar
+                view={activeView}
+                title={assignmentViewMeta[activeView].title}
+                scope={activeTaskScope}
+                pendingCount={pendingCount}
+                onScopeChange={(scope) =>
+                  navigate(() => {
+                    setTablePage(1);
+                    setSelectedStudentIds([]);
+                    router.replace(getScopeHref(scope), { scroll: false });
+                  })
+                }
+                busy={interactionBusy}
+                unavailable={
+                  onboardingQuery.isFetching ||
+                  onboardingQuery.isError ||
+                  !onboardingQuery.currentData
+                }
+                automaticCount={
+                  activeView === 'division' && !showDivisionSelection ? 0 : automaticTargets.length
+                }
+                manualCount={manualTargets.length}
+                manualEditing={assignment.manualEditing}
+                changedCount={
+                  assignment.contextChanged || !canManageOnboarding ? 0 : assignment.changedCount
+                }
+                onAuto={() => {
+                  if (assignmentType && automaticTargets.length) {
+                    assignment.clearResults();
+                    setAutoAssignment({ type: assignmentType, students: automaticTargets });
+                  }
+                }}
+                onManual={() => assignment.startManual(assignmentTargets)}
+                onSave={() => assignment.form.submitForm()}
+                onCancel={() => navigate(() => {})}
+                needsReason={assignment.needsReason}
+                reason={assignment.form.values.reason}
+                reasonError={
+                  assignment.form.touched.reason || assignment.form.submitCount > 0
+                    ? assignment.form.errors.reason
                     : undefined
                 }
-                identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
-                canLock={canManageOnboarding}
-                canUnlock={
-                  canManageOnboarding &&
-                  !filterOptionsQuery.isError &&
-                  filterOptionsQuery.currentData?.canUnlockIdentifiers === true
+                onReasonChange={(reason) => assignment.form.setFieldValue('reason', reason)}
+                onReasonBlur={() => assignment.form.setFieldTouched('reason')}
+                locks={
+                  activeView === 'gr-number' || activeView === 'roll-number' ? (
+                    <StudentIdentifierLockControls
+                      academicYearId={currentYear?.id}
+                      divisionId={
+                        readAcademicFilterIds(selectedDivisionId).length === 1
+                          ? readAcademicFilterIds(selectedDivisionId)[0]
+                          : undefined
+                      }
+                      identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
+                      canLock={canManageOnboarding}
+                      canUnlock={
+                        canManageOnboarding &&
+                        !filterOptionsQuery.isError &&
+                        filterOptionsQuery.currentData?.canUnlockIdentifiers === true
+                      }
+                      disabled={
+                        assignment.manualEditing || assignment.busy || onboardingQuery.isFetching
+                      }
+                      onInteractionChange={setLockInteraction}
+                    />
+                  ) : undefined
                 }
               />
             )}
-            {activeView !== 'readiness' ? (
-              <StudentSetupAssignmentBar
-                view={activeView}
-                scope={activeTaskScope}
-                scopeHref={getScopeHref}
-                pendingCount={pendingCount}
-                visibleCount={displayedRows.length}
-                selectedCount={selectedStudentIds.length}
-                assignmentMode={
-                  activeView === 'gr-number' ? settings.grNumber.assignmentMode : undefined
-                }
-                onSelectAll={selectAllVisible}
-                onAssign={() => {
-                  if (activeView === 'fees' || activeView === 'credentials') {
-                    if (selectedStudentIds.length === 1)
-                      setSelectedStudentId(selectedStudentIds[0]);
-                    else
-                      shikshaMitraToast.error({
-                        message: 'Select one student to review this task.',
-                      });
-                  } else openAssignment(activeView, selectedStudentIds);
-                }}
-                onClear={() => setSelectedStudentIds([])}
-              />
-            ) : selectedStudentIds.length ? (
-              <Paper variant="outlined" sx={{ px: 1.25, py: 1, flexShrink: 0 }}>
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  alignItems={{ md: 'center' }}
-                  spacing={1}
-                  sx={{ flexWrap: { md: 'wrap' } }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={0.75} sx={{ flex: 1 }}>
-                    <Iconify
-                      icon="mdi:checkbox-marked-circle-outline"
-                      width={20}
-                      color="primary.main"
-                    />
-                    <Typography variant="body2" fontWeight={600}>
-                      {selectedStudentIds.length} student(s) selected
-                    </Typography>
-                  </Stack>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:google-classroom" width={17} />}
-                    onClick={() => openAssignment('division', selectedStudentIds)}
-                    disabled={!canManageOnboarding}
-                  >
-                    Assign Division
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:identifier" width={17} />}
-                    onClick={() => openAssignment('gr-number', selectedStudentIds)}
-                    disabled={!canManageOnboarding}
-                  >
-                    Assign GR No.
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Iconify icon="mdi:format-list-numbered" width={17} />}
-                    onClick={() => openAssignment('roll-number', selectedStudentIds)}
-                    disabled={!canManageOnboarding}
-                  >
-                    Assign Roll No.
-                  </Button>
-                  <Button
-                    size="small"
-                    color="inherit"
-                    endIcon={<Iconify icon="mdi:chevron-down" width={17} />}
-                    onClick={(event) => setMoreActionsAnchor(event.currentTarget)}
-                    aria-controls={
-                      moreActionsAnchor ? 'student-onboarding-bulk-more-menu' : undefined
-                    }
-                    aria-haspopup="menu"
-                    aria-expanded={Boolean(moreActionsAnchor)}
-                  >
-                    More
-                  </Button>
-                  <Button size="small" color="inherit" onClick={() => setSelectedStudentIds([])}>
-                    Clear
-                  </Button>
-                </Stack>
-                <Menu
-                  id="student-onboarding-bulk-more-menu"
-                  anchorEl={moreActionsAnchor}
-                  open={Boolean(moreActionsAnchor)}
-                  onClose={() => setMoreActionsAnchor(null)}
-                  slotProps={{
-                    paper: {
-                      sx: {
-                        '& .MuiListItemIcon-root': {
-                          minWidth: 10,
-                        },
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem
-                    disabled={!canManageOnboarding}
-                    onClick={() => openBulkWorkflowAction('review-readiness')}
-                  >
-                    <ListItemIcon sx={{ minWidth: 10 }}>
-                      <Iconify icon="mdi:clipboard-check-outline" width={22} />
-                    </ListItemIcon>
-                    <ListItemText>Review readiness</ListItemText>
-                  </MenuItem>
-                  <MenuItem
-                    disabled={!canManageOnboarding}
-                    onClick={() => openBulkWorkflowAction('activate')}
-                  >
-                    <ListItemIcon sx={{ minWidth: 10 }}>
-                      <Iconify icon="mdi:account-arrow-right-outline" width={22} />
-                    </ListItemIcon>
-                    <ListItemText>Activate ready students</ListItemText>
-                  </MenuItem>
-                </Menu>
-              </Paper>
-            ) : null}
             <StudentSetupTable
               rows={displayedRows}
-              isLoading={onboardingQuery.isLoading}
+              showSelection={showDivisionSelection && canManageOnboarding}
+              manualEditing={assignment.manualEditing}
+              editableIds={assignment.editableIds}
+              manualValues={assignment.form.values.values}
+              manualErrors={assignment.manualErrors}
+              manualBlockers={assignment.manualBlockers}
+              assignmentMessages={assignment.messages}
+              assignmentBusy={interactionBusy}
+              onManualChange={(id, value) => assignment.form.setFieldValue(`values.${id}`, value)}
+              onManualBlur={(id) => assignment.form.setFieldTouched(`values.${id}`)}
+              isLoading={
+                onboardingQuery.isLoading ||
+                (onboardingQuery.isFetching &&
+                  !onboardingQuery.currentData &&
+                  !assignment.manualEditing)
+              }
               isError={onboardingQuery.isError}
               onRetry={() => onboardingQuery.refetch()}
               view={activeView}
@@ -1814,38 +997,53 @@ export default function StudentSetupScreen() {
               onClearWorklistFilters={
                 hasWorklistFilters && currentYear?.id ? clearWorklistFilters : undefined
               }
-              onOpen={(id) => {
-                setDrawerTaskView(null);
-                setSelectedStudentId(id);
-              }}
-              onOpenTask={(id, view) => {
-                setDrawerTaskView(null);
-                setSelectedStudentId(id);
-                router.replace(studentSetupTaskHref(pathname, searchParams.toString(), id, view), {
-                  scroll: false,
-                });
-              }}
+              onOpen={(id) =>
+                navigate(() => {
+                  setDrawerTaskView(null);
+                  setSelectedStudentId(id);
+                })
+              }
+              onOpenTask={(id, view) =>
+                navigate(() => {
+                  setDrawerTaskView(null);
+                  setSelectedStudentId(id);
+                  router.replace(
+                    studentSetupTaskHref(pathname, searchParams.toString(), id, view),
+                    {
+                      scroll: false,
+                    }
+                  );
+                })
+              }
               selectedStudentIds={selectedStudentIds}
               onToggleSelection={toggleStudent}
               allStudentsSelected={allStudentsSelected}
               someStudentsSelected={someStudentsSelected}
               onToggleAll={toggleAll}
-              totalCount={onboardingQuery.currentData?.totalCount ?? 0}
+              totalCount={
+                assignment.displayedTotalCount ?? onboardingQuery.currentData?.totalCount ?? 0
+              }
               page={tablePage}
               rowsPerPage={rowsPerPage}
               searchTerm={searchTerm}
-              onPaginationChange={(page, nextRowsPerPage) => {
-                setTablePage(page);
-                setRowsPerPage(nextRowsPerPage);
-              }}
-              onSearchChange={(value) => {
-                const next = new URLSearchParams(searchParams.toString());
-                if (value.trim()) next.set('search', value.trim());
-                else next.delete('search');
-                setTablePage(1);
-                const query = next.toString();
-                router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-              }}
+              onPaginationChange={(page, nextRowsPerPage) =>
+                navigate(() => {
+                  setTablePage(page);
+                  setRowsPerPage(nextRowsPerPage);
+                  setSelectedStudentIds([]);
+                })
+              }
+              onSearchChange={(value) =>
+                navigate(() => {
+                  const next = new URLSearchParams(searchParams.toString());
+                  if (value.trim()) next.set('search', value.trim());
+                  else next.delete('search');
+                  setTablePage(1);
+                  const query = next.toString();
+                  router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+                  setSelectedStudentIds([]);
+                })
+              }
               columnFilters={columnFilters}
               onColumnFilterChange={handleColumnFilterChange}
               sorts={sorts}
@@ -1886,14 +1084,19 @@ export default function StudentSetupScreen() {
           onClose={() => setAssignmentRequest(null)}
         />
       ) : null}
-      <OnboardingBulkActionDialog
-        action={bulkAction}
-        students={bulkActionStudents}
-        onClose={() => {
-          setBulkAction(null);
-          setBulkActionStudents([]);
-        }}
-      />
+      {autoAssignment && (
+        <StudentSetupAutoAssignmentDialog
+          type={autoAssignment.type}
+          students={autoAssignment.students}
+          busy={assignment.busy}
+          results={assignment.results}
+          onAssign={(divisionId) => assignment.runAutomatic(autoAssignment.students, divisionId)}
+          onClose={() => {
+            if (!assignment.busy) setAutoAssignment(null);
+          }}
+        />
+      )}
+      {confirmation}
     </Stack>
   );
 }

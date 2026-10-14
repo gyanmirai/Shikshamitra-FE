@@ -5,8 +5,8 @@ import type { RootState } from 'src/redux/store';
 import { isNaN } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Button, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Alert, Button, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
@@ -14,9 +14,9 @@ import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
+import { refundAllocationLabel } from './initialValuesAndValidation';
 import OverallSummaryCard from './feeHeadRefundTable/OverallSummaryCard';
 import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
-import { refundAllocationLabel } from './initialValuesAndValidation';
 
 import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
 
@@ -30,6 +30,7 @@ interface FeeHeadRefundTableProps {
   errorMessage?: string;
   onHasRecords?: (has: boolean) => void;
   mode?: 'refund' | 'adjustment';
+  compact?: boolean;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   errorMessage,
   onHasRecords,
   mode = 'refund',
+  compact = false,
 }): React.ReactElement | null => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
@@ -58,7 +60,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     { skip: skipEligibility || !isAdj }
   );
 
-  const eligibility = isAdj ? adjustmentEligibility.data : refundEligibility.data;
+  const eligibility = isAdj ? adjustmentEligibility.currentData : refundEligibility.currentData;
   const eligibilityError = isAdj ? adjustmentEligibility.error : refundEligibility.error;
   const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
   const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
@@ -107,13 +109,20 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       items: fh.months.map((m): IMonthItem => {
         const monthIndex = typeof m.month === 'number' ? m.month : 0;
         const monthName = FeeMonth[monthIndex] ?? `Month ${m.month}`;
-        const repeated = !isAdj && fh.months.filter((other) =>
-          other.month === m.month && other.year === m.year &&
-          (other as any).receiptNumber === (m as any).receiptNumber
-        ).length > 1;
+        const repeated =
+          !isAdj &&
+          fh.months.filter(
+            (other) =>
+              other.month === m.month &&
+              other.year === m.year &&
+              (other as any).receiptNumber === (m as any).receiptNumber
+          ).length > 1;
         const monthLabel = refundAllocationLabel(
-          monthName, m.year, (m as any).receiptNumber ?? '',
-          (m as any).sourceAllocationId ?? '', repeated
+          monthName,
+          m.year,
+          (m as any).receiptNumber ?? '',
+          (m as any).sourceAllocationId ?? '',
+          repeated
         );
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
@@ -162,6 +171,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   // Effect to handle refundType change to 'full'
   useEffect(() => {
+    if (!eligibility || isLoading || isFetching || eligibilityError) return;
     if (formik.values.refundType === 'full' && formik.values.feeHeadRefunds.length > 0) {
       const refunds = formik.values.feeHeadRefunds;
       let needsUpdate = false;
@@ -188,7 +198,17 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         formik.setFieldValue('feeHeadRefunds', updated, false);
       }
     }
-  }, [formik.values.refundType, formik.values.feeHeadRefunds, feeHeads, formik, eligibility, isAdj]);
+  }, [
+    formik.values.refundType,
+    formik.values.feeHeadRefunds,
+    feeHeads,
+    formik,
+    eligibility,
+    isAdj,
+    isLoading,
+    isFetching,
+    eligibilityError,
+  ]);
 
   /**
    * Memoization Justification:
@@ -402,53 +422,79 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     [formik]
   );
 
-  if (!studentId) return null;
+  const feeHeadsWithPayments = useMemo(
+    () =>
+      feeHeads
+        .map((fh) => ({
+          ...fh,
+          items:
+            selectedReceiptId && !isAdj
+              ? fh.items.filter((item) => item.sourceReceiptId === selectedReceiptId)
+              : fh.items,
+        }))
+        .filter((fh) =>
+          fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
+        ),
+    [feeHeads, selectedReceiptId, isAdj]
+  );
+
+  useEffect(() => {
+    onHasRecords?.(
+      Boolean(
+        studentId &&
+        !isLoading &&
+        !isFetching &&
+        !eligibilityError &&
+        feeHeadsWithPayments.length > 0
+      )
+    );
+  }, [studentId, isLoading, isFetching, eligibilityError, feeHeadsWithPayments, onHasRecords]);
+
+  if (!studentId)
+    return (
+      <Typography variant="body2" color="text.secondary">
+        Select a student to load refundable fees.
+      </Typography>
+    );
   if (isLoading || isFetching) return <RefundTableSkeleton />;
   if (eligibilityError) {
     const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
-    const message = !isAdj && errorCode === 'Finance:RefundPolicy:010016'
-      ? 'No refund is possible. This student has no paid fees eligible for a refund.'
-      : detail === 'Something went wrong' || detail === 'One or more business rules were violated.'
-      ? 'Unable to check refund eligibility. Please try again.'
-      : detail;
-    const isBusinessRule = typeof errorCode === 'string' &&
+    const message =
+      !isAdj && errorCode === 'Finance:RefundPolicy:010016'
+        ? 'No refund is possible. This student has no paid fees eligible for a refund.'
+        : detail === 'Something went wrong' ||
+            detail === 'One or more business rules were violated.'
+          ? 'Unable to check refund eligibility. Please try again.'
+          : detail;
+    const isBusinessRule =
+      typeof errorCode === 'string' &&
       (errorCode.startsWith('Finance:FeeRefund:') || errorCode === 'Finance:RefundPolicy:010016');
     return (
       <Alert
         severity="error"
         sx={{ borderRadius: 3 }}
-        action={isBusinessRule ? undefined :
-          <Button color="inherit" size="small" onClick={() => refetchEligibility()}>Retry</Button>}
+        action={
+          isBusinessRule ? undefined : (
+            <Button color="inherit" size="small" onClick={() => refetchEligibility()}>
+              Retry
+            </Button>
+          )
+        }
       >
         {message}
       </Alert>
     );
   }
 
-  if (!isAdj && refundEligibility.data && refundEligibility.data.totalRefundable <= 0) {
+  if (!isAdj && refundEligibility.currentData && refundEligibility.currentData.totalRefundable <= 0) {
     return (
       <Alert severity="info" sx={{ borderRadius: 3 }}>
-        {refundEligibility.data.totalPaid <= 0
+        {refundEligibility.currentData.totalPaid <= 0
           ? 'No refund is possible. This student has not paid any fees yet.'
           : 'No refund is possible. No refundable paid balance remains for this student.'}
       </Alert>
     );
   }
-
-  const feeHeadsWithPayments = feeHeads
-    .map((fh) => ({
-      ...fh,
-      items:
-        selectedReceiptId && !isAdj
-          ? fh.items.filter((item) => item.sourceReceiptId === selectedReceiptId)
-          : fh.items,
-    }))
-    .filter((fh) =>
-      fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
-    );
-
-  // Notify parent whether any payment records exist
-  onHasRecords?.(feeHeadsWithPayments.length > 0);
 
   if (feeHeadsWithPayments.length === 0) {
     return (
@@ -471,7 +517,9 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         </Alert>
       )}
       {/* ── Overall Summary KPI Cards ── */}
-      <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />
+      {!compact && (
+        <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />
+      )}
 
       {/* ── Validation error ── */}
       {showError && errorMessage && (
@@ -481,7 +529,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       )}
 
       {/* ── Guidance info banner ── */}
-      {totalSelectedMonthsCount === 0 && (
+      {!compact && totalSelectedMonthsCount === 0 && (
         <Box
           display="flex"
           alignItems="flex-start"
@@ -526,26 +574,28 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       )}
 
       {/* ── Fee Head-wise Section Title ── */}
-      <Box display="flex" alignItems="center" gap={1} pb={1}>
-        <Typography
-          variant="caption"
-          fontWeight={700}
-          color="text.secondary"
-          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
-        >
-          {isAdj ? 'Fee Head-Wise Adjustment Details' : 'Fee Head-Wise Refund Details'}
-        </Typography>
-        <Box
-          sx={{
-            flex: 1,
-            height: '1px',
-            bgcolor: 'divider',
-          }}
-        />
-        <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
-          {feeHeadsWithPayments.length} fee head{feeHeadsWithPayments.length !== 1 ? 's' : ''}
-        </Typography>
-      </Box>
+      {!compact && (
+        <Box display="flex" alignItems="center" gap={1} pb={1}>
+          <Typography
+            variant="caption"
+            fontWeight={700}
+            color="text.secondary"
+            sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
+          >
+            {isAdj ? 'Fee Head-Wise Adjustment Details' : 'Fee Head-Wise Refund Details'}
+          </Typography>
+          <Box
+            sx={{
+              flex: 1,
+              height: '1px',
+              bgcolor: 'divider',
+            }}
+          />
+          <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
+            {feeHeadsWithPayments.length} fee head{feeHeadsWithPayments.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
+      )}
 
       {feeHeadsWithPayments.map((feeHead) => (
         <FeeHeadGroup

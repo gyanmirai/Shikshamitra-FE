@@ -298,6 +298,31 @@ const editable = (extra: Partial<ApplicationAssessment> = {}) => ({
   ...extra,
 });
 
+it('keeps result saving in the pinned Actions cell and submits its associated marks form', async () => {
+  mocks.query.mockReturnValue(query(editable({ canRecordResult: true })));
+  panel();
+  const marks = screen.getByRole('textbox', { name: 'Marks / 100' });
+  const save = screen.getByRole('button', {
+    name: 'Save result for attempt 1',
+  }) as HTMLButtonElement;
+  const form = marks.closest('form');
+  expect(save.closest('td')).not.toBe(marks.closest('td'));
+  expect(save.closest('td')).toBe(
+    screen.getByRole('button', { name: 'More actions for attempt 1' }).closest('td')
+  );
+  expect(save.form).toBe(form);
+  expect(save.closest('td')).toHaveStyle({ position: 'sticky' });
+  fireEvent.change(marks, { target: { value: '80' } });
+  fireEvent.click(save);
+  await waitFor(() =>
+    expect(mocks.run).toHaveBeenCalledWith(
+      'result',
+      expect.objectContaining({ marks: 80 }),
+      expect.anything()
+    )
+  );
+});
+
 it.each(['present', 'absent'])('records %s directly without a form popup', async (attendance) => {
   mocks.query.mockReturnValue(query(editable()));
   panel();

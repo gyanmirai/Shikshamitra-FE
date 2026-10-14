@@ -23,7 +23,11 @@ export const getAttendanceCounts = (rows: AttendanceStudent[]) => {
 
 export const markRemainingPresent = (rows: AttendanceStudent[]) =>
   rows.map((row) =>
-    row.isExpected && row.status === AttendanceStatus.Pending && !row.approvedLeaveId
+    row.isExpected &&
+    row.status === AttendanceStatus.Pending &&
+    !row.approvedLeaveId &&
+    !row.requiresCorrectionApproval &&
+    !row.needsCreditCorrection
       ? { ...row, status: AttendanceStatus.Present, late: false, halfDay: false }
       : row
   );

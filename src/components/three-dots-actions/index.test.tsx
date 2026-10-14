@@ -94,4 +94,43 @@ describe('ThreeDotsActions', () => {
     fireEvent.click(assign);
     expect(onAssign).toHaveBeenCalledOnce();
   });
+
+  it('renders a native View link and preserves modifier click without bubbling', () => {
+    const onRowClick = vi.fn();
+    const onView = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <div role="button" tabIndex={0} onClick={onRowClick} onKeyDown={() => undefined}>
+          <ThreeDotsActions
+            showViewIcon
+            showThreeDots={false}
+            viewHref="/student/profile?student=student-1&population=Former"
+            viewLabel="View profile for Riya Shah"
+            handleViewClick={onView}
+          />
+        </div>
+      </ThemeProvider>
+    );
+    const view = screen.getByRole('link', { name: 'View profile for Riya Shah' });
+    expect(view).toHaveAttribute('href', '/student/profile?student=student-1&population=Former');
+    expect(fireEvent.click(view, { ctrlKey: true })).toBe(true);
+    expect(onView).toHaveBeenCalledOnce();
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+
+  it('keeps an unavailable View action disabled without exposing a link', () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <ThreeDotsActions
+          showViewIcon
+          showThreeDots={false}
+          disableViewIcon
+          viewHref="/student/profile?student=student-1"
+          viewLabel="View Riya Shah"
+        />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('link', { name: 'View Riya Shah' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View Riya Shah' })).toBeDisabled();
+  });
 });

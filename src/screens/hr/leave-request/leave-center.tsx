@@ -95,10 +95,10 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   const breadcrumbItems = isSelfContext
     ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
     : [
-      { name: 'HR/Staff', href: '/hr/dashboard/' },
-      { name: 'Leave Management', href: HR_ROUTE },
-      { name: pageTitle },
-    ];
+        { name: 'HR/Staff', href: hrPaths.dashboard },
+        { name: 'Leave Management', href: HR_ROUTE },
+        { name: pageTitle },
+      ];
 
   const handleTabChange = (_event: SyntheticEvent, nextTab: LeaveCenterTab) => {
     if (!visibleTabs.includes(nextTab)) {
@@ -149,6 +149,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
           value={activeTab}
           onChange={handleTabChange}
           role="tablist"
+          aria-label={pageTitle}
           variant="scrollable"
           scrollButtons="auto"
           sx={{
@@ -158,7 +159,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
             [`& .MuiTabs-flexContainer`]: { gap: 0.75 },
             [`& .MuiTabs-indicator`]: { display: 'none' },
             [`& .MuiTab-root`]: {
-              minHeight: 34,
+              minHeight: 44,
               px: 1.5,
               py: 0.5,
               borderRadius: 1,
@@ -173,6 +174,8 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         >
           {visibleTabs.includes('balance') && (
             <Tab
+              id={`${context}-leave-tab-balance`}
+              aria-controls={`${context}-leave-panel`}
               label="My Balance"
               value="balance"
               icon={<Iconify icon="mdi:scale-balance" width={18} />}
@@ -181,6 +184,8 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
           )}
           {visibleTabs.includes('my-requests') && (
             <Tab
+              id={`${context}-leave-tab-my-requests`}
+              aria-controls={`${context}-leave-panel`}
               label="My Requests"
               value="my-requests"
               icon={<Iconify icon="mdi:file-document-edit-outline" width={18} />}
@@ -189,6 +194,8 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
           )}
           {visibleTabs.includes('approvals') && (
             <Tab
+              id={`${context}-leave-tab-approvals`}
+              aria-controls={`${context}-leave-panel`}
               label="Approvals"
               value="approvals"
               icon={<Iconify icon="mdi:check-circle-outline" width={18} />}
@@ -211,7 +218,12 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         />
       )}
 
-      <Box sx={{ flex: 1, minHeight: 0 }}>
+      <Box
+        id={`${context}-leave-panel`}
+        role="tabpanel"
+        aria-labelledby={`${context}-leave-tab-${activeTab}`}
+        sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+      >
         {activeTab === 'my-requests' && (
           <ApplyLeave mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
         )}

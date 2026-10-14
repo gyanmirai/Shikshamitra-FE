@@ -1,3 +1,5 @@
-import StudentDirectory from 'src/screens/student/records/student-directory';
+import { StudentProfile } from 'src/screens/student/studentProfile';
 
-export default function Page() { return <StudentDirectory />; }
+export default function Page() {
+  return <StudentProfile />;
+}

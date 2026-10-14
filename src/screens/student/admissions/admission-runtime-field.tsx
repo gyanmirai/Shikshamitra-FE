@@ -1,6 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type {
+  AdmissionFormOption,
+  AdmissionFormOptionsQuery,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -39,6 +43,7 @@ export type AdmissionRuntimeFieldProps = {
   onChange: (value: string) => void;
   onBlur?: () => void;
   onBusyChange?: (busy: boolean) => void;
+  loadSiblingOptions?: (input: AdmissionFormOptionsQuery) => Promise<AdmissionFormOption[]>;
 };
 type ChoiceOption = { value: string; label: string };
 type RendererProps = AdmissionRuntimeFieldProps & { options: ChoiceOption[] };
@@ -188,6 +193,7 @@ function renderInput({ field, value, disabled, error, onChange, options, onBlur 
         <CustomSelect
           options={options}
           label={field.label}
+          required={field.required}
           multiple={isMultiSelect}
           value={isMultiSelect ? selectedValues : value}
           disabled={disabled}

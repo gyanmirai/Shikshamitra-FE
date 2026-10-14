@@ -156,7 +156,11 @@ export function HrReportFiltersSection({
               ))}
             </TextField>
             {renderConditionValue(condition, index)}
-            <IconButton size="small" onClick={() => onRemoveCondition(index)}>
+            <IconButton
+              size="small"
+              aria-label={`Remove filter condition ${index + 1}`}
+              onClick={() => onRemoveCondition(index)}
+            >
               <Iconify icon="solar:trash-bin-trash-bold" />
             </IconButton>
           </Box>
