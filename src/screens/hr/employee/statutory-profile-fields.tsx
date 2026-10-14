@@ -9,7 +9,6 @@ import { hasStatutoryNumber } from 'src/redux/hr/statutory-profile-api';
 import {
   Box,
   Chip,
-  Grid,
   Alert,
   Paper,
   Stack,
@@ -110,7 +109,7 @@ export function StatutoryProfileFields({
       reason: 'esicDisabledReason',
       manage: canManageEsic,
       view: canViewEsic,
-      description: 'Calculated independently using the school’s ESIC settings.',
+      description: 'Uses the school’s ESIC eligibility and calculation rules.',
     },
   ] as const;
   const field = (
@@ -128,13 +127,28 @@ export function StatutoryProfileFields({
         size="small"
         fullWidth
         disabled={readOnly}
+        autoComplete="off"
+        spellCheck={name !== 'pfNumber' && name !== 'uanNumber' && name !== 'esicInsuranceNumber'}
+        multiline={name === 'pfDisabledReason' || name === 'esicDisabledReason'}
+        maxRows={3}
+        slotProps={{
+          inputLabel: { shrink: true },
+          htmlInput: { ...(name === 'uanNumber' ? { inputMode: 'numeric' as const } : {}) },
+        }}
         error={meta.touched && Boolean(meta.error)}
         helperText={meta.touched && meta.error ? meta.error : helperText}
       />
     );
   };
   return (
-    <Grid container spacing={1.5}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+        gap: 1.5,
+        alignItems: 'start',
+      }}
+    >
       {schemes
         .filter((scheme) => scheme.view)
         .map((scheme) => {
@@ -142,88 +156,129 @@ export function StatutoryProfileFields({
           const registered = hasStatutoryNumber(form.values[scheme.number]);
           const readOnly = disabled || !scheme.manage;
           return (
-            <Grid size={{ xs: 12, md: 6 }} key={scheme.code}>
-              <Paper variant="outlined" sx={{ borderRadius: 1.5, overflow: 'hidden', height: 1 }}>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
-                  sx={{ p: 1.5, bgcolor: 'background.neutral' }}
-                >
-                  <Box>
-                    <Typography variant="subtitle2">{scheme.title}</Typography>
-                    <Typography
-                      id={`${descriptionId}-${scheme.code}`}
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      {scheme.code === 'PF' && pfChoiceRequired
-                        ? 'Above ₹25,000 gross salary, choose whether to enroll in PF.'
-                        : scheme.description}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Paper
+              key={scheme.code}
+              variant="outlined"
+              sx={{ borderRadius: 1.5, overflow: 'hidden', minWidth: 0 }}
+            >
+              <Stack
+                spacing={0.5}
+                sx={{
+                  p: 1.5,
+                  bgcolor: 'background.neutral',
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                }}
+              >
+                <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                  <Typography component="h3" variant="subtitle2">
+                    {scheme.title}
+                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
                     {!(scheme.code === 'PF' && pfChoiceRequired) && (
                       <Switch
                         checked={apply}
                         onChange={(_, checked) => form.setFieldValue(scheme.apply, checked)}
                         disabled={readOnly}
-                        slotProps={{ input: { 'aria-label': scheme.title } }}
+                        slotProps={{
+                          input: {
+                            'aria-label': scheme.title,
+                            'aria-describedby': `${descriptionId}-${scheme.code}`,
+                          },
+                        }}
                       />
                     )}
                     <Chip
                       size="small"
                       variant="soft"
-                      color={!apply || !registered ? 'warning' : 'success'}
-                      label={!apply ? 'Off' : registered ? 'Ready' : 'Pending'}
+                      color={
+                        !apply || (scheme.code === 'PF' && pfChoiceRequired && pfChoice == null)
+                          ? 'default'
+                          : !registered
+                            ? 'warning'
+                            : 'success'
+                      }
+                      label={
+                        scheme.code === 'PF' && pfChoiceRequired && pfChoice == null
+                          ? 'Choose'
+                          : !apply
+                            ? 'Off'
+                            : registered
+                              ? 'Ready'
+                              : 'Pending'
+                      }
                     />
                   </Stack>
                 </Stack>
-                <Stack spacing={1.5} sx={{ p: 1.5 }}>
-                  {scheme.code === 'PF' && pfChoiceRequired && (
-                    <RadioGroup
-                      row
-                      aria-label="PF enrollment"
-                      aria-describedby={`${descriptionId}-PF`}
-                      value={pfChoice == null ? '' : pfChoice ? 'ON' : 'OFF'}
-                      onChange={(_, value) => onPfChoice?.(value === 'ON')}
-                    >
-                      <FormControlLabel
-                        value="ON"
-                        control={<Radio size="small" />}
-                        label="Opt in to PF"
-                        disabled={readOnly}
-                      />
-                      <FormControlLabel
-                        value="OFF"
-                        control={<Radio size="small" />}
-                        label="Opt out of PF"
-                        disabled={readOnly}
-                      />
-                    </RadioGroup>
-                  )}
-                  {field(
-                    scheme.number,
-                    scheme.numberLabel,
-                    readOnly,
-                    'Required for deductions. Blank or 0 means registration pending.'
-                  )}
+                <Typography
+                  id={`${descriptionId}-${scheme.code}`}
+                  variant="caption"
+                  color="text.secondary"
+                >
+                  {scheme.code === 'PF' && pfChoiceRequired
+                    ? 'Above ₹25,000 gross salary, choose whether to enroll in PF.'
+                    : scheme.description}
+                </Typography>
+              </Stack>
+              <Stack spacing={2} sx={{ p: 1.5 }}>
+                {scheme.code === 'PF' && pfChoiceRequired && (
+                  <RadioGroup
+                    row
+                    aria-label="PF enrollment"
+                    aria-describedby={`${descriptionId}-PF`}
+                    value={pfChoice == null ? '' : pfChoice ? 'ON' : 'OFF'}
+                    onChange={(_, value) => onPfChoice?.(value === 'ON')}
+                  >
+                    <FormControlLabel
+                      value="ON"
+                      control={<Radio size="small" />}
+                      label="Opt in to PF"
+                      disabled={readOnly}
+                    />
+                    <FormControlLabel
+                      value="OFF"
+                      control={<Radio size="small" />}
+                      label="Opt out of PF"
+                      disabled={readOnly}
+                    />
+                  </RadioGroup>
+                )}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      scheme.code === 'PF'
+                        ? 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))'
+                        : '1fr',
+                    gap: 1.5,
+                  }}
+                >
+                  {field(scheme.number, scheme.numberLabel, readOnly)}
                   {scheme.code === 'PF' && field('uanNumber', 'UAN (optional)', readOnly)}
-                  {!apply &&
-                    field(scheme.reason, `Reason for turning ${scheme.code} off`, readOnly)}
-                  {(!apply || !registered) && (
-                    <Alert severity="warning" sx={{ py: 0 }}>
-                      {!apply
-                        ? `${scheme.code} is turned off for this employee. No contribution will be applied.`
-                        : `No ${scheme.numberLabel} is recorded. Eligible contributions will be ₹0 until it is provided.`}
-                    </Alert>
-                  )}
-                </Stack>
-              </Paper>
-            </Grid>
+                </Box>
+                {!apply && field(scheme.reason, `Reason for turning ${scheme.code} off`, readOnly)}
+                {(!apply || !registered) && (
+                  <Alert
+                    severity="warning"
+                    variant="outlined"
+                    sx={{
+                      py: 0.5,
+                      px: 1.25,
+                      borderColor: 'warning.light',
+                      bgcolor: 'background.paper',
+                      '& .MuiAlert-message': { typography: 'caption' },
+                      '& .MuiAlert-icon': { fontSize: 18 },
+                    }}
+                  >
+                    {!apply
+                      ? `${scheme.code} is turned off for this employee. No contribution will be applied.`
+                      : `No ${scheme.numberLabel} is recorded. Eligible contributions will be ₹0 until it is provided.`}
+                  </Alert>
+                )}
+              </Stack>
+            </Paper>
           );
         })}
-    </Grid>
+    </Box>
   );
 }

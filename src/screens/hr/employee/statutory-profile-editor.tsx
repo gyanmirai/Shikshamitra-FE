@@ -3,6 +3,7 @@
 import type { StaffStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 
 import { useFormik } from 'formik';
+import { fDate } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -224,8 +225,8 @@ export function StatutoryProfileEditor({
         }}
       />
       <Typography variant="caption" color="text.secondary">
-        Changes apply to editable payroll from {data.effectiveMonth}. Locked months remain
-        unchanged.
+        Applies from {fDate(`${data.effectiveMonth}-01`, 'MMM YYYY')}. Registration numbers are
+        required for deductions. Locked payroll remains unchanged.
       </Typography>
       {!draftMode && !editorRef && (data.canManagePf || data.canManageEsic) && (
         <Button

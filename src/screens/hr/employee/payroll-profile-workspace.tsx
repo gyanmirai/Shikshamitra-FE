@@ -15,17 +15,7 @@ import { useGetBankDetailsQuery } from 'src/redux/hr/employeeApi';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetSalaryTemplateQuery } from 'src/redux/hr/salary-template-api';
 import { useGetPolicyAssignmentPreviewQuery } from 'src/redux/hr/hr-policy-api';
-import {
-  Box,
-  Grid,
-  Link,
-  Alert,
-  Stack,
-  Button,
-  Divider,
-  Skeleton,
-  Typography,
-} from '@mui/material';
+import { Box, Link, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 import {
   useGetCompensationRevisionsQuery,
   useGetEffectiveCompensationRevisionQuery,
@@ -63,13 +53,7 @@ function DetailRows({ rows }: { rows: Array<[string, string | number | null | un
   );
 }
 
-function SalaryBreakdown({
-  revision,
-  stacked,
-}: {
-  revision: CompensationRevision;
-  stacked: boolean;
-}) {
+function SalaryBreakdown({ revision }: { revision: CompensationRevision }) {
   const displayLines = [
     ...revision.lines,
     ...(revision.estimatedStatutoryDeductions || []).map((line, index) => ({
@@ -81,10 +65,16 @@ function SalaryBreakdown({
     })),
   ];
   return (
-    <Grid container spacing={2}>
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+        gap: 2,
+      }}
+    >
       {[true, false].map((isEarning) => (
-        <Grid key={String(isEarning)} size={{ xs: 12, lg: stacked ? 12 : 6 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        <Box key={String(isEarning)} sx={{ minWidth: 0 }}>
+          <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>
             {isEarning ? 'Regular earnings' : 'Regular deductions'}
           </Typography>
           <Stack divider={<Divider />}>
@@ -100,7 +90,9 @@ function SalaryBreakdown({
                   sx={{ py: 0.75 }}
                 >
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="body2">{line.name}</Typography>
+                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                      {line.name}
+                    </Typography>
                     {line.description && (
                       <Typography variant="caption" color="text.secondary">
                         {line.description}
@@ -121,9 +113,9 @@ function SalaryBreakdown({
               </Typography>
             )}
           </Stack>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 }
 
@@ -244,25 +236,54 @@ export function PayrollProfileWorkspace({
           </Alert>
         ) : salary.data ? (
           <>
-            <DetailRows
-              rows={[
-                ['Effective from', fDate(salary.data.effectiveMonth, 'MMM YYYY')],
+            <Box
+              component="dl"
+              sx={{
+                m: 0,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 170px), 1fr))',
+                gap: 2,
+                p: 1.5,
+                bgcolor: 'background.neutral',
+                borderRadius: 1.5,
+              }}
+            >
+              {[
                 ['Gross salary', formatCurrency(salary.data.grossSalary)],
                 ['Net estimate at salary setup', formatCurrency(salary.data.netSalary)],
-                [
-                  'Salary template',
-                  templateId
-                    ? `${template.data?.name || 'Assigned template'}${salary.data.sourceSalaryTemplateVersion ? ` · Version ${salary.data.sourceSalaryTemplateVersion}` : ''}`
-                    : 'No template reference',
-                ],
-              ]}
-            />
-            <Typography variant="caption" color="text.secondary">
-              Saved estimates are from salary setup. Payroll uses current registration, attendance
-              and one-time adjustments.
-            </Typography>
+                ['Effective from', fDate(salary.data.effectiveMonth, 'MMM YYYY')],
+              ].map(([label, value]) => (
+                <Box key={label} sx={{ minWidth: 0 }}>
+                  <Typography component="dt" variant="caption" color="text.secondary">
+                    {label}
+                  </Typography>
+                  <Typography
+                    component="dd"
+                    variant="h6"
+                    sx={{ m: 0, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            <Stack spacing={0.75}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ overflowWrap: 'anywhere' }}
+              >
+                Salary template:{' '}
+                {templateId
+                  ? `${template.data?.name || 'Assigned template'}${salary.data.sourceSalaryTemplateVersion ? ` · Version ${salary.data.sourceSalaryTemplateVersion}` : ''}`
+                  : 'No template reference'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Payroll uses current registration, rules, attendance and adjustments.
+              </Typography>
+            </Stack>
             <Divider />
-            <SalaryBreakdown revision={salary.data} stacked={origin === 'staff-edit'} />
+            <SalaryBreakdown revision={salary.data} />
           </>
         ) : (
           <Typography variant="body2" color="text.secondary">
