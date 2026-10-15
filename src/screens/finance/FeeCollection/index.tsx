@@ -46,7 +46,18 @@ const FeeCollection = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow:
+          !studentDialog.value && !viewDialog.value && !adjustmentDialog.value
+            ? 'hidden'
+            : undefined,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {studentDialog.value ? (
         <CustomBreadcrumbs
           heading="Fee Collection Form"

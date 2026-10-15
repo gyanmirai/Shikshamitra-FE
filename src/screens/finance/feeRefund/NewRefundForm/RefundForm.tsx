@@ -773,6 +773,7 @@ const FeeRefundFormComponent = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:check-circle-outline" />}
             type="button"
             variant="contained"
             loading={isSubmitting || isUpdating || isSubmittingDraft || isPreviewing}

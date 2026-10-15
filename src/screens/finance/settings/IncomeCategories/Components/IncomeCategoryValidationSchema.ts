@@ -8,6 +8,8 @@ export const incomeCategoryValidationSchema = (
 ) =>
   Yup.object().shape({
     name: Yup.string()
+      .trim()
+      .max(40, 'Income Category Name must be at most 40 characters')
       .required('Income Category Name is required')
       .test('unique-income-category', 'This income category name already exists', (value) => {
         if (!value?.trim()) return true;

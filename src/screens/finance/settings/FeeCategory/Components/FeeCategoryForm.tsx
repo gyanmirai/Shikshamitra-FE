@@ -824,7 +824,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         title="Remove Fee Head?"
         content="This Fee Head will be removed from this Fee Category."
         action={
-          <Button variant="contained" color="error" onClick={handleConfirmRemove}>
+          <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
+            variant="contained"
+            color="error"
+            onClick={handleConfirmRemove}
+          >
             Remove
           </Button>
         }

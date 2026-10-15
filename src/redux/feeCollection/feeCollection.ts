@@ -55,6 +55,9 @@ export interface PagedResult<T> {
 }
 
 export interface FeeCollectionSummaryParams {
+  filters?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
   academicYearId: string;
   boardId: string;
   educationMediumId: string;

@@ -1,4 +1,5 @@
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -186,6 +187,20 @@ export default function ClassAccordionPanel({
           </IconButton>
         )}
       </Stack>
+      {canAdd && (
+        <Box sx={{ px: 1.5, pb: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            fullWidth
+            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+            onClick={addNew}
+            disabled={busy}
+          >
+            Add structure
+          </Button>
+        </Box>
+      )}
       {cards.length > 6 && (
         <TextField
           size="small"
@@ -262,19 +277,6 @@ export default function ClassAccordionPanel({
             </Box>
           )}
       </Scrollbar>
-      {canAdd && (
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={addNew}
-            disabled={busy}
-          >
-            Add Structure
-          </Button>
-        </Box>
-      )}
     </Stack>
   );
 
@@ -296,7 +298,17 @@ export default function ClassAccordionPanel({
         </Alert>
       )}
       {!desktop && (
-        <Box sx={{ px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider' }}>
+        <Box
+          sx={{
+            px: 1.5,
+            py: 1,
+            borderBottom: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+          }}
+        >
           <Button
             size="small"
             variant="outlined"
@@ -317,6 +329,18 @@ export default function ClassAccordionPanel({
               Structures{activeCard ? ` · ${activeName}` : ''}
             </Box>
           </Button>
+          {canAdd && (
+            <Button
+              size="small"
+              variant="outlined"
+              sx={{ flexShrink: 0 }}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              disabled={busy}
+              onClick={addNew}
+            >
+              Add structure
+            </Button>
+          )}
         </Box>
       )}
       <Drawer
@@ -352,7 +376,7 @@ export default function ClassAccordionPanel({
               title="No fee structures"
               description={
                 canAdd
-                  ? 'Use Add Structure to start configuring fees for this class.'
+                  ? 'Use Add structure to start configuring fees for this class.'
                   : 'No fee structures are configured for this class.'
               }
               sx={{ flex: 1 }}

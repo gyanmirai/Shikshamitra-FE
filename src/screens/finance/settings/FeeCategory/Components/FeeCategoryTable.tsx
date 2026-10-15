@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -635,6 +636,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -712,6 +714,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon={nextStatus ? 'mdi:restore' : 'mdi:archive-outline'} />}
             loading={isStatusLoading}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
@@ -781,6 +784,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={
+              <Iconify icon={nextFeeHeadStatus ? 'mdi:check-circle-outline' : 'mdi:cancel'} />
+            }
             loading={isFeeHeadStatusLoading}
             variant="contained"
             color={nextFeeHeadStatus ? 'primary' : 'warning'}

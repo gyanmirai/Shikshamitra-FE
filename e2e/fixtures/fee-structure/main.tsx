@@ -5,6 +5,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
 import { CssBaseline, Box, Alert, Typography, Button } from '@mui/material';
 import { Toaster } from 'sonner';
+import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import FeeStructureWorkspaceCard from 'src/screens/finance/settings/FeeStructure/Components/FeeStructureWorkspaceCard';
@@ -46,125 +47,131 @@ function Fixture() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <CssBaseline />
-        <Box
-          sx={{
-            bgcolor: 'background.neutral',
-            height: '100dvh',
-            display: 'flex',
-            overflow: 'hidden',
-            p: { xs: 1, md: 2 },
-          }}
-        >
+        <LocalizationProvider>
+          <CssBaseline />
           <Box
             sx={{
-              maxWidth: 1450,
-              mx: 'auto',
-              width: 1,
-              flex: 1,
-              minHeight: 0,
+              bgcolor: 'background.neutral',
+              height: '100dvh',
               display: 'flex',
-              flexDirection: 'column',
+              overflow: 'hidden',
+              p: { xs: 1, md: 2 },
             }}
           >
-            <Alert
-              severity="info"
-              sx={{ mb: 1, flexShrink: 0, display: { xs: 'none', md: 'flex' } }}
-            >
-              Component verification fixture · synthetic school data · no backend or financial
-              transactions
-            </Alert>
-            <Typography variant="h5" sx={{ mb: 0.5, flexShrink: 0 }}>
-              Manage Fee Structure
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, flexShrink: 0 }}>
-              Synthetic data · no financial transactions · Class 5 · Primary · CBSE / English ·
-              2026–27
-            </Typography>
-            <Box component="details" sx={{ mb: 1, flexShrink: 0 }}>
-              <Typography component="summary" variant="caption" sx={{ cursor: 'pointer' }}>
-                Fixture controls
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  gap: 1,
-                  mb: 1,
-                  flexShrink: 0,
-                }}
-              >
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setConfigured(!configured);
-                    setPinned(false);
-                  }}
-                >
-                  {configured ? 'Load empty draft fixture' : 'Load configured draft fixture'}
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() => {
-                    setConfigured(true);
-                    setPinned(true);
-                  }}
-                >
-                  Load saved policy overrides fixture
-                </Button>
-                <ThemeControls />
-                <Button size="small" onClick={() => setWorkspace(!workspace)}>
-                  {workspace ? 'Show component fixture' : 'Open full-screen workspace'}
-                </Button>
-              </Box>
-            </Box>
             <Box
               sx={{
+                maxWidth: 1450,
+                mx: 'auto',
+                width: 1,
                 flex: 1,
                 minHeight: 0,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 2,
-                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              {workspace ? (
-                <FeeStructureWorkspaceDialog
-                  editData={{
-                    id: 'metadata',
-                    name: 'Main fee structure',
-                    academicYearName: '2026–27',
-                    feeStructureClasses: {},
-                    classes: [
-                      { id: 'class', name: 'Class 5' },
-                      { id: 'other', name: 'Class 6' },
-                      ...Array.from({ length: 6 }, (_, i) => ({
-                        id: `class-${i + 7}`,
-                        name: `Class ${i + 7}`,
-                      })),
-                    ],
+              <Alert
+                severity="info"
+                sx={{ mb: 1, flexShrink: 0, display: { xs: 'none', md: 'flex' } }}
+              >
+                Component verification fixture · synthetic school data · no backend or financial
+                transactions
+              </Alert>
+              <Typography variant="h5" sx={{ mb: 0.5, flexShrink: 0 }}>
+                Manage Fee Structure
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, flexShrink: 0 }}>
+                Synthetic data · no financial transactions · Class 5 · Primary · CBSE / English ·
+                2026–27
+              </Typography>
+              <Box component="details" sx={{ mb: 1, flexShrink: 0 }}>
+                <Typography component="summary" variant="caption" sx={{ cursor: 'pointer' }}>
+                  Fixture controls
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1,
+                    flexShrink: 0,
                   }}
-                  onClose={() => setWorkspace(false)}
-                />
-              ) : (
-                <FeeStructureWorkspaceCard
-                  key={`${configured}-${pinned}`}
-                  index={0}
-                  initialData={{
-                    name: '',
-                    classId: 'class',
-                    feeStructureMetaDataId: 'metadata',
-                    feeHeads: [],
-                    status: 1,
-                    record: configured ? (pinned ? pinnedPolicyFixture : readyFixture) : undefined,
-                  }}
-                />
-              )}
+                >
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setConfigured(!configured);
+                      setPinned(false);
+                    }}
+                  >
+                    {configured ? 'Load empty draft fixture' : 'Load configured draft fixture'}
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setConfigured(true);
+                      setPinned(true);
+                    }}
+                  >
+                    Load saved policy overrides fixture
+                  </Button>
+                  <ThemeControls />
+                  <Button size="small" onClick={() => setWorkspace(!workspace)}>
+                    {workspace ? 'Show component fixture' : 'Open full-screen workspace'}
+                  </Button>
+                </Box>
+              </Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                }}
+              >
+                {workspace ? (
+                  <FeeStructureWorkspaceDialog
+                    editData={{
+                      id: 'metadata',
+                      name: 'Main fee structure',
+                      academicYearName: '2026–27',
+                      feeStructureClasses: {},
+                      classes: [
+                        { id: 'class', name: 'Class 5' },
+                        { id: 'other', name: 'Class 6' },
+                        ...Array.from({ length: 6 }, (_, i) => ({
+                          id: `class-${i + 7}`,
+                          name: `Class ${i + 7}`,
+                        })),
+                      ],
+                    }}
+                    onClose={() => setWorkspace(false)}
+                  />
+                ) : (
+                  <FeeStructureWorkspaceCard
+                    key={`${configured}-${pinned}`}
+                    index={0}
+                    initialData={{
+                      name: '',
+                      classId: 'class',
+                      feeStructureMetaDataId: 'metadata',
+                      feeHeads: [],
+                      status: 1,
+                      record: configured
+                        ? pinned
+                          ? pinnedPolicyFixture
+                          : readyFixture
+                        : undefined,
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
-        </Box>
-        <Toaster />
+          <Toaster />
+        </LocalizationProvider>
       </ThemeProvider>
     </Provider>
   );

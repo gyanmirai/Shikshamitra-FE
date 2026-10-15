@@ -110,6 +110,7 @@ export default function AssignedPolicyEditor({
       )}
       <Stack direction="row" spacing={1} justifyContent="flex-end">
         <Button
+          startIcon={<Iconify icon="mdi:close" />}
           disabled={state.isLoading}
           onClick={() => {
             if (formik.dirty) setConfirmCancel(true);
@@ -139,7 +140,11 @@ export default function AssignedPolicyEditor({
         icon="warning"
         content="Your unsaved policy selections and reason will be discarded."
         action={
-          <Button variant="contained" onClick={onCancel}>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
+            onClick={onCancel}
+          >
             Discard changes
           </Button>
         }

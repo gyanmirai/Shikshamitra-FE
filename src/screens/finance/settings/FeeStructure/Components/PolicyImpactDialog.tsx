@@ -2,6 +2,8 @@ import { useId } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionHeader } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 
@@ -37,17 +39,18 @@ export default function PolicyImpactDialog({
   return (
     <CustomDialog
       open
-      title={<span id={titleId}>{title} impact</span>}
+      title={`${title} impact`}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       handleClose={onClose}
-      maxWidth="sm"
+      titleInfo="Review how this policy affects each fee head. Student eligibility and transactions are checked in their own workflows."
+      maxWidth="md"
       hasForm={false}
       guardUnsavedChanges={false}
       paperProps={{ sx: { backgroundImage: 'none' } }}
     >
       <DialogScrollContent>
-        <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+        <Stack spacing={2} sx={{ minWidth: 0 }}>
           <Stack spacing={1}>
             <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
               {policyLabel}
@@ -62,38 +65,49 @@ export default function PolicyImpactDialog({
             </Typography>
           </Stack>
           <Stack spacing={1}>
-            <Typography variant="subtitle2">Fee head impact</Typography>
+            <FormSectionHeader title="Fee head coverage" icon={GlobalIcons.assigned} />
             {rows ? (
               rows.length ? (
-                <Stack component="ul" spacing={0} sx={{ m: 0, p: 0, listStyle: 'none' }}>
-                  {rows.map((row) => (
-                    <Stack
-                      component="li"
-                      key={row.id}
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={0.5}
-                      sx={{ py: 1.25, borderBottom: 1, borderColor: 'divider', minWidth: 0 }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ flex: 1, fontWeight: 600, overflowWrap: 'anywhere' }}
-                      >
-                        {row.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ flex: 1, overflowWrap: 'anywhere' }}
-                      >
-                        {row.treatment === 'MonthlyCutoff'
-                          ? 'Monthly cutoff'
-                          : row.treatment === 'FullCharge'
-                            ? 'Full charge'
-                            : row.treatment}
-                      </Typography>
-                    </Stack>
-                  ))}
-                </Stack>
+                <CustomizableTable
+                  tableTitle="Policy fee head coverage"
+                  tableId={`policy-impact-${title}`}
+                  data={rows.map((row) => ({ ...row, _id: row.id }))}
+                  showToolbar={false}
+                  isPagination={rows.length > 10}
+                  isSearch={false}
+                  isFilter={false}
+                  isShowedDense={false}
+                  columns={[
+                    {
+                      id: 'name',
+                      label: 'Fee head',
+                      minWidth: 180,
+                      isFilter: false,
+                      isSort: false,
+                      render: (value) => (
+                        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                          {value}
+                        </Typography>
+                      ),
+                    },
+                    {
+                      id: 'treatment',
+                      label: 'Policy treatment',
+                      minWidth: 160,
+                      isFilter: false,
+                      isSort: false,
+                      render: (value) => (
+                        <Label color={value === 'Excluded' ? 'default' : 'info'}>
+                          {value === 'MonthlyCutoff'
+                            ? 'Monthly cutoff'
+                            : value === 'FullCharge'
+                              ? 'Full charge'
+                              : value}
+                        </Label>
+                      ),
+                    },
+                  ]}
+                />
               ) : (
                 <Alert severity="info">No fee heads have been added to this structure.</Alert>
               )
@@ -112,8 +126,8 @@ export default function PolicyImpactDialog({
               </Alert>
             )}
           </Stack>
-          <Stack spacing={0.75}>
-            <Typography variant="subtitle2">Impact summary</Typography>
+          <Stack spacing={0.75} sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}>
+            <Typography variant="subtitle2">What this policy changes</Typography>
             <Typography variant="body2" color="text.secondary">
               {summary}
             </Typography>

@@ -4,6 +4,15 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Finance:AccountsRegisterInvalidPeriod':
+    'Select a month or payment date within the academic year.',
+  'Finance:AccountsRegisterInvalidFilter':
+    'The selected register filters are invalid. Clear filters and retry.',
+  'Finance:ManualEntryInvalidFields':
+    'Review the transaction name, payer/payee, reference and notes.',
+  'Finance:ManualEntryKeyConflict':
+    'This submission already exists with different details. Close the form and review the saved entry.',
+  'Finance:InvalidCashBank': 'Cash entries cannot include a bank account.',
   'Volo.Abp.Identity:PasswordRequiresNonAlphanumeric': 'Password must include a special character.',
   'Volo.Abp.Identity:PasswordRequiresLower': 'Password must include a lowercase letter.',
   'Volo.Abp.Identity:PasswordRequiresUpper': 'Password must include an uppercase letter.',

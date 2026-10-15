@@ -90,6 +90,22 @@ export async function createUnicodeTablePdf({ head, body }: PdfTableData): Promi
 }
 
 export async function saveUnicodeTablePdf(data: PdfTableData): Promise<void> {
+  if (
+    [...data.head, ...data.body.flat()].some((value) =>
+      /[\u0900-\u097f\u0a80-\u0aff\ua8e0-\ua8ff]/u.test(value)
+    )
+  ) {
+    const { createIndicTablePdfBlob } = await import('./indic-pdf-export');
+    const blob = await createIndicTablePdfBlob(data);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${data.title}.pdf`;
+    link.click();
+    // Allow the download to start before releasing its backing blob.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  }
   const doc = await createUnicodeTablePdf(data);
   doc.save(`${data.title}.pdf`);
 }

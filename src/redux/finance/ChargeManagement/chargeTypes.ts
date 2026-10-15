@@ -122,6 +122,8 @@ export interface IGetChargesParams {
   page?: number;
   pageSize?: number;
   search?: string;
+  /** JSON column filters applied before counting and pagination. */
+  filters?: string;
   status?: ChargeWorkflowStatus;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';

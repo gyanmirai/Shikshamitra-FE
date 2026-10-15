@@ -1,5 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
+import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -85,6 +86,7 @@ export default function FeeStructureEditForm({
           allowScrollButtonsMobile
           aria-label="Classes"
           sx={{ flex: 1, minWidth: 0 }}
+          slotProps={{ tab: { px: 1.25, minWidth: 56 }, scroller: { p: 0.5 } }}
         >
           {classes.map((item) => (
             <Tab
@@ -144,6 +146,7 @@ export default function FeeStructureEditForm({
         content="You have unsaved changes in this class. Switching to another class will discard them. Do you want to continue?"
         action={
           <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
             variant="contained"
             color="error"
             size="small"

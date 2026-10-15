@@ -168,7 +168,7 @@ const FeeRefund = () => {
             links={[
               { name: 'Finance', href: '/finance/dashboard' },
               {
-                name: 'Fee Refund',
+                name: 'Refunds',
                 href: '/finance/fee-refund',
                 onClick() {
                   addRefundRequest.onFalse();
@@ -190,7 +190,7 @@ const FeeRefund = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Fee Refund',
+              name: 'Refunds',
               href: '/finance/fee-refund',
               onClick() {
                 viewRefundRequest.onFalse();
@@ -207,11 +207,11 @@ const FeeRefund = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Fee Refund"
+          heading="Refunds"
           description="Search for a student and manage fee refund requests by initiating new refund requests."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Refund', href: '/finance/fee-refund' },
+            { name: 'Refunds', href: '/finance/fee-refund' },
           ]}
           action={
             hasGrantedPermission(permissions, financePermissions.fees.refundActions.add) ? (
@@ -531,10 +531,15 @@ const FeeRefund = () => {
             inputProps={{ maxLength: 500 }}
           />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={processDialog.onFalse} color="inherit">
+            <Button
+              startIcon={<Iconify icon="mdi:close" />}
+              onClick={processDialog.onFalse}
+              color="inherit"
+            >
               Cancel
             </Button>
             <Button
+              startIcon={<Iconify icon="mdi:cash-check" />}
               variant="contained"
               disabled={
                 isProcessing ||
@@ -610,10 +615,15 @@ const FeeRefund = () => {
             inputProps={{ maxLength: 1000 }}
           />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={verifyDialog.onFalse} color="inherit">
+            <Button
+              startIcon={<Iconify icon="mdi:close" />}
+              onClick={verifyDialog.onFalse}
+              color="inherit"
+            >
               Close
             </Button>
             <Button
+              startIcon={<Iconify icon="mdi:cancel" />}
               color="error"
               variant="outlined"
               disabled={
@@ -649,6 +659,7 @@ const FeeRefund = () => {
               Mark failed
             </Button>
             <Button
+              startIcon={<Iconify icon="mdi:check-circle-outline" />}
               color="success"
               variant="contained"
               disabled={
@@ -709,10 +720,15 @@ const FeeRefund = () => {
             inputProps={{ maxLength: 500 }}
           />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={reverseDialog.onFalse} color="inherit">
+            <Button
+              startIcon={<Iconify icon="mdi:close" />}
+              onClick={reverseDialog.onFalse}
+              color="inherit"
+            >
               Cancel
             </Button>
             <Button
+              startIcon={<Iconify icon="mdi:cash-refund" />}
               color="warning"
               variant="contained"
               disabled={
@@ -762,6 +778,7 @@ const FeeRefund = () => {
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"

@@ -8,6 +8,7 @@ export default defineConfig({
   publicDir: `${repo}/public`,
   resolve: {
     alias: [
+      { find: /^@mui\/icons-material$/, replacement: `${here}/icon-barrel.ts` },
       { find: /.*hooks\/useFeeStructureLookups$/, replacement: `${here}/mock-lookups.ts` },
       {
         find: /.*hooks\/useClassWiseFeeStructureHooks$/,

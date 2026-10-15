@@ -107,15 +107,15 @@ it('shows all twelve installments and the rounded amounts without changing the s
   const { onSave } = setup();
   const table = screen.getByRole('table', { name: 'Payment term installments table' });
   expect(within(table).getAllByRole('row')).toHaveLength(13);
-  expect(within(table).getByRole('row', { name: /May 2027/ })).toHaveTextContent('₹87');
-  expect(screen.getByText('Total amount: ₹1,000')).toBeTruthy();
+  expect(within(table).getByRole('row', { name: /May 2027/ })).toHaveTextContent('₹ 87');
+  expect(screen.getByText('Total amount: ₹ 1,000')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Use this schedule' }));
   expect(onSave).toHaveBeenCalledWith(term.installments, true);
 });
 
 it('withholds misleading amounts during an invalid allocation edit and blocks saving', () => {
   const { onSave } = setup();
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Jun 2026 allocation percentage' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Jun 2026 allocation percentage' }), {
     target: { value: '20' },
   });
   expect(screen.getByText('Total amount: —')).toBeTruthy();
@@ -127,7 +127,7 @@ it('withholds misleading amounts during an invalid allocation edit and blocks sa
 it('keeps locked allocations disabled and variable amounts deferred to assignment', () => {
   setup({ isVariable: true, amount: null }, true);
   expect(screen.getAllByText('Calculated during assignment')).toHaveLength(12);
-  expect(screen.getByRole('spinbutton', { name: 'Jun 2026 allocation percentage' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Jun 2026 allocation percentage' })).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Use this schedule' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
 });

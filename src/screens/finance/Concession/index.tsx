@@ -69,7 +69,16 @@ const Concession = () => {
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow:
+          !addConcessionRequest.value && !viewConcessionRequest.value ? 'hidden' : undefined,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {addConcessionRequest.value ? (
         <CustomBreadcrumbs
           heading={
@@ -260,7 +269,12 @@ const Concession = () => {
         content="Your unsaved concession request changes will be lost when you leave this form."
         icon="warning"
         action={
-          <Button color="error" variant="contained" onClick={completeClose}>
+          <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
+            color="error"
+            variant="contained"
+            onClick={completeClose}
+          >
             Discard & leave
           </Button>
         }

@@ -462,11 +462,18 @@ const financeModule = {
           icon: menuIconView('mdi:bank-outline'),
           children: [
             {
-              title: 'Income & Expenses',
-              path: financePaths.accounts.incomeAndExpense,
-              _action: 'income-and-expense',
-              permissionName: financePermissions.accounts.root,
-              icon: menuIconView('mdi:finance'),
+              title: 'Income',
+              path: financePaths.incomeTracking,
+              _action: 'income-tracking',
+              permissionName: `${financePermissions.accounts.income}.View`,
+              icon: menuIconView('mdi:cash-plus'),
+            },
+            {
+              title: 'Expenses',
+              path: financePaths.expenseTracking,
+              _action: 'expense-tracking',
+              permissionName: `${financePermissions.accounts.expense}.View`,
+              icon: menuIconView('mdi:cash-minus'),
             },
             {
               title: 'Verify pending receipts',

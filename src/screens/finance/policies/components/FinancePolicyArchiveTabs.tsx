@@ -1,4 +1,3 @@
-import { Label } from 'src/components/label';
 import { Stack, Button } from '@mui/material';
 
 type ArchiveView = 'current' | 'archived';
@@ -29,13 +28,8 @@ export function FinancePolicyArchiveTabs({
         size="small"
         variant={value === 'archived' ? 'contained' : 'outlined'}
         onClick={() => onChange('archived')}
-        endIcon={
-          <Label color="default" variant="soft">
-            {archivedCount ?? 0}
-          </Label>
-        }
       >
-        Archived
+        Archived ({archivedCount ?? 0})
       </Button>
     </Stack>
   );

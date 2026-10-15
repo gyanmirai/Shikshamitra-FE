@@ -1,15 +1,18 @@
 'use client';
 
-import dayjs from 'dayjs';
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { fDate } from 'src/utils/format-time';
+import { GlobalIcons } from 'src/utils/icons';
+import { formatNumber } from 'src/utils/formate_number';
 import React, { useMemo, useState, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Tab, Tabs, Card, Alert, Button, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
-import { Box, Tab, Tabs, Card, Chip, Typography, IconButton } from '@mui/material';
 import { ChargeWorkflowStatus, ChargeWorkflowStatusOptions } from 'src/enums/fee-charges-status';
 import { useChargePermissions } from 'src/screens/finance/ChargesManagement/useChargePermissions';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
@@ -18,6 +21,8 @@ import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
 } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+
+import { serializeChargeTableFilters } from './chargeTableFilters';
 
 import type { IChargeData } from './type';
 
@@ -74,6 +79,12 @@ const ChargesTable = ({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState('');
+  const [columnFilters, setColumnFilters] = useState<IParams['filters']>([]);
+  const [sorts, setSorts] = useState<IParams['sorts']>([]);
+  const serializedFilters = useMemo(
+    () => serializeChargeTableFilters(columnFilters),
+    [columnFilters]
+  );
 
   useEffect(() => {
     setSelectedTab(tabs.value);
@@ -96,6 +107,8 @@ const ChargesTable = ({
     data: chargesData,
     isLoading: chargesLoading,
     isFetching: chargesFetching,
+    isError: chargesError,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargesQuery,
@@ -109,6 +122,9 @@ const ChargesTable = ({
       page,
       pageSize,
       search: search || undefined,
+      filters: serializedFilters,
+      sortBy: sorts[0]?.column,
+      sortOrder: sorts[0]?.direction,
       _refetchTrigger: refetchTrigger,
     },
     options: {
@@ -153,7 +169,7 @@ const ChargesTable = ({
             ? parseFloat(String(item.amount).replace(/,/g, ''))
             : 0,
         description: item.purposeDescription || '-',
-        dueDate: item.dueDate ? dayjs(item.dueDate).format('DD-MM-YYYY') : '-',
+        dueDate: item.dueDate,
       })),
     [chargesData?.items]
   );
@@ -184,11 +200,17 @@ const ChargesTable = ({
           />
         </Box>
       </Card>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Tabs
             value={tabs.value}
-            onChange={tabs.onChange}
+            onChange={(event, value) => {
+              tabs.onChange(event, value);
+              setPage(1);
+              setColumnFilters((current) =>
+                current.filter((filter) => filter.column !== 'workflowStatus')
+              );
+            }}
             sx={{
               '& .MuiTabs-flexContainer': { gap: 2 },
               flexGrow: 1,
@@ -213,23 +235,30 @@ const ChargesTable = ({
 
       <CustomizableTable
         tableId="charges-table"
+        tableTitle="Charges"
         isLoading={chargesLoading || chargesFetching}
+        errorContent={
+          chargesError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not load charges. Try again or clear the filters.
+            </Alert>
+          ) : undefined
+        }
         noDataText={
           <>
             No Charges Found{' '}
-            <Box
-              component="span"
-              onClick={permissions.canAdd ? onAddCharge : undefined}
-              color="primary.main"
-              fontWeight={600}
-              sx={
-                permissions.canAdd
-                  ? { '&:hover': { cursor: 'pointer', textDecoration: 'underline' } }
-                  : undefined
-              }
-            >
-              {permissions.canAdd ? 'Add Charge' : 'Create permission required'}
-            </Box>
+            {permissions.canAdd && (
+              <Button size="small" onClick={onAddCharge}>
+                Add Charge
+              </Button>
+            )}
           </>
         }
         columns={[
@@ -238,10 +267,12 @@ const ChargesTable = ({
             label: 'Charge Name',
             align: 'left',
             isFilter: true,
-            width: 160,
+            filterType: 'string',
+            width: 140,
             minWidth: 140,
             maxWidth: 220,
             sticky: true,
+            stickyPosition: 'left',
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value || '-'}
@@ -252,21 +283,21 @@ const ChargesTable = ({
             id: 'studentCount',
             label: 'Students',
             align: 'left',
-            width: 140,
+            filterType: 'number',
+            isFilter: true,
+            isSort: false,
             minWidth: 120,
             maxWidth: 180,
             render: (_value, row: any) => {
               const total: number = row.studentCount ?? 0;
               const processed: number = row.processedCount ?? 0;
-              const isPending = row.displayStatus === PENDING;
               return (
-                <Chip
-                  label={`${processed}/${total} reviewed`}
-                  size="small"
-                  color={isPending ? 'warning' : 'default'}
-                  variant="outlined"
-                  sx={{ fontSize: '11px', height: 22 }}
-                />
+                <Box>
+                  <Typography variant="body2">{total}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {processed} reviewed
+                  </Typography>
+                </Box>
               );
             },
           },
@@ -275,7 +306,8 @@ const ChargesTable = ({
             label: 'Charge Category',
             align: 'left',
             isFilter: true,
-            width: 180,
+            filterType: 'string',
+            isSort: false,
             minWidth: 150,
             maxWidth: 220,
           },
@@ -285,16 +317,17 @@ const ChargesTable = ({
             filterType: 'number',
             align: 'left',
             isFilter: true,
-            width: 120,
             minWidth: 100,
             maxWidth: 160,
-            render: (value) => `₹ ${parseFloat(value).toLocaleString()}`,
+            render: (value) => (value == null ? '—' : formatNumber(value, 'INR')),
           },
           {
             id: 'description',
             label: 'Description',
             align: 'left',
-            width: 220,
+            filterType: 'string',
+            isFilter: true,
+            isSort: false,
             minWidth: 160,
             maxWidth: 280,
             cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
@@ -318,16 +351,22 @@ const ChargesTable = ({
             label: 'Due Date',
             align: 'left',
             filterType: 'date',
-            width: 120,
+            isFilter: true,
             minWidth: 100,
             maxWidth: 150,
+            render: (value) => (value ? fDate(value, 'DD-MM-YYYY') : '—'),
           },
           {
             id: 'workflowStatus',
             label: 'Status',
             align: 'left',
             sticky: true,
-            width: 120,
+            stickyPosition: 'right',
+            filterType: 'enum',
+            enumOptions: [...ChargeWorkflowStatusOptions],
+            isFilter: true,
+            isSort: false,
+            width: 110,
             minWidth: 110,
             render: (value) => {
               const option = ChargeWorkflowStatusOptions.find((item) => item.value === value);
@@ -336,13 +375,15 @@ const ChargesTable = ({
           },
           {
             id: 'actions',
-            label: 'Action',
-            align: 'left',
+            label: 'Actions',
+            align: 'right',
             isSort: false,
             isFilter: false,
             width: 150,
             minWidth: 120,
             sticky: true,
+            stickyPosition: 'right',
+            excludeFromExport: true,
             render(_value, row: any) {
               const isPending = row.displayStatus === PENDING;
               const actions: string[] = row.availableActions ?? [];
@@ -351,81 +392,75 @@ const ChargesTable = ({
               const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
               const canReject = isPending && permissions.canReject && actions.includes('Reject');
               const canVoid = permissions.canVoid && actions.includes('Void');
+              const name = row.chargeName || 'charge';
               return (
-                <Box display="flex" gap={1} alignItems="center">
-                  <AdaptiveThreeDotsActions
-                    actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => onView(row as IChargeData),
-                      },
-                      ...(canEdit
-                        ? [
-                            {
-                              id: 'edit',
-                              label: 'Edit',
-                              icon: 'solar:pen-bold',
-                              onClick: () => onEdit(row as IChargeData),
-                            },
-                          ]
-                        : []),
-                      ...(canDelete
-                        ? [
-                            {
-                              id: 'delete',
-                              label: 'Delete',
-                              icon: 'solar:trash-bin-trash-bold',
-                              onClick: () => onRemove(row as IChargeData),
-                              color: 'error.main',
-                            },
-                          ]
-                        : []),
-                    ]}
-                    placement="right-top"
-                  />
-                  {(canApprove || canReject) && (
-                    <Box sx={{ display: 'flex' }}>
-                      {canApprove && (
-                        <IconButton
-                          size="small"
-                          onClick={() => onApprove(row as IChargeData)}
-                          sx={{
+                <AdaptiveThreeDotsActions
+                  moreLabel={`More actions for ${name}`}
+                  placement="right-top"
+                  sx={{ justifyContent: 'flex-end' }}
+                  actions={[
+                    {
+                      id: 'view',
+                      label: `View ${name}`,
+                      icon: GlobalIcons.eye,
+                      onClick: () => onView(row as IChargeData),
+                    },
+                    ...(canEdit
+                      ? [
+                          {
+                            id: 'edit',
+                            label: `Edit ${name}`,
+                            icon: GlobalIcons.edit,
+                            onClick: () => onEdit(row as IChargeData),
+                          },
+                        ]
+                      : []),
+                    ...(canApprove
+                      ? [
+                          {
+                            id: 'approve',
+                            label: `Approve ${name}`,
+                            icon: 'mdi:approve',
                             color: 'success.main',
-                            '&:hover': { backgroundColor: 'success.lighter' },
-                          }}
-                          title="Approve"
-                        >
-                          <Iconify icon="mdi:approve" width={20} height={20} />
-                        </IconButton>
-                      )}
-                      {canReject && (
-                        <IconButton
-                          size="small"
-                          onClick={() => onReject(row as IChargeData)}
-                          sx={{
+                            onClick: () => onApprove(row as IChargeData),
+                          },
+                        ]
+                      : []),
+                    ...(canReject
+                      ? [
+                          {
+                            id: 'reject',
+                            label: `Reject ${name}`,
+                            icon: 'mdi:close',
                             color: 'error.main',
-                            '&:hover': { backgroundColor: 'error.lighter' },
-                          }}
-                          title="Reject"
-                        >
-                          <Iconify icon="entypo:cross" width={20} height={20} />
-                        </IconButton>
-                      )}
-                    </Box>
-                  )}
-                  {canVoid && (
-                    <IconButton
-                      size="small"
-                      onClick={() => onVoid(row as IChargeData)}
-                      sx={{ color: 'warning.main' }}
-                      title="Void uncollected charge"
-                    >
-                      <Iconify icon="mdi:cancel-circle-outline" width={20} height={20} />
-                    </IconButton>
-                  )}
-                </Box>
+                            onClick: () => onReject(row as IChargeData),
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            id: 'delete',
+                            label: `Delete ${name}`,
+                            icon: GlobalIcons.delete,
+                            color: 'error.main',
+                            onClick: () => onRemove(row as IChargeData),
+                          },
+                        ]
+                      : []),
+                    ...(canVoid
+                      ? [
+                          {
+                            id: 'void',
+                            label: `Void uncollected ${name}`,
+                            icon: 'mdi:cancel-circle-outline',
+                            color: 'warning.main',
+                            onClick: () => onVoid(row as IChargeData),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               );
             },
           },
@@ -445,7 +480,21 @@ const ChargesTable = ({
           setSearch(value);
           setPage(1);
         }}
-        isFilter={false}
+        serverSideFilter
+        filters={columnFilters}
+        onServerFilter={(nextFilters) => {
+          setColumnFilters(nextFilters);
+          setPage(1);
+        }}
+        serverSideSort
+        serverSideSortMode="single"
+        sorts={sorts}
+        onServerSort={(_column, nextSorts) => {
+          setSorts(nextSorts);
+          setPage(1);
+        }}
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
       />
     </>
   );

@@ -1,26 +1,25 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-
 import { formatNumber } from 'src/utils/formate_number';
-
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Card, Alert, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Card } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   FeeCollectionStatusType,
-  FeeCollectionStatusOptions,
-  FeeCollectionStatusTypeColors,
   feeInstallmentStatusLabel,
+  FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
 import type { IFeeData, IFeeTableProps } from './type';
@@ -60,11 +59,20 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     selectedDivisionId,
   ]);
 
-  const [feeCollectionParams, setFeeCollectionParams] = useState({
+  const [feeCollectionParams, setFeeCollectionParams] = useState<{
+    page: number;
+    pageSize: number;
+    search: string;
+    filterKey: string;
+    filters: IParams['filters'];
+    sorts: IParams['sorts'];
+  }>({
     page: 1,
     pageSize: 10,
     search: '',
     filterKey,
+    filters: [],
+    sorts: [],
   });
 
   // Reset the request offset immediately when the academic scope changes,
@@ -91,6 +99,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     data: feeCollectionData,
     isLoading: feeCollectionLoading,
     isFetching: feeCollectionFetching,
+    isError: feeCollectionError,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCollectionListQuery,
@@ -105,6 +115,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       MaxResultCount: feeCollectionParams.pageSize,
       SkipCount: (page - 1) * feeCollectionParams.pageSize,
       Search: feeCollectionParams.search || undefined,
+      Filters: serializeFinanceTableFilters(feeCollectionParams.filters),
+      SortBy: feeCollectionParams.sorts[0]?.column,
+      SortOrder: feeCollectionParams.sorts[0]?.direction,
     },
     options: {
       skip: !currentYear?.id || !isReady,
@@ -163,46 +176,68 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       {selectedMedium ? (
         <CustomizableTable
           tableId="fee-collection-table"
-          noDataText={<>Fee Collection Data Not Found </>}
+          tableTitle="Collections"
+          wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          noDataText="No students found in this academic scope"
           isLoading={feeCollectionLoading || feeCollectionFetching}
           serverSidePagination
+          maxServerRowsPerPage={100}
           page={page - 1}
           rowsPerPage={feeCollectionParams.pageSize}
           totalCount={feeCollectionData?.totalCount ?? 0}
           onServerPagination={handleServerPagination}
           serverSideSearch
           onServerSearch={handleServerSearch}
+          serverSideFilter
+          serverSideSort
+          serverSideSortMode="single"
+          filters={feeCollectionParams.filters}
+          sorts={feeCollectionParams.sorts}
+          onServerFilter={(filters) =>
+            setFeeCollectionParams((previous) => ({ ...previous, page: 1, filters }))
+          }
+          onServerSort={(_column, sorts) =>
+            setFeeCollectionParams((previous) => ({ ...previous, page: 1, sorts }))
+          }
+          errorContent={
+            feeCollectionError ? (
+              <Alert severity="error" action={<Button onClick={() => refetch()}>Retry</Button>}>
+                Could not load collections. Try again or clear the filters.
+              </Alert>
+            ) : undefined
+          }
           columns={[
             {
               id: 'name',
-              label: 'Name(Gr No.)',
+              label: 'Student (GR No.)',
+              filterType: 'string',
               align: 'left',
               isFilter: true,
               width: 200,
               minWidth: 200,
               maxWidth: 500,
               sticky: true,
-              // render: (value, row) => (
-              //   <Typography variant="caption" fontSize="13px">
-              //     {value || '-'} {row.grNumber && `(${row.grNumber})`}
-              //   </Typography>
-              // ),
+              stickyPosition: 'left',
             },
             {
               id: 'standardDivision',
-              label: 'Class/Div',
+              label: 'Class/Division',
+              filterType: 'string',
+              isFilter: true,
               align: 'left',
-              width: 150,
-              minWidth: 100,
+              width: 180,
+              minWidth: 180,
               maxWidth: 150,
             },
             {
               id: 'rollNumber',
               label: 'Roll No.',
+              filterType: 'string',
               align: 'left',
               isFilter: true,
-              width: 100,
-              minWidth: 100,
+              width: 140,
+              minWidth: 140,
               maxWidth: 150,
             },
             {
@@ -214,7 +249,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 130,
               minWidth: 110,
               maxWidth: 160,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'paidFees',
@@ -225,7 +260,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 130,
               minWidth: 110,
               maxWidth: 160,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'pendingFees',
@@ -236,7 +271,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 140,
               minWidth: 120,
               maxWidth: 170,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'overdueFees',
@@ -247,7 +282,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 140,
               minWidth: 120,
               maxWidth: 170,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'totalConcessionAmount',
@@ -258,7 +293,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 190,
               minWidth: 150,
               maxWidth: 210,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'totalCharges',
@@ -269,7 +304,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 150,
               minWidth: 130,
               maxWidth: 180,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'pendingCharges',
@@ -280,7 +315,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               width: 150,
               minWidth: 130,
               maxWidth: 180,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+              render: (value: any) => formatNumber(value ?? 0, 'INR'),
             },
             {
               id: 'status',
@@ -289,10 +324,16 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
               filterType: 'enum',
               enumOptions: [
-                ...FeeCollectionStatusOptions,
+                ...[
+                  FeeCollectionStatusType.Pending,
+                  FeeCollectionStatusType.Paid,
+                  FeeCollectionStatusType.Overdue,
+                ].map((value) => ({ value, label: feeInstallmentStatusLabel(value) })),
                 { label: 'No Fee Assigned', value: FeeCollectionStatusType.NoFeeAssigned },
               ],
               sticky: true,
+              stickyPosition: 'right',
+              isSort: false,
               width: 150,
               minWidth: 140,
               maxWidth: 180,
@@ -305,32 +346,37 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             {
               id: 'action',
               label: 'Actions',
-              width: 96,
-              minWidth: 80,
-              align: 'left',
+              width: 150,
+              minWidth: 140,
+              align: 'right',
               isSort: false,
               sticky: true,
+              stickyPosition: 'right',
               isFilter: false,
+              excludeFromExport: true,
               render(value, row) {
                 return (
                   <AdaptiveThreeDotsActions
+                    placement="right-top"
+                    moreLabel={`More actions for ${row.name}`}
+                    sx={{ justifyContent: 'flex-end' }}
                     actions={[
                       {
                         id: 'collect',
-                        label: 'Collect Fee',
+                        label: `Collect fee for ${row.name}`,
                         icon: 'mdi:cash-plus',
                         onClick: () =>
                           onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData),
                       },
                       {
                         id: 'view',
-                        label: 'View Details',
+                        label: `View details for ${row.name}`,
                         icon: GlobalIcons.eye,
                         onClick: () => onView(row as IFeeData),
                       },
                       {
                         id: 'adjust',
-                        label: 'Give Fees Adjustment',
+                        label: `Give fee adjustment for ${row.name}`,
                         icon: 'tdesign:adjustment',
                         onClick: () =>
                           onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData),

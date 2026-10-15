@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-06
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -34,6 +34,18 @@ numbers stay masked. Missing legacy audit details are identified explicitly;
 loading, no history, and request errors have separate states, with Retry on errors.
 The dialog body scrolls independently of its header and Close footer. Category
 and bank-account forms use the same section cards as Academic Subject forms.
+
+| UI behavior          | Implementation                                                                                                                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Names and limits     | Preserve entered case, numbers, symbols and Unicode; trim at save; show Income 40, Expense 128, bank names 100 and Purpose 500 limits; validate in Formik rather than relying only on HTML maxlength |
+| Duplicate failures   | Create/edit failures map to the Name or Account Number field and remain visible in a form alert; entered values are retained                                                                         |
+| Bank UPI             | Render/export the server's `maskedUpiId`; keep full detail values only in the edit form                                                                                                              |
+| Mobile tables        | Keep the identifying Name/Bank Name column on the left; disable right-side status/action pinning below the small breakpoint so it cannot cover names                                                 |
+| Status accessibility | Each switch names its action and selected record                                                                                                                                                     |
+| Bank deletion        | Confirmation identifies bank, branch and masked account number; the primary action reads Delete                                                                                                      |
+| Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                            |
+
+The [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#category-and-bank-settings-data) owns validation, masking and history persistence.
 
 ## Accounts source activity
 
@@ -103,7 +115,19 @@ Charge changes start at `/finance/charge-management`. The workspace has Pending,
 
 ## Concession decisions
 
-The Pending concession table shows View, Approve, and Reject as direct row actions for a submitted request when the exact action permission and server available action allow them. The immutable requester ID must be present, and the signed-in requester or submitter cannot decide the request. Approval stays on the list: it loads the current approval context, previews the server-calculated impact, and requires confirmation before submitting the preview fingerprint and request stamp. Rejection requires a reason. Both decisions invalidate the concession query so the row and Pending/Approved/Rejected counts refresh. The View Concession controls apply the same identity restriction. The backend enforces the decision rule independently of these UI guards.
+The Pending concession table offers View, Approve, and Reject through the shared two-icon/overflow action pattern when the exact action permission and server available action allow them. The immutable requester ID must be present, and the signed-in requester or submitter cannot decide the request. Approval stays on the list: it loads the current approval context, previews the server-calculated impact, and requires confirmation before submitting the preview fingerprint and request stamp. Rejection requires a reason. Both decisions invalidate the concession query so the row and Pending/Approved/Rejected counts refresh. The View Concession controls apply the same identity restriction. The backend enforces the decision rule independently of these UI guards.
+
+### Concessions and Collections table controls
+
+Both workspaces use `CustomizableTable` with a contextual title, column filters, visible filter chips, server search/sorting/pagination, and sticky Status/Actions columns on the right.
+The table's controlled `page` is zero-based, but `onServerPagination` reports one-based server pages. Collections and Charges pass that callback page directly to their API state; Concessions and Refunds subtract one for their zero-based state. This keeps Next and Previous from skipping records.
+Student filters include the displayed GR number; Class/Division filters match the combined value, including division.
+Money columns use raw balances for numeric comparisons and ranges, while displaying the shared INR format.
+Concessions keeps the raw request timestamp for calendar-day filtering and renders exact lifecycle statuses; the Status choices belong to the active operational tab.
+Changing a concession tab clears only the status filter and resets to page one; other filters and sorting survive.
+Collections offers Pending, Paid, Overdue and No Fee Assigned, the statuses its summary read model can produce.
+Query errors appear with Retry in the table region, and neither table applies filters only to the currently loaded page.
+The shared Columns/Export/Fullscreen utilities remain available; table export reflects the loaded table rows and excludes Actions.
 
 1. Inspect `src/app/(auth-route)/finance/charge-management/**`.
 2. Inspect `src/screens/finance/ChargesManagement/**`.
@@ -307,7 +331,6 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
 
-
 ## Variable fee structure assignment
 
 See [variable fee assignment](./references/variable-fee-assignment.md) for the active fixed/variable and required/optional conditions.
@@ -337,3 +360,7 @@ amount and current allocations with the same whole-rupee/remainder rule; it does
 Incomplete or invalid allocations display an em dash until corrected. Variable fee amounts remain
 `Calculated during assignment`. The footer stays reachable while the schedule scrolls, and changes
 apply only to the owning Fee Structure; the published Payment Term is preserved.
+
+## Income and Expenses workspaces
+
+See [the workspace contract](./references/income-expense-workspaces.md) for separate registers, academic-year months, selected-record details, manual creation and automatic refund visibility.

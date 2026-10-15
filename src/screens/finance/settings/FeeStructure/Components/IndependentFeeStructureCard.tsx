@@ -1318,6 +1318,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -1345,6 +1346,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:lock-outline" />}
             variant="contained"
             color={isLocked ? 'warning' : 'success'}
             size="small"

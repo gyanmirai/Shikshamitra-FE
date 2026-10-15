@@ -36,3 +36,6 @@ childProcess.exec = function patchedExec(command, options, callback) {
 
   return originalExec.apply(this, arguments);
 };
+
+// Vite 8 imports exec as a named ESM binding; keep it aligned with the preload patch.
+require('node:module').syncBuiltinESMExports();

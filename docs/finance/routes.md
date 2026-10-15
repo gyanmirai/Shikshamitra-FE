@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-01
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -38,10 +38,10 @@ Use this table for visible Finance navigation.
 | Concession Type      | `/finance/settings/concession-type`         | `src/constants/finance-menu.ts` |
 | Charge Category      | `/finance/settings/chargeCategory`          | `src/constants/finance-menu.ts` |
 | Reconciliation       | `/finance/reconciliation`                   | `src/constants/finance-menu.ts` |
-| Income & Expenses     | `/finance/income-and-expense`               | `src/constants/finance-menu.ts` |
-| Old Accounts Activity | `/finance/accounts/activity`                | Redirects to Income & Expenses |
-| Income Tracking      | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
-| Expense Tracking     | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
+| Legacy combined page | `/finance/income-and-expense` | Redirects to an authorized Income or Expenses workspace |
+| Old Accounts Activity | `/finance/accounts/activity` | Redirects through the authorized workspace selector |
+| Income               | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
+| Expenses             | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
 | Income Category      | `/finance/settings/incomeCategories`        | `src/constants/finance-menu.ts` |
 | Expense Category     | `/finance/settings/expenseCategories`       | `src/constants/finance-menu.ts` |
 | Bank Accounts        | `/finance/settings/bank-account-management` | `src/constants/finance-menu.ts` |
@@ -83,3 +83,6 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 ## Income, expense, and bank routing
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
+
+Separate registers use exact IncomeTracking.View and ExpenseTracking.View grants in navigation, route and screen guards.
+See [Income and Expenses workspaces](./references/income-expense-workspaces.md).

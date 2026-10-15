@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -122,13 +121,8 @@ const FeeCategoryCreation = () => {
             size="small"
             variant={archiveView === 'archived' ? 'contained' : 'outlined'}
             onClick={() => setArchiveView('archived')}
-            endIcon={
-              <Label color="default" variant="soft">
-                {archivedSummary?.totalCount ?? 0}
-              </Label>
-            }
           >
-            Archived
+            Archived ({archivedSummary?.totalCount ?? 0})
           </Button>
         </Stack>
       </Card>

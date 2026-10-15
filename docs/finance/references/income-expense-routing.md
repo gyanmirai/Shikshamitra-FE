@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-06
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,7 +25,7 @@ Income Categories, Expense Categories, and Bank Accounts have independent settin
 | Refund approval | Expense Category, Payout Method, and Paying Bank Account |
 | Refund payout recording | Approved method and bank, reference, and evidence |
 | Income/Expense tables | Automatic source entries visible; manual edit/delete actions hidden for those rows |
-| Combined Income & Expenses register | Category and masked bank snapshots; each payment counted once |
+| Separate Income and Expenses registers | Category and masked bank snapshots; each payment counted once |
 
 The shared `FinanceRoutingFields` component uses searchable `CustomSelect` controls with Formik for flows that choose routing. It reports failed lookups and displays an unavailable saved selection explicitly. Policy drafts may omit mappings, while activation requires them. Charge Category settings own the income mapping; the charge form has no routing selector.
 
@@ -42,3 +42,5 @@ Run the account settings form tests and charge validation tests, TypeScript, foc
 Deploy the backend migration before these clients. Review existing pending charges and active policies with missing mappings. Historical journal references remain backend compatibility evidence; General Accounts journal posting is currently unavailable.
 
 Backend invariants and API ownership: [backend routing reference](../../../../Shikshamitra-BE/docs/modules/finance/references/income-expense-routing.md).
+
+Active workspaces now expose View-only row actions and routed manual creation; see [the workspace contract](./income-expense-workspaces.md).

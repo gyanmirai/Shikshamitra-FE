@@ -6,7 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentReview from './AssignmentReview';
 
@@ -89,9 +89,9 @@ const preview: AssignmentPreview = {
   ],
 };
 
-const mount = (data = preview, committed = false) =>
+const mount = (data = preview, committed = false, dirty = false) =>
   render(
-    <Provider store={configureStore({ reducer: () => ({ confirmPopup: { isChanges: false } }) })}>
+    <Provider store={configureStore({ reducer: () => ({ confirmPopup: { isChanges: dirty } }) })}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <AssignmentReview data={data} committed={committed} />
       </ThemeProvider>
@@ -101,7 +101,7 @@ const mount = (data = preview, committed = false) =>
 describe('assignment review evidence', () => {
   it('shows canonical totals, skipped heads and every installment without hidden paging', () => {
     mount();
-    expect(screen.getByText('Total obligation').nextElementSibling).toHaveTextContent('₹ 1,000');
+    expect(screen.getByText('Total to assign').nextElementSibling).toHaveTextContent('₹ 1,000');
     expect(screen.getByText('Service reduction').nextElementSibling).toHaveTextContent('₹ 200');
     const heads = within(
       screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
@@ -109,28 +109,44 @@ describe('assignment review evidence', () => {
     expect(heads.getByText('Not selected')).toBeInTheDocument();
     expect(heads.getByText('No obligation')).toBeInTheDocument();
     expect(heads.getByText('Monthly · v3')).toBeInTheDocument();
-    expect(heads.getByText('Configured year, not a verified joining date')).toBeInTheDocument();
+    fireEvent.mouseOver(heads.getByRole('button', { name: 'Tuition service details' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Configured dates are in the past.');
+    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(screen.getByRole('table', { name: 'Preview fee installments table' }));
     expect(schedule.getAllByRole('row')).toHaveLength(13);
     expect(schedule.getByText('Tuition · Installment 12')).toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('Configured dates are in the past.');
   });
 
-  it('keeps policy versions visible and reveals treatment on expansion', () => {
+  it('keeps policy versions visible and moves treatment to a focusable info icon', async () => {
     mount();
-    const policy = screen.getByRole('button', { name: /Applicable policies/ });
-    expect(policy).toHaveAttribute('aria-expanded', 'false');
-    expect(policy).toHaveTextContent('School collection · v2');
-    fireEvent.click(policy);
-    expect(policy).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Tuition: Evaluated during collection only.')).toBeVisible();
+    expect(screen.getByText(/collection policy: School collection · v2/)).toBeVisible();
+    expect(
+      screen.queryByText('Tuition: Evaluated during collection only.')
+    ).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'collection policy information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Tuition: Evaluated during collection only.'
+    );
+  });
+
+  it('closes installment evidence without discarding the parent assignment form', async () => {
+    const confirm = vi.fn();
+    vi.stubGlobal('confirm', confirm);
+    mount(preview, false, true);
+    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Installment details');
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(confirm).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
   it('preserves saved balances and does not invent legacy schedule evidence', () => {
     mount({ ...preview, calculationVersion: 'LegacyUnknown' }, true);
-    expect(screen.queryByText('Configured schedule')).not.toBeInTheDocument();
+    expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Coverage amount' })).not.toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Recorded obligation' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(
       screen.getByRole('table', { name: 'Assigned fee installments and balances table' })
     );

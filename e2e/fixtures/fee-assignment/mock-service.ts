@@ -7,7 +7,7 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { classType, financeModuleType, studentAdmissionType } from 'src/redux/tagTypes';
+import { classType, financeModuleType, financePolicyType, studentAdmissionType } from 'src/redux/tagTypes';
 
 const policyOptions: AssignmentPolicy[] = [
   {
@@ -202,6 +202,7 @@ export const api = createApi({
   reducerPath: 'api',
   tagTypes: [
     ...Object.values(financeModuleType),
+    ...Object.values(financePolicyType),
     ...Object.values(studentAdmissionType),
     ...Object.values(classType),
   ],

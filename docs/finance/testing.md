@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-06
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,6 +25,24 @@ npm run docs:check
 ```
 
 ## Focused frontend checks
+
+### Concessions and Collections tables
+
+Run `npm run test -- src/screens/finance/Concession/Components/StudentConcessionTable.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.query.test.tsx` for query-state, status, paging and maker/checker controls.
+Retain the existing Collections status, balance and academic-filter regression tests under `src/screens/finance/FeeCollection/Components/FeeCollectionTable*.test.tsx`.
+In the Codex in-app browser, inspect both routes with their context filters, open text/numeric/date/status filter menus, combine filters, clear them, change concession tabs, and check fullscreen and sticky right columns.
+Verify failure/Retry and no-results treatments, keyboard actions, and absence of document-level horizontal overflow.
+Use a backend rebuilt with the new list-query inputs when validating actual filtered results across pages.
+
+### Accounts settings regression
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/settings/account-settings-forms.test.ts src/screens/finance/settings/components/account-setting-save-error.test.ts src/screens/finance/settings/components/category-tags.test.ts src/screens/finance/settings/components/AccountSettingVersionDialog.test.tsx src/screens/finance/settings/components/account-setting-history-formatters.test.ts src/components/customizabaleTable/indic-pdf-export.test.ts src/components/customizabaleTable/table-export.test.tsx src/redux/finance/bankAccountOptionLabel.test.ts src/redux/finance/financeRoutingApi.bankAccounts.test.ts --pool=threads --maxWorkers=1 --testTimeout=30000`.
+Run `node scripts/qa/render-account-settings-pdf.cjs` and compare rendered and extracted Hindi/Gujarati content, including multi-page output.
+Run `node --max-old-space-size=8192 node_modules/typescript/bin/tsc -p e2e/fixtures/account-settings-qa/tsconfig.json` for the three settings screens and their imports, including the app's theme augmentations. This scoped check is independent of the full repository type check.
+For the final in-app browser check, start `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config e2e/fixtures/account-settings-qa/vite.config.mts` and open `http://127.0.0.1:4186/`.
+The fixture uses the real Income Category, Expense Category and Bank Accounts screens with synthetic local API hooks; it does not prove live persistence or authorization.
+Verify numbers/Unicode in names, displayed maximum errors, saved masked UPI output, record-specific status switch labels, mobile names at 390px, named bank deletion confirmation, duplicate field errors, and Unicode PDF downloads.
+Backend audit persistence and masking are covered by the [backend testing guide](../../../Shikshamitra-BE/docs/modules/finance/testing.md).
 
 Use these commands as the first validation set.
 
@@ -171,3 +189,14 @@ discard sessions reopen with defaults or saved source values. The retained summa
 component can be tested separately via the fixture's simulation toggle.
 
 See [variable fee assignment](./references/variable-fee-assignment.md) for focused suites and the current workflow acceptance checks.
+
+## Income and Expenses workspaces
+
+See [the workspace contract](./references/income-expense-workspaces.md) for separate registers, academic-year months, selected-record details, manual creation and automatic refund visibility.
+
+Focused Accounts regressions: `node node_modules/vitest/vitest.mjs run --config e2e/fixtures/accounts-register/vitest.config.mts`.
+
+Full-page entry-form regressions (cash/non-cash, exact decimal payloads, draft protection, locked saving and idempotent failure retry): `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/accounts/Registers --pool=threads --maxWorkers=1 --testTimeout=30000`.
+The config isolates pure date/money tests from unrelated global browser setup.
+For the real-component smoke test, run `node node_modules/vite/bin/vite.js --config e2e/fixtures/accounts-register/vite.config.mts` and open `http://127.0.0.1:4209/` in the Codex in-app browser.
+The fixture exercises both registers, View, cash/non-cash creates, year/month filtering, permission visibility, failure states and refund cache refresh using synthetic data only.

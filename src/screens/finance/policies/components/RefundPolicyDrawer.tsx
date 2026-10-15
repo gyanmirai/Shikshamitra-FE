@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -209,7 +210,7 @@ function RefundPolicyDrawerSession({
                             )}
                             helperText={
                               formik.touched.allowedPayoutMethods &&
-                                formik.errors.allowedPayoutMethods
+                              formik.errors.allowedPayoutMethods
                                 ? String(formik.errors.allowedPayoutMethods)
                                 : 'Only selected methods are available for refund requests and payments.'
                             }
@@ -270,6 +271,7 @@ function RefundPolicyDrawerSession({
         content="Your changes to this refund policy will be lost."
         action={
           <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
             variant="contained"
             color="error"
             size="small"

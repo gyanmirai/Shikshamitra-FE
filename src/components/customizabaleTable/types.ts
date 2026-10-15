@@ -70,6 +70,7 @@ export interface ICustomizableTableProps {
     column: string,
     sortData: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   ) => void;
+  /** Reports one-based server pages; the controlled `page` prop is zero-based. */
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onSearchInputChange?: (searchTerm: string) => void;
   onServerSearch?: (searchTerm: string) => void;

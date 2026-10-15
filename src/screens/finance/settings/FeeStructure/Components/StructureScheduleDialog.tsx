@@ -9,11 +9,12 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { fCurrency } from 'src/utils/format-number';
+import { formatNumber } from 'src/utils/formate_number';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Alert, Stack, Button, Typography, DialogActions } from '@mui/material';
 
 import { structureScheduleAmounts } from './structureScheduleAmounts';
 
@@ -217,11 +218,17 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
                 isSort: false,
                 isFilter: false,
                 render: (_v, row) => (
-                  <TextField
+                  <NumericFormatCustom
                     size="small"
                     fullWidth
                     sx={{ '& input': { textAlign: 'right', fontVariantNumeric: 'tabular-nums' } }}
-                    type="number"
+                    label="Allocation"
+                    name={`allocation-${row.sourcePaymentTermInstallmentId}`}
+                    prefix=""
+                    suffix="%"
+                    roundToWholeRupees={false}
+                    decimalScale={2}
+                    isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= 100}
                     disabled={readOnly}
                     value={row.allocationPercentage ?? ''}
                     inputProps={{
@@ -230,13 +237,14 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
                       step: 0.01,
                       'aria-label': `${row.name} allocation percentage`,
                     }}
-                    onChange={(e) =>
-                      change(
-                        row.sourcePaymentTermInstallmentId,
-                        'allocationPercentage',
-                        e.target.value === '' ? null : Number(e.target.value)
-                      )
-                    }
+                    onValueChange={({ floatValue }, source) => {
+                      if (source.source === 'event')
+                        change(
+                          row.sourcePaymentTermInstallmentId,
+                          'allocationPercentage',
+                          floatValue ?? null
+                        );
+                    }}
                   />
                 ),
               },
@@ -257,7 +265,7 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
                   ) : row.amount === null ? (
                     '—'
                   ) : (
-                    fCurrency(row.amount)
+                    formatNumber(row.amount, 'INR')
                   ),
               },
             ]}
@@ -272,7 +280,7 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
                 ? 'Calculated during assignment'
                 : totalAmount === null
                   ? '—'
-                  : fCurrency(totalAmount)}
+                  : formatNumber(totalAmount, 'INR')}
             </Typography>
           </Stack>
         </Stack>

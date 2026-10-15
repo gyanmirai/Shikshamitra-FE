@@ -4,6 +4,7 @@ import type { FeeWaiverSourceType } from 'src/redux/feeCollection/feeCollection'
 
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useApplyFeeWaiverMutation } from 'src/redux/feeCollection/feeCollection';
@@ -120,8 +121,18 @@ export default function FeeWaiverToggle({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={close} color="inherit" disabled={isLoading}>Cancel</Button>
-          <LoadingButton variant="contained" loading={isLoading} onClick={submit}>
+          <Button
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={close}
+            color="inherit"
+            disabled={isLoading}
+          >Cancel</Button>
+          <LoadingButton
+            startIcon={<Iconify icon="mdi:cash-remove" />}
+            variant="contained"
+            loading={isLoading}
+            onClick={submit}
+          >
             Confirm waiver
           </LoadingButton>
         </DialogActions>

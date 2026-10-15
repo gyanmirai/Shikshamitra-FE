@@ -470,6 +470,7 @@ const PaymentTerm = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -495,6 +496,7 @@ const PaymentTerm = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:check-circle-outline" />}
             variant="contained"
             size="small"
             loading={publishState.isLoading}
@@ -534,6 +536,7 @@ const PaymentTerm = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:archive-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -573,13 +576,19 @@ const PaymentTerm = () => {
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button size="small" variant="outlined" onClick={cloneDialog.onFalse}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={cloneDialog.onFalse}
+          >
             Cancel
           </Button>
           <LoadingButton
             size="small"
             variant="contained"
             loading={cloneState.isLoading}
+            startIcon={<Iconify icon="mdi:content-copy" />}
             disabled={!cloneSourceYearId}
             onClick={handleCloneSubmit}
           >
