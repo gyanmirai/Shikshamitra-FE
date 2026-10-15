@@ -38,6 +38,7 @@ export type AdvanceOptions = {
   transitionDefinitionId?: string;
   skipCurrentStage?: boolean;
   adminOverride?: boolean;
+  deferFeeCollection?: boolean;
 };
 
 export function useApplicationDetail(id: string, selectedStageId?: string) {
@@ -194,11 +195,13 @@ export function useApplicationDetail(id: string, selectedStageId?: string) {
         }).unwrap();
         setRuntimeAction(null);
         shikshaMitraToast.success({
-          message: options?.skipCurrentStage
-            ? 'Current stage skipped'
-            : options?.adminOverride
-              ? 'Workflow transition overridden'
-              : 'Application moved to the next stage',
+          message: options?.deferFeeCollection
+            ? 'Fee collection deferred to Onboarding. The application moved to the next stage.'
+            : options?.skipCurrentStage
+              ? 'Current stage skipped'
+              : options?.adminOverride
+                ? 'Workflow transition overridden'
+                : 'Application moved to the next stage',
         });
         return true;
       } catch (error) {

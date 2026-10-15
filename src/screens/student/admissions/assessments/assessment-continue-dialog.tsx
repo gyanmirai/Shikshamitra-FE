@@ -1,6 +1,6 @@
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Alert, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -12,7 +12,9 @@ import {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { assessmentErrorMessage } from './assessment-utils';
-import { canRequestNormalStageAdvance } from '../application-detail/application-progress-model';
+import { continueAssessment } from './assessment-continue-command';
+
+import type { AssessmentContinueRetry } from './assessment-continue-command';
 
 export function AssessmentContinueDialog({
   row,
@@ -23,6 +25,8 @@ export function AssessmentContinueDialog({
 }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const retry = useRef<AssessmentContinueRetry>({});
+  const key = useRef<string | null>(null);
   const [getApplication] = useLazyGetAdmissionApplicationQuery();
   const [getWorkflow] = admissionApplicationsApi.useLazyGetAdmissionApplicationWorkflowQuery();
   const [getAssessment] = admissionAssessmentsApi.useLazyGetApplicationAssessmentQuery();
@@ -32,30 +36,18 @@ export function AssessmentContinueDialog({
     setBusy(true);
     setError('');
     try {
-      const [application, workflow, assessment] = await Promise.all([
-        getApplication(row.applicationId, false).unwrap(),
-        getWorkflow(row.applicationId, false).unwrap(),
-        getAssessment(
-          { applicationId: row.applicationId, stageInstanceId: row.stageInstanceId },
-          false
-        ).unwrap(),
-      ]);
-      if (workflow.currentStageInstanceId !== row.stageInstanceId)
-        throw new Error(
-          'The admission step changed. Refresh the roster and review the current application.'
-        );
-      const stage = workflow.stages.find((item) => item.id === row.stageInstanceId);
-      if (!assessment.canComplete || !canRequestNormalStageAdvance(stage, application.status))
-        throw new Error(
-          assessment.blockers.join(' ') ||
-            'This assessment cannot continue yet. Refresh the roster and complete its pending actions.'
-        );
-      await advance({
-        id: row.applicationId,
-        expectedCurrentStageInstanceId: row.stageInstanceId,
-        concurrencyStamp: application.concurrencyStamp,
-        idempotencyKey: crypto.randomUUID(),
-      }).unwrap();
+      await continueAssessment(
+        row,
+        {
+          application: (id) => getApplication(id, false).unwrap(),
+          workflow: (id) => getWorkflow(id, false).unwrap(),
+          assessment: (applicationId, stageInstanceId) =>
+            getAssessment({ applicationId, stageInstanceId }, false).unwrap(),
+          advance: (input) => advance(input).unwrap(),
+        },
+        (key.current ??= crypto.randomUUID()),
+        retry.current
+      );
       shikshaMitraToast.success({ message: 'Application moved to the next stage' });
       onClose();
     } catch (failure) {

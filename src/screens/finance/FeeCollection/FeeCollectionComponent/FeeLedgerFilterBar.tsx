@@ -39,6 +39,8 @@ interface FeeLedgerFilterBarProps {
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
   studentId?: string;
+  academicYearId?: string;
+  feeHeads?: { feeHeadId: string; feeHeadName: string }[];
   academicYearMonths?: { month: number; year: number }[];
   isMonthsLoading?: boolean;
   selectionStates?: Partial<
@@ -99,6 +101,8 @@ const FeeLedgerFilterBar = ({
   onFilterChange,
   entryCount,
   studentId,
+  academicYearId,
+  feeHeads,
   academicYearMonths,
   isMonthsLoading = false,
   selectionStates,
@@ -106,6 +110,7 @@ const FeeLedgerFilterBar = ({
 }: FeeLedgerFilterBarProps) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const resolvedYearId = academicYearId ?? currentYear?.id;
   const tabs = useTabs(filters.activeTab);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
@@ -120,8 +125,8 @@ const FeeLedgerFilterBar = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId, academicYearId: currentYear?.id },
-    options: { skip: !studentId || !currentYear?.id },
+    params: { studentId, academicYearId: resolvedYearId },
+    options: { skip: feeHeads !== undefined || !studentId || !resolvedYearId },
   });
 
   const monthOptions = getAcademicYearMonthOptions(academicYearMonths);
@@ -142,12 +147,13 @@ const FeeLedgerFilterBar = ({
 
   const feeHeadOptions = [
     { id: 'All', name: 'All' },
-    ...(studentFeeStructureData?.feeHeads ?? [])
-      .filter((fh: any) => fh.isSelected === true)
-      .map((fh: any) => ({
-        id: fh.feeHeadId,
-        name: fh.feeHeadName,
-      })),
+    ...(
+      feeHeads ??
+      (studentFeeStructureData?.feeHeads ?? []).filter((fh: any) => fh.isSelected === true)
+    ).map((fh: any) => ({
+      id: fh.feeHeadId,
+      name: fh.feeHeadName,
+    })),
   ];
 
   return (

@@ -4,8 +4,9 @@ import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Stack, Typography } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import { inquiryHandoffBlocker } from './use-inquiry-handoff';
 import { formatAdmissionReference } from '../admission-reference';
@@ -70,14 +71,14 @@ export function getAdmissionInquiryActions(
     actions.push({
       id: 'edit',
       label: `Edit ${reference}`,
-      icon: 'mdi:pencil-outline',
+      icon: GlobalIcons.edit,
       onClick: () => options.onManage(inquiry),
     });
   if (options.canManage && options.onFollowUp)
     actions.push({
       id: 'follow-up',
       label: `Follow-up ${reference}`,
-      icon: 'mdi:note-text-outline',
+      icon: GlobalIcons.notebook,
       disabled: Boolean(inquiry.isTransferred || inquiry.applicationId || inquiry.isDuplicate),
       tooltip:
         inquiry.isTransferred || inquiry.applicationId
@@ -104,7 +105,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
     {
       id: 'inquiryNumber',
       label: 'Inquiry',
-      minWidth: 140,
+      minWidth: 150,
       filterType: 'string',
       sticky: true,
       stickyPosition: 'left',
@@ -126,19 +127,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       minWidth: 190,
       filterType: 'enum',
       enumOptions: options.offeringOptions,
-      render: (_value, row) => {
-        const inquiry = row as AdmissionInquiry;
-        return (
-          <Stack spacing={0.25}>
-            <Typography variant="body2">
-              {inquiry.admissionOfferingCode || 'Offering requires resolution'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {inquiry.admissionCycleName || 'Admission cycle'}
-            </Typography>
-          </Stack>
-        );
-      },
+      render: (_value, row) => (row as AdmissionInquiry).standardName || '—',
     },
     {
       id: 'normalizedPhone',
@@ -213,27 +202,24 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       maxWidth: 152,
       align: 'left',
       sticky: true,
+      stickyPosition: 'right',
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
       render: (_, row) => {
         const inquiry = row as AdmissionInquiry;
-        const reference = formatAdmissionReference(inquiry.inquiryNumber);
-
         return (
-          <AdaptiveThreeDotsActions
-            placement="right-top"
-            moreLabel={`More actions for ${reference}`}
-            mobileDirectActionLimit={2}
+          <ThreeDotsActions
+            showThreeDots={false}
             sx={{
               gap: 0,
-              justifyContent: 'flex-end',
+              justifyContent: 'flex-start',
               '& .MuiIconButton-root': {
                 width: { xs: 44, sm: 30 },
                 height: { xs: 44, sm: 30 },
               },
             }}
-            actions={getAdmissionInquiryActions(inquiry, options)}
+            directActions={getAdmissionInquiryActions(inquiry, options)}
           />
         );
       },

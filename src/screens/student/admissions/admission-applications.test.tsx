@@ -95,6 +95,7 @@ vi.mock('./admission-academic-filters', () => ({
     boardId: state.boardId,
     mediumId: state.mediumId,
     standardId: '',
+    dashboardScope: new URLSearchParams(state.search).has('dashboard'),
     clear: state.clear,
     update: vi.fn(),
   }),
@@ -311,6 +312,19 @@ describe('Applications decision workspace', () => {
     expect(state.query).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ skip: true })
+    );
+  });
+  it.each([
+    ['active-applications', { activeOnly: true, decisionWorkspaceOnly: false }],
+    ['admission-decisions', { pendingDecisionOnly: true, decisionWorkspaceOnly: true }],
+  ])('keeps the %s dashboard population across all boards and mediums', (preset, expected) => {
+    state.search = `dashboard=${preset}&year=year-1&division=division-a`;
+    state.boardId = '';
+    state.mediumId = '';
+    render(<AdmissionApplicationsScreen />);
+    expect(state.query).toHaveBeenCalledWith(
+      expect.objectContaining({ ...expected, divisionId: 'division-a', academicYearId: 'year-1' }),
+      expect.objectContaining({ skip: false })
     );
   });
   it('shows the correct prerequisite instead of cached rows without an academic year', () => {

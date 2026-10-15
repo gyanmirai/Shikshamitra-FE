@@ -1,19 +1,14 @@
-import type { RootState } from 'src/redux/store';
 import type { AdmissionFeeSelection } from 'src/redux/student/admissions/admission-fee-selection-types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { EmptyContent } from 'src/components/empty-content';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import {
   Box,
   Alert,
@@ -52,11 +47,6 @@ export function AdmissionFeeSelectionEditor({
   onEditorStateChange,
   compact = false,
 }: Props) {
-  const permissions = useSelector((value: RootState) => value.auth.permissions);
-  const canOpenFinance = hasGrantedPermission(
-    permissions,
-    financePermissions.fees.settings.feeStructureActions.view
-  );
   const candidates = useGetAdmissionFeeSelectionCandidatesQuery(state.applicationId, {
     refetchOnMountOrArgChange: true,
   });
@@ -140,11 +130,13 @@ export function AdmissionFeeSelectionEditor({
     <Box
       component="form"
       onSubmit={formik.handleSubmit}
-      sx={{ position: 'relative' }}
-      aria-busy={busy}
+      sx={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}
+      aria-busy={busy || candidates.isFetching}
     >
-      <Stack spacing={compact ? 1 : 1.5}>
-        {candidates.isLoading && <Skeleton height={80} />}
+      <Stack spacing={compact ? 1 : 1.5} useFlexGap sx={{ flex: 1 }}>
+        {candidates.isLoading && (
+          <Skeleton role="status" aria-label="Loading published fee structures" height={80} />
+        )}
         {!candidates.isLoading && candidates.isFetching && (
           <LinearProgress aria-label="Checking published fee structures" />
         )}
@@ -163,69 +155,44 @@ export function AdmissionFeeSelectionEditor({
         {noCandidates && (
           <EmptyContent
             title={
-              <Typography component="span" variant="subtitle1" color="text.primary">
-                No matching fee structure
-              </Typography>
-            }
-            description="A published fee structure is not available for this application's academic year and class. Ask Finance to publish the matching structure, then check again."
-            sx={{ py: 3, height: 'auto', border: 1, borderColor: 'divider', borderRadius: 1.5 }}
-            slotProps={{
-              img: { maxWidth: 64 },
-              description: { maxWidth: 600, color: 'text.secondary', typography: 'body2' },
-            }}
-            action={
-              <Stack spacing={1.5} alignItems="center" sx={{ mt: 2 }}>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  flexWrap="wrap"
-                  useFlexGap
-                  justifyContent="center"
-                >
-                  {canOpenFinance && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      component={RouterLink}
-                      href={financePaths.fees.settings.feeStructure}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      disabled={busy || disabled}
-                      startIcon={<Iconify icon="mdi:open-in-new" width={16} />}
-                    >
-                      Open Finance
-                    </Button>
-                  )}
-                  <Button
-                    size="small"
-                    variant="contained"
-                    disabled={busy || disabled || candidates.isFetching}
-                    onClick={() => candidates.refetch()}
-                    startIcon={<Iconify icon="mdi:refresh" width={16} />}
-                  >
-                    {candidates.isFetching ? 'Checking…' : 'Check again'}
-                  </Button>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-                  {state.isRequired
-                    ? 'Admission can continue after a matching structure is confirmed.'
-                    : 'Fee structure selection is optional for this application.'}
+              <Stack component="span" spacing={1.5} alignItems="center">
+                <Iconify
+                  icon="mdi:file-search-outline"
+                  width={32}
+                  sx={{ color: 'text.disabled' }}
+                />
+                <Typography component="span" variant="subtitle2" color="text.primary">
+                  No matching fee structure
                 </Typography>
               </Stack>
             }
+            description="No published structure for this class and academic year."
+            sx={{ py: 3, height: 'auto', flex: 1, minWidth: 0 }}
+            slotProps={{
+              img: { display: 'none' },
+              description: { maxWidth: 600, color: 'text.secondary', typography: 'body2' },
+            }}
           />
         )}
         {!candidates.isError && !candidates.isLoading && !noCandidates && (
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.2fr) minmax(0, 1fr)' },
+              gridTemplateColumns: compact
+                ? 'minmax(0, 1fr)'
+                : { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1.2fr) minmax(0, 1fr)' },
               gap: 1.5,
             }}
           >
             <Stack
               spacing={1.5}
-              sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }}
+              sx={{
+                p: compact ? 0 : 2,
+                border: compact ? 0 : 1,
+                borderColor: 'divider',
+                borderRadius: 1.5,
+                minWidth: 0,
+              }}
             >
               <Typography variant="subtitle2">Select fee structure</Typography>
               <CustomSelect
@@ -315,17 +282,35 @@ export function AdmissionFeeSelectionEditor({
           </Box>
         )}
         {saveError && <Alert severity="error">{saveError}</Alert>}
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          justifyContent="flex-end"
+          sx={{ mt: 'auto', pt: 1.5, borderTop: compact ? 1 : 0, borderColor: 'divider' }}
+        >
           <Button
             size="small"
             color="inherit"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:close" width={16} />}
             disabled={busy}
             onClick={() => (formik.dirty ? setDiscard(true) : onClose())}
           >
             Cancel
           </Button>
-          {!noCandidates && (
+          {noCandidates ? (
+            <Button
+              size="small"
+              variant="contained"
+              disabled={busy || disabled || candidates.isFetching}
+              onClick={() => candidates.refetch()}
+              startIcon={<Iconify icon="mdi:refresh" width={16} />}
+            >
+              {candidates.isFetching ? 'Checking…' : 'Check again'}
+            </Button>
+          ) : (
             <Button
               size="small"
               type="submit"

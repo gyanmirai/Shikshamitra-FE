@@ -63,11 +63,12 @@ const unwrap = <T>(response: Result<T> | T): T =>
     ? response.data
     : (response as T);
 
-const caseTags = (id: string) => [
+const caseTags = (id: string, error?: unknown) => [
   { type: studentOnboardingType.onboardingServiceHandoffs, id },
   { type: studentOnboardingType.onboardingCaseDetail, id },
   { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
   { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+  ...(!error ? [{ type: studentType.student, id: 'MODULE-DASHBOARD-admissions' }] : []),
 ];
 
 export const studentOnboardingApi = api.injectEndpoints({
@@ -106,7 +107,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     getStudentOnboardingWorkflowDocuments: builder.query<ApplicationDocumentVerification[], string>(
       {
@@ -144,7 +145,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (
         response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
       ) => unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     recordStudentOnboardingWorkflowOriginal: builder.mutation<
       ApplicationDocumentVerification,
@@ -158,7 +159,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (
         response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
       ) => unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     reviewStudentOnboardingWorkflowDocument: builder.mutation<
       ApplicationDocumentVerification,
@@ -178,7 +179,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (
         response: Result<ApplicationDocumentVerification> | ApplicationDocumentVerification
       ) => unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     assignStudentOnboardingGr: builder.mutation<
       StudentOnboardingCase,
@@ -198,7 +199,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => [
-        ...caseTags(id),
+        ...caseTags(id, _error),
         { type: studentOnboardingType.onboardingIdentifierSeries, id },
       ],
     }),
@@ -219,7 +220,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     setStudentOnboardingIdentifierLock: builder.mutation<
       void,
@@ -262,7 +263,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionFeeSelection> | AdmissionFeeSelection) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     getStudentCredentialEmails: builder.query<StudentCredentialEmail[], string>({
       query: (id) => `/student/onboarding/${id}/credential-emails`,
@@ -320,7 +321,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentCredentialEmail> | StudentCredentialEmail) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     overrideStudentOnboardingDocuments: builder.mutation<
       StudentOnboardingDocuments,
@@ -341,7 +342,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments
       ) => unwrap(response),
       invalidatesTags: (_result, _error, { caseId }) => [
-        ...caseTags(caseId),
+        ...caseTags(caseId, _error),
         { type: studentOnboardingType.onboardingDocuments, id: caseId },
       ],
     }),
@@ -372,7 +373,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentPortalAccount> | StudentPortalAccount) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     getStudentOnboardingCases: builder.query<
       StudentOnboardingCasePage,
@@ -457,7 +458,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     assignStudentOnboardingOwner: builder.mutation<
       StudentOnboardingCase,
@@ -470,7 +471,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     setStudentOnboardingRoute: builder.mutation<
       StudentOnboardingCase,
@@ -483,7 +484,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     updateStudentOnboardingStep: builder.mutation<
       StudentOnboardingCase,
@@ -503,7 +504,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     setStudentOnboardingPlacement: builder.mutation<
       StudentOnboardingCase,
@@ -517,7 +518,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => [
-        ...caseTags(id),
+        ...caseTags(id, _error),
         { type: studentOnboardingType.onboardingPlacementOptions, id },
       ],
     }),
@@ -560,7 +561,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => [
-        ...caseTags(id),
+        ...caseTags(id, _error),
         { type: studentOnboardingType.onboardingIdentifierSeries, id },
       ],
     }),
@@ -584,8 +585,14 @@ export const studentOnboardingApi = api.injectEndpoints({
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => [
-        ...caseTags(id),
+        ...caseTags(id, _error),
         { type: studentType.student, id: 'RECORDS-DIRECTORY' },
+        ...(!_error
+          ? [
+              { type: studentType.student, id: 'MODULE-DASHBOARD-records' },
+              { type: studentType.student, id: 'MODULE-DASHBOARD-attendance' },
+            ]
+          : []),
         { type: studentOnboardingType.onboardingServiceHandoffs, id },
       ],
     }),
@@ -600,7 +607,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     getStudentOnboardingServiceHandoffs: builder.query<StudentOnboardingServiceHandoff[], string>({
       query: (id) => `/student/onboarding/${id}/service-handoffs`,
@@ -625,6 +632,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: studentOnboardingType.onboardingServiceHandoffs, id },
         { type: studentOnboardingType.onboardingCaseDetail, id },
+        ...(!_error ? [{ type: studentType.student, id: 'MODULE-DASHBOARD-admissions' }] : []),
       ],
     }),
     confirmStudentOnboardingServiceConsent: builder.mutation<
@@ -638,7 +646,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
         unwrap(response),
-      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id, _error),
     }),
     getStudentOnboardingPolicies: builder.query<StudentOnboardingPolicy[], string>({
       query: (academicYearId) => ({
@@ -832,7 +840,7 @@ export const studentOnboardingApi = api.injectEndpoints({
       ) => unwrap(response),
       invalidatesTags: (_result, _error, { caseId }) => [
         { type: studentOnboardingType.onboardingDocuments, id: caseId },
-        ...caseTags(caseId),
+        ...caseTags(caseId, _error),
       ],
     }),
   }),

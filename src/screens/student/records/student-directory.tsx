@@ -39,7 +39,10 @@ export default function StudentDirectory({ rowActions }: Props) {
     'Students.Records.Overrides.Approve',
   ]);
   const population = params.get('population') === 'Former' ? 'Former' : 'Active';
-  const year = currentYear?.id ?? '';
+  const year =
+    params.get('dashboard') === 'directory'
+      ? params.get('year') || currentYear?.id || ''
+      : (currentYear?.id ?? '');
   const boardId = params.get('board') ?? '';
   const mediumId = params.get('medium') ?? '';
   const standardId = params.get('class') ?? '';
@@ -50,12 +53,15 @@ export default function StudentDirectory({ rowActions }: Props) {
   const sorting = params.get('sort') ?? '';
   const update = useCallback(
     (values: Record<string, string | number | undefined>) => {
-      const url = recordsQueryUrl(pathname, currentQuery, { ...values, year: undefined });
+      const url = recordsQueryUrl(pathname, currentQuery, {
+        ...values,
+        year: params.get('dashboard') === 'directory' ? year : undefined,
+      });
       if (url !== `${pathname}${currentQuery ? `?${currentQuery}` : ''}`) {
         router.push(url, { scroll: false });
       }
     },
-    [currentQuery, pathname, router]
+    [currentQuery, pathname, router, params, year]
   );
   const input: StudentDirectoryInput = {
     population,

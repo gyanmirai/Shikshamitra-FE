@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 import type { AdmissionInquiryPolicy } from './admission-inquiry-policy';
 
@@ -72,6 +72,8 @@ const unwrap = <T>(response: Result<T>) =>
   'data' in (response as { data?: T }) ? (response as { data: T }).data : (response as T);
 const url = (id: string) => `/student/enrollment/admissions/inquiries/${id}/management`;
 const tags = [studentAdmissionsCrmType.admissionInquiry];
+const invalidateManagement = (_result: unknown, error: unknown) =>
+  error ? [] : [...tags, { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const];
 
 export const admissionInquiryManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -90,7 +92,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     recordAdmissionInquiryContact: builder.mutation<
       AdmissionInquiryManagement,
@@ -109,7 +111,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     scheduleAdmissionInquiryFollowUp: builder.mutation<
       AdmissionInquiryManagement,
@@ -126,7 +128,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     completeAdmissionInquiryFollowUp: builder.mutation<AdmissionInquiryManagement, FinishFollowUp>({
       query: ({ inquiryId, followUpId, ...body }) => ({
@@ -135,7 +137,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     cancelAdmissionInquiryFollowUp: builder.mutation<AdmissionInquiryManagement, FinishFollowUp>({
       query: ({ inquiryId, followUpId, ...body }) => ({
@@ -144,7 +146,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     qualifyAdmissionInquiry: builder.mutation<
       AdmissionInquiryManagement,
@@ -163,7 +165,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
     reopenAdmissionInquiryQualification: builder.mutation<
       AdmissionInquiryManagement,
@@ -175,7 +177,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrap<AdmissionInquiryManagement>,
-      invalidatesTags: tags,
+      invalidatesTags: invalidateManagement,
     }),
   }),
   overrideExisting: true,

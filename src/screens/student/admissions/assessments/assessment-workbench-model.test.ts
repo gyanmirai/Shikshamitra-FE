@@ -5,7 +5,11 @@ import { assessmentResponse } from 'src/redux/student/admissions/assessment-test
 
 import { assessmentScopeLabel } from './assessment-utils';
 import { getAssessmentPermissions } from './use-assessment-permissions';
-import { getAssessmentRowActions, readAssessmentWorkbench } from './assessment-workbench-model';
+import {
+  getAssessmentRowActions,
+  readAssessmentWorkbench,
+  getPrimaryAssessmentAction,
+} from './assessment-workbench-model';
 
 const row: AssessmentRosterItem = {
   applicationId: 'app',
@@ -29,6 +33,55 @@ const all = {
   review: true,
   waive: true,
 };
+
+describe('assessment next action follows the operational queue', () => {
+  const correctable = {
+    ...row,
+    assessment: {
+      ...row.assessment,
+      canComplete: false,
+      canBook: false,
+      canRecordAttendance: true,
+      canRecordResult: true,
+      canRetake: false,
+    },
+  };
+  it('prioritizes results after attendance while retaining attendance correction as an allowed action', () => {
+    const resultRow = { ...correctable, queue: 'result' as const };
+    expect(getPrimaryAssessmentAction(resultRow, all, false)).toBe('result');
+    expect(getAssessmentRowActions(resultRow, all)).toContain('attendance');
+  });
+  it('prioritizes attendance in the scheduled attendance queue', () => {
+    expect(getPrimaryAssessmentAction({ ...correctable, queue: 'attendance' }, all, false)).toBe(
+      'attendance'
+    );
+  });
+  it('does not promote denied result actions and respects historical guards', () => {
+    expect(
+      getPrimaryAssessmentAction(
+        { ...correctable, queue: 'result' },
+        { ...all, results: false },
+        false
+      )
+    ).toBe('attendance');
+    expect(
+      getPrimaryAssessmentAction({ ...correctable, queue: 'result', isActive: false }, all, true)
+    ).toBeUndefined();
+  });
+  it('keeps Continue primary when current completion and the canonical advance capability permit it', () => {
+    expect(
+      getPrimaryAssessmentAction(
+        {
+          ...correctable,
+          queue: 'ready',
+          assessment: { ...correctable.assessment, canComplete: true },
+        },
+        all,
+        true
+      )
+    ).toBe('continue');
+  });
+});
 
 describe('assessment workbench URL and action safety', () => {
   it('distinguishes pinned workflows using names without repeating identical offering codes', () => {

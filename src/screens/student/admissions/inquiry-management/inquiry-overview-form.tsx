@@ -8,9 +8,12 @@ import { useFormik, type FormikProps } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
+  Grid,
   Alert,
   Stack,
   Button,
@@ -29,6 +32,7 @@ import AdmissionRuntimeField from '../admission-runtime-field';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
+import { AdmissionSectionFields } from '../components/admission-section-fields';
 import {
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
@@ -49,12 +53,14 @@ export function InquiryOverviewForm({
   onCancel,
   onDraftChange,
   title = 'Inquiry form',
+  fullHeight = false,
 }: {
   inquiry: AdmissionInquiry;
   readOnly: boolean;
   onCancel?: () => void;
   onDraftChange?: (state: { dirty: boolean; busy: boolean }) => void;
   title?: string;
+  fullHeight?: boolean;
 }) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
   const [current, setCurrent] = useState(inquiry);
@@ -276,226 +282,263 @@ export function InquiryOverviewForm({
     if (catalogue.isError) catalogue.refetch();
   };
   return (
-    <Stack component="form" noValidate onSubmit={formik.handleSubmit} spacing={1.5}>
-      <Typography variant="subtitle1" component="h2">
-        {title}
-      </Typography>
-      {readOnly && <Alert severity="info">This historical inquiry is read-only.</Alert>}
+    <Box
+      component="form"
+      noValidate
+      onSubmit={formik.handleSubmit}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        ...(fullHeight && { flex: 1, height: 1, minHeight: 0, overflow: 'hidden' }),
+      }}
+    >
+      <Box
+        role="region"
+        aria-label="Inquiry form fields"
+        sx={
+          fullHeight
+            ? { flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }
+            : undefined
+        }
+      >
+        <FormBusyRegion
+          busy={updateState.isLoading || readingPhoto}
+          label={readingPhoto ? 'Reading photo…' : 'Saving inquiry…'}
+        >
+          <Stack spacing={1}>
+            {readOnly && <Alert severity="info">This historical inquiry is read-only.</Alert>}
+            {!readOnly && (
+              <SectionCard title={title}>
+                <Grid size={{ xs: 12 }}>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
+                      gap: 3,
+                    }}
+                  >
+                    <TextField
+                      select
+                      required
+                      fullWidth
+                      size="small"
+                      label="Board"
+                      value={formik.values.boardId}
+                      disabled={locked || choicesLoading}
+                      onChange={(event) => changeContext('boardId', event.target.value)}
+                    >
+                      {academic.boards.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      required
+                      fullWidth
+                      size="small"
+                      label="Medium"
+                      value={formik.values.mediumId}
+                      disabled={locked || !formik.values.boardId}
+                      onChange={(event) => changeContext('mediumId', event.target.value)}
+                    >
+                      {academic.mediums.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      required
+                      fullWidth
+                      size="small"
+                      label="Class"
+                      value={formik.values.standardId}
+                      disabled={locked || !formik.values.mediumId || choicesLoading}
+                      onChange={(event) => changeContext('standardId', event.target.value)}
+                    >
+                      {standards.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <TextField
+                      select
+                      required
+                      fullWidth
+                      size="small"
+                      label="Offering"
+                      value={formik.values.offeringId}
+                      disabled={locked || choicesLoading || !formik.values.standardId}
+                      onChange={(event) => formik.setFieldValue('offeringId', event.target.value)}
+                    >
+                      {Array.from(
+                        new Map(
+                          [
+                            ...matching,
+                            ...(selectedOffering &&
+                            selectedOffering.id === current.admissionOfferingId
+                              ? [selectedOffering]
+                              : []),
+                          ].map((item) => [item.id, item])
+                        ).values()
+                      ).map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name || item.code}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Box>
+                </Grid>
+              </SectionCard>
+            )}
+            {(loading || choicesLoading) && <LinearProgress aria-label="Loading inquiry form" />}
+            {(loadError || choicesError) && (
+              <Alert severity="error" action={<Button onClick={retry}>Retry</Button>}>
+                Inquiry form or academic choices could not be loaded.
+              </Alert>
+            )}
+            {offeringChanged &&
+              formik.values.standardId &&
+              !choicesLoading &&
+              matching.length === 0 && (
+                <Alert severity="warning">Selected class has no admission open.</Alert>
+              )}
+            {offeringChanged &&
+              runtime.currentData &&
+              !runtime.currentData.availability.canCreateInquiry && (
+                <Alert severity="warning">
+                  {runtime.currentData.availability.reasonMessage ||
+                    'Admission is not open for the selected class.'}
+                </Alert>
+              )}
+            {form && (
+              <Typography variant="body2" color="text.secondary">
+                {form.name} · Version {form.version}
+              </Typography>
+            )}
+            {!formId && !loading && (
+              <Alert severity="warning">
+                The original attached inquiry form is unavailable. Select an open admission offering
+                to resolve this historical inquiry.
+              </Alert>
+            )}
+            {!loading &&
+              !loadError &&
+              form &&
+              sections
+                .filter((section) =>
+                  isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
+                )
+                .map((section) => (
+                  <SectionCard key={section.id} title={section.name}>
+                    <AdmissionSectionFields
+                      columns={2}
+                      spacing={3}
+                      fullWidthFieldTypes={[1, 11, 12]}
+                      fields={section.fields.filter((field) =>
+                        isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
+                      )}
+                      renderField={(field) => (
+                        <AdmissionRuntimeField
+                          onBusyChange={(busy) => onPhotoReading(field.code, busy)}
+                          field={field}
+                          value={formik.values.fields[field.code] ?? ''}
+                          disabled={locked || field.readOnly}
+                          error={
+                            formik.submitCount > 0 || touched?.[field.code]
+                              ? errors?.[field.code]
+                              : undefined
+                          }
+                          formValues={formik.values.fields}
+                          onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
+                          onChange={(value) => formik.setFieldValue(`fields.${field.code}`, value)}
+                        />
+                      )}
+                    />
+                  </SectionCard>
+                ))}
+            <SectionCard title="Inquiry details">
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Source"
+                  value={formik.values.source}
+                  disabled={locked}
+                  onChange={(event) => formik.setFieldValue('source', Number(event.target.value))}
+                >
+                  {admissionInquirySourceOptions.map((label, value) => (
+                    <MenuItem key={label} value={value}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Communication language"
+                  value={formik.values.preferredLanguageCode}
+                  disabled={locked}
+                  onChange={formik.handleChange}
+                  name="preferredLanguageCode"
+                >
+                  {admissionInquiryLanguageOptions.map((item) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Source details"
+                  name="sourceDetail"
+                  value={formik.values.sourceDetail}
+                  disabled={locked}
+                  onChange={formik.handleChange}
+                  slotProps={{ htmlInput: { maxLength: 128 } }}
+                />
+              </Grid>
+            </SectionCard>
+            {requestError && <Alert severity="error">{requestError}</Alert>}
+            {formik.submitCount > 0 && formik.errors.offeringId && (
+              <Alert severity="error">{formik.errors.offeringId}</Alert>
+            )}
+          </Stack>
+        </FormBusyRegion>
+      </Box>
       {!readOnly && (
-        <Box
+        <Stack
+          component="footer"
+          aria-label="Inquiry form actions"
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-            gap: 1.5,
+            flexShrink: 0,
+            p: 2,
+            borderTop: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            ...(!fullHeight && { position: 'sticky', bottom: 0, zIndex: 1 }),
           }}
         >
-          <TextField
-            select
-            required
-            fullWidth
-            size="small"
-            label="Board"
-            value={formik.values.boardId}
-            disabled={locked || choicesLoading}
-            onChange={(event) => changeContext('boardId', event.target.value)}
-          >
-            {academic.boards.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            required
-            fullWidth
-            size="small"
-            label="Medium"
-            value={formik.values.mediumId}
-            disabled={locked || !formik.values.boardId}
-            onChange={(event) => changeContext('mediumId', event.target.value)}
-          >
-            {academic.mediums.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            required
-            fullWidth
-            size="small"
-            label="Class"
-            value={formik.values.standardId}
-            disabled={locked || !formik.values.mediumId || choicesLoading}
-            onChange={(event) => changeContext('standardId', event.target.value)}
-          >
-            {standards.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            required
-            fullWidth
-            size="small"
-            label="Offering"
-            value={formik.values.offeringId}
-            disabled={locked || choicesLoading || !formik.values.standardId}
-            onChange={(event) => formik.setFieldValue('offeringId', event.target.value)}
-          >
-            {Array.from(
-              new Map(
-                [
-                  ...matching,
-                  ...(selectedOffering && selectedOffering.id === current.admissionOfferingId
-                    ? [selectedOffering]
-                    : []),
-                ].map((item) => [item.id, item])
-              ).values()
-            ).map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name || item.code}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-      )}
-      {(loading || choicesLoading) && <LinearProgress aria-label="Loading inquiry form" />}
-      {(loadError || choicesError) && (
-        <Alert severity="error" action={<Button onClick={retry}>Retry</Button>}>
-          Inquiry form or academic choices could not be loaded.
-        </Alert>
-      )}
-      {offeringChanged && formik.values.standardId && !choicesLoading && matching.length === 0 && (
-        <Alert severity="warning">Selected class has no admission open.</Alert>
-      )}
-      {offeringChanged &&
-        runtime.currentData &&
-        !runtime.currentData.availability.canCreateInquiry && (
-          <Alert severity="warning">
-            {runtime.currentData.availability.reasonMessage ||
-              'Admission is not open for the selected class.'}
-          </Alert>
-        )}
-      {form && (
-        <Typography variant="body2" color="text.secondary">
-          {form.name} · Version {form.version}
-        </Typography>
-      )}
-      {!formId && !loading && (
-        <Alert severity="warning">
-          The original attached inquiry form is unavailable. Select an open admission offering to
-          resolve this historical inquiry.
-        </Alert>
-      )}
-      {!loading &&
-        !loadError &&
-        form &&
-        sections
-          .filter((section) =>
-            isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
-          )
-          .map((section) => (
-            <Stack key={section.id} spacing={1}>
-              <Typography variant="subtitle2" component="h3">
-                {section.name}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
-                  gap: 1.5,
-                }}
-              >
-                {section.fields
-                  .filter((field) =>
-                    isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
-                  )
-                  .map((field) => (
-                    <Box
-                      key={field.code}
-                      sx={{
-                        minWidth: 0,
-                        gridColumn: [1, 11, 12].includes(field.fieldType) ? '1 / -1' : undefined,
-                      }}
-                    >
-                      <AdmissionRuntimeField
-                        onBusyChange={(busy) => onPhotoReading(field.code, busy)}
-                        field={field}
-                        value={formik.values.fields[field.code] ?? ''}
-                        disabled={locked || field.readOnly}
-                        error={
-                          formik.submitCount > 0 || touched?.[field.code]
-                            ? errors?.[field.code]
-                            : undefined
-                        }
-                        formValues={formik.values.fields}
-                        onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
-                        onChange={(value) => formik.setFieldValue(`fields.${field.code}`, value)}
-                      />
-                    </Box>
-                  ))}
-              </Box>
-            </Stack>
-          ))}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Source"
-          value={formik.values.source}
-          disabled={locked}
-          onChange={(event) => formik.setFieldValue('source', Number(event.target.value))}
-        >
-          {admissionInquirySourceOptions.map((label, value) => (
-            <MenuItem key={label} value={value}>
-              {label}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Communication language"
-          value={formik.values.preferredLanguageCode}
-          disabled={locked}
-          onChange={formik.handleChange}
-          name="preferredLanguageCode"
-        >
-          {admissionInquiryLanguageOptions.map((item) => (
-            <MenuItem key={item.value} value={item.value}>
-              {item.label}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Stack>
-      <TextField
-        fullWidth
-        size="small"
-        label="Source details"
-        name="sourceDetail"
-        value={formik.values.sourceDetail}
-        disabled={locked}
-        onChange={formik.handleChange}
-        slotProps={{ htmlInput: { maxLength: 128 } }}
-      />
-      {requestError && <Alert severity="error">{requestError}</Alert>}
-      {formik.submitCount > 0 && formik.errors.offeringId && (
-        <Alert severity="error">{formik.errors.offeringId}</Alert>
-      )}
-      {!readOnly && (
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
           {onCancel && (
             <Button
               size="small"
               variant="outlined"
-              disabled={updateState.isLoading}
+              disabled={updateState.isLoading || readingPhoto}
               onClick={onCancel}
             >
               Cancel
@@ -520,6 +563,6 @@ export function InquiryOverviewForm({
           </LoadingButton>
         </Stack>
       )}
-    </Stack>
+    </Box>
   );
 }

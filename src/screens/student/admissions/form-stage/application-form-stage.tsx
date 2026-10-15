@@ -1,7 +1,9 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
+import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Card,
@@ -10,11 +12,9 @@ import {
   Stack,
   Button,
   Skeleton,
-  Accordion,
   Typography,
+  DialogActions,
   LinearProgress,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -44,6 +44,7 @@ export function ApplicationFormStage({
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
 }) {
+  const [verificationOpen, setVerificationOpen] = useState(false);
   const {
     action,
     setAction,
@@ -58,7 +59,7 @@ export function ApplicationFormStage({
   useApplicationStageReadiness(onReadinessChange, {
     stageId: stage.id,
     canComplete: Boolean(summary?.canComplete && !query.isError),
-    busy: busy || Boolean(action),
+    busy: busy || Boolean(action) || (compact && verificationOpen),
     concurrencyStamp: summary?.concurrencyStamp,
   });
   const renderVerification = () =>
@@ -117,14 +118,131 @@ export function ApplicationFormStage({
         )}
       </Stack>
     );
+  const reasonDialog = action && summary && (
+    <FormStageReasonDialog
+      title={
+        action.type === 'correction'
+          ? 'Request form correction'
+          : `Reopen ${action.section.sectionName}`
+      }
+      description={
+        action.type === 'correction'
+          ? 'The application returns to draft. Previous section verification becomes stale and the applicant must resubmit.'
+          : 'The section must be checked again before this Form stage can be completed.'
+      }
+      confirmLabel={action.type === 'correction' ? 'Request correction' : 'Reopen section'}
+      busy={busy}
+      onClose={() => setAction(null)}
+      onSubmit={(reason) => submitReason(reason).then(() => undefined)}
+    />
+  );
+  if (compact) {
+    const hasVerification = summary?.sections.some((section) => section.required);
+    return (
+      <>
+        {(!summary || hasVerification || query.isError) && (
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:clipboard-check-outline" width={16} />}
+              aria-haspopup="dialog"
+              disabled={busy}
+              onClick={() => setVerificationOpen(true)}
+            >
+              Section verification
+            </Button>
+          </Stack>
+        )}
+        {summary && !hasVerification && canReopen && (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={busy || !summary.canRequestCorrection}
+            onClick={() => setAction({ type: 'correction' })}
+          >
+            Request correction
+          </Button>
+        )}
+        {showCompletionAction && canAdvance && summary && !query.isError && (
+          <Button
+            size="small"
+            variant="contained"
+            disabled={busy || !summary.canComplete}
+            onClick={() => onComplete()}
+          >
+            Continue admission
+          </Button>
+        )}
+        {verificationOpen && !action && (
+          <CustomDialog
+            open
+            title="Section Verification"
+            titleInfo="Review required sections and record staff verification after application submission."
+            maxWidth="md"
+            hasForm={false}
+            hasUnsavedChanges={false}
+            guardUnsavedChanges={false}
+            disableClose={busy}
+            handleClose={() => setVerificationOpen(false)}
+          >
+            <DialogScrollContent>
+              {query.isFetching && <LinearProgress aria-label="Refreshing Form stage" />}
+              {query.isLoading ? (
+                <Skeleton variant="rounded" height={160} />
+              ) : query.isError || !summary ? (
+                <AdmissionQueryError onRetry={query.refetch} />
+              ) : (
+                <Stack spacing={1.5}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
+                  >
+                    <Box>
+                      <Typography variant="subtitle2">Required sections</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {
+                          summary.sections.filter((section) => section.required && section.verified)
+                            .length
+                        }{' '}
+                        of {summary.sections.filter((section) => section.required).length} required
+                        sections verified
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {summary.submissionAttempts} of {summary.policy?.maxSubmissionAttempts ?? 1}{' '}
+                        submission attempts used
+                      </Typography>
+                    </Box>
+                    <Label color={summary.canComplete ? 'success' : 'warning'}>
+                      {summary.canComplete ? 'Ready' : 'Pending'}
+                    </Label>
+                  </Stack>
+                  {renderVerification()}
+                </Stack>
+              )}
+            </DialogScrollContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={busy}
+                onClick={() => setVerificationOpen(false)}
+                startIcon={<Iconify icon="mdi:close" width={16} />}
+              >
+                Close
+              </Button>
+            </DialogActions>
+          </CustomDialog>
+        )}
+        {reasonDialog}
+      </>
+    );
+  }
   return (
-    <Card
-      sx={{
-        p: compact ? 1.5 : 2,
-        ...(compact && { boxShadow: 'none', border: 1, borderColor: 'divider' }),
-      }}
-    >
-      <Stack spacing={compact ? 1.5 : 2}>
+    <Card sx={{ p: 2 }}>
+      <Stack spacing={2}>
         {!compact && (
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
             <div>
@@ -147,48 +265,7 @@ export function ApplicationFormStage({
           <AdmissionQueryError onRetry={query.refetch} />
         ) : (
           <>
-            {compact ? (
-              <Accordion
-                key={`${stage.id}:${summary.formStatus === 1 ? 'submitted' : 'draft'}`}
-                defaultExpanded={summary.formStatus === 1}
-                disabled={busy}
-                disableGutters
-                sx={{
-                  bgcolor: 'transparent',
-                  boxShadow: 'none',
-                  border: 0,
-                  '&:before': { display: 'none' },
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}
-                  sx={{ px: 0, minHeight: 44, '& .MuiAccordionSummary-content': { my: 0.5 } }}
-                >
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    gap={1}
-                    flexWrap="wrap"
-                    sx={{ width: 1 }}
-                  >
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2">Section verification</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {summary.formStatus === 1
-                          ? `${summary.sections.filter((section) => section.required && section.verified).length} of ${summary.sections.filter((section) => section.required).length} required sections verified`
-                          : 'Submit the application before staff verification.'}
-                        {' · '}
-                        {summary.submissionAttempts} of {summary.policy?.maxSubmissionAttempts ?? 1}{' '}
-                        submission attempts used
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails sx={{ p: 0, pt: 1 }}>{renderVerification()}</AccordionDetails>
-              </Accordion>
-            ) : (
-              renderVerification()
-            )}
+            {renderVerification()}
             <Stack direction="row" justifyContent={compact ? 'flex-end' : 'flex-start'} spacing={1}>
               {showCompletionAction && canAdvance && (
                 <Button
@@ -203,24 +280,7 @@ export function ApplicationFormStage({
             </Stack>
           </>
         )}
-        {action && summary && (
-          <FormStageReasonDialog
-            title={
-              action.type === 'correction'
-                ? 'Request form correction'
-                : `Reopen ${action.section.sectionName}`
-            }
-            description={
-              action.type === 'correction'
-                ? 'The application returns to draft. Previous section verification becomes stale and the applicant must resubmit.'
-                : 'The section must be checked again before this Form stage can be completed.'
-            }
-            confirmLabel={action.type === 'correction' ? 'Request correction' : 'Reopen section'}
-            busy={busy}
-            onClose={() => setAction(null)}
-            onSubmit={(reason) => submitReason(reason).then(() => undefined)}
-          />
-        )}
+        {reasonDialog}
       </Stack>
     </Card>
   );

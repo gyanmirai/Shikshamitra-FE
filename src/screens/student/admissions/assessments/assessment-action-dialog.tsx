@@ -38,6 +38,8 @@ export function AssessmentActionDialog({
   const formik = useFormik<AssessmentActionValues>({
     initialValues: {
       sessionId: initialSessionId,
+      slotStartsAt: '',
+      requiresSlot: false,
       attendance: 'present',
       outcome: '',
       approved: true,

@@ -5,7 +5,7 @@ import { vi, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
-import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { ApplicationAssessmentPanel } from './application-assessment-panel';
@@ -34,8 +34,8 @@ vi.mock('react-redux', () => ({
     select({ confirmPopup: { isChanges: false } }),
   useDispatch: () => vi.fn(),
 }));
-vi.mock('./assessment-scheduling-guidance', () => ({
-  AssessmentSchedulingGuidance: () => <div>Book a slot before the entrance exam</div>,
+vi.mock('./assessment-pipeline-booking-drawer', () => ({
+  AssessmentPipelineBookingDrawer: () => <div role="dialog" aria-label="Book Assessment Slot" />,
 }));
 
 const base: ApplicationAssessment = {
@@ -112,6 +112,8 @@ it('removes the redundant start banner while retaining actionable stage blockers
       canWaive: false,
       blockers: [
         'Create an assessment attempt or record an authorized waiver.',
+        'Record the required assessment attendance and result.',
+        'Attendance and results become available when the session starts.',
         'This assessment stage is not active.',
       ],
     })
@@ -121,10 +123,16 @@ it('removes the redundant start banner while retaining actionable stage blockers
     screen.queryByText('Create an assessment attempt or record an authorized waiver.')
   ).not.toBeInTheDocument();
   expect(screen.getByText('This assessment stage is not active.')).toBeVisible();
+  expect(
+    screen.queryByText('Record the required assessment attendance and result.')
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('Attendance and results become available when the session starts.')
+  ).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Start assessment' })).not.toBeInTheDocument();
 });
 
-it('keeps current and historical results together in the embedded attempts table', async () => {
+it('keeps current and previous attempts as cards without a table or history section', () => {
   const attempt = {
     id: 'old',
     attemptNumber: 1,
@@ -143,7 +151,12 @@ it('keeps current and historical results together in the embedded attempts table
   panel();
   expect(screen.getByText('Attempt 2')).toBeVisible();
   expect(screen.getByText('Attempt 1')).toBeVisible();
-  expect(screen.getByRole('table', { name: 'Assessment attempts table' })).toBeVisible();
+  expect(screen.getByRole('article', { name: 'Assessment attempt 2' })).toBeVisible();
+  expect(screen.getByRole('article', { name: 'Assessment attempt 1' })).toBeVisible();
+  expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  expect(screen.queryByText('Activity')).not.toBeInTheDocument();
+  expect(screen.queryByText('Attempt history')).not.toBeInTheDocument();
+  expect(screen.queryByText('Save result to continue')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Previous attempts/ })).not.toBeInTheDocument();
 });
 
@@ -177,13 +190,16 @@ it('locks compact stage controls during refresh and supports query retry', () =>
   expect(mocks.refetch).toHaveBeenCalledOnce();
 });
 
-it('shows slot guidance by default only for an unbooked scheduled assessment', () => {
+it('opens scheduled booking in the Pipeline drawer without the external scheduling warning', () => {
   mocks.query.mockReturnValue(
     query({ ...base, policy: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: true } })
   );
   const { rerender } = panel();
-  expect(screen.getByText('Book a slot before the entrance exam')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Book assessment slot' })).toBeEnabled();
+  expect(screen.queryByText('Book a slot before the entrance exam')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Go to Assessments' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Book Assessment Slot' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Book Assessment Slot' }));
+  expect(screen.getByRole('dialog', { name: 'Book Assessment Slot' })).toBeVisible();
   mocks.query.mockReturnValue(
     query({
       ...base,
@@ -298,7 +314,33 @@ const editable = (extra: Partial<ApplicationAssessment> = {}) => ({
   ...extra,
 });
 
-it('keeps result saving in the pinned Actions cell and submits its associated marks form', async () => {
+it('shows the booked session, school-local date/time and room in the attempt card', () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        attempts: [
+          {
+            ...pendingAttempt,
+            sessionId: 'session-1',
+            sessionName: 'School exam · Entrance assessment · 15 Oct 2026',
+            sessionStartsAt: '2026-10-15T09:40:00Z',
+            sessionEndsAt: '2026-10-15T09:45:00Z',
+            sessionLocation: 'A001',
+          },
+        ],
+      })
+    )
+  );
+  panel();
+  const card = screen.getByRole('article', { name: 'Assessment attempt 1' });
+  expect(within(card).getByText('School exam · Entrance assessment · 15 Oct 2026')).toBeVisible();
+  expect(within(card).getByText('15 Oct 2026')).toBeVisible();
+  expect(within(card).getByText('3:10 PM–3:15 PM IST')).toBeVisible();
+  expect(within(card).getByText('A001')).toBeVisible();
+  expect(within(card).getByText('Result pending')).toHaveClass('mnl__label__root');
+});
+
+it('keeps a small Save Result action beside marks and submits the same result form', async () => {
   mocks.query.mockReturnValue(query(editable({ canRecordResult: true })));
   panel();
   const marks = screen.getByRole('textbox', { name: 'Marks / 100' });
@@ -306,12 +348,10 @@ it('keeps result saving in the pinned Actions cell and submits its associated ma
     name: 'Save result for attempt 1',
   }) as HTMLButtonElement;
   const form = marks.closest('form');
-  expect(save.closest('td')).not.toBe(marks.closest('td'));
-  expect(save.closest('td')).toBe(
-    screen.getByRole('button', { name: 'More actions for attempt 1' }).closest('td')
-  );
+  expect(save).toHaveClass('MuiButton-sizeSmall');
+  expect(save).toHaveTextContent('Save Result');
   expect(save.form).toBe(form);
-  expect(save.closest('td')).toHaveStyle({ position: 'sticky' });
+  expect(save.closest('article')).toBe(marks.closest('article'));
   fireEvent.change(marks, { target: { value: '80' } });
   fireEvent.click(save);
   await waitFor(() =>
@@ -421,7 +461,7 @@ it('locks conflicting controls and prevents duplicate writes during inline savin
   );
 });
 
-it('keeps saved results in the same table without editable completed controls', () => {
+it('keeps saved results in the same card without editable completed controls', () => {
   mocks.query.mockReturnValue(
     query(
       editable({
@@ -452,6 +492,69 @@ it('retains audited Waive/Cancel dialogs in the shared row menu', () => {
   fireEvent.click(screen.getByRole('button', { name: 'More actions for attempt 1' }));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Cancel attempt' }));
   expect(screen.getByRole('dialog')).toHaveTextContent('Action cancel');
+});
+
+it('changes recorded attendance through the existing notes dialog', () => {
+  mocks.query.mockReturnValue(
+    query(editable({ attempts: [{ ...pendingAttempt, attendance: 'present' }] }))
+  );
+  panel();
+  expect(screen.getByText('Present')).toHaveClass('mnl__label__root');
+  const change = screen.getByRole('button', { name: 'Change attendance for attempt 1' });
+  expect(change).toHaveClass('MuiButton-sizeSmall');
+  fireEvent.click(change);
+  expect(screen.getByRole('dialog')).toHaveTextContent('Action attendance');
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
+it('keeps a failed result visible and routes retakes through the existing reason dialog', () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        attempts: [
+          {
+            ...pendingAttempt,
+            status: 'completed',
+            attendance: 'present',
+            outcome: 'failed',
+            marks: 22,
+          },
+        ],
+        canRetake: true,
+        canRecordAttendance: false,
+      })
+    )
+  );
+  const onComplete = vi.fn();
+  panel(onComplete);
+  expect(screen.getByText('22 / 100')).toBeVisible();
+  expect(screen.getByText('Failed')).toHaveClass('mnl__label__root');
+  expect(screen.queryByRole('textbox', { name: 'Marks / 100' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'More actions for attempt 1' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Allow retake' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Action retake');
+  expect(onComplete).not.toHaveBeenCalled();
+});
+
+it('shows the assigned interview slot instead of the whole session window', () => {
+  mocks.query.mockReturnValue(
+    query(
+      editable({
+        attempts: [
+          {
+            ...pendingAttempt,
+            sessionStartsAt: '2026-10-15T03:30:00Z',
+            sessionEndsAt: '2026-10-15T05:30:00Z',
+            slotStartsAt: '2026-10-15T04:00:00Z',
+            slotEndsAt: '2026-10-15T04:15:00Z',
+          },
+        ],
+      })
+    )
+  );
+  panel();
+  expect(screen.getByText('9:30 AM–9:45 AM IST')).toBeVisible();
+  expect(screen.queryByText('9:00 AM–11:00 AM IST')).not.toBeInTheDocument();
 });
 
 it('does not expose inline write controls when action permissions are denied', () => {

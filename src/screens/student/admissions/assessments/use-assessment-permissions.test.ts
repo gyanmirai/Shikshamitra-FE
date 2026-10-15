@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
-import { getAssessmentPermissions } from './use-assessment-permissions';
+import {
+  getAssessmentPermissions,
+  canAdvanceAssessmentApplications,
+} from './use-assessment-permissions';
 
 describe('getAssessmentPermissions', () => {
   it('maps backend Add and Delete grants to assessment workflow actions', () => {
@@ -30,5 +33,38 @@ describe('getAssessmentPermissions', () => {
     expect(result.manageSessions).toBe(false);
     expect(result.book).toBe(false);
     expect(result.waive).toBe(false);
+  });
+});
+
+describe('assessment application continuation permissions', () => {
+  it('allows the canonical application Add capability together with View', () => {
+    expect(
+      canAdvanceAssessmentApplications([
+        { name: 'Students.Admissions.Applications.View', isGranted: true },
+        { name: 'Students.Admissions.Applications.Add', isGranted: true },
+      ])
+    ).toBe(true);
+  });
+  it('rejects the fabricated Advance name even with application View', () => {
+    expect(
+      canAdvanceAssessmentApplications([
+        { name: 'Students.Admissions.Applications.View', isGranted: true },
+        { name: 'Students.Admissions.Applications.Advance', isGranted: true },
+      ])
+    ).toBe(false);
+  });
+  it('requires both current View and Add grants, including revocation', () => {
+    expect(
+      canAdvanceAssessmentApplications([
+        { name: 'Students.Admissions.Applications.Add', isGranted: true },
+      ])
+    ).toBe(false);
+    expect(
+      canAdvanceAssessmentApplications([
+        { name: 'Students.Admissions.Applications.View', isGranted: true },
+        { name: 'Students.Admissions.Applications.Add', isGranted: false },
+      ])
+    ).toBe(false);
+    expect(canAdvanceAssessmentApplications(undefined)).toBe(false);
   });
 });

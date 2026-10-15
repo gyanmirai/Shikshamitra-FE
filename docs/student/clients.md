@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,12 @@ audience: humans-and-agents
 # Find Student Enrollment Admissions clients
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
+
+## Payment collection and deferral
+
+`admission-fee-collection-api.ts` adapts the Finance-owned admission application summary, prepare, collect-form and collection endpoints. Reads do not prepare dues. Only Collect Fees submits preparation; the shared Finance form receives an application adapter and explicit academic year, without inventing a Student ID or navigating to Finance. Mutations invalidate application, fee-selection, Finance collection/receipt and Onboarding caches. Receipt access remains independently gated.
+
+Workflow advance accepts `deferFeeCollection: true` with the required trimmed `reason`, expected stage, application stamp and idempotency key. Fee-selection reads include `hasRecordedFeePayment` and nullable `feeCollectionDeferral` (stage, reason, actor and timestamp), which is also displayed in Onboarding Fees. Finalization follows the existing decision path. See the [backend collection contract](../../../Shikshamitra-BE/docs/modules/finance/references/admission-fee-collection.md).
 
 ## Finalized application summary reads
 
@@ -141,7 +147,34 @@ Endpoint contracts and domain enforcement remain owned by the [backend Student A
 
 ## Endpoint ownership
 
+Applicant 360 reads the application's own Offering through the existing `admission-offerings-api.ts` detail query only with the canonical Offerings View grant.
+The header uses the application's Class name with the authorized Offering's Board/Medium names; it never infers them from the current list filters.
+Without that grant the extra query is skipped and cached Offering labels are hidden; the application header and existing actions remain usable.
+
 Assessment sessions and offering/stage choices use `src/redux/student/admissions/admission-assessment-sessions-api.ts`.
+The single applicant workspace uses `src/redux/student/admissions/admission-assessment-roster-api.ts` with optional Offering/stage, academic context and session filters; search, sorting, counts and paging are server-owned.
+`src/redux/student/admissions/admission-assessment-planning-api.ts` owns the shared-session reads and coordinated planning commands.
+
+| Planning client operation                                                                       | Frontend use                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET `/student/enrollment/admissions/assessments/sessions/workbench` and `/sessions/{id}`        | Paged session management, compact session choices and recovery of an off-page selected session                                                                   |
+| GET `/student/enrollment/admissions/assessments/session-resources`                              | Admissions-scoped Institute room/building/floor/capacity and initial staff options for the task drawer                                                           |
+| GET `/student/enrollment/admissions/assessments/interviewers?search=...`                        | Debounced remote staff search through `PaginatedSearchSelect`; selection is not limited to the initial staff page                                                |
+| GET `/student/enrollment/admissions/assessments/sessions/{id}/slots`                            | Available individual-interview slot choices                                                                                                                      |
+| POST `/student/enrollment/admissions/assessments/sessions/preview`                              | Session settings, optional existing-session identity/version and paged eligible applicants; response includes global proposals, warnings and preview fingerprint |
+| POST `/student/enrollment/admissions/assessments/sessions/confirm`                              | Explicit selected bookings, fingerprint and stable idempotency key for coordinated session/reservation/booking confirmation                                      |
+| PUT `/student/enrollment/admissions/assessments/sessions/{id}` and POST `/sessions/{id}/cancel` | Shared session editing and reasoned cancellation using the current session version                                                                               |
+
+The screen retains the confirmation idempotency key for an unchanged serialized payload across retries; changing the input or selection creates a new key.
+Preview proposals are independent of candidate-table pages and are bounded to 200 bookings per confirmation; remaining applicants can be booked later into the same session.
+Interview proposals retain server-suggested applicant-compatible times; a newly selected applicant without a proposal sends no explicit slot, allowing server allocation at confirmation.
+Session/workbench/resource reads provide the existing exam tag; coordinated writes invalidate exam, application and applicant reads.
+Preview has no write invalidation, and endpoint responses are normalized through the shared assessment envelope adapter.
+Bulk attendance/results reuse the existing assessment reads and mutations; bulk Continue reuses fresh application/workflow/assessment reads and the guarded workflow-advance mutation.
+Pipeline's inline booking drawer reuses the existing session/slot reads and booking mutation. Create & Book uses the shared preview/confirmation endpoints with the current application number as a preview search, then matches both application and stage IDs and confirms exactly one student with fresh concurrency evidence. The original confirmation body and idempotency key are retained after uncertain failures; definitive business rejection requires a fresh preview. No new endpoint or migration belongs to this frontend change.
+These bulk commands are sequential per applicant, retain failed rows for explicit retry and do not imply an atomic multi-applicant result/advance transaction.
+The main workspace read subscriptions are paused while a bulk sheet is open and resume on close, avoiding full-roster refetches after each row mutation. A lost attendance/result response is reconciled only against unchanged sent values and notes on the same persisted attempt. Continue retains and replays the exact sent command and idempotency key so the backend can resolve a committed transition before current-stage checks.
+The [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) owns room reservations, multi-Offering authorization, eligibility, slot conflicts and transaction rules.
 Applicant bookings, attendance, results, cancellation, retakes, and waivers use `src/redux/student/admissions/admission-assessments-api.ts`.
 The shared response types are in `src/redux/student/admissions/admission-assessment-types.ts`.
 Assessment stage configuration uses `src/redux/student/admissions/admission-assessment-policy.ts`, preserving unrelated stage configuration and defaulting Assessment to managed result collection without independent review.
@@ -241,7 +274,9 @@ Activated and terminal cases retain their pinned requirements and existing autom
 | `src/screens/student/dashboard/hooks/use-student-dashboard-sections.ts`             | One subscription per permitted section, shared by metrics, priorities and graphs      |
 | `src/screens/student/dashboard/dashboard-insights.ts` and `dashboard-graph-data.ts` | Permission-filtered presentation of existing scoped totals; no independent data fetch |
 
-Context reads `/api/students/dashboard/context`; sections read `/api/students/dashboard/sections/{section}?academicYearId={guid}`, with section `records`, `admissions` or `attendance`. Permitted sections load independently after context resolves. Cache arguments include subject, tenant and granted permission names; section arguments also include year. Identity keys partition cache entries and are not sent as API authority. `currentData` clears previous identity/year results, errors withhold data, and unused dashboard entries expire immediately. The `Student/MODULE-DASHBOARD` tag supports manual GET refresh. There is no polling, Reporting preview refresh mutation or snapshot job. Destination mutations remain owned by their clients; returning to the dashboard refetches sections.
+Context reads `/api/students/dashboard/context`; sections read `/api/students/dashboard/sections/{section}?academicYearId={guid}`, with section `records`, `admissions` or `attendance`. Admin additionally reads `/api/students/dashboard/filters?academicYearId={guid}` before issuing summaries with optional `boardId`, `mediumId`, `standardId` and `divisionId`. Permitted sections load independently after context resolves. Cache arguments include subject, tenant and granted permission names; section arguments also include year and hierarchy scope. Identity keys partition cache entries and are not sent as API authority. `currentData` clears previous identity/year/scope results, errors withhold data, and unused dashboard entries expire immediately. The `Student/MODULE-DASHBOARD` tag supports manual GET refresh; section-specific `MODULE-DASHBOARD-records`, `MODULE-DASHBOARD-admissions` and `MODULE-DASHBOARD-attendance` tags connect relevant successful owning mutations. There is no polling, Reporting preview refresh mutation or snapshot job.
+
+The Admin workspace under `src/screens/student/dashboard/admin-workspace/` reuses shared breadcrumbs, Directory filter fields, dashboard section cards and a bounded `CustomizableTable` preview. Admin aggregates are additive section fields; other role layouts retain their existing contracts. `src/utils/student-dashboard-drilldown.ts` owns supported destination presets. The owning Attendance queue client at `src/redux/student/take-attendance/attendance-register-queue-api.ts` reads `/api/students/dashboard/attendance-registers` with the same scope and server pagination.
 
 See [backend dashboard API](../../../Shikshamitra-BE/docs/modules/student/api.md#student-dashboard-live-reads). Existing Reporting preview APIs remain available to their existing consumers.
 
@@ -264,3 +299,5 @@ The backend recipient contract and provenance checks are described in [Student A
 The legacy provisioning, credential-email and Configure-gated case-only parent-email correction clients remain compatible for their existing consumers.
 The simplified Credentials panel does not invoke a policy correction or change automatic-email preferences.
 Explicit manual sends use the backend's audited manual-intent contract even when automatic email is Off.
+
+Assessments progress uses the additive roster `status` query and `statusCounts` response, independently of legacy action queues. Roster items and session scopes include the actual `className`; Classes in session setup map to exact authorized Offering/stage pairs. Numeric marks remain available to entry/history consumers.

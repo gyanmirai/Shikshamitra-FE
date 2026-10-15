@@ -67,7 +67,8 @@ const form: AdmissionForm = {
 function setup(
   configurationJson?: string,
   stageChanges: Partial<AdmissionWorkflowStage> = {},
-  stages: AdmissionWorkflowStage[] = []
+  stages: AdmissionWorkflowStage[] = [],
+  availableForms: AdmissionForm[] = [form]
 ) {
   const onSave = vi.fn();
   const editorStage = {
@@ -80,7 +81,7 @@ function setup(
       open
       stage={editorStage}
       stageTypes={[metadata]}
-      forms={[form]}
+      forms={availableForms}
       stages={stages}
       readOnly={false}
       onClose={vi.fn()}
@@ -91,6 +92,69 @@ function setup(
 }
 
 describe('single-page stage drawer', { timeout: 15000 }, () => {
+  it('keeps a pinned archived registration form readable on an immutable workflow', () => {
+    renderDocumentUi(
+      <AdmissionWorkflowStageDrawer
+        open
+        stage={{ ...stage, configurationJson: JSON.stringify({ formDefinitionId: form.id }) }}
+        stageTypes={[metadata]}
+        forms={[{ ...form, status: 2, purpose: 1 }]}
+        stages={[]}
+        readOnly
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: 'Published form version *' })).toHaveTextContent(
+      'Application form · v2'
+    );
+    expect(screen.getByRole('combobox', { name: 'Published form version *' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+  });
+  it('offers only published registration forms and excludes inquiry forms and drafts', async () => {
+    const inquiry = { ...form, id: 'inquiry', name: 'Inquiry form', purpose: 0 as const };
+    const draft = {
+      ...form,
+      id: 'draft',
+      name: 'Draft registration',
+      purpose: 1 as const,
+      status: 0 as const,
+    };
+    const { user } = setup(
+      JSON.stringify({ formDefinitionId: form.id }),
+      {},
+      [],
+      [form, inquiry, draft]
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    expect(screen.getByRole('option', { name: 'Application form · v2' })).toBeVisible();
+    expect(screen.queryByRole('option', { name: /Inquiry form/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Draft registration/ })).not.toBeInTheDocument();
+  });
+
+  it('preserves an old inquiry reference until replaced and blocks applying it', async () => {
+    const inquiry = { ...form, id: 'inquiry', name: 'Inquiry form', purpose: 0 as const };
+    const { user, onSave } = setup(
+      JSON.stringify({ formDefinitionId: inquiry.id, extension: 'keep' }),
+      {},
+      [],
+      [form, inquiry]
+    );
+    expect(screen.getByText(/Inquiry forms cannot be used in this stage/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    expect(onSave).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
+      formDefinitionId: form.id,
+      extension: 'keep',
+    });
+  });
+
   it.each([1, 2, 4, 5, 7] as const)('omits next-step settings for stage type %s', (type) => {
     renderDocumentUi(
       <AdmissionWorkflowStageDrawer
@@ -182,12 +246,13 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       },
     });
   });
-  it('collapses Form completion without changing submission settings and keeps common controls visible', async () => {
+  it('shows completion settings directly and preserves submission settings when saved', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    const completion = screen.getByRole('button', { name: 'Submission and verification' });
-    expect(completion).toHaveAttribute('aria-expanded', 'true');
-    await user.click(completion);
-    expect(completion).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.queryByRole('button', { name: 'Submission and verification' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Allow corrections')).toBeVisible();
+    expect(screen.getByRole('switch', { name: 'Allow corrections' })).toBeChecked();
     expect(screen.getByText('Required stage')).toBeVisible();
     expect(screen.getByText('Entry stage')).toBeVisible();
     expect(
@@ -199,16 +264,16 @@ describe('single-page stage drawer', { timeout: 15000 }, () => {
       DEFAULT_FORM_STAGE_POLICY
     );
   });
-  it('keeps completion validation visible when staff attempt to collapse an invalid section', async () => {
+  it('keeps completion validation visible beside the directly available controls', async () => {
     const { user, onSave } = setup(JSON.stringify({ formDefinitionId: form.id }));
-    const completion = screen.getByRole('button', { name: 'Submission and verification' });
     await user.click(
       screen.getByRole('switch', {
         name: 'Require staff verification before completing this stage',
       })
     );
-    await user.click(completion);
-    expect(completion).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.queryByRole('button', { name: 'Submission and verification' })
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Choose at least one section that staff must verify.')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();

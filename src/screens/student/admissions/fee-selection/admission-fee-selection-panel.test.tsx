@@ -12,6 +12,7 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionFeeSelectionPanel from './admission-fee-selection-panel';
+import { ADMISSION_FEE_COLLECTION_PERMISSIONS } from './admission-fee-collection-permissions';
 
 import type { ApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 
@@ -32,6 +33,24 @@ vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
 }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('./admission-fee-collection-panel', () => ({
+  default: ({
+    disabled,
+    onOpenChange,
+    footerAction,
+  }: {
+    disabled: boolean;
+    onOpenChange: (open: boolean) => void;
+    footerAction?: React.ReactNode;
+  }) => (
+    <>
+      <button type="button" disabled={disabled} onClick={() => onOpenChange(true)}>
+        Test collection dialog
+      </button>
+      {footerAction}
+    </>
+  ),
+}));
 vi.mock('src/redux/student/admissions/admission-fee-selection-api', () => ({
   useGetAdmissionFeeSelectionQuery: mocks.read,
   useGetAdmissionFeeSelectionCandidatesQuery: mocks.candidates,
@@ -77,6 +96,7 @@ const base: AdmissionFeeSelection = {
   available: true,
   isRequired: false,
   isLocked: false,
+  hasRecordedFeePayment: false,
   canEdit: true,
   canConfirmOnboarding: false,
   onboardingConfirmed: false,
@@ -85,6 +105,7 @@ const base: AdmissionFeeSelection = {
 };
 const selected: AdmissionFeeSelection = {
   ...base,
+  hasRecordedFeePayment: true,
   selection: {
     ...candidate,
     heads: [candidate.heads[0]],
@@ -142,6 +163,7 @@ describe('AdmissionFeeSelectionPanel', () => {
       'Students.Admissions.Applications.View',
       'Students.Admissions.Applications.Add',
       'Students.Onboarding.Add',
+      ADMISSION_FEE_COLLECTION_PERMISSIONS.view,
     ].map((name) => ({ name, isGranted: true }));
     setRead(base);
     mocks.candidates.mockReturnValue({
@@ -173,8 +195,10 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 
-  it('opens the compact first selection directly and summarizes selected optional heads without calculating dues', async () => {
+  it('opens selection explicitly and summarizes optional heads without calculating dues', async () => {
     renderPanel({ compact: true });
+    expect(mocks.candidates).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
     await waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toHaveTextContent(
         'Class one fees'
@@ -219,6 +243,76 @@ describe('AdmissionFeeSelectionPanel', () => {
       busy: false,
       concurrencyStamp: 'stamp-1',
     });
+  });
+
+  it.each([base, { ...selected, hasRecordedFeePayment: false }])(
+    'allows reason-based deferral without collection and keeps ordinary continuation disabled',
+    (unpaid) => {
+      setRead(unpaid);
+      const onCollectLater = vi.fn();
+      const onReadinessChange = vi.fn();
+      renderPanel({
+        compact: true,
+        completionStageId: 'payment',
+        onReadinessChange,
+        onCollectLater,
+      });
+      expect(onReadinessChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({ canComplete: false })
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Collect later in Onboarding' }));
+      expect(onCollectLater).toHaveBeenCalledOnce();
+      expect(mocks.save).not.toHaveBeenCalled();
+      expect(mocks.confirm).not.toHaveBeenCalled();
+      expect(mocks.candidates).not.toHaveBeenCalled();
+    }
+  );
+
+  it('blocks continuation and deferral while collection is open', () => {
+    setRead(selected);
+    const onCollectLater = vi.fn();
+    const onReadinessChange = vi.fn();
+    renderPanel({ completionStageId: 'payment', onReadinessChange, onCollectLater });
+    fireEvent.click(screen.getByRole('button', { name: 'Test collection dialog' }));
+    expect(onReadinessChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ canComplete: false })
+    );
+    expect(screen.getByRole('button', { name: 'Collect later in Onboarding' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
+  });
+
+  it('retains reason-based deferral without Finance collection visibility', () => {
+    permissions = permissions.filter(
+      (item) => item.name !== ADMISSION_FEE_COLLECTION_PERMISSIONS.view
+    );
+    const onCollectLater = vi.fn();
+    renderPanel({ compact: true, onCollectLater });
+    expect(
+      screen.queryByRole('button', { name: 'Test collection dialog' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Collect later in Onboarding' }));
+    expect(onCollectLater).toHaveBeenCalledOnce();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it('shows the saved deferral reason in historical review without collection actions', () => {
+    setRead({
+      ...selected,
+      feeCollectionDeferral: {
+        stageId: 'payment',
+        reason: 'Parent will pay after confirmation.',
+        deferredAt: '2026-10-14T10:00:00Z',
+        deferredBy: 'staff',
+      },
+    });
+    renderPanel({ readOnly: true, onCollectLater: vi.fn() });
+    expect(screen.getByText('Parent will pay after confirmation.')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Test collection dialog' })
+    ).not.toBeInTheDocument();
   });
 
   it.each(['empty', 'available', 'loading', 'error'])(
@@ -296,12 +390,13 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeEnabled();
   });
 
-  it('keeps paid compact selections locked and never exposes new money commands', () => {
+  it('locks paid selections while the shared collection panel handles remaining dues', () => {
     setRead({ ...selected, isLocked: true, canEdit: false });
     renderPanel({ compact: true });
     expect(screen.getByText(/Payment has been recorded/)).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Change fee structure' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /collect|waive|refund/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /waive|refund/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeEnabled();
   });
   it('shows completed fee review without selection or workflow writes even with management access', () => {
     setRead(selected);
@@ -349,7 +444,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open Finance' })).not.toBeInTheDocument();
   });
-  it('offers Finance navigation only with the exact Fee Structure View permission', () => {
+  it('keeps Finance navigation removed even with Fee Structure View access and retains retry', () => {
     permissions.push({ name: 'Finance.Settings.FeeStructure.View', isGranted: true });
     mocks.candidates.mockReturnValue({
       currentData: [],
@@ -359,9 +454,9 @@ describe('AdmissionFeeSelectionPanel', () => {
       refetch: mocks.refetch,
     });
     renderPanel({ compact: true });
-    const link = screen.getByRole('link', { name: 'Open Finance' });
-    expect(link).toHaveAttribute('href', '/finance/settings/create-fee-structure');
-    expect(link).toHaveAttribute('target', '_blank');
+    fireEvent.click(screen.getByRole('button', { name: 'Select fee structure' }));
+    expect(screen.queryByRole('link', { name: 'Open Finance' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ask Finance to publish/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(mocks.save).not.toHaveBeenCalled();

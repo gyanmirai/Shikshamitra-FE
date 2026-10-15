@@ -5,6 +5,10 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 import TakeAttendanceScreen from './index';
 
+vi.mock('src/redux/year/yearApi', () => ({
+  useGetYearByIdQuery: () => ({ currentData: mocks.yearData, isError: false }),
+}));
+
 const mocks = vi.hoisted(() => ({
   params: new URLSearchParams('date=2026-09-30&organization=level&class=class&division=division'),
   replace: vi.fn(),
@@ -23,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   queryArgs: vi.fn(),
   queryOptions: vi.fn(),
   workspaceOptions: vi.fn(),
+  yearData: undefined as Record<string, unknown> | undefined,
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
@@ -331,6 +336,7 @@ const day = (patch: Partial<AttendanceDay> = {}): AttendanceDay => ({
   ...patch,
 });
 beforeEach(() => {
+  mocks.yearData = undefined;
   mocks.globalReady = true;
   vi.clearAllMocks();
   mocks.params = new URLSearchParams(
@@ -397,7 +403,7 @@ describe('Daily Attendance workspace', () => {
   it('keeps Attendance rightmost and sticky without an actions column or Draft breadcrumb', async () => {
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
-    const columns = mocks.tableProps.mock.calls.at(-1)![0].columns;
+    const { columns } = mocks.tableProps.mock.calls.at(-1)![0];
     expect(columns.at(-1)).toMatchObject({
       id: 'statusLabel',
       label: 'Attendance',
@@ -688,7 +694,6 @@ describe('Daily Attendance workspace', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Attendance cannot be taken for a future date.'
     );
-
   });
   it('shows Student List filters and clears dependent choices when either changes', () => {
     mocks.params = new URLSearchParams(
@@ -954,6 +959,33 @@ describe('Daily Attendance workspace', () => {
       expect.objectContaining({ Date: '2026-09-29' })
     );
   });
+  it('opens a dated dashboard register in its explicit year without changing global context', () => {
+    mocks.params.set('year', 'linked-year');
+    mocks.yearData = {
+      id: 'linked-year',
+      name: 'Linked year',
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+    };
+    render(<TakeAttendanceScreen />);
+    expect(mocks.queryArgs).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        AcademicYearId: 'linked-year',
+        StandardId: 'class',
+        DivisionId: 'division',
+        Date: '2026-09-30',
+      })
+    );
+    expect(screen.getByTestId('register')).toBeVisible();
+  });
+
+  it('waits for the requested year before mounting a register instead of querying the global year', () => {
+    mocks.params.set('year', 'linked-year');
+    render(<TakeAttendanceScreen />);
+    expect(screen.getByLabelText('Loading register academic year')).toBeVisible();
+    expect(mocks.queryArgs).not.toHaveBeenCalled();
+  });
+
   it('shows failed reads as errors with a retry rather than a successful empty register', () => {
     mocks.query = {
       ...mocks.query,

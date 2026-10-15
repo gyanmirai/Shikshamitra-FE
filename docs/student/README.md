@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -22,7 +22,7 @@ Student Onboarding uses a persisted Student Setup worklist with Readiness, Divis
 Onboarding Settings combines Portal Access, GR Number and Roll Number in three URL-backed tabs.
 Portal Access contains only student and parent/guardian login requirements; new schools default to Student No and Parent/Guardian Yes while existing saved choices remain intact.
 Pending cases inherit admission requirements automatically; activated and completed cases preserve their saved snapshots.
-Fees selects and confirms an existing published fee structure through Onboarding without assigning dues, collecting money, or requiring payment settlement.
+Fees selects and confirms an existing published fee structure through Onboarding. An explicit Collect Fees action opens the reused Finance collection form without navigating to Finance; fee settlement is not required for activation. Admissions Payment also allows Collect later in Onboarding with a mandatory reason and no structure or payment.
 Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.
 Credentials selects the account type and saved email, then uses one Send Credentials command for safe account preparation and durable email delivery, with a Recipient choice only when needed.
 Student List uses the selected header year, four visible academic selectors and Active/Former inside Filters, with a compact server-backed table and preserved profile navigation context.
@@ -30,7 +30,10 @@ Student Profile has Overview, Details, Documents and History. Details renders th
 Division-wide GR and Roll locks protect those identifiers without locking placement, and task drawers display only the selected task.
 See [workflows.md](./workflows.md) and [testing.md](./testing.md) for the current flow and verification limits.
 
-Assessments provides scoped Sessions and Applicants workspaces with explicit booking, attendance, result, review and workflow continuation actions. See [workflows.md](./workflows.md) for the staff journey and [testing.md](./testing.md) for acceptance evidence.
+Assessments uses one applicant table with optional Offering/stage filters and contextual session setup and management drawers.
+Shared school exams and individual/group interviews use Institute rooms, searchable staff, booking preview and explicit attendance/result/Continue actions.
+Online assessments remain outside the current flow.
+See [workflows.md](./workflows.md) for the staff journey and [testing.md](./testing.md) for current verification limits.
 
 ## Read order
 

@@ -35,6 +35,8 @@ export default function AdmissionApplicationsScreen() {
   const pathname = usePathname();
   const router = useRouter();
   const params = useSearchParams();
+  const activeApplications = params.get('dashboard') === 'active-applications';
+  const pendingDecisions = params.get('dashboard') === 'admission-decisions';
   const applicationId = params.get('application');
   const state = readAdmissionApplicationsState(params);
   const permissions = useSelector((value: RootState) => value.auth.permissions);
@@ -67,15 +69,17 @@ export default function AdmissionApplicationsScreen() {
     Boolean(applicationId) ||
     !canView ||
     !academic.academicYearId ||
-    !academic.boardId ||
-    !academic.mediumId;
+    (!academic.dashboardScope && (!academic.boardId || !academic.mediumId));
   const listQuery = useGetAdmissionApplicationsQuery(
     {
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
       ...academicClassFilterInput(academic.standardId),
-      decisionWorkspaceOnly: true,
+      decisionWorkspaceOnly: !activeApplications,
+      activeOnly: activeApplications || undefined,
+      pendingDecisionOnly: pendingDecisions || undefined,
+      divisionId: academic.dashboardScope ? params.get('division') || undefined : undefined,
       maxResultCount: state.rowsPerPage,
       skipCount: state.page * state.rowsPerPage,
       search: state.search || undefined,
@@ -134,19 +138,27 @@ export default function AdmissionApplicationsScreen() {
 
   const emptyState = !academic.academicYearId
     ? 'Select an academic year to view Applications'
-    : !academic.boardId || !academic.mediumId
+    : !academic.dashboardScope && (!academic.boardId || !academic.mediumId)
       ? 'Select a Board and Medium to view Applications'
       : state.search
         ? 'No applications match your search'
         : academic.standardId
           ? 'No applications match the selected classes'
-          : 'No applications have reached the admission decision phase yet';
+          : activeApplications
+            ? 'No active applications match this scope'
+            : pendingDecisions
+              ? 'No admission decisions are pending in this scope'
+              : 'No applications have reached the admission decision phase yet';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Applications"
-        description="Review admission decisions and finalize approved admissions. Earlier admission work continues in Pipeline."
+        description={
+          activeApplications
+            ? 'Review active applications in the selected dashboard scope.'
+            : 'Review admission decisions and finalize approved admissions. Earlier admission work continues in Pipeline.'
+        }
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },

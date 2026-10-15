@@ -1,6 +1,11 @@
 import type { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
-import { receiptType, financeModuleType } from 'src/redux/tagTypes';
+import {
+  receiptType,
+  financeModuleType,
+  studentOnboardingType,
+  studentAdmissionsCrmType,
+} from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
 
@@ -33,7 +38,8 @@ export function buildFeeCollectionStudentFeeDetailsUrl(arg: StudentIdArg | undef
 // ─── V2 DTO Types (mirroring backend contracts) ──────────────────────────────
 
 export interface FeeCollectionSummaryItem {
-  studentId: string;
+  studentId: string | null;
+  financeFeeAccountId?: string | null;
   studentName: string;
   grNumber: string;
   rollNumber: string;
@@ -73,7 +79,8 @@ export interface FeeCollectionSummaryParams {
 // ─── Collect-form types ───────────────────────────────────────────────────────
 
 export interface StudentInfo {
-  studentId: string;
+  studentId: string | null;
+  financeFeeAccountId?: string | null;
   studentName: string;
   grNo: string;
   rollNo: string;
@@ -306,7 +313,8 @@ export interface CollectFeeOutput {
   feeReceiptId?: string;
   chargeReceiptNumber?: string;
   chargeReceiptId?: string;
-  studentId: string;
+  studentId: string | null;
+  financeFeeAccountId?: string | null;
   studentName: string;
   academicYearId: string;
   totalAmount: number;
@@ -453,16 +461,29 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [
-        receiptType.receipt,
-        financeModuleType.feeCollection,
-        financeModuleType.feeDetails,
-        financeModuleType.charges,
-        financeModuleType.financeAudit,
-        financeModuleType.incomeTracking,
-        financeModuleType.accountPosting,
-        financeModuleType.draftPosting,
-      ],
+      invalidatesTags: (result, error) => {
+        const collection = result as (CollectFeeOutput & { data?: CollectFeeOutput }) | undefined;
+        const admissionAccountId =
+          collection?.financeFeeAccountId ?? collection?.data?.financeFeeAccountId;
+        return [
+          receiptType.receipt,
+          financeModuleType.feeCollection,
+          financeModuleType.feeDetails,
+          financeModuleType.charges,
+          financeModuleType.financeAudit,
+          financeModuleType.incomeTracking,
+          financeModuleType.accountPosting,
+          financeModuleType.draftPosting,
+          ...(!error && admissionAccountId
+            ? [
+                studentAdmissionsCrmType.admissionApplication,
+                studentOnboardingType.onboardingCaseDetail,
+                studentOnboardingType.onboardingCaseList,
+                studentOnboardingType.onboardingAnalytics,
+              ]
+            : []),
+        ];
+      },
     }),
 
     applyFeeWaiver: builder.mutation<FeeWaiverResult, ApplyFeeWaiverInput>({
@@ -484,9 +505,12 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
      * GET /v1/fee-receipts/{id}/pdf or /v1/charge-receipts/{id}/pdf
      * Returns receipt PDF as Blob for authenticated preview/download.
      */
-    downloadReceiptPdf: builder.mutation<Blob, { receiptId: string }>({
-      query: ({ receiptId }) => ({
-        url: `${FEE_RECEIPT_BASE_URL}/${receiptId}/pdf`,
+    downloadReceiptPdf: builder.mutation<
+      Blob,
+      { receiptId: string; receiptType?: 'fee' | 'charge' }
+    >({
+      query: ({ receiptId, receiptType: receiptScope = 'fee' }) => ({
+        url: `${downloadReceiptPdfConfig[receiptScope].baseUrl}/${receiptId}/pdf`,
         method: 'GET',
         responseHandler: (response) => response.blob(),
       }),

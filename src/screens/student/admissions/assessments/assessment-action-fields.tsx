@@ -33,6 +33,10 @@ export function AssessmentActionFields({
             admissionOfferingId={admissionOfferingId}
             workflowStageDefinitionId={workflowStageDefinitionId}
             value={values.sessionId}
+            slotStartsAt={values.slotStartsAt ?? ''}
+            onSlotChange={(value) => formik.setFieldValue('slotStartsAt', value)}
+            onSlotRequirementChange={(value) => formik.setFieldValue('requiresSlot', value)}
+            slotError={touched.slotStartsAt ? errors.slotStartsAt : undefined}
             onChange={(value) => formik.setFieldValue('sessionId', value)}
             error={touched.sessionId ? errors.sessionId : undefined}
             disabled={isSubmitting}

@@ -1,5 +1,6 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
@@ -11,6 +12,7 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import AdmissionInquiryEditPage, { getInquiryEditReturnUrl } from './admission-inquiry-edit-page';
+import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
 
 const push = vi.fn();
 const update = vi.fn();
@@ -296,7 +298,7 @@ describe('Edit inquiry page', () => {
 
     expect(screen.getByRole('heading', { name: 'Edit inquiry' })).toBeInTheDocument();
     expect(screen.getByText('Original inquiry · Version 1')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Form history' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Form history' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Status' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Schedule follow-up' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
@@ -318,6 +320,25 @@ describe('Edit inquiry page', () => {
         })
       )
     );
+  });
+
+  it('uses the same edit-only form from the inquiry list and protects dirty footer cancellation', async () => {
+    const user = userEvent.setup();
+    const close = vi.fn();
+    render(<AdmissionInquiryManagementPage inquiry={inquiry} onClose={close} />);
+
+    expect(screen.queryByRole('heading', { name: 'Form history' })).not.toBeInTheDocument();
+    expect(screen.getByText('Original inquiry · Version 1')).toBeVisible();
+    const name = screen.getByRole('textbox', { name: 'Applicant name' });
+    await user.clear(name);
+    await user.type(name, 'Unsaved inquiry edit');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(close).not.toHaveBeenCalled();
+    expect(name).toHaveValue('Unsaved inquiry edit');
+    expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(close).toHaveBeenCalledOnce();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it('preserves the draft when a status save refreshes the concurrency stamp', async () => {

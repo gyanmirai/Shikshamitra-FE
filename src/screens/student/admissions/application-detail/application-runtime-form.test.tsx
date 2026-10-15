@@ -5,8 +5,8 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { act, render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { act, render, screen, within, fireEvent } from '@testing-library/react';
 
 import { ApplicationRuntimeForm } from './application-runtime-form';
 
@@ -23,21 +23,27 @@ vi.mock('../admission-runtime-field', () => ({
     disabled,
     onChange,
     onBusyChange,
+    error,
   }: {
     field: { label: string };
     value: string;
     disabled: boolean;
     onChange: (value: string) => void;
     onBusyChange?: (busy: boolean) => void;
+    error?: string;
   }) => {
     if (onBusyChange) photoReaders.set(field.label, onBusyChange);
     return (
-      <input
-        aria-label={field.label}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      <>
+        <input
+          aria-label={field.label}
+          aria-invalid={Boolean(error)}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        {error && <span>{error}</span>}
+      </>
     );
   },
 }));
@@ -107,6 +113,77 @@ function renderForm(overrides: Partial<Props> = {}) {
 }
 
 describe('application form step navigation', () => {
+  it('keeps field validation beside fields without a duplicate top banner and keeps API errors visible by the footer', () => {
+    renderForm({
+      compact: true,
+      errors: [
+        'Complete the highlighted fields before continuing.',
+        'The saved form changed. Reload and try again.',
+      ],
+      fieldErrors: { basic: 'Basic details answer is required.' },
+      sectionActions: <button type="button">Section verification</button>,
+    });
+    expect(screen.getByRole('textbox', { name: 'Basic details answer' })).toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    expect(screen.getByText('Basic details answer is required.')).toBeVisible();
+    expect(
+      screen.queryByText('Complete the highlighted fields before continuing.')
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'The saved form changed. Reload and try again.'
+    );
+    expect(screen.getByRole('button', { name: 'Section verification' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Admission form' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Section verification' })).toHaveLength(1);
+    ['Previous', 'Save', 'Save & Next'].forEach((name) =>
+      expect(screen.getByRole('button', { name })).toHaveClass('MuiButton-sizeSmall')
+    );
+  });
+  it('keeps a configured registration photo on the left without losing its field binding', () => {
+    const basic = section('basic', 'Basic details', 'personal', 0);
+    renderForm({
+      form: {
+        formVersion: 1,
+        academicYearId: 'year',
+        status: 0,
+        definition: {
+          name: 'Registration',
+          layoutType: 0,
+          fieldsPerRow: 2,
+          sections: [
+            {
+              ...basic,
+              fields: [
+                ...basic.fields,
+                {
+                  id: 'photo',
+                  code: 'PHOTO',
+                  label: 'Student photo',
+                  fieldType: 0,
+                  required: false,
+                  validationJson: '{"format":"photo"}',
+                },
+              ],
+            },
+          ],
+        },
+      } as Props['form'],
+    });
+    const photo = within(screen.getByLabelText('Profile photos')).getByRole('textbox', {
+      name: 'Student photo',
+    });
+    const answer = within(screen.getByLabelText('Form fields')).getByRole('textbox', {
+      name: 'Basic details answer',
+    });
+    fireEvent.change(answer, { target: { value: 'Retained name' } });
+    fireEvent.change(photo, { target: { value: 'photo-answer' } });
+    expect(photo).toHaveValue('photo-answer');
+    expect(answer).toHaveValue('Retained name');
+    expect(screen.getAllByRole('textbox')).toEqual([photo, answer]);
+  });
+
   it('saves in place and replaces the forward action with submission only on the last step', async () => {
     const user = userEvent.setup();
     const save = vi.fn(async () => true);

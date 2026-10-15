@@ -74,6 +74,18 @@ describe('leave requests page', () => {
     state.params = new URLSearchParams();
   });
 
+  it('keeps a dashboard pending queue across all boards and mediums', () => {
+    state.params = new URLSearchParams(
+      'dashboard=pending&year=year-2&class=other-class&division=other-division'
+    );
+    render(<LeaveRequestsPage />);
+    expect(JSON.parse(screen.getByTestId('leave-scope').textContent ?? '{}')).toEqual({
+      academicYearId: 'year-2',
+      standardId: 'other-class',
+      divisionId: 'other-division',
+    });
+  });
+
   it('shows only leave requests with board, medium, organization, class, and division filters', () => {
     state.params = new URLSearchParams('organization=organization&class=class&division=division');
     render(<LeaveRequestsPage />);

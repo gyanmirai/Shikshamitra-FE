@@ -21,6 +21,7 @@ export function ApplicationManagedStages({
   application,
   workflow,
   onFeeSelectionStateChange,
+  onDeferFeeCollection,
   compact = false,
   selectedStage,
   showCompletionAction = true,
@@ -34,6 +35,7 @@ export function ApplicationManagedStages({
   advancing: boolean;
   onComplete: (concurrencyStamp?: string) => void;
   onFeeSelectionStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
+  onDeferFeeCollection?: (reason: string) => Promise<boolean>;
   compact?: boolean;
   selectedStage?: AdmissionApplicationStage;
   showCompletionAction?: boolean;
@@ -73,7 +75,7 @@ export function ApplicationManagedStages({
   )
     return null;
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} sx={stage?.stageType === 4 ? { flex: 1, minWidth: 0 } : undefined}>
       {stage?.formStageEnabled && !historical && (
         <ApplicationFormStage
           applicationId={application.id}
@@ -94,6 +96,7 @@ export function ApplicationManagedStages({
           advancing={actions.advancing}
           onComplete={actions.onComplete}
           onFeeSelectionStateChange={onFeeSelectionStateChange}
+          onDeferCollection={onDeferFeeCollection}
           compact={compact}
           readOnly={historical}
           showCompletionAction={showCompletionAction}

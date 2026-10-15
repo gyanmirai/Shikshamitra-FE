@@ -1,6 +1,7 @@
 import type { AdmissionAssessmentPolicy } from './admission-assessment-policy';
 
 export type AssessmentScope = {
+  className?: string;
   admissionOfferingId: string;
   academicYearId?: string;
   boardId?: string;
@@ -32,6 +33,96 @@ export type AssessmentSession = AssessmentSessionInput & {
   bookedCount: number;
   isCancelled: boolean;
   concurrencyStamp: string;
+  canManage?: boolean;
+  scopes?: AssessmentSessionScope[];
+  scopeDetails?: AssessmentScope[];
+  sessionType?: AssessmentSessionType;
+  roomId?: string | null;
+  roomReservationId?: string | null;
+  roomReservationStatus?: number | null;
+  interviewerId?: string | null;
+  interviewerName?: string | null;
+  slotDurationMinutes?: number | null;
+  breakMinutes?: number | null;
+};
+
+export type AssessmentSessionType = 'exam' | 'individualInterview' | 'groupInterview';
+export type AssessmentSessionScope = {
+  admissionOfferingId: string;
+  workflowStageDefinitionId: string;
+};
+export type AssessmentSharedSessionInput = Omit<
+  AssessmentSessionInput,
+  'admissionOfferingId' | 'workflowStageDefinitionId'
+> & {
+  admissionOfferingId?: string;
+  workflowStageDefinitionId?: string;
+  scopes: AssessmentSessionScope[];
+  sessionType: AssessmentSessionType;
+  roomId: string;
+  interviewerId?: string | null;
+  slotDurationMinutes?: number | null;
+  breakMinutes?: number | null;
+};
+export type AssessmentSessionRoom = {
+  id: string;
+  roomName: string;
+  buildingId: string;
+  buildingName: string;
+  floorId: string;
+  floorName: string;
+  capacity: number;
+};
+export type AssessmentSessionStaff = { id: string; name: string };
+export type AssessmentSessionResources = {
+  rooms: AssessmentSessionRoom[];
+  interviewers: AssessmentSessionStaff[];
+};
+export type AssessmentInterviewSlot = { startsAt: string; endsAt: string };
+export type AssessmentBookingCandidate = AssessmentSessionScope & {
+  applicationId: string;
+  stageInstanceId: string;
+  applicationNumber: string;
+  applicantName: string;
+  concurrencyStamp: string;
+  slotStartsAt?: string | null;
+  slotEndsAt?: string | null;
+};
+export type AssessmentSelectedBooking = {
+  applicationId: string;
+  stageInstanceId: string;
+  concurrencyStamp: string;
+  slotStartsAt?: string | null;
+};
+export type AssessmentBookingPreview = {
+  proposedBookings: AssessmentBookingCandidate[];
+  totalCount: number;
+  items: AssessmentBookingCandidate[];
+  eligibleCount: number;
+  availableCount: number;
+  remainingCount: number;
+  requiresRoomApproval: boolean;
+  roomName: string;
+  buildingName: string;
+  floorName: string;
+  previewFingerprint: string;
+  slots: AssessmentInterviewSlot[];
+  warnings: string[];
+};
+export type AssessmentSessionConfirmation = { session: AssessmentSession; bookedCount: number };
+export type AssessmentSessionList = { totalCount: number; items: AssessmentSession[] };
+export type AssessmentSessionListQuery = {
+  academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  standardIds?: string;
+  admissionOfferingId?: string;
+  workflowStageDefinitionId?: string;
+  search?: string;
+  includeCancelled?: boolean;
+  skipCount: number;
+  maxResultCount: number;
 };
 
 export type AssessmentAttendance = 'pending' | 'present' | 'absent';
@@ -44,6 +135,8 @@ export type AssessmentAttempt = {
   sessionStartsAt?: string | null;
   sessionEndsAt?: string | null;
   sessionLocation?: string | null;
+  slotStartsAt?: string | null;
+  slotEndsAt?: string | null;
   attendance: AssessmentAttendance;
   status: 'pending' | 'pendingReview' | 'completed' | 'cancelled';
   outcome: AssessmentOutcome;

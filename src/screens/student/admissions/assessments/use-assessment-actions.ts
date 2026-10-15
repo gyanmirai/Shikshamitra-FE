@@ -32,7 +32,11 @@ export function useAssessmentActions(assessment: ManagedApplicationAssessment) {
     };
     const notes = values.notes.trim() || undefined;
     if (action === 'book')
-      return book({ ...stage, sessionId: values.sessionId || undefined }).unwrap();
+      return book({
+        ...stage,
+        sessionId: values.sessionId || undefined,
+        slotStartsAt: values.slotStartsAt || undefined,
+      }).unwrap();
     if (action === 'waive') return waive({ ...stage, reason: notes ?? '' }).unwrap();
     const latest = latestAssessmentAttempt(snapshot);
     if (!latest) throw new Error('The assessment attempt has changed. Refresh and try again.');

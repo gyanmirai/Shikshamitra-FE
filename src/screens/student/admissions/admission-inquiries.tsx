@@ -82,7 +82,10 @@ export default function AdmissionInquiriesScreen() {
     (state: RootState) => state.auth.user?.sub as string | undefined
   );
   const { canManage } = getAdmissionInquiryAccess(permissions);
-  const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId);
+  const dashboardFollowUps = searchParams.get('dashboard') === 'inquiry-followups';
+  const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId, {
+    excludePostApplication: !dashboardFollowUps,
+  });
   const {
     currentData: data,
     isLoading,
@@ -92,7 +95,9 @@ export default function AdmissionInquiriesScreen() {
   } = useGetAdmissionInquiriesQuery(
     {
       ...listFilters,
-      isTransferred: false,
+      dashboardFollowUpsDue: searchParams.get('dashboard') === 'inquiry-followups' || undefined,
+      divisionId: academic.dashboardScope ? searchParams.get('division') || undefined : undefined,
+      isTransferred: dashboardFollowUps ? undefined : false,
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
@@ -101,7 +106,11 @@ export default function AdmissionInquiriesScreen() {
       skipCount: page * rowsPerPage,
       sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
     },
-    { skip: !academic.academicYearId || !academic.boardId || !academic.mediumId }
+    {
+      skip:
+        !academic.academicYearId ||
+        (!academic.dashboardScope && (!academic.boardId || !academic.mediumId)),
+    }
   );
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
@@ -284,7 +293,9 @@ export default function AdmissionInquiriesScreen() {
             noDataText={
               search || tableFilters.length
                 ? 'No inquiries match the selected search or filters'
-                : 'No inquiries awaiting admission handoff'
+                : dashboardFollowUps
+                  ? 'No inquiry follow-ups are due in this scope'
+                  : 'No inquiries awaiting admission handoff'
             }
           />
         </Box>

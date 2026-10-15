@@ -1,7 +1,9 @@
 import type { StudentDirectoryOptions } from 'src/redux/student/records/student-records-types';
 
-import { Box } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, IconButton, InputAdornment } from '@mui/material';
 
 export type DirectoryFilters = {
   board: string;
@@ -15,6 +17,8 @@ type Props = {
   options?: StudentDirectoryOptions;
   isLoading: boolean;
   disabled?: boolean;
+  requireClassForDivision?: boolean;
+  divisionHelpInTooltip?: boolean;
   onChange: (changes: Partial<DirectoryFilters>) => void;
 };
 
@@ -37,6 +41,8 @@ export default function StudentDirectoryFilterFields({
   options,
   isLoading,
   disabled = false,
+  requireClassForDivision = false,
+  divisionHelpInTooltip = false,
   onChange,
 }: Props) {
   const mediums = (options?.mediums ?? []).filter(
@@ -94,7 +100,35 @@ export default function StudentDirectoryFilterFields({
         label="Division"
         value={values.division || 'all'}
         isLoading={isLoading}
-        disabled={disabled}
+        disabled={disabled || (requireClassForDivision && !values.class)}
+        helperText={
+          requireClassForDivision && !values.class && !divisionHelpInTooltip
+            ? 'Select a class first'
+            : undefined
+        }
+        endAdornment={
+          divisionHelpInTooltip ? (
+            <InputAdornment position="end" sx={{ mr: 2.5 }}>
+              <CustomTooltip
+                title={
+                  values.class
+                    ? 'Filter students by division within the selected class.'
+                    : 'Select a class first to choose a division.'
+                }
+                arrow
+              >
+                <IconButton
+                  size="small"
+                  aria-label="About Division filter"
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Iconify icon="mdi:information-outline" width={16} sx={{ color: 'info.main' }} />
+                </IconButton>
+              </CustomTooltip>
+            </InputAdornment>
+          ) : undefined
+        }
         options={[{ id: 'all', name: 'All divisions' }, ...divisions]}
         labelKey="name"
         valueKey="id"

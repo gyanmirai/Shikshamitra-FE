@@ -1,6 +1,6 @@
 import { MenuItem } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
 type LeaveRequestActionsProps = {
@@ -8,6 +8,7 @@ type LeaveRequestActionsProps = {
   onApprove: () => void;
   onReject: () => void;
   onEdit: () => void;
+  editDisabled?: boolean;
 };
 
 export function LeaveRequestActions({
@@ -15,6 +16,7 @@ export function LeaveRequestActions({
   onApprove,
   onReject,
   onEdit,
+  editDisabled = false,
 }: LeaveRequestActionsProps) {
   return (
     <ThreeDotsActions
@@ -39,7 +41,10 @@ export function LeaveRequestActions({
       actions={({ popover }) => (
         <MenuItem
           aria-label={`Edit leave request for ${studentName}`}
+          disabled={editDisabled}
+          title={editDisabled ? 'Select a medium to edit a leave request.' : undefined}
           onClick={() => {
+            if (editDisabled) return;
             popover.onClose();
             onEdit();
           }}

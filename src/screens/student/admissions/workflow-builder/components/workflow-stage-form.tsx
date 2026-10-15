@@ -14,8 +14,14 @@ type Props = {
 };
 
 export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }: Props) {
+  const registrationForms = forms.filter(
+    (form) =>
+      form.purpose !== 0 && (form.status === 1 || (readOnly && form.id === formDefinitionId))
+  );
+  const inquirySelected = forms.some((form) => form.id === formDefinitionId && form.purpose === 0);
   const showError = Boolean(formik.touched.configurationJson || formik.submitCount > 0);
-  const hasError = Boolean(showError && formik.errors.configurationJson && !formDefinitionId);
+  const hasError =
+    inquirySelected || Boolean(showError && formik.errors.configurationJson && !formDefinitionId);
 
   return (
     <ShakingTextField error={hasError}>
@@ -25,7 +31,9 @@ export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }:
         size="small"
         label="Published form version *"
         disabled={readOnly}
-        value={formDefinitionId}
+        value={
+          registrationForms.some((form) => form.id === formDefinitionId) ? formDefinitionId : ''
+        }
         onBlur={() => formik.setFieldTouched('configurationJson', true)}
         onChange={(event) =>
           formik.setFieldValue(
@@ -35,11 +43,16 @@ export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }:
         }
         error={hasError}
         helperText={
+          (inquirySelected
+            ? 'Select a published registration form. Inquiry forms cannot be used in this stage.'
+            : undefined) ||
           (hasError && formik.errors.configurationJson) ||
-          (forms.length === 0 ? 'Publish a form before attaching it to this stage.' : undefined)
+          (registrationForms.length === 0
+            ? 'Publish a registration form before attaching it to this stage.'
+            : undefined)
         }
       >
-        {forms.map((form) => (
+        {registrationForms.map((form) => (
           <MenuItem key={form.id} value={form.id}>
             {form.name} · v{form.version}
           </MenuItem>

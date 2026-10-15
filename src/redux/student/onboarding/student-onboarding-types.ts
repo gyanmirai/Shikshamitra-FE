@@ -4,6 +4,7 @@ export type StudentIdentifierType = 0 | 1 | 2 | 3 | 4;
 export type StudentOnboardingServiceHandoffStatus = 0 | 1 | 2 | 3 | 4;
 
 export type StudentOnboardingListInput = {
+  dashboardQueue?: import('src/utils/student-dashboard-drilldown').OnboardingDashboardQueue;
   search?: string;
   status?: StudentOnboardingStatus;
   studentNameFilter?: string;

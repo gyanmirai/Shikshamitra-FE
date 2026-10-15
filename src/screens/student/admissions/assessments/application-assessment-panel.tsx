@@ -13,7 +13,7 @@ import { AssessmentPanelActions } from './assessment-panel-actions';
 import { AssessmentAttemptHistory } from './assessment-attempt-history';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentAttemptWorkspace } from './assessment-attempt-workspace';
-import { AssessmentSchedulingGuidance } from './assessment-scheduling-guidance';
+import { AssessmentPipelineBookingDrawer } from './assessment-pipeline-booking-drawer';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 
 import type { AssessmentAction } from './assessment-action-model';
@@ -29,7 +29,6 @@ type Props = {
   compact?: boolean;
   showCompletionAction?: boolean;
   onReadinessChange?: ApplicationStageReadinessHandler;
-  onOpenAssessments?: (url: string) => void;
 };
 
 export function ApplicationAssessmentPanel({
@@ -42,7 +41,6 @@ export function ApplicationAssessmentPanel({
   compact = false,
   showCompletionAction = true,
   onReadinessChange,
-  onOpenAssessments,
 }: Props) {
   const permissions = useAssessmentPermissions();
   const query = useGetApplicationAssessmentQuery(
@@ -57,10 +55,15 @@ export function ApplicationAssessmentPanel({
     );
   }, []);
   const assessment = query.currentData;
-  // The empty state and actions already explain how to begin an attempt.
+  // The summary and controls provide routine guidance; retain actionable blockers.
   const blockers =
     assessment?.blockers.filter(
-      (blocker) => blocker !== 'Create an assessment attempt or record an authorized waiver.'
+      (blocker) =>
+        ![
+          'Create an assessment attempt or record an authorized waiver.',
+          'Record the required assessment attendance and result.',
+          'Attendance and results become available when the session starts.',
+        ].includes(blocker)
     ) ?? [];
   useApplicationStageReadiness(onReadinessChange, {
     stageId: stage.id,
@@ -112,54 +115,73 @@ export function ApplicationAssessmentPanel({
         ) : (
           <>
             {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
-            {stage.status < 2 &&
-              assessment.canBook &&
-              !assessment.canComplete &&
-              assessment.policy.schedulingEnabled &&
-              !assessment.attempts.some(
-                (attempt) => attempt.status !== 'cancelled' && Boolean(attempt.sessionId)
-              ) && (
-                <AssessmentSchedulingGuidance
-                  admissionOfferingId={admissionOfferingId}
-                  workflowStageDefinitionId={stage.definitionStageId}
-                  canView={permissions.view}
-                  canManageSessions={permissions.manageSessions}
-                  disabled={query.isFetching || advancing}
-                  onOpenAssessments={onOpenAssessments}
-                />
-              )}
             <Box
               component="dl"
-              sx={{
-                m: 0,
-                p: 1.5,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 1.5,
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'repeat(2, minmax(0, 1fr))',
-                  md: 'repeat(4, minmax(0, 1fr))',
-                },
-                gap: 1.5,
-              }}
+              sx={
+                compact
+                  ? { m: 0, display: 'flex', flexWrap: 'wrap', gap: 2 }
+                  : {
+                      m: 0,
+                      p: 1.5,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1.5,
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'repeat(2, minmax(0, 1fr))',
+                        md: 'repeat(4, minmax(0, 1fr))',
+                      },
+                      gap: 1.5,
+                    }
+              }
             >
-              {[
-                [
-                  'Session booking',
-                  assessment.policy.schedulingEnabled ? 'Required' : 'Not required',
-                ],
-                ['Attendance', assessment.policy.attendanceRequired ? 'Required' : 'Not required'],
-                [
-                  assessment.policy.scoringEnabled ? 'Pass mark' : 'Result',
-                  assessment.policy.scoringEnabled
-                    ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
-                    : 'Pass or fail',
-                ],
-                ['Attempts', `${assessment.attempts.length} of ${assessment.policy.maxAttempts}`],
-              ].map(([label, value]) => (
-                <Box key={label} sx={{ minWidth: 0 }}>
-                  <Typography component="dt" variant="caption" color="text.secondary">
+              {(compact
+                ? [
+                    [
+                      assessment.policy.scoringEnabled ? 'Pass mark' : 'Result',
+                      assessment.policy.scoringEnabled
+                        ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
+                        : 'Pass or fail',
+                    ],
+                    [
+                      'Attempts',
+                      `${assessment.attempts.length} of ${assessment.policy.maxAttempts}`,
+                    ],
+                  ]
+                : [
+                    [
+                      'Session booking',
+                      assessment.policy.schedulingEnabled ? 'Required' : 'Not required',
+                    ],
+                    [
+                      'Attendance',
+                      assessment.policy.attendanceRequired ? 'Required' : 'Not required',
+                    ],
+                    [
+                      assessment.policy.scoringEnabled ? 'Pass mark' : 'Result',
+                      assessment.policy.scoringEnabled
+                        ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
+                        : 'Pass or fail',
+                    ],
+                    [
+                      'Attempts',
+                      `${assessment.attempts.length} of ${assessment.policy.maxAttempts}`,
+                    ],
+                  ]
+              ).map(([label, value]) => (
+                <Box
+                  key={label}
+                  sx={
+                    compact
+                      ? { minWidth: 0, display: 'flex', gap: 0.5, alignItems: 'baseline' }
+                      : { minWidth: 0 }
+                  }
+                >
+                  <Typography
+                    component="dt"
+                    variant={compact ? 'body2' : 'caption'}
+                    color="text.secondary"
+                  >
                     {label}
                   </Typography>
                   <Typography component="dd" variant="body2" fontWeight={600} sx={{ m: 0 }}>
@@ -186,7 +208,11 @@ export function ApplicationAssessmentPanel({
             <Box
               component="section"
               aria-label="Assessment attempts"
-              sx={{ p: { xs: 1.5, sm: 2 }, border: 1, borderColor: 'divider', borderRadius: 1.5 }}
+              sx={
+                compact
+                  ? { minWidth: 0 }
+                  : { p: { xs: 1.5, sm: 2 }, border: 1, borderColor: 'divider', borderRadius: 1.5 }
+              }
             >
               {compact ? (
                 <>
@@ -255,14 +281,24 @@ export function ApplicationAssessmentPanel({
                 </>
               )}
             </Box>
-            {action && (
-              <AssessmentActionDialog
-                action={action}
+            {action === 'book' && assessment.policy.schedulingEnabled ? (
+              <AssessmentPipelineBookingDrawer
                 assessment={{ ...assessment, policy: assessment.policy }}
                 admissionOfferingId={admissionOfferingId}
-                workflowStageDefinitionId={stage.definitionStageId}
+                stage={stage}
+                disabled={query.isError || query.isFetching || advancing || stage.status !== 1}
                 onClose={() => setAction(null)}
               />
+            ) : (
+              action && (
+                <AssessmentActionDialog
+                  action={action}
+                  assessment={{ ...assessment, policy: assessment.policy }}
+                  admissionOfferingId={admissionOfferingId}
+                  workflowStageDefinitionId={stage.definitionStageId}
+                  onClose={() => setAction(null)}
+                />
+              )
             )}
           </>
         )}

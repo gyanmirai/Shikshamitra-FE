@@ -36,11 +36,20 @@ export type AdmissionFeeSelection = {
   available: boolean;
   isRequired: boolean;
   isLocked: boolean;
+  hasRecordedFeePayment?: boolean;
+  feeCollectionDeferral?: AdmissionFeeCollectionDeferral | null;
   canEdit: boolean;
   canConfirmOnboarding: boolean;
   onboardingConfirmed: boolean;
   onboardingBlocker: string | null;
   selection: AdmissionSavedFeeSelection | null;
+};
+
+export type AdmissionFeeCollectionDeferral = {
+  stageId: string;
+  reason: string;
+  deferredAt: string;
+  deferredBy: string | null;
 };
 
 export type AdmissionFeeSelectionCommand = {

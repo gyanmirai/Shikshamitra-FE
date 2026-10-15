@@ -28,6 +28,13 @@ describe('global academic context in the authenticated header', () => {
     '/setting/basic-information',
     '/setting/room/record-id',
     '/setting/future-submodule/',
+    '/security',
+    '/security/',
+    '/security/dashboard',
+    '/security/role',
+    '/security/user',
+    '/security/department',
+    '/security/user/record-id',
   ])('does not mount the global selector on %s', (pathname) => {
     state.pathname = pathname;
     const view = render(<RouteAwareAcademicSearch />);
@@ -43,17 +50,26 @@ describe('global academic context in the authenticated header', () => {
     '/finance/fee-collection',
     '/settings',
     '/setting-tools',
-  ])('retains the global selector outside Institute Setup on %s', (pathname) => {
+    '/security-guard',
+    '/security-guard/dashboard',
+    '/security-tools',
+  ])('retains the global selector outside Institute Setup and Security on %s', (pathname) => {
     state.pathname = pathname;
     render(<RouteAwareAcademicSearch />);
     expect(screen.getByRole('button', { name: 'Global academic context' })).toBeVisible();
   });
 
-  it('updates visibility as the user enters and leaves Institute Setup', () => {
+  it('updates visibility as the user enters and leaves Institute Setup and Security', () => {
     state.pathname = '/academic/dashboard';
     const view = render(<RouteAwareAcademicSearch />);
     expect(screen.getByRole('button', { name: 'Global academic context' })).toBeVisible();
     state.pathname = '/setting/school-identity';
+    view.rerender(<RouteAwareAcademicSearch />);
+    expect(view.container).toBeEmptyDOMElement();
+    state.pathname = '/security/role';
+    view.rerender(<RouteAwareAcademicSearch />);
+    expect(view.container).toBeEmptyDOMElement();
+    state.pathname = '/security/user';
     view.rerender(<RouteAwareAcademicSearch />);
     expect(view.container).toBeEmptyDOMElement();
     state.pathname = '/student/dashboard';

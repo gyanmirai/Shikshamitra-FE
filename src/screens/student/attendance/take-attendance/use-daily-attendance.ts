@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { AcademicYear } from 'src/types/school';
 import type {
   AttendanceDay,
   AttendanceMark,
@@ -51,14 +52,14 @@ const readSelection = (query: string): Selection => {
   };
 };
 
-export function useDailyAttendance() {
+export function useDailyAttendance(academicYearOverride?: AcademicYear) {
   const router = useRouter();
   const pathname = usePathname();
   const queryString = useSearchParams().toString();
   const globals = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [academicContext, setAcademicContext] = useState({
-    year: globals.currentYear,
+    year: academicYearOverride ?? globals.currentYear,
     board: globals.currentBoard,
     medium: globals.currentMedium,
   });
@@ -247,6 +248,28 @@ export function useDailyAttendance() {
       replaceSelection({ date: '', board: '', medium: '', standard: '', division: '' });
     });
   useEffect(() => {
+    if (!academicYearOverride || academicYearOverride.id === academicContext.year?.id) return;
+    requestNavigation(() => {
+      clearDraft();
+      initializedYear.current = '';
+      setAcademicContext({
+        year: academicYearOverride,
+        board: globals.currentBoard,
+        medium: globals.currentMedium,
+      });
+      setSelection(readSelection(queryString));
+    });
+  }, [
+    academicYearOverride,
+    academicContext.year?.id,
+    requestNavigation,
+    clearDraft,
+    globals.currentBoard,
+    globals.currentMedium,
+    queryString,
+  ]);
+  useEffect(() => {
+    if (academicYearOverride) return;
     if (seenGlobal.current === globalKey) return;
     seenGlobal.current = globalKey;
     // The application shell hydrates its academic context after a full page load.
@@ -271,6 +294,7 @@ export function useDailyAttendance() {
     });
   }, [
     globalKey,
+    academicYearOverride,
     globals.currentYear,
     globals.currentBoard,
     globals.currentMedium,
@@ -556,8 +580,9 @@ export function useDailyAttendance() {
       });
     });
   const contextChanged =
+    !academicYearOverride &&
     globalKey !==
-    `${academicContext.year?.id}/${academicContext.board?.id}/${academicContext.medium?.id}`;
+      `${academicContext.year?.id}/${academicContext.board?.id}/${academicContext.medium?.id}`;
   const emptyMessage = !year
     ? 'Select an academic year to view attendance.'
     : context && !validDate

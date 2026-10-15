@@ -6,6 +6,8 @@ import type {
 export type AssessmentAction = 'book' | 'attendance' | 'result' | 'retake' | 'cancel' | 'waive';
 export type AssessmentActionValues = {
   sessionId: string;
+  slotStartsAt?: string;
+  requiresSlot?: boolean;
   attendance: 'present' | 'absent';
   outcome: 'passed' | 'failed' | '';
   approved: boolean;
@@ -39,6 +41,8 @@ export function validateAssessmentAction(
   const errors: Partial<Record<keyof AssessmentActionValues, string>> = {};
   if (action === 'book' && assessment.policy.schedulingEnabled && !values.sessionId)
     errors.sessionId = 'Choose a session';
+  if (action === 'book' && values.requiresSlot && !values.slotStartsAt)
+    errors.slotStartsAt = 'Choose an interview time slot';
   if (
     action === 'result' &&
     assessment.policy.scoringEnabled &&

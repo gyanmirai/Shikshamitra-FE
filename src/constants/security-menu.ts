@@ -33,13 +33,13 @@ const securityModule = {
     {
       subheader: '',
       items: [
-        {
-          title: 'Dashboard',
-          path: securityPaths.dashboard,
-          _action: 'dashboard',
-          permissionName: securityPermissions.dashboard,
-          icon: menuIconView('mdi:view-dashboard-outline'),
-        },
+        // {
+        //   title: 'Dashboard',
+        //   path: securityPaths.dashboard,
+        //   _action: 'dashboard',
+        //   permissionName: securityPermissions.dashboard,
+        //   icon: menuIconView('mdi:view-dashboard-outline'),
+        // },
         {
           title: 'Role And Permission',
           path: securityPaths.roleAndPermission.root,

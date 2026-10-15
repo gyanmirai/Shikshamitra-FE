@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 import { studentAcademicFilterParams } from 'src/utils/student-academic-filter-query';
 
 import type { AdmissionForm } from './admission-forms-api';
@@ -9,6 +9,10 @@ import type {
   AdmissionOfferingListItem,
   AdmissionOfferingAvailability,
 } from './admission-offerings-api';
+
+const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
+const inquiryMutationTags = (_result: unknown, error: unknown) =>
+  error ? [] : [studentAdmissionsCrmType.admissionInquiry, dashboardTag];
 
 export type AdmissionInquiryCaptureContext = {
   offering: AdmissionOffering;
@@ -63,6 +67,7 @@ export type AdmissionInquiry = {
   boardId?: string | null;
   mediumId?: string | null;
   standardId?: string | null;
+  standardName?: string | null;
   applicationId?: string | null;
   isTransferred?: boolean;
   isDuplicate?: boolean;
@@ -87,6 +92,8 @@ export type AdmissionInquiry = {
   isOverdue: boolean;
 };
 export type AdmissionInquiryListInput = {
+  divisionId?: string;
+  dashboardFollowUpsDue?: boolean;
   academicYearId?: string;
   boardId?: string;
   mediumId?: string;
@@ -277,16 +284,20 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
     createAdmissionInquiry: builder.mutation<AdmissionInquiry, CreateAdmissionInquiry>({
       query: (body) => ({ url: '/student/enrollment/admissions/inquiries', method: 'POST', body }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: [
-        studentAdmissionsCrmType.admissionInquiry,
-        studentAdmissionsCrmType.admissionApplicant,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionInquiry,
+              studentAdmissionsCrmType.admissionApplicant,
+            ],
     }),
     updateAdmissionInquiry: builder.mutation<
       AdmissionInquiry,
@@ -299,7 +310,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
     confirmAdmissionInquiryOffering: builder.mutation<
       AdmissionInquiry,
@@ -312,7 +323,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
     getAdmissionInquiryTimeline: builder.query<AdmissionInquiryTimelineItem[], string>({
       query: (id) => `/student/enrollment/admissions/inquiries/${id}/timeline`,
@@ -370,7 +381,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
     bulkAssignAdmissionInquiryCounsellor: builder.mutation<
       BulkAdmissionInquiryResult,
@@ -384,7 +395,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       transformResponse: (
         response: Result<BulkAdmissionInquiryResult> | BulkAdmissionInquiryResult
       ) => unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
     createAdmissionInquiryCommunication: builder.mutation<
       AdmissionInquiryCommunicationResult,
@@ -398,7 +409,7 @@ export const admissionInquiriesApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionInquiryCommunicationResult> | AdmissionInquiryCommunicationResult
       ) => unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+      invalidatesTags: inquiryMutationTags,
     }),
   }),
 });

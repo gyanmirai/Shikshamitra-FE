@@ -13,6 +13,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
 import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
   readAcademicFilterIds,
@@ -129,12 +130,19 @@ export default function StudentSetupScreen() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const dashboardQueue = readOnboardingDashboardQueue(searchParams.get('dashboard'));
+  const academicYearId = dashboardQueue
+    ? searchParams.get('year') || currentYear?.id
+    : currentYear?.id;
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canManageOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.Add');
   const canCancelOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.Delete');
   const { settings } = useOnboardingSettings();
-  const activeView = parseStudentSetupView(searchParams.get('view'));
-  const activeTaskScope = parseStudentSetupTaskScope(searchParams.get('scope'), activeView);
+  const activeView = parseStudentSetupView(searchParams.get('view') || dashboardQueue || null);
+  const activeTaskScope = parseStudentSetupTaskScope(
+    searchParams.get('scope') || (dashboardQueue && activeView !== 'readiness' ? 'pending' : null),
+    activeView
+  );
   const focusedCaseId = searchParams.get('case');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(focusedCaseId);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -325,7 +333,8 @@ export default function StudentSetupScreen() {
 
   const queryArgs = useMemo(
     () => ({
-      academicYearId: currentYear?.id || '',
+      academicYearId: academicYearId || '',
+      dashboardQueue,
       boardId: selectedBoardId || undefined,
       mediumId: selectedMediumId || undefined,
       ...academicClassFilterInput(selectedStandardId),
@@ -335,7 +344,11 @@ export default function StudentSetupScreen() {
       placementDivisionId: placementFilterApplicable ? placementDivisionId || undefined : undefined,
       status: selectedStatusOption?.status,
       pendingTask:
-        activeView !== 'readiness' && activeTaskScope === 'pending' ? activeView : undefined,
+        (!dashboardQueue || dashboardQueue === 'unfinished') &&
+        activeView !== 'readiness' &&
+        activeTaskScope === 'pending'
+          ? activeView
+          : undefined,
       enteredToday:
         activeView === 'readiness' && searchParams.get('today') === 'true' ? true : undefined,
       studentNameFilter: studentNameFilter || undefined,
@@ -364,7 +377,8 @@ export default function StudentSetupScreen() {
       maxResultCount: rowsPerPage,
     }),
     [
-      currentYear?.id,
+      academicYearId,
+      dashboardQueue,
       searchParams,
       activeView,
       activeTaskScope,
@@ -394,7 +408,7 @@ export default function StudentSetupScreen() {
   );
 
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
-    skip: !currentYear?.id || !selectedBoardId || !selectedMediumId,
+    skip: !academicYearId || (!dashboardQueue && (!selectedBoardId || !selectedMediumId)),
   });
   const pendingCountQuery = useGetStudentOnboardingCasesQuery(
     {
@@ -406,15 +420,14 @@ export default function StudentSetupScreen() {
     },
     {
       skip:
-        !currentYear?.id ||
-        !selectedBoardId ||
-        !selectedMediumId ||
+        !academicYearId ||
+        (!dashboardQueue && (!selectedBoardId || !selectedMediumId)) ||
         activeView === 'readiness' ||
         activeTaskScope === 'pending',
     }
   );
-  const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(currentYear?.id ?? '', {
-    skip: !currentYear?.id,
+  const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(academicYearId ?? '', {
+    skip: !academicYearId,
   });
   const placementOptions = useMemo(() => {
     const options = filterOptionsQuery.currentData;
@@ -505,7 +518,7 @@ export default function StudentSetupScreen() {
   ];
   useEffect(() => {
     const options = filterOptionsQuery.currentData;
-    if (!options) return;
+    if (!options || dashboardQueue) return;
     const board = options.boards.find((item) => item.id === selectedBoardId);
     const mediums = options.mediums.filter((item) => item.parentId === selectedBoardId);
     const standards = options.standards.filter((item) => item.parentId === selectedMediumId);
@@ -540,6 +553,7 @@ export default function StudentSetupScreen() {
   }, [
     changeAcademicFilter,
     filterOptionsQuery.currentData,
+    dashboardQueue,
     selectedBoardId,
     selectedMediumId,
     selectedStandardId,
@@ -565,7 +579,7 @@ export default function StudentSetupScreen() {
     canManage: canManageOnboarding,
     grAssignmentMode: settings.grNumber.assignmentMode,
     contextKey: [
-      currentYear?.id ?? '',
+      academicYearId ?? '',
       selectedBoardId,
       selectedMediumId,
       selectedStandardId,
@@ -660,6 +674,7 @@ export default function StudentSetupScreen() {
 
   const getViewHref = (view: StudentSetupView) => {
     const next = new URLSearchParams(searchParams.toString());
+    if (dashboardQueue && view !== activeView) next.set('dashboard', 'unfinished');
     next.set('view', view);
     next.delete('case');
     if (view !== activeView) next.delete('scope');
@@ -682,6 +697,7 @@ export default function StudentSetupScreen() {
 
   const getScopeHref = (scope: StudentSetupTaskScope) => {
     const next = new URLSearchParams(searchParams.toString());
+    if (dashboardQueue) next.set('dashboard', 'unfinished');
     next.set('view', activeView);
     next.set('scope', scope);
     next.delete('stage');
@@ -817,10 +833,17 @@ export default function StudentSetupScreen() {
           gap: 1,
         }}
       >
+        {dashboardQueue && (
+          <Alert severity="info">
+            Dashboard worklist: {dashboardQueue.replaceAll('-', ' ')}. Counts follow the selected
+            academic scope.
+          </Alert>
+        )}
         <StudentSetupFilters
+          allowAllScope={Boolean(dashboardQueue)}
           options={filterOptionsQuery.currentData}
           isLoading={filterOptionsQuery.isFetching}
-          disabled={!currentYear?.id || filterOptionsQuery.isError || interactionBusy}
+          disabled={!academicYearId || filterOptionsQuery.isError || interactionBusy}
           todayOnly={searchParams.get('today') === 'true'}
           onTodayChange={
             activeView === 'readiness'
@@ -857,7 +880,7 @@ export default function StudentSetupScreen() {
           </Alert>
         )}
 
-        {!currentYear?.id && showFilterAlert ? (
+        {!academicYearId && showFilterAlert ? (
           <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
             Select an academic year to load onboarding cases.
           </Alert>
@@ -926,7 +949,7 @@ export default function StudentSetupScreen() {
                 locks={
                   activeView === 'gr-number' || activeView === 'roll-number' ? (
                     <StudentIdentifierLockControls
-                      academicYearId={currentYear?.id}
+                      academicYearId={academicYearId}
                       divisionId={
                         readAcademicFilterIds(selectedDivisionId).length === 1
                           ? readAcademicFilterIds(selectedDivisionId)[0]
@@ -977,7 +1000,7 @@ export default function StudentSetupScreen() {
                   : assignmentViewMeta[activeView].title
               }
               noDataText={
-                !currentYear?.id
+                !academicYearId
                   ? 'Select an academic year to view onboarding students.'
                   : activeView === 'readiness'
                     ? hasWorklistFilters
@@ -990,12 +1013,12 @@ export default function StudentSetupScreen() {
                         : 'No students are in onboarding for this academic year.'
               }
               noDataDescription={
-                currentYear?.id && !hasWorklistFilters && activeView === 'readiness'
+                academicYearId && !hasWorklistFilters && activeView === 'readiness'
                   ? 'Students appear here after an admission is accepted.'
                   : undefined
               }
               onClearWorklistFilters={
-                hasWorklistFilters && currentYear?.id ? clearWorklistFilters : undefined
+                hasWorklistFilters && academicYearId ? clearWorklistFilters : undefined
               }
               onOpen={(id) =>
                 navigate(() => {

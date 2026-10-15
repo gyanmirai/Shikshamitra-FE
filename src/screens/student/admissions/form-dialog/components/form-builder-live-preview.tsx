@@ -3,19 +3,13 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useMemo } from 'react';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
-import { Box, Stack } from '@mui/material';
-import CustomSelect from 'src/components/custom-select';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import { FormPreviewContent } from '../../form-preview/form-preview-content';
 import { buildDynamicAdmissionYupSchema } from '../../admission-form-validation';
 import { getAdmissionFormPreviewInitialValues } from '../../form-preview/form-preview-model';
-import {
-  FORM_SIMULATOR_PERSONAS,
-  type FormSimulatorPersona,
-  buildAdmissionFormPersonaValues,
-} from '../form-simulator-personas';
 
 export function getLivePreviewForm(form: CreateUpdateAdmissionForm): AdmissionForm {
   return {
@@ -44,29 +38,9 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
     validationSchema,
     onSubmit: async () => undefined,
   });
-  const [persona, setPersona] = useState<FormSimulatorPersona>('blank');
-  const applyPersona = async (value: string | number | string[] | number[]) => {
-    const nextPersona = String(Array.isArray(value) ? value[0] : value) as FormSimulatorPersona;
-    setPersona(nextPersona);
-    await formik.setValues(buildAdmissionFormPersonaValues(previewForm, nextPersona));
-    formik.setTouched({});
-  };
-
   return (
-    <Box sx={{ height: 1, overflowY: 'auto', p: { xs: 1, sm: 2 } }}>
-      <Stack spacing={1.5} sx={{ mb: 1.5 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-          <Box sx={{ width: { xs: 1, sm: 260 } }}>
-            <CustomSelect
-              label="Test scenario"
-              value={persona}
-              options={FORM_SIMULATOR_PERSONAS.map((item) => ({ ...item }))}
-              onChange={applyPersona}
-            />
-          </Box>
-        </Stack>
-      </Stack>
+    <Scrollbar sx={{ height: 1, minHeight: 0, p: { xs: 1, sm: 2 } }}>
       <FormPreviewContent form={previewForm} formik={formik} resolvedOptions={{}} embedded />
-    </Box>
+    </Scrollbar>
   );
 }

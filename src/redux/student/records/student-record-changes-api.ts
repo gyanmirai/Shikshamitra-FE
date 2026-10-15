@@ -71,6 +71,7 @@ export type CreateRecordChange = {
 const changesTag = [{ type: studentType.student, id: 'RECORDS-CHANGES' }];
 const refreshTags = [
   ...changesTag,
+  { type: studentType.student, id: 'MODULE-DASHBOARD-records' },
   { type: studentType.student, id: 'RECORDS-DIRECTORY' },
   { type: studentType.student, id: 'LIST' },
 ];
@@ -101,6 +102,11 @@ export const studentRecordChangesApi = api.injectEndpoints({
       {
         studentId?: string;
         academicYearId?: string;
+        approvableOnly?: boolean;
+        boardId?: string;
+        mediumId?: string;
+        standardId?: string;
+        divisionId?: string;
         status?: string;
         skipCount?: number;
         maxResultCount?: number;

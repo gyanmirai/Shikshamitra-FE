@@ -21,7 +21,7 @@ export const admissionAssessmentsApi = api.injectEndpoints({
     }),
     bookAssessmentAttempt: builder.mutation<
       ApplicationAssessment,
-      AssessmentStageKey & { sessionId?: string; concurrencyStamp: string }
+      AssessmentStageKey & { sessionId?: string; slotStartsAt?: string; concurrencyStamp: string }
     >({
       query: ({ applicationId, stageInstanceId, ...body }) => ({
         url: `${stageUrl({ applicationId, stageInstanceId })}/attempts`,

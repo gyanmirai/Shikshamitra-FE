@@ -134,6 +134,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     () =>
       feeCollectionData?.items?.map((item: any) => ({
         ...item,
+        id: item.studentId ?? item.financeFeeAccountId ?? item.id,
         name: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
         standardDivision: item.standardDivision || '-',
         rollNumber: item.rollNumber || '-',
@@ -365,21 +366,34 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                         id: 'collect',
                         label: `Collect fee for ${row.name}`,
                         icon: 'mdi:cash-plus',
+                        disabled: !row.studentId,
+                        tooltip: !row.studentId
+                          ? 'Collect applicant fees from Applicant 360 or Onboarding.'
+                          : undefined,
                         onClick: () =>
-                          onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData),
+                          row.studentId && onCollectFee({ ...row, id: row.studentId } as IFeeData),
                       },
                       {
                         id: 'view',
                         label: `View details for ${row.name}`,
                         icon: GlobalIcons.eye,
-                        onClick: () => onView(row as IFeeData),
+                        disabled: !row.studentId,
+                        tooltip: !row.studentId
+                          ? 'Student details become available after admission finalization. Payment receipts are available in Receipts.'
+                          : undefined,
+                        onClick: () => row.studentId && onView(row as IFeeData),
                       },
                       {
                         id: 'adjust',
                         label: `Give fee adjustment for ${row.name}`,
                         icon: 'tdesign:adjustment',
+                        disabled: !row.studentId,
+                        tooltip: !row.studentId
+                          ? 'Fee adjustments require a Student fee assignment.'
+                          : undefined,
                         onClick: () =>
-                          onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData),
+                          row.studentId &&
+                          onGiveAdjustment({ ...row, id: row.studentId } as IFeeData),
                       },
                     ]}
                   />

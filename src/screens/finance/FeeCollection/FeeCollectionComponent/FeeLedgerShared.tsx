@@ -3,6 +3,7 @@
 import type { LabelColor } from 'src/components/label';
 import type { FeeMonth } from 'src/enums/fee-collection-type';
 
+import { useContext } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -10,13 +11,14 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Box, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
-  FeeCollectionStatusTypeColors,
   feeInstallmentStatusLabel,
   chargeCollectionStatusLabel,
+  FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
 import FeeWaiverToggle from './FeeWaiverToggle';
 import { roundUpToRupee } from './preview/paymentAllocationUtils';
+import { FeeCollectionWaiverContext } from './feeCollectionContext';
 
 // ─── Constants & Helpers ───────────────────────────────────────────────────────
 
@@ -177,6 +179,7 @@ export const FeeRow = ({
   onToggle,
 }: FeeRowProps) => {
   const theme = useTheme();
+  const allowWaivers = useContext(FeeCollectionWaiverContext);
   const safeReconciliationAmount = reconciliationAmount ?? 0;
   const safeConcessionAmount = concessionAmount ?? 0;
   const safeLateFeeAmount = lateFeeAmount ?? 0;
@@ -234,7 +237,7 @@ export const FeeRow = ({
             </Typography>
           )}
         </Box>
-        {chargeId && (
+        {allowWaivers && chargeId && (
           <FeeWaiverToggle
             sourceType={waiverSourceType ?? 'Charge'}
             sourceId={chargeId}
@@ -242,7 +245,7 @@ export const FeeRow = ({
             onApplied={onWaiverApplied}
           />
         )}
-        {!chargeId && safeLateFeeAmount > 0 && dueFeeId && (
+        {allowWaivers && !chargeId && safeLateFeeAmount > 0 && dueFeeId && (
           <FeeWaiverToggle
             sourceType="LateFee"
             sourceId={dueFeeId}
