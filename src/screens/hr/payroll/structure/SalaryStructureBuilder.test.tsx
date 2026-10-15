@@ -283,10 +283,8 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(screen.getByRole('radio', { name: 'Opt out of PF' })).not.toBeChecked();
     expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
-    await user.type(
-      screen.getByLabelText('Reason for turning PF off'),
-      'Employee selected opt-out'
-    );
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Employee selected opt-out');
     await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
     expect(mocks.calculate).toHaveBeenCalledWith(
       expect.objectContaining({ monthlyAmount: 25001, pfApplicable: false, pfRuleId: null })
@@ -347,14 +345,65 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(await screen.findByText('Choose whether to opt in or opt out of PF')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
-    await user.type(
-      screen.getByLabelText('Reason for turning PF off'),
-      'Employee selected opt-out'
-    );
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Employee selected opt-out');
     await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
     expect(mocks.calculate).toHaveBeenLastCalledWith(
       expect.objectContaining({ pfApplicable: false, pfRuleId: null })
+    );
+  });
+
+  it('allows voluntary consent when an earlier PF rule never established membership', async () => {
+    const user = userEvent.setup();
+    mocks.revisions = [
+      {
+        id: 'pending-pf-revision',
+        revisionNumber: 1,
+        status: 'EFFECTIVE',
+        effectiveMonth: '2026-10-01T00:00:00.000Z',
+        sourceSalaryTemplateId: 'template-saved',
+        salaryBasis: 'GROSS',
+        quotedMonthlyAmount: 15000,
+        pfRuleId: 'pf-rule',
+        pfEnrollment: { membership: 'NOT_MEMBER' },
+        warnings: ['PF_NUMBER_MISSING'],
+        overrides: [],
+        isCurrent: true,
+      },
+    ];
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 30000,
+        pfEligibility: {
+          grossSalary: 30000,
+          wages: 18000,
+          coverageCeiling: 25000,
+          status: 'VOLUNTARY',
+          enrollmentRequired: false,
+          canSave: false,
+          issueCode: 'PF_CONSENT_REQUIRED',
+        },
+      }),
+    });
+    renderBuilder();
+    const amount = await screen.findByLabelText('Monthly salary');
+    await user.clear(amount);
+    await user.type(amount, '30000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    const consent = await screen.findByLabelText('Employee consent reference');
+    await user.type(consent, 'Approved voluntary enrollment');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        pfEnrollment: {
+          membership: 'NOT_MEMBER',
+          consentReference: 'Approved voluntary enrollment',
+        },
+      })
     );
   });
 

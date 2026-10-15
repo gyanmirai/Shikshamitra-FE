@@ -187,12 +187,7 @@ export function SalaryStructureBuilder({
   const pfNotApplicable = calculation?.pfEligibility?.status === 'NOT_APPLICABLE';
   const continuingPfMember =
     pfEnrollment.membership === 'EXISTING_MEMBER' ||
-    revisionData?.items.some(
-      (revision) =>
-        revision.pfRuleId &&
-        revision.status !== 'LEGACY_NON_EFFECTIVE' &&
-        revision.effectiveMonth.slice(0, 7) <= effectiveMonth
-    );
+    calculation?.pfEligibility?.status === 'CONTINUING_MEMBER';
   const pfRequired =
     !pfNotApplicable &&
     (continuingPfMember ||
