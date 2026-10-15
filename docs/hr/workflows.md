@@ -433,7 +433,7 @@ Authorized HR can turn PF off with a reason while preserving eligibility evidenc
 New voluntary enrollment has no preselected choice, and calculation or saving waits for that choice.
 Opting in reveals the PF rule and voluntary consent reference; opting out excludes the PF rule from the request.
 CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
-Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
