@@ -17,7 +17,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import FileUploader1 from 'src/components/custom-upload/custom-upload';
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -117,9 +117,6 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
             ContactNumber: formValues.contactNumber,
             PostalCode: formValues.zipPostalCode,
             InstituteName: formValues.instituteName,
-            Logo: formValues.instituteLogo,
-            Banner: formValues.instituteBanner,
-            PrincipleSign: formValues.principleSign,
           },
         };
 
@@ -385,39 +382,9 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
           <Grid size={{ xs: 12, md: 4 }}>
             <Stack spacing={3}>
               <Card sx={{ p: 3, boxShadow: theme.customShadows.z4 }}>
-                {renderSectionHeader('Brand Identity', 'solar:gallery-wide-bold', 'Upload visuals')}
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Institute Logo *
-                    </Typography>
-                    <BasicInformationAssets
-                      formik={formik}
-                      name="instituteLogo"
-                      title="Drop logo here"
-                    />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Institute Banner *
-                    </Typography>
-                    <BasicInformationAssets
-                      formik={formik}
-                      name="instituteBanner"
-                      title="Drop banner here"
-                    />
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Principal&apos;s Signature *
-                    </Typography>
-                    <BasicInformationAssets
-                      formik={formik}
-                      name="principleSign"
-                      title="Drop signature here"
-                    />
-                  </Box>
-                </Stack>
+                {renderSectionHeader('School Identity', 'solar:gallery-wide-bold', 'School logos and signatures')}
+                <Typography variant="body2" sx={{ mb: 2 }}>Manage the school logo, banner and principal’s signature in School Identity after institute setup.</Typography>
+                <Button component="a" href={instituteSetupPaths.schoolIdentity}>Open School Identity</Button>
               </Card>
             </Stack>
           </Grid>
@@ -658,37 +625,6 @@ const BasicInformation = () => {
 };
 export default BasicInformation;
 
-/**
- * Component for handling basic information assets with image upload and preview functionality
- * @param {Object} formik - Formik instance for form handling
- * @param {string} name - Field name for the form values
- * @param {string} title - Title to display above the upload section
- */
-const BasicInformationAssets = ({ formik, name, title }: any) => (
-  <Card sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }} key={name}>
-    <FileUploader1
-      multiple
-      previewCount={3}
-      onChange={(files) => formik.setFieldValue(name, files)}
-      value={formik.values[name]}
-      error={formik.touched[name] && formik.errors[name]}
-      helperText={formik.touched[name] && formik.errors[name]}
-      label={title}
-      outputFormat="base64"
-    />
-    {/* <FileUploader1
-        onChange={handleChange}
-        multiple
-        parentsProps={{ sx: { width: '100%' } }}
-        showVisibleDocumentCount={2}
-        value={formik.values[name]}
-        primaryText={title}
-        secondaryText="maximum upload size (5mb)"
-        error={formik.touched[name] && formik.errors[name]}
-        key={name}
-      /> */}
-  </Card>
-);
 
 // ImageSlider component displays a modal dialog with image carousel functionality
 const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {

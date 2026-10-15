@@ -4,6 +4,9 @@ import { api } from '../service';
 
 export const boardApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getBoardOptions: builder.query<{ value: number; label: string }[], void>({
+      query: () => ({ url: '/app/education-board/options' }),
+    }),
     getBoards: builder.query({
       query: () => ({ url: '/app/education-board', redirect: 'follow' }),
       providesTags: [boardType.board],
@@ -39,6 +42,7 @@ export const boardApi = api.injectEndpoints({
 });
 
 export const {
+  useGetBoardOptionsQuery,
   useAddBoardMutation,
   useDeleteBoardMutation,
   useGetBoardByIdQuery,

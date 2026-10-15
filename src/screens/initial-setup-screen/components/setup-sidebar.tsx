@@ -32,6 +32,7 @@ export default function SetupSidebar({
         width: 256,
         flexShrink: 0,
         p: 3,
+        overflowY: 'auto',
         bgcolor: 'background.neutral',
         borderRight: 1,
         borderColor: 'divider',
@@ -65,20 +66,6 @@ export default function SetupSidebar({
         useFlexGap
         sx={{ position: 'relative' }}
       >
-        <Box
-          aria-hidden
-          className={styles.activeStep}
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 48,
-            borderRadius: 1.5,
-            bgcolor: 'primary.lighter',
-            transform: `translateY(${step * 56}px)`,
-          }}
-        />
         {setupSteps.map((item, index) => (
           <ButtonBase
             key={item.title}
@@ -96,8 +83,7 @@ export default function SetupSidebar({
               minHeight: 48,
               borderRadius: 1.5,
               color: step === index ? 'primary.dark' : 'text.secondary',
-              bgcolor: 'transparent',
-              opacity: index > furthest ? 0.5 : 1,
+              bgcolor: step === index ? 'primary.lighter' : 'transparent',
               '&.Mui-focusVisible': {
                 outline: '2px solid',
                 outlineColor: 'primary.main',
@@ -115,12 +101,14 @@ export default function SetupSidebar({
                 display: 'grid',
                 placeItems: 'center',
                 borderRadius: '50%',
+                border: 1,
+                borderColor: index < furthest || step === index ? 'transparent' : 'text.secondary',
                 bgcolor:
                   index < furthest
                     ? 'success.dark'
                     : step === index
                       ? 'primary.dark'
-                      : 'action.disabledBackground',
+                      : 'background.paper',
                 color: index < furthest || step === index ? 'common.white' : 'text.secondary',
               }}
             >

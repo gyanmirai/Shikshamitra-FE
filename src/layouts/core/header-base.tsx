@@ -6,7 +6,7 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { useSelector } from 'react-redux';
-import { Logo } from 'src/components/logo';
+import { SchoolBrandingLogo } from '../components/school-branding-logo';
 import { useSession } from 'next-auth/react';
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
@@ -153,7 +153,7 @@ export function HeaderBase({
             )}
 
             {/* -- Logo -- */}
-            <Logo data-slot="logo" />
+            <SchoolBrandingLogo enabled={!isHost && Boolean(user?.profile?.tenantid)} />
 
             {/* -- Divider -- */}
             <StyledDivider data-slot="divider" />

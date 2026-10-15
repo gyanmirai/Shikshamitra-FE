@@ -3,7 +3,7 @@ import type { SetupDraft, SetupAction, InitialSetup } from 'src/redux/initial-se
 import { useRef, useState, useCallback } from 'react';
 import { useSaveInitialSetupMutation } from 'src/redux/initial-setup/initial-setup-api';
 
-import { setupError } from '../services/setup-error';
+import { setupError, isSetupConflict } from '../services/setup-error';
 
 export function useSetupPersistence(initial: InitialSetup) {
   const [progress, setProgress] = useState(initial);
@@ -34,15 +34,10 @@ export function useSetupPersistence(initial: InitialSetup) {
           setConflict(false);
           return response;
         } catch (failure) {
-          setError(setupError(failure));
-          setConflict(
-            Boolean(
-              failure &&
-              typeof failure === 'object' &&
-              'status' in failure &&
-              failure.status === 409
-            )
-          );
+          if (action !== 'users' || isSetupConflict(failure)) {
+            setError(setupError(failure));
+            setConflict(isSetupConflict(failure));
+          }
           throw failure;
         } finally {
           setSaving(false);

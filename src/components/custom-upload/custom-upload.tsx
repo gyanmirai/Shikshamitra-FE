@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import { BannerUpload } from './banner-upload';
 
 export interface FileWithPreview extends File {
   preview?: string;
@@ -24,7 +25,10 @@ export interface FileWithPreview extends File {
 
 type OutputFormat = 'url' | 'base64' | 'file';
 
-interface CustomUploadProps {
+export interface CustomUploadProps {
+  variant?: 'default' | 'banner';
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
   multiple?: boolean;
   previewCount?: number;
   value?: (FileWithPreview | string)[];
@@ -42,7 +46,7 @@ function isImageUrl(url: string) {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
 }
 
-const CustomUpload: React.FC<CustomUploadProps> = ({
+const DefaultUpload: React.FC<CustomUploadProps> = ({
   multiple = false,
   previewCount = 3,
   value = [],
@@ -423,5 +427,8 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     </Box>
   );
 };
+
+const CustomUpload = ({ variant, ...props }: CustomUploadProps) =>
+  variant === 'banner' ? <BannerUpload {...props} /> : <DefaultUpload {...props} />;
 
 export default CustomUpload;

@@ -17,24 +17,21 @@ export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> 
       <LoginField
         name="organization"
         label="School code"
-        placeholder="Enter school code"
-        icon="mdi:school-outline"
+        placeholder="Enter your school code"
         autoComplete="organization"
         formik={formik}
       />
       <LoginField
         name="email"
-        label="Email / Username"
-        placeholder="Enter email or username"
-        icon="mdi:account-outline"
+        label="Email or username"
+        placeholder="Enter your email or username"
         autoComplete="username"
         formik={formik}
       />
       <LoginField
         name="password"
         label="Password"
-        placeholder="Enter password"
-        icon="mdi:lock-outline"
+        placeholder="Enter your password"
         autoComplete="current-password"
         formik={formik}
         type={showPassword ? 'text' : 'password'}

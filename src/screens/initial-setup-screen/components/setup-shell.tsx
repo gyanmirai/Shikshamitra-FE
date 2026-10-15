@@ -47,33 +47,33 @@ export default function SetupShell({
         pendingSteps={pendingSteps}
       />
       <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
+        <Box
           component="header"
           sx={{
-            px: { xs: 2, sm: 3 },
-            minHeight: 56,
             flexShrink: 0,
             borderBottom: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Box sx={{ display: { md: 'none' } }}>
-              <Logo disableLink width={32} height={32} />
-            </Box>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Box sx={{ display: { md: 'none' } }}>
+                <Logo disableLink width={32} height={32} />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Initial setup
+              </Typography>
+            </Stack>
             <Typography variant="body2" color="text.secondary">
-              Initial setup
+              Step {step + 1} of {setupSteps.length}
             </Typography>
           </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Step {step + 1} of {setupSteps.length}
-          </Typography>
-        </Stack>
-        <Box sx={{ flexShrink: 0 }}>
           <LinearProgress
             variant="determinate"
             value={((step + 1) / setupSteps.length) * 100}
@@ -111,8 +111,8 @@ export default function SetupShell({
             borderColor: 'divider',
             bgcolor: 'background.paper',
             px: { xs: 2, sm: 3 },
-            py: 1.5,
-            pb: 'max(12px, env(safe-area-inset-bottom))',
+            py: 2,
+            pb: 'max(16px, env(safe-area-inset-bottom))',
           }}
         >
           {footer}

@@ -17,12 +17,18 @@ export function FormSectionCard({
   titleTypographyProps,
   description,
   descriptionTooltip,
+  descriptionTooltipLabel,
   action,
   actionFullWidthOnMobile,
   children,
 }: FormSectionCardProps) {
   return (
-    <Card component="section" variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+    <Card
+      component="section"
+      aria-labelledby={titleTypographyProps?.id}
+      variant="outlined"
+      sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}
+    >
       <Stack spacing={2}>
         <FormSectionHeader
           icon={icon}
@@ -31,6 +37,7 @@ export function FormSectionCard({
           titleTypographyProps={titleTypographyProps}
           description={description}
           descriptionTooltip={descriptionTooltip}
+          descriptionTooltipLabel={descriptionTooltipLabel}
           action={action}
           actionFullWidthOnMobile={actionFullWidthOnMobile}
         />

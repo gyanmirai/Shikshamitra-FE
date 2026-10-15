@@ -174,6 +174,18 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, error?.message);
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
+  const businessData = data?.data ?? data?.error?.data;
+  const duplicateStandardName = businessData?.name;
+  const isLegacyStandardDuplicate =
+    errorCode === 'ShikshaMitra.TenantSettings:00001' &&
+    typeof businessData?.entityName === 'string' &&
+    businessData.entityName.toLowerCase() === 'standard';
+  const duplicateStandardMessage =
+    errorCode === 'ShikshaMitra.TenantSettings:DuplicateStandardName' || isLegacyStandardDuplicate
+      ? typeof duplicateStandardName === 'string' && duplicateStandardName.trim()
+        ? `A standard named '${duplicateStandardName.trim()}' already exists in this academic stage.`
+        : 'A standard with this name already exists in this academic stage.'
+      : undefined;
   const knownMessage =
     typeof errorCode === 'string'
       ? KNOWN_ERROR_MESSAGES[errorCode] ||
@@ -182,7 +194,12 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
       : undefined;
   const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
 
-  const detail = knownMessage || specificCandidate || candidates[0] || 'Something went wrong';
+  const detail =
+    duplicateStandardMessage ||
+    knownMessage ||
+    specificCandidate ||
+    candidates[0] ||
+    'Something went wrong';
 
   return {
     detail: String(detail),

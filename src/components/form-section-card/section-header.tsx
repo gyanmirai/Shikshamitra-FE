@@ -12,6 +12,7 @@ export interface FormSectionHeaderProps {
   titleTypographyProps?: Partial<TypographyProps>;
   description?: string;
   descriptionTooltip?: string;
+  descriptionTooltipLabel?: string;
   action?: ReactNode;
   actionFullWidthOnMobile?: boolean;
 }
@@ -23,6 +24,7 @@ export function FormSectionHeader({
   titleTypographyProps,
   description,
   descriptionTooltip,
+  descriptionTooltipLabel,
   action,
   actionFullWidthOnMobile = false,
 }: FormSectionHeaderProps) {
@@ -51,7 +53,8 @@ export function FormSectionHeader({
             <CustomTooltip title={descriptionTooltip} arrow placement="right">
               <IconButton
                 aria-label={
-                  typeof title === 'string' ? `${title} information` : 'Section information'
+                  descriptionTooltipLabel ??
+                  (typeof title === 'string' ? `${title} information` : 'Section information')
                 }
                 size="small"
                 color="info"
