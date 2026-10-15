@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: How-to
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -26,6 +26,16 @@ Collapsing groups only changes presentation.
 The user approved the themed permission matrix on October 9, replacing the earlier three-panel switch layout.
 The screen uses the existing theme and shared table, dialog, scroll, and confirmation components.
 Prominent bulk grant/revoke controls are omitted; each action applies the existing grouped mapping.
+
+## Delete a role
+
+Role Management opens the shared `ConfirmDialog` through `role-delete-dialog.tsx`.
+The Delete action names the selected role and warns that deletion cannot be undone.
+While the request is pending, submission, Cancel, Escape and backdrop dismissal are locked.
+A failed deletion keeps the selected role and dialog open, displays the server's recovery message inline and uses the shared error toast.
+Cancel and retry become available after the request completes. Success closes the dialog, shows the success toast and invalidates the role list through the existing RTK Query tag.
+
+See the [backend role deletion contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/multi-tenancy/roles.md#delete-an-unused-role) for dependencies, counts, permissions and tenant rules.
 
 ## Role defaults and user overrides
 

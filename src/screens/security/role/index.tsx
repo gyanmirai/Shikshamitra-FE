@@ -15,7 +15,6 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -30,7 +29,6 @@ import {
 import {
   useGetRolesQuery,
   useAddRoleMutation,
-  useDeleteRoleMutation,
   useUpdateRoleMutation,
 } from 'src/redux/role/roleApi';
 import {
@@ -46,6 +44,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import RoleDeleteDialog from './role-delete-dialog';
 import PermissionAccessForm from './permission-access-form';
 import {
   getEmployeeOnboardingAssignable,
@@ -82,8 +81,6 @@ const getEmployeeGroupAudience = (role: any): EmployeeGroupAudienceValue =>
 const RoleScreen = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canManagePermissions = hasGrantedPermission(permissions, 'AbpIdentity.Roles.ManagePermissions');
-  // State for managing confirmation dialog
-  const confirm = useBoolean();
 
   const permissionDialog = useBoolean();
   const [permissionBusy, setPermissionBusy] = useState(false);
@@ -103,16 +100,6 @@ const RoleScreen = () => {
     currentQueryAndMutation: useGetRolesQuery,
     options: {
       refetchOnMountOrArgChange: true,
-    },
-  });
-
-  // Mutation hook for deleting a role
-  const [deleteRole, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteRoleMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Role deleted successfully',
     },
   });
 
@@ -145,35 +132,9 @@ const RoleScreen = () => {
         }
       />
 
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-          setDeleteInformation(null);
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete role <strong>{deleteInformation?.name}</strong>?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            color="error"
-            loading={isDeleteLoading}
-            onClick={async () => {
-              if (deleteInformation?.id) {
-                await deleteRole(deleteInformation.id);
-              }
-              confirm.onFalse();
-              setDeleteInformation(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
+      {deleteInformation && (
+        <RoleDeleteDialog role={deleteInformation} onClose={() => setDeleteInformation(null)} />
+      )}
       <CustomizableTable
         noDataText={
           <>
@@ -231,7 +192,6 @@ const RoleScreen = () => {
                 showEditIcon
                 handleDeleteClick={() => {
                   setDeleteInformation(data);
-                  confirm.onTrue();
                 }}
                 placement="left-center"
                 handleEditClick={() => {

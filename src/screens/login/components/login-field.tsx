@@ -5,19 +5,23 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import type { LoginValues } from '../hooks/use-login-form';
-
-type Props = {
-  name: keyof LoginValues;
+type Props<T extends Record<string, string>> = {
+  name: Extract<keyof T, string>;
   label: string;
   placeholder: string;
-  formik: FormikProps<LoginValues>;
+  formik: FormikProps<T>;
   type?: string;
   autoComplete: string;
   endAdornment?: ReactNode;
 };
 
-export function LoginField({ name, label, formik, endAdornment, ...props }: Props) {
+export function LoginField<T extends Record<string, string>>({
+  name,
+  label,
+  formik,
+  endAdornment,
+  ...props
+}: Props<T>) {
   const error = formik.touched[name] ? formik.errors[name] : undefined;
 
   return (
@@ -40,7 +44,7 @@ export function LoginField({ name, label, formik, endAdornment, ...props }: Prop
         onBlur={formik.handleBlur}
         disabled={formik.isSubmitting}
         error={Boolean(error)}
-        helperText={error}
+        helperText={typeof error === 'string' ? error : undefined}
         slotProps={{
           input: {
             endAdornment,
