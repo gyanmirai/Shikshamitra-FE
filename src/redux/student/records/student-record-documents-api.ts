@@ -1,10 +1,11 @@
 import { api } from 'src/redux/service';
+import type { IdentityChoices, IdentitySelection } from 'src/screens/setting/school-identity/types';
 import { studentType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
 
 export type CertificateType = 1 | 2 | 3 | 4;
-export type CertificateTemplate = { id?: string | null; certificateType: CertificateType; headerContent: string; footerContent: string; logoUrl?: string | null; schoolAddress?: string | null; principalSignatureUrl?: string | null; schoolStampUrl?: string | null; isActive: boolean };
+export type CertificateTemplate = { identityChoices?: Partial<IdentityChoices> | null; id?: string | null; certificateType: CertificateType; headerContent: string; footerContent: string; logoUrl?: string | null; schoolAddress?: string | null; principalSignatureUrl?: string | null; schoolStampUrl?: string | null; isActive: boolean };
 export type CertificatePreviewInput = { studentId: string; certificateType: CertificateType; transitionId?: string; issueDate?: string; certificateFields: Record<string, string> };
 export type CertificateResponse = { certificateId?: string | null; certificateNo: string; certificateType: string; issueDate: string; status: string; transitionId?: string | null; student: { studentId: string; studentName: string; grNo?: string | null; className?: string | null; divisionName?: string | null }; organization?: { organizationName: string; address?: string | null }; template: { headerContent?: string; footerContent?: string; renderedHeaderContent: string; renderedFooterContent: string; document?: { title: string; body: string; particulars: { label: string; value: string }[] } | null }; certificateData: Record<string, string | null> };
 export type CertificateHistory = { certificateId: string; certificateNumber: string; certificateType: string; issueDate: string; status: string; createdDate: string; transitionId?: string | null; sourceCertificateId?: string | null; supportedActions: string[] };
@@ -12,7 +13,7 @@ export type CertificateBatch = { id: string; certificateType: string; generatedA
 export type CertificateBatchDetail = { id: string; certificates: CertificateResponse[] };
 export type CertificateBatchQuery = { certificateType: CertificateType; generatedFrom: string; generatedTo: string; skipCount: number; maxResultCount: number };
 export type IdCardSelection = { academicYearId?: string | null; boardIds: string[]; mediumIds: string[]; standardIds: string[]; divisionIds: string[]; studentIds: string[] };
-export type IdCardTemplate = { id?: string | null; name: string; presetKey: string; orientation: 'Horizontal' | 'Vertical'; schoolName: string; schoolAddress: string; headerText: string; footerText: string; primaryColor: string; backgroundColor: string; cardsPerPage: number; showQrCode: boolean; showPhoto: boolean; fields: string[]; selection?: IdCardSelection; concurrencyStamp?: string | null };
+export type IdCardTemplate = { logo?: IdentitySelection; id?: string | null; name: string; presetKey: string; orientation: 'Horizontal' | 'Vertical'; schoolName: string; schoolAddress: string; headerText: string; footerText: string; primaryColor: string; backgroundColor: string; cardsPerPage: number; showQrCode: boolean; showPhoto: boolean; fields: string[]; selection?: IdCardSelection; concurrencyStamp?: string | null };
 export type IdCard = { id?: string | null; studentId: string; cardNumber: string; status: string; issuedAt?: string | null; issuedByUserId?: string | null; hasPhoto: boolean; studentSnapshot: Record<string, string | null>; templateSnapshot: IdCardTemplate };
 export type GuardianLink = { linkId: string; userId: string; relationship: string; email: string; emailConfirmed: boolean; isActive: boolean };
 export type GuardianReview = { id: string; studentId: string; changeRequestId: string; status: string; concurrencyStamp: string; onApprovedChangeMode: 'SuspendUntilReview' | 'KeepUntilReview'; previousLinks: GuardianLink[]; creationTime: string; reviewedByUserId?: string | null; reviewedAt?: string | null };

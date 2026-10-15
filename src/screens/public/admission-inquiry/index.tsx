@@ -61,6 +61,8 @@ type PublicOffering = {
   unavailableReason?: string | null;
 };
 type PublicContext = {
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
   offerings: PublicOffering[];
   academicOptions?: Omit<PublicOffering, 'id' | 'name' | 'code'>[];
   admissionCycleName: string;
@@ -187,6 +189,10 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
     <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', px: 2, py: { xs: 3, sm: 6 } }}>
       <Card variant="outlined" sx={{ maxWidth: 640, mx: 'auto', p: { xs: 2, sm: 4 } }}>
         <Stack spacing={2}>
+          {context?.bannerUrl && <Box component="img" src={`${process.env.NEXT_PUBLIC_API_URL}${context.bannerUrl}`}
+            alt="School banner" sx={{ width: 1, maxHeight: 160, objectFit: 'contain' }} />}
+          {context?.logoUrl && !context.bannerUrl && <Box component="img" src={`${process.env.NEXT_PUBLIC_API_URL}${context.logoUrl}`}
+            alt="School logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />}
           <Box>
             <Typography variant="h4" component="h1">
               Admission inquiry

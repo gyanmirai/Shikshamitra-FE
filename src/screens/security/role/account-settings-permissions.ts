@@ -100,6 +100,12 @@ export const getNodeActionPermissionNamesForAction = (
   const configuredNames = getConfiguredPermissionNames(name, permissions);
   const permissionBase = getActionPermissionBase(name);
 
+  if (permissionBase === 'InstituteSetup.SchoolIdentity') {
+    const actions = action === 'View' ? ['View']
+      : action === 'Add' ? ['ManageDefaults', 'ManageOverrides', 'AccessSignature'] : [];
+    return configuredNames.filter((permissionName) => actions.some((item) => permissionName === `${permissionBase}.${item}`));
+  }
+
   if (isStatutorySchemePermission(permissionBase)) {
     if (!['View', 'Edit', 'Delete'].includes(action)) return [];
     const actions = action === 'Edit' ? STATUTORY_SCHEME_EDIT_ACTIONS : [action];
@@ -169,6 +175,7 @@ export const getNodePermissionActions = (
   name: NodePermissionName,
   permissions: PermissionGrant[]
 ): PermissionType[] => {
+  if (getActionPermissionBase(name) === 'InstituteSetup.SchoolIdentity') return PERMISSIONS;
   if (isStatutorySchemePermission(getActionPermissionBase(name))) return ['View', 'Edit', 'Delete'];
   if (isStudentPermission(name)) return PERMISSIONS;
 

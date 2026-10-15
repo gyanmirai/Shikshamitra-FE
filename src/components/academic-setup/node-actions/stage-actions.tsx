@@ -4,16 +4,16 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useDeleteOrganizationMutation } from 'src/redux/oraganization/oraganization';
-
-import type { AcademicSetupParents } from '../academic-setup-model';
 
 import { ClassForm } from '../class-setup';
 import { OrganizationForm } from '../organization-setup';
 import { AcademicActionButtons } from './academic-action-buttons';
+
+import type { AcademicSetupParents } from '../academic-setup-model';
 
 export const StageActions = ({
   stage,
@@ -45,7 +45,12 @@ export const StageActions = ({
         handleClose={addDialog.onFalse}
         open={addDialog.value}
       >
-        <ClassForm handleClose={addDialog.onFalse} editData={null} organizationId={stage.id} />
+        <ClassForm
+          handleClose={addDialog.onFalse}
+          editData={null}
+          organizationId={stage.id}
+          existingStandards={stage.standards}
+        />
       </CustomDialog>
       <CustomDialog
         title={`Edit stage ${stage.name}`}

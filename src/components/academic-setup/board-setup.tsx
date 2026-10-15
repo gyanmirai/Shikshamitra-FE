@@ -2,51 +2,39 @@
 
 import type { Board } from 'src/types/school';
 
-import dayjs from 'dayjs';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
-import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { BoardEnum, BoardList } from 'src/enums/board';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   useGetBoardsQuery,
-  useAddBoardMutation,
   useDeleteBoardMutation,
-  useUpdateBoardMutation,
 } from 'src/redux/board/boardApi';
 import {
   Tab,
   Box,
   Tabs,
-  Grid,
-  Stack,
-  Alert,
   Button,
   MenuList,
   MenuItem,
-  Typography,
-  DialogActions,
   CircularProgress,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import MediumSetup from './medium-setup';
-import CustomSelect from '../custom-select';
+import { BoardForm } from './board-form';
+import CustomDialog from '../customDialog';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
-import { parseAcademicYearDateForPicker } from './academic-year-date-utils';
 
 import type { EducationMedium } from './medium-setup';
 
+export { BoardForm } from './board-form';
+
 export interface EducationBoard {
+  type: number;
   name: string;
   educationalMediums: EducationMedium[];
   educationBoardStages: any[];
@@ -171,12 +159,13 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
         handleClose={onCloseDialog}
         open={modal.value}
       >
-        <BoardForm
+        {modal.value && <BoardForm
           handleClose={onCloseDialog}
           handleSetTeb={handleSetTeb}
           academicYearId={academicYearId}
           editData={editData}
-        />
+          boards={currentTabs as unknown as Board[]}
+        />}
       </CustomDialog>
       <Box
         display="flex"
@@ -239,295 +228,3 @@ const BoardSetup = ({ academicYearId }: BoardSetupProps) => {
 };
 
 export default BoardSetup;
-
-interface IBoardForm {
-  handleClose: () => void;
-  handleSetTeb?: (value: Record<string, any>) => void;
-  editData: null | Record<string, any>;
-  academicYearId: string | number;
-  boards?: Board[];
-  /** The parent Academic Year's own date range — board dates must fall within it. */
-  academicYear?: { startDate?: string; endDate?: string; name?: string } | null;
-}
-export const BoardForm = ({
-  handleClose,
-  handleSetTeb,
-  editData,
-  academicYearId,
-  boards,
-  academicYear,
-}: IBoardForm) => {
-  const confirm = useBoolean();
-  const [addBoard, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddBoardMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Board added Successfully',
-    },
-  });
-  const [updateBoard, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateBoardMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Board updated Successfully',
-    },
-  });
-
-  // Exclude the board being edited from the "already used" count — otherwise
-  // editing e.g. GSEB (when CBSE also exists) sees 2 sibling boards and the
-  // dropdown ends up with zero options, hiding the current selection.
-  const otherBoards = boards?.filter((board: any) => board.id !== editData?.id);
-
-  const boardOptions =
-    otherBoards?.length === 2
-      ? []
-      : otherBoards?.length === 0
-        ? BoardList
-        : otherBoards?.find((board: any) => board.type === BoardEnum.CBSE)
-          ? [
-              {
-                value: BoardEnum.GSEB,
-                label: 'GSEB',
-              },
-            ]
-          : [
-              {
-                value: BoardEnum.CBSE,
-                label: 'CBSE',
-              },
-            ];
-
-  const yearStart = academicYear?.startDate
-    ? parseAcademicYearDateForPicker(academicYear.startDate)
-    : null;
-  const yearEnd = academicYear?.endDate
-    ? parseAcademicYearDateForPicker(academicYear.endDate)
-    : null;
-
-  const formik = useFormik({
-    initialValues: {
-      board: editData ? (editData.type?.toString() ?? '') : '',
-      startDate: editData?.startDate ? dayjs(editData.startDate) : (null as dayjs.Dayjs | null),
-      endDate: editData?.endDate ? dayjs(editData.endDate) : (null as dayjs.Dayjs | null),
-    },
-    validationSchema: Yup.object().shape({
-      board: Yup.string().required('Board is required.'),
-      startDate: Yup.date()
-        .nullable()
-        .required('Start Date is required.')
-        .typeError('Start Date is required.')
-        .test(
-          'board-start-within-year',
-          yearStart && yearEnd
-            ? `Start Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
-            : 'Start Date must be within the academic year.',
-          (value) => {
-            if (!value || !yearStart || !yearEnd) return true;
-            const d = dayjs(value);
-            return (
-              (d.isAfter(yearStart, 'day') || d.isSame(yearStart, 'day')) &&
-              (d.isBefore(yearEnd, 'day') || d.isSame(yearEnd, 'day'))
-            );
-          }
-        ),
-      endDate: Yup.date()
-        .nullable()
-        .required('End Date is required.')
-        .typeError('End Date is required.')
-        .min(Yup.ref('startDate'), 'End Date must be on or after Start Date.')
-        .test(
-          'board-end-within-year',
-          yearStart && yearEnd
-            ? `End Date must be within the academic year (${yearStart.format('DD MMM YYYY')} – ${yearEnd.format('DD MMM YYYY')}).`
-            : 'End Date must be within the academic year.',
-          (value) => {
-            if (!value || !yearStart || !yearEnd) return true;
-            const d = dayjs(value);
-            return (
-              (d.isAfter(yearStart, 'day') || d.isSame(yearStart, 'day')) &&
-              (d.isBefore(yearEnd, 'day') || d.isSame(yearEnd, 'day'))
-            );
-          }
-        ),
-    }),
-    validateOnMount: false,
-    onSubmit: async (values) => {
-      confirm.onTrue();
-    },
-  });
-  const handleSubmitClick = (e: any) => {
-    formik.setTouched({ board: true, startDate: true, endDate: true });
-    formik.handleSubmit(e);
-  };
-  const onSubmit = async () => {
-    try {
-      if (editData) {
-        await updateBoard({
-          id: editData.id,
-          body: {
-            type: +formik.values.board,
-            academicYearId,
-            startDate: dateConvertor(formik.values.startDate?.format(dateFormat) || '') || '',
-            endDate: dateConvertor(formik.values.endDate?.format(dateFormat) || '') || '',
-          },
-        }).unwrap();
-      } else {
-        await addBoard({
-          type: +formik.values.board,
-          academicYearId,
-          startDate: dateConvertor(formik.values.startDate?.format(dateFormat) || '') || '',
-          endDate: dateConvertor(formik.values.endDate?.format(dateFormat) || '') || '',
-        }).unwrap();
-      }
-      handleClose();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-    <>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-        }}
-        title={`${editData ? 'Update' : 'Create'}`}
-        content={`Are you sure want to ${editData ? 'Update' : 'Create'} Education Board ?`}
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            // color="error"
-            onClick={onSubmit}
-          >
-            Confirm
-          </LoadingButton>
-        }
-      />
-
-      <DialogScrollContent>
-        <Stack spacing={2.5}>
-          {(yearStart || yearEnd) && (
-            <Alert
-              severity="info"
-              variant="outlined"
-              icon={<Iconify icon="solar:calendar-bold-duotone" width={18} />}
-              sx={{ borderRadius: 1.5, '& .MuiAlert-message': { width: '100%' } }}
-            >
-              <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                Academic Year:{' '}
-                {academicYear?.name || `${yearStart?.format('YYYY')}-${yearEnd?.format('YYYY')}`}
-              </Typography>
-              {yearStart && yearEnd && (
-                <Typography variant="caption" sx={{ display: 'block', mt: 0.25 }}>
-                  Allowed date range:{' '}
-                  <b>
-                    {yearStart.format('DD MMM YYYY')} – {yearEnd.format('DD MMM YYYY')}
-                  </b>
-                  . Board start and end dates must fall within this range.
-                </Typography>
-              )}
-            </Alert>
-          )}
-
-          <CustomSelect
-            fullWidth
-            id="board"
-            name="board"
-            autoFocus
-            label="Board Name *"
-            value={formik.values.board}
-            onChange={(val) => formik.setFieldValue('board', val)}
-            error={formik.touched.board && Boolean(formik.errors.board)}
-            helperText={((formik.touched.board && formik.errors.board) || '') as string}
-            size="small"
-            options={boardOptions}
-            formControlProps={{
-              fullWidth: true,
-              sx: {
-                maxWidth: 'unset',
-              },
-            }}
-          />
-
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DatePicker
-                label="Start Date *"
-                value={formik.values.startDate}
-                views={['year', 'month', 'day']}
-                minDate={yearStart ?? undefined}
-                maxDate={yearEnd ?? undefined}
-                format="DD-MMM-YYYY"
-                onChange={(newValue) => {
-                  formik.setFieldValue('startDate', newValue);
-                  // Revalidate end date when start date changes
-                  if (formik.values.endDate) {
-                    formik.setFieldTouched('endDate', true, false);
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    helperText: formik.touched.startDate && (formik.errors.startDate as string),
-                    error: formik.touched.startDate && Boolean(formik.errors.startDate),
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DatePicker
-                label="End Date *"
-                value={formik.values.endDate}
-                views={['year', 'month', 'day']}
-                format="DD-MMM-YYYY"
-                minDate={
-                  formik.values.startDate
-                    ? dayjs(formik.values.startDate)
-                    : (yearStart ?? undefined)
-                }
-                maxDate={yearEnd ?? undefined}
-                onChange={(newValue) => {
-                  formik.setFieldValue('endDate', newValue);
-                }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    helperText: formik.touched.endDate && (formik.errors.endDate as string),
-                    error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                  },
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleClose}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          variant="contained"
-          size="small"
-          type="submit"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={handleSubmitClick}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};

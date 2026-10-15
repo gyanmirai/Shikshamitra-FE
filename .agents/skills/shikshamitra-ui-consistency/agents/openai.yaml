@@ -1,0 +1,4 @@
+interface:
+  display_name: "ShikshaMitra UI Consistency"
+  short_description: "Build consistent UI with rules and reference images"
+  default_prompt: "Use $shikshamitra-ui-consistency to build or review this frontend surface using the shared components and applicable reference images."

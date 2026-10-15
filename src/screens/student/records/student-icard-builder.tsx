@@ -1,5 +1,7 @@
 'use client';
 
+import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
+
 import type { IdCard, IdCardTemplate } from 'src/redux/student/records/student-record-documents-api';
 import type { StudentDirectoryItem, StudentDirectoryOption } from 'src/redux/student/records/student-records-types';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -73,6 +75,7 @@ const studentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || 'Restricted identity';
 
 export default function StudentICardBuilder({ onClose, initialTemplate }: { onClose: () => void; initialTemplate?: IdCardTemplate | null }) {
+  const [identityUploading, setIdentityUploading] = useState(false);
   const templateQuery = useGetRecordIdTemplateQuery(undefined, { skip: initialTemplate !== undefined });
   const optionsQuery = useGetStudentRecordsDirectoryOptionsQuery({});
   const [saveTemplate, saveState] = useSaveRecordIdTemplateMutation();
@@ -92,7 +95,7 @@ export default function StudentICardBuilder({ onClose, initialTemplate }: { onCl
   const [error, setError] = useState('');
   const [templateNameTouched, setTemplateNameTouched] = useState(false);
   const issueKey = useRef('');
-  const busy = saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
+  const busy = identityUploading || saveState.isLoading || createState.isLoading || updateState.isLoading || previewState.isLoading || exportState.isLoading || issueState.isLoading;
   const templateName = template?.name ?? '';
   const schoolName = template?.schoolName ?? '';
   const templateNameError = templateNameTouched && !templateName.trim();
@@ -315,6 +318,8 @@ export default function StudentICardBuilder({ onClose, initialTemplate }: { onCl
               <TextField size="small" label="Card footer" value={template.footerText} inputProps={{ maxLength: 500 }} onChange={(event) => patchTemplate({ footerText: event.target.value })} />
               <Grid container spacing={1.5}><Grid size={{ xs: 6 }}><TextField fullWidth size="small" label="Accent color" type="color" value={template.primaryColor} onChange={(event) => patchTemplate({ primaryColor: event.target.value })} /></Grid>
                 <Grid size={{ xs: 6 }}><TextField fullWidth size="small" label="Background color" type="color" value={template.backgroundColor} onChange={(event) => patchTemplate({ backgroundColor: event.target.value })} /></Grid></Grid>
+              <TemplateIdentityAsset kind="logo" value={template.logo} disabled={busy} onBusy={setIdentityUploading}
+                onChange={(logo) => patchTemplate({ logo })} />
               <FormControlLabel control={<Checkbox checked={template.showPhoto} onChange={(event) => patchTemplate({ showPhoto: event.target.checked })} />} label="Show student photo" />
               <FormControlLabel control={<Checkbox checked={template.showQrCode} onChange={(event) => patchTemplate({ showQrCode: event.target.checked })} />} label="Show student QR code" />
               <Typography variant="subtitle2">Information shown on the card</Typography>

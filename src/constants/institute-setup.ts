@@ -7,6 +7,7 @@ const defaultInstituteSetupPermissionName = 'InstituteSetup.';
 
 export const instituteSetupPaths = {
   academicSetup: '/setting/academic-setup',
+  schoolIdentity: '/setting/school-identity',
   shiftManagement: '/setting/shift-management',
   roomsManagement: {
     root: '/setting/room-management',
@@ -19,6 +20,7 @@ export const instituteSetupPaths = {
 export const instituteSetupPermissions = {
   root: `${defaultModulePermissionName}InstituteSetup`,
   academicSetup: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}AcademicSetup`,
+  schoolIdentity: 'InstituteSetup.SchoolIdentity.View',
   shiftManagement: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}ShiftManagement`,
   roomsManagement: {
     root: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomManagement`,
@@ -48,6 +50,14 @@ const instituteSetupModule = {
           shortcutKeyName: 'Ctrl+A',
           permissionName: instituteSetupPermissions.academicSetup,
           icon: menuIconView('mdi:school-outline'),
+        },
+        {
+          title: 'School Identity',
+          path: instituteSetupPaths.schoolIdentity,
+          _action: 'school-identity',
+          permissionName: instituteSetupPermissions.schoolIdentity,
+          visibilityPermissionName: 'ShikshaMitra.Module.InstituteSetup.SchoolIdentity',
+          icon: menuIconView('mdi:badge-account-horizontal-outline'),
         },
         {
           title: 'Shift Management',

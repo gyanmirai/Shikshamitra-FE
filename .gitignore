@@ -34,6 +34,8 @@ public/fonts/NotoSansGujarati-Bold.ttf
 !.agents/skills/shikshamitra-module-docs/**
 !.agents/skills/shikshamitra-fe-patterns/
 !.agents/skills/shikshamitra-fe-patterns/**
+!.agents/skills/shikshamitra-ui-consistency/
+!.agents/skills/shikshamitra-ui-consistency/**
 .claude/
 .swc
 _static

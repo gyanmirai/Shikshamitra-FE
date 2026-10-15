@@ -37,6 +37,7 @@ export default function LoadSession() {
     const identity = userId ? `${userId}:${session?.profile?.tenantid ?? 'host'}` : null;
     const usable = status === 'authenticated' && Boolean(userId && accessToken) && !session?.error;
     const clear = () => {
+      clearCachedAuthSession();
       dispatch(clearUser());
       dispatch(setCurrentYear({}));
       dispatch(setCurrentBoard({}));

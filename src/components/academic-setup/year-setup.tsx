@@ -115,6 +115,7 @@ const YearSetup = ({ initialYearId }: { initialYearId?: string } = {}) => {
       </Box>
 
       <AcademicSetupDialogs
+        boards={workspace.boards}
         currentYear={workspace.currentYear}
         editYear={editYear}
         isYearDialogOpen={yearDialog.value}
