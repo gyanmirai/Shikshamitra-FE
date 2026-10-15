@@ -9,9 +9,9 @@ import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Grid, Alert, Button, MenuItem, TextField } from '@mui/material';
+import DatePickerCalendarHeader from 'src/components/date-picker-calendar-header';
 
 import SetupField from './setup-field';
-import SetupCalendarHeader from './setup-calendar-header';
 
 export default function YearStep({ form }: { form: FormikProps<SetupDraft> }) {
   const canRead = useSelector((state: RootState) =>
@@ -81,7 +81,7 @@ export default function YearStep({ form }: { form: FormikProps<SetupDraft> }) {
                 format="DD/MM/YYYY"
                 views={['year', 'month', 'day']}
                 openTo="day"
-                slots={{ calendarHeader: SetupCalendarHeader }}
+                slots={{ calendarHeader: DatePickerCalendarHeader }}
                 value={form.values[name] ? dayjs(form.values[name]?.slice(0, 10)) : null}
                 onChange={(date) =>
                   form.setFieldValue(

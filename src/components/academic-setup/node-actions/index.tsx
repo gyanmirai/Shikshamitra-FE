@@ -1,5 +1,8 @@
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
 
+import Stack from '@mui/material/Stack';
+import { SchoolIdentityAction } from '../school-identity-action';
+
 import { BoardActions } from './board-actions';
 import { StageActions } from './stage-actions';
 import { MediumActions } from './medium-actions';
@@ -23,5 +26,5 @@ export const AcademicNodeActions = ({ node }: { node: AcademicSetupNode }) => {
     actions = <DivisionActions division={node.data as Division} parents={node.parentsData} />;
   }
 
-  return actions;
+  return <Stack direction="row" flexWrap="wrap" gap={1}><SchoolIdentityAction node={node} />{actions}</Stack>;
 };

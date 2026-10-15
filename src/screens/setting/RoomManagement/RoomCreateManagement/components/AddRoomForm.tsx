@@ -42,6 +42,15 @@ const featureOptions = [
   'First Aid Kit',
 ];
 
+const calculatedBenches = (rows: number | string, columns: number | string) =>
+  Number(rows) * Number(columns);
+
+const effectiveBenches = (
+  totalBenches: number | string,
+  rows: number | string,
+  columns: number | string
+) => (totalBenches === '' ? calculatedBenches(rows, columns) : Number(totalBenches));
+
 const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
   const [addRoom, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -68,7 +77,12 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       building: editData?.buildingId || '',
       floor: editData?.floorId || editData?.floor || '',
       roomType: editData?.roomTypeId || '',
-      totalBenches: editData?.totalBenches || '',
+      totalBenches:
+        editData?.totalBenches &&
+        editData.totalBenches !==
+          calculatedBenches(editData.benchesPerRow, editData.benchesPerColumn)
+          ? editData.totalBenches
+          : '',
       benchCapacity: editData?.benchCapacity || '',
       benchesPerRow: editData?.benchesPerRow || '',
       benchesPerColumn: editData?.benchesPerColumn || '',
@@ -80,26 +94,50 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       building: Yup.string().required('Building is required'),
       floor: Yup.string().required('Floor is required'),
       roomType: Yup.string().required('Room Type is required'),
-      totalBenches: Yup.number().required('Total Benches is required'),
+      totalBenches: Yup.number()
+        .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+        .test(
+          'whole-positive',
+          'Total Benches must be a whole number of at least 1',
+          function (value) {
+            const total =
+              value ?? calculatedBenches(this.parent.benchesPerRow, this.parent.benchesPerColumn);
+            return Number.isInteger(total) && total >= 1;
+          }
+        )
+        .test(
+          'within-grid',
+          'Total Benches cannot exceed Class Benches Rows × Class Benches Columns',
+          function (value) {
+            if (value === undefined) return true;
+            const grid = calculatedBenches(this.parent.benchesPerRow, this.parent.benchesPerColumn);
+            return !Number.isFinite(grid) || grid < 1 || value <= grid;
+          }
+        ),
       benchCapacity: Yup.number().required('Bench Capacity is required'),
       benchesPerRow: Yup.number().required('Class Benches Rows is required'),
       benchesPerColumn: Yup.number().required('Class Benches Columns is required'),
     }),
     onSubmit: (values) => {
+      const totalBenches = effectiveBenches(
+        values.totalBenches,
+        values.benchesPerRow,
+        values.benchesPerColumn
+      );
       const selectedBuilding: any = buildings?.find((b: any) => b.id === values.building);
       const selectedFloor: any = floorsOptions?.find((f: any) => f.id === values.floor);
       const selectedRoomType: any = roomTypes?.items?.find((r: any) => r.id === values.roomType);
 
       const payload = {
         roomName: values.roomName,
-        capacity: Number(values.capacity),
+        capacity: totalBenches * Number(values.benchCapacity),
         buildingId: values.building,
         buildingName: selectedBuilding?.buildingName || '',
         floorId: values.floor,
         floorName: selectedFloor?.floorName || '',
         roomTypeId: values.roomType,
         roomTypeName: selectedRoomType?.roomTypeName || '',
-        totalBenches: Number(values.totalBenches),
+        totalBenches,
         benchCapacity: Number(values.benchCapacity),
         benchesPerRow: Number(values.benchesPerRow),
         benchesPerColumn: Number(values.benchesPerColumn),
@@ -151,18 +189,29 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
   }, [buildings, formik.values.building]);
 
   useEffect(() => {
-    const rows = Number(formik.values.benchesPerRow);
-    const cols = Number(formik.values.benchesPerColumn);
-    const total = rows * cols;
-    formik.setFieldValue('totalBenches', total > 0 ? total : '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.benchesPerRow, formik.values.benchesPerColumn]);
-
-  useEffect(() => {
-    const total = Number(formik.values.totalBenches) * Number(formik.values.benchCapacity);
+    const total =
+      effectiveBenches(
+        formik.values.totalBenches,
+        formik.values.benchesPerRow,
+        formik.values.benchesPerColumn
+      ) * Number(formik.values.benchCapacity);
     formik.setFieldValue('capacity', total > 0 ? total : '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.totalBenches, formik.values.benchCapacity]);
+  }, [
+    formik.values.totalBenches,
+    formik.values.benchCapacity,
+    formik.values.benchesPerRow,
+    formik.values.benchesPerColumn,
+  ]);
+
+  const gridBenches = calculatedBenches(
+    formik.values.benchesPerRow,
+    formik.values.benchesPerColumn
+  );
+  const totalBenchesError =
+    formik.touched.totalBenches || formik.values.totalBenches !== ''
+      ? formik.errors.totalBenches
+      : undefined;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -179,13 +228,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     name="roomName"
                     value={formik.values.roomName}
                     onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/[^a-zA-Z-:0-9\s]/g, '')
-                        .split(' ')
-                        .map((word) =>
-                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                        )
-                        .join(' ');
+                      const value = e.target.value.replace(/[^a-zA-Z-:0-9\s]/g, '');
                       formik.setFieldValue('roomName', value);
                     }}
                     onBlur={formik.handleBlur}
@@ -329,23 +372,36 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={formik.touched.totalBenches && !!formik.errors.totalBenches}
-                >
+                <ShakingTextField error={!!totalBenchesError}>
                   <TextField
                     fullWidth
                     size="small"
                     label="Total Benches *"
                     name="totalBenches"
-                    type="number"
+                    type="text"
                     value={formik.values.totalBenches}
-                    onChange={formik.handleChange}
+                    placeholder={gridBenches > 0 ? String(gridBenches) : ''}
+                    InputLabelProps={{
+                      shrink: gridBenches > 0 || formik.values.totalBenches !== '',
+                      sx: { '&.Mui-focused': { color: 'text.secondary' } },
+                    }}
+                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                    onFocus={(event) => {
+                      const input = event.currentTarget;
+                      if (input.value) {
+                        requestAnimationFrame(() => {
+                          if (document.activeElement !== input) return;
+                          const end = input.value.length;
+                          input.setSelectionRange(end, end);
+                        });
+                      }
+                    }}
+                    onChange={(event) => {
+                      if (/^\d*$/.test(event.target.value)) formik.handleChange(event);
+                    }}
                     onBlur={formik.handleBlur}
-                    disabled
-                    error={formik.touched.totalBenches && Boolean(formik.errors.totalBenches)}
-                    helperText={
-                      (formik.touched.totalBenches && formik.errors.totalBenches) as string
-                    }
+                    error={Boolean(totalBenchesError)}
+                    helperText={totalBenchesError as string}
                   />
                 </ShakingTextField>
               </Grid>

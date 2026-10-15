@@ -70,12 +70,12 @@ const RoomCreateManagement = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Room Management"
+        heading="Rooms"
         description="Create and manage rooms for effective facility management."
         links={[
           { name: 'Institute Setup', href: '/academic/dashboard' },
-          { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
-          { name: 'Room Management' },
+          { name: 'Rooms & Buildings', href: '/academic/curriculumSubjects' },
+          { name: 'Rooms' },
         ]}
         action={
           <Button
@@ -117,6 +117,7 @@ const RoomCreateManagement = () => {
 
       <ConfirmDialog
         open={deleteRoomDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedRoom(null);
           deleteRoomDialog.onFalse();

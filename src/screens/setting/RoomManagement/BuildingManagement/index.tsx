@@ -76,8 +76,12 @@ const BuildingManagement = () => {
     <Box height="100%" display="flex" flexDirection="column">
       {addBuildingDialog.value ? (
         <CustomBreadcrumbs
-          heading="Building Management"
-          description="Update and modify existing building details by revising key information, floor mappings, and room assignments for improved facility management."
+          heading="Buildings"
+          description={
+            selectedBuilding
+              ? 'Update and modify existing building details by revising key information, floor mappings, and room assignments for improved facility management.'
+              : 'Add a new building and define its floors and room capacity.'
+          }
           isBack
           onBack={() => {
             handleClose(null, false);
@@ -85,23 +89,23 @@ const BuildingManagement = () => {
           links={[
             { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
             {
-              name: 'Rooms Management',
+              name: 'Rooms & Buildings',
               onClick: () => {
                 addBuildingDialog.onFalse();
               },
             },
-            { name: 'Building Management' },
+            { name: 'Buildings' },
           ]}
           sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Building Management"
+          heading="Buildings"
           description="Define and organize building infrastructure by setting up buildings, floors and rooms to ensure effective facility management."
           links={[
             { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
-            { name: 'Rooms Management', href: instituteSetupPaths.roomsManagement.root },
-            { name: 'Building Management' },
+            { name: 'Rooms & Buildings', href: instituteSetupPaths.roomsManagement.root },
+            { name: 'Buildings' },
           ]}
           sx={{ px: 1 }}
           action={
@@ -148,6 +152,7 @@ const BuildingManagement = () => {
 
       <ConfirmDialog
         open={deleteBuildingDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedBuilding(null);
           deleteBuildingDialog.onFalse();

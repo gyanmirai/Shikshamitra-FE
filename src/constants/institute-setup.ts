@@ -7,6 +7,7 @@ const defaultInstituteSetupPermissionName = 'InstituteSetup.';
 
 export const instituteSetupPaths = {
   academicSetup: '/setting/academic-setup',
+  schoolIdentity: '/setting/school-identity',
   shiftManagement: '/setting/shift-management',
   roomsManagement: {
     root: '/setting/room-management',
@@ -19,6 +20,7 @@ export const instituteSetupPaths = {
 export const instituteSetupPermissions = {
   root: `${defaultModulePermissionName}InstituteSetup`,
   academicSetup: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}AcademicSetup`,
+  schoolIdentity: 'InstituteSetup.SchoolIdentity.View',
   shiftManagement: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}ShiftManagement`,
   roomsManagement: {
     root: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomManagement`,
@@ -50,6 +52,14 @@ const instituteSetupModule = {
           icon: menuIconView('mdi:school-outline'),
         },
         {
+          title: 'School Identity',
+          path: instituteSetupPaths.schoolIdentity,
+          _action: 'school-identity',
+          permissionName: instituteSetupPermissions.schoolIdentity,
+          visibilityPermissionName: 'ShikshaMitra.Module.InstituteSetup.SchoolIdentity',
+          icon: menuIconView('mdi:badge-account-horizontal-outline'),
+        },
+        {
           title: 'Shift Management',
           path: instituteSetupPaths.shiftManagement,
           _action: 'shift-management',
@@ -59,7 +69,7 @@ const instituteSetupModule = {
           icon: menuIconView('mdi:clock-time-three-outline'),
         },
         {
-          title: 'Rooms Management',
+          title: 'Rooms & Buildings',
           path: instituteSetupPaths.roomsManagement.root,
           _action: 'building-management',
           shortcutKey: 'Ctrl+B',
@@ -68,7 +78,7 @@ const instituteSetupModule = {
           icon: menuIconView('mdi:door-closed'),
           children: [
             {
-              title: 'Building Management',
+              title: 'Buildings',
               path: instituteSetupPaths.roomsManagement.building,
               _action: 'building-list',
               shortcutKey: 'Ctrl+B+L',
@@ -77,7 +87,7 @@ const instituteSetupModule = {
               icon: menuIconView('mdi:office-building'),
             },
             {
-              title: 'Room Type Management',
+              title: 'Room Types',
               path: instituteSetupPaths.roomsManagement.roomType,
               _action: 'room-type-management',
               shortcutKey: 'Ctrl+B+T',
@@ -86,7 +96,7 @@ const instituteSetupModule = {
               icon: menuIconView('mdi:door-sliding'),
             },
             {
-              title: 'Room Management',
+              title: 'Rooms',
               path: instituteSetupPaths.roomsManagement.room,
               _action: 'room-management',
               shortcutKey: 'Ctrl+B+R',

@@ -16,6 +16,7 @@ export interface Board {
   lastModificationTime: string;
   lastModifierId: string;
   type: number;
+  customName?: string | null;
   name: string;
   academicYearId: string;
   educationMediums: Medium[];

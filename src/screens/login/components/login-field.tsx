@@ -3,9 +3,7 @@ import type { FormikProps } from 'formik';
 
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import type { LoginValues } from '../hooks/use-login-form';
 
@@ -13,14 +11,13 @@ type Props = {
   name: keyof LoginValues;
   label: string;
   placeholder: string;
-  icon: string;
   formik: FormikProps<LoginValues>;
   type?: string;
   autoComplete: string;
   endAdornment?: ReactNode;
 };
 
-export function LoginField({ name, label, icon, formik, endAdornment, ...props }: Props) {
+export function LoginField({ name, label, formik, endAdornment, ...props }: Props) {
   const error = formik.touched[name] ? formik.errors[name] : undefined;
 
   return (
@@ -46,19 +43,14 @@ export function LoginField({ name, label, icon, formik, endAdornment, ...props }
         helperText={error}
         slotProps={{
           input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <Iconify icon={icon} sx={{ color: 'text.secondary' }} />
-              </InputAdornment>
-            ),
             endAdornment,
           },
         }}
         sx={(theme) => ({
           '& .MuiOutlinedInput-root': {
-            minHeight: 52,
+            minHeight: 48,
             borderRadius: 1.5,
-            bgcolor: 'background.neutral',
+            bgcolor: 'background.paper',
             '& fieldset': { borderColor: 'text.secondary' },
             '&:hover fieldset': { borderColor: 'text.primary' },
             '&.Mui-focused fieldset': { borderColor: 'primary.dark' },
@@ -68,7 +60,7 @@ export function LoginField({ name, label, icon, formik, endAdornment, ...props }
               '&.Mui-error fieldset': { borderColor: 'error.light' },
             }),
           },
-          '& input': { fontSize: '1rem', py: 1.5 },
+          '& input': { fontSize: '1rem', py: 1.25 },
           '& .MuiFormHelperText-root': {
             mx: 0,
             '&.Mui-error': {

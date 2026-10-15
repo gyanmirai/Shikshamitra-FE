@@ -1,18 +1,16 @@
 'use client';
 
-import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Stack, Button, DialogActions } from '@mui/material';
+import { Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useAddYearMutation, useUpdateYearMutation } from 'src/redux/year/yearApi';
 
-import { Iconify } from '../iconify';
 import { ConfirmDialog } from '../confirm-dialog';
 import { DialogScrollContent } from '../customDialog';
+import { AcademicFormActionIcon } from './academic-form-action-icon';
+import { AcademicYearDateFields } from './academic-year-date-fields';
 import { formatAcademicYearDateForPayload } from './academic-year-date-utils';
 import {
   buildAcademicYearName,
@@ -75,6 +73,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
             size="small"
             variant="contained"
             loading={isSaving}
+            startIcon={<AcademicFormActionIcon action="confirm" />}
             onClick={saveAcademicYear}
           >
             Confirm
@@ -82,50 +81,14 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
         }
       />
       <DialogScrollContent>
-        <Stack spacing={2}>
-          <DatePicker
-            label="Start date"
-            value={formik.values.startDate}
-            format="DD-MMM-YYYY"
-            onChange={(value) => formik.setFieldValue('startDate', value)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-                error: formik.touched.startDate && Boolean(formik.errors.startDate),
-                helperText:
-                  formik.touched.startDate && typeof formik.errors.startDate === 'string'
-                    ? formik.errors.startDate
-                    : undefined,
-              },
-            }}
-          />
-          <DatePicker
-            label="End date"
-            value={formik.values.endDate}
-            format="DD-MMM-YYYY"
-            minDate={dayjs(formik.values.startDate).add(1, 'day')}
-            onChange={(value) => formik.setFieldValue('endDate', value)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-                error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                helperText:
-                  formik.touched.endDate && typeof formik.errors.endDate === 'string'
-                    ? formik.errors.endDate
-                    : undefined,
-              },
-            }}
-          />
-        </Stack>
+        <AcademicYearDateFields formik={formik} />
       </DialogScrollContent>
       <DialogActions>
         <Button
           size="small"
           variant="outlined"
           onClick={onClose}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<AcademicFormActionIcon action="cancel" />}
         >
           Cancel
         </Button>
@@ -137,7 +100,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
             formik.setTouched({ startDate: true, endDate: true });
             formik.handleSubmit();
           }}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={<AcademicFormActionIcon action="submit" />}
         >
           {editData ? 'Update year' : 'Create year'}
         </LoadingButton>
