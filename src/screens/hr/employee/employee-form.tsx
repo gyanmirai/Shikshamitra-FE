@@ -555,6 +555,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const [addAccessControl] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAccessControlMutation,
+    popupConfig: { error: false },
   });
   const {
     data: academicPermissionBoardsData,
@@ -1222,6 +1223,9 @@ const FormSlider = ({
   useEffect(() => {
     initializedStepsRef.current = {};
   }, [editData?.id]);
+  useEffect(() => {
+    initializedStepsRef.current[7] = false;
+  }, [currentYear?.id]);
 
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
@@ -1419,6 +1423,7 @@ const FormSlider = ({
     reportingManagerDetails,
     activeAccessControl,
     allBoardsForYear,
+    currentYear?.id,
     step,
   ]);
   return (
@@ -1482,7 +1487,7 @@ const FormSlider = ({
                                 xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
                                 md: [1, 2, 3, 4].includes(step) ? 12 : 4,
                               }}
-                              key={field.name}
+                              key={step === 7 ? `${field.name}:${currentYear?.id}` : field.name}
                               {...field.gridProps}
                             >
                               {field.renderComp ? (

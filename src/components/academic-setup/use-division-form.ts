@@ -1,13 +1,18 @@
 'use client';
 
+import { useRef } from 'react';
 import { useFormik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { duplicateDivisionCode } from 'src/utils/duplicate-division-error';
 import { useAddDivisionMutation, useUpdateDivisionMutation } from 'src/redux/division/divisionApi';
 
-import { onboardingDivisionSchema } from './onboarding-division-model';
+import { divisionFormSchema, onboardingDivisionInput } from './onboarding-division-model';
+
+import type { ExistingDivision } from './onboarding-division-model';
 
 export type DivisionFormProps = {
   handleClose: () => void;
@@ -20,6 +25,7 @@ export type DivisionFormProps = {
     roomNumber?: string | null;
   } | null;
   showRoomSelection?: boolean;
+  existingDivisions?: ExistingDivision[];
 };
 
 export function useDivisionForm({
@@ -27,7 +33,9 @@ export function useDivisionForm({
   editData,
   classId,
   showRoomSelection = true,
+  existingDivisions,
 }: DivisionFormProps) {
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const confirm = useBoolean();
   const dispatch = useDispatch();
   const [addDivision, { isLoading: isCreating }] = useQueryAndMutation({
@@ -47,7 +55,7 @@ export function useDivisionForm({
       strength: editData?.strength ?? '',
       roomNumber: editData?.roomNumber ?? editData?.roomId ?? '',
     },
-    validationSchema: onboardingDivisionSchema,
+    validationSchema: divisionFormSchema(existingDivisions, editData?.id),
     onSubmit: (_values, helpers) => {
       confirm.onTrue();
       helpers.setSubmitting(false);
@@ -56,9 +64,7 @@ export function useDivisionForm({
   const saveDivision = async () => {
     if (isSaving) return;
     const body = {
-      name: formik.values.name.trim(),
-      strength: Number(formik.values.strength),
-      standardId: classId,
+      ...onboardingDivisionInput(formik.values, classId),
       ...(showRoomSelection ? { roomNumber: formik.values.roomNumber } : {}),
     };
     try {
@@ -66,9 +72,15 @@ export function useDivisionForm({
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       confirm.onFalse();
       handleClose();
-    } catch {
-      // The shared mutation hook displays the error while the draft remains available for retry.
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === duplicateDivisionCode) {
+        confirm.onFalse();
+        formik.setFieldError('name', problem.detail);
+        formik.setFieldTouched('name', true, false);
+        requestAnimationFrame(() => nameInputRef.current?.focus());
+      }
     }
   };
-  return { formik, confirm, isSaving, saveDivision };
+  return { formik, confirm, isSaving, saveDivision, nameInputRef };
 }

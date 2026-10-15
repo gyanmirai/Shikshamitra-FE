@@ -19,12 +19,14 @@ export function DivisionManagementForm({
   editData,
   classId,
   showRoomSelection = true,
+  existingDivisions,
 }: DivisionFormProps) {
-  const { formik, confirm, isSaving, saveDivision } = useDivisionForm({
+  const { formik, confirm, isSaving, saveDivision, nameInputRef } = useDivisionForm({
     handleClose,
     editData,
     classId,
     showRoomSelection,
+    existingDivisions,
   });
   return (
     <>
@@ -56,6 +58,7 @@ export function DivisionManagementForm({
             autoFocus
             size="small"
             name="name"
+            inputRef={nameInputRef}
             label="Division Name"
             value={formik.values.name}
             disabled={isSaving}

@@ -8,28 +8,48 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <Box
       component="main"
-      sx={{
+      sx={(theme) => ({
         width: 1,
         minHeight: '100dvh',
-        display: 'grid',
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 0.95fr) minmax(0, 1.05fr)' },
-        bgcolor: 'background.paper',
-      }}
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: { xs: 0, sm: 3, md: 4 },
+        '@media (min-width: 900px) and (max-height: 800px)': { p: 2 },
+        bgcolor: 'background.neutral',
+        ...theme.applyStyles('dark', { bgcolor: 'background.default' }),
+      })}
     >
-      <LoginBrandPanel />
       <Box
         sx={(theme) => ({
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: 1,
+          maxWidth: 1280,
           minWidth: 0,
-          bgcolor: 'background.neutral',
-          px: { xs: 2, sm: 4, md: 3, lg: 5 },
-          py: { xs: 3, sm: 4, md: 5 },
-          ...theme.applyStyles('dark', { bgcolor: 'background.default' }),
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1.08fr) minmax(0, 1fr)' },
+          bgcolor: 'background.paper',
+          borderRadius: { xs: 0, sm: 3 },
+          borderWidth: { xs: 0, sm: 1 },
+          borderStyle: 'solid',
+          borderColor: 'divider',
+          overflow: 'hidden',
+          boxShadow: { xs: 'none', sm: theme.customShadows.card },
         })}
       >
-        {children}
+        <LoginBrandPanel />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 0,
+            px: { xs: 3, sm: 5, lg: 6 },
+            py: { xs: 4, md: 5 },
+            '@media (min-width: 900px) and (max-height: 800px)': { py: 2 },
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );

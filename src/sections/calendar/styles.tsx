@@ -1,18 +1,19 @@
 import { varAlpha } from 'src/theme/styles';
 import { styled } from '@mui/material/styles';
 
+import { calendarMonthStyles } from './calendar-month-styles';
+
 // ----------------------------------------------------------------------
 
 export const StyledCalendar = styled('div')(({ theme }) => ({
-  width: 'calc(100% + 2px)',
-  marginLeft: -1,
-  marginBottom: -1,
+  width: '100%',
+  minWidth: 0,
 
   '& .fc': {
     '--fc-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
-    '--fc-now-indicator-color': theme.palette.success.main,
-    '--fc-today-bg-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
-    '--fc-page-bg-color': theme.vars.palette.background.default,
+    '--fc-now-indicator-color': theme.vars.palette.primary.main,
+    '--fc-today-bg-color': varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
+    '--fc-page-bg-color': theme.vars.palette.background.paper,
     '--fc-neutral-bg-color': theme.vars.palette.background.neutral,
     '--fc-list-event-hover-bg-color': theme.vars.palette.action.hover,
     '--fc-highlight-color': theme.vars.palette.action.hover,
@@ -20,12 +21,21 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
 
   '& .fc .fc-license-message': { display: 'none' },
   '& .fc a': { color: theme.vars.palette.text.primary },
+  '& .fc a:focus-visible': {
+    outline: `2px solid ${theme.vars.palette.primary.main}`,
+    outlineOffset: 2,
+  },
 
   // Table Head
   '& .fc .fc-col-header ': {
+    backgroundColor: theme.vars.palette.background.neutral,
     boxShadow: `inset 0 -1px 0 ${theme.vars.palette.divider}`,
     '& th': { borderColor: 'transparent' },
-    '& .fc-col-header-cell-cushion': { ...theme.typography.subtitle2, padding: '13px 0' },
+    '& .fc-col-header-cell-cushion': {
+      ...theme.typography.subtitle2,
+      color: theme.vars.palette.text.secondary,
+      padding: theme.spacing(1.25, 0),
+    },
   },
 
   // List Empty
@@ -37,38 +47,14 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
 
   // Event
   '& .fc .fc-event': {
-    // borderColor: 'transparent !important',
-    // backgroundColor: 'transparent !important',
-    borderRadius: theme.shape.borderRadius,
-    // borderWidth: 2,
+    borderRadius: +theme.shape.borderRadius / 2,
   },
   '& .fc .fc-event .fc-event-main': {
     padding: '2px 4px',
-    borderRadius: 6,
-    backgroundColor: theme.vars.palette.common.white,
-    '&::before': {
-      top: 0,
-      left: 0,
-      width: '100%',
-      content: "''",
-      opacity: 0.24,
-      height: '100%',
-      borderRadius: 6,
-      position: 'absolute',
-      backgroundColor: 'currentColor',
-      transition: theme.transitions.create(['opacity']),
-      '&:hover': { '&::before': { opacity: 0.32 } },
-    },
   },
   '& .fc .fc-event .fc-event-main-frame': {
     fontSize: 13,
     lineHeight: '20px',
-    filter: 'brightness(0.48)',
-  },
-  '& .fc .fc-daygrid-event .fc-event-title': {
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
   },
   '& .fc .fc-event .fc-event-time': {
     overflow: 'unset',
@@ -99,26 +85,7 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
   },
 
   // Month View
-  '& .fc .fc-day-other .fc-daygrid-day-top': {
-    opacity: 1,
-    '& .fc-daygrid-day-number': { color: theme.vars.palette.text.disabled },
-  },
-  '& .fc .fc-daygrid-day-number': { ...theme.typography.body2, padding: theme.spacing(1, 1, 0) },
-  '& .fc .fc-daygrid-event': { marginTop: 4 },
-  '& .fc .fc-daygrid-event.fc-event-start, & .fc .fc-daygrid-event.fc-event-end': {
-    marginLeft: 4,
-    marginRight: 4,
-  },
-  '& .fc .fc-daygrid-more-link': {
-    ...theme.typography.caption,
-    color: theme.vars.palette.text.secondary,
-    '&:hover': {
-      backgroundColor: 'unset',
-      textDecoration: 'underline',
-      color: theme.vars.palette.text.primary,
-      fontWeight: theme.typography.fontWeightMedium,
-    },
-  },
+  ...calendarMonthStyles(theme),
 
   // Week & Day View
   '& .fc .fc-timegrid-axis-cushion': {

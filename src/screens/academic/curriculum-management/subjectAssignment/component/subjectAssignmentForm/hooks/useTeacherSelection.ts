@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 
 import { toTeacherOption } from '../teacherOptions';
@@ -7,6 +7,7 @@ import type { TeacherOption } from '../teacherOptions';
 
 interface UseTeacherSelectionParams {
   teacherIds: string[];
+  standardId?: string;
 }
 
 interface EmployeeResult {
@@ -15,11 +16,10 @@ interface EmployeeResult {
   employeeIdentifier?: string | null;
 }
 
-export function useTeacherSelection({ teacherIds }: UseTeacherSelectionParams) {
+export function useTeacherSelection({ teacherIds, standardId }: UseTeacherSelectionParams) {
   const [getTeacherOptions] = useLazyGetEmployeeQuery();
   const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
   const [teacherObjs, setTeacherObjs] = useState<TeacherOption[]>([]);
-  const seenTeacherIdsRef = useRef<Set<string>>(new Set());
   const teacherIdsKey = teacherIds.join(',');
 
   useEffect(() => {
@@ -58,25 +58,20 @@ export function useTeacherSelection({ teacherIds }: UseTeacherSelectionParams) {
    */
   const fetchTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
-      if (page === 1) seenTeacherIdsRef.current = new Set();
+      if (standardId === '') return { data: [], hasMore: false };
       const response = await getTeacherOptions({
         search: query,
         page,
         isTeaching: true,
         status: 'Active',
+        ...(standardId ? { standardId } : {}),
       }).unwrap();
       const hasMore = response.currentPage < response.totalPages;
-      const data = (response?.items ?? [])
-        .map((employee: EmployeeResult) => toTeacherOption(employee))
-        .filter(({ id }: TeacherOption) => {
-          if (seenTeacherIdsRef.current.has(id)) return false;
-          seenTeacherIdsRef.current.add(id);
-          return true;
-        });
+      const data = (response?.items ?? []).map((employee: EmployeeResult) => toTeacherOption(employee));
 
       return { data, hasMore };
     },
-    [getTeacherOptions]
+    [getTeacherOptions, standardId]
   );
 
   return {

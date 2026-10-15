@@ -8,7 +8,17 @@ const roots = [subject,
   'Academics.CurriculumManagement.Settings.ElectiveGroupCreation'];
 const module = 'ShikshaMitra.Module.Academics';
 export const names = [...roots.flatMap((root) => ['View', 'Add', 'Delete'].map((action) => `${root}.${action}`)),
-  module, `${module}.Curriculum`, `${module}.Curriculum.Settings`];
+  module, `${module}.Curriculum`, `${module}.Curriculum.Settings`,
+  'ShikshaMitra.Module.InstituteSetup',
+  'ShikshaMitra.Module.InstituteSetup.SchoolIdentity',
+  ...['View', 'ManageDefaults', 'ManageOverrides', 'AccessSignature'].map(
+    (action) => `InstituteSetup.SchoolIdentity.${action}`
+  ),
+  ...['ShiftManagement', 'AcademicSetup'].flatMap((feature) => [
+    `ShikshaMitra.Module.InstituteSetup.${feature}`,
+    ...['View', 'Add', 'Edit', 'Delete'].map((action) => `InstituteSetup.${feature}.${action}`),
+  ]),
+];
 
 export function createFixture() {
   const direct = new Map([

@@ -58,6 +58,7 @@ export function PaginatedSearchSelect<
   debounceMs = 400,
   placeholder,
   helperText,
+  noOptionsText,
   error,
   isLoading,
   loadingLabel = 'Loading options',
@@ -174,12 +175,12 @@ export function PaginatedSearchSelect<
       }}
       //   Ensure we don't show "No options" when we are just waiting for the user to type
       noOptionsText={
-        props.noOptionsText !== undefined ? (
-          props.noOptionsText
-        ) : searchError ? (
+        searchError ? (
           <Typography variant="body2" color="error.main" sx={{ p: 2 }}>
             Results are unavailable. Retry below.
           </Typography>
+        ) : noOptionsText !== undefined ? (
+          noOptionsText
         ) : inputValue.length < minChars ? (
           <Box p={2} textAlign="center">
             <Typography variant="body2" color="text.secondary">

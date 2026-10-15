@@ -31,7 +31,9 @@ const TeacherSelectionFields = ({
       value={teacherObjs}
       onChange={(_: unknown, newValues: TeacherOption[]) => onChange(newValues)}
       getOptionLabel={(option: TeacherOption) => option?.label || ''}
-      isOptionEqualToValue={(option: TeacherOption, value: TeacherOption) => option?.id === value?.id}
+      isOptionEqualToValue={(option: TeacherOption, value: TeacherOption) =>
+        option?.id === value?.id
+      }
       renderOption={(props: any, option: TeacherOption, { selected }: { selected: boolean }) => {
         const { key, ...rest } = props;
         return (
@@ -69,8 +71,12 @@ const TeacherSelectionFields = ({
       size="small"
       fullWidth
       placeholder={teacherObjs.length ? '' : 'Select teachers'}
+      noOptionsText="No matching teachers are assigned to this class in Academic Permission. Review Staff Directory or choose another class."
       error={!!getError('teacherIds')}
-      helperText={getError('teacherIds')}
+      helperText={
+        getError('teacherIds') ||
+        'Only teachers assigned to this class in Academic Permission are listed.'
+      }
     />
   </Grid>
 );

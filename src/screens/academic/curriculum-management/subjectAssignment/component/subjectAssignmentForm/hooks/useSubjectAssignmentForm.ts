@@ -8,17 +8,15 @@ import { useSelector } from 'react-redux';
 import { useRef, useMemo, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useGetSubjectAssignmentsQuery,
-  useAddSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
   useGetCoreElectiveSubjectsQuery,
   useGetSubjectAssignmentByIdQuery,
-  useUpdateSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { SubjectType } from '../../../enum/subjectType';
+import { useSubjectAssignmentSubmit } from './useSubjectAssignmentSubmit';
 import { validationSchema, getSubjectAssignmentInitialValues } from '../initialValues';
 
 import type { ISubjectAssignmentFormProps, ISubjectAssignmentFormValues } from '../type';
@@ -60,14 +58,10 @@ export function useSubjectAssignmentForm({
     params: { academicMediumId: (medium as Medium).id },
   });
 
-  const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddSubjectAssignmentMutation,
-  });
-
-  const [updateSubjectAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
+  const { onSubmit, isAddLoading, isUpdateLoading } = useSubjectAssignmentSubmit({
+    academicMediumId: (medium as Medium).id,
+    assignmentId: isEdit ? data?.id : undefined,
+    onClose,
   });
 
   const formik = useFormik<ISubjectAssignmentFormValues>({
@@ -78,49 +72,7 @@ export function useSubjectAssignmentForm({
       classId
     ),
     validationSchema,
-    onSubmit: async (values) => {
-      try {
-        const subjectsPayload = values.subjects.map((subj) => ({
-          subjectId: subj.subjectId,
-          electiveGroupId: subj.electiveGroupId || null,
-          subjectCode: subj.subjectCode,
-          documents: subj.documents || [],
-          learningGoal: subj.learningGoal,
-          prerequisites: subj.prerequisites,
-          description: subj.description,
-          teacherIds: subj.teacherIds,
-        }));
-
-        const payload = {
-          classId: values.classId,
-          status: values.status,
-          subjects: subjectsPayload,
-        };
-
-        if (isEdit && data?.id) {
-          await updateSubjectAssignment({ assignmentId: data.id, body: payload }).unwrap();
-          shikshaMitraToast.success({
-            message: `Subject Assignment updated successfully for  ${values.className}`,
-          });
-        } else {
-          await addSubjectAssignment({
-            academicMediumId: (medium as Medium).id,
-            body: payload,
-          }).unwrap();
-          shikshaMitraToast.success({
-            message:
-              values.status === 0
-                ? `Subject Assignment saved as draft for  ${values.className}`
-                : `Subject Assignment published successfully for  ${values.className}`,
-          });
-        }
-
-        onClose(null, true);
-      } catch (error) {
-        console.error('Failed to save subject assignment', error);
-        shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
-      }
-    },
+    onSubmit,
   });
 
   const { data: subjectTableDataApi } = useQueryAndMutation({
@@ -342,6 +294,7 @@ export function useSubjectAssignmentForm({
     if (!subjectId) return;
     const idx = latestSubjectsRef.current.findIndex((s) => s.subjectNo === subjectId);
     if (idx === -1) return;
+    formik.setStatus(undefined);
     formik.setFieldValue(`subjects.${idx}.${field}`, value);
   };
 

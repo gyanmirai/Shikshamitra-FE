@@ -5,7 +5,7 @@ import { parseApiProblemDetail } from './api-problem-details';
 const code = 'ShikshaMitra.TenantSettings:DuplicateStandardName';
 
 describe('duplicate standard API feedback', () => {
-  it('supports the legacy shared duplicate code only for standards', () => {
+  it('uses the entity to distinguish legacy standard and division duplicate codes', () => {
     expect(
       parseApiProblemDetail({
         data: {
@@ -23,7 +23,7 @@ describe('duplicate standard API feedback', () => {
           data: { entityName: 'division', name: 'A' },
         },
       }).detail
-    ).toBe('This division already exists.');
+    ).toBe("A division named 'A' already exists in this standard.");
   });
   it('maps a generic ProblemDetails conflict using its code and standard name', () => {
     expect(
