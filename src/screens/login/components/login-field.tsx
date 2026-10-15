@@ -3,24 +3,25 @@ import type { FormikProps } from 'formik';
 
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
-import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import InputAdornment from '@mui/material/InputAdornment';
 
-import type { LoginValues } from '../hooks/use-login-form';
-
-type Props = {
-  name: keyof LoginValues;
+type Props<T extends Record<string, string>> = {
+  name: Extract<keyof T, string>;
   label: string;
   placeholder: string;
-  icon: string;
-  formik: FormikProps<LoginValues>;
+  formik: FormikProps<T>;
   type?: string;
   autoComplete: string;
   endAdornment?: ReactNode;
 };
 
-export function LoginField({ name, label, icon, formik, endAdornment, ...props }: Props) {
+export function LoginField<T extends Record<string, string>>({
+  name,
+  label,
+  formik,
+  endAdornment,
+  ...props
+}: Props<T>) {
   const error = formik.touched[name] ? formik.errors[name] : undefined;
 
   return (
@@ -43,22 +44,17 @@ export function LoginField({ name, label, icon, formik, endAdornment, ...props }
         onBlur={formik.handleBlur}
         disabled={formik.isSubmitting}
         error={Boolean(error)}
-        helperText={error}
+        helperText={typeof error === 'string' ? error : undefined}
         slotProps={{
           input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <Iconify icon={icon} sx={{ color: 'text.secondary' }} />
-              </InputAdornment>
-            ),
             endAdornment,
           },
         }}
         sx={(theme) => ({
           '& .MuiOutlinedInput-root': {
-            minHeight: 52,
+            minHeight: 48,
             borderRadius: 1.5,
-            bgcolor: 'background.neutral',
+            bgcolor: 'background.paper',
             '& fieldset': { borderColor: 'text.secondary' },
             '&:hover fieldset': { borderColor: 'text.primary' },
             '&.Mui-focused fieldset': { borderColor: 'primary.dark' },
@@ -68,7 +64,7 @@ export function LoginField({ name, label, icon, formik, endAdornment, ...props }
               '&.Mui-error fieldset': { borderColor: 'error.light' },
             }),
           },
-          '& input': { fontSize: '1rem', py: 1.5 },
+          '& input': { fontSize: '1rem', py: 1.25 },
           '& .MuiFormHelperText-root': {
             mx: 0,
             '&.Mui-error': {

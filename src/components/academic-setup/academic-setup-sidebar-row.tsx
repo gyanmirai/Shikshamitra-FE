@@ -1,5 +1,5 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Tooltip, ListItemText, ListItemButton } from '@mui/material';
+import { Box, ListItemText, ListItemButton } from '@mui/material';
 
 import { NODE_TYPE_META, type AcademicSetupNode } from './academic-setup-model';
 
@@ -71,16 +71,14 @@ export const AcademicSetupSidebarRow = ({
         <Iconify icon={meta.icon} width={16} aria-hidden />
       </Box>
 
-      <Tooltip title={node.name} placement="right" enterDelay={700}>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <ListItemText
-            primary={node.name}
-            secondary={`Level ${depth + 1} · ${meta.label}`}
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
-            secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary', noWrap: true }}
-          />
-        </Box>
-      </Tooltip>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <ListItemText
+          primary={node.name}
+          secondary={`Level ${depth + 1} · ${meta.label}`}
+          primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
+          secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary', noWrap: true }}
+        />
+      </Box>
 
       {hasChildren ? (
         <Box sx={{ ml: 0.5, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0.25 }}>

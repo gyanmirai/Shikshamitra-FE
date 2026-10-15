@@ -47,6 +47,10 @@ Before creating, updating, or reviewing a frontend screen or UI surface, use
 `.agents/skills/shikshamitra-fe-patterns/SKILL.md`. Read only the references routed for the affected
 surface; do not load every UI rulebook by default. Inspect the current shared-component API and a
 comparable live screen before implementation.
+For header, table, form-dialog, drawer, confirmation, or read-only detail consistency, also use
+`.agents/skills/shikshamitra-ui-consistency/SKILL.md`. It routes the implementation rules and
+reference-image slots for these surfaces. Missing images do not block written-rule implementation;
+report image matching as unverified until the images are attached and inspected.
 Configure new module and feature paths in `src/constants/` first, then add the App Router entry under `src/app/` and the owning screen under `src/screens/`.
 Use the existing shared component or MUI component before creating a local primitive, use theme palette tokens instead of hardcoded colors, and serialize date-time payloads as `DateTimeOffset`-compatible ISO 8601 values.
 When no suitable project component exists, consult [Minimal UI components](https://minimals.cc/components) and adapt the pattern to this repository’s theme, accessibility, routing, and state rules.

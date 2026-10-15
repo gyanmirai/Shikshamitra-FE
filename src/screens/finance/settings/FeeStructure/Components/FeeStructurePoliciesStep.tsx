@@ -5,12 +5,14 @@ import type {
 
 import { useState } from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Alert, Stack, Button, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Alert, Stack, Button, Typography, IconButton } from '@mui/material';
 
 import { policyImpactRows } from '../policyImpactModel';
 
@@ -179,48 +181,53 @@ export default function FeeStructurePoliciesStep({
                     </Alert>
                   )}
               </Stack>
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Stack direction="row" spacing={0.5}>
                 {version && (
-                  <Button
-                    size="small"
-                    startIcon={<Iconify icon="mdi:eye-outline" />}
-                    disabled={busy}
-                    onClick={() => onView(key)}
-                    aria-label={`View ${impact.label} fee head impact`}
-                  >
-                    View Policy
-                  </Button>
+                  <CustomTooltip title={`View ${impact.label} impact`}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        disabled={busy}
+                        onClick={() => onView(key)}
+                        aria-label={`View ${impact.label} fee head impact`}
+                      >
+                        <Iconify icon={GlobalIcons.eye} />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
                 )}
                 <CustomTooltip
                   title={
-                    !allowed
-                      ? 'Editing this policy requires an editable draft and policy permissions.'
-                      : ''
+                    allowed
+                      ? `${version ? 'Change' : 'Select'} ${impact.label}`
+                      : 'Editing this policy requires an editable draft and policy permissions.'
                   }
                 >
                   <span>
-                    <Button
+                    <IconButton
                       size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon={version ? 'mdi:pencil-outline' : 'mdi:plus'} />}
                       disabled={!allowed || busy}
                       onClick={() => setChoosing(key)}
                       aria-label={`${version ? 'Change' : 'Select'} ${impact.label}`}
                     >
-                      {version ? 'Change Policy' : 'Select Policy'}
-                    </Button>
+                      <Iconify icon={version ? GlobalIcons.edit : GlobalIcons.addIcon} />
+                    </IconButton>
                   </span>
                 </CustomTooltip>
                 {version && writable && settings.permissions[key] && (
-                  <Button
-                    size="small"
-                    startIcon={<Iconify icon="mdi:close" />}
-                    disabled={busy}
-                    onClick={() => onChange(key, null)}
-                    aria-label={`Remove ${impact.label}`}
-                  >
-                    Remove Policy
-                  </Button>
+                  <CustomTooltip title={`Remove ${impact.label}`}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        disabled={busy}
+                        onClick={() => onChange(key, null)}
+                        aria-label={`Remove ${impact.label}`}
+                      >
+                        <Iconify icon={GlobalIcons.delete} />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
                 )}
               </Stack>
             </FormSectionCard>
@@ -231,6 +238,7 @@ export default function FeeStructurePoliciesStep({
         <CustomDialog
           open
           title={`Choose ${selectedFamily.label}`}
+          titleInfo={selectedFamily.description}
           maxWidth="md"
           hasForm={false}
           guardUnsavedChanges={false}
@@ -284,7 +292,7 @@ export default function FeeStructurePoliciesStep({
                 },
                 {
                   id: 'coverage',
-                  label: 'Fee-head coverage',
+                  label: 'Fee head coverage',
                   minWidth: 180,
                   isFilter: false,
                   isSort: false,
@@ -313,6 +321,9 @@ export default function FeeStructurePoliciesStep({
                       aria-label={`Select ${row.name} version ${row.versionNumber}`}
                       onClick={() => {
                         onChange(choosing, row.versionId);
+                        shikshaMitraToast.success({
+                          message: `${selectedFamily.label} added to this draft.`,
+                        });
                         setChoosing(undefined);
                       }}
                     >

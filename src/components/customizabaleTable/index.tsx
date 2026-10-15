@@ -266,7 +266,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const newSearchTerm = event.target.value;
+      const newSearchTerm = event.target.value.trim() ? event.target.value : '';
       handleChangeParams({ searchTerm: newSearchTerm, page: 0 });
       onSearchInputChange?.(newSearchTerm);
       if (serverSideSearch && onServerSearch) {

@@ -597,6 +597,7 @@ const FeeStructureStep = ({
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -679,6 +680,7 @@ const FeeStructureStep = ({
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
             variant="contained"
             color="warning"
             size="small"

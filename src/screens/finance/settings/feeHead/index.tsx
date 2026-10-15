@@ -187,6 +187,7 @@ const FeeHeadCreation = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"

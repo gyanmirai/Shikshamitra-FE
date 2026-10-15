@@ -237,7 +237,7 @@ function ProrationPolicyDrawerSession({
               variant="contained"
               color="error"
               size="small"
-              startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+              startIcon={<Iconify icon="mdi:exit-to-app" />}
               onClick={() => {
                 unsavedChangesDialog.onFalse();
                 formik.resetForm();

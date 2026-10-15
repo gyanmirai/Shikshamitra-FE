@@ -4,6 +4,7 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
 
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -273,6 +274,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon={nextStatus ? 'mdi:restore' : 'mdi:archive-outline'} />}
             loading={isStatusLoading}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}

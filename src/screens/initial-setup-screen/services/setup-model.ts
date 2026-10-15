@@ -2,6 +2,7 @@ import type { SetupDraft, SetupAction } from 'src/redux/initial-setup/types';
 
 import * as Yup from 'yup';
 import { tenantSchema } from 'src/screens/host-tenants/services/tenant-form';
+import { normalizeSetupDraft } from 'src/redux/initial-setup/normalize-setup';
 
 export const setupSteps = [
   {
@@ -67,7 +68,14 @@ export function setupSchema(step: number) {
     });
   if (step === 3)
     return Yup.object({
-      boardType: Yup.number().nullable().oneOf([0, 1]).required('Board is required'),
+      boardType: Yup.number().nullable().oneOf([0, 1, 2, 3, 4, 5, 6]).required('Board is required'),
+      customBoardName: Yup.string()
+        .trim()
+        .max(128)
+        .when('boardType', {
+          is: 6,
+          then: (schema) => schema.required('Custom board name is required'),
+        }),
       medium: text('Medium'),
       stage: text('Stage'),
       className: text('Class'),
@@ -84,7 +92,6 @@ export function setupSchema(step: number) {
         .min(1)
         .max(10000)
         .required('Division capacity is required'),
-      roomNumber: Yup.string().max(50),
     });
   return Yup.object({});
 }
@@ -104,7 +111,7 @@ export function setupStepRequest(
         createNew: draft.existingYearId === null,
       },
     };
-  if (step === 3) return { action: 'structure', input: { draft } };
+  if (step === 3) return { action: 'structure', input: { draft: normalizeSetupDraft(draft) } };
   if (step === 5) return { action: 'complete', input: {} };
   return { action: 'advance', input: { step } };
 }

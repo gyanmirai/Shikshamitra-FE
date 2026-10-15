@@ -1,22 +1,10 @@
-import Box from '@mui/material/Box';
-
 import { LoginForm } from './components/login-form';
-import { LoginHeader } from './components/login-header';
+import { AuthLayout } from './components/auth-layout';
 
-export default function MobileLoginScreen() {
+export default function LoginScreen() {
   return (
-    <Box
-      component="main"
-      sx={{
-        minHeight: '100dvh',
-        bgcolor: 'background.paper',
-        display: 'flex',
-        flexDirection: 'column',
-        minWidth: 0,
-      }}
-    >
-      <LoginHeader />
+    <AuthLayout>
       <LoginForm />
-    </Box>
+    </AuthLayout>
   );
 }

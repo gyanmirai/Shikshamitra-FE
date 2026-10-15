@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Box, Alert, Stack, Button, Divider, TextField, Typography } from '@mui/material';
@@ -85,7 +86,7 @@ export default function ReadOnlyConcessionApprovalView({
     <Box sx={{ p: 3, overflowY: 'auto', height: '100%' }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Approve concession</Typography>
-        <Button onClick={onBack}>Back</Button>
+        <Button startIcon={<Iconify icon="mdi:close" />} onClick={onBack} >Back</Button>
       </Stack>
       {isLoading && <Typography>Loading financial impact…</Typography>}
       {context && (
@@ -155,6 +156,15 @@ export default function ReadOnlyConcessionApprovalView({
             }}
           />
           <LoadingButton
+            startIcon={
+              <Iconify
+                icon={
+                  previewTotal === null
+                    ? 'mdi:clipboard-text-search-outline'
+                    : 'mdi:check-circle-outline'
+                }
+              />
+            }
             variant="contained"
             color="success"
             disabled={changed || isLoading}

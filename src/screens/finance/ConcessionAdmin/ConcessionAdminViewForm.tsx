@@ -1293,6 +1293,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             loading={isDeleteLoading}
             variant="contained"
             color="error"

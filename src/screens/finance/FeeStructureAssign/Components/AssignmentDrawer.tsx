@@ -28,7 +28,11 @@ export default function AssignmentDrawer({
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const viewing = students.length === 1 && students[0].isFeeStructureAssigned;
-  const title = viewing ? 'View Fee Assignment' : 'Assign Fee Structure';
+  const title = viewing
+    ? 'View Fee Assignment'
+    : students.length > 1
+      ? 'Bulk Assign Fee Structure'
+      : 'Assign Fee Structure';
   const requestClose = () => {
     if (busy) return;
     if (isChanges) setConfirmClose(true);
@@ -46,7 +50,11 @@ export default function AssignmentDrawer({
             role: 'dialog',
             'aria-label': title,
             'aria-modal': true,
-            sx: { width: { xs: '100%', md: 960 }, maxWidth: '100%', overflow: 'hidden' },
+            sx: {
+              width: { xs: '100%', md: students.length > 1 ? 1200 : 960 },
+              maxWidth: '100%',
+              overflow: 'hidden',
+            },
           },
         }}
       >

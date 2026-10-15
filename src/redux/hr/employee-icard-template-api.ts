@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { employeeType } from 'src/redux/tagTypes';
+import { employeeType, instituteSetupType } from 'src/redux/tagTypes';
 
 const compactParams = (params: Record<string, unknown>) =>
   Object.fromEntries(
@@ -14,6 +14,7 @@ export const buildEmployeeICardPdfUrl = (templateId: string) =>
   `/employees/i-card/templates/${templateId}/pdf`;
 
 export type EmployeeICardTemplate = {
+  logoMode?: 0 | 1 | 2 | null;
   id: string;
   academicYearId: string;
   mediumStageId?: string | null;
@@ -47,6 +48,15 @@ export type EmployeeICardTemplateRequest = Omit<
 
 export const employeeICardTemplateApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getEmployeeICardSchoolLogo: builder.query<Blob | null, string | undefined>({
+      query: (mediumStageId) => ({
+        url: '/employees/i-card/templates/school-logo',
+        params: mediumStageId ? { mediumStageId } : undefined,
+        responseHandler: (response) => response.status === 204 ? Promise.resolve(null) : response.blob(),
+      }),
+      providesTags: [instituteSetupType.schoolIdentity],
+      keepUnusedDataFor: 0,
+    }),
     getEmployeeICardTemplates: builder.query({
       query: (params = {}) => ({
         url: '/employees/i-card/templates',
@@ -114,6 +124,7 @@ export const employeeICardTemplateApi = api.injectEndpoints({
 });
 
 export const {
+  useGetEmployeeICardSchoolLogoQuery,
   useGetEmployeeICardTemplatesQuery,
   useCreateEmployeeICardTemplateMutation,
   useUpdateEmployeeICardTemplateMutation,

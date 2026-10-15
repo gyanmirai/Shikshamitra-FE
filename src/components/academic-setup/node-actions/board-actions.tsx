@@ -3,16 +3,16 @@ import type { Board } from 'src/types/school';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { boardApi, useGetBoardsQuery, useDeleteBoardMutation } from 'src/redux/board/boardApi';
-
-import type { AcademicSetupParents } from '../academic-setup-model';
 
 import { BoardForm } from '../board-setup';
 import { MediumForm } from '../medium-setup';
 import { AcademicActionButtons } from './academic-action-buttons';
+
+import type { AcademicSetupParents } from '../academic-setup-model';
 
 export const BoardActions = ({
   board,
@@ -59,13 +59,15 @@ export const BoardActions = ({
         open={editDialog.value}
         maxWidth="sm"
       >
-        <BoardForm
-          handleClose={editDialog.onFalse}
-          editData={board}
-          academicYearId={board.academicYearId}
-          academicYear={parents.year}
-          boards={siblingBoards}
-        />
+        {editDialog.value && (
+          <BoardForm
+            handleClose={editDialog.onFalse}
+            editData={board}
+            academicYearId={board.academicYearId}
+            academicYear={parents.year}
+            boards={siblingBoards}
+          />
+        )}
       </CustomDialog>
       <ConfirmDialog
         open={deleteDialog.value}

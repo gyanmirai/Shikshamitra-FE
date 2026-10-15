@@ -100,7 +100,6 @@ export const settingMenu = {
 
 export const navData = (visibility: boolean[]) => [
   {
-    subheader: 'Management',
     items: [
       {
         title: 'Dashboard',

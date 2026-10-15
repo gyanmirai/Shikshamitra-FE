@@ -4,6 +4,15 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Finance:AccountsRegisterInvalidPeriod':
+    'Select a month or payment date within the academic year.',
+  'Finance:AccountsRegisterInvalidFilter':
+    'The selected register filters are invalid. Clear filters and retry.',
+  'Finance:ManualEntryInvalidFields':
+    'Review the transaction name, payer/payee, reference and notes.',
+  'Finance:ManualEntryKeyConflict':
+    'This submission already exists with different details. Close the form and review the saved entry.',
+  'Finance:InvalidCashBank': 'Cash entries cannot include a bank account.',
   'Volo.Abp.Identity:PasswordRequiresNonAlphanumeric': 'Password must include a special character.',
   'Volo.Abp.Identity:PasswordRequiresLower': 'Password must include a lowercase letter.',
   'Volo.Abp.Identity:PasswordRequiresUpper': 'Password must include an uppercase letter.',
@@ -174,6 +183,18 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addCandidate(candidates, error?.message);
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
+  const businessData = data?.data ?? data?.error?.data;
+  const duplicateStandardName = businessData?.name;
+  const isLegacyStandardDuplicate =
+    errorCode === 'ShikshaMitra.TenantSettings:00001' &&
+    typeof businessData?.entityName === 'string' &&
+    businessData.entityName.toLowerCase() === 'standard';
+  const duplicateStandardMessage =
+    errorCode === 'ShikshaMitra.TenantSettings:DuplicateStandardName' || isLegacyStandardDuplicate
+      ? typeof duplicateStandardName === 'string' && duplicateStandardName.trim()
+        ? `A standard named '${duplicateStandardName.trim()}' already exists in this academic stage.`
+        : 'A standard with this name already exists in this academic stage.'
+      : undefined;
   const knownMessage =
     typeof errorCode === 'string'
       ? KNOWN_ERROR_MESSAGES[errorCode] ||
@@ -182,7 +203,12 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
       : undefined;
   const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
 
-  const detail = knownMessage || specificCandidate || candidates[0] || 'Something went wrong';
+  const detail =
+    duplicateStandardMessage ||
+    knownMessage ||
+    specificCandidate ||
+    candidates[0] ||
+    'Something went wrong';
 
   return {
     detail: String(detail),

@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,22 @@ audience: humans-and-agents
 # Validate Security frontend changes
 
 TL;DR: validate permission mappings, override persistence, review/discard, and the responsive matrix using current evidence.
+
+## Role deletion
+
+`role-delete-dialog.test.tsx` drives the production dialog and RTK Query mutation with HTTP fixtures.
+It verifies an actionable 409 reason, retained role/dialog, retry success, pending-request locks and cancel after failure.
+The shared query wrapper owns the error toast; the dialog preserves the error inline and emits success before closing so immediate unmounting cannot suppress feedback.
+
+```sh
+npx vitest run src/screens/security/role/role-delete-dialog.test.tsx src/redux/customQueryAndMutation.test.ts
+```
+
+For browser validation, use the production dialog/client with synthetic authentication and real ABP endpoints backed by a disposable local database.
+Check assigned-role rejection, archived-employee rejection, unused-role deletion, retry/cancel and keyboard focus in both themes and narrow viewports.
+Do not delete deployed school roles to test this flow.
+
+## Permission editor checks
 
 Run from the frontend repository:
 

@@ -5,10 +5,14 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import GlobalAcademicSearch from './index';
 
+import type { GlobalAcademicSearchOption } from './types';
+
 const mocks = vi.hoisted(() => ({
   pathname: '/student/onboarding/setup',
   confirm: vi.fn().mockResolvedValue(false),
   dispatch: vi.fn(),
+  options: [] as GlobalAcademicSearchOption[],
+  selectedOption: null as GlobalAcademicSearchOption | null,
   years: {
     items: [
       { id: 'year-a', name: '2026-2027' },
@@ -58,16 +62,76 @@ vi.mock('src/utils/driverBtnConfig', () => ({ setDriverNextEnabled: vi.fn() }));
 vi.mock('src/utils/academicHierarchyUtils', () => ({
   getScopedAcademicData: (data: unknown) => data,
   getScopedAcademicYears: (data: unknown) => data,
-  getGlobalAcademicSearchOptions: () => [],
+  getGlobalAcademicSearchOptions: () => mocks.options,
   getValidGlobalAcademicSelection: () => null,
-  getScopedSelectedAcademicOption: () => null,
+  getScopedSelectedAcademicOption: () => mocks.selectedOption,
 }));
 
-describe('Student-only global year confirmation', () => {
+describe('Global academic context confirmation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.scope.isAdmin = true;
     mocks.scope.accessibleHierarchy = [];
+    mocks.options = [];
+    mocks.selectedOption = null;
+  });
+
+  it('sets a complete context without claiming a year-only state is the current context', async () => {
+    mocks.pathname = '/academic/curriculumSubjects';
+    mocks.options = [
+      {
+        label: '2025-2026 / GSEB / Gujarati',
+        value: 'previous-gseb-gujarati',
+        academicYear: { id: 'year-2025', name: '2025-2026' },
+        board: { id: 'gseb', name: 'GSEB' },
+        medium: { id: 'gujarati', name: 'Gujarati' },
+      } as GlobalAcademicSearchOption,
+    ];
+    render(<GlobalAcademicSearch />);
+    const selector = screen.getByRole('combobox', { name: 'Academic Year, Board and Medium' });
+    expect(selector).toHaveValue('');
+    mocks.dispatch.mockClear();
+    fireEvent.mouseDown(selector);
+    fireEvent.click(await screen.findByRole('option', { name: mocks.options[0].label }));
+    await waitFor(() =>
+      expect(mocks.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message:
+            'Are you sure you want to set academic year, board and medium to 2025-2026 / GSEB / Gujarati?',
+        })
+      )
+    );
+    expect(selector).toHaveValue('');
+    expect(mocks.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('uses the visible complete context for the change message', async () => {
+    mocks.pathname = '/academic/curriculumSubjects';
+    const makeOption = (id: string, label: string) =>
+      ({
+        value: id,
+        label,
+        academicYear: { id, name: label.split(' / ')[0] },
+        board: { id: `${id}-board`, name: label.split(' / ')[1] },
+        medium: { id: `${id}-medium`, name: label.split(' / ')[2] },
+      }) as GlobalAcademicSearchOption;
+    mocks.selectedOption = makeOption('year-a', '2026-2027 / CBSE / English');
+    mocks.options = [mocks.selectedOption, makeOption('year-b', '2025-2026 / GSEB / Gujarati')];
+    render(<GlobalAcademicSearch />);
+    const selector = screen.getByRole('combobox', { name: 'Academic Year, Board and Medium' });
+    expect(selector).toHaveValue(mocks.selectedOption.label);
+    fireEvent.mouseDown(selector);
+    fireEvent.click(await screen.findByRole('option', { name: mocks.options[1].label }));
+    await waitFor(() =>
+      expect(mocks.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message:
+            'Are you sure you want to change academic year, board and medium from 2026-2027 / CBSE / English to 2025-2026 / GSEB / Gujarati?',
+        })
+      )
+    );
+    expect(selector).toHaveValue(mocks.selectedOption.label);
+    expect(mocks.dispatch).not.toHaveBeenCalled();
   });
 
   it('omits unassigned hierarchy years and selects the authorized year on Student entry', async () => {

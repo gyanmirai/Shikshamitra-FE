@@ -59,6 +59,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         label: 'Name',
         align: 'left',
         sticky: true,
+        stickyPosition: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
             {value}
@@ -101,6 +102,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         label: 'Status',
         minWidth: 140,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         render(value, row) {
           const expense = row as IExpenseCategory;
           return (
@@ -112,6 +115,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                 variant="soft"
               />
               <Switch
+                slotProps={{
+                  input: {
+                    'aria-label': `${expense.isActive ? 'Deactivate' : 'Activate'} ${expense.name}`,
+                  },
+                }}
                 size="small"
                 disabled={!access.canChangeStatus}
                 checked={expense.isActive || false}
@@ -129,6 +137,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         align: 'left',
         isSort: false,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         isFilter: false,
         render(value, row) {
           return (
@@ -157,8 +167,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                     onDelete(row as IExpenseCategory);
                   },
                   disabled: !access.canDelete || !(row as IExpenseCategory).canDelete,
-                  tooltip:
-                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  tooltip: (row as IExpenseCategory).isActive
+                    ? 'Deactivate this record before deleting it.'
+                    : 'This record is referenced by other Finance records and cannot be deleted.',
                   color: 'error.main',
                 },
               ]}
@@ -176,6 +187,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
     <>
       <CustomizableTable
         tableId="expense-category-data-table"
+        tableTitle="Expense Categories"
+        searchFieldProps={{ placeholder: 'Search name...' }}
         noDataText={
           <>
             Expense Category Data Not Found{' '}

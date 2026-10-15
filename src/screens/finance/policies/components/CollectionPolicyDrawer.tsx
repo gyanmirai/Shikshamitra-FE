@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
@@ -197,6 +198,7 @@ function CollectionPolicyDrawerSession({
           content="Your changes to this collection policy will be lost."
           action={
             <Button
+              startIcon={<Iconify icon="mdi:exit-to-app" />}
               variant="contained"
               color="error"
               size="small"

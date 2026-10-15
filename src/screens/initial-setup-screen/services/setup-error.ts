@@ -34,3 +34,13 @@ export function setupError(error: unknown) {
     ? 'Unable to save your progress. Your entries are still here; please retry.'
     : problem.detail;
 }
+
+export function isSetupConflict(error: unknown) {
+  if (!error || typeof error !== 'object' || !('status' in error) || error.status !== 409)
+    return false;
+  const problem = parseApiProblemDetail(error);
+  return (
+    !/DuplicateEmail|DuplicateUserName/i.test(problem.errorCode ?? '') &&
+    !/(email|user\s*name).*(already|in use|taken|exists)/i.test(problem.detail)
+  );
+}

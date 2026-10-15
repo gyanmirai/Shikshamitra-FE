@@ -1,6 +1,48 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-CONTEXT-001
+    module: Academic
+    submodule: GlobalContext
+    title: Header and confirmation share the resolved academic context for partial and complete selections
+    risk: medium
+    priority: P2
+    type: [functional, e2e, regression]
+    roles: [staff]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: e2e/fixtures/academic-context/check.mjs
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: INS-ACADEMIC-001
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Duplicate standards show stage-scoped validation and a specific API conflict
+    risk: high
+    priority: P1
+    type: [functional, e2e, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/fixtures/academic-setup/check.mjs
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
+  - id: INS-ACADEMIC-002
+    module: InstituteSetup
+    submodule: AcademicSetup
+    title: Division management supports optional rooms while initial setup omits room controls and payloads
+    risk: high
+    priority: P1
+    type: [functional, e2e, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/setting/academic-setup]
+    automated: true
+    automationFile: e2e/fixtures/academic-setup/check.mjs
+    status: automated
+    tags: ['@module-institute-setup', '@regression']
   - id: ACM-DASH-001
     module: Academic
     submodule: Dashboard

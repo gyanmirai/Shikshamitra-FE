@@ -8,13 +8,13 @@ export type SetupDraft = {
   startDate: string | null;
   endDate: string | null;
   boardType: number | null;
+  customBoardName: string;
   medium: string;
   stage: string;
   className: string;
   ageLowerLimit: number | null;
   divisionName: string;
   strength: number | null;
-  roomNumber: string;
 };
 export type SetupUser = { requestId: string; id: string; userName: string; email: string };
 export type InitialSetup = {

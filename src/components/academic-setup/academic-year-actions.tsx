@@ -41,8 +41,7 @@ export const AcademicYearActions = ({
         <Button
           type="button"
           size="small"
-          variant="outlined"
-          color="inherit"
+          variant="contained"
           aria-label="Create academic year"
           startIcon={<Iconify icon="mingcute:add-line" width={16} aria-hidden />}
           onClick={onCreateYear}

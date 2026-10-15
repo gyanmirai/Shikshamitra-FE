@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-06
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -116,3 +116,11 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 ## Income, expense, and bank routing
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
+
+## Separate Accounts register client
+
+`src/redux/finance/accountsActivityApi.ts` owns direction/month/year/category/search/paging, selected-record details and manual creation.
+`src/redux/finance/financeRoutingApi.ts` adds income-entry and expense-entry operations with owning Add permissions.
+Manual requests include bankAccountId, payer/payee, paymentReference and a stable UUID idempotency key retained on retry.
+Register list/detail queries subscribe to Income, Expense, Fee Collection and Fee Refund cache tags.
+Use [the workspace contract](./references/income-expense-workspaces.md) for UI behavior and backend ownership.

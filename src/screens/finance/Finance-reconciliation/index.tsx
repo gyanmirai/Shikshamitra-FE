@@ -1,15 +1,14 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
@@ -25,6 +24,7 @@ import CreditCardTable from './Component/CreditCardTable';
 import DemandDraftTable from './Component/DemandDraftTable';
 import BankTransferTable from './Component/BankTransferTable';
 import ChequeDetailsForm from './Component/ChequeDetailsTable';
+import { academicMonthOptions, defaultAcademicMonth } from '../accounts/Registers/academicMonths';
 
 // Map enum to label and component
 const reconciliationTabConfig = [
@@ -71,7 +71,28 @@ const FinanceReconciliation = () => {
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState(ReconciliationStatusType.Cheque);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const academicStartDate = currentYear?.startDate;
+  const academicEndDate = currentYear?.endDate;
+  const monthOptions = useMemo(
+    () =>
+      academicStartDate && academicEndDate
+        ? academicMonthOptions({ startDate: academicStartDate, endDate: academicEndDate })
+        : [],
+    [academicStartDate, academicEndDate]
+  );
+  const [monthSelection, setMonthSelection] = useState({
+    yearId: currentYear?.id,
+    value: defaultAcademicMonth(monthOptions),
+  });
+  const monthKey =
+    monthSelection.yearId === currentYear?.id &&
+    monthOptions.some((option) => option.value === monthSelection.value)
+      ? monthSelection.value
+      : defaultAcademicMonth(monthOptions);
+  const date = monthOptions.length ? dayjs(`${monthKey}-01`) : null;
+  React.useEffect(() => {
+    setMonthSelection({ yearId: currentYear?.id, value: defaultAcademicMonth(monthOptions) });
+  }, [currentYear?.id, monthOptions]);
 
   // Sync activeTab with URL params on initial load and when searchParams change
   React.useEffect(() => {
@@ -238,18 +259,15 @@ const FinanceReconciliation = () => {
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <Box display="flex" gap={2} alignItems="center">
-            <DatePicker
-              label="Month-Year"
-              format="MMM-YYYY"
-              value={date}
-              views={['year', 'month']}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                },
-              }}
-              onChange={(newDate) => setDate(newDate)}
-              sx={{ maxWidth: '240px', width: '100%' }}
+            <CustomSelect
+              label="Month"
+              value={monthOptions.length ? monthKey : ''}
+              options={monthOptions}
+              disabled={!monthOptions.length}
+              onChange={(value) =>
+                setMonthSelection({ yearId: currentYear?.id, value: String(value) })
+              }
+              formControlProps={{ sx: { width: 240 } }}
             />
           </Box>
           <Tabs
@@ -300,7 +318,6 @@ const FinanceReconciliation = () => {
             ))}
           </Tabs>
         </Box>
-
       </Card>
       <Box sx={{ height: '100%', flex: 1, overflow: 'hidden' }}>
         {currentActiveComponent?.component && (

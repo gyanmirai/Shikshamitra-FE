@@ -1921,6 +1921,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           }
           action={
             <LoadingButton
+              startIcon={<Iconify icon="mdi:check-circle-outline" />}
               type="button"
               variant="contained"
               loading={formik.isSubmitting || createLoading || submitLoading}

@@ -6,6 +6,8 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { createTheme } from 'src/theme/create-theme';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ThemeProvider, useColorScheme } from '@mui/material/styles';
@@ -20,30 +22,36 @@ const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     confirmPopup,
-    globalState: () => ({
-      currentYear: {
-        id: 'year',
-        name: '2026–27',
-        boards: [
-          { id: 'board', name: 'CBSE', educationMediums: [{ id: 'medium', name: 'English' }] },
-        ],
-      },
-    }),
-    auth: () => ({
-      permissions: [
-        'Finance.Fees.StructureAssign.View',
-        'Finance.Fees.StructureAssign.Add',
-        'Finance.Fees.StructureAssign.OverrideAmount',
-        'Finance.Fees.StructureAssign.OverridePolicies',
-        'Finance.Policies.ProrationPolicy.OverrideChargePeriod',
-      ]
-        .filter(
-          (name) =>
-            !new URLSearchParams(window.location.search).has('variableFees') ||
-            !name.endsWith('.OverrideAmount')
-        )
-        .map((name) => ({ name, isGranted: true })),
-    }),
+    globalState: (
+      state = {
+        currentYear: {
+          id: 'year',
+          name: '2026–27',
+          startDate: '2026-04-01T00:00:00Z',
+          endDate: '2027-03-31T00:00:00Z',
+          boards: [
+            { id: 'board', name: 'CBSE', educationMediums: [{ id: 'medium', name: 'English' }] },
+          ],
+        },
+      }
+    ) => state,
+    auth: (
+      state = {
+        permissions: [
+          'Finance.Fees.StructureAssign.View',
+          'Finance.Fees.StructureAssign.Add',
+          'Finance.Fees.StructureAssign.OverrideAmount',
+          'Finance.Fees.StructureAssign.OverridePolicies',
+          'Finance.Policies.ProrationPolicy.OverrideChargePeriod',
+        ]
+          .filter(
+            (name) =>
+              !new URLSearchParams(window.location.search).has('variableFees') ||
+              !name.endsWith('.OverrideAmount')
+          )
+          .map((name) => ({ name, isGranted: true })),
+      }
+    ) => state,
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });
@@ -77,7 +85,9 @@ createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <CssBaseline />
-      <Fixture />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Fixture />
+      </LocalizationProvider>
     </ThemeProvider>
   </Provider>
 );

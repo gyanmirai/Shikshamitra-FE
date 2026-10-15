@@ -4,7 +4,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const ExpenseTrackingLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.accounts.expense}>
+  <StudentPermissionGuard permissionKey={`${financePermissions.accounts.expense}.View`}>
     {children}
   </StudentPermissionGuard>
 );

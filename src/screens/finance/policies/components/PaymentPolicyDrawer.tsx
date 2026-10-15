@@ -1211,6 +1211,7 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
           content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
           action={
             <Button
+              startIcon={<Iconify icon="mdi:exit-to-app" />}
               variant="contained"
               color="error"
               size="small"

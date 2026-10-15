@@ -674,7 +674,7 @@ export default function FeeStructureWorkspaceCard({
                         {
                           id: 'delete',
                           label: 'Delete Draft',
-                          icon: 'mdi:delete-outline',
+                          icon: GlobalIcons.delete,
                           color: 'error.main',
                           disabled: navigationBusy,
                           onClick: () => setConfirmation('delete'),
@@ -760,7 +760,7 @@ export default function FeeStructureWorkspaceCard({
               }}
               showSaveButton={writable}
               saveButtonLabel="Save draft"
-              nextButtonLabel={writable ? 'Save & Continue' : 'Next'}
+              nextButtonLabel={writable ? 'Save & continue' : 'Next'}
               finalButtonLabel="Publish structure"
               disableSubmit={!canPublish || !!publishBlockReason}
               saveButtonProps={{
@@ -1082,7 +1082,7 @@ export default function FeeStructureWorkspaceCard({
           }
         >
           {termDetail.isFetching
-            ? 'Loading the selected Payment Term version�'
+            ? 'Loading the selected Payment Term version…'
             : 'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'}
         </Alert>
       )}

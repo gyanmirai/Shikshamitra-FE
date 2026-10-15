@@ -60,6 +60,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         label: 'Bank Name',
         minWidth: 120,
         sticky: true,
+        stickyPosition: 'left',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
@@ -167,7 +168,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         ),
       },
       {
-        id: 'upiId',
+        id: 'maskedUpiId',
         label: 'UPI ID',
         align: 'left',
         minWidth: 90,
@@ -182,6 +183,8 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         label: 'Status',
         minWidth: 140,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         render(value, row) {
           const bank = row as IBankAccount;
           return (
@@ -193,6 +196,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
                 variant="soft"
               />
               <Switch
+                slotProps={{
+                  input: {
+                    'aria-label': `${bank.isActive ? 'Deactivate' : 'Activate'} ${bank.bankName}`,
+                  },
+                }}
                 size="small"
                 disabled={!access.canChangeStatus}
                 checked={bank.isActive || false}
@@ -210,6 +218,8 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         align: 'left',
         isSort: false,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         isFilter: false,
         render(value, row) {
           return (
@@ -238,8 +248,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
                     onDelete(row as IBankAccount);
                   },
                   disabled: !access.canDelete || !(row as IBankAccount).canDelete,
-                  tooltip:
-                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  tooltip: (row as IBankAccount).isActive
+                    ? 'Deactivate this record before deleting it.'
+                    : 'This record is referenced by other Finance records and cannot be deleted.',
                   color: 'error.main',
                 },
               ]}
@@ -257,6 +268,8 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
     <>
       <CustomizableTable
         tableId="bank-account-data-table"
+        tableTitle="Bank Accounts"
+        searchFieldProps={{ placeholder: 'Search bank, branch or holder...' }}
         noDataText={
           <>
             Bank Account Data Not Found{' '}

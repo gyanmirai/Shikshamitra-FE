@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -171,13 +170,8 @@ const ConcessionType = () => {
               setQueryParams((current) => ({ ...current, page: 1 }));
               setArchiveView('archived');
             }}
-            endIcon={
-              <Label color="default" variant="soft">
-                {archivedSummary?.data?.totalCount ?? 0}
-              </Label>
-            }
           >
-            Archived
+            Archived ({archivedSummary?.data?.totalCount ?? 0})
           </Button>
         </Stack>
       </Card>
@@ -268,6 +262,7 @@ const ConcessionType = () => {
           }
           action={
             <LoadingButton
+              startIcon={<Iconify icon="mdi:delete-outline" />}
               variant="contained"
               color="error"
               size="small"

@@ -1,8 +1,8 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { LabelColor } from 'src/components/label';
+import type { IParams } from 'src/components/customizabaleTable/types';
 import type { ConcessionApplication } from 'src/redux/finance/ConcessionManagement/types';
 
 import dayjs from 'dayjs';
@@ -10,23 +10,36 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
-import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { ConcessionStatusType } from 'src/enums/concession-status-type';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
+import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import { Box, Tab, Card, Tabs, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Card,
+  Tabs,
+  Alert,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
@@ -41,8 +54,14 @@ import {
   useDeleteConcessionApplicationMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
-import type { IStudentInfo } from '../type';
 import { canDecideConcession } from '../concessionDecisionEligibility';
+import {
+  toConcessionTableRow,
+  concessionStatusLabel,
+  concessionStatusOptions,
+} from './concessionTablePresentation';
+
+import type { IStudentInfo } from '../type';
 
 interface ICombinedProps {
   onRequestConcession?: (student: IStudentInfo) => void;
@@ -87,8 +106,25 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     classesLoading,
   } = filters;
   const tabs = useTabs('pending');
+  const scopeKey = JSON.stringify([filterPayload, tabs.value]);
+  const [tableQuery, setTableQuery] = useState<{
+    page: number;
+    rowsPerPage: number;
+    search: string;
+    filters: IParams['filters'];
+    sorts: IParams['sorts'];
+    scopeKey: string;
+  }>({ page: 0, rowsPerPage: 10, search: '', filters: [], sorts: [], scopeKey });
+  const page = tableQuery.scopeKey === scopeKey ? tableQuery.page : 0;
+  useEffect(() => {
+    setTableQuery((previous) =>
+      previous.scopeKey === scopeKey ? previous : { ...previous, page: 0, scopeKey }
+    );
+  }, [scopeKey]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
+  const currentUserId = useSelector(
+    (state: RootState) => state.auth.user?.sub as string | undefined
+  );
   const actions = financePermissions.fees.concessionActions;
   const canApprove = hasGrantedPermission(permissions, actions.approve);
   const canReject = hasGrantedPermission(permissions, actions.reject);
@@ -135,7 +171,13 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
 
   const reviewApproval = async () => {
     if (!approvalRequest || !approvalContext.data) return;
-    if (!canDecideConcession(currentUserId, approvalRequest.requesterId, approvalRequest.submittedById)) {
+    if (
+      !canDecideConcession(
+        currentUserId,
+        approvalRequest.requesterId,
+        approvalRequest.submittedById
+      )
+    ) {
       closeApproval();
       return;
     }
@@ -160,7 +202,13 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
 
   const confirmApproval = async () => {
     if (!approvalRequest || !approvalPreview) return;
-    if (!canDecideConcession(currentUserId, approvalRequest.requesterId, approvalRequest.submittedById)) {
+    if (
+      !canDecideConcession(
+        currentUserId,
+        approvalRequest.requesterId,
+        approvalRequest.submittedById
+      )
+    ) {
       closeApproval();
       return;
     }
@@ -218,6 +266,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     data: allConcessionData,
     isLoading: isLoadingConcessionData,
     isFetching: isFetchingConcessionData,
+    isError: concessionError,
+    refetch: refetchConcessions,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionApplicationsQuery,
@@ -229,27 +279,23 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
       divisionId:
         filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
+      tab: tabs.value,
+      page: page + 1,
+      pageSize: tableQuery.rowsPerPage,
+      search: tableQuery.search || undefined,
+      filters: serializeFinanceTableFilters(tableQuery.filters),
+      sortBy: tableQuery.sorts[0]?.column,
+      sortOrder: tableQuery.sorts[0]?.direction,
     },
     options: {
       skip: !isReady,
     },
   });
 
-  const allItems = useMemo(() => allConcessionData?.items || [], [allConcessionData]);
-
-  // Filter items by tab
-  const filteredItems = useMemo(() => {
-    const groupedStatuses: Record<string, ConcessionStatusType[]> = {
-      pending: [ConcessionStatusType.Draft, ConcessionStatusType.Pending],
-      approved: [
-        ConcessionStatusType.Approved,
-        ConcessionStatusType.PartiallyReversed,
-        ConcessionStatusType.Reversed,
-      ],
-      rejected: [ConcessionStatusType.Rejected, ConcessionStatusType.Cancelled],
-    };
-    return allItems.filter((item: any) => groupedStatuses[tabs.value]?.includes(item.status));
-  }, [allItems, tabs.value]);
+  const tableData = useMemo(
+    () => (allConcessionData?.items || []).map(toConcessionTableRow),
+    [allConcessionData?.items]
+  );
 
   const concessionCounts = useMemo(
     () => ({
@@ -313,11 +359,18 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           />
         </Box>
       </Card>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, mb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Tabs
             value={tabs.value}
-            onChange={tabs.onChange}
+            onChange={(event, value) => {
+              tabs.onChange(event, value);
+              setTableQuery((previous) => ({
+                ...previous,
+                page: 0,
+                filters: previous.filters.filter((filter) => filter.column !== 'status'),
+              }));
+            }}
             sx={{
               '& .MuiTabs-flexContainer': { gap: 2 },
               flexGrow: 1,
@@ -341,19 +394,54 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
       </Card>
       <CustomizableTable
         tableId="student-concession-table"
+        tableTitle="Concessions"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoadingConcessionData || isFetchingConcessionData}
+        serverSidePagination
+        maxServerRowsPerPage={100}
+        serverSideSearch
+        serverSideFilter
+        serverSideSort
+        serverSideSortMode="single"
+        page={page}
+        rowsPerPage={tableQuery.rowsPerPage}
+        filters={tableQuery.filters}
+        sorts={tableQuery.sorts}
+        totalCount={allConcessionData?.totalCount ?? 0}
+        onServerPagination={(nextPage, rowsPerPage) =>
+          setTableQuery((previous) => ({ ...previous, page: nextPage - 1, rowsPerPage, scopeKey }))
+        }
+        onServerSearch={(search) => setTableQuery((previous) => ({ ...previous, page: 0, search }))}
+        onServerFilter={(columnFilters) =>
+          setTableQuery((previous) => ({ ...previous, page: 0, filters: columnFilters }))
+        }
+        onServerSort={(_column, sorts) =>
+          setTableQuery((previous) => ({ ...previous, page: 0, sorts }))
+        }
+        errorContent={
+          concessionError ? (
+            <Alert
+              severity="error"
+              action={<Button onClick={() => refetchConcessions()}>Retry</Button>}
+            >
+              Could not load concessions. Try again or clear the filters.
+            </Alert>
+          ) : undefined
+        }
         columns={[
           {
-            id: 'studentName',
-            label: 'Name(Gr No.)',
+            id: 'studentIdentity',
+            label: 'Student (GR No.)',
+            filterType: 'string',
+            isFilter: true,
             align: 'left',
             sticky: true,
-            width: 150,
-            minWidth: 100,
-            maxWidth: 150,
+            stickyPosition: 'left',
+            minWidth: 200,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.grNumber && `(${row.grNumber})`}
+                {value || '-'}
               </Typography>
             ),
           },
@@ -361,32 +449,35 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             id: 'rollNo',
             label: 'Roll No.',
             align: 'left',
-            width: 96,
-            minWidth: 80,
+            width: 140,
+            minWidth: 140,
             maxWidth: 120,
-            filterType: 'number',
+            filterType: 'string',
+            isFilter: true,
             render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value ?? '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'classDivision',
+            label: 'Class/Division',
+            filterType: 'string',
+            isFilter: true,
+            align: 'left',
+            minWidth: 150,
+            render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
                 {value || '-'}
               </Typography>
             ),
           },
           {
-            id: 'standardName',
-            label: 'Class/Div',
-            align: 'left',
-            width: 110,
-            minWidth: 90,
-            maxWidth: 140,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'} {row.divisionName && `(${row.divisionName})`}
-              </Typography>
-            ),
-          },
-          {
             id: 'concessionTypeName',
             label: 'Concession Type',
+            filterType: 'string',
+            isFilter: true,
             align: 'left',
             width: 160,
             minWidth: 140,
@@ -395,21 +486,25 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           {
             id: 'concessionAmount',
             label: 'Amount',
+            filterType: 'number',
+            isFilter: true,
             width: 130,
             minWidth: 110,
             maxWidth: 160,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
-                {formatNumber(value || 0, 'INR')}
+                {value == null ? '-' : formatNumber(value, 'INR')}
               </Typography>
             ),
           },
           {
             id: 'createdAt',
             label: 'Requested On',
+            filterType: 'date',
+            isFilter: true,
             align: 'left',
-            width: 140,
-            minWidth: 120,
+            width: 180,
+            minWidth: 180,
             maxWidth: 160,
             render: (value) =>
               value ? (
@@ -421,30 +516,50 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               ),
           },
           {
+            id: 'status',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: concessionStatusOptions(String(tabs.value)),
+            isFilter: true,
+            isSort: false,
+            sticky: true,
+            stickyPosition: 'right',
+            minWidth: 140,
+            width: 140,
+            render: (value) => (
+              <Label color={ConcessionStatusTypeColors[value as ConcessionStatusType]}>
+                {concessionStatusLabel(value)}
+              </Label>
+            ),
+          },
+          {
             id: 'actions',
-            label: 'Action',
-            align: 'left',
-            width: 80,
-            minWidth: 64,
+            label: 'Actions',
+            align: 'right',
+            width: 150,
+            minWidth: 140,
             isSort: false,
             isFilter: false,
+            excludeFromExport: true,
             sticky: true,
+            stickyPosition: 'right',
             render: (value, row) => {
               const isDraft = row.status === ConcessionStatusType.Draft;
               const isPending = row.status === ConcessionStatusType.Pending;
               const isOwnRequest = Boolean(
                 currentUserId &&
-                  (currentUserId.toLowerCase() === row.requesterId?.toLowerCase() ||
-                    currentUserId.toLowerCase() === row.submittedById?.toLowerCase())
+                (currentUserId.toLowerCase() === row.requesterId?.toLowerCase() ||
+                  currentUserId.toLowerCase() === row.submittedById?.toLowerCase())
               );
               const canDecide = canDecideConcession(
                 currentUserId,
                 row.requesterId,
                 row.submittedById
               );
-              const decisionTooltip = !currentUserId || !row.requesterId
-                ? 'Decision identity is unavailable'
-                : 'You cannot approve or reject your own request';
+              const decisionTooltip =
+                !currentUserId || !row.requesterId
+                  ? 'Decision identity is unavailable'
+                  : 'You cannot approve or reject your own request';
               const serverAllows = (action: string) =>
                 !row.availableActions?.length || row.availableActions.includes(action);
               const canCancelRow =
@@ -460,44 +575,54 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               return (
                 <AdaptiveThreeDotsActions
                   placement="right-top"
+                  moreLabel={`More actions for ${row.studentIdentity}`}
+                  sx={{ justifyContent: 'flex-end' }}
                   actions={[
                     {
                       id: 'view',
-                      label: 'View',
-                      icon: 'carbon:view-filled',
+                      label: `View ${row.studentIdentity}`,
+                      icon: GlobalIcons.eye,
                       onClick: () => onViewConcession?.(row as IStudentInfo),
                     },
-                    ...(isPending && canApprove && (row.availableActions?.includes('approve') || isOwnRequest)
-                      ? [{
-                          id: 'approve',
-                          label: 'Approve',
-                          icon: 'solar:check-circle-bold',
-                          color: 'success.main',
-                          disabled: !canDecide,
-                          tooltip: !canDecide ? decisionTooltip : undefined,
-                          onClick: () => {
-                            setApprovalPreview(null);
-                            setApprovalRequest(row as ConcessionApplication);
+                    ...(isPending &&
+                    canApprove &&
+                    (row.availableActions?.includes('approve') || isOwnRequest)
+                      ? [
+                          {
+                            id: 'approve',
+                            label: `Approve ${row.studentIdentity}`,
+                            icon: 'solar:check-circle-bold',
+                            color: 'success.main',
+                            disabled: !canDecide,
+                            tooltip: !canDecide ? decisionTooltip : undefined,
+                            onClick: () => {
+                              setApprovalPreview(null);
+                              setApprovalRequest(row as ConcessionApplication);
+                            },
                           },
-                        }]
+                        ]
                       : []),
-                    ...(isPending && canReject && (row.availableActions?.includes('reject') || isOwnRequest)
-                      ? [{
-                          id: 'reject',
-                          label: 'Reject',
-                          icon: 'solar:close-circle-bold',
-                          color: 'error.main',
-                          disabled: !canDecide,
-                          tooltip: !canDecide ? decisionTooltip : undefined,
-                          onClick: () => onReject(row as IStudentInfo),
-                        }]
+                    ...(isPending &&
+                    canReject &&
+                    (row.availableActions?.includes('reject') || isOwnRequest)
+                      ? [
+                          {
+                            id: 'reject',
+                            label: `Reject ${row.studentIdentity}`,
+                            icon: 'solar:close-circle-bold',
+                            color: 'error.main',
+                            disabled: !canDecide,
+                            tooltip: !canDecide ? decisionTooltip : undefined,
+                            onClick: () => onReject(row as IStudentInfo),
+                          },
+                        ]
                       : []),
                     ...(isDraft && canEdit && serverAllows('edit')
                       ? [
                           {
                             id: 'edit',
-                            label: 'Edit',
-                            icon: 'solar:pen-bold',
+                            label: `Edit ${row.studentIdentity}`,
+                            icon: GlobalIcons.edit,
                             onClick: () => onEditConcession?.(row as IStudentInfo),
                           },
                         ]
@@ -506,8 +631,8 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                       ? [
                           {
                             id: 'delete',
-                            label: 'Delete',
-                            icon: 'solar:trash-bin-trash-bold',
+                            label: `Delete ${row.studentIdentity}`,
+                            icon: GlobalIcons.delete,
                             color: 'error.main',
                             onClick: () => {
                               setSelectedConcession(row as ConcessionApplication);
@@ -521,7 +646,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                       ? [
                           {
                             id: 'cancel',
-                            label: 'Cancel request',
+                            label: `Cancel request for ${row.studentIdentity}`,
                             icon: 'solar:close-circle-bold',
                             onClick: () => {
                               setSelectedConcession(row as ConcessionApplication);
@@ -534,7 +659,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                       ? [
                           {
                             id: 'replace',
-                            label: 'Create replacement',
+                            label: `Create replacement for ${row.studentIdentity}`,
                             icon: 'solar:copy-bold',
                             onClick: () =>
                               onRequestConcession?.({
@@ -553,22 +678,14 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             },
           },
         ]}
-        data={filteredItems}
+        data={tableData}
         noDataText={
           <>
-            No Concessions Found{' '}
+            No concessions in this tab{' '}
             {canAdd && (
-              <Box
-                component="span"
-                onClick={onAddConcession}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': { cursor: 'pointer', textDecoration: 'underline' },
-                }}
-              >
-                Add Concession
-              </Box>
+              <Button size="small" onClick={onAddConcession}>
+                Request Concession
+              </Button>
             )}
           </>
         }
@@ -595,18 +712,30 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               </Typography>
             ) : (
               <Typography variant="body2">
-                Approve {formatNumber(approvalPreview.total, 'INR')} in concessions? This updates the student’s fees.
+                Approve {formatNumber(approvalPreview.total, 'INR')} in concessions? This updates
+                the student’s fees.
               </Typography>
             )}
           </Box>
         }
         action={
           <LoadingButton
+            startIcon={
+              <Iconify
+                icon={
+                  approvalPreview === null
+                    ? 'mdi:clipboard-text-search-outline'
+                    : 'mdi:check-circle-outline'
+                }
+              />
+            }
             variant="contained"
             color="success"
             size="small"
             loading={isPreviewingApproval || isApproving}
-            disabled={!approvalContext.data || approvalContext.isFetching || approvalContext.isError}
+            disabled={
+              !approvalContext.data || approvalContext.isFetching || approvalContext.isError
+            }
             onClick={approvalPreview === null ? reviewApproval : confirmApproval}
           >
             {approvalPreview === null ? 'Review impact' : 'Confirm approve'}
@@ -629,6 +758,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -701,10 +831,17 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           />
         </DialogScrollContent>
         <DialogActions>
-          <Button variant="outlined" color="inherit" size="small" onClick={closeCancelDialog}>
+          <Button
+            startIcon={<Iconify icon="mdi:close" />}
+            variant="outlined"
+            color="inherit"
+            size="small"
+            onClick={closeCancelDialog}
+          >
             Close
           </Button>
           <LoadingButton
+            startIcon={<Iconify icon="mdi:cancel" />}
             loading={isCancelling}
             variant="contained"
             color="error"

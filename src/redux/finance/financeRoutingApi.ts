@@ -10,6 +10,8 @@ export interface RoutingOption {
   label: string;
 }
 export type RoutingOperation =
+  | 'income-entry'
+  | 'expense-entry'
   | 'collection'
   | 'refund'
   | 'refund-policy'

@@ -7,15 +7,19 @@ import type {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSectionHeader } from 'src/components/form-section-card';
+import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
 import {
   Box,
   Stack,
   Alert,
   Button,
   Accordion,
+  IconButton,
   Typography,
   AccordionSummary,
   AccordionDetails,
@@ -60,36 +64,92 @@ export default function FeeStructureReviewStep({
   const [details, setDetails] = useState(false);
   return (
     <Stack spacing={2}>
+      <FormSectionCard
+        icon="mdi:clipboard-check-outline"
+        title="Structure summary"
+        descriptionTooltip="Fixed fee total includes optional heads. Variable amounts are set during student assignment; this is not a student's amount due."
+        action={
+          <Label color={locked ? 'info' : preview?.isReady ? 'success' : 'warning'}>
+            {locked ? 'Published' : preview?.isReady ? 'Ready to publish' : 'Draft'}
+          </Label>
+        }
+      >
+        <Typography variant="h6" sx={{ overflowWrap: 'anywhere' }}>
+          {candidate.name}
+        </Typography>
+        <Box
+          component="dl"
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, minmax(0, 1fr))',
+            },
+            gap: 2,
+            m: 0,
+          }}
+        >
+          {[
+            {
+              label: 'Fixed fee total',
+              value: structureMoney(
+                candidate.feeHeads
+                  .filter((line) => !line.isVariable)
+                  .reduce((sum, line) => sum + (line.amount ?? 0), 0)
+              ),
+            },
+            { label: 'Fee heads', value: candidate.feeHeads.length },
+            {
+              label: 'Optional fee heads',
+              value: candidate.feeHeads.filter((line) => line.isOptional).length,
+            },
+            {
+              label: 'Variable fee heads',
+              value: candidate.feeHeads.filter((line) => line.isVariable).length,
+            },
+          ].map((item) => (
+            <Box key={item.label}>
+              <Typography component="dt" variant="caption" color="text.secondary">
+                {item.label}
+              </Typography>
+              <Typography component="dd" variant="h6" sx={{ m: 0 }}>
+                {item.value}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </FormSectionCard>
       <Box
-        component="dl"
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
-          gap: 2,
-          m: 0,
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
+          gap: 1.5,
         }}
       >
-        <Box>
-          <Typography component="dt" variant="caption" color="text.secondary">
-            Configured fixed amount
-          </Typography>
-          <Typography component="dd" variant="subtitle2" sx={{ m: 0 }}>
-            {structureMoney(
-              candidate.feeHeads
-                .filter((line) => !line.isVariable)
-                .reduce((sum, line) => sum + (line.amount ?? 0), 0)
-            )}
-          </Typography>
-        </Box>
         {impacts.map((impact) => (
-          <Box key={impact.key}>
-            <Typography component="dt" variant="caption" color="text.secondary">
-              {impact.label}
-            </Typography>
-            <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
+          <FormSectionCard
+            key={impact.key}
+            icon={impact.key === 'collection' ? 'mdi:cash-check' : 'mdi:cash-refund'}
+            title={impact.label}
+            action={
+              <CustomTooltip title={`${writable ? 'Edit' : 'View'} ${impact.label}`}>
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={busy}
+                    aria-label={`${writable ? 'Edit' : 'View'} ${impact.label}`}
+                    onClick={() => onNavigate(1)}
+                  >
+                    <Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
+            }
+          >
+            <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
               {candidate[`${impact.key}PolicyVersionId`] ? impact.policyLabel : impact.empty}
             </Typography>
-          </Box>
+          </FormSectionCard>
         ))}
       </Box>
       {locked && (
@@ -103,21 +163,21 @@ export default function FeeStructureReviewStep({
         icon="mdi:clipboard-check-outline"
         title={
           locked
-            ? 'Publication checks'
+            ? 'Publication validation'
             : preview?.errors.length
               ? `${preview.errors.length} issue${preview.errors.length === 1 ? ' blocks' : 's block'} publication`
-              : 'Configuration readiness'
+              : 'Publish readiness'
         }
         descriptionTooltip="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
         action={
           <LoadingButton
             size="small"
-            startIcon={<Iconify icon="mdi:refresh" />}
+            startIcon={<Iconify icon={GlobalIcons.refresh} />}
             loading={previewing}
             disabled={busy}
             onClick={onReview}
           >
-            {locked ? 'View Publication Checks' : 'Recheck Configuration'}
+            {locked ? 'View saved checks' : 'Check readiness'}
           </LoadingButton>
         }
       />
@@ -154,13 +214,21 @@ export default function FeeStructureReviewStep({
                         }
                       >
                         {/policy|collection|refund/i.test(message)
-                          ? 'Review Policies'
-                          : 'Review Fee Heads'}
+                          ? 'Review policies'
+                          : 'Review fee heads'}
                       </Button>
                       {/refund/i.test(message) && onRemoveRefund && (
-                        <Button size="small" disabled={busy} onClick={onRemoveRefund}>
-                          Remove Refund Policy
-                        </Button>
+                        <CustomTooltip title="Remove refund policy">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            aria-label="Remove refund policy"
+                            disabled={busy}
+                            onClick={onRemoveRefund}
+                          >
+                            <Iconify icon={GlobalIcons.delete} />
+                          </IconButton>
+                        </CustomTooltip>
                       )}
                     </Stack>
                   </Box>
@@ -194,8 +262,13 @@ export default function FeeStructureReviewStep({
             icon="mdi:shield-check-outline"
             title="Policy coverage"
             action={
-              <Button size="small" disabled={busy} onClick={() => onNavigate(1)}>
-                {writable ? 'Edit Policies' : 'View Policies'}
+              <Button
+                size="small"
+                startIcon={<Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />}
+                disabled={busy}
+                onClick={() => onNavigate(1)}
+              >
+                {writable ? 'Edit policies' : 'View policies'}
               </Button>
             }
           />
@@ -213,8 +286,8 @@ export default function FeeStructureReviewStep({
               {
                 id: 'name',
                 label: 'Fee head',
-                width: '34%',
-                minWidth: 200,
+                width: '28%',
+                minWidth: 140,
                 isSort: false,
                 isFilter: false,
               },
@@ -246,14 +319,19 @@ export default function FeeStructureReviewStep({
           />
           <FormSectionHeader
             icon="mdi:calendar-month-outline"
-            title="Installment schedule"
+            title="Payment schedules"
             action={
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                 <Button size="small" onClick={() => setDetails(!details)} aria-pressed={details}>
-                  {details ? 'Hide Details' : 'Show Details'}
+                  {details ? 'Hide details' : 'Show details'}
                 </Button>
-                <Button size="small" disabled={busy} onClick={() => onNavigate(0)}>
-                  {writable ? 'Edit Fee Heads' : 'View Fee Heads'}
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon={writable ? GlobalIcons.edit : GlobalIcons.eye} />}
+                  disabled={busy}
+                  onClick={() => onNavigate(0)}
+                >
+                  {writable ? 'Edit fee heads' : 'View fee heads'}
                 </Button>
               </Stack>
             }
@@ -264,93 +342,111 @@ export default function FeeStructureReviewStep({
             </Typography>
           )}
           {preview.schedules.map((schedule) => (
-            <Stack key={schedule.feeHeadId} spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="baseline" useFlexGap flexWrap="wrap">
-                <Typography component="h3" variant="subtitle2">
-                  {schedule.feeHeadName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {schedule.paymentTermName} · v{schedule.versionNumber} ·{' '}
-                  {schedule.installments.length} installment
-                  {schedule.installments.length === 1 ? '' : 's'}
-                </Typography>
-              </Stack>
-              <CustomizableTable
-                tableTitle={`${schedule.feeHeadName} installments`}
-                tableId={`${tableId}-installments-${schedule.feeHeadId}-${details ? 'detail' : 'summary'}`}
-                data={schedule.installments.map((line) => ({
-                  ...line,
-                  _id: `${schedule.feeHeadId}-${line.sequence}`,
-                }))}
-                showToolbar={false}
-                isPagination={schedule.installments.length > 12}
-                isFilter={false}
-                isSearch={false}
-                isShowedDense={false}
-                columns={[
-                  {
-                    id: 'name',
-                    label: 'Installment',
-                    width: '20%',
-                    minWidth: 140,
-                    isSort: false,
-                    isFilter: false,
-                  },
-                  {
-                    id: 'coverageStartDate',
-                    label: 'Service period',
-                    width: '38%',
-                    minWidth: 240,
-                    isSort: false,
-                    isFilter: false,
-                    render: (_value, row) =>
-                      `${date(row.coverageStartDate)} – ${date(row.coverageEndDate)}`,
-                  },
-                  ...(details
-                    ? [
-                        {
-                          id: 'demandDate',
-                          label: 'Demand date',
-                          minWidth: 140,
-                          isSort: false,
-                          isFilter: false,
-                          render: (value: string) => date(value),
-                        },
-                        {
-                          id: 'allocationPercentage',
-                          label: 'Allocation (%)',
-                          minWidth: 120,
-                          align: 'right' as const,
-                          isSort: false,
-                          isFilter: false,
-                        },
-                      ]
-                    : []),
-                  {
-                    id: 'dueDate',
-                    label: 'Due date',
-                    width: '22%',
-                    minWidth: 140,
-                    isSort: false,
-                    isFilter: false,
-                    render: (value) => date(value),
-                  },
-                  {
-                    id: 'calculatedAmount',
-                    label: 'Amount (₹)',
-                    width: '20%',
-                    minWidth: 150,
-                    align: 'right',
-                    isSort: false,
-                    isFilter: false,
-                    render: (_value, row) =>
-                      structureMoney(
-                        row.calculatedAmount == null ? null : Number(row.calculatedAmount)
-                      ),
-                  },
-                ]}
-              />
-            </Stack>
+            <Accordion
+              key={schedule.feeHeadId}
+              disableGutters
+              elevation={0}
+              sx={{
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                '&:before': { display: 'none' },
+              }}
+            >
+              <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                  <Typography component="h3" variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                    {schedule.feeHeadName}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {schedule.paymentTermName} · Version {schedule.versionNumber} ·{' '}
+                    {schedule.installments.length} installment
+                    {schedule.installments.length === 1 ? '' : 's'}
+                  </Typography>
+                </Stack>
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: { xs: 1, sm: 1.5 }, pt: 0 }}>
+                <CustomizableTable
+                  tableTitle={`${schedule.feeHeadName} installments`}
+                  tableId={`${tableId}-installments-${schedule.feeHeadId}-${details ? 'detail' : 'summary'}`}
+                  data={schedule.installments.map((line) => ({
+                    ...line,
+                    _id: `${schedule.feeHeadId}-${line.sequence}`,
+                  }))}
+                  showToolbar={false}
+                  isPagination={schedule.installments.length > 12}
+                  isFilter={false}
+                  isSearch={false}
+                  isShowedDense={false}
+                  columns={[
+                    {
+                      id: 'name',
+                      label: 'Installment',
+                      width: '20%',
+                      minWidth: 140,
+                      isSort: false,
+                      isFilter: false,
+                    },
+                    {
+                      id: 'coverageStartDate',
+                      label: 'Service period',
+                      width: '38%',
+                      minWidth: 240,
+                      isSort: false,
+                      isFilter: false,
+                      render: (_value, row) =>
+                        `${date(row.coverageStartDate)} – ${date(row.coverageEndDate)}`,
+                    },
+                    ...(details
+                      ? [
+                          {
+                            id: 'demandDate',
+                            label: 'Demand date',
+                            minWidth: 140,
+                            isSort: false,
+                            isFilter: false,
+                            render: (value: string) => date(value),
+                          },
+                          {
+                            id: 'allocationPercentage',
+                            label: 'Allocation (%)',
+                            minWidth: 120,
+                            align: 'right' as const,
+                            isSort: false,
+                            isFilter: false,
+                          },
+                        ]
+                      : []),
+                    {
+                      id: 'dueDate',
+                      label: 'Due date',
+                      width: '22%',
+                      minWidth: 140,
+                      isSort: false,
+                      isFilter: false,
+                      render: (value) => date(value),
+                    },
+                    {
+                      id: 'calculatedAmount',
+                      label: 'Amount (₹)',
+                      width: '20%',
+                      minWidth: 150,
+                      align: 'right',
+                      isSort: false,
+                      isFilter: false,
+                      render: (_value, row) =>
+                        structureMoney(
+                          row.calculatedAmount == null ? null : Number(row.calculatedAmount)
+                        ),
+                    },
+                  ]}
+                />
+              </AccordionDetails>
+            </Accordion>
           ))}
         </>
       )}

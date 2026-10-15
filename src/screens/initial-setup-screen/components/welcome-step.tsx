@@ -31,12 +31,12 @@ export default function WelcomeStep() {
             direction="row"
             spacing={2}
             alignItems="center"
-            sx={{ py: 2.5, '&:not(:last-child)': { borderBottom: 1, borderColor: 'divider' } }}
+            sx={{ py: 2, '&:not(:last-child)': { borderBottom: 1, borderColor: 'divider' } }}
           >
             <Box sx={{ p: 1, display: 'flex', borderRadius: 1, bgcolor: 'background.neutral' }}>
               <Iconify icon={icon} width={24} sx={{ color: 'text.secondary' }} />
             </Box>
-            <Box>
+            <Box sx={{ minWidth: 0 }}>
               <Typography variant="subtitle1">{title}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {description}

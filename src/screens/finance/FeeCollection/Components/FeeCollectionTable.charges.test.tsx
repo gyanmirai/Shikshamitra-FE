@@ -62,19 +62,19 @@ describe('Collections canonical charge columns', () => {
     const view = render(<FeeCollectionTable {...props} />);
     expect(screen.getByText('Diya Sweta Badgujar (10092)')).toBeVisible();
     expect(
-      within(screen.getByRole('cell', { name: 'totalCharges' })).getByText(/^₹\s*400\.\s*00$/)
+      within(screen.getByRole('cell', { name: 'totalCharges' })).getByText(/^₹\s*400$/)
     ).toBeVisible();
     expect(
-      within(screen.getByRole('cell', { name: 'pendingCharges' })).getByText(/^₹\s*400\.\s*00$/)
+      within(screen.getByRole('cell', { name: 'pendingCharges' })).getByText(/^₹\s*400$/)
     ).toBeVisible();
 
     mocks.row = { ...mocks.row, pendingCharges: 100 };
     view.rerender(<FeeCollectionTable {...props} />);
     expect(
-      within(screen.getByRole('cell', { name: 'totalCharges' })).getByText(/^₹\s*400\.\s*00$/)
+      within(screen.getByRole('cell', { name: 'totalCharges' })).getByText(/^₹\s*400$/)
     ).toBeVisible();
     expect(
-      within(screen.getByRole('cell', { name: 'pendingCharges' })).getByText(/^₹\s*100\.\s*00$/)
+      within(screen.getByRole('cell', { name: 'pendingCharges' })).getByText(/^₹\s*100$/)
     ).toBeVisible();
   });
 });
