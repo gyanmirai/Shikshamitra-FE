@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-10-09
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,6 +25,7 @@ Cache invalidation is specific to the selected provider.
 The approved editor uses navigation groups and a compact permission matrix with inline action choices.
 The dialog wrapper clips only its own scroll container. Navigation and matrix scroll containers remain independently scrollable.
 `account-settings-permissions.ts` maps those controls to existing server permission IDs, retaining staging's Student bundles and Accounts Settings exceptions.
+Institute Setup's Shift Management and Academic Setup entries use explicit `permissionChildren` in `src/constants/institute-setup.ts` to map their matrices to `InstituteSetup.ShiftManagement.View` and `InstituteSetup.AcademicSetup.View`. The matrix discovers each namespace's existing server actions. Their parent `ShikshaMitra.Module.InstituteSetup.*` names remain navigation visibility flags and are never submitted as action grants.
 Statutory Schemes Edit maps to the existing `Edit`, `Activate`, `ManageEnrollment`, and `ApproveOverride` grants under `HR.PayrollManagement.Settings.StatutorySchemes`.
 The matrix edits only explicitly mapped actions. Undisplayed and unfamiliar server actions remain unchanged.
 Delete remains disabled while no matching server permission exists.

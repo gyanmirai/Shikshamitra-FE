@@ -45,7 +45,12 @@ export const StandardActions = ({
         handleClose={addDialog.onFalse}
         open={addDialog.value}
       >
-        <DivisionForm handleClose={addDialog.onFalse} editData={null} classId={standard.id} />
+        <DivisionForm
+          handleClose={addDialog.onFalse}
+          editData={null}
+          classId={standard.id}
+          existingDivisions={standard.divisions}
+        />
       </CustomDialog>
       <CustomDialog
         title={`Edit standard ${standard.name}`}

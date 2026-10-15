@@ -41,21 +41,6 @@ export const AcademicSetupChildCard = ({
         },
       }}
     >
-      <Box
-        sx={{
-          width: 36,
-          height: 36,
-          mr: 1,
-          flexShrink: 0,
-          borderRadius: 1,
-          bgcolor: 'background.neutral',
-          color: 'text.secondary',
-          display: 'grid',
-          placeItems: 'center',
-        }}
-      >
-        <Iconify icon={meta.icon} width={16} aria-hidden />
-      </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
           {node.name}

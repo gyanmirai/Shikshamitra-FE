@@ -1,15 +1,14 @@
 import type { CardProps } from '@mui/material';
 import type { ICalendarEvent } from 'src/types/calendar';
+import type { CalendarViewOption } from 'src/sections/calendar/calendar-view-switcher';
 import type { EventClickArg, CalendarOptions, EventSourceInput } from '@fullcalendar/core';
 
 import { Card } from '@mui/material';
-import React, { useEffect } from 'react';
 import Calendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
-import { fDate } from 'src/utils/format-time';
-import { useTheme } from '@mui/material/styles';
 // eslint-disable-next-line import/no-duplicates
 import dayGridPlugin from '@fullcalendar/daygrid';
+import React, { useState, useEffect } from 'react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -27,11 +26,7 @@ type CommonCalenderProps = CalendarOptions & {
   onDateClick?: (arg: EventClickArg) => void;
   showCalendarToolbar?: boolean;
   formate?: string;
-  viewOptions?: {
-    value: string;
-    label: string;
-    icon: string;
-  }[];
+  viewOptions?: CalendarViewOption[];
   renderCompToHeader?: React.ReactNode;
   showCalendarFilter?: boolean;
   onOPenFiler?: () => void;
@@ -55,16 +50,15 @@ const CommonCalender = ({
   onOPenFiler = () => {},
   containerProps = {},
   canReset,
+  datesSet,
+  eventDidMount,
   ...props
 }: CommonCalenderProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const theme = useTheme();
+  const [title, setTitle] = useState('');
   const {
     calendarRef,
-    //
     view,
     date,
-    //
     onDatePrev,
     onDateNext,
     onDateToday,
@@ -74,12 +68,7 @@ const CommonCalender = ({
 
     onResizeEvent,
     onInitialView,
-    //
     setDate,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    selectedRange,
-    //
-    // onClickEventInFilters,
   } = useCalendar({
     initialView,
     initialDate,
@@ -90,22 +79,19 @@ const CommonCalender = ({
   }, [onInitialView]);
 
   return (
-    // <DashboardContent
-    //   maxWidth="xl"
-    //   sx={{
-    //     ...flexProps,
-    //     [theme.breakpoints.up('lg')]: {
-    //       px: 0,
-    //     },
-    //   }}
-    // >
     <Card sx={{ minHeight: '70vh', ...flexProps }} {...containerProps}>
       <StyledCalendar
-        sx={{ ...flexProps, height: '100%', '.fc.fc-media-screen': { flex: '1 1 auto' } }}
+        sx={{
+          ...flexProps,
+          minHeight: 0,
+          height: '100%',
+          '.fc.fc-media-screen': { flex: '1 1 auto', minHeight: 0 },
+        }}
       >
         {showCalendarToolbar && (
           <CalendarToolbar
-            date={fDate(date, formate)}
+            date={date}
+            title={formate ? undefined : title}
             format={formate}
             setDate={setDate}
             calendarRef={calendarRef}
@@ -117,7 +103,7 @@ const CommonCalender = ({
             onToday={onDateToday}
             onChangeView={onChangeView}
             onOpenFilters={onOPenFiler}
-            viewOptions={viewOptions as any}
+            viewOptions={viewOptions}
             renderCompToHeader={renderCompToHeader}
             showCalendarFilter={showCalendarFilter}
           />
@@ -141,6 +127,15 @@ const CommonCalender = ({
           select={onSelectRange}
           eventClick={onDateClick}
           aspectRatio={3}
+          expandRows
+          datesSet={(arg) => {
+            setTitle(arg.view.title);
+            datesSet?.(arg);
+          }}
+          eventDidMount={(arg) => {
+            arg.el.title ||= arg.event.title;
+            eventDidMount?.(arg);
+          }}
           eventDrop={(arg) => {
             onDropEvent(arg, onEventDrop);
           }}
@@ -152,7 +147,6 @@ const CommonCalender = ({
         />
       </StyledCalendar>
     </Card>
-    // </DashboardContent>
   );
 };
 

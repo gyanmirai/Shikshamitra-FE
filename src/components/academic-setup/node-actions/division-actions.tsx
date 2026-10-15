@@ -4,15 +4,15 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useDeleteDivisionMutation } from 'src/redux/division/divisionApi';
 
-import type { AcademicSetupParents } from '../academic-setup-model';
-
 import { DivisionForm } from '../division-setup';
 import { AcademicActionButtons } from './academic-action-buttons';
+
+import type { AcademicSetupParents } from '../academic-setup-model';
 
 export const DivisionActions = ({
   division,
@@ -47,6 +47,7 @@ export const DivisionActions = ({
           handleClose={editDialog.onFalse}
           editData={division}
           classId={parents.standard?.id ?? ''}
+          existingDivisions={parents.standard?.divisions}
         />
       </CustomDialog>
       <ConfirmDialog

@@ -123,6 +123,74 @@ try {
     ).toBeVisible();
   });
   await check(
+    'division duplicates are blocked inline in onboarding and management without an API call',
+    async () => {
+      let posts = 0;
+      const track = (request) => {
+        if (request.method() === 'POST' && request.url().endsWith('/api/app/division')) posts += 1;
+      };
+      page.on('request', track);
+      for (const button of ['Onboarding Division', 'Add Division']) {
+        await page.getByRole('button', { name: button, exact: true }).click();
+        await page.getByRole('textbox', { name: 'Division Name' }).fill(' a ');
+        await page.getByRole('spinbutton', { name: 'Strength' }).fill('50');
+        await page.getByRole('button', { name: 'Submit', exact: true }).click();
+        await expect(
+          page.getByText(/A division named 'A' already exists in this standard./i)
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Confirm', exact: true })).toHaveCount(0);
+        await page.screenshot({
+          path: fileURLToPath(
+            new URL(`division-duplicate-${button.replaceAll(' ', '-')}.png`, output)
+          ),
+        });
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      }
+      expect(posts).toBe(0);
+      page.off('request', track);
+    }
+  );
+  await check(
+    'stale division names return 409 with an editable draft and corrected retry succeeds',
+    async () => {
+      const { items } = await (await page.request.get(`${origin}/api/app/division`)).json();
+      const standardId = items.find((item) => item.name === 'A').standardId;
+      await page.getByRole('button', { name: 'Onboarding Division', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Division Name' }).fill('Race');
+      await page.getByRole('spinbutton', { name: 'Strength' }).fill('50');
+      const external = await page.request.post(`${origin}/api/app/division`, {
+        data: { name: 'Race', strength: 50, standardId },
+      });
+      expect(external.ok()).toBe(true);
+      const response = page.waitForResponse(
+        (item) => item.url().endsWith('/api/app/division') && item.request().method() === 'POST'
+      );
+      await submit();
+      expect((await response).status()).toBe(409);
+      await expect(page.getByRole('button', { name: 'Confirm', exact: true })).toHaveCount(0);
+      await expect(page.getByRole('textbox', { name: 'Division Name' })).toHaveValue('Race');
+      await expect(page.getByRole('textbox', { name: 'Division Name' })).toBeFocused();
+      await expect(page.getByRole('spinbutton', { name: 'Strength' })).toHaveValue('50');
+      await expect(
+        page
+          .locator('[data-sonner-toast]')
+          .filter({ hasText: "A division named 'Race' already exists" })
+      ).toBeVisible();
+      await expect(
+        page
+          .locator('.MuiFormHelperText-root')
+          .filter({ hasText: "A division named 'Race' already exists" })
+      ).toBeVisible();
+      await page.getByRole('textbox', { name: 'Division Name' }).fill('Corrected');
+      await submit();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await page.reload();
+      await expect(
+        page.getByText('Corrected: 50 seats; saved room: unassigned', { exact: true })
+      ).toBeVisible();
+    }
+  );
+  await check(
     'division edits persist strength and preserve room allocations after reload',
     async () => {
       const { items } = await (await page.request.get(`${origin}/api/app/division`)).json();
@@ -176,6 +244,7 @@ try {
       await expect(page.getByRole('combobox', { name: 'Room (optional)' })).toHaveValue(
         'Main > First > B102'
       );
+      await page.getByRole('combobox', { name: 'Room (optional)' }).hover();
       await page.getByRole('button', { name: 'Clear', exact: true }).click();
       request = page.waitForRequest(
         (item) => item.method() === 'PUT' && item.url().includes('/api/app/division/')
@@ -206,13 +275,19 @@ try {
     for (const width of [390, 768, 1440]) {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       for (const theme of ['light', 'dark']) {
-        await page.getByRole('button', { name: 'Add Standard', exact: true }).click();
+        await page.getByRole('button', { name: 'Onboarding Division', exact: true }).click();
+        await page.getByRole('textbox', { name: 'Division Name' }).fill('A');
+        await page.getByRole('spinbutton', { name: 'Strength' }).fill('50');
+        await page.getByRole('button', { name: 'Submit', exact: true }).click();
+        await expect(
+          page.getByText("A division named 'A' already exists in this standard.", { exact: true })
+        ).toBeVisible();
         const bounds = await page.getByRole('dialog').boundingBox();
         expect(bounds.x).toBeGreaterThanOrEqual(0);
         expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
         await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeInViewport();
         await page.screenshot({
-          path: fileURLToPath(new URL(`standard-${width}-${theme}.png`, output)),
+          path: fileURLToPath(new URL(`division-${width}-${theme}.png`, output)),
         });
         await page.keyboard.press('Escape');
         await expect(page.getByRole('dialog')).toHaveCount(0);

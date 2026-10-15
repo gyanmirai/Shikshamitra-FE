@@ -1,9 +1,25 @@
+import {
+  duplicateDivisionCode,
+  duplicateDivisionMessage,
+  isDuplicateDivisionError,
+} from './duplicate-division-error';
+
 export interface ParsedApiProblemDetail {
   detail: string;
   errorCode?: string;
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'UserScope:InvalidHierarchy':
+    'The academic permission selection contains items from different branches. Reload the hierarchy and select the board, medium, stage, class, and division from the same branch.',
+  'UserScope:UsersNotFound':
+    'One or more selected user accounts could not be found in this school. Refresh the staff record and check its linked account.',
+  'UserScope:UserNotFound':
+    'The selected user account could not be found in this school. Refresh the staff record and check its linked account.',
+  'UserScope:InvalidReferences':
+    'A selected academic year, board, medium, stage, class, or division is no longer available. Reload the academic hierarchy and select permissions again.',
+  'UserScope:AcademicYearNotFound':
+    'The selected academic year is no longer available. Select an available academic year and try again.',
   'Finance:AccountsRegisterInvalidPeriod':
     'Select a month or payment date within the academic year.',
   'Finance:AccountsRegisterInvalidFilter':
@@ -184,6 +200,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
   const businessData = data?.data ?? data?.error?.data;
+  const isDivisionDuplicate = isDuplicateDivisionError(errorCode, businessData);
   const duplicateStandardName = businessData?.name;
   const isLegacyStandardDuplicate =
     errorCode === 'ShikshaMitra.TenantSettings:00001' &&
@@ -204,6 +221,10 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   const specificCandidate = candidates.find((candidate) => !isGenericMessage(candidate));
 
   const detail =
+    (isDivisionDuplicate &&
+      duplicateDivisionMessage(
+        typeof businessData?.name === 'string' ? businessData.name : undefined
+      )) ||
     duplicateStandardMessage ||
     knownMessage ||
     specificCandidate ||
@@ -212,6 +233,6 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
 
   return {
     detail: String(detail),
-    errorCode,
+    errorCode: isDivisionDuplicate ? duplicateDivisionCode : errorCode,
   };
 }

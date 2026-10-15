@@ -20,12 +20,9 @@ export const useSubjectCard = ({
   ISubjectCardProps,
   'isPublished' | 'onFileUpload' | 'onAccordionToggle' | 'onRemove' | 'isCore'
 >) => {
-  const {
-    teacherObjs,
-    setTeacherObjs,
-    fetchTeacherOptions,
-  } = useTeacherSelection({
+  const { teacherObjs, setTeacherObjs, fetchTeacherOptions } = useTeacherSelection({
     teacherIds: subject.teacherIds,
+    standardId: formik.values.classId,
   });
 
   const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
@@ -36,7 +33,9 @@ export const useSubjectCard = ({
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
 
-  const isExpanded = activeSubjectId === subject.subjectNo;
+  const teacherError =
+    formik.status?.subjectId === subject.subjectId ? formik.status.teacherError : undefined;
+  const isExpanded = activeSubjectId === subject.subjectNo || Boolean(teacherError);
 
   const handleChange = useCallback(
     (field: string, value: unknown) => {
@@ -48,9 +47,10 @@ export const useSubjectCard = ({
 
   const getError = useCallback(
     (field: string) =>
-      getIn(formik.touched, `subjects[${index}].${field}`) &&
-      getIn(formik.errors, `subjects[${index}].${field}`),
-    [formik.touched, formik.errors, index]
+      (field === 'teacherIds' && teacherError) ||
+      (getIn(formik.touched, `subjects[${index}].${field}`) &&
+        getIn(formik.errors, `subjects[${index}].${field}`)),
+    [formik.touched, formik.errors, index, teacherError]
   );
 
   const hasSubjectError = useMemo(() => {
@@ -122,6 +122,6 @@ export const useSubjectCard = ({
     isExpanded,
     handleChange,
     getError,
-    hasSubjectError,
+    hasSubjectError: hasSubjectError || Boolean(teacherError),
   };
 };

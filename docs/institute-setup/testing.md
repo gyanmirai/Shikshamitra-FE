@@ -3,7 +3,7 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -20,8 +20,11 @@ TL;DR: run focused form/permission tests and typecheck before browser acceptance
 | Documentation | `node scripts/docs/validate-docs.mjs --module institute-setup` |
 | Synthetic production-screen fixture | `node node_modules/vite/bin/vite.js --config e2e/fixtures/school-identity/vite.config.mjs` |
 | Automated fixture workflows and responsive states | `node e2e/school-identity/check.mjs` |
+| User/role permission catalogue and disabled Delete | `npx playwright test --config e2e/security/school-identity-permissions.config.ts` |
 
 Final browser acceptance must use the Codex in-app browser after automated checks. Cover defaults and partial overrides, parent selection, loading/error/retry, upload rejection, keyboard file selection, preview/download, unsaved cancellation, signature restrictions, copy confirmation, reset, and history. Check a narrow screen, both supported themes and focus visibility. Clearly label any test fixture and distinguish it from live API acceptance.
+
+The permission fixture uses the production permission form and RTK Query client with synthetic catalogue responses. Its user and role cases verify disabled Delete choices, enabled View/Add, no initial write, keyboard configuration changes, exact changed-only saves and persistence after reload in light/dark at desktop, tablet and phone widths. It does not authenticate to a deployed school or prove deployed backend acceptance; the [backend tests](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#school-identity-checks) validate the real catalogue and rejection contract.
 
 Store screenshots, generated PDFs and fixture state under ignored `.artifacts/`; never commit credentials, authentication state, or test outputs. Deployment and database migration are separate release actions, not evidence that browser acceptance has occurred.
 
@@ -34,10 +37,13 @@ The fixture imports the production screen and shared components, with synthetic 
 | Stage-scoped duplicate names, legacy/new API errors, onboarding contracts | `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/academic-setup/standard-form-model.test.ts src/components/academic-setup/onboarding-standard-form.test.tsx src/components/academic-setup/onboarding-division-model.test.ts src/utils/academic-setup-error.test.ts --pool=threads` |
 | Fixture with production forms and real backend endpoints | `node node_modules/vite/bin/vite.js --config e2e/fixtures/academic-setup/vite.config.mjs` |
 | Automated form/API, retry, room preservation and responsive checks | `node e2e/fixtures/academic-setup/check.mjs` |
+| Division validation and current/legacy conflict parsing | `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/components/academic-setup/onboarding-division-model.test.ts src/utils/duplicate-division-error.test.ts src/utils/academic-setup-error.test.ts --pool=threads` |
 
 Start the Academic Setup bridge described in the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md) first. The fixture listens at `http://127.0.0.1:4322`, uses production `ClassForm`, `DivisionForm`, shared dialogs, toast parsing and RTK Query, and labels its authentication and outer workspace as synthetic. It writes only to disposable local SQLite. A fresh bridge provides Class 1 and Class 3; restart it before rerunning the complete script.
 
 The final Codex in-app browser smoke verifies inline duplicates, successful corrected submission, division editing/reopening, optional room selection in regular management, room-free initial setup and keyboard/responsive behavior. Automated room options are synthetic; division writes use the real disposable ABP backend. Evidence is ignored under `.artifacts/academic-setup/`. These checks do not establish QA/Staging deployment. The broader existing `api-problem-details.test.ts` currently has an unrelated admission-form approval message failure; keep it distinct from these focused checks.
+
+Division regression coverage also checks that known duplicates send no POST, that a name created after opening the form returns a specific HTTP 409 and an editable draft, and that corrected submission survives reload. Screenshots include the division duplicate error at 390, 768 and 1440 pixels in light and dark themes.
 
 ## Shift tenant isolation
 

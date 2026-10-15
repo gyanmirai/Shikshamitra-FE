@@ -11,8 +11,6 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { alpha, useTheme } from '@mui/material/styles';
-import { CustomTabs } from 'src/components/custom-tabs';
-import CustomSelect from 'src/components/custom-select';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -21,8 +19,8 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Paper, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
-import { Box, Tab, Paper, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import {
   useGetCalendarsQuery,
   useGetCalendarDaysQuery,
@@ -36,26 +34,12 @@ import { buildCalendarDayMap } from './calendarViewModel';
 import CalendarYearView from './components/CalendarYearView';
 import { calculateCalendarSummary } from './calendarSummary';
 import AcademicCalendarView from './components/AcademicCalendarView';
+import CalendarViewControls from './components/CalendarViewControls';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
 import { CalendarYearSkeleton, CalendarMonthSkeleton } from './components/CalendarSkeleton';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
-
-// ─── Tabs ────────────────────────────────────────────────────────────────────
-
-const TABS = [
-  {
-    value: 'yearView',
-    label: 'Year View',
-    icon: <Iconify icon="mdi:calendar-month-outline" width={18} />,
-  },
-  {
-    value: 'monthView',
-    label: 'Calendar View',
-    icon: <Iconify icon="mdi:calendar-today-outline" width={18} />,
-  },
-];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -330,7 +314,7 @@ const CalendarManagement = () => {
   }, [filteredCalendarDays, selectedDayDate, selectedDayMarkerId]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 1 }}>
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
         heading="Calendar Management"
@@ -502,40 +486,16 @@ const CalendarManagement = () => {
         </Box>
       </Paper>
 
-      {/* View Tabs */}
-      <Paper
-        sx={{
-          flexShrink: 0,
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
-        <CustomTabs
-          value={activeTab}
-          onChange={(_, val) => setParam('tab', val)}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Paper>
-
-      {/* Class Filter */}
-      <Box sx={{ width: { xs: 1, sm: 180 }, flexShrink: 0 }}>
-        <CustomSelect
-          label="Class"
-          options={classFilterOptions}
-          labelKey="name"
-          valueKey="id"
-          value={filterStandardId}
-          onChange={(val) => setFilterStandardId(val as string)}
-          size="small"
-          formControlProps={{ size: 'small', sx: { minWidth: 180 } }}
-        />
-      </Box>
+      <CalendarViewControls
+        activeTab={activeTab}
+        onTabChange={(tab) => setParam('tab', tab)}
+        classOptions={classFilterOptions}
+        classId={filterStandardId}
+        onClassChange={setFilterStandardId}
+      />
 
       {/* Tab Content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         {/* YEAR VIEW TAB */}
         {activeTab === 'yearView' && (
           <>

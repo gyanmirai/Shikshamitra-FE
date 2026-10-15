@@ -77,16 +77,18 @@ const SubjectAssignmentForm = ({
     [formik.values.selectedSubjects, handleSubjectChange]
   );
 
+  const classError = formik.status?.classError || (formik.touched.classId && formik.errors.classId);
+
   if (isLoading) return <SubjectAssignmentFormSkeleton />;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+      <form onSubmit={formik.handleSubmit} aria-busy={formik.isSubmitting} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={1}>
+            <Grid container spacing={1} inert={formik.isSubmitting}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
+                <ShakingTextField error={Boolean(classError)}>
                   <CustomSelect
                     options={classOptions}
                     label="Class *"
@@ -95,15 +97,23 @@ const SubjectAssignmentForm = ({
                     valueKey="value"
                     disabled={isEdit}
                     onChange={(val) => {
-                      formik.setFieldValue('classId', val);
+                      if (String(val) === formik.values.classId) return;
                       const standard = classOptions.find((c: any) => c.value === val);
-                      formik.setFieldValue('className', standard?.label);
+                      formik.setStatus(undefined);
+                      formik.setValues({
+                        ...formik.values,
+                        classId: String(val),
+                        className: standard?.label,
+                        subjects: formik.values.subjects.map((subject) => ({
+                          ...subject,
+                          teacherIds: [],
+                          teachers: [],
+                        })),
+                      });
                     }}
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
-                    error={Boolean(formik.touched.className && formik.errors.className)}
-                    helperText={
-                      (formik.touched.className && formik.errors.className) || 'Select the class'
-                    }
+                    error={Boolean(classError)}
+                    helperText={classError || 'Select the class'}
                   />
                 </ShakingTextField>
               </Grid>
@@ -210,7 +220,7 @@ const SubjectAssignmentForm = ({
                 <Grid size={{ xs: 12 }}>
                   {formik.values.subjects.map((subject, index) => (
                     <SubjectCard
-                      key={subject.subjectNo}
+                      key={`${formik.values.classId}:${subject.subjectNo}`}
                       index={index}
                       formik={formik}
                       subject={subject}

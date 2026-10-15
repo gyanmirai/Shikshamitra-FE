@@ -5,8 +5,9 @@ import type { EventInput } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { Box, Alert } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import CommonCalender from 'src/components/calender';
+import { alpha, useTheme } from '@mui/material/styles';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
 
 import { getDayTypeSemanticColor } from './calendarDayTypePresentation';
@@ -41,6 +42,7 @@ export default function AcademicCalendarView({
   onDayClick,
 }: Props) {
   const theme = useTheme();
+  const smUp = useResponsive('up', 'sm');
 
   /**
    * Memoization Justification:
@@ -58,9 +60,9 @@ export default function AcademicCalendarView({
             start: date,
             end: dayjs(date).add(1, 'day').format('YYYY-MM-DD'),
             allDay: true,
-            backgroundColor: color,
+            backgroundColor: alpha(color, 0.12),
             borderColor: color,
-            textColor: theme.palette.common.white,
+            textColor: (theme.vars?.palette ?? theme.palette).text.primary,
             extendedProps: { markerId: record.id },
           };
         })
@@ -81,7 +83,16 @@ export default function AcademicCalendarView({
   };
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        flex: 1,
+        height: '100%',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+      }}
+    >
       {!isLoading && events.length === 0 && (
         <Alert severity="info">No events are scheduled for this calendar.</Alert>
       )}
@@ -90,8 +101,9 @@ export default function AcademicCalendarView({
         data={events}
         isLoading={isLoading}
         initialDate={initialDate}
-        initialView="dayGridMonth"
+        initialView={smUp ? 'dayGridMonth' : 'listWeek'}
         showCalendarToolbar
+        height="100%"
         editable={false}
         droppable={false}
         selectable={false}
@@ -106,7 +118,10 @@ export default function AcademicCalendarView({
         containerProps={{
           sx: {
             flexGrow: 1,
-            minHeight: 560,
+            minHeight: 0,
+            height: '100%',
+            border: 1,
+            borderColor: 'divider',
             display: 'flex',
             flexDirection: 'column',
             '--Paper-shadow': 'var(--shadows-0)',

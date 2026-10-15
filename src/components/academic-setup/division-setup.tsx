@@ -142,7 +142,12 @@ const DivisionSetup = ({ classId }: DivisionSetupProps) => {
         handleClose={onCloseDialog}
         open={modal.value}
       >
-        <DivisionForm classId={classId} handleClose={onCloseDialog} editData={editData} />
+        <DivisionForm
+          classId={classId}
+          handleClose={onCloseDialog}
+          editData={editData}
+          existingDivisions={currentTabs}
+        />
       </CustomDialog>
       <Box
         display="flex"

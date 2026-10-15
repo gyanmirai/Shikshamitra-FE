@@ -87,6 +87,9 @@ const instituteSetupModule = {
           shortcutKey: 'Ctrl+S',
           shortcutKeyName: 'Ctrl+S',
           permissionName: instituteSetupPermissions.shiftManagement,
+          permissionChildren: [
+            { title: 'Shift Management', permissionName: 'InstituteSetup.ShiftManagement.View' },
+          ],
           icon: menuIconView('mdi:clock-time-three-outline'),
         },
         {
@@ -96,6 +99,9 @@ const instituteSetupModule = {
           shortcutKey: 'Ctrl+A',
           shortcutKeyName: 'Ctrl+A',
           permissionName: instituteSetupPermissions.academicSetup,
+          permissionChildren: [
+            { title: 'Academic Setup', permissionName: 'InstituteSetup.AcademicSetup.View' },
+          ],
           icon: menuIconView('mdi:school-outline'),
         },
         {

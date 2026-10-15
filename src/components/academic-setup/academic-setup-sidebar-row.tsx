@@ -55,22 +55,6 @@ export const AcademicSetupSidebarRow = ({
         },
       }}
     >
-      <Box
-        sx={{
-          width: 34,
-          height: 34,
-          mr: 1,
-          flexShrink: 0,
-          borderRadius: 1.25,
-          display: 'grid',
-          placeItems: 'center',
-          bgcolor: isSelected ? 'background.paper' : 'background.neutral',
-          color: 'text.secondary',
-        }}
-      >
-        <Iconify icon={meta.icon} width={16} aria-hidden />
-      </Box>
-
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <ListItemText
           primary={node.name}

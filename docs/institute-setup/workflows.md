@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,7 +16,11 @@ The active stage supplies its existing standard names to `ClassForm`, including 
 
 Initial setup Add Division and Edit Division expose name and strength only, send no room field and make no room-option request. Regular Academic Setup includes an optional searchable room selector. Editing displays the saved assignment, preserves it when untouched, and sends an empty value only when the user clears it. Related hierarchy form actions use consistent Cancel, Submit and Confirm icons. See the [backend API contract](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md) for authoritative persistence behavior.
 
+The selected standard supplies its existing division names to `DivisionForm`. Onboarding and management share `useDivisionForm`: duplicate names show an inline error before confirmation, with case and surrounding spaces ignored and the edited record excluded. A server duplicate response closes confirmation, retains name and strength, and shows a specific toast and name-field error so the user can correct and resubmit. The parser supports both the dedicated division conflict code and the legacy shared code when `entityName` is `division`.
+
 ## School Identity configuration
+
+The Module Permission dialog retains the compact View/Add/Delete layout for both users and roles. School Identity Delete is unavailable by design, so every choice in that group stays disabled. Add groups the server's existing configuration and signature capabilities; View remains separate. No Delete grant is generated or submitted. See the [backend product rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#school-identity) for supported asset changes and retention.
 
 TL;DR: submit shared assets once, then change only the assets that differ for a board or its medium. [Backend product rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md) own resolution and document retention.
 

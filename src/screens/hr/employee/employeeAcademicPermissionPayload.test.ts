@@ -51,4 +51,26 @@ describe('staff academic permission payload', () => {
     expect(payload).not.toHaveProperty('standardIds');
     expect(payload).not.toHaveProperty('divisionIds');
   });
+
+  it('does not turn a selection from another academic year into a permission clear', () => {
+    expect(() =>
+      buildUserScopeBulkAssignPayload({
+        academicYearId: 'year-1',
+        userIds: ['user-1'],
+        selection: { ...emptyAccessSelection(), boards: ['board-from-previous-year'] },
+        allBoards,
+      })
+    ).toThrow('no longer matches the selected academic year');
+  });
+
+  it('still supports intentionally clearing every academic permission', () => {
+    expect(
+      buildUserScopeBulkAssignPayload({
+        academicYearId: 'year-1',
+        userIds: ['user-1'],
+        selection: emptyAccessSelection(),
+        allBoards,
+      })
+    ).toMatchObject({ scopes: [], clearExisting: true });
+  });
 });

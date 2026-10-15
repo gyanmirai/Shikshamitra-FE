@@ -4,6 +4,19 @@ import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
   it.each([
+    ['UserScope:InvalidHierarchy', 'same branch'],
+    ['UserScope:UsersNotFound', 'linked account'],
+    ['UserScope:InvalidReferences', 'Reload the academic hierarchy'],
+    ['UserScope:AcademicYearNotFound', 'Select an available academic year'],
+  ])('explains %s when an older backend returns only generic detail', (errorCode, recovery) => {
+    expect(
+      parseApiProblemDetail({
+        status: 400,
+        data: { errorCode, detail: 'One or more business rules were violated.' },
+      }).detail
+    ).toContain(recovery);
+  });
+  it.each([
     {
       detail: 'One or more business rules were violated.',
       data: { Reason: "The email must match the selected person's saved profile." },

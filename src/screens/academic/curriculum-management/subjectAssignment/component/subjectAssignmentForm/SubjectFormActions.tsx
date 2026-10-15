@@ -41,6 +41,7 @@ const SubjectFormActions = ({
           variant="outlined"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={onCancel}
+          disabled={isAddLoading || isUpdateLoading}
           size="small"
         >
           Cancel
@@ -50,6 +51,7 @@ const SubjectFormActions = ({
           variant="contained"
           onClick={onSubmit}
           loading={isUpdateLoading}
+          disabled={isAddLoading || isUpdateLoading}
           startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
         >
           Update
@@ -59,20 +61,22 @@ const SubjectFormActions = ({
       <>
         <LoadingButton
           size="small"
-          type="submit"
+          type="button"
           variant="outlined"
           onClick={onDraft}
           loading={isAddLoading && currentStatus === PublishUnpublishStatusType.Draft}
+          disabled={isAddLoading || isUpdateLoading}
           startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
         >
           Save Draft
         </LoadingButton>
         <LoadingButton
           size="small"
-          type="submit"
+          type="button"
           variant="contained"
           onClick={onPublish}
           loading={isAddLoading && currentStatus === PublishUnpublishStatusType.Published}
+          disabled={isAddLoading || isUpdateLoading}
           startIcon={<Iconify icon={GlobalIcons.publish} />}
         >
           Publish

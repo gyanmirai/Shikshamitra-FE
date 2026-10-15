@@ -168,6 +168,9 @@ function Workspace() {
                 handleClose={close}
                 editData={editDivision}
                 classId={classOne.id}
+                existingDivisions={(divisions?.items ?? []).filter(
+                  (item: { standardId: string }) => item.standardId === classOne.id
+                )}
               />
             ) : null}
           </CustomDialog>

@@ -6,10 +6,9 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { varAlpha } from 'src/theme/styles';
 import Typography from '@mui/material/Typography';
+import { StudentSearchingIllustration } from 'src/assets/illustrations/student-searching-illustration';
 
 // ----------------------------------------------------------------------
-
-const emptyContentImage = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/assets/icons/empty/ic-content.svg`;
 
 export type EmptyContentProps = Omit<StackProps, 'title'> & {
   title?: React.ReactNode;
@@ -54,12 +53,16 @@ export function EmptyContent({
       }}
       {...other}
     >
-      <Box
-        component="img"
-        alt="empty content"
-        src={imgUrl ?? emptyContentImage}
-        sx={{ width: 1, maxWidth: 160, ...slotProps?.img }}
-      />
+      {imgUrl ? (
+        <Box
+          component="img"
+          alt=""
+          src={imgUrl}
+          sx={{ width: 1, maxWidth: 160, ...slotProps?.img }}
+        />
+      ) : (
+        <StudentSearchingIllustration sx={slotProps?.img} />
+      )}
 
       {title && (
         <Typography
@@ -68,9 +71,9 @@ export function EmptyContent({
           sx={{
             mt: 1,
             textAlign: 'center',
-            ...slotProps?.title,
-            color: 'text.disabled',
+            color: 'text.secondary',
             fontSize: '16px !important',
+            ...slotProps?.title,
           }}
         >
           {title}
@@ -80,7 +83,7 @@ export function EmptyContent({
       {description && (
         <Typography
           variant="caption"
-          sx={{ mt: 1, textAlign: 'center', color: 'text.disabled', ...slotProps?.description }}
+          sx={{ mt: 1, textAlign: 'center', color: 'text.secondary', ...slotProps?.description }}
         >
           {description}
         </Typography>

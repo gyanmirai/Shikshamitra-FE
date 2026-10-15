@@ -28,6 +28,13 @@ Do not delete deployed school roles to test this flow.
 
 ## Permission editor checks
 
+`institute-setup-permissions.test.ts` covers Shift Management and Academic Setup action discovery for both Role and User providers, independent visibility flags, bulk action names, and missing catalogues.
+`e2e/security/institute-setup-permissions.spec.ts` uses the production permission form/client with a synthetic network catalogue. It checks all four existing actions, exact changed-only Edit saves, reload persistence, keyboard selection, accessibility, both themes and 390/768/1440 widths. Backend `PermissionConsistencyApi_Tests` separately verifies the real ABP catalogue and role/user override round trips. Finish with a read-only local Admin DDVS check in the Codex in-app browser; synthetic writes do not prove deployed acceptance.
+
+```sh
+npx playwright test --config e2e/security/institute-setup-permissions.config.ts
+```
+
 Run from the frontend repository:
 
 ```sh

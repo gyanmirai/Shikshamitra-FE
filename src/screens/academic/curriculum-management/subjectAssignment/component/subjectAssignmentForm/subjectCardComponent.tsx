@@ -164,6 +164,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               teacherObjs={teacherObjs}
               fetchTeacherOptions={fetchTeacherOptions}
               onTeachersChange={(newValues) => {
+                formik.setStatus(undefined);
                 setTeacherObjs(newValues);
                 formik.setFieldValue(
                   `subjects.${index}.teacherIds`,

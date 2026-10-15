@@ -21,7 +21,7 @@ export function useCalendar({
 
   const smUp = useResponsive('up', 'sm');
 
-  const [date, setDate] = useState<Date | string>(new Date());
+  const [date, setDate] = useState<Date | string>(() => initialDate || new Date());
 
   const [openForm, setOpenForm] = useState(false);
 
@@ -29,7 +29,9 @@ export function useCalendar({
 
   const [selectedRange, setSelectedRange] = useState<ICalendarRange>(null);
 
-  const [view, setView] = useState<ICalendarView>(smUp ? 'dayGridMonth' : 'listWeek');
+  const [view, setView] = useState<ICalendarView>(
+    initialView || (smUp ? 'dayGridMonth' : 'listWeek')
+  );
 
   // Function to scroll to current time
   const scrollToCurrentTime = () => {
