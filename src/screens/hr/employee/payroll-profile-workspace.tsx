@@ -22,6 +22,7 @@ import {
 } from 'src/redux/hr/compensation-revision-api';
 
 import { staffSalaryEditorHref } from './payroll-profile-utils';
+import { StatutoryProfileEditor } from './statutory-profile-editor';
 import { EmployeeEsiDetails } from '../payroll/setting/employee-esi-details';
 import { PayrollProfilePolicyEditor } from './payroll-profile-policy-editor';
 import { PayrollProfileDetailsEditor } from './payroll-profile-details-editor';
@@ -225,12 +226,16 @@ export function PayrollProfileWorkspace({
   origin = 'staff-profile',
   detailsContent,
   actionsDisabled = false,
+  statutoryEditorRef,
+  onStatutoryStateChange,
 }: {
   employeeId: string;
   employeeName?: string;
   origin?: 'staff-profile' | 'staff-edit';
   detailsContent?: (values: PayrollProfileDetails, canEdit: boolean) => ReactNode;
   actionsDisabled?: boolean;
+  statutoryEditorRef?: React.Ref<import('./statutory-profile-editor').StatutoryProfileEditHandle>;
+  onStatutoryStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const prefetchSalaryEditor = useSalaryEditorPrefetch(employeeId);
@@ -351,7 +356,8 @@ export function PayrollProfileWorkspace({
               ]}
             />
             <Typography variant="caption" color="text.secondary">
-              Estimated net salary excludes monthly attendance effects and one-time adjustments.
+              Payroll uses current registration, rules, attendance and adjustments. This saved net
+              estimate excludes monthly attendance effects and one-time adjustments.
             </Typography>
             <Divider />
             <SalaryBreakdown revision={salary.data} />
@@ -395,6 +401,22 @@ export function PayrollProfileWorkspace({
           </Link>
         )}
       </FormSectionCard>
+      {(canReadSalary || can(hrPermissions.payroll.settings.statutorySchemes)) && (
+        <FormSectionCard
+          icon="mdi:shield-check-outline"
+          title="PF and ESIC"
+          action={<EmployeeEsiDetails employeeId={employeeId} employeeName={employeeName} />}
+        >
+          <StatutoryProfileEditor
+            employeeId={employeeId}
+            grossSalary={salary.data?.grossSalary}
+            disabled={actionsDisabled}
+            editorRef={statutoryEditorRef}
+            onEditorStateChange={onStatutoryStateChange}
+            guardNavigation={!onStatutoryStateChange}
+          />
+        </FormSectionCard>
+      )}
       <FormSectionCard
         icon="mdi:clipboard-check-outline"
         title="Assigned policies"
@@ -477,9 +499,6 @@ export function PayrollProfileWorkspace({
           <FormSectionCard icon="mdi:bank-outline" title="Bank details">
             <DetailRowsSkeleton label="Loading bank details" rows={5} />
           </FormSectionCard>
-          <FormSectionCard icon="mdi:card-account-details-outline" title="Statutory identifiers">
-            <DetailRowsSkeleton label="Loading statutory identifiers" rows={2} />
-          </FormSectionCard>
           <FormSectionCard icon="mdi:clock-outline" title="Attendance integration">
             <DetailRowsSkeleton label="Loading attendance integration" rows={2} />
           </FormSectionCard>
@@ -520,18 +539,6 @@ export function PayrollProfileWorkspace({
                   bank?.accountNumber ? `•••• ${bank.accountNumber.slice(-4)}` : null,
                 ],
                 ['IFSC code', bank?.ifscCode || null],
-              ]}
-            />
-          </FormSectionCard>
-          <FormSectionCard
-            icon="mdi:card-account-details-outline"
-            title="Statutory identifiers"
-            action={<EmployeeEsiDetails employeeId={employeeId} employeeName={employeeName} />}
-          >
-            <DetailRows
-              rows={[
-                ['EPF number', identifiers?.epfNumber || null],
-                ['UAN number', identifiers?.uanNumber || null],
               ]}
             />
           </FormSectionCard>

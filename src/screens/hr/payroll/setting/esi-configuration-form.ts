@@ -32,12 +32,12 @@ export function validateConfiguration(
   if (!values.effectiveMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(values.effectiveMonth))
     errors.effectiveMonth = 'Choose an effective month.';
   const config = values.calculationSettings;
-  if (
-    (config?.eligibilityBasis === 'BASIC_COMPONENT' ||
-      config?.calculationBasis === 'BASIC_COMPONENT') &&
-    !config.basicComponentId
-  )
-    errors.calculationSettings = { basicComponentId: 'Choose the Basic salary component.' };
+  const componentErrors: Record<string, string> = {};
+  if (config.eligibilityBasis === 'COMPONENT' && !config.eligibilityComponentId)
+    componentErrors.eligibilityComponentId = 'Choose the eligibility component.';
+  if (config.calculationBasis === 'COMPONENT' && !config.calculationComponentId)
+    componentErrors.calculationComponentId = 'Choose the calculation component.';
+  if (Object.keys(componentErrors).length) errors.calculationSettings = componentErrors;
   if (config?.employeePercentage != null || config?.employerPercentage != null) {
     const configurationErrors: Record<string, string> = {};
     (['employeePercentage', 'employerPercentage'] as const).forEach((key) => {

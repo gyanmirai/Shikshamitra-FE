@@ -31,9 +31,9 @@ describe('ESIC calculation configuration', () => {
     expect(
       validateConfiguration({
         ...draft,
-        calculationSettings: { ...draft.calculationSettings, eligibilityBasis: 'BASIC_COMPONENT' },
+        calculationSettings: { ...draft.calculationSettings, eligibilityBasis: 'COMPONENT' },
       })
-    ).toHaveProperty('calculationSettings.basicComponentId');
+    ).toHaveProperty('calculationSettings.eligibilityComponentId');
     expect(
       validateConfiguration({
         ...draft,
@@ -62,23 +62,23 @@ describe('ESIC calculation configuration', () => {
     const calculationSettings = {
       ...draft.calculationSettings,
       eligibilityBasis: 'GROSS' as const,
-      calculationBasis: 'BASIC_COMPONENT' as const,
+      calculationBasis: 'COMPONENT' as const,
     };
     expect(validateConfiguration({ ...draft, calculationSettings })).toHaveProperty(
-      'calculationSettings.basicComponentId'
+      'calculationSettings.calculationComponentId'
     );
     expect(
       validateConfiguration({
         ...draft,
-        calculationSettings: { ...calculationSettings, basicComponentId: 'school-basic' },
+        calculationSettings: { ...calculationSettings, calculationComponentId: 'school-basic' },
       })
     ).toEqual({});
   });
   it('preserves independently saved and scheduled bases', () => {
     const calculationSettings = {
       eligibilityBasis: 'GROSS' as const,
-      calculationBasis: 'BASIC_COMPONENT' as const,
-      basicComponentId: 'school-basic',
+      calculationBasis: 'COMPONENT' as const,
+      calculationComponentId: 'school-basic',
     };
     const current = { ...settings.current, calculationSettings };
     expect(configurationValues({ ...settings, current }).calculationSettings).toEqual(
@@ -90,8 +90,10 @@ describe('ESIC calculation configuration', () => {
       concurrencyStamp: 'future',
       calculationSettings: {
         ...calculationSettings,
-        eligibilityBasis: 'BASIC_COMPONENT' as const,
+        eligibilityBasis: 'COMPONENT' as const,
+        eligibilityComponentId: 'other-earning',
         calculationBasis: 'GROSS' as const,
+        calculationComponentId: null,
       },
     };
     expect(

@@ -172,7 +172,7 @@ Global typecheck remains blocked by two unrelated `primaryText` prop errors on `
 
 Verify an inactive employee can open **ESIC details** under Payroll > Statutory Details and from salary setup.
 Cover View and ManageEnrollment separately, failed-save draft preservation, readiness refresh, and removal of stale salary calculations after registration changes.
-Covered employees without an insurance number must remain blocked from activation, including registration-pending employees.
+Covered employees with pending registration can activate with valid salary rules; payroll shows suppressed contributions and a registration warning.
 Keep the server-side activation test in the backend compensation API suite authoritative.
 
 On 2026-10-01, the focused salary-builder and ESIC settings suites passed all 12 tests, with typecheck and scoped lint passing.
@@ -637,6 +637,15 @@ Run `e2e/hr/employee/employee-salary-structure.spec.ts` for page entry, draft pr
 The salary editor tests cover denied access, unavailable staff reads, persistent footer actions, guarded navigation, and validated return destinations.
 They also cover formatted decimal and large amounts with unchanged numeric payloads, inline amount errors, missing-reason focus, and calculation/save feedback through the history refresh.
 Verify the compact employee/ESIC header, readable history months, annual equivalent labels, and footer wrapping in the authenticated browser at desktop and narrow widths.
+
+## Enrollment and salary document coverage
+
+Run statutory-profile-editor.test.tsx for dirty refreshes, concurrency, retry keys, boundary choice and atomic salary-save responses.
+Run salary-documents-workspace.test.tsx for cancellation, stale responses, retained filters, mandatory columns, duplicate exports and expired downloads.
+Run SalaryStructureBuilder.test.tsx, esi-configuration-form.test.ts, payslip-settings-form.test.tsx and runPayroll.test.tsx for integration regressions.
+Run focused ESLint, TypeScript, HR docs validation and security regressions.
+Use an authenticated local backend for the final Codex-browser smoke at 390, 768 and 1440 pixel widths.
+Inspect application-rendered monthly PDFs, inclusive statements, missing months and register totals with anonymized data.
 
 ## Operational dashboard decision cue checks
 

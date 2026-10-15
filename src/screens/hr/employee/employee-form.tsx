@@ -72,6 +72,7 @@ import {
   EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE,
 } from './employee-default-policy-utils';
 
+import type { StatutoryProfileEditHandle } from './statutory-profile-editor';
 import type {
   IPayrollInformation,
   IWorkExperienceResponse,
@@ -394,12 +395,17 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const [pendingPolicyRoute, setPendingPolicyRoute] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(editData && initialStep === 5 ? 5 : 0);
   const payrollEditRef = React.useRef<PayrollEditHandle>(null);
+  const statutoryEditRef = React.useRef<StatutoryProfileEditHandle>(null);
+  const [statutoryState, setStatutoryState] = useState({ dirty: false, busy: false });
+  const [payrollSubmitting, setPayrollSubmitting] = useState(false);
   const [payrollState, setPayrollState] = useState<PayrollEditState>({
     dirty: false,
     busy: false,
     ready: false,
   });
   const inlinePayroll = Boolean(editData?.id && activeStep === 5);
+  const payrollDirty = payrollState.dirty || statutoryState.dirty;
+  const payrollBusy = payrollState.busy || statutoryState.busy;
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -873,14 +879,19 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
       isSaveButton: boolean = false
     ) => {
       if (editData?.id && activeStep === 5) {
+        setPayrollSubmitting(true);
         setIsLoading(true);
         onBusyChange?.(true);
         try {
-          if (await payrollEditRef.current?.save()) {
+          if (
+            (!statutoryEditRef.current || (await statutoryEditRef.current.save())) &&
+            (await payrollEditRef.current?.save())
+          ) {
             dispatch(setIsChanges(false));
             if (!isSaveButton) setActiveStep(6);
           }
         } finally {
+          setPayrollSubmitting(false);
           setIsLoading(false);
           onBusyChange?.(false);
         }
@@ -1033,6 +1044,11 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
       allBoardsForAcademicPermission.length > 0 &&
       !academicPermissionBoardsFetching
     );
+  useEffect(() => {
+    if (inlinePayroll) onBusyChange?.(payrollBusy || payrollSubmitting);
+  }, [inlinePayroll, payrollBusy, payrollSubmitting, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
+
   const disableStepperSubmit =
     activeStep === 7
       ? !(academicPermissionSubmitReady && academicPermissionHierarchyReady)
@@ -1041,9 +1057,11 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   return (
     <>
       <CustomStepperWithFormik
-        showSaveButton={inlinePayroll ? payrollState.dirty : isChanges}
+        showSaveButton={inlinePayroll ? payrollDirty : isChanges}
         saveAndNextButtonProps={
-          inlinePayroll ? { disabled: !payrollState.ready, loading: payrollState.busy } : undefined
+          inlinePayroll
+            ? { disabled: !payrollState.ready, loading: payrollBusy || payrollSubmitting }
+            : undefined
         }
         disableSubmit={disableStepperSubmit}
         key={editData?.id || 'new'}
@@ -1054,7 +1072,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
         completedSteps={!editData ? completedSteps : undefined}
         isStepClickable={canNavigateToStep}
         handleBack={() => {
-          if (inlinePayroll && payrollState.dirty) setPendingStep(activeStep - 1);
+          if (inlinePayroll && payrollDirty) setPendingStep(activeStep - 1);
           else setActiveStep(activeStep - 1);
         }}
         validationSchema={employeeValidations[activeStep]}
@@ -1088,7 +1106,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
             <>
               <SyncReduxDirty
                 formik={formik}
-                dirtyOverride={inlinePayroll ? payrollState.dirty : undefined}
+                dirtyOverride={inlinePayroll ? payrollDirty : undefined}
               />
               {inlinePayroll ? (
                 <Box sx={{ p: { xs: 1, sm: 2 }, minWidth: 0 }}>
@@ -1097,6 +1115,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
                     employeeName={editData.fullName}
                     origin="staff-edit"
                     actionsDisabled={payrollState.busy}
+                    statutoryEditorRef={statutoryEditRef}
+                    onStatutoryStateChange={setStatutoryState}
                     detailsContent={(values, canEdit) => (
                       <PayrollEditDetails
                         ref={payrollEditRef}

@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import EmployeeFrom from './employee-form';
 
-const mocks = vi.hoisted(() => ({ save: vi.fn(), toast: vi.fn() }));
+const mocks = vi.hoisted(() => ({ save: vi.fn(), toast: vi.fn(), saveStatutory: vi.fn() }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
     selector({
@@ -38,23 +38,51 @@ vi.mock('src/components/form-section-card', () => ({
 vi.mock('src/redux/hr/employee-payroll-profile-api', () => ({
   useUpdatePayrollProfileDetailsMutation: () => [mocks.save, {}],
 }));
-vi.mock('./payroll-profile-workspace', () => ({
-  PayrollProfileWorkspace: ({ detailsContent }: any) =>
-    detailsContent(
-      {
-        bankDetails: {
-          bankName: 'Bank',
-          branchName: '',
-          accountHolderName: 'Staff',
-          accountNumber: '1234567890',
-          ifscCode: 'SBIN0001234',
+vi.mock('./payroll-profile-workspace', async () => {
+  const { useState, useEffect, useImperativeHandle } = await import('react');
+  return {
+    PayrollProfileWorkspace: ({
+      detailsContent,
+      statutoryEditorRef,
+      onStatutoryStateChange,
+    }: any) => {
+      const [dirty, setDirty] = useState(false);
+      useEffect(
+        () => onStatutoryStateChange?.({ dirty, busy: false }),
+        [dirty, onStatutoryStateChange]
+      );
+      useImperativeHandle(statutoryEditorRef, () => ({
+        save: async () => {
+          if (!dirty) return true;
+          const saved = await mocks.saveStatutory();
+          if (saved) setDirty(false);
+          return saved;
         },
-        statutoryIdentifiers: { epfNumber: '', uanNumber: '' },
-        attendanceIntegration: { punchId: 'PUNCH', totalWorkingHourPerMonth: 160 },
-      },
-      true
-    ),
-}));
+      }));
+      return (
+        <>
+          <button type="button" onClick={() => setDirty(true)}>
+            Edit statutory registration
+          </button>
+          {detailsContent(
+            {
+              bankDetails: {
+                bankName: 'Bank',
+                branchName: '',
+                accountHolderName: 'Staff',
+                accountNumber: '1234567890',
+                ifscCode: 'SBIN0001234',
+              },
+              statutoryIdentifiers: { epfNumber: '', uanNumber: '' },
+              attendanceIntegration: { punchId: 'PUNCH', totalWorkingHourPerMonth: 160 },
+            },
+            true
+          )}
+        </>
+      );
+    },
+  };
+});
 vi.mock('src/components/custom-stepper', async () => {
   const { useFormik } = await import('formik');
   return {
@@ -94,6 +122,7 @@ vi.mock('src/components/custom-stepper', async () => {
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.saveStatutory.mockResolvedValue(true);
   mocks.save.mockReturnValue({ unwrap: async () => undefined });
 });
 function setup() {
@@ -137,4 +166,22 @@ it('keeps the wizard on Payroll and retains inputs when Save & Next fails', asyn
   await screen.findByRole('alert');
   expect(screen.getByTestId('current-step')).toHaveTextContent('5');
   expect(screen.getByLabelText('Punch ID')).toHaveValue('DRAFT');
+});
+
+it('Save & Next persists a registration-only draft before advancing', async () => {
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit statutory registration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(screen.getByTestId('current-step')).toHaveTextContent('6'));
+  expect(mocks.saveStatutory).toHaveBeenCalledTimes(1);
+  expect(mocks.save).not.toHaveBeenCalled();
+});
+it('a failed registration save retains the Payroll step and never writes bank details', async () => {
+  mocks.saveStatutory.mockResolvedValue(false);
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit statutory registration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(mocks.saveStatutory).toHaveBeenCalledTimes(1));
+  expect(screen.getByTestId('current-step')).toHaveTextContent('5');
+  expect(mocks.save).not.toHaveBeenCalled();
 });

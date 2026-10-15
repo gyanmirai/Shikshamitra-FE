@@ -142,12 +142,6 @@ export const PayrollEditDetails = forwardRef<
           {field('bankDetails.ifscCode', 'IFSC code *')}
         </Box>
       </FormSectionCard>
-      <FormSectionCard icon="mdi:card-account-details-outline" title="Statutory identifiers">
-        <Box sx={grid}>
-          {field('statutoryIdentifiers.epfNumber', 'EPF number')}
-          {field('statutoryIdentifiers.uanNumber', 'UAN number')}
-        </Box>
-      </FormSectionCard>
       <FormSectionCard icon="mdi:clock-outline" title="Attendance integration">
         <Box sx={grid}>
           {field('attendanceIntegration.punchId', 'Punch ID')}

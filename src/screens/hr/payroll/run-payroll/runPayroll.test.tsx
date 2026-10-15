@@ -26,6 +26,8 @@ const mocks = vi.hoisted(() => ({
   confirmLock: null as null | (() => Promise<void>),
   adjustment: vi.fn(),
 }));
+vi.mock('./payroll-registration-readiness', () => ({ PayrollRegistrationReadiness: () => null }));
+
 vi.mock('react-redux', () => ({ useSelector: (selector: any) => selector(mocks.state) }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: mocks.replace }),

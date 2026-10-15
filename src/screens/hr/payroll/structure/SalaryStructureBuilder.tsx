@@ -25,6 +25,10 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {
+  StatutoryProfileEditor,
+  type StatutoryProfileDraft,
+} from 'src/screens/hr/employee/statutory-profile-editor';
+import {
   useGetActiveSalaryTemplatesQuery,
   useCalculateSalaryTemplateMutation,
 } from 'src/redux/hr/salary-template-api';
@@ -42,7 +46,6 @@ import {
   Paper,
   Button,
   Select,
-  Switch,
   Tooltip,
   Divider,
   MenuItem,
@@ -145,8 +148,11 @@ export function SalaryStructureBuilder({
     Number(formik.values.quotedMonthlyAmount || 0)
   );
   const [pfEnrollment, setPfEnrollment] = useState<PfEnrollment>({ membership: 'UNKNOWN' });
-  const [pfApplicable, setPfApplicable] = useState(false);
+  const [pfChoice, setPfChoice] = useState<'OPT_IN' | 'OPT_OUT' | null>(null);
   const [pfRuleId, setPfRuleId] = useState('');
+  const [savedStatutoryProfile, setSavedStatutoryProfile] =
+    useState<import('src/redux/hr/statutory-profile-api').StaffStatutoryProfileResponse>();
+  const [statutoryDraft, setStatutoryDraft] = useState<StatutoryProfileDraft | null>(null);
   const [customizing, setCustomizing] = useState(false);
   const [overrides, setOverrides] = useState<SalaryRuleOverride[]>([]);
   const [customizationReason, setCustomizationReason] = useState('');
@@ -171,7 +177,6 @@ export function SalaryStructureBuilder({
   const salaryTemplateLabelId = useId();
   const salaryBasisLabelId = useId();
   const pfRuleLabelId = useId();
-  const pfApplicableId = useId();
 
   const templates = templateData?.items || [];
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
@@ -179,6 +184,33 @@ export function SalaryStructureBuilder({
     templates.find((template) => template.id === selectedTemplateId) || defaultTemplate;
   const selectedVersion = selectedTemplate?.editableVersion;
   const pfRules = (pfData?.items || []).filter((rule: any) => rule.isActive);
+  const pfNotApplicable = calculation?.pfEligibility?.status === 'NOT_APPLICABLE';
+  const continuingPfMember =
+    pfEnrollment.membership === 'EXISTING_MEMBER' ||
+    calculation?.pfEligibility?.status === 'CONTINUING_MEMBER';
+  const pfRequired =
+    !pfNotApplicable &&
+    (continuingPfMember ||
+      (salaryBasis === 'GROSS' && monthlyAmount > 0 && monthlyAmount <= 25000) ||
+      calculation?.pfEligibility?.enrollmentRequired === true);
+  const pfApplicable =
+    !pfNotApplicable &&
+    (statutoryDraft ? statutoryDraft.profile.applyPf : pfRequired || pfChoice === 'OPT_IN');
+  const pfChoiceMissing =
+    employeeId && !statutoryDraft
+      ? true
+      : statutoryDraft
+        ? !statutoryDraft.valid
+        : !pfRequired &&
+          !pfNotApplicable &&
+          pfChoice === null &&
+          ((salaryBasis === 'GROSS' && monthlyAmount > 25000) ||
+            calculation?.pfEligibility?.status === 'VOLUNTARY');
+  useEffect(() => {
+    if (pfApplicable && !pfRuleId) {
+      setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+    }
+  }, [pfApplicable, pfRuleId, selectedVersion?.defaultPfRuleId, pfRules]);
   const exactMonthRevision = useMemo(
     () =>
       revisionData?.items
@@ -212,7 +244,7 @@ export function SalaryStructureBuilder({
       setPfEnrollment(
         source.pfEnrollment ?? { membership: source.pfRuleId ? 'EXISTING_MEMBER' : 'UNKNOWN' }
       );
-      setPfApplicable(Boolean(source.pfRuleId));
+      setPfChoice(source.pfRuleId ? 'OPT_IN' : 'OPT_OUT');
       setPfRuleId(source.pfRuleId || '');
       setOverrides(source.overrides || []);
       setCustomizationReason(source.customizationReason || '');
@@ -220,7 +252,7 @@ export function SalaryStructureBuilder({
     } else {
       setSelectedTemplateId(selectedTemplate.id);
       setSalaryBasis(selectedTemplate.editableVersion.defaultSalaryBasis);
-      setPfApplicable(selectedTemplate.editableVersion.defaultPfApplicable);
+      setPfChoice(null);
       setPfRuleId(selectedTemplate.editableVersion.defaultPfRuleId || '');
       const joining = dateOfJoining;
       if (joining) setEffectiveMonth(dayjs(joining).format('YYYY-MM'));
@@ -240,12 +272,15 @@ export function SalaryStructureBuilder({
   useEffect(() => setActivationCompleted(false), [employeeId]);
 
   const signature = JSON.stringify({
+    statutoryProfile: statutoryDraft?.profile,
+    statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
     templateVersionId: selectedVersion?.id,
     salaryBasis,
     effectiveMonth,
     monthlyAmount,
     pfEnrollment,
     pfApplicable,
+    pfChoice,
     pfRuleId,
     overrides: customizing ? overrides : [],
     customizationReason: customizing ? customizationReason.trim() : '',
@@ -253,8 +288,23 @@ export function SalaryStructureBuilder({
   const busy =
     localBusy || calculationState.isLoading || saveState.isLoading || activationState.isLoading;
   useEffect(() => {
-    if (initialized && baseline === null) setBaseline(signature);
-  }, [initialized, baseline, signature]);
+    if (
+      initialized &&
+      baseline === null &&
+      (!employeeId || statutoryDraft) &&
+      (!pfApplicable || pfRuleId || !pfRules.length)
+    )
+      setBaseline(signature);
+  }, [
+    initialized,
+    baseline,
+    signature,
+    employeeId,
+    statutoryDraft,
+    pfApplicable,
+    pfRuleId,
+    pfRules.length,
+  ]);
   useEffect(() => {
     onEditorStateChange?.({
       dirty: (baseline !== null && baseline !== signature) || esiEditorState.dirty,
@@ -274,7 +324,7 @@ export function SalaryStructureBuilder({
     setSelectedTemplateId(templateId);
     if (template) {
       setSalaryBasis(template.editableVersion.defaultSalaryBasis);
-      setPfApplicable(template.editableVersion.defaultPfApplicable);
+      setPfChoice(null);
       setPfRuleId(template.editableVersion.defaultPfRuleId || '');
       setCustomizing(false);
       setOverrides([]);
@@ -291,6 +341,7 @@ export function SalaryStructureBuilder({
       !Number.isFinite(monthlyAmount) ||
       monthlyAmount <= 0 ||
       !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
+      pfChoiceMissing ||
       (pfApplicable && !pfRuleId)
     )
       return;
@@ -308,6 +359,10 @@ export function SalaryStructureBuilder({
         pfEnrollment,
         pfApplicable,
         pfRuleId: pfApplicable ? pfRuleId : null,
+        statutoryProfileOverride: statutoryDraft?.profile,
+        statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
+        statutoryProfileUpdatePf: statutoryDraft?.updatePf,
+        statutoryProfileUpdateEsic: statutoryDraft?.updateEsic,
         overrides: customizing ? overrides : [],
         customizationReason: customizing ? customizationReason.trim() || null : null,
       }).unwrap();
@@ -330,6 +385,7 @@ export function SalaryStructureBuilder({
       !employeeId ||
       !selectedVersion ||
       !calculationCurrent ||
+      pfChoiceMissing ||
       !calculation ||
       savedSignature === signature ||
       hasConflict ||
@@ -358,6 +414,10 @@ export function SalaryStructureBuilder({
           pfEnrollment,
           pfApplicable,
           pfRuleId: pfApplicable ? pfRuleId : null,
+          statutoryProfileOverride: statutoryDraft?.profile,
+          statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
+          statutoryProfileUpdatePf: statutoryDraft?.updatePf,
+          statutoryProfileUpdateEsic: statutoryDraft?.updateEsic,
           statutoryProfile: 'IN-GJ',
           overrides: customizing ? overrides : [],
           customizationReason: customizing ? customizationReason.trim() || null : null,
@@ -366,8 +426,16 @@ export function SalaryStructureBuilder({
         },
       }).unwrap();
       operationKeyRef.current = '';
-      setBaseline(signature);
-      setSavedSignature(signature);
+      const savedSignatureValue = result.savedStatutoryProfile
+        ? JSON.stringify({
+            ...JSON.parse(signature),
+            statutoryProfile: result.savedStatutoryProfile.profile,
+            statutoryProfileConcurrencyStamp: result.savedStatutoryProfile.concurrencyStamp,
+          })
+        : signature;
+      setSavedStatutoryProfile(result.savedStatutoryProfile);
+      setBaseline(savedSignatureValue);
+      setSavedSignature(savedSignatureValue);
       if (refetchRevisions) await refetchRevisions();
       toast.success(
         result.isScheduled
@@ -500,7 +568,13 @@ export function SalaryStructureBuilder({
       !calculation.employeeStateInsurance.canCalculate ||
       calculation.employeeStateInsurance.issueCodes.some(
         (code) =>
-          code !== 'ESI_RATE_OVERRIDE' &&
+          ![
+            'ESI_RATE_OVERRIDE',
+            'ESI_APPLY_DISABLED',
+            'ESI_NUMBER_MISSING',
+            'ESI_BASIS_RECONCILIATION_DIFFERENCE',
+            'ESI_STATUTORY_ASSESSMENT_UNAVAILABLE',
+          ].includes(code) &&
           (code !== 'ESI_INSURANCE_NUMBER_REQUIRED' ||
             !calculation.employeeStateInsurance.registrationPending)
       )
@@ -521,6 +595,7 @@ export function SalaryStructureBuilder({
   else if (!selectedVersion) footerStatus = 'Choose a salary template';
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
   else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
+  else if (pfChoiceMissing) footerStatus = 'Choose whether to opt in or opt out of PF';
   else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
   else if (statutoryBlocked)
     footerStatus =
@@ -576,7 +651,8 @@ export function SalaryStructureBuilder({
           !Number.isFinite(monthlyAmount) ||
           monthlyAmount <= 0 ||
           !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
-          (pfApplicable && !pfRuleId)
+          (pfApplicable && !pfRuleId) ||
+          pfChoiceMissing
         }
       >
         Calculate salary
@@ -595,6 +671,7 @@ export function SalaryStructureBuilder({
           !canManage ||
           busy ||
           !calculationCurrent ||
+          pfChoiceMissing ||
           statutoryBlocked ||
           savedSignature === signature ||
           hasConflict ||
@@ -740,62 +817,34 @@ export function SalaryStructureBuilder({
                 bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                <Switch
-                  checked={pfApplicable}
-                  disabled={
-                    !canManage ||
-                    busy ||
-                    Boolean(
-                      calculation?.pfEligibility?.enrollmentRequired &&
-                      calculationCurrent &&
-                      pfApplicable
-                    )
-                  }
-                  onChange={(_, checked) => {
-                    setPfApplicable(checked);
-                    if (!checked) setPfRuleId('');
-                    else if (!pfRuleId)
-                      setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
-                    setCalculation(null);
-                  }}
-                  slotProps={{
-                    input: {
-                      id: pfApplicableId,
-                      'aria-describedby': `${pfApplicableId}-description`,
-                    },
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <StatutoryProfileEditor
+                  employeeId={employeeId}
+                  month={effectiveMonth}
+                  savedProfile={savedStatutoryProfile}
+                  draftMode
+                  pfEnrollmentRecorded={Boolean(currentRevision)}
+                  disabled={!canManage || busy}
+                  grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
+                  onDraftChange={(draft) => {
+                    setStatutoryDraft(draft);
+                    if (draft)
+                      setPfChoice(
+                        draft.pfChoice == null ? null : draft.pfChoice ? 'OPT_IN' : 'OPT_OUT'
+                      );
                   }}
                 />
-                <Box sx={{ minWidth: 0 }}>
-                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                    <Typography
-                      component="label"
-                      htmlFor={pfApplicableId}
-                      variant="body2"
-                      sx={{ fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      PF enrollment
-                    </Typography>
-                    <Tooltip title="The selected PF rule determines the provident fund contributions in the salary calculation.">
-                      <IconButton size="small" aria-label="About PF applicability">
-                        <Iconify icon="eva:info-outline" width={16} />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  <Typography
-                    id={`${pfApplicableId}-description`}
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block' }}
-                  >
-                    Deduct Provident Fund for this employee
-                  </Typography>
-                </Box>
               </Box>
               <FormControl
                 fullWidth
                 size="small"
-                disabled={!canManage || busy || !pfApplicable || pfRulesError}
+                disabled={
+                  !canManage ||
+                  busy ||
+                  !pfApplicable ||
+                  pfRulesError ||
+                  (statutoryDraft?.pfChoice === null && !continuingPfMember)
+                }
               >
                 <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
                 <Select
@@ -838,7 +887,7 @@ export function SalaryStructureBuilder({
             <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
             <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
           </TextField>
-          {pfApplicable && pfEnrollment.membership === 'NOT_MEMBER' && (
+          {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
             <TextField
               size="small"
               fullWidth
@@ -854,9 +903,12 @@ export function SalaryStructureBuilder({
           )}
           {calculation?.pfEligibility && (
             <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
-              PF: {contractLabel(calculation.pfEligibility.status)}. PF wages:{' '}
-              {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage ceiling:{' '}
-              {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
+              PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
+              {formatPayrollCurrency(
+                calculation.pfEligibility.grossSalary ?? calculation.grossSalary
+              )}
+              . PF calculation wages: {formatPayrollCurrency(calculation.pfEligibility.wages)}.
+              Coverage ceiling: {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
               {calculation.pfEligibility.issueCode
                 ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
                 : ''}
@@ -1029,6 +1081,13 @@ export function SalaryStructureBuilder({
         )}
         {calculation ? (
           <Box display="grid" gap={2} aria-live="polite">
+            {calculation.targetResult.isExplainedByEnrollment && (
+              <Alert severity="warning">
+                Registration changes explain a CTC difference of{' '}
+                {formatPayrollCurrency(calculation.targetResult.difference)}. Saved gross salary is
+                unchanged.
+              </Alert>
+            )}
             <Grid container spacing={1.5}>
               <Grid size={{ xs: 6, md: 3 }}>
                 <Summary label="Full-month gross" amount={calculation.grossSalary} />

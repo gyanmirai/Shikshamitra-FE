@@ -2,6 +2,47 @@ export const PAYROLL_ISSUE_LABELS: Record<
   string,
   { label: string; severity: 'CRITICAL' | 'WARNING' | 'INFO'; color: 'warning' | 'error' | 'info' }
 > = {
+  PF_APPLY_DISABLED: {
+    label: 'PF turned off. No employee or employer contribution will apply.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  PF_NUMBER_MISSING: {
+    label: 'PF number missing. Contributions are skipped until registration is completed.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ESI_APPLY_DISABLED: {
+    label: 'ESIC turned off. No employee or employer contribution will apply.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ESI_NUMBER_MISSING: {
+    label:
+      'ESIC insurance number missing. Contributions are skipped until registration is completed.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ESI_BASIS_RECONCILIATION_DIFFERENCE: {
+    label: 'Selected ESIC basis differs from the statutory wage assessment. Review the evidence.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ESI_STATUTORY_ASSESSMENT_UNAVAILABLE: {
+    label: 'Statutory wage assessment unavailable. Review earning classifications.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  STATUTORY_APPLICATION_COST_VARIANCE: {
+    label: 'Enrollment changes explain the CTC difference. Saved gross salary has been preserved.',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ESI_COMPONENT_REQUIRED: {
+    label: 'The selected ESIC salary component is missing or inactive.',
+    severity: 'CRITICAL',
+    color: 'error',
+  },
   PF_MEMBERSHIP_REVIEW_REQUIRED: {
     label: 'Review school PF coverage and previous membership',
     severity: 'CRITICAL',

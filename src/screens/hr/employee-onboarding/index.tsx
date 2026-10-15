@@ -16,7 +16,6 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { DatePicker } from '@mui/x-date-pickers';
 import PhoneInput from 'src/components/phone-input';
 import CustomDialog from 'src/components/customDialog';
@@ -24,7 +23,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { HrBloodGroupArray } from 'src/enums/blood-group';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -34,6 +35,7 @@ import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -94,6 +96,10 @@ import {
 
 import { getOnboardingErrorMessage } from './error-message';
 import { resolveCurrentEmployeeApplication } from './employee-application-query-state';
+import {
+  StatutoryProfileFields,
+  statutoryProfileSchema,
+} from '../employee/statutory-profile-fields';
 import {
   finalizeEmployeeFieldsSchema,
   applyFinalizeEmployeeValidation,
@@ -1099,6 +1105,18 @@ function FinalizeDialog({
     isLoading: organizationsLoading,
   } = useAcademicOrganizationOptions(currentYear?.id);
   const [finalizeApplication, { isLoading }] = useFinalizeEmployeeApplicationMutation();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManageStatutory =
+    hasGrantedPermission(permissions, hrPermissions.payroll.compensationRevisionActions.manage) &&
+    hasGrantedPermission(
+      permissions,
+      hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment
+    );
+  const statutoryForm = useFormik({
+    initialValues: emptyStatutoryProfile,
+    validationSchema: statutoryProfileSchema,
+    onSubmit: () => {},
+  });
 
   const initialValues = useMemo(
     () => (application ? buildFinalizeInitialValues(application) : null),
@@ -1144,6 +1162,7 @@ function FinalizeDialog({
       setMaxStepVisited(0);
       setAcademicTouched(false);
       setFinalizeSaving(false);
+      statutoryForm.resetForm();
       formik.resetForm({ values: buildFinalizeInitialValues(application) });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1243,6 +1262,17 @@ function FinalizeDialog({
       return;
     }
 
+    if (canManageStatutory && !statutoryProfileSchema.isValidSync(statutoryForm.values)) {
+      await statutoryForm.validateForm();
+      statutoryForm.setTouched({
+        pfDisabledReason: true,
+        esicDisabledReason: true,
+        pfNumber: true,
+        uanNumber: true,
+        esicInsuranceNumber: true,
+      });
+      return;
+    }
     setFinalizeSaving(true);
     try {
       const result = await finalizeApplication({
@@ -1289,6 +1319,7 @@ function FinalizeDialog({
                 academicScopes: academicPermissionScopeRows.scopeRows,
               }
             : {}),
+          ...(canManageStatutory ? { statutoryProfile: statutoryForm.values } : {}),
           familyInfo: application.familyInfo || null,
           additionalInfo: application.additionalInfo || null,
           workExperiences: application.workExperiences || [],
@@ -2626,6 +2657,14 @@ function FinalizeDialog({
                       label="Attach submitted resume to staff documents"
                     />
                   </Stack>
+                  {canManageStatutory && (
+                    <SectionCard title="PF and ESIC registration">
+                      <StatutoryProfileFields
+                        form={statutoryForm}
+                        disabled={finalizeSaving || isLoading}
+                      />
+                    </SectionCard>
+                  )}
                   {!canSubmit && (
                     <Typography variant="body2" color="error">
                       {form.isTeaching

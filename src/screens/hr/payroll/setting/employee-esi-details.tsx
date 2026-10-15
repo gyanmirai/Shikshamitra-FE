@@ -48,6 +48,7 @@ export function EmployeeEsiDetails({
         open={open}
         canManageEnrollment={canManage}
         canApproveOverride={false}
+        showStatutoryEditor={false}
         onClose={() => setOpen(false)}
         onSaved={async () => onSaved?.()}
         onEditorStateChange={onEditorStateChange}

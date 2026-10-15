@@ -69,6 +69,9 @@ vi.mock('../policies/components/HRPolicySharedUI', () => ({
   ),
 }));
 vi.mock('../payroll/setting/employee-esi-details', () => ({ EmployeeEsiDetails: () => null }));
+vi.mock('./statutory-profile-editor', () => ({
+  StatutoryProfileEditor: () => <div>Statutory registration details</div>,
+}));
 vi.mock('./payroll-profile-policy-editor', () => ({
   PayrollProfilePolicyEditor: () => <div>Assignment editor</div>,
 }));
@@ -191,7 +194,7 @@ describe('staff payroll overview', () => {
     expect(screen.getByText('From Jan 2027')).toBeVisible();
     expect(screen.getByText('Scheduled changes')).toBeVisible();
     expect(screen.getByRole('link', { name: 'Change salary' })).toBeVisible();
-    expect(screen.getByText(/excludes monthly attendance/)).toBeVisible();
+    expect(screen.getByText(/Payroll uses current registration/)).toBeVisible();
   });
   it('does not label policy failures as organization defaults', () => {
     mocks.policies.isError = true;

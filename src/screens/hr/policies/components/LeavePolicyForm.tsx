@@ -52,6 +52,7 @@ export const toLeavePolicyFormStatus = (value?: string | null): LeavePolicyFormS
 
 type LeavePolicyRuleFormValue = {
   paidType: LeavePaidType;
+  payrollCategory: 'PAID' | 'CL' | 'UNPAID';
   entitlementMode: EntitlementMode;
   accrualPolicyType: 'Monthly' | 'Yearly';
   leaveCount: number | string;
@@ -80,6 +81,7 @@ type LeavePolicyFormValues = {
 
 const baseRule = (paidType: LeavePaidType): LeavePolicyRuleFormValue => ({
   paidType,
+  payrollCategory: paidType === 'Unpaid' ? 'UNPAID' : 'PAID',
   entitlementMode: paidType === 'Unpaid' ? 'Unlimited' : 'Limited',
   accrualPolicyType: 'Yearly',
   leaveCount: paidType === 'Paid' ? 12 : '',
@@ -125,6 +127,8 @@ const buildRuleValue = (
 
   return {
     paidType,
+    payrollCategory:
+      paidType === 'Unpaid' ? 'UNPAID' : source.payrollCategory === 'CL' ? 'CL' : 'PAID',
     entitlementMode,
     accrualPolicyType: source.accrualPolicyType === 'Monthly' ? 'Monthly' : 'Yearly',
     leaveCount: entitlementMode === 'Unlimited' ? '' : (source.leaveCount ?? fallback.leaveCount),
@@ -204,6 +208,7 @@ const toRulePayload = (rule: LeavePolicyRuleFormValue) => {
 
   return {
     paidType: rule.paidType,
+    payrollCategory: rule.payrollCategory,
     entitlementMode: paidOnly ? 'Limited' : rule.entitlementMode,
     accrualPolicyType: rule.accrualPolicyType,
     leaveCount: isUnlimited ? null : Number(rule.leaveCount) || 0,
@@ -509,6 +514,21 @@ function RuleSection({
           </Label>
         </Stack>
 
+        {isPaid && (
+          <TextField
+            select
+            label="Payroll leave label"
+            value={rule.payrollCategory}
+            size="small"
+            onChange={(event) =>
+              setRuleValue(bucket, 'payrollCategory', event.target.value as 'PAID' | 'CL')
+            }
+            helperText="Use Casual leave only when this paid-leave rule represents CL."
+          >
+            <MenuItem value="PAID">Paid leave</MenuItem>
+            <MenuItem value="CL">Casual leave (CL)</MenuItem>
+          </TextField>
+        )}
         <Grid container spacing={1.5} alignItems="stretch">
           {!isPaid ? (
             <Grid size={{ xs: 12, md: 3 }}>

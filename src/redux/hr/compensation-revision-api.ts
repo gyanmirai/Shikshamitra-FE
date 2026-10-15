@@ -2,6 +2,7 @@ import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
+import type { StaffStatutoryProfile } from './statutory-profile-api';
 import type {
   SalaryBasis,
   PfEnrollment,
@@ -32,6 +33,7 @@ export type CompensationRevisionLine = {
 };
 
 export type CompensationRevision = {
+  savedStatutoryProfile?: import('./statutory-profile-api').StaffStatutoryProfileResponse;
   pfEnrollment?: PfEnrollment;
   pfEligibility?: PfEligibility;
   id: string;
@@ -66,6 +68,10 @@ export type CompensationRevision = {
 };
 
 export type SaveEmployeeCompensation = {
+  statutoryProfileOverride?: StaffStatutoryProfile;
+  statutoryProfileConcurrencyStamp?: string | null;
+  statutoryProfileUpdatePf?: boolean;
+  statutoryProfileUpdateEsic?: boolean;
   pfEnrollment?: PfEnrollment;
   templateVersionId: string;
   salaryBasis: SalaryBasis;

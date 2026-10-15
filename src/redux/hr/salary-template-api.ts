@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
+import type { StaffStatutoryProfile } from './statutory-profile-api';
+
 export type SalaryBasis = 'GROSS' | 'EMPLOYER_COST';
 export type ProtectionPolicy = 'PROTECT_GROSS' | 'PROTECT_TAKE_HOME' | 'PROTECT_EMPLOYER_COST';
 
@@ -127,6 +129,7 @@ export type PfEnrollment = {
   consentReference?: string | null;
 };
 export type PfEligibility = {
+  grossSalary?: number | null;
   status: string;
   wages: number;
   coverageCeiling: number;
@@ -151,7 +154,13 @@ export type SalaryTemplateCalculation = {
   employerContributionTotal: number;
   employerCost: number;
   protectedMonthlyAmount: number;
-  targetResult: { requested: number; achieved: number; difference: number; isExact: boolean };
+  targetResult: {
+    requested: number;
+    achieved: number;
+    difference: number;
+    isExact: boolean;
+    isExplainedByEnrollment?: boolean;
+  };
   employeeStateInsurance: SalaryTemplateEsiPreview;
   earnings: CalculatedSalaryLine[];
   deductions: CalculatedSalaryLine[];
@@ -177,6 +186,10 @@ export const buildSalaryTemplateCalculationRequest = ({
   templateVersionId,
   ...body
 }: {
+  statutoryProfileOverride?: StaffStatutoryProfile;
+  statutoryProfileConcurrencyStamp?: string | null;
+  statutoryProfileUpdatePf?: boolean;
+  statutoryProfileUpdateEsic?: boolean;
   templateVersionId: string;
   salaryBasis: SalaryBasis;
   monthlyAmount: number;

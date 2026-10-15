@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -178,7 +178,7 @@ After saving an employee as inactive, HR can open **ESIC details** directly from
 The action reuses the enrollment drawer and requires Statutory Schemes View; its fields and Save action additionally require ManageEnrollment.
 The onboarding drawer omits unavailable contribution totals and the settings-only override history.
 Saving registration refreshes activation readiness and clears the previous salary calculation without resetting salary inputs.
-An insurance-number activation blocker directs HR to complete ESIC details; registration pending does not enable activation.
+Pending PF/ESIC registration appears as a warning and a direct staff-editor action; valid salary setup remains activatable.
 Enrollment failures and background refreshes preserve the open draft.
 Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
 ESIC uses one compact Formik settings form with a calculation switch, conditional school registration fields, and standard Save/Cancel actions.
@@ -427,7 +427,13 @@ One-time adjustments remain in monthly payroll.
 ## PF enrollment and ESIC calculation settings
 
 Salary setup retains the Gross/CTC choice and one monthly amount.
-Authorized HR staff record previous PF membership, enrollment, and voluntary consent evidence during onboarding or later salary updates.
+Authorized HR staff record previous PF membership during onboarding salary setup or later salary updates.
+PF defaults on up to INR 25,000 Gross and presents explicit Opt in to PF / Opt out of PF choices above that amount.
+Authorized HR can turn PF off with a reason while preserving eligibility evidence.
+New voluntary enrollment has no preselected choice, and calculation or saving waits for that choice.
+Opting in reveals the PF rule and voluntary consent reference; opting out excludes the PF rule from the request.
+CTC setup confirms the requirement from the backend-calculated Gross, while changing salary preserves the draft and requires a fresh calculation.
+Existing membership remains visibly Required, and the backend owns coverage and contribution rules described in [the payroll API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md).
 The salary calculation returns the enrollment decision and blocks saving when required evidence or enrollment is missing.
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
@@ -446,6 +452,27 @@ The settings page explains that other statutory included wages and add-back stil
 Valid unsaved settings request a debounced draft impact preview; saving retains the concurrency token and idempotency key across retries.
 Run Payroll displays rate-override evidence from the saved calculation snapshot and keeps employee deductions separate from employer contributions.
 See the [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#pf-enrollment-and-esic-calculation-settings) for eligibility, effective dates, rates, and immutable payroll rules.
+
+## Shared enrollment and salary documents
+
+Onboarding, Staff Edit Payroll and salary setup reuse `src/screens/hr/employee/statutory-profile-fields.tsx`.
+Existing staff use `src/screens/hr/employee/statutory-profile-editor.tsx` for guarded drafts, scheme permissions, concurrency and idempotent writes.
+Each compact card shows the Apply switch, status, identifier and contextual Off or Pending warning.
+Run Payroll offers a registration review list before preparation and staff-editor links from distinct missing-number and disabled-scheme warnings.
+Mark Reviewed acknowledges the displayed warning evidence before locking.
+ESIC settings choose eligibility and calculation bases separately, each with its own recurring component.
+
+The existing payslip-generation route now presents Monthly payslips, Employee statements and School register tabs.
+Monthly issuance retains its existing immutable PDF workflow.
+Statements choose one staff member and an inclusive range; registers choose one month.
+Filters survive tab changes; inactive panels stop previews and export polling.
+Previews debounce, cancel obsolete requests and reject stale responses.
+PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
+School settings provide Compact/Detailed layouts, logo upload, optional fields and saved column presets.
+Identity, totals and all nonzero deductions remain mandatory.
+
+Staff Edit Payroll saves its statutory draft before bank changes through Save and Save & Next.
+Its navigation guard and busy state include both editors.
 
 ## Operational dashboard decision cues
 

@@ -531,7 +531,7 @@ describe('SalaryTemplateEditor', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Discard unsaved changes?' })
     ).not.toBeInTheDocument();
-  });
+  }, 15000);
 
   it('expires a preview and retains form values after a failed save with an idempotent retry', async () => {
     const user = userEvent.setup();

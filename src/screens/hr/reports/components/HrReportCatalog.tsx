@@ -5,6 +5,7 @@ import CommonReport from 'src/components/common-report';
 
 import { HrReportBuilder } from './HrReportBuilder';
 import { mapHrSourcesToCategories, mapHrSourcesToSubCategories } from '../hr-report-utils';
+import SalaryDocumentsWorkspace from '../../payroll/salarySlip-generate/salary-documents-workspace';
 
 import type { HrReportPermissions } from '../hr-report-permissions';
 import type { HrReportQueuedExport, HrReportCatalogSelection } from '../hr-report-types';
@@ -34,20 +35,35 @@ export function HrReportCatalog({
 
   const subCategories = useMemo(
     () =>
-      mapHrSourcesToSubCategories(sources, templates, ({ source, template }) => (
-        <HrReportBuilder
-          source={source}
-          template={template}
-          isFetchingExports={isFetchingExports}
-          refetchExports={refetchExports}
-          permissions={permissions}
-          onExportQueued={onExportQueued}
-        />
-      )),
+      mapHrSourcesToSubCategories(sources, templates, ({ source, template }) =>
+        source.id === 'payroll_statement' || source.id === 'payroll_register' ? (
+          <SalaryDocumentsWorkspace
+            kind={source.id === 'payroll_statement' ? 'statement' : 'register'}
+          />
+        ) : (
+          <HrReportBuilder
+            source={source}
+            template={template}
+            isFetchingExports={isFetchingExports}
+            refetchExports={refetchExports}
+            permissions={permissions}
+            onExportQueued={onExportQueued}
+          />
+        )
+      ),
     [isFetchingExports, onExportQueued, permissions, refetchExports, sources, templates]
   );
 
   if (directSelection) {
+    if (
+      directSelection.source.id === 'payroll_statement' ||
+      directSelection.source.id === 'payroll_register'
+    )
+      return (
+        <SalaryDocumentsWorkspace
+          kind={directSelection.source.id === 'payroll_statement' ? 'statement' : 'register'}
+        />
+      );
     return (
       <HrReportBuilder
         source={directSelection.source}

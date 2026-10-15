@@ -32,6 +32,34 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock('src/redux/hr/statutory-profile-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('src/redux/hr/statutory-profile-api')>();
+  return {
+    ...actual,
+    useGetStaffStatutoryProfileQuery: () => ({
+      currentData: {
+        employeeId: 'employee-1',
+        effectiveMonth: '2026-10',
+        concurrencyStamp: 'profile-stamp',
+        canViewPf: true,
+        canViewEsic: mocks.canViewEsi,
+        canManagePf: mocks.canManageSalary,
+        canManageEsic: mocks.canManageEsi,
+        profile: {
+          ...actual.emptyStatutoryProfile,
+          pfNumber: '7',
+          esicInsuranceNumber: mocks.enrollment.insuranceNumber,
+          versionId: mocks.revisions.length ? 'existing-profile' : null,
+        },
+        warnings: [],
+        history: [],
+      },
+      isLoading: false,
+    }),
+    useSaveStaffStatutoryProfileMutation: () => [vi.fn(), { isLoading: false }],
+  };
+});
+
 vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
 vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, name: string) => {
@@ -50,7 +78,10 @@ vi.mock('src/redux/hr/statutory-scheme-api', () => ({
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 vi.mock('src/redux/PF/PFApi', () => ({
-  useGetPFQuery: () => ({ data: { items: [] }, isError: false }),
+  useGetPFQuery: () => ({
+    data: { items: [{ id: 'pf-rule', name: 'School PF', isActive: true }] },
+    isError: false,
+  }),
 }));
 vi.mock('src/redux/hr/employeeApi', () => ({
   useUpdateEmployeeStatusMutation: () => [mocks.activate, { isLoading: false }],
@@ -186,29 +217,194 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(screen.getByRole('button', { name: 'ESIC details' })).toBeVisible();
   });
 
-  it('keeps the PF label, description and keyboard toggle accessible without help changing the draft', async () => {
+  it('offers explicit, accessible PF opt-in and opt-out choices above the gross ceiling', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    const pfSwitch = screen.getByRole('switch', { name: 'PF enrollment' });
-    expect(pfSwitch).toHaveAccessibleDescription('Deduct Provident Fund for this employee');
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.type(screen.getByLabelText('Monthly salary'), '30000');
+    const choices = screen.getByRole('radiogroup', { name: 'PF enrollment' });
+    expect(choices).toHaveAccessibleDescription(
+      'Above ₹25,000 gross salary, choose whether to enroll in PF.'
+    );
+    const optIn = screen.getByRole('radio', { name: 'Opt in to PF' });
+    const optOut = screen.getByRole('radio', { name: 'Opt out of PF' });
+    expect(optIn).not.toBeChecked();
+    expect(optOut).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute(
       'aria-disabled',
       'true'
     );
 
-    await user.click(screen.getByText('PF enrollment', { exact: true }));
-    expect(pfSwitch).toBeChecked();
+    await user.click(optIn);
+    expect(optIn).toBeChecked();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).not.toHaveAttribute(
       'aria-disabled',
       'true'
     );
-    await user.click(screen.getByRole('button', { name: 'About PF applicability' }));
-    expect(pfSwitch).toBeChecked();
-    await user.click(pfSwitch);
-    await user.keyboard(' ');
-    expect(pfSwitch).toBeChecked();
+    expect(optIn).toBeChecked();
+    await user.click(optOut);
+    expect(optOut).toBeChecked();
+    await user.keyboard('{ArrowLeft}');
+    expect(optIn).toBeChecked();
     expect(mocks.calculate).not.toHaveBeenCalled();
     expect(mocks.saveSalary).not.toHaveBeenCalled();
+  });
+
+  it.each(['24999', '25000'])('requires PF automatically at gross salary %s', async (amount) => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    await user.type(screen.getByLabelText('Monthly salary'), amount);
+    expect(screen.getByText('Required by default up to ₹25,000 gross salary.')).toBeVisible();
+    expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        monthlyAmount: Number(amount),
+        pfApplicable: true,
+        pfRuleId: 'pf-rule',
+      })
+    );
+  });
+
+  it('requires an explicit choice when salary increases from mandatory to optional', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.click(screen.getByRole('combobox', { name: 'Amount basis' }));
+    await user.click(screen.getByRole('option', { name: 'Monthly salary' }));
+    const amount = screen.getByLabelText('Monthly salary');
+    await user.type(amount, '25000');
+    await user.clear(amount);
+    await user.type(amount, '25001');
+    expect(screen.getByRole('radio', { name: 'Opt in to PF' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Opt out of PF' })).not.toBeChecked();
+    expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Employee selected opt-out');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenCalledWith(
+      expect.objectContaining({ monthlyAmount: 25001, pfApplicable: false, pfRuleId: null })
+    );
+  });
+
+  it('uses calculated gross for CTC even when the quoted employer cost is above the ceiling', async () => {
+    const user = userEvent.setup();
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 24500,
+        employerCost: 26000,
+        pfEligibility: {
+          grossSalary: 24500,
+          wages: 14700,
+          coverageCeiling: 25000,
+          status: 'MANDATORY',
+          enrollmentRequired: true,
+          canSave: true,
+        },
+      }),
+    });
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '26000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(
+      await screen.findByText('Required by default up to ₹25,000 gross salary.')
+    ).toBeVisible();
+    expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+  });
+
+  it('requires a voluntary choice after calculating an undecided CTC salary', async () => {
+    const user = userEvent.setup();
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 30000,
+        employerCost: 30000,
+        pfEligibility: {
+          grossSalary: 30000,
+          wages: 18000,
+          coverageCeiling: 25000,
+          status: 'VOLUNTARY',
+          enrollmentRequired: false,
+          canSave: true,
+        },
+      }),
+    });
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '30000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(await screen.findByText('Choose whether to opt in or opt out of PF')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
+    await user.click(screen.getByLabelText('Reason for turning PF off'));
+    await user.paste('Employee selected opt-out');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+    expect(mocks.calculate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ pfApplicable: false, pfRuleId: null })
+    );
+  });
+
+  it('allows voluntary consent when an earlier PF rule never established membership', async () => {
+    const user = userEvent.setup();
+    mocks.revisions = [
+      {
+        id: 'pending-pf-revision',
+        revisionNumber: 1,
+        status: 'EFFECTIVE',
+        effectiveMonth: '2026-10-01T00:00:00.000Z',
+        sourceSalaryTemplateId: 'template-saved',
+        salaryBasis: 'GROSS',
+        quotedMonthlyAmount: 15000,
+        pfRuleId: 'pf-rule',
+        pfEnrollment: { membership: 'NOT_MEMBER' },
+        warnings: ['PF_NUMBER_MISSING'],
+        overrides: [],
+        isCurrent: true,
+      },
+    ];
+    const calculation = await mocks.calculate().unwrap();
+    mocks.calculate.mockClear();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        ...calculation,
+        grossSalary: 30000,
+        pfEligibility: {
+          grossSalary: 30000,
+          wages: 18000,
+          coverageCeiling: 25000,
+          status: 'VOLUNTARY',
+          enrollmentRequired: false,
+          canSave: false,
+          issueCode: 'PF_CONSENT_REQUIRED',
+        },
+      }),
+    });
+    renderBuilder();
+    const amount = await screen.findByLabelText('Monthly salary');
+    await user.clear(amount);
+    await user.type(amount, '30000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    const consent = await screen.findByLabelText('Employee consent reference');
+    await user.type(consent, 'Approved voluntary enrollment');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    expect(mocks.calculate).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        pfEnrollment: {
+          membership: 'NOT_MEMBER',
+          consentReference: 'Approved voluntary enrollment',
+        },
+      })
+    );
   });
 
   it('preserves formatted decimal and large amounts in calculation and save payloads', async () => {
@@ -424,7 +620,15 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     );
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
-    expect(screen.getByRole('alert')).toBeVisible();
+    expect(
+      screen
+        .getAllByRole('alert')
+        .find((alert) =>
+          /calculation failed|save failed|retry|could not|failed|unavailable/i.test(
+            alert.textContent ?? ''
+          )
+        )!
+    ).toBeVisible();
   });
   it('retains the draft after a save failure and resets the baseline only after success', async () => {
     const user = userEvent.setup();
@@ -434,7 +638,13 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
     mocks.saveSalary.mockReturnValueOnce({ unwrap: vi.fn().mockRejectedValue({ status: 500 }) });
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
-    expect(await screen.findByRole('alert')).toBeVisible();
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole('alert')
+          .some((alert) => /error|failed|wrong/i.test(alert.textContent ?? ''))
+      ).toBe(true)
+    );
     expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     await waitFor(() =>
@@ -557,100 +767,68 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
   });
 
-  it('lets HR enter ESIC details for an inactive staff before salary setup', async () => {
+  it('saves ESIC registration in the salary transaction for inactive staff', async () => {
     const user = userEvent.setup();
-    mocks.readiness = { canActivate: false, blockerCodes: ['ESI_INSURANCE_NUMBER_REQUIRED'] };
     renderBuilder();
-    expect(screen.queryByRole('button', { name: 'Activate staff' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
-    expect(screen.queryByText('Contribution details')).not.toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
-    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
-    await waitFor(() =>
-      expect(mocks.updateEnrollment).toHaveBeenCalledWith({
-        employeeId: 'employee-1',
-        body: expect.objectContaining({ insuranceNumber: '1234567890' }),
-      })
-    );
-    expect(mocks.refetchReadiness).toHaveBeenCalled();
-  });
-
-  it('includes an ESIC-only draft in page navigation protection and clears it after discard', async () => {
-    const user = userEvent.setup();
-    const onEditorStateChange = vi.fn();
-    renderBuilder({ onEditorStateChange });
-    await waitFor(() =>
-      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
-    );
-    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
-    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
-    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
-    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
-    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toHaveValue(
-      '1234567890'
-    );
-    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
-    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
-    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-    await waitFor(() =>
-      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
-    );
-    expect(mocks.updateEnrollment).not.toHaveBeenCalled();
-  });
-
-  it('blocks page navigation during ESIC saves and invalidates the salary calculation afterwards', async () => {
-    const user = userEvent.setup();
-    const onEditorStateChange = vi.fn();
-    let completeSave!: () => void;
-    mocks.updateEnrollment.mockReturnValue({
-      unwrap: () =>
-        new Promise<void>((resolve) => {
-          completeSave = resolve;
-        }),
-    });
-    renderBuilder({ onEditorStateChange });
-    await user.type(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' }), '10000');
+    await user.type(screen.getByLabelText('ESIC insurance number'), '1234567890');
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
     await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
-    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
-    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
-    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
-    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true });
-    expect(screen.getByRole('button', { name: 'Close staff ESIC details' })).toBeDisabled();
-    await act(async () => completeSave());
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    await waitFor(() =>
+      expect(mocks.saveSalary).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            statutoryProfileOverride: expect.objectContaining({
+              esicInsuranceNumber: '1234567890',
+              applyEsic: true,
+            }),
+            statutoryProfileUpdateEsic: true,
+          }),
+        })
+      )
+    );
+  });
+  it('includes an ESIC-only edit in salary navigation protection', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    await user.type(screen.getByLabelText('ESIC insurance number'), '1234567890');
     await waitFor(() =>
       expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
     );
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled());
-    expect(mocks.refetchReadiness).toHaveBeenCalled();
   });
-
-  it('preserves entered registration details when saving fails', async () => {
+  it('guards salary saves containing registration edits and preserves failed drafts', async () => {
     const user = userEvent.setup();
-    mocks.updateEnrollment.mockReturnValue({
-      unwrap: vi.fn().mockRejectedValue(new Error('offline')),
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await user.type(screen.getByLabelText('ESIC insurance number'), '1234567890');
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    let rejectSave!: (reason: unknown) => void;
+    mocks.saveSalary.mockReturnValueOnce({
+      unwrap: () =>
+        new Promise((_, reject) => {
+          rejectSave = reject;
+        }),
     });
-    renderBuilder();
-    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
-    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
-    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
-    await waitFor(() => expect(mocks.updateEnrollment).toHaveBeenCalled());
-    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toHaveValue(
-      '1234567890'
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true })
     );
-    expect(mocks.refetchReadiness).not.toHaveBeenCalled();
+    await act(async () => rejectSave({ status: 500 }));
+    expect(screen.getByLabelText('ESIC insurance number')).toHaveValue('1234567890');
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
+    );
   });
-
-  it('does not expose enrollment editing without its permissions', async () => {
-    const user = userEvent.setup();
+  it('keeps registration fields read-only without the scheme action permission', () => {
     mocks.canManageEsi = false;
     renderBuilder();
-    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
-    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Save enrollment' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('ESIC insurance number')).toBeDisabled();
   });
-
   it('does not expose ESIC details without View permission', () => {
     mocks.canViewEsi = false;
     renderBuilder();
