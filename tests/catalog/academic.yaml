@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-CONTEXT-001
+    module: Academic
+    submodule: GlobalContext
+    title: Header and confirmation share the resolved academic context for partial and complete selections
+    risk: medium
+    priority: P2
+    type: [functional, e2e, regression]
+    roles: [staff]
+    tenants: [school]
+    routes: [/academic/curriculumSubjects]
+    automated: true
+    automationFile: e2e/fixtures/academic-context/check.mjs
+    status: automated
+    tags: ['@module-academic', '@regression']
   - id: INS-ACADEMIC-001
     module: InstituteSetup
     submodule: AcademicSetup
