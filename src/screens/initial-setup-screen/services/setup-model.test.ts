@@ -43,6 +43,31 @@ describe('institute setup validation', () => {
     expect(await setupSchema(3).isValid({ ...structure, ageLowerLimit: 0 })).toBe(false);
     expect(await setupSchema(3).isValid({ ...structure, strength: 0 })).toBe(false);
   });
+  it('accepts every supported board and requires a name for a custom board', async () => {
+    const structure = {
+      medium: 'English',
+      stage: 'Primary',
+      className: 'Class 1',
+      divisionName: 'A',
+      ageLowerLimit: 6,
+      strength: 30,
+    };
+    const validBoards = await Promise.all(
+      [0, 1, 2, 3, 4, 5].map((boardType) => setupSchema(3).isValid({ ...structure, boardType }))
+    );
+    expect(validBoards).toEqual([true, true, true, true, true, true]);
+    expect(await setupSchema(3).isValid({ ...structure, boardType: 6 })).toBe(false);
+    expect(
+      await setupSchema(3).isValid({ ...structure, boardType: 6, customBoardName: '   ' })
+    ).toBe(false);
+    expect(
+      await setupSchema(3).isValid({
+        ...structure,
+        boardType: 6,
+        customBoardName: 'Regional board',
+      })
+    ).toBe(true);
+  });
   it('provides a useful next action for concurrency conflicts and unconfirmed configuration', () => {
     expect(setupError({ status: 409 })).toContain('Reload');
     expect(

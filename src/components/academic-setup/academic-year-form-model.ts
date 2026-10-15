@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-import type { AcademicYearRecord } from './academic-setup-model';
-
 import { parseAcademicYearDateForPicker } from './academic-year-date-utils';
+
+import type { AcademicYearRecord } from './academic-setup-model';
 
 export type AcademicYearFormValues = {
   startDate: dayjs.Dayjs;
@@ -15,10 +15,10 @@ export const getAcademicYearInitialValues = (
 ): AcademicYearFormValues => ({
   startDate: editData?.startDate
     ? parseAcademicYearDateForPicker(editData.startDate)
-    : dayjs().month(5).date(1),
+    : dayjs().month(5).date(1).startOf('day'),
   endDate: editData?.endDate
     ? parseAcademicYearDateForPicker(editData.endDate)
-    : dayjs().add(1, 'year').month(2).date(31),
+    : dayjs().add(1, 'year').month(2).date(31).startOf('day'),
 });
 
 export const buildAcademicYearName = (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) =>

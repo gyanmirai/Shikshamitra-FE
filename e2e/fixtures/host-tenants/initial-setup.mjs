@@ -5,7 +5,7 @@ import { createSetupAcademics } from './setup-academics.mjs';
 export function createInitialSetupFixture(profile, options = {}) {
   const state = {
     isCompleted: options.setupCompleted === true, canManageSetup: options.canSetup !== false,
-    currentStep: 0, furthestStep: 0, schoolCode: 'SCHOOL_01', concurrencyStamp: randomUUID(),
+    currentStep: options.setupStep ?? 0, furthestStep: options.setupStep ?? 0, schoolCode: 'SCHOOL_01', concurrencyStamp: randomUUID(),
     academicYearId: null, divisionId: null, completedAt: null, createdUsers: [], pendingSteps: [],
     draft: { profile: { ...profile }, yearName: '', existingYearId: null, startDate: null, endDate: null, boardType: null, medium: '', stage: '', className: '', ageLowerLimit: null, divisionName: '', strength: null, roomNumber: '' },
   };
@@ -29,6 +29,10 @@ export function createInitialSetupFixture(profile, options = {}) {
     const action = url.pathname.split('/').at(-1);
     if (action === 'users' && state.createdUsers.some((user) => user.requestId === body.requestId)) { send(200, current()); return true; }
     if (body.concurrencyStamp !== state.concurrencyStamp) { send(409, { title: 'Conflict' }); return true; }
+    if (action === 'users') {
+      const duplicate = state.createdUsers.find(user => user.userName.toLowerCase() === body.userName.toLowerCase() || user.email.toLowerCase() === body.email.toLowerCase());
+      if (duplicate) { send(400, { errorCode: duplicate.userName.toLowerCase() === body.userName.toLowerCase() ? 'Volo.Abp.Identity:DuplicateUserName' : 'Volo.Abp.Identity:DuplicateEmail', detail: 'One or more business rules were violated.' }); return true; }
+    }
     if (options.delay) await new Promise((resolve) => setTimeout(resolve, options.delay));
     if (action === 'draft') { state.draft = structuredClone(body.draft); state.currentStep = body.currentStep; }
     if (action === 'advance') { state.furthestStep = Math.max(state.furthestStep, body.step + 1); state.currentStep = body.step + 1; }

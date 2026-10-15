@@ -9,6 +9,9 @@ import type {
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
+import { TemplateIdentityAsset } from 'src/screens/setting/school-identity/components/template-identity-asset';
+import { selectionSchema, templateIdentitySchema } from 'src/screens/setting/school-identity/identity-form';
+import { CertificateIdentityAssets } from './components/certificate-identity-assets';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -74,7 +77,9 @@ export default function RecordDocumentTemplates({
 }
 
 function IdTemplateForm({ initial, onClose }: { initial: IdCardTemplate; onClose: () => void }) {
-  const [save, state] = useSaveRecordIdTemplateMutation();
+  const [uploading, setUploading] = useState(false);
+  const [save, mutation] = useSaveRecordIdTemplateMutation();
+  const state = { ...mutation, isLoading: mutation.isLoading || uploading };
   const [error, setError] = useState(false);
   const form = useFormik({
     initialValues: initial,
@@ -86,6 +91,7 @@ function IdTemplateForm({ initial, onClose }: { initial: IdCardTemplate; onClose
         .matches(/^#[0-9a-fA-F]{6}$/, 'Use a color such as #00897B.')
         .required(),
       fields: Yup.array().min(1, 'Select at least one field.'),
+      logo: selectionSchema().optional().default(undefined),
     }),
     onSubmit: async (values) => {
       setError(false);
@@ -136,6 +142,8 @@ function IdTemplateForm({ initial, onClose }: { initial: IdCardTemplate; onClose
                 helperText={form.touched[name] && form.errors[name]}
               />
             ))}
+            <TemplateIdentityAsset kind="logo" value={form.values.logo} disabled={state.isLoading} onBusy={setUploading}
+              onChange={(logo) => { form.setFieldValue('logo', logo); }} />
             <FormControlLabel
               label="Include student photo when available"
               control={
@@ -214,7 +222,9 @@ function CertificateTemplateForm({
   initial: CertificateTemplate;
   onClose: () => void;
 }) {
-  const [save, state] = useSaveRecordCertificateTemplateMutation();
+  const [uploading, setUploading] = useState(false);
+  const [save, mutation] = useSaveRecordCertificateTemplateMutation();
+  const state = { ...mutation, isLoading: mutation.isLoading || uploading };
   const [error, setError] = useState(false);
   const form = useFormik({
     initialValues: initial,
@@ -222,6 +232,7 @@ function CertificateTemplateForm({
       headerContent: Yup.string().max(4000),
       footerContent: Yup.string().max(4000),
       schoolAddress: Yup.string().nullable().max(512),
+      identityChoices: templateIdentitySchema,
     }),
     onSubmit: async (values) => {
       setError(false);
@@ -291,6 +302,8 @@ function CertificateTemplateForm({
               error={!!form.touched.schoolAddress && !!form.errors.schoolAddress}
               helperText={form.touched.schoolAddress && form.errors.schoolAddress}
             />
+            <CertificateIdentityAssets value={form.values} disabled={state.isLoading} onBusy={setUploading}
+              onChange={(choices) => { form.setFieldValue('identityChoices', choices); }} />
             {error && (
               <Alert severity="error">
                 Template could not be saved. Check the fields and your access before retrying.

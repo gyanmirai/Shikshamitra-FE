@@ -4,16 +4,16 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import { useDeleteClassMutation } from 'src/redux/class/classApi';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import type { AcademicSetupParents } from '../academic-setup-model';
 
 import { ClassForm } from '../class-setup';
 import { DivisionForm } from '../division-setup';
 import { AcademicActionButtons } from './academic-action-buttons';
+
+import type { AcademicSetupParents } from '../academic-setup-model';
 
 export const StandardActions = ({
   standard,
@@ -56,6 +56,7 @@ export const StandardActions = ({
           handleClose={editDialog.onFalse}
           editData={standard}
           organizationId={parents.organization?.id ?? ''}
+          existingStandards={parents.organization?.standards}
         />
       </CustomDialog>
       <ConfirmDialog

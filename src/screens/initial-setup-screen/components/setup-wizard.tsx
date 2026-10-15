@@ -70,8 +70,9 @@ export default function SetupWizard({
       }
     >
       <Stack spacing={2.5}>
-        <Box data-setup-heading>
+        <Stack data-setup-heading spacing={1}>
           <Typography
+            component="p"
             variant="overline"
             sx={(theme) => ({
               color: 'primary.dark',
@@ -86,7 +87,6 @@ export default function SetupWizard({
             component="h1"
             variant="h4"
             sx={{
-              mb: 0.75,
               '&:focus-visible': {
                 outline: '2px solid',
                 outlineColor: 'primary.main',
@@ -97,7 +97,7 @@ export default function SetupWizard({
             {active.heading}
           </Typography>
           <Typography color="text.secondary">{active.description}</Typography>
-        </Box>
+        </Stack>
         {error && (
           <Alert
             severity="error"

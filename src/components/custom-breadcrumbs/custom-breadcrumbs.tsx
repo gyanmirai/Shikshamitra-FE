@@ -30,7 +30,7 @@ export function CustomBreadcrumbs({
   descriptionDisplay = 'tooltip',
   tooltipProps,
   isBack = false,
-  onBack = () => { },
+  onBack = () => {},
   showDivider = false,
   ...other
 }: CustomBreadcrumbsProps) {
@@ -86,7 +86,7 @@ export function CustomBreadcrumbs({
             bgcolor: 'action.hover',
             border: '1px solid',
             borderColor: 'divider',
-           
+
             '&:hover': {
               bgcolor: 'unset',
               color: 'text.primary',
@@ -167,7 +167,7 @@ export function CustomBreadcrumbs({
           spacing={2}
           sx={{ minWidth: 0 }}
         >
-          {renderHeading}
+          {(heading || isBack) && renderHeading}
           {action && <Box sx={{ flexShrink: 0, ...slotProps?.action }}>{action}</Box>}
         </Stack>
       </Stack>
@@ -194,7 +194,7 @@ export function CustomBreadcrumbs({
         ...sx,
       }}
     >
-      {renderHeading}
+      {(heading || isBack) && renderHeading}
 
       {/* CENTER: Breadcrumbs (Liquid Width) */}
       {!!links.length && (
@@ -207,15 +207,17 @@ export function CustomBreadcrumbs({
           }}
         >
           {/* Vertical Separator between Heading and Breadcrumbs */}
-          <Box
-            sx={{
-              width: '1px',
-              height: 24,
-              bgcolor: (theme) => theme.palette.grey[400],
-              mr: 2,
-              display: { xs: 'none', md: 'block' },
-            }}
-          />
+          {(heading || isBack) && (
+            <Box
+              sx={{
+                width: '1px',
+                height: 24,
+                bgcolor: (theme) => theme.palette.grey[400],
+                mr: 2,
+                display: { xs: 'none', md: 'block' },
+              }}
+            />
+          )}
 
           {renderLinks(<Separator />)}
         </Box>
@@ -223,7 +225,13 @@ export function CustomBreadcrumbs({
 
       {/* RIGHT: Actions */}
       {action && (
-        <Box sx={{ flexShrink: 0, alignSelf: { xs: 'flex-start', md: 'center' }, ...slotProps?.action }}>
+        <Box
+          sx={{
+            flexShrink: 0,
+            alignSelf: { xs: 'flex-start', md: 'center' },
+            ...slotProps?.action,
+          }}
+        >
           {action}
         </Box>
       )}

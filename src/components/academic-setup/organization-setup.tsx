@@ -34,10 +34,11 @@ import {
 
 import { Iconify } from '../iconify';
 import ClassSetup from './class-setup';
-import UploadButton from '../upload-button';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import CustomUpload from '../custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
+import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 export interface IOrganizationSetup {
   id: string;
@@ -221,6 +222,7 @@ interface IOrganizationForm {
 }
 export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizationForm) => {
   const confirm = useBoolean();
+  const [isReadingBanner, setIsReadingBanner] = useState(false);
   const [addOrganization, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddOrganizationMutation,
@@ -249,6 +251,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
       organization: Yup.string().required('Organization is required'),
     }),
     onSubmit: async (values) => {
+      if (isReadingBanner) return;
       confirm.onTrue();
     },
   });
@@ -309,6 +312,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
             loading={isLoading || isUpdateLoading}
             // color="error"
             onClick={onSubmit}
+            startIcon={<AcademicFormActionIcon action="confirm" />}
           >
             Confirm
           </LoadingButton>
@@ -332,47 +336,37 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
             helperText={formik.touched.organization && formik.errors.organization}
             size="small"
           />
-          <UploadButton
-            variant="outlined"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-
-              const base64: string = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                  resolve(reader.result as string);
-                };
-              });
-              formik.setFieldValue('banner', getBase64String(base64));
+          <CustomUpload
+            variant="banner"
+            disabled={isLoading || isUpdateLoading}
+            value={formik.values.banner ? [convertBase64Format(formik.values.banner)] : []}
+            onBusyChange={setIsReadingBanner}
+            onChange={(files) => {
+              const image = files[0];
+              formik.setFieldValue(
+                'banner',
+                typeof image === 'string' ? getBase64String(image) : null
+              );
             }}
-          >
-            Upload Banner
-          </UploadButton>
-          {formik.values.banner && (
-            <Box
-              component="img"
-              src={convertBase64Format(formik.values.banner)}
-              sx={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '5px',
-              }}
-            />
-          )}
+          />
         </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleClose}
+          startIcon={<AcademicFormActionIcon action="cancel" />}
+        >
           Cancel
         </Button>
         <LoadingButton
           loading={isLoading || isUpdateLoading}
+          disabled={isReadingBanner}
           variant="contained"
           size="small"
           type="submit"
+          startIcon={<AcademicFormActionIcon action="submit" />}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit

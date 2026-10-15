@@ -33,6 +33,7 @@ import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 import { CustomStyling } from '../tree-view/custom-styling';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
+import { AcademicFormActionIcon } from './academic-form-action-icon';
 
 export interface EducationMedium {
   id: string;
@@ -342,6 +343,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
             loading={isLoading || isUpdateLoading}
             // color="error"
             onClick={onSubmit}
+            startIcon={<AcademicFormActionIcon action="confirm" />}
           >
             Confirm
           </LoadingButton>
@@ -368,7 +370,12 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
         </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <Button variant="outlined" size="small" onClick={handleClose}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleClose}
+          startIcon={<AcademicFormActionIcon action="cancel" />}
+        >
           Cancel
         </Button>
         <LoadingButton
@@ -376,6 +383,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           variant="contained"
           size="small"
           type="submit"
+          startIcon={<AcademicFormActionIcon action="submit" />}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit

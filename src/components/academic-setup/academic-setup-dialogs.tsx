@@ -1,3 +1,5 @@
+import type { Board } from 'src/types/school';
+
 import { BoardForm } from './board-setup';
 import CustomDialog from '../customDialog';
 import { AcademicYearForm } from './academic-year-form';
@@ -6,6 +8,7 @@ import type { AcademicYearRecord } from './academic-setup-model';
 
 type AcademicSetupDialogsProps = {
   currentYear?: AcademicYearRecord;
+  boards: Board[];
   editYear: AcademicYearRecord | null;
   isYearDialogOpen: boolean;
   isBoardDialogOpen: boolean;
@@ -15,6 +18,7 @@ type AcademicSetupDialogsProps = {
 
 export const AcademicSetupDialogs = ({
   currentYear,
+  boards,
   editYear,
   isYearDialogOpen,
   isBoardDialogOpen,
@@ -35,11 +39,13 @@ export const AcademicSetupDialogs = ({
       open={isBoardDialogOpen}
       handleClose={onCloseBoardDialog}
     >
-      {currentYear ? (
+      {currentYear && isBoardDialogOpen ? (
         <BoardForm
           academicYearId={currentYear.id}
           handleClose={onCloseBoardDialog}
           editData={null}
+          boards={boards}
+          academicYear={currentYear}
         />
       ) : null}
     </CustomDialog>

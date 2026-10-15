@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import { Box, Stack, Button, IconButton } from '@mui/material';
 
-export default function SetupCalendarHeader({
+export default function DatePickerCalendarHeader({
   currentMonth,
   onMonthChange,
   view,

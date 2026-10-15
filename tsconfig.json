@@ -43,7 +43,11 @@
     "build/types/**/*.ts",
     "build/dev/types/**/*.ts",
     ".artifacts/permission-inheritance/next-build/types/**/*.ts",
-    ".artifacts/permission-inheritance/next-build/dev/types/**/*.ts"
+    ".artifacts/permission-inheritance/next-build/dev/types/**/*.ts",
+    ".artifacts/host-tenant-next/types/**/*.ts",
+    ".artifacts/host-tenant-next/dev/types/**/*.ts",
+    ".artifacts/onboarding-next/types/**/*.ts",
+    ".artifacts/onboarding-next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

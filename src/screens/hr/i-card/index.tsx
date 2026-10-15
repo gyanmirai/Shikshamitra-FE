@@ -38,6 +38,7 @@ import {
   Button,
   Checkbox,
   TextField,
+  MenuItem,
   ButtonBase,
   IconButton,
   Typography,
@@ -83,6 +84,7 @@ import {
   getDefaultICardDesignerElementId,
   hasPersistedEmployeeICardTemplate,
 } from './i-card-builder-utils';
+import { SharedSchoolLogo } from './components/shared-school-logo';
 
 type ICardFieldKey =
   | 'name'
@@ -112,6 +114,7 @@ type BuilderState = {
   schoolName: string;
   schoolAddress: string;
   logoBlobName: string | null;
+  logoMode: 0 | 1 | 2;
   logoPreview: string;
   themeColor: string;
   backgroundColor: string;
@@ -278,6 +281,7 @@ const initialBuilder = (academicYearName?: string, organization = 'all'): Builde
   schoolName: 'School Name',
   schoolAddress: '',
   logoBlobName: null,
+  logoMode: 0,
   logoPreview: '',
   themeColor: '#1D4ED8',
   backgroundColor: '#F8FAFC',
@@ -419,6 +423,7 @@ const buildTemplateState = (
     schoolName: template.schoolName || template.name,
     schoolAddress: template.schoolAddress || '',
     logoBlobName: template.logoBlobName || null,
+    logoMode: template.logoMode ?? (template.logoBlobName ? 1 : 0),
     logoPreview: '',
     themeColor: template.themeColor || '#1D4ED8',
     backgroundColor: template.backgroundColor || '#F8FAFC',
@@ -1071,6 +1076,7 @@ const EmployeeICardBuilder = ({
         return {
           ...updated,
           logoBlobName: result.blobName,
+          logoMode: 1,
           logoPreview: preview,
         };
       });
@@ -1160,6 +1166,7 @@ const EmployeeICardBuilder = ({
         backgroundColor: state.backgroundColor,
         backgroundImageBlobName: null,
         logoBlobName: state.logoBlobName,
+        logoMode: state.logoMode,
         schoolName: state.schoolName.trim(),
         schoolAddress: state.schoolAddress.trim(),
         themeColor: state.themeColor,
@@ -1389,10 +1396,15 @@ const EmployeeICardBuilder = ({
 
                 {currentStep === 1 && (
                   <Stack spacing={2}>
+                    <TextField select label="School logo setting" value={state.logoMode} size="small"
+                      onChange={(event) => patchState({ logoMode: Number(event.target.value) as 0 | 1 | 2 })}>
+                      <MenuItem value={0}>Use School Identity</MenuItem><MenuItem value={1}>Use custom asset</MenuItem><MenuItem value={2}>Do not display</MenuItem>
+                    </TextField>
                     <Button
                       size="small"
                       component="label"
                       variant="outlined"
+                      disabled={state.logoMode !== 1}
                       startIcon={<Iconify icon="solar:upload-linear" />}
                     >
                       Upload School Logo
@@ -2377,11 +2389,13 @@ const LayoutElementPreview = ({
     );
   }
   if (element.type === 'logo') {
+    if (state.logoMode === 2) return null;
+    if (state.logoMode === 0) return <SharedSchoolLogo mediumStageId={state.organization === 'all' ? undefined : state.organization} />;
     return (
       <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
         <PreviewLogo
           blobName={state.logoBlobName}
-          preview={state.logoPreview}
+          preview={state.logoMode === 1 ? state.logoPreview : ''}
           themeColor={state.themeColor}
         />
       </Box>

@@ -344,6 +344,7 @@ export const inquiryPreferenceType = {
 
 // ===== Institute Setup API (reducerPath: instituteSetupApi) =====
 export const instituteSetupType = {
+  schoolIdentity: 'SchoolIdentity',
   roomTypes: 'RoomTypes',
   rooms: 'Rooms',
   buildings: 'Buildings',

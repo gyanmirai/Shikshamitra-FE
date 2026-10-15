@@ -5,9 +5,10 @@ import { useRef, useEffect } from 'react';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Alert, Button, MenuItem, TextField, DialogActions } from '@mui/material';
+import { Grid, Alert, Button, MenuItem, TextField, AlertTitle, DialogActions } from '@mui/material';
 
 import { useSetupUserForm } from '../hooks/use-setup-user-form';
+import SetupUserFields, { setupUserErrorTextSx } from './setup-user-fields';
 
 export default function SetupUserDialog({
   onClose,
@@ -16,7 +17,8 @@ export default function SetupUserDialog({
   onClose: () => void;
   onCreate: (input: Record<string, unknown>) => Promise<void>;
 }) {
-  const { form, error, policy, passwordHelp } = useSetupUserForm(onCreate, onClose);
+  const { form, error, policy, passwordHelp, serverErrors, clearServerError, submit } =
+    useSetupUserForm(onCreate, onClose);
   const canReadRoles = useSelector((state: RootState) =>
     state.auth.permissions.some(
       (permission: { name: string; isGranted: boolean }) =>
@@ -27,7 +29,10 @@ export default function SetupUserDialog({
   const content = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (form.submitCount && !form.isSubmitting)
-      content.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+      (
+        content.current?.querySelector<HTMLElement>('[aria-invalid="true"]') ||
+        content.current?.querySelector<HTMLElement>('[role="alert"]')
+      )?.focus();
   }, [form.submitCount, form.isSubmitting]);
   const close = () => {
     if (!form.isSubmitting && (!form.dirty || window.confirm('Discard the unsaved user form?')))
@@ -46,8 +51,9 @@ export default function SetupUserDialog({
       <DialogScrollContent>
         <div ref={content}>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+            <Alert severity="error" tabIndex={-1} sx={{ mb: 2 }}>
+              <AlertTitle>{error.title}</AlertTitle>
+              {error.message}
             </Alert>
           )}
           {policy.isError && (
@@ -65,34 +71,12 @@ export default function SetupUserDialog({
             descriptionTooltip="Credentials stay only in this form until submission. Share the initial password securely."
           >
             <Grid container spacing={2}>
-              {(['userName', 'email', 'password'] as const).map((name) => (
-                <Grid key={name} size={12}>
-                  <TextField
-                    name={name}
-                    label={
-                      name === 'userName'
-                        ? 'User name'
-                        : name === 'email'
-                          ? 'Email'
-                          : 'Initial password'
-                    }
-                    fullWidth
-                    size="small"
-                    required
-                    type={name === 'password' ? 'password' : name === 'email' ? 'email' : 'text'}
-                    autoComplete={name === 'password' ? 'new-password' : 'off'}
-                    value={form.values[name]}
-                    onChange={form.handleChange}
-                    onBlur={form.handleBlur}
-                    disabled={form.isSubmitting}
-                    error={Boolean(form.touched[name] && form.errors[name])}
-                    helperText={
-                      (form.touched[name] && form.errors[name]) ||
-                      (name === 'password' ? passwordHelp : undefined)
-                    }
-                  />
-                </Grid>
-              ))}
+              <SetupUserFields
+                form={form}
+                serverErrors={serverErrors}
+                clearServerError={clearServerError}
+                passwordHelp={passwordHelp}
+              />
               {canReadRoles && (
                 <Grid size={12}>
                   <TextField
@@ -101,20 +85,27 @@ export default function SetupUserDialog({
                     size="small"
                     label="Roles"
                     value={form.values.roleNames}
+                    error={Boolean(serverErrors.roleNames)}
                     disabled={form.isSubmitting || roles.isLoading || roles.isError}
-                    slotProps={{ select: { multiple: true } }}
-                    onChange={(event) =>
+                    slotProps={{
+                      select: { multiple: true },
+                      inputLabel: { sx: setupUserErrorTextSx },
+                      formHelperText: { sx: setupUserErrorTextSx },
+                    }}
+                    onChange={(event) => {
+                      clearServerError('roleNames');
                       form.setFieldValue(
                         'roleNames',
                         typeof event.target.value === 'string'
                           ? event.target.value.split(',')
                           : event.target.value
-                      )
-                    }
+                      );
+                    }}
                     helperText={
-                      roles.isError
+                      serverErrors.roleNames ||
+                      (roles.isError
                         ? 'Unable to load roles. Retry to assign access.'
-                        : 'Optional. Choose the roles this staff member needs.'
+                        : 'Optional. Choose the roles this staff member needs.')
                     }
                   >
                     {(roles.data?.items ?? []).map((role) => (
@@ -138,10 +129,10 @@ export default function SetupUserDialog({
           variant="contained"
           color="inherit"
           loading={form.isSubmitting}
-          disabled={!policy.data || policy.isFetching}
-          onClick={() => form.submitForm()}
+          disabled={form.isSubmitting || !policy.data || policy.isFetching || policy.isError}
+          onClick={submit}
         >
-          Submit
+          {form.isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </DialogActions>
     </CustomDialog>
