@@ -1090,22 +1090,24 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
                 dirtyOverride={inlinePayroll ? payrollState.dirty : undefined}
               />
               {inlinePayroll ? (
-                <PayrollProfileWorkspace
-                  employeeId={editData.id}
-                  employeeName={editData.fullName}
-                  origin="staff-edit"
-                  actionsDisabled={payrollState.busy}
-                  detailsContent={(values, canEdit) => (
-                    <PayrollEditDetails
-                      ref={payrollEditRef}
-                      key={editData.id}
-                      employeeId={editData.id}
-                      initialValues={values}
-                      canEdit={canEdit}
-                      onStateChange={setPayrollState}
-                    />
-                  )}
-                />
+                <Box sx={{ p: { xs: 1, sm: 2 }, minWidth: 0 }}>
+                  <PayrollProfileWorkspace
+                    employeeId={editData.id}
+                    employeeName={editData.fullName}
+                    origin="staff-edit"
+                    actionsDisabled={payrollState.busy}
+                    detailsContent={(values, canEdit) => (
+                      <PayrollEditDetails
+                        ref={payrollEditRef}
+                        key={editData.id}
+                        employeeId={editData.id}
+                        initialValues={values}
+                        canEdit={canEdit}
+                        onStateChange={setPayrollState}
+                      />
+                    )}
+                  />
+                </Box>
               ) : (
                 !isSubmitted && (
                   <FormSlider
