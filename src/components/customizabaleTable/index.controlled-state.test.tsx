@@ -9,6 +9,20 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import CustomizableTable from '.';
 
+// Keep table behavior real without loading the entire icon asset library.
+vi.mock('@mui/icons-material', () => {
+  const Icon = () => null;
+  return {
+    ArrowDownward: Icon,
+    ArrowUpward: Icon,
+    Clear: Icon,
+    ExpandLess: Icon,
+    ExpandMore: Icon,
+    RemoveRedEye: Icon,
+    Search: Icon,
+  };
+});
+
 const columns = [
   {
     id: 'name',
@@ -77,6 +91,30 @@ describe('CustomizableTable controlled server state', () => {
 
     expect(screen.getByRole('textbox', { name: /search/i })).toHaveValue('patel');
     expect(screen.getByText('51–75 of 100')).toBeVisible();
+  });
+
+  it('reports one-based server pages while displaying zero-based controlled pages', () => {
+    const onServerPagination = vi.fn();
+    const props = {
+      tableId: 'controlled-pagination-contract',
+      columns,
+      data: [{ id: 'lead-1', name: 'Patel' }],
+      serverSidePagination: true,
+      totalCount: 95,
+      rowsPerPage: 10,
+      onServerPagination,
+    };
+    const { rerender } = renderTable(<CustomizableTable {...props} page={0} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
+    expect(onServerPagination).toHaveBeenLastCalledWith(2, 10);
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <CustomizableTable {...props} page={1} />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('11–20 of 95')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to previous page' }));
+    expect(onServerPagination).toHaveBeenLastCalledWith(1, 10);
   });
 
   it('keeps typed search text until the server debounce reaches the parent', () => {

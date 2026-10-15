@@ -8,6 +8,7 @@ export { FormSectionHeader } from './section-header';
 
 interface FormSectionCardProps extends FormSectionHeaderProps {
   children?: ReactNode;
+  contentSpacing?: number;
 }
 
 export function FormSectionCard({
@@ -21,6 +22,7 @@ export function FormSectionCard({
   action,
   actionFullWidthOnMobile,
   children,
+  contentSpacing = 2,
 }: FormSectionCardProps) {
   return (
     <Card

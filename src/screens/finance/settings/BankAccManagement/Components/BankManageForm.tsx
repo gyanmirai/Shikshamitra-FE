@@ -14,9 +14,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Alert, Stack, Button, TextField, DialogActions } from '@mui/material';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
+import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   usePutBankAccountMutation,
   usePostBankAccountMutation,
@@ -28,6 +29,7 @@ import { bankAccountValidationSchema } from './BankValidationSchema';
 
 const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [saveError, setSaveError] = useState('');
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
   const [pendingFormValues, setPendingFormValues] = useState<ReturnType<
@@ -64,13 +66,14 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
 
   // Perform the actual form submission
   const performSubmission = async (values: any) => {
+    setSaveError('');
     try {
       // Transform form data to API format
       const payload = {
-        bankName: values.bankName,
-        branchName: values.branchName,
+        bankName: values.bankName.trim(),
+        branchName: values.branchName.trim(),
         branchAddress: values.branchAddress || '',
-        accountHolderName: values.accountHolderName,
+        accountHolderName: values.accountHolderName.trim(),
         accountType: values.accountType,
         accountNumber: String(values.accountNumber),
         purpose: values.purpose || '',
@@ -102,10 +105,12 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       }
       onClose(null, true);
     } catch (error) {
-      console.error('Save operation failed:', error);
-      shikshaMitraToast.error({
-        message: `Failed to ${editData ? 'update' : 'create'} bank account`,
-      });
+      const problem = getAccountSettingSaveError(error, 'bank');
+      setSaveError(problem.message);
+      if (problem.field) {
+        formik.setFieldTouched(problem.field, true, false);
+        formik.setFieldError(problem.field, problem.message);
+      }
     }
   };
   const handleSubmit = useCallback(() => {
@@ -115,6 +120,11 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
+        {saveError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {saveError}
+          </Alert>
+        )}
         <Stack spacing={2}>
           {/* Section: Bank Details */}
           <FormSectionCard
@@ -134,15 +144,14 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     label="Bank Name *"
                     name="bankName"
                     value={formik.values.bankName}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/[^a-zA-Z\s]/g, '')
-                        .replace(/\s+/g, ' ')
-                        .trimStart();
-                      formik.setFieldValue('bankName', value);
-                    }}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     error={formik.touched.bankName && Boolean(formik.errors.bankName)}
-                    helperText={formik.touched.bankName && formik.errors.bankName}
+                    helperText={
+                      formik.touched.bankName && formik.errors.bankName
+                        ? formik.errors.bankName
+                        : `${formik.values.bankName.length}/100 characters`
+                    }
                     inputProps={{ maxLength: 100 }}
                   />
                 </ShakingTextField>
@@ -187,15 +196,14 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     label="Branch Name *"
                     name="branchName"
                     value={formik.values.branchName}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/[^a-zA-Z0-9\s]/g, '')
-                        .replace(/\s+/g, ' ')
-                        .trimStart();
-                      formik.setFieldValue('branchName', value);
-                    }}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     error={formik.touched.branchName && Boolean(formik.errors.branchName)}
-                    helperText={formik.touched.branchName && formik.errors.branchName}
+                    helperText={
+                      formik.touched.branchName && formik.errors.branchName
+                        ? formik.errors.branchName
+                        : `${formik.values.branchName.length}/100 characters`
+                    }
                     inputProps={{ maxLength: 100 }}
                   />
                 </ShakingTextField>
@@ -237,17 +245,16 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     label="Account Holder Name *"
                     name="accountHolderName"
                     value={formik.values.accountHolderName}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/[^a-zA-Z\s]/g, '')
-                        .replace(/\s+/g, ' ')
-                        .trimStart();
-                      formik.setFieldValue('accountHolderName', value);
-                    }}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                     error={
                       formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
                     }
-                    helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
+                    helperText={
+                      formik.touched.accountHolderName && formik.errors.accountHolderName
+                        ? formik.errors.accountHolderName
+                        : `${formik.values.accountHolderName.length}/100 characters`
+                    }
                     inputProps={{ maxLength: 100 }}
                   />
                 </ShakingTextField>
@@ -314,7 +321,13 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   value={formik.values.purpose}
                   onChange={formik.handleChange}
                   inputProps={{ maxLength: 500 }}
-                  helperText={`${formik.values.purpose?.length ?? 0}/500`}
+                  onBlur={formik.handleBlur}
+                  error={Boolean(formik.touched.purpose && formik.errors.purpose)}
+                  helperText={
+                    formik.touched.purpose && formik.errors.purpose
+                      ? formik.errors.purpose
+                      : `${formik.values.purpose?.length ?? 0}/500`
+                  }
                   FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />
               </Grid>

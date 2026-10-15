@@ -8,6 +8,8 @@ export const expenseCategoryValidationSchema = (
 ) =>
   Yup.object().shape({
     name: Yup.string()
+      .trim()
+      .max(128, 'Expense Category Name must be at most 128 characters')
       .required('Expense Category Name is required')
       .test('unique-expense-category', 'This expense category name already exists', (value) => {
         if (!value?.trim()) return true;

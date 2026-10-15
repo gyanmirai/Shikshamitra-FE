@@ -63,6 +63,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         label: 'Name',
         align: 'left',
         sticky: true,
+        stickyPosition: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
             {value}
@@ -105,6 +106,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         label: 'Status',
         minWidth: 140,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         render(value, row) {
           const income = row as IIncomeCategory;
           return (
@@ -116,6 +119,11 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                 variant="soft"
               />
               <Switch
+                slotProps={{
+                  input: {
+                    'aria-label': `${income.isActive ? 'Deactivate' : 'Activate'} ${income.name}`,
+                  },
+                }}
                 size="small"
                 disabled={!access.canChangeStatus}
                 checked={income.isActive || false}
@@ -133,6 +141,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         align: 'left',
         isSort: false,
         sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
         isFilter: false,
         render(value, row) {
           return (
@@ -161,8 +171,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                     onDelete(row as IIncomeCategory);
                   },
                   disabled: !access.canDelete || !(row as IIncomeCategory).canDelete,
-                  tooltip:
-                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  tooltip: (row as IIncomeCategory).isActive
+                    ? 'Deactivate this record before deleting it.'
+                    : 'This record is referenced by other Finance records and cannot be deleted.',
                   color: 'error.main',
                 },
               ]}
@@ -180,6 +191,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
     <>
       <CustomizableTable
         tableId="income-category-data-table"
+        tableTitle="Income Categories"
+        searchFieldProps={{ placeholder: 'Search name...' }}
         noDataText={
           <>
             Income Category Data Not Found{' '}

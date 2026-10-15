@@ -216,6 +216,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"

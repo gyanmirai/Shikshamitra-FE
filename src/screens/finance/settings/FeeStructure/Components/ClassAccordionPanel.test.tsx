@@ -100,7 +100,7 @@ it('keeps edits and updates the structure list name when switching between struc
 
 it('selects a new local draft and preserves its name after visiting a saved structure', () => {
   setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'Bus fees' },
   });
@@ -116,17 +116,17 @@ it('locks structure navigation and creation while a save is running', () => {
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('button', { name: 'Add Structure' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add structure' })).toBeDisabled();
 });
 
 it('does not offer structure creation without its permission', () => {
   setup(false);
-  expect(screen.queryByRole('button', { name: 'Add Structure' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Add structure' })).toBeNull();
 });
 
 it('keeps a new editor mounted and selected after saving and list refetch', () => {
   const view = setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Add Structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
     target: { value: 'New fees' },
   });

@@ -10,6 +10,7 @@ import { render, screen, within, fireEvent } from '@testing-library/react';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('src/components/academic-date-picker', () => ({ AcademicDatePicker: () => null }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   useAssignmentTransportSourcesQuery: () => ({}),
 }));
@@ -86,11 +87,11 @@ describe('variable student inputs', () => {
     expect(screen.getByLabelText(/Transport student amount/)).toHaveValue('');
     const tuition = within(screen.getByRole('region', { name: 'Tuition' }));
     expect(tuition.getByText('₹ 5,000')).toBeInTheDocument();
-    expect(tuition.getByText('Mandatory')).toBeInTheDocument();
+    expect(tuition.getByText('Required')).toBeInTheDocument();
     expect(tuition.queryByRole('textbox')).not.toBeInTheDocument();
     expect(tuition.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('option', { name: 'Verified transport service' })
+      screen.queryByRole('option', { name: 'Transport service' })
     ).not.toBeInTheDocument();
   });
 

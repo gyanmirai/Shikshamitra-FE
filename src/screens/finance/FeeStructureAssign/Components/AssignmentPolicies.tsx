@@ -3,13 +3,26 @@ import type {
   AssignmentPolicySelection,
 } from 'src/redux/finance/studentFeeAssignment';
 
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { FormSectionHeader } from 'src/components/form-section-card';
-import { Box, Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   useAssignmentPolicyOptionsQuery,
   selectableAssignmentPolicyFamilies,
 } from 'src/redux/finance/studentFeeAssignment';
+import {
+  Box,
+  Stack,
+  Alert,
+  Button,
+  Skeleton,
+  TextField,
+  Accordion,
+  IconButton,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 export default function AssignmentPolicies({
   studentId,
@@ -21,6 +34,7 @@ export default function AssignmentPolicies({
   canOverride,
   disabled = false,
   editing = false,
+  flat = false,
 }: {
   studentId: string;
   academicYearId: string;
@@ -31,6 +45,7 @@ export default function AssignmentPolicies({
   canOverride: boolean;
   disabled?: boolean;
   editing?: boolean;
+  flat?: boolean;
 }) {
   const options = useAssignmentPolicyOptionsQuery(
     { studentId, academicYearId },
@@ -41,17 +56,8 @@ export default function AssignmentPolicies({
     selections.some(
       (s) => s.versionId !== (defaults.find((p) => p.family === s.family)?.versionId ?? null)
     );
-  return (
+  const policyControls = (
     <Stack spacing={2}>
-      <FormSectionHeader
-        icon="mdi:shield-check-outline"
-        title={editing ? 'Student policies' : 'Policy defaults and overrides'}
-        descriptionTooltip={
-          editing
-            ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts.'
-            : 'Policies default to the selected fee structure. Changes here apply only to this student.'
-        }
-      />
       {options.isLoading && <Skeleton height={48} />}
       {options.isError && (
         <Alert
@@ -92,7 +98,7 @@ export default function AssignmentPolicies({
                   ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
                   ...available.map((p) => ({
                     value: p.versionId,
-                    label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? (editing ? ' · currently assigned' : ' · fee structure default') : ''}`,
+                    label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
                   })),
                 ]}
                 helperText={
@@ -126,7 +132,7 @@ export default function AssignmentPolicies({
                     onChange(nextSelections, nextSelections.length ? reason : '');
                   }}
                 >
-                  Reset {family} to fee structure default
+                  Reset {family}
                 </Button>
               )}
             </Stack>
@@ -135,13 +141,15 @@ export default function AssignmentPolicies({
       </Box>
       {!editing && selections.length > 0 && (
         <Button size="small" disabled={disabled} onClick={() => onChange([], '')}>
-          Restore fee structure defaults
+          Restore defaults
         </Button>
       )}
       {changed && (
         <TextField
           label={editing ? 'Policy change reason' : 'Policy override reason'}
           required
+          size="small"
+          fullWidth
           multiline
           minRows={2}
           value={reason}
@@ -149,17 +157,8 @@ export default function AssignmentPolicies({
           onChange={(e) => onChange(selections, e.target.value)}
           slotProps={{ htmlInput: { maxLength: 500 } }}
           error={!reason.trim()}
-          helperText={
-            !reason.trim()
-              ? 'Enter a reason for changing the assigned policies.'
-              : 'Recorded with this student’s policy selection.'
-          }
+          helperText={!reason.trim() ? 'Enter a reason for changing policies.' : undefined}
         />
-      )}
-      {!canOverride && (
-        <Typography variant="caption" color="text.secondary">
-          You do not have permission to override policies. The fee structure defaults will be used.
-        </Typography>
       )}
       {canOverride &&
         !options.isLoading &&
@@ -172,10 +171,113 @@ export default function AssignmentPolicies({
                 policy.versionId === defaults.find((item) => item.family === family)?.versionId
             )
         ) && (
-          <Alert severity="info">
-            No other active policies are available for this student’s academic year.
-          </Alert>
+          <CustomTooltip
+            title="No other policies are available for this academic year."
+            arrow
+            placement="right"
+          >
+            <IconButton
+              size="small"
+              color="info"
+              aria-label="Policy availability information"
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              <Iconify icon="mdi:information-outline" width={18} />
+            </IconButton>
+          </CustomTooltip>
         )}
+    </Stack>
+  );
+  return (
+    <Stack spacing={2}>
+      {!editing && (!canOverride || !flat) && (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+            gap: 1.5,
+          }}
+        >
+          {selectableAssignmentPolicyFamilies.map((family) => {
+            const inherited = defaults.find((policy) => policy.family === family);
+            const selected = selections.find((policy) => policy.family === family);
+            const policy = selected
+              ? [...(options.data ?? []), ...defaults].find(
+                  (item) => item.versionId === selected.versionId
+                )
+              : inherited;
+            return (
+              <Stack
+                key={family}
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ textTransform: 'capitalize' }}
+                  >
+                    {family} policy
+                  </Typography>
+                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                    {policy
+                      ? `${policy.name} · v${policy.version}`
+                      : selected?.versionId
+                        ? 'Unavailable policy'
+                        : 'None'}
+                  </Typography>
+                </Box>
+                <CustomTooltip
+                  title={selected ? 'Student override' : 'Fee structure default'}
+                  arrow
+                  placement="right"
+                >
+                  <IconButton
+                    size="small"
+                    color="info"
+                    aria-label={`${family} policy source information`}
+                  >
+                    <Iconify icon="mdi:information-outline" width={16} />
+                  </IconButton>
+                </CustomTooltip>
+              </Stack>
+            );
+          })}
+        </Box>
+      )}
+      {canOverride &&
+        (flat ? (
+          policyControls
+        ) : (
+          <Accordion
+            disableGutters
+            elevation={0}
+            defaultExpanded={editing || changed}
+            sx={{ '&::before': { display: 'none' }, border: 1, borderColor: 'divider' }}
+          >
+            <AccordionSummary disabled={disabled} expandIcon={<Iconify icon="mdi:chevron-down" />}>
+              <Typography variant="subtitle2">
+                {editing ? 'Student policies' : 'Change policies'}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>{policyControls}</AccordionDetails>
+          </Accordion>
+        ))}
+      {!canOverride && (
+        <CustomTooltip title="Policy changes require override access." arrow placement="right">
+          <IconButton
+            size="small"
+            color="info"
+            aria-label="Policy override access information"
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            <Iconify icon="mdi:information-outline" width={18} />
+          </IconButton>
+        </CustomTooltip>
+      )}
     </Stack>
   );
 }

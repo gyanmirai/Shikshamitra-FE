@@ -85,7 +85,12 @@ export default function FeeCollectionOutcomePanel({
           View in audit trail
         </Button>
         {onClose && (
-          <Button size="small" variant="text" onClick={onClose}>
+          <Button
+            startIcon={<Iconify icon="mdi:close" />}
+            size="small"
+            variant="text"
+            onClick={onClose}
+          >
             Close
           </Button>
         )}

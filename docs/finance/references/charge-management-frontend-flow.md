@@ -3,7 +3,7 @@ module: finance
 domain: charge-management
 content_type: Reference
 status: active
-updated_on: 2026-10-02
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,6 +17,24 @@ The canonical workspace is `/finance/charge-management`; the former `chargesRequ
 Collected charges cannot be voided from this screen. Users are directed to reconciliation/refund handling, and the backend enforces that boundary. A charge-specific paid-refund UI, immutable event timeline, notifications, export parity, and browser automation remain follow-up work.
 
 The inbox now shows Pending, In Process, Completed and Rejected with server counts and status badges. Every new charge requires approval, and category setup no longer offers a bypass. Detail distinguishes approval decisions from collection status and shows collected, waived and outstanding amounts per student. Payment, waiver and reconciliation mutations refresh subscribed charge queries. Completion uses the server's batch `workflowStatus`; the original student `status` remains the approval decision. See [Finance testing](../testing.md) for focused regression commands.
+
+The table uses the shared Columns, Export and full-screen tools and a filter on every
+data column. Students shows the total in the selected scope, with the reviewed count
+underneath; its numeric filter applies to that total. Status and Actions are pinned on
+the right, with at most two direct actions and the remainder in the shared menu.
+`chargeTableFilters.ts` serializes text, numeric/range, calendar-date and workflow-status
+filters into the list API's `filters` parameter. The API applies filters before counting
+and pagination, and tab counts follow the same search and filters. Changing a tab clears
+only the workflow-status column filter. Charge Name, Amount and Due Date support server
+sorting with a stable tie-breaker; unsupported columns do not show a sort control.
+The table's zero-based pages are converted to the API's one-based pages.
+
+Focused checks: `ChargesTable.test.tsx` covers page conversion, filter/sort persistence,
+tab transitions, date serialization and allowed actions. Backend
+`ChargeColumnFilter_Tests.cs` covers validation, filter combinations, date boundaries
+and PostgreSQL predicate translation. Finish the browser smoke check on
+`/finance/charge-management`, including filter menus, empty results, page changes and
+right-side sticky columns at narrow widths.
 
 Backend behavior, financial invariants, gaps, and the target lifecycle are canonical in [Charge management end to end](../../../../Shikshamitra-BE/docs/modules/finance/references/charge-management-end-to-end.md).
 

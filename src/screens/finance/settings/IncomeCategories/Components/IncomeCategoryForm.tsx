@@ -7,14 +7,16 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Chip, Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
+import { mergeCategoryTags } from 'src/screens/finance/settings/components/category-tags';
+import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   useGetIncomeCategoriesQuery,
   usePutIncomeCategoryMutation,
@@ -28,13 +30,14 @@ import type { IIncomeCategoryFormProps } from './type';
 
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [saveError, setSaveError] = useState('');
 
   const { data: incomeCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
     options: {
-      skip: !currentYear?.id || !open?.value || editData,
+      skip: !currentYear?.id || !open?.value,
     },
   });
 
@@ -45,8 +48,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       ),
     [incomeCategoryData]
   );
-  const existingNamesRef = useRef<Set<string>>(new Set());
-  existingNamesRef.current = existingNames;
 
   const [tag, setTag] = useState('');
   const [tagError, setTagError] = useState('');
@@ -72,12 +73,13 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
 
   // Perform the actual form submission
   const performSubmission = async (values: any) => {
+    setSaveError('');
     try {
       // Transform form data to API format
       const payload = {
-        name: values.name,
+        name: values.name.trim(),
         description: values.description || '',
-        tags: values.tags || [],
+        tags: mergeCategoryTags(values.tags || [], tag),
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
@@ -104,10 +106,12 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       }
       onClose(null, true);
     } catch (error) {
-      console.error('Save operation failed:', error);
-      shikshaMitraToast.error({
-        message: `Failed to ${editData ? 'update' : 'create'} income category`,
-      });
+      const problem = getAccountSettingSaveError(error, 'category');
+      setSaveError(problem.message);
+      if (problem.field) {
+        formik.setFieldTouched(problem.field, true, false);
+        formik.setFieldError(problem.field, problem.message);
+      }
     }
   };
 
@@ -133,8 +137,16 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     );
   };
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+    <BackPopUpChecked
+      initialValues={{ ...formik.initialValues, draftTag: '' }}
+      currentValues={{ ...formik.values, draftTag: tag }}
+    >
       <DialogScrollContent>
+        {saveError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {saveError}
+          </Alert>
+        )}
         <FormSectionCard
           icon="solar:wallet-money-bold-duotone"
           title="Income category details"
@@ -150,17 +162,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                   name="name"
                   size="small"
                   value={formik.values.name}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/^\s+/g, '')
-                      .trimStart()
-                      .split(' ')
-                      .map((word) =>
-                        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                      )
-                      .join(' ');
-                    formik.setFieldValue('name', value);
-                  }}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={
                     formik.touched.name && formik.errors.name
@@ -224,7 +227,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                     tagError ||
                     (formik.touched.tags && typeof formik.errors.tags === 'string'
                       ? formik.errors.tags
-                      : `Press enter after typing a tag to add it`)
+                      : `Press Enter to add a tag. Remaining text is included on submit.`)
                   }
                 />
               </ShakingTextField>

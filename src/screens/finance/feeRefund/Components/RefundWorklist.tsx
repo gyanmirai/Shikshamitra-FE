@@ -402,7 +402,7 @@ export default function RefundWorklist({
           rowsPerPage={pageSize}
           searchTerm={search}
           onServerPagination={(nextPage, nextSize) => {
-            setPage(nextPage);
+            setPage(nextPage - 1);
             setPageSize(nextSize);
           }}
           onServerSearch={(value) => {

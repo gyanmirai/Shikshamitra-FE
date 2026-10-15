@@ -1,21 +1,35 @@
 import * as Yup from 'yup';
 
 export const bankAccountValidationSchema = Yup.object().shape({
-  bankName: Yup.string().trim().required('Bank Name is required'),
+  bankName: Yup.string()
+    .trim()
+    .max(100, 'Bank Name must be at most 100 characters')
+    .required('Bank Name is required'),
 
-  branchName: Yup.string().trim().required('Branch Name is required'),
+  branchName: Yup.string()
+    .trim()
+    .max(100, 'Branch Name must be at most 100 characters')
+    .required('Branch Name is required'),
 
   branchAddress: Yup.string().trim().nullable(),
 
-  accountHolderName: Yup.string().trim().required('Account Holder Name is required'),
-  accountType: Yup.number().required('Account Type is required'),
+  accountHolderName: Yup.string()
+    .trim()
+    .max(100, 'Account Holder Name must be at most 100 characters')
+    .required('Account Holder Name is required'),
+  accountType: Yup.number()
+    .oneOf([0, 1], 'Select Saving or Current')
+    .required('Account Type is required'),
 
   accountNumber: Yup.string()
     .trim()
     .matches(/^[0-9]{6,18}$/, 'Account Number must be 6–18 digits')
     .required('Account Number is required'),
 
-  purpose: Yup.string().trim().nullable(),
+  purpose: Yup.string()
+    .trim()
+    .max(500, 'Account Purpose must be at most 500 characters')
+    .nullable(),
 
   ifscCode: Yup.string()
     .trim()
@@ -31,5 +45,5 @@ export const bankAccountValidationSchema = Yup.object().shape({
   effectiveTo: Yup.date()
     .nullable()
     .transform((v, o) => (o === '' ? null : v))
-    .min(Yup.ref('effectiveFrom'), 'Effective to must be after effective from'),
+    .min(Yup.ref('effectiveFrom'), 'Effective to must be on or after effective from'),
 });

@@ -12,23 +12,25 @@ import * as Yup from 'yup';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { FormSectionHeader } from 'src/components/form-section-card';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   Box,
+  List,
   Stack,
   Alert,
   Button,
   Skeleton,
-  Accordion,
+  TextField,
+  Pagination,
   Typography,
-  AccordionSummary,
-  AccordionDetails,
+  ListItemButton,
 } from '@mui/material';
 import {
   assignmentError,
@@ -45,6 +47,8 @@ import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
 import { variableAssignmentError } from './variableAssignmentValidation';
+import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
+import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 
 interface Student {
   studentId: string;
@@ -56,32 +60,22 @@ interface AssignmentValues {
   requests: AssignmentRequest[];
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
-const steps = ['Structure', 'Heads and service', 'Policies', 'Review', 'Results'];
+const steps = ['Structure & policies', 'Fees & dates', 'Review & assign'];
 const stepContent = [
   {
-    title: 'Select a fee structure',
+    title: 'Structure & policies',
     icon: 'mdi:file-document-outline',
-    help: 'Choose a published revision for the selected academic year and enrollment. The same revision applies to all selected students.',
+    help: 'Choose a published revision for the selected year. Bulk eligibility is verified during preview.',
   },
   {
-    title: 'Configure fee heads',
+    title: 'Fees & dates',
     icon: 'mdi:format-list-checks',
-    help: 'Review mandatory fees, include optional heads and enter any student amounts. Service-date changes are available only with the required access.',
+    help: 'Review required fees, select optional fees and configure permitted service-date changes for this student.',
   },
   {
-    title: 'Review policy selections',
-    icon: 'mdi:shield-check-outline',
-    help: 'Use the fee structure defaults or make a permitted student override with a reason. Collection and refund rules are evaluated in their own workflows.',
-  },
-  {
-    title: 'Review assignments',
+    title: 'Review & assign',
     icon: 'mdi:clipboard-check-outline',
-    help: 'Check the obligation, service periods and installment schedule for each student before confirming. Only successful previews can be assigned.',
-  },
-  {
-    title: 'Assignment results',
-    icon: 'mdi:check-circle-outline',
-    help: 'Successful assignments are preserved. Review remaining students to retry only those that still need attention.',
+    help: 'Review server-calculated obligations and schedules before assigning. Successful assignments are preserved when retrying remaining students.',
   },
 ];
 
@@ -120,6 +114,8 @@ export default function AssignmentWorkflow({
   onBusyChange?: (busy: boolean) => void;
 }) {
   const { permissions } = useSelector((state: RootState) => state.auth);
+  const currentYear = useSelector((state: RootState) => state.globalState?.currentYear);
+  const yearBounds = assignmentYearBounds(currentYear, academicYearId);
   const canAssign = hasGrantedPermission(
     permissions,
     `${financePermissions.fees.structureAssign}.Add`
@@ -145,10 +141,16 @@ export default function AssignmentWorkflow({
     { skip: !academicYearId || !viewing }
   );
   const [activeStep, setActiveStep] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.studentId ?? '');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentPage, setStudentPage] = useState(1);
+  const isBulk = students.length > 1;
   const [preview, setPreview] = useState<AssignmentBulkPreview>();
   const [outcomes, setOutcomes] = useState<AssignmentBulkResult>();
   const [error, setError] = useState('');
   const [invalidAmounts, setInvalidAmounts] = useState(false);
+  const [showInputErrors, setShowInputErrors] = useState(false);
   const generation = useRef(0);
   const operation = useRef(false);
   const [previewBulk, previewState] = useAssignmentBulkPreviewMutation();
@@ -174,9 +176,15 @@ export default function AssignmentWorkflow({
   const complete = committedIds.size === students.length;
   const selectedPreviewItems =
     preview?.results.filter((r) => r.preview && !committedIds.has(r.studentId)) ?? [];
+  const batchTotals = assignmentCurrencyTotals(
+    showResults
+      ? (outcomes?.results.flatMap((item) => (item.result ? [item.result.assignment] : [])) ?? [])
+      : selectedPreviewItems.flatMap((item) => (item.preview ? [item.preview] : []))
+  );
   const invalidate = () => {
     generation.current += 1;
     setPreview(undefined);
+    setShowResults(false);
     setError('');
   };
 
@@ -187,6 +195,18 @@ export default function AssignmentWorkflow({
     setPreview(undefined);
     const items = values.requests.filter((r) => !committedIds.has(r.studentId));
     if (!items.length) return;
+    const candidate = candidates.data?.find((item) => item.id === values.structureId);
+    const dateProblem =
+      candidate &&
+      items
+        .map((request) => assignmentServiceDateError(candidate, request, yearBounds))
+        .find(Boolean);
+    if (dateProblem) {
+      setShowInputErrors(true);
+      setError(dateProblem);
+      setActiveStep(1);
+      return;
+    }
     try {
       const result =
         students.length === 1
@@ -198,7 +218,7 @@ export default function AssignmentWorkflow({
           : await previewBulk({ items }).unwrap();
       if (ticket === generation.current) {
         setPreview(result);
-        setActiveStep(3);
+        setActiveStep(2);
       }
     } catch (e) {
       if (ticket === generation.current) setError(assignmentError(e));
@@ -233,7 +253,8 @@ export default function AssignmentWorkflow({
         results: [...(previous?.results.filter((r) => r.result) ?? []), ...result.results],
       }));
       setPreview(undefined);
-      setActiveStep(4);
+      setShowResults(true);
+      setActiveStep(2);
     } catch (e) {
       setError(assignmentError(e));
     }
@@ -298,10 +319,6 @@ export default function AssignmentWorkflow({
                     Edit assigned policies
                   </Button>
                 ))}
-              <Alert severity="info">
-                Assigned obligations are preserved. Service changes, transfers and revision adoption
-                require a separate reviewed financial correction.
-              </Alert>
             </>
           ) : (
             <Alert severity="info">Your current access allows viewing assignments only.</Alert>
@@ -325,7 +342,7 @@ export default function AssignmentWorkflow({
     );
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, pt: 2 }}>
+    <Box sx={{ flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.neutral' }}>
       <CustomStepperWithFormik
         initialValues={initialValues}
         steps={steps}
@@ -333,34 +350,25 @@ export default function AssignmentWorkflow({
         validationSchema={validationSchema}
         showSaveButton={false}
         onCancel={onClose}
-        isStepClickable={(index) =>
-          !busy &&
-          !complete &&
-          committedIds.size === 0 &&
-          activeStep < 4 &&
-          index < activeStep &&
-          index <= 2
-        }
+        isStepClickable={(index) => !busy && !complete && !showResults && index < activeStep}
         onStepClick={(index) => {
           invalidate();
           setActiveStep(index);
         }}
-        completedSteps={
-          complete ? [0, 1, 2, 3, 4] : Array.from({ length: activeStep }, (_, i) => i)
-        }
+        completedSteps={complete ? [0, 1, 2] : Array.from({ length: activeStep }, (_, i) => i)}
         backButtonProps={{ disabled: complete, startIcon: <Iconify icon="mdi:arrow-left" /> }}
         handleBack={() => {
           invalidate();
-          setActiveStep(activeStep === 4 ? 1 : Math.max(0, activeStep - 1));
+          setActiveStep(Math.max(0, activeStep - 1));
         }}
-        nextButtonLabel={
-          activeStep <= 1
-            ? 'Next'
-            : activeStep === 2
-              ? 'Preview assignments'
-              : `Confirm assignment (${selectedPreviewItems.length})`
+        nextButtonLabel={activeStep === 0 ? 'Next' : 'Preview assignments'}
+        finalButtonLabel={
+          showResults
+            ? complete
+              ? 'Close'
+              : 'Review remaining students'
+            : `Assign fees (${selectedPreviewItems.length})`
         }
-        finalButtonLabel={complete ? 'Close' : 'Review remaining students'}
         saveAndNextButtonProps={{
           size: 'small',
           loading: busy,
@@ -368,19 +376,19 @@ export default function AssignmentWorkflow({
             busy ||
             (activeStep === 0 && (candidates.isLoading || candidates.isError)) ||
             (activeStep === 1 && invalidAmounts) ||
-            (activeStep === 3 && selectedPreviewItems.length === 0),
+            (activeStep === 2 && !showResults && selectedPreviewItems.length === 0),
           startIcon: (
             <Iconify
               icon={
-                activeStep <= 1
+                activeStep === 0
                   ? 'mdi:arrow-right'
-                  : activeStep === 2
+                  : activeStep === 1
                     ? 'mdi:eye-outline'
-                    : activeStep === 3
-                      ? 'mdi:check'
-                      : complete
+                    : showResults
+                      ? complete
                         ? 'mdi:close'
                         : 'mdi:refresh'
+                      : 'mdi:check'
               }
             />
           ),
@@ -388,35 +396,38 @@ export default function AssignmentWorkflow({
         }}
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
           if (operation.current || busy) return;
-          if (activeStep <= 1) {
-            if (activeStep === 1) {
+          if (activeStep === 0) {
+            const missingReason = values.requests.find((r) => {
               const candidate = candidates.data?.find((c) => c.id === values.structureId);
-              if (!candidate) {
-                setError('Reload the selected fee structure.');
-                return;
-              }
-              const problem = values.requests
-                .filter((r) => !committedIds.has(r.studentId))
-                .map((request) => {
-                  const message = variableAssignmentError(candidate, request);
-                  if (!message) return undefined;
-                  const student = students.find((s) => s.studentId === request.studentId);
-                  return `${student?.studentName ?? 'Student'}: ${message}`;
-                })
-                .find(Boolean);
-              if (problem) {
-                setError(problem);
-                return;
-              }
+              return (
+                !committedIds.has(r.studentId) &&
+                r.policies?.some(
+                  (p) =>
+                    p.versionId !==
+                    (candidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
+                ) &&
+                !r.policyOverrideReason?.trim()
+              );
+            });
+            if (missingReason) {
+              setSelectedStudentId(missingReason.studentId);
+              setActiveStep(0);
+              setError('Enter a policy override reason for each student whose policies changed.');
+              return;
             }
+
             setError('');
             setActiveStep(activeStep + 1);
             return;
           }
-          if (activeStep === 4) {
+          if (showResults) {
             if (complete) onClose();
             else {
               invalidate();
+              setSelectedStudentId(
+                students.find((student) => !committedIds.has(student.studentId))?.studentId ??
+                  selectedStudentId
+              );
               setActiveStep(1);
             }
             return;
@@ -424,8 +435,34 @@ export default function AssignmentWorkflow({
           operation.current = true;
           setLoading(true);
           try {
-            if (activeStep === 2) {
-              const missingReason = values.requests.some((r) => {
+            if (activeStep === 1) {
+              const candidate = candidates.data?.find((c) => c.id === values.structureId);
+              if (!candidate) {
+                setError('Reload the selected fee structure.');
+                return;
+              }
+              const invalidRequest = values.requests
+                .filter((r) => !committedIds.has(r.studentId))
+                .find(
+                  (r) =>
+                    variableAssignmentError(candidate, r) ||
+                    assignmentServiceDateError(candidate, r, yearBounds)
+                );
+              if (invalidRequest) {
+                setSelectedStudentId(invalidRequest.studentId);
+                setShowInputErrors(true);
+                const student = students.find(
+                  (item) => item.studentId === invalidRequest.studentId
+                );
+                setError(
+                  `${student?.studentName ?? 'Student'}: ${variableAssignmentError(candidate, invalidRequest) || assignmentServiceDateError(candidate, invalidRequest, yearBounds)}`
+                );
+                return;
+              }
+            }
+
+            if (activeStep === 1) {
+              const missingReason = values.requests.find((r) => {
                 const candidate = candidates.data?.find((c) => c.id === values.structureId);
                 return (
                   !committedIds.has(r.studentId) &&
@@ -438,6 +475,8 @@ export default function AssignmentWorkflow({
                 );
               });
               if (missingReason) {
+                setSelectedStudentId(missingReason.studentId);
+                setActiveStep(0);
                 setError('Enter a policy override reason for each student whose policies changed.');
                 return;
               }
@@ -468,35 +507,30 @@ export default function AssignmentWorkflow({
                   onChange={setInvalidAmounts}
                 />
               )}
-              <FormSectionHeader
-                icon={stepContent[activeStep].icon}
-                title={stepContent[activeStep].title}
-                descriptionTooltip={stepContent[activeStep].help}
-                action={
-                  <Typography variant="caption" color="text.secondary">
-                    {students.length} student{students.length === 1 ? '' : 's'}
-                  </Typography>
-                }
-              />
-              {activeStep === 4 && (
+              {showResults && (
                 <Alert severity={complete ? 'success' : 'warning'}>
-                  {committedIds.size} committed or already assigned;{' '}
-                  {students.length - committedIds.size} need attention. Successful assignments are
-                  preserved when retrying.
+                  {committedIds.size} assigned
+                  {!complete ? ` · ${students.length - committedIds.size} need attention` : ''}.
                 </Alert>
               )}
-              {activeStep === 3 &&
+              {activeStep === 2 &&
+                !showResults &&
                 preview?.results.some(
                   (item) => !item.preview && !committedIds.has(item.studentId)
                 ) && (
                   <Alert severity="warning">
                     {selectedPreviewItems.length} student
-                    {selectedPreviewItems.length === 1 ? '' : 's'} ready to assign. Expand students
+                    {selectedPreviewItems.length === 1 ? '' : 's'} ready to assign. Select students
                     marked Needs attention to review their errors.
                   </Alert>
                 )}
               {activeStep === 0 && (
-                <>
+                <FormSectionCard
+                  title="Fee structure"
+                  contentSpacing={1.5}
+                  icon="mdi:file-document-outline"
+                  descriptionTooltip={stepContent[0].help}
+                >
                   {candidates.isError && (
                     <Alert
                       severity="error"
@@ -515,7 +549,7 @@ export default function AssignmentWorkflow({
                   )}
                   <CustomSelect
                     name="structureId"
-                    label="Published fee structure revision"
+                    label="Fee structure"
                     value={values.structureId}
                     isLoading={candidates.isLoading}
                     disabled={busy || committedIds.size > 0}
@@ -524,11 +558,12 @@ export default function AssignmentWorkflow({
                     onBlur={formik.handleBlur}
                     options={(candidates.data ?? []).map((c) => ({
                       value: c.id,
-                      label: `${c.name} · revision ${c.revisionNumber}`,
+                      label: `${c.name} · r${c.revisionNumber}`,
                     }))}
-                    noOptionsMessage="No eligible published structure for this enrollment and year"
+                    noOptionsMessage="No published structure for this student and year"
                     onChange={(value) => {
                       invalidate();
+                      setShowInputErrors(false);
                       setOutcomes(undefined);
                       formik.setValues({
                         structureId: String(value),
@@ -544,83 +579,224 @@ export default function AssignmentWorkflow({
                       });
                     }}
                   />
-                </>
+                  {candidate && (
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      justifyContent="space-between"
+                      alignItems="center"
+                      useFlexGap
+                      flexWrap="wrap"
+                    >
+                      <Stack direction="row" spacing={1}>
+                        <Label>
+                          {candidate.heads.filter((head) => !head.isOptional).length} required
+                        </Label>
+                        {candidate.heads.some((head) => head.isOptional) && (
+                          <Label>
+                            {candidate.heads.filter((head) => head.isOptional).length} optional
+                          </Label>
+                        )}
+                      </Stack>
+                      <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {candidate.total == null ? '—' : formatNumber(candidate.total, 'INR')}
+                      </Typography>
+                    </Stack>
+                  )}
+                </FormSectionCard>
               )}
-              {activeStep < 3 && candidate && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ overflowWrap: 'anywhere' }}
-                >
-                  {candidate.name} · revision {candidate.revisionNumber}
-                  {activeStep === 0
-                    ? ` · ${candidate.heads.filter((head) => !head.isOptional).length} mandatory · ${candidate.heads.filter((head) => head.isOptional).length} optional heads`
-                    : ''}
-                </Typography>
-              )}
-              {activeStep > 0 &&
-                students.map((student, index) => {
+              {(activeStep > 0 || Boolean(candidate)) &&
+                (() => {
+                  const student =
+                    students.find((item) => item.studentId === selectedStudentId) ?? students[0];
                   const request = values.requests.find((r) => r.studentId === student.studentId);
                   const studentPreview = preview?.results.find(
                     (r) => r.studentId === student.studentId
                   );
                   const outcome = outcomes?.results.find((r) => r.studentId === student.studentId);
+                  const filtered = students.filter((item) =>
+                    (item.studentName || '').toLowerCase().includes(studentSearch.toLowerCase())
+                  );
+                  const page = Math.min(studentPage, Math.max(1, Math.ceil(filtered.length / 20)));
+                  const updateRequest = (next: AssignmentRequest) => {
+                    invalidate();
+                    formik.setFieldValue(
+                      'requests',
+                      values.requests.map((r) => (r.studentId === next.studentId ? next : r))
+                    );
+                  };
                   return (
-                    <Accordion
-                      key={student.studentId}
-                      defaultExpanded={students.length === 1 || index === 0}
-                      disableGutters
-                      elevation={0}
-                      sx={{ border: 1, borderColor: 'divider', '&::before': { display: 'none' } }}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: 'minmax(0, 1fr)',
+                          md: isBulk ? '240px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                        },
+                        gap: 2,
+                        alignItems: 'start',
+                      }}
                     >
-                      <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                      {isBulk && (
+                        <FormSectionCard
+                          title="Selected students"
+                          icon="mdi:account-group-outline"
+                          descriptionTooltip="Select a student to configure their fees and policies or inspect their preview and outcome."
+                        >
+                          <TextField
+                            size="small"
+                            fullWidth
+                            label="Search selected students"
+                            value={studentSearch}
+                            disabled={busy}
+                            onChange={(e) => {
+                              setStudentSearch(e.target.value);
+                              setStudentPage(1);
+                            }}
+                          />
+                          <Typography variant="caption" color="text.secondary" aria-live="polite">
+                            {committedIds.size} assigned · {students.length - committedIds.size}{' '}
+                            remaining
+                          </Typography>
+                          {activeStep === 2 && batchTotals.length > 0 && (
+                            <Box sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
+                              <Typography variant="caption" color="text.secondary">
+                                {showResults ? 'Confirmed total' : 'Ready total'}
+                              </Typography>
+                              {batchTotals.map((item) => (
+                                <Typography
+                                  key={item.currency}
+                                  variant="h6"
+                                  sx={{ fontVariantNumeric: 'tabular-nums' }}
+                                >
+                                  {formatNumber(item.total, item.currency)}
+                                </Typography>
+                              ))}
+                            </Box>
+                          )}
+                          <List disablePadding aria-label="Selected students">
+                            {filtered.slice((page - 1) * 20, page * 20).map((item) => {
+                              const saved = outcomes?.results.find(
+                                (r) => r.studentId === item.studentId
+                              );
+                              const checked = preview?.results.find(
+                                (r) => r.studentId === item.studentId
+                              );
+                              const input = values.requests.find(
+                                (r) => r.studentId === item.studentId
+                              );
+                              const needsInput =
+                                !saved?.result &&
+                                candidate &&
+                                input &&
+                                (variableAssignmentError(candidate, input) ||
+                                  assignmentServiceDateError(candidate, input, yearBounds));
+                              const needsAttention =
+                                !saved?.result &&
+                                !checked?.preview &&
+                                (saved?.errorMessage || checked?.errorMessage || needsInput);
+                              return (
+                                <ListItemButton
+                                  key={item.studentId}
+                                  selected={item.studentId === student.studentId}
+                                  disabled={busy}
+                                  aria-label={`Select ${item.studentName || 'student'}`}
+                                  aria-current={
+                                    item.studentId === student.studentId ? 'true' : undefined
+                                  }
+                                  onClick={() => setSelectedStudentId(item.studentId)}
+                                  sx={{ borderRadius: 1, mb: 0.5, px: 1.5 }}
+                                >
+                                  <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                                    <Typography
+                                      variant="subtitle2"
+                                      sx={{ overflowWrap: 'anywhere' }}
+                                    >
+                                      {item.studentName || 'Student'}
+                                    </Typography>
+                                    <Label
+                                      color={
+                                        saved?.result
+                                          ? 'success'
+                                          : needsAttention
+                                            ? 'warning'
+                                            : 'default'
+                                      }
+                                    >
+                                      {saved?.result
+                                        ? saved.outcome === 'AlreadyAssigned'
+                                          ? 'Already assigned'
+                                          : 'Assigned'
+                                        : needsAttention
+                                          ? 'Needs attention'
+                                          : checked?.preview
+                                            ? 'Ready to assign'
+                                            : 'Configure'}
+                                    </Label>
+                                    {checked?.preview && !saved?.result && (
+                                      <Typography variant="caption">
+                                        {formatNumber(checked.preview.proratedTotal, 'INR')}
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                </ListItemButton>
+                              );
+                            })}
+                          </List>
+                          {!filtered.length && (
+                            <Typography variant="body2" color="text.secondary">
+                              No matching students.
+                            </Typography>
+                          )}
+                          {filtered.length > 20 && (
+                            <Pagination
+                              size="small"
+                              count={Math.ceil(filtered.length / 20)}
+                              page={page}
+                              disabled={busy}
+                              onChange={(_, next) => setStudentPage(next)}
+                            />
+                          )}
+                        </FormSectionCard>
+                      )}
+                      <Stack spacing={2} sx={{ minWidth: 0 }}>
                         <Stack
                           direction="row"
-                          spacing={1}
+                          justifyContent="space-between"
                           alignItems="center"
-                          useFlexGap
-                          flexWrap="wrap"
-                          sx={{ minWidth: 0 }}
+                          spacing={1}
                         >
-                          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                            {student.studentName || `Student ${index + 1}`}
+                          <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
+                            {student.studentName || 'Student'}
                           </Typography>
-                          {outcome && (
+                          {candidate && activeStep < 2 && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ overflowWrap: 'anywhere' }}
+                            >
+                              {candidate.name} · r{candidate.revisionNumber}
+                            </Typography>
+                          )}
+                          {outcome && (showResults || outcome.result) && (
                             <Label color={outcome.result ? 'success' : 'warning'}>
                               {outcome.outcome === 'AlreadyAssigned'
                                 ? 'Already assigned'
                                 : outcome.outcome}
                             </Label>
                           )}
-                          {!outcome && studentPreview?.errorMessage && (
-                            <Label color="warning">Needs attention</Label>
-                          )}
                         </Stack>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Stack spacing={2}>
-                          {outcome?.result ? (
-                            <AssignmentReview data={outcome.result.assignment} committed />
-                          ) : (
-                            <>
-                              {activeStep === 1 && candidate && request && (
-                                <AssignmentStudentInputs
-                                  candidate={candidate}
-                                  request={request}
-                                  onChange={(next) => {
-                                    invalidate();
-                                    formik.setFieldValue(
-                                      'requests',
-                                      values.requests.map((r) =>
-                                        r.studentId === next.studentId ? next : r
-                                      )
-                                    );
-                                  }}
-                                  canOverrideDates={canOverrideDates}
-                                  disabled={busy}
-                                />
-                              )}
-                              {activeStep === 2 && candidate && request && (
+                        {outcome?.result ? (
+                          <AssignmentReview data={outcome.result.assignment} committed />
+                        ) : (
+                          <>
+                            {activeStep === 0 && candidate && request && (
+                              <FormSectionCard
+                                title="Policies"
+                                contentSpacing={1.5}
+                                icon="mdi:shield-check-outline"
+                                descriptionTooltip="Policy defaults and permitted overrides for this student. Changes require a reason."
+                              >
                                 <AssignmentPolicies
                                   studentId={request.studentId}
                                   academicYearId={academicYearId}
@@ -629,41 +805,59 @@ export default function AssignmentWorkflow({
                                   reason={request.policyOverrideReason ?? ''}
                                   canOverride={canOverridePolicies}
                                   disabled={busy}
-                                  onChange={(policies, policyOverrideReason) => {
-                                    invalidate();
-                                    formik.setFieldValue(
-                                      'requests',
-                                      values.requests.map((r) =>
-                                        r.studentId === request.studentId
-                                          ? { ...r, policies, policyOverrideReason }
-                                          : r
-                                      )
-                                    );
-                                  }}
+                                  flat
+                                  onChange={(policies, policyOverrideReason) =>
+                                    updateRequest({ ...request, policies, policyOverrideReason })
+                                  }
                                 />
-                              )}
-                              {outcome?.errorMessage && (
-                                <Alert severity="error">{outcome.errorMessage}</Alert>
-                              )}
-                              {studentPreview?.errorMessage && (
-                                <Alert severity="error">{studentPreview.errorMessage}</Alert>
-                              )}
-                              {activeStep === 3 && studentPreview?.preview && (
-                                <AssignmentReview data={studentPreview.preview} />
-                              )}
-                              {activeStep === 4 && !outcome && (
-                                <Alert severity="warning">
-                                  This student has not been assigned. Review the remaining students
-                                  and preview again.
-                                </Alert>
-                              )}
-                            </>
-                          )}
-                        </Stack>
-                      </AccordionDetails>
-                    </Accordion>
+                              </FormSectionCard>
+                            )}
+                            {activeStep === 1 && candidate && request && (
+                              <FormSectionCard
+                                  title="Fees & dates"
+                                  contentSpacing={1}
+                                  icon="mdi:format-list-checks"
+                                  descriptionTooltip={stepContent[1].help}
+                                >
+                                  <AssignmentStudentInputs
+                                    key={student.studentId}
+                                    candidate={candidate}
+                                    request={request}
+                                    onChange={updateRequest}
+                                    canOverrideDates={canOverrideDates}
+                                    disabled={busy}
+                                    yearBounds={yearBounds}
+                                    showErrors={showInputErrors}
+                                    flat
+                                  />
+                                </FormSectionCard>
+                            )}
+                            {outcome?.errorMessage && !studentPreview?.preview && (
+                              <Alert severity="error">{outcome.errorMessage}</Alert>
+                            )}
+                            {studentPreview?.errorMessage && (
+                              <Alert severity="error">{studentPreview.errorMessage}</Alert>
+                            )}
+                            {activeStep === 2 && !showResults && studentPreview?.preview && (
+                              <AssignmentReview
+                                data={studentPreview.preview}
+                                onEdit={(step) => {
+                                  invalidate();
+                                  setActiveStep(step);
+                                }}
+                              />
+                            )}
+                            {showResults && !outcome && (
+                              <Alert severity="warning">
+                                Not assigned. Review this student and preview again.
+                              </Alert>
+                            )}
+                          </>
+                        )}
+                      </Stack>
+                    </Box>
                   );
-                })}
+                })()}
               {error && <Alert severity="error">{error}</Alert>}
             </Stack>
           );

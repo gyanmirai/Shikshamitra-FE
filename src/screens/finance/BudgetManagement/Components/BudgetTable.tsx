@@ -252,7 +252,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
                         id: 'inactive',
                         label: 'Inactive',
                         icon: GlobalIcons.cancel,
-                        onClick: () => {},
+                        onClick: () => { },
                       },
                     ]}
                   />

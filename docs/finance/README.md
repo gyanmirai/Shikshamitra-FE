@@ -3,7 +3,7 @@ module: finance
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -93,3 +93,7 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 ## Income, expense, and bank routing
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
+
+## Income and Expenses workspaces
+
+See [the workspace contract](./references/income-expense-workspaces.md) for separate registers, academic-year months, selected-record details, manual creation and automatic refund visibility.

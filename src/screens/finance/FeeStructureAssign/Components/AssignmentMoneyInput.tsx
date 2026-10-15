@@ -1,14 +1,13 @@
 import type { TextFieldProps } from '@mui/material';
 
 import { useState, useEffect } from 'react';
-import { TextField } from '@mui/material';
-import { NumericFormat } from 'react-number-format';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { MAX_ASSIGNMENT_AMOUNT } from './assignmentMoney';
 
 type AssignmentMoneyInputProps = Pick<
   TextFieldProps,
-  'label' | 'helperText' | 'disabled' | 'error' | 'fullWidth' | 'required'
+  'label' | 'name' | 'helperText' | 'disabled' | 'error' | 'fullWidth' | 'required'
 > & {
   value: number | null;
   onAmountChange: (amount: number | null) => void;
@@ -29,11 +28,12 @@ export default function AssignmentMoneyInput({
   }, [value]);
 
   return (
-    <NumericFormat
+    <NumericFormatCustom
       {...props}
-      customInput={TextField}
+      size="small"
       value={draft}
       valueIsNumericString
+      roundToWholeRupees={false}
       inputMode="decimal"
       prefix="₹ "
       thousandSeparator=","

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -209,6 +210,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
             }
             action={
               <Button
+                startIcon={<Iconify icon="mdi:check-circle-outline" />}
                 variant="contained"
                 disabled={isSubmitting}
                 onClick={() => handleSubmit(true)}
@@ -227,6 +229,7 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
             cancelText="Stay"
             action={
               <Button
+                startIcon={<Iconify icon="mdi:exit-to-app" />}
                 color="error"
                 variant="contained"
                 onClick={() => {

@@ -16,6 +16,7 @@ export interface IBankAccount {
   purpose?: string;
   ifscCode: string;
   upiId?: string;
+  maskedUpiId?: string | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
   concurrencyStamp: string;

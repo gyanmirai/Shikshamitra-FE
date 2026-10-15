@@ -186,6 +186,7 @@ const FinanceExpenseCategoriesScreen = () => {
               if (!selectedExpenseCategory?.id) return;
 
               confirmWithUndo({
+                message: 'Deletion pending',
                 item: selectedExpenseCategory,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
@@ -200,6 +201,8 @@ const FinanceExpenseCategoriesScreen = () => {
                         setDeleteIndex(index);
                         if (index !== -1) {
                           list.splice(index, 1);
+                          if (typeof draft?.totalCount === 'number')
+                            draft.totalCount = Math.max(0, draft.totalCount - 1);
                         }
                       }
                     )
@@ -211,7 +214,7 @@ const FinanceExpenseCategoriesScreen = () => {
               setSelectedExpenseCategory(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />

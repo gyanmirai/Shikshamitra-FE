@@ -1268,6 +1268,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                   content="This change will remove selected students. Do you want to continue?"
                   action={
                     <Button
+                      startIcon={<Iconify icon="mdi:arrow-right" />}
                       variant="contained"
                       color="error"
                       size="small"
@@ -1368,6 +1369,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           }}
           action={
             <LoadingButton
+              startIcon={<Iconify icon="mdi:check-circle-outline" />}
               type="button"
               variant="contained"
               loading={formik.isSubmitting || isSubmitLoading}
@@ -1422,6 +1424,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           cancelText="Keep editing"
           action={
             <LoadingButton
+              startIcon={<Iconify icon="mdi:check-circle-outline" />}
               type="button"
               variant="contained"
               loading={formik.isSubmitting || isSubmitLoading}

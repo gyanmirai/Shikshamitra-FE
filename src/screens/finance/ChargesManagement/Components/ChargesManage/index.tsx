@@ -468,6 +468,7 @@ const ChargesManagement = () => {
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -520,6 +521,7 @@ const ChargesManagement = () => {
         }
         action={
           <Button
+            startIcon={<Iconify icon="mdi:cancel" />}
             variant="contained"
             color="warning"
             disabled={isVoiding || voidReason.trim().length < 10}
@@ -558,6 +560,7 @@ const ChargesManagement = () => {
         onClose={() => setUnsavedClose(null)}
         action={
           <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
             variant="contained"
             color="warning"
             onClick={() => {

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Box, Button } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
+import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
 import FeeStructureEditForm from './FeeStructureEditForm';
@@ -73,7 +74,13 @@ export default function FeeStructureWorkspaceDialog({
         title="Discard unsaved changes?"
         content="Your unsaved Fee Structure changes will be lost when you leave this workspace."
         action={
-          <Button size="small" color="error" variant="contained" onClick={onClose}>
+          <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
+            size="small"
+            color="error"
+            variant="contained"
+            onClick={onClose}
+          >
             Discard & leave
           </Button>
         }

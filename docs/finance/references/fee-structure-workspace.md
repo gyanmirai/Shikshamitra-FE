@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-14
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -201,3 +201,22 @@ Policy fields use three aligned columns on wide screens, two at medium widths an
 Focused regression files include the shared stepper's existing tests, `feeStructureFields.test.tsx`, `Components/ClassAccordionPanel.test.tsx` and `Components/FeeStructureWorkspaceDialog.test.tsx`. The isolated browser fixture offers **Open full-screen workspace** to exercise the real dialog, horizontal class tabs, structure selector and class/dismissal guards with synthetic data. The fixture performs no backend financial transactions; authenticated full-stack integration is outside this fixture's coverage.
 
 Verification: 61 focused tests, TypeScript, focused ESLint and Finance documentation validation pass. The final in-app browser smoke covers full-screen desktop/tablet/mobile geometry, horizontal class scrolling, light/dark themes, class and dialog dirty guards, Save & next, review, and protected publication. No shared-component source files are changed.
+
+## Inline fee head editing and compact review
+
+The class tabs use compact horizontal padding. Add structure is above the structure list on
+desktop and beside the Structures selector on smaller screens. Selecting a fee head adds it
+immediately; amount, pricing, payment term and optionality are editable in the shared table.
+There is no separate fee head editor. The remove icon sits beside the fee head name; the
+schedule action uses the shared View icon. Published rows remain read-only.
+
+Policy cards use accessible View, Change/Select and Remove icons from `GlobalIcons`.
+Choosing a policy reports one success toast that it was added to the draft; saving is separate.
+Policy picker and impact dialogs expose header information. Impact coverage uses the shared
+table with readable treatment labels and retains loading, missing-access and error states.
+
+Review starts with the structure name, fixed fee total and optional/variable head counts,
+followed by attached policy summaries, publication checks and coverage. Each payment schedule
+expands independently. Inputs use `NumericFormatCustom`; monetary display uses the existing
+`formatNumber(value, 'INR')` convention. Decimal input and payload amounts remain unchanged.
+The frontend patterns skill records these conventions for all future Finance changes.

@@ -7,14 +7,16 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Chip, Grid, Alert, Button, TextField, DialogActions } from '@mui/material';
+import { mergeCategoryTags } from 'src/screens/finance/settings/components/category-tags';
+import { getAccountSettingSaveError } from 'src/screens/finance/settings/components/account-setting-save-error';
 import {
   useGetExpenseCategoryQuery,
   usePutExpenseCategoryMutation,
@@ -28,13 +30,14 @@ import type { IExpenseCategoryFormProps } from './type';
 
 const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [saveError, setSaveError] = useState('');
 
   const { data: expenseCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
     options: {
-      skip: !currentYear?.id || !open?.value || editData,
+      skip: !currentYear?.id || !open?.value,
     },
   });
 
@@ -45,8 +48,6 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       ),
     [expenseCategoryData]
   );
-  const existingNamesRef = useRef<Set<string>>(new Set());
-  existingNamesRef.current = existingNames;
 
   const [tag, setTag] = useState('');
 
@@ -71,12 +72,13 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
 
   // Perform the actual form submission
   const performSubmission = async (values: any) => {
+    setSaveError('');
     try {
       // Transform form data to API format
       const payload = {
-        name: values.name,
+        name: values.name.trim(),
         description: values.description || '',
-        tags: values.tags || [],
+        tags: mergeCategoryTags(values.tags || [], tag),
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
@@ -103,10 +105,12 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       }
       onClose(null, true);
     } catch (error) {
-      console.error('Save operation failed:', error);
-      shikshaMitraToast.error({
-        message: `Failed to ${editData ? 'update' : 'create'} expense category`,
-      });
+      const problem = getAccountSettingSaveError(error, 'category');
+      setSaveError(problem.message);
+      if (problem.field) {
+        formik.setFieldTouched(problem.field, true, false);
+        formik.setFieldError(problem.field, problem.message);
+      }
     }
   };
 
@@ -129,8 +133,16 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
   };
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+    <BackPopUpChecked
+      initialValues={{ ...formik.initialValues, draftTag: '' }}
+      currentValues={{ ...formik.values, draftTag: tag }}
+    >
       <DialogScrollContent>
+        {saveError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {saveError}
+          </Alert>
+        )}
         <FormSectionCard
           icon="solar:wallet-money-bold-duotone"
           title="Expense category details"
@@ -146,20 +158,15 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   name="name"
                   size="small"
                   value={formik.values.name}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .replace(/[^a-zA-Z\s]/g, '')
-                      .replace(/^\s+/g, '')
-                      .trimStart()
-                      .split(' ')
-                      .map((word) =>
-                        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                      )
-                      .join(' ');
-                    formik.setFieldValue('name', value);
-                  }}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
+                  helperText={
+                    formik.touched.name && formik.errors.name
+                      ? formik.errors.name
+                      : `${formik.values.name.length}/128 characters`
+                  }
+                  inputProps={{ maxLength: 128 }}
                 />
               </ShakingTextField>
             </Grid>
@@ -212,7 +219,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   helperText={
                     formik.touched.tags && typeof formik.errors.tags === 'string'
                       ? formik.errors.tags
-                      : 'Press Enter to add a tag'
+                      : 'Press Enter to add a tag. Remaining text is included on submit.'
                   }
                 />
               </ShakingTextField>

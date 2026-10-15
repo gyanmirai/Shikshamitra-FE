@@ -7,7 +7,6 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -354,13 +353,8 @@ const FinanceChargeCategory = () => {
               setQueryParams((current) => ({ ...current, page: 1 }));
               setArchiveView('archived');
             }}
-            endIcon={
-              <Label color="default" variant="soft">
-                {archivedSummary?.totalCount ?? 0}
-              </Label>
-            }
           >
-            Archived
+            Archived ({archivedSummary?.totalCount ?? 0})
           </Button>
         </Stack>
       </Card>
@@ -430,6 +424,7 @@ const FinanceChargeCategory = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"
@@ -482,6 +477,7 @@ const FinanceChargeCategory = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon={nextStatus ? 'mdi:restore' : 'mdi:archive-outline'} />}
             loading={isStatusLoading}
             disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"

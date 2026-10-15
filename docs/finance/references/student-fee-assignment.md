@@ -3,7 +3,7 @@ module: finance
 domain: student-fee-assignment
 content_type: Reference
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -15,7 +15,7 @@ The `/finance/fee-structure-assign` route lists assignment status for the select
 ## User flow
 
 1. Select academic context and students. Selection clears when context, search or page changes. Assigned students open a read view; inactive students cannot be selected for creation.
-2. Open the themed assignment drawer with the shared `DrawerHeader`. Select a published structure revision, then choose Next.
+2. Open the themed assignment drawer with the shared `DrawerHeader`. Select a published structure revision and review per-student policies before choosing Next.
 3. Review each student's mandatory heads and select optional heads separately. Fixed published amounts appear as read-only values, not inputs. Included variable heads require a student coverage amount; zero requires a reason. Configure supported verified transport dates or authorized manual service dates with the existing permission gates.
 4. Review **Policies** for each student: Refund and Collection use the structure's supported pinned selections. With `Finance.Fees.StructureAssign.OverridePolicies`, choose current active versions for the selected year or clear an optional refund policy. Collection remains required. Changes require a reason; Restore fee structure defaults clears student overrides. Historical concession and proration evidence remains in the contracts, but these families cannot be selected here.
 5. Preview. Each student receives an independent result/error. Review head totals, dates, preserved installment percentages, payment-term versions and policy treatment.
@@ -24,11 +24,15 @@ The `/finance/fee-structure-assign` route lists assignment status for the select
 
 The compact academic filter card follows `DESIGN.md` with `Paper`, `p: 1` and `spacing={1}`. Board, medium, class and division fill the row on desktop and stack on mobile. The shared table fills the remaining height; its controlled page index is zero-based while its server callback is one-based.
 
-`CustomStepperWithFormik` owns the form values across Structure, Heads and service, Policies, Review and Results. Each step renders its own content. Back preserves values and invalidates the previous preview; another preview is required before confirmation. There is no draft-save action. Small themed buttons have leading Iconify icons, and the stepper owns scrolling and its action footer.
+`CustomStepperWithFormik` owns the form values across exactly three steps: Structure & policies, Fees & dates, and Review & assign. Results are displayed within the third step. Each step renders its own content. Back and Review Edit actions preserve values and invalidate the previous preview; another preview is required before assignment. There is no draft-save action. Small themed buttons have leading Iconify icons, and the stepper owns scrolling and its action footer.
 
-The drawer uses shared `FormSectionHeader` guidance and `Label` statuses. Mandatory heads have readable headings instead of disabled checkboxes; optional selection retains its checkbox. Variable amounts and service controls use a responsive two-column grid. Policy choices sit side by side on desktop and stack on mobile. Completed setup steps can be revisited before any assignment is committed; doing so preserves form values and invalidates preview evidence. The first step offers Cancel through the owning close/discard guard.
+The drawer follows Add Charge's shared section-card pattern, theme spacing and responsive fields. A single student has open Fees & dates and Policies sections, with no student accordion or collapsed fee controls. Required fixed fees remain read-only; optional fees retain their checkboxes. Included variable fees use shared numeric inputs. Display amounts use `formatNumber`; payload amounts are unchanged. Policy defaults, permitted overrides and reasons are available together in step one. Override reasons are validated before advancing. The duplicate Select fee structure heading is omitted. Fees & dates uses compact shared-card spacing and responsive fee/control columns.
 
-Review starts with server-returned obligation, configured schedule and service reduction. Fee-head evidence and installment balances use embedded `CustomizableTable` instances with no hidden pagination or toolbar. The drawer body owns vertical scrolling and each table contains horizontal overflow. Policy names and versions remain visible in a collapsed disclosure; head treatment expands on demand. Legacy assignments omit unknown configured amounts and label unknown shares. The student table uses shared status labels and `ThreeDotsActions`, an indeterminate page-selection checkbox and a clear-selection action; sorting unavailable in the server contract is disabled.
+Bulk assignment uses a wider responsive workspace with a searchable, paginated selected-student list and one active student's configuration or review. The list shows readiness, needs-attention and committed status. Switching students preserves their own Formik requests and policy reasons; only the published structure is shared. Twenty student rows render per list page. The layout stacks at narrow widths. Successfully committed students remain read-only, and retries include only remaining students.
+
+Manual service dates use shared `AcademicDatePicker` controls in `DD/MM/YYYY` format. Their inclusive limits come from the globally selected year's configured `startDate` and `endDate`, never its name or an assumed April–March range. Year IDs must match the assignment context. Start/end validity, year bounds, date order and the override reason are checked before leaving Fees & dates, including typed dates. Missing bounds disable manual date entry. Service boundaries serialize as the selected calendar day at UTC midnight, matching the backend contract. Academic holidays do not block service-period boundaries. The backend remains authoritative for date scope and verified transport evidence.
+
+Review uses a ledger layout: server-returned totals and the structure summary sit beside the fee breakdown when the content container has room, and above it on narrow screens. Fee-head evidence uses an embedded three-column `CustomizableTable`. Supporting verification, amount basis and policy treatment are available through focusable shared info tooltips; policy names and versions remain visible. Consequential warnings remain visible. The compact installment table groups existing server lines only when installment label, sequence, demand date and due date match, summing their recorded obligations and balances without repricing or rounding. View all opens every original installment, share and balance in a shared read-only `CustomDialog`; closing this dialog preserves the parent form dirty state. Legacy assignments omit unknown configured amounts and label unknown shares. Bulk review shows ready or confirmed totals separately for each currency. The final step shows canonical outcomes; bulk students can be selected to inspect their committed evidence. The student table uses shared status labels and `ThreeDotsActions`, an indeterminate page-selection checkbox and a clear-selection action; sorting unavailable in the server contract is disabled.
 
 Changing any input invalidates the previous preview. Late preview responses are discarded. Failed commits retain an actionable error; identical network retries use the backend's saved result. Results offers Review remaining students after partial success and Close when all students succeed. The drawer blocks closing during requests and uses the shared `ConfirmDialog` before discarding unassigned changes. Successful assignments remain intact.
 
@@ -42,7 +46,8 @@ Changing any input invalidates the previous preview. Late preview responses are 
 | `Components/FeeStructureAssignTable.tsx` | Context filters, paging, eligible selection and year-specific assignment status |
 | `Components/AssignmentWorkflow.tsx` | Shared single/bulk review, dirty state, stale-response protection, canonical outcomes and retry handling |
 | `Components/AssignmentStudentInputs.tsx` | Optional heads, permitted amount/date inputs and verified transport record picker |
-| `Components/AssignmentReview.tsx` | Human-readable immutable evidence, totals, policies and balances |
+| `Components/AssignmentReview.tsx` | Responsive ledger review, shared evidence tables/dialog, totals and policy info icons |
+| `Components/assignmentReviewPresentation.ts` | Group matching recorded installments and aggregate totals separately by currency; no pricing rules |
 | `Components/AssignmentPolicies.tsx` | Per-student policy defaults, version selection, restore and reason |
 | `Components/AssignedPolicyEditor.tsx` | Concurrent policy edits with reason, busy/dirty guards and unchanged obligations |
 | `Components/StudentFeeStructureAssignmentForm.tsx` / `BulkFeeStructureAssignmentForm.tsx` | Compatibility wrappers for existing collection/profile entry points |
@@ -52,7 +57,7 @@ The flow reads policy choices through the scoped assignment endpoint. Policy ove
 ## Checks
 
 - `npm run ts` for client/component types.
-- `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/FeeStructureAssign/Components --pool=threads` checks input behavior, recorded review amounts/balances, all installment rows, policy disclosure, preview invalidation and partial-success retries.
+- `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/FeeStructureAssign/Components --pool=threads` checks input behavior, recorded review amounts/balances, all installment rows, focusable policy evidence, grouped schedule preservation, preview invalidation and partial-success retries.
 - `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/FeeStructureAssign/Components/AssignmentWorkflow.test.tsx src/components/custom-stepper/button-props.test.ts src/components/custom-stepper/formik-validation.test.ts --pool=threads` verifies required structure selection, Back/preview invalidation, busy navigation guards, token submission and failed-student-only bulk retry.
 - `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config e2e/fixtures/fee-assignment/vite.config.mts` serves the synthetic component fixture on `127.0.0.1:4179` for in-app browser checks. It uses real workflow components and RTK Query against a synthetic base query; it is not full-stack or calculation evidence.
 - Verify light/dark themes, a narrow viewport, scrolling, optional-head preview changes, preserved 60/40 shares and canonical confirmation. The table should scroll locally on narrow screens and footer actions remain reachable.

@@ -175,11 +175,12 @@ const BankAccountManagement: React.FC = () => {
           setSelectedBankAccount(null);
           deleteBankAccountDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Bank Account"
         content={
           <>
-            Are you sure you want to delete bank account{' '}
-            <strong>{selectedBankAccount?.accountNumber}</strong>?
+            Delete <strong>{selectedBankAccount?.bankName}</strong> (
+            {selectedBankAccount?.branchName},{' '}
+            <strong>{selectedBankAccount?.maskedAccountNumber}</strong>)?
           </>
         }
         action={
@@ -193,6 +194,7 @@ const BankAccountManagement: React.FC = () => {
               if (!selectedBankAccount?.id) return;
 
               confirmWithUndo({
+                message: 'Deletion pending',
                 item: selectedBankAccount,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
@@ -207,6 +209,8 @@ const BankAccountManagement: React.FC = () => {
                         setDeleteIndex(index);
                         if (index !== -1) {
                           list.splice(index, 1);
+                          if (typeof draft?.totalCount === 'number')
+                            draft.totalCount = Math.max(0, draft.totalCount - 1);
                         }
                       }
                     )
@@ -218,7 +222,7 @@ const BankAccountManagement: React.FC = () => {
               setSelectedBankAccount(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />

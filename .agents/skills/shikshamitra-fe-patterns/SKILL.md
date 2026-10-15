@@ -68,3 +68,21 @@ example, a table page normally requires `page-headers.md`, `tables.md`, and
   tooltips, a focused form body, a neutral `Submit` action, and no submit shortcut. Put optional
   drawer context in an info tooltip after the status badge, as described in
   [sidebars.md](references/sidebars.md).
+
+## Finance numeric inputs and amount display
+
+- Use `NumericFormatCustom` from `src/components/custom-numeric-format` for every numeric
+  field in Finance, including amounts, percentages and counts. Use `size="small"`, `fullWidth`,
+  a persistent label, field name, and the owning form's touched/error/helper text.
+- Keep the raw value as a string while typing, including empty values and a trailing decimal point.
+  Prefer `onValueChange` with `source.source === 'event'` to receive the unformatted value;
+  do not parse the currency symbol or grouped display back into the form value. Validate at save.
+- For decimal money contracts, explicitly set `roundToWholeRupees={false}` and `decimalScale={2}`;
+  preserve the existing range and monetary contract. For percentages/counts use `prefix=""`,
+  `suffix="%"` only for percentages, an appropriate decimal scale, and the field-specific range.
+- Display monetary values throughout Finance with `formatNumber(value, 'INR')` imported from
+  `src/utils/formate_number`. Do not prepend another rupee symbol or create a feature formatter.
+  Preserve meaningful null/unavailable states. The shared formatter follows the application's
+  whole-rupee display convention; it must never change amounts in payloads or calculations.
+- Use `GlobalIcons` from `src/utils/icons` for add, edit, view, remove and save actions.
+  Icon-only controls need a specific accessible label and tooltip.
