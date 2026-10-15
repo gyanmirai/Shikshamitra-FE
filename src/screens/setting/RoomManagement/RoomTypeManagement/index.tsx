@@ -73,12 +73,12 @@ const RoomTypeManagement = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Room Type Management"
+        heading="Room Types"
         description="Define and organize room types to ensure effective facility management."
         links={[
           { name: 'Institute Setup', href: '/academic/dashboard' },
-          { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
-          { name: 'Room Type Management' },
+          { name: 'Rooms & Buildings', href: '/academic/curriculumSubjects' },
+          { name: 'Room Types' },
         ]}
         action={
           <Button
@@ -118,6 +118,7 @@ const RoomTypeManagement = () => {
 
       <ConfirmDialog
         open={deleteRoomTypeDialog.value}
+        disableBackdropClick
         onClose={() => {
           deleteRoomTypeDialog.onFalse();
           setSelectedRoomType(null);
