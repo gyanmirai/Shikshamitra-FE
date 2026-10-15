@@ -84,7 +84,7 @@ export default function PermissionDraftFooter({
         )}
         <Button
           size="small"
-          color="primary"
+          color="inherit"
           variant="contained"
           disabled={draft.blocked || !draft.dirty}
           onClick={onReview}

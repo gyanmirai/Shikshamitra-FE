@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { StepIconProps } from '@mui/material/StepIcon';
 
 import dayjs from 'dayjs';
 import * as yup from 'yup';
@@ -8,12 +9,12 @@ import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Add, ArrowBack } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -23,13 +24,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Step,
-  Paper,
   Button,
   Stepper,
   StepLabel,
   TextField,
-  Typography,
   StepContent,
+  DialogActions,
 } from '@mui/material';
 import {
   useGetShiftsQuery,
@@ -38,11 +38,40 @@ import {
   useDeleteShiftMutation,
 } from 'src/redux/shiftManagement/shift-management-api';
 
+const NumberStepIcon = ({ completed, icon }: StepIconProps) => (
+  <Box
+    aria-hidden="true"
+    sx={{
+      width: 24,
+      height: 24,
+      minWidth: 24,
+      minHeight: 24,
+      flexShrink: 0,
+      borderRadius: '50%',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
+      bgcolor: completed ? 'success.main' : 'grey.500',
+      color: 'common.white',
+      fontSize: 12,
+      fontWeight: 700,
+      lineHeight: 1,
+    }}
+  >
+    {icon}
+  </Box>
+);
+
 const ShiftManageMentScreen = () => {
   const open = useBoolean();
   const confirm = useBoolean(false);
 
   const [editData, setEditData] = useState<any>(null);
+  const closeShiftForm = () => {
+    setEditData(null);
+    open.onFalse();
+  };
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -58,6 +87,7 @@ const ShiftManageMentScreen = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <ConfirmDialog
         open={confirm.value}
+        disableBackdropClick
         onClose={() => {
           setEditData(null);
           confirm.onFalse();
@@ -87,105 +117,84 @@ const ShiftManageMentScreen = () => {
       />
       <CustomBreadcrumbs
         heading="Shift Management"
+        description="Create and manage named shifts with start and end times for the school's daily schedule."
         links={[{ name: 'Institute Setup' }, { name: 'Shift Management' }]}
-        isBack={open.value}
-        onBack={() => {
-          setEditData(null);
-          open.onFalse();
-        }}
         action={
-          !open.value && (
-            <Button
-              startIcon={open.value ? <ArrowBack /> : <Add />}
-              size="small"
-              variant="contained"
-              onClick={open.onToggle}
-            >
-              {open.value ? 'back' : 'Shift'}
-            </Button>
-          )
+          <Button startIcon={<Add />} size="small" variant="contained" onClick={open.onTrue}>
+            Shift
+          </Button>
         }
       />
-      {open.value ? (
-        <ShiftManageMentForm
-          handleClose={() => {
-            setEditData(null);
-            open.onFalse();
-          }}
-          editData={editData}
-        />
-      ) : (
-        <CustomizableTable
-          noDataText={
-            <>
-              No shifts have been added yet.{' '}
-              <Box
-                onClick={() => {
-                  open.onTrue();
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Add Shift
-              </Box>
-            </>
-          }
-          tableId="shift-management"
-          isLoading={isLoading}
-          columns={[
-            { label: 'Name', id: 'shiftName' },
-            { label: 'Start Time', id: 'startTime' },
-            { label: 'End Time', id: 'endTime' },
-            {
-              label: 'Action',
-              id: 'action',
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    showDeleteIcon
-                    showEditIcon
-                    handleEditClick={() => {
-                      setEditData(row as any);
-                      open.onTrue();
-                    }}
-                    handleDeleteClick={() => {
-                      setEditData(row as any);
-                      confirm.onTrue();
-                    }}
-                    showThreeDots={false}
-                  />
-                );
-              },
+      <CustomizableTable
+        noDataText={
+          <>
+            No shifts have been added yet.{' '}
+            <Box
+              onClick={() => {
+                open.onTrue();
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Shift
+            </Box>
+          </>
+        }
+        tableId="shift-management"
+        isLoading={isLoading}
+        columns={[
+          { label: 'Name', id: 'shiftName' },
+          { label: 'Start Time', id: 'startTime' },
+          { label: 'End Time', id: 'endTime' },
+          {
+            label: 'Action',
+            id: 'action',
+            isFilter: false,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  showDeleteIcon
+                  showEditIcon
+                  handleEditClick={() => {
+                    setEditData(row as any);
+                    open.onTrue();
+                  }}
+                  handleDeleteClick={() => {
+                    setEditData(row as any);
+                    confirm.onTrue();
+                  }}
+                  showThreeDots={false}
+                />
+              );
             },
-          ]}
-          data={data?.items || []}
-        />
-      )}
+          },
+        ]}
+        data={data?.items || []}
+      />
+      <CustomDialog
+        open={open.value}
+        handleClose={closeShiftForm}
+        title={editData ? 'Edit Shift' : 'Add Shift'}
+        maxWidth="sm"
+        paperProps={{ sx: { maxWidth: 540 } }}
+      >
+        {open.value && <ShiftManageMentForm handleClose={closeShiftForm} editData={editData} />}
+      </CustomDialog>
     </Box>
   );
 };
 
 export default ShiftManageMentScreen;
 
-const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
-  '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.palette.error.main : theme.palette.primary.main,
-  },
-  '& .MuiStepLabel-label': {
-    color: error ? theme.palette.error.main : theme.vars.palette.text.primary,
-    fontWeight: error ? 'bold' : 'normal',
-  },
-}));
-
 const ShiftManageMentForm = ({ handleClose, editData }: any) => {
-  const [addShift, { isLaoding: isAddLoading }] = useQueryAndMutation({
+  const [addShift, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddShiftMutation,
   });
@@ -252,15 +261,18 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
       label: 'Shift Name',
       content: () => (
         <TextField
-          label="Name"
+          fullWidth
+          label="Shift Name"
+          required
           name="name"
           value={formik.values.name}
           onChange={(e) => {
             const newName = capitalize(e.target.value);
             formik.setFieldValue('name', newName);
           }}
+          onBlur={formik.handleBlur}
           error={formik.touched.name && Boolean(formik.errors.name)}
-          // helperText={formik.touched.name && formik.errors.name}
+          helperText={formik.touched.name && formik.errors.name}
           size="small"
         />
       ),
@@ -276,9 +288,11 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
           slotProps={{
             textField: {
               size: 'small',
-
-              // helperText: formik.touched.startTime && formik.errors.startTime,
-              error: !!formik.errors.startTime && formik.touched.startTime,
+              fullWidth: true,
+              required: true,
+              onBlur: () => formik.setFieldTouched('startTime', true),
+              error: Boolean(formik.touched.startTime && formik.errors.startTime),
+              helperText: formik.touched.startTime && formik.errors.startTime,
             },
           }}
         />
@@ -295,70 +309,50 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
           slotProps={{
             textField: {
               size: 'small',
-
-              // helperText: formik.touched.endTime && formik.errors.endTime,
-              error: !!formik.errors.endTime && formik.touched.endTime,
+              fullWidth: true,
+              required: true,
+              onBlur: () => formik.setFieldTouched('endTime', true),
+              error: Boolean(formik.touched.endTime && formik.errors.endTime),
+              helperText: formik.touched.endTime && formik.errors.endTime,
             },
           }}
         />
       ),
     },
   ];
+  const completedSteps = [
+    Boolean(formik.values.name.trim()) && !formik.errors.name,
+    Boolean(formik.values.startTime?.isValid()) && !formik.errors.startTime,
+    Boolean(formik.values.endTime?.isValid()) && !formik.errors.endTime,
+  ];
 
-  const validation = (index: number) => {
-    if (index === 0 && formik.errors.name && formik.touched.name) {
-      return { msg: formik.errors.name, value: true };
-    }
-    if (index === 1 && formik.errors.startTime && formik.touched.startTime) {
-      return { msg: formik.errors.startTime, value: true };
-    }
-    if (index === 2 && formik.errors.endTime && formik.touched.endTime) {
-      return { msg: formik.errors.endTime, value: true };
-    }
-    return { msg: '', value: false };
-  };
   return (
-    <Box
-      component="form"
-      onSubmit={formik.handleSubmit}
-      height="100%"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Paper
-        elevation={2}
-        sx={{
-          p: 2,
-          // height: '100%',
-          minHeight: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Stepper orientation="vertical" sx={{ ' & .MuiStepConnector-line': { display: 'none' } }}>
+    <>
+      <DialogScrollContent sx={{ pt: 2, pb: 2 }}>
+        <Stepper
+          orientation="vertical"
+          activeStep={-1}
+          sx={{
+            '& .MuiStep-root': { pb: 1 },
+            '& .MuiStepConnector-root': { display: 'none' },
+            '& .MuiStepContent-root': { mt: 0.5, pb: 1, ml: 0, pl: 4, borderLeft: 0 },
+          }}
+        >
           {steps.map((step, index) => (
-            <Step key={index} expanded>
-              <CustomStepLabel
-                error={validation(index).value}
-                sx={{ '& svg': { color: 'primary.main' } }}
-              >
-                {step.label}{' '}
-                <small>{validation(index).value && `(${validation(index).msg})`}</small>
-              </CustomStepLabel>
-              <StepContent>
-                <Typography>{step.content()}</Typography>
-              </StepContent>
+            <Step key={index} expanded completed={completedSteps[index]}>
+              <StepLabel StepIconComponent={NumberStepIcon}>{step.label}</StepLabel>
+              <StepContent>{step.content()}</StepContent>
             </Step>
           ))}
         </Stepper>
-        <Box display="flex" justifyContent="space-between">
-          <CancelButton onClick={handleClose} />
-          <SubmitButton loading={isAddLoading || isUpdateLoading} />
-        </Box>
-      </Paper>
-    </Box>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <CancelButton onClick={handleClose} />
+        <SubmitButton
+          loading={isAddLoading || isUpdateLoading}
+          onClick={() => formik.handleSubmit()}
+        />
+      </DialogActions>
+    </>
   );
 };

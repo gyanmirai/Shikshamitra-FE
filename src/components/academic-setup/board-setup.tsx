@@ -458,6 +458,7 @@ export const BoardForm = ({
               <DatePicker
                 label="Start Date *"
                 value={formik.values.startDate}
+                views={['year', 'month', 'day']}
                 minDate={yearStart ?? undefined}
                 maxDate={yearEnd ?? undefined}
                 format="DD-MMM-YYYY"
@@ -483,6 +484,7 @@ export const BoardForm = ({
               <DatePicker
                 label="End Date *"
                 value={formik.values.endDate}
+                views={['year', 'month', 'day']}
                 format="DD-MMM-YYYY"
                 minDate={
                   formik.values.startDate

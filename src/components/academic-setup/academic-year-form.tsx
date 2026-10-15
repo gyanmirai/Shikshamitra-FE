@@ -87,6 +87,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
             label="Start date"
             value={formik.values.startDate}
             format="DD-MMM-YYYY"
+            views={['year', 'month', 'day']}
             onChange={(value) => formik.setFieldValue('startDate', value)}
             slotProps={{
               textField: {
@@ -104,6 +105,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
             label="End date"
             value={formik.values.endDate}
             format="DD-MMM-YYYY"
+            views={['year', 'month', 'day']}
             minDate={dayjs(formik.values.startDate).add(1, 'day')}
             onChange={(value) => formik.setFieldValue('endDate', value)}
             slotProps={{

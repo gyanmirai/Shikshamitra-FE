@@ -59,7 +59,7 @@ const instituteSetupModule = {
           icon: menuIconView('mdi:clock-time-three-outline'),
         },
         {
-          title: 'Rooms Management',
+          title: 'Rooms & Buildings',
           path: instituteSetupPaths.roomsManagement.root,
           _action: 'building-management',
           shortcutKey: 'Ctrl+B',
@@ -68,7 +68,7 @@ const instituteSetupModule = {
           icon: menuIconView('mdi:door-closed'),
           children: [
             {
-              title: 'Building Management',
+              title: 'Buildings',
               path: instituteSetupPaths.roomsManagement.building,
               _action: 'building-list',
               shortcutKey: 'Ctrl+B+L',
@@ -77,7 +77,7 @@ const instituteSetupModule = {
               icon: menuIconView('mdi:office-building'),
             },
             {
-              title: 'Room Type Management',
+              title: 'Room Types',
               path: instituteSetupPaths.roomsManagement.roomType,
               _action: 'room-type-management',
               shortcutKey: 'Ctrl+B+T',
@@ -86,7 +86,7 @@ const instituteSetupModule = {
               icon: menuIconView('mdi:door-sliding'),
             },
             {
-              title: 'Room Management',
+              title: 'Rooms',
               path: instituteSetupPaths.roomsManagement.room,
               _action: 'room-management',
               shortcutKey: 'Ctrl+B+R',
