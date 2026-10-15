@@ -1,5 +1,5 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { PayrollProfileWorkspace } from './payroll-profile-workspace';
 import { PayrollProfileDetailsEditor } from './payroll-profile-details-editor';
@@ -109,7 +109,11 @@ beforeEach(() => {
     'HR.PayrollManagement.RunPayroll.View',
   ].map((name) => ({ name, isGranted: true }));
   mocks.salary.data = null;
+  mocks.salary.isLoading = false;
   mocks.salary.isError = false;
+  mocks.details.isLoading = false;
+  mocks.revisions.isLoading = false;
+  mocks.policies.isFetching = false;
   mocks.policies.currentData = null;
   mocks.policies.isError = false;
   mocks.revisions.data.items = [];
@@ -117,6 +121,22 @@ beforeEach(() => {
 });
 
 describe('staff payroll overview', () => {
+  it('keeps section context and named loading states while payroll requests are pending', () => {
+    mocks.salary.isLoading = true;
+    mocks.details.isLoading = true;
+    mocks.revisions.isLoading = true;
+    mocks.policies.isFetching = true;
+    render(<PayrollProfileWorkspace employeeId="staff-1" origin="staff-edit" />);
+    expect(screen.getByRole('status', { name: 'Loading salary details' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading assigned policies' })).toBeVisible();
+    expect(screen.getByRole('status', { name: 'Loading bank details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /^Salary$/ })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Assigned policies' })).toBeVisible();
+    expect(
+      screen.queryByRole('link', { name: /Set up salary|Change salary/ })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change assignment' })).not.toBeInTheDocument();
+  });
   it('preloads salary on pointer and keyboard intent, but not while actions are disabled', () => {
     const { rerender } = render(<PayrollProfileWorkspace employeeId="staff-1" />);
     const link = screen.getByRole('link', { name: 'Set up salary' });
@@ -166,6 +186,10 @@ describe('staff payroll overview', () => {
     expect(screen.getByText('Basic pay')).toBeVisible();
     expect(screen.getByText('PF')).toBeVisible();
     expect(screen.getByText('Professional tax')).toBeVisible();
+    const grossSummary = screen.getByText('Gross salary').parentElement!;
+    const netSummary = screen.getByText('Estimated net salary').parentElement!;
+    expect(within(grossSummary).getByText('₹40,000')).toBeVisible();
+    expect(within(netSummary).getByText('₹38,000')).toBeVisible();
     expect(screen.getByText('Apr 2026')).toBeVisible();
     expect(screen.getByText('From Jan 2027')).toBeVisible();
     expect(screen.getByText('Scheduled changes')).toBeVisible();

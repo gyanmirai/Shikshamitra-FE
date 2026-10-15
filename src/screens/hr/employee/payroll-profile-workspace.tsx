@@ -53,6 +53,96 @@ function DetailRows({ rows }: { rows: Array<[string, string | number | null | un
   );
 }
 
+function DetailRowsSkeleton({ label, rows = 4 }: { label: string; rows?: number }) {
+  return (
+    <Stack role="status" aria-label={label} spacing={1}>
+      {Array.from({ length: rows }, (_, index) => (
+        <Box
+          key={index}
+          aria-hidden
+          sx={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 2 }}
+        >
+          <Skeleton width="70%" />
+          <Skeleton width={index % 2 ? '80%' : '55%'} />
+        </Box>
+      ))}
+    </Stack>
+  );
+}
+
+const salaryColumns = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
+  gap: 2,
+};
+
+function SalarySummary({ revision }: { revision?: CompensationRevision }) {
+  return (
+    <Box
+      component={revision ? 'dl' : 'div'}
+      sx={{ m: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}
+    >
+      {(['Gross salary', 'Estimated net salary'] as const).map((label, index) => (
+        <Box
+          key={label}
+          sx={{
+            p: { xs: 1.5, sm: 2 },
+            borderRadius: 1,
+            bgcolor: 'background.neutral',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Typography
+            component={revision ? 'dt' : 'div'}
+            variant="body2"
+            color="text.secondary"
+            sx={{ pb: 0.5 }}
+          >
+            {label}
+          </Typography>
+          {revision ? (
+            <Typography
+              component="dd"
+              variant="h5"
+              sx={{
+                m: 0,
+                mt: 'auto',
+                overflowWrap: 'anywhere',
+                fontVariantNumeric: 'tabular-nums',
+                color: index ? 'primary.main' : 'text.primary',
+              }}
+            >
+              {formatCurrency(index ? revision.netSalary : revision.grossSalary)}
+            </Typography>
+          ) : (
+            <Skeleton aria-hidden width="70%" height={36} sx={{ mt: 'auto' }} />
+          )}
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function SalarySkeleton() {
+  return (
+    <Stack role="status" aria-label="Loading salary details" spacing={2}>
+      <SalarySummary />
+      <DetailRowsSkeleton label="Loading salary reference" rows={2} />
+      <Divider />
+      <Box sx={salaryColumns}>
+        {['Regular earnings', 'Regular deductions'].map((label) => (
+          <Stack key={label} spacing={1}>
+            <Typography variant="subtitle2">{label}</Typography>
+            <DetailRowsSkeleton label={`Loading ${label.toLowerCase()}`} rows={3} />
+          </Stack>
+        ))}
+      </Box>
+    </Stack>
+  );
+}
+
 function SalaryBreakdown({ revision }: { revision: CompensationRevision }) {
   const displayLines = [
     ...revision.lines,
@@ -65,16 +155,18 @@ function SalaryBreakdown({ revision }: { revision: CompensationRevision }) {
     })),
   ];
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-        gap: 2,
-      }}
-    >
+    <Box sx={salaryColumns}>
       {[true, false].map((isEarning) => (
         <Box key={String(isEarning)} sx={{ minWidth: 0 }}>
-          <Typography component="h3" variant="subtitle2" sx={{ mb: 1 }}>
+          <Typography
+            component="h3"
+            variant="subtitle2"
+            sx={{
+              pb: 1,
+              borderBottom: '2px solid',
+              borderColor: isEarning ? 'primary.main' : 'warning.main',
+            }}
+          >
             {isEarning ? 'Regular earnings' : 'Regular deductions'}
           </Typography>
           <Stack divider={<Divider />}>
@@ -87,21 +179,30 @@ function SalaryBreakdown({ revision }: { revision: CompensationRevision }) {
                   direction="row"
                   justifyContent="space-between"
                   gap={2}
-                  sx={{ py: 0.75 }}
+                  sx={{ py: 1 }}
                 >
                   <Box sx={{ minWidth: 0 }}>
                     <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                       {line.name}
                     </Typography>
                     {line.description && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', overflowWrap: 'anywhere' }}
+                      >
                         {line.description}
                       </Typography>
                     )}
                   </Box>
                   <Typography
                     variant="body2"
-                    sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+                    sx={{
+                      flexShrink: 0,
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
                   >
                     {formatCurrency(line.amount)}
                   </Typography>
@@ -195,7 +296,13 @@ export function PayrollProfileWorkspace({
   if (!employeeId)
     return <Alert severity="info">Save staff information before setting up payroll.</Alert>;
   return (
-    <Stack spacing={1}>
+    <Stack
+      spacing={2}
+      sx={{
+        minWidth: 0,
+        '@media (prefers-reduced-motion: reduce)': { '& .MuiSkeleton-root': { animation: 'none' } },
+      }}
+    >
       <FormSectionCard
         icon="mdi:cash-multiple"
         title="Salary"
@@ -222,7 +329,7 @@ export function PayrollProfileWorkspace({
             You do not have permission to view salary.
           </Typography>
         ) : salary.isLoading ? (
-          <Skeleton height={150} variant="rounded" />
+          <SalarySkeleton />
         ) : salary.isError ? (
           <Alert
             severity="error"
@@ -236,52 +343,22 @@ export function PayrollProfileWorkspace({
           </Alert>
         ) : salary.data ? (
           <>
-            <Box
-              component="dl"
-              sx={{
-                m: 0,
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 170px), 1fr))',
-                gap: 2,
-                p: 1.5,
-                bgcolor: 'background.neutral',
-                borderRadius: 1.5,
-              }}
-            >
-              {[
-                ['Gross salary', formatCurrency(salary.data.grossSalary)],
-                ['Net estimate at salary setup', formatCurrency(salary.data.netSalary)],
+            <SalarySummary revision={salary.data} />
+            <DetailRows
+              rows={[
                 ['Effective from', fDate(salary.data.effectiveMonth, 'MMM YYYY')],
-              ].map(([label, value]) => (
-                <Box key={label} sx={{ minWidth: 0 }}>
-                  <Typography component="dt" variant="caption" color="text.secondary">
-                    {label}
-                  </Typography>
-                  <Typography
-                    component="dd"
-                    variant="h6"
-                    sx={{ m: 0, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
-                  >
-                    {value}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-            <Stack spacing={0.75}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ overflowWrap: 'anywhere' }}
-              >
-                Salary template:{' '}
-                {templateId
-                  ? `${template.data?.name || 'Assigned template'}${salary.data.sourceSalaryTemplateVersion ? ` · Version ${salary.data.sourceSalaryTemplateVersion}` : ''}`
-                  : 'No template reference'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Payroll uses current registration, rules, attendance and adjustments.
-              </Typography>
-            </Stack>
+                [
+                  'Salary template',
+                  templateId
+                    ? `${template.data?.name || 'Assigned template'}${salary.data.sourceSalaryTemplateVersion ? ` · Version ${salary.data.sourceSalaryTemplateVersion}` : ''}`
+                    : 'No template reference',
+                ],
+              ]}
+            />
+            <Typography variant="caption" color="text.secondary">
+              Payroll uses current registration, rules, attendance and adjustments. This saved net
+              estimate excludes monthly attendance effects and one-time adjustments.
+            </Typography>
             <Divider />
             <SalaryBreakdown revision={salary.data} />
           </>
@@ -293,7 +370,7 @@ export function PayrollProfileWorkspace({
         )}
         {canReadSalary &&
           (revisions.isLoading ? (
-            <Skeleton height={30} />
+            <Skeleton aria-label="Loading scheduled salary changes" width="45%" />
           ) : revisions.isError ? (
             <Alert
               severity="warning"
@@ -366,7 +443,7 @@ export function PayrollProfileWorkspace({
         ) : !academicYearId ? (
           <Typography variant="body2">Select an academic year to view policies.</Typography>
         ) : policies.isFetching ? (
-          <Skeleton variant="rounded" height={180} />
+          <DetailRowsSkeleton label="Loading assigned policies" rows={6} />
         ) : policies.isError ? (
           <Alert
             severity="error"
@@ -418,7 +495,14 @@ export function PayrollProfileWorkspace({
         <Alert severity="warning">Unable to refresh details. Your edits are preserved.</Alert>
       )}
       {details.isLoading ? (
-        <Skeleton height={200} variant="rounded" />
+        <>
+          <FormSectionCard icon="mdi:bank-outline" title="Bank details">
+            <DetailRowsSkeleton label="Loading bank details" rows={5} />
+          </FormSectionCard>
+          <FormSectionCard icon="mdi:clock-outline" title="Attendance integration">
+            <DetailRowsSkeleton label="Loading attendance integration" rows={2} />
+          </FormSectionCard>
+        </>
       ) : details.isError && (!detailsContent || !details.data) ? (
         <Alert
           severity="error"
