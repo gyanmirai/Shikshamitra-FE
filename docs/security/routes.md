@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-10-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -14,6 +14,10 @@ audience: humans-and-agents
 | --- | --- | --- |
 | `/security/role` | Role management | Current caller needs `AbpIdentity.Roles.ManagePermissions` |
 | `/security/user` | User management | Current caller needs `AbpIdentity.Users.ManagePermissions` |
+
+The Security sidebar's Dashboard item is commented out in `src/constants/security-menu.ts`; its route and permission constants are retained. Role Management and User Management remain under Role And Permission.
+
+The authenticated header does not mount the global academic year, board, and medium selector on `/security` or its descendant routes. This uses the same route-aware wrapper as Institute Setup. Other modules, including the separate `/security-guard` module, retain their existing selector behavior.
 
 Module Permission opens the original module, sub-module, and permission panels.
 Set Module Visibility opens the separate original visibility dialog.

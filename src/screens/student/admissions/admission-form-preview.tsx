@@ -98,7 +98,7 @@ export default function AdmissionFormPreviewScreen() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading={`${form.name} preview`}
-        description="Test field visibility and required validation before publishing this form."
+        description="Preview the form layout and applicant fields."
         links={[
           { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },

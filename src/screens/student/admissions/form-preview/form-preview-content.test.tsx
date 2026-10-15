@@ -212,8 +212,7 @@ describe('embedded admission form preview', () => {
     expect(screen.getByText('Contact details')).toBeVisible();
   });
 
-  it('validates from its own action without nesting a form inside the builder form', async () => {
-    const user = userEvent.setup();
+  it('shows only the preview without validation actions or a nested form', () => {
     const submitForm = vi.fn().mockResolvedValue(undefined);
     const formik = {
       values: {},
@@ -243,7 +242,7 @@ describe('embedded admission form preview', () => {
     );
 
     expect(screen.getByTestId('builder-form').querySelectorAll('form')).toHaveLength(0);
-    await user.click(screen.getByRole('button', { name: 'Validate preview' }));
-    expect(submitForm).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Validate preview' })).not.toBeInTheDocument();
+    expect(submitForm).not.toHaveBeenCalled();
   });
 });

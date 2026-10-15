@@ -24,7 +24,10 @@ import {
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { assessmentQueues } from './assessment-workbench-model';
+import { AssessmentPanelActions } from './assessment-panel-actions';
 import { AssessmentAttemptHistory } from './assessment-attempt-history';
+
+import type { AssessmentAction } from './assessment-action-model';
 
 function WorkbenchDrawer({
   title,
@@ -52,7 +55,12 @@ function WorkbenchDrawer({
         <Typography id={titleId} variant="h6">
           {title}
         </Typography>
-        <IconButton size="small" aria-label={`Close ${title}`} onClick={onClose}>
+        <IconButton
+          size="small"
+          sx={{ width: 44, height: 44 }}
+          aria-label={`Close ${title}`}
+          onClick={onClose}
+        >
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
@@ -74,7 +82,7 @@ export function AssessmentInsightsDrawer({
   onClose,
 }: {
   counts?: AssessmentRoster['counts'];
-  scope: AssessmentScope;
+  scope?: AssessmentScope;
   sessionName?: string;
   loading: boolean;
   error: boolean;
@@ -85,7 +93,9 @@ export function AssessmentInsightsDrawer({
     <WorkbenchDrawer title="Assessment insights" onClose={onClose}>
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
-          {scope.offeringName} · {scope.stageName}
+          {scope
+            ? `${scope.offeringName} · ${scope.stageName}`
+            : 'All allowed offerings and stages'}
           {sessionName ? ` · ${sessionName}` : ''}. Counts use the current session and applicant
           search.
         </Typography>
@@ -118,11 +128,15 @@ export function AssessmentInsightsDrawer({
 export function AssessmentApplicantDrawer({
   row,
   canViewApplication,
+  canAdvance,
+  onAction,
   returnUrl,
   onClose,
 }: {
   row: AssessmentRosterItem;
   canViewApplication: boolean;
+  canAdvance: boolean;
+  onAction: (row: AssessmentRosterItem, action: AssessmentAction | 'continue') => void;
   returnUrl: string;
   onClose: () => void;
 }) {
@@ -156,6 +170,15 @@ export function AssessmentApplicantDrawer({
           <Skeleton variant="rounded" height={150} />
         ) : (
           <>
+            {row.isActive && query.currentData.policy && (
+              <AssessmentPanelActions
+                assessment={{ ...query.currentData, policy: query.currentData.policy }}
+                canAdvance={canAdvance}
+                disabled={query.isFetching}
+                onAction={(action) => onAction({ ...row, assessment: query.currentData! }, action)}
+                onComplete={() => onAction({ ...row, assessment: query.currentData! }, 'continue')}
+              />
+            )}
             {!!query.currentData.blockers.length && (
               <Alert severity="info">{query.currentData.blockers.join(' ')}</Alert>
             )}

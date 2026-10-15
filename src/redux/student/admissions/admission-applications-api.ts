@@ -9,6 +9,10 @@ import {
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 
+const dashboardTag = { type: studentType.student, id: 'MODULE-DASHBOARD-admissions' } as const;
+const applicationMutationTags = (_result: unknown, error: unknown) =>
+  error ? [] : [studentAdmissionsCrmType.admissionApplication, dashboardTag];
+
 export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AdmissionDirectFamilyMatch = {
   familyId: string;
@@ -76,6 +80,9 @@ export type AdmissionApplication = {
   submittedAt?: string | null;
 };
 export type AdmissionApplicationListInput = {
+  activeOnly?: boolean;
+  pendingDecisionOnly?: boolean;
+  divisionId?: string;
   decisionWorkspaceOnly?: boolean;
   academicYearId?: string;
   boardId?: string;
@@ -342,7 +349,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     startAdmissionApplication: builder.mutation<
       AdmissionApplication,
@@ -355,11 +362,15 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [
-        studentAdmissionsCrmType.admissionApplication,
-        studentAdmissionsCrmType.admissionApplicant,
-        studentAdmissionsCrmType.admissionInquiry,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+              studentAdmissionsCrmType.admissionInquiry,
+            ],
     }),
     findAdmissionDirectFamilies: builder.query<
       AdmissionDirectFamilyMatch[],
@@ -384,10 +395,14 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [
-        studentAdmissionsCrmType.admissionApplication,
-        studentAdmissionsCrmType.admissionApplicant,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+            ],
     }),
     getAdmissionApplicationWorkflow: builder.query<AdmissionApplicationWorkflow, string>({
       query: (id) => `/student/enrollment/admissions/applications/${id}/workflow`,
@@ -417,7 +432,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplicationForm> | AdmissionApplicationForm) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     submitAdmissionApplication: builder.mutation<
       {
@@ -436,7 +451,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
           | Result<{ application: AdmissionApplication; validationErrors: string[] }>
           | { application: AdmissionApplication; validationErrors: string[] }
       ) => unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     reopenAdmissionApplicationForm: builder.mutation<AdmissionApplicationForm, string>({
       query: (id) => ({
@@ -445,7 +460,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplicationForm> | AdmissionApplicationForm) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     getAdmissionApplicationFormHistory: builder.query<AdmissionFormChangeHistory[], string>({
       query: (id) => `/student/enrollment/admissions/applications/${id}/form/history`,
@@ -476,7 +491,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     rejectAdmissionApplication: builder.mutation<
       AdmissionApplication,
@@ -489,7 +504,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     waitlistAdmissionApplication: builder.mutation<
       AdmissionApplication,
@@ -502,7 +517,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
     endAdmissionApplicationJourney: builder.mutation<
       AdmissionApplication,
@@ -518,6 +533,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              dashboardTag,
               studentAdmissionsCrmType.admissionApplication,
               studentAdmissionsCrmType.admissionApplicant,
               studentAdmissionsCrmType.admissionInquiry,
@@ -546,23 +562,27 @@ export const admissionApplicationsApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionFinalizationResult> | AdmissionFinalizationResult
       ) => unwrap(response),
-      invalidatesTags: (result, _error, { input }) => [
-        studentAdmissionsCrmType.admissionApplication,
-        studentAdmissionsCrmType.admissionApplicant,
-        studentAdmissionsCrmType.admissionOffering,
-        { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
-        { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
-        ...(result
-          ? [
-              studentRegistrationType.studentRegistration,
-              { type: studentType.student, id: 'RECORDS-DIRECTORY' },
-              { type: studentType.student, id: 'LIST' },
-              ...(input.applyStudentProfileFields
-                ? [{ type: studentType.student, id: 'RECORDS-CHANGES' }]
+      invalidatesTags: (result, error, { input }) =>
+        error
+          ? []
+          : [
+              dashboardTag,
+              studentAdmissionsCrmType.admissionApplication,
+              studentAdmissionsCrmType.admissionApplicant,
+              studentAdmissionsCrmType.admissionOffering,
+              { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+              { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+              ...(result
+                ? [
+                    studentRegistrationType.studentRegistration,
+                    { type: studentType.student, id: 'RECORDS-DIRECTORY' },
+                    { type: studentType.student, id: 'LIST' },
+                    ...(input.applyStudentProfileFields
+                      ? [{ type: studentType.student, id: 'RECORDS-CHANGES' }]
+                      : []),
+                  ]
                 : []),
-            ]
-          : []),
-      ],
+            ],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<
       AdmissionApplicationWorkflow,
@@ -575,6 +595,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
         reason?: string;
         skipCurrentStage?: boolean;
         adminOverride?: boolean;
+        deferFeeCollection?: boolean;
       }
     >({
       query: ({ id, ...body }) => ({
@@ -585,7 +606,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionApplicationWorkflow> | AdmissionApplicationWorkflow
       ) => unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: applicationMutationTags,
     }),
   }),
 });

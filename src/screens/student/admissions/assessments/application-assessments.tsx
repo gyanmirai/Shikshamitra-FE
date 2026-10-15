@@ -44,7 +44,7 @@ export function ApplicationAssessments({ stages, currentStage, selectedStageId, 
       );
     return (
       <Stack spacing={1}>
-        <Typography variant="subtitle2">{selectedStage.name} · Assessment history</Typography>
+        <Typography variant="subtitle1">{selectedStage.name}</Typography>
         <AssessmentHistoryDetails
           applicationId={props.applicationId}
           stageInstanceId={selectedStage.id}

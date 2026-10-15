@@ -1,5 +1,5 @@
 import type { FormikProps } from 'formik';
-import type { KeyboardEvent } from 'react';
+import type { FormEvent, KeyboardEvent } from 'react';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useMemo, useState } from 'react';
@@ -190,16 +190,14 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
   return (
     <Card
       component={embedded ? 'div' : 'form'}
-      onSubmit={embedded ? undefined : formik.handleSubmit}
+      onSubmit={embedded ? undefined : (event: FormEvent) => event.preventDefault()}
       onKeyDownCapture={(event: KeyboardEvent<HTMLElement>) => {
         if (
-          embedded &&
           event.key === 'Enter' &&
           event.target instanceof HTMLInputElement &&
           event.target.getAttribute('role') !== 'combobox'
         ) {
           event.preventDefault();
-          if (!readingPhoto) formik.submitForm();
         }
       }}
     >
@@ -260,23 +258,6 @@ export function FormPreviewContent({ form, formik, resolvedOptions, embedded = f
             </Button>
           </Stack>
         )}
-        {Object.values(formik.errors)
-          .filter((error): error is string => typeof error === 'string')
-          .map((error) => (
-            <Alert severity="error" key={error} sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          ))}
-        <Button
-          size="small"
-          type={embedded ? 'button' : 'submit'}
-          variant="contained"
-          disabled={readingPhoto}
-          onClick={embedded ? () => formik.submitForm() : undefined}
-          sx={{ mt: 3 }}
-        >
-          Validate preview
-        </Button>
       </CardContent>
     </Card>
   );

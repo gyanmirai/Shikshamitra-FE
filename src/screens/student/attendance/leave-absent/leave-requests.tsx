@@ -31,7 +31,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useStudentAcademicScope } from 'src/hooks/use-student-academic-scope';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -85,6 +84,7 @@ const LeaveAndAbsentScreen = ({
   selectedDivisionId,
 }: {
   scope: {
+    boardId?: string;
     academicYearId?: string;
     educationMediumId?: string;
     organizationId?: string;
@@ -117,6 +117,7 @@ const LeaveAndAbsentScreen = ({
   const dispatch = useDispatch();
 
   const context = useAttendanceContext();
+  const requiresMediumSelection = context.params.get('dashboard') === 'pending' && !selectedMedium;
   const requestedStatus = context.params.get('leaveStatus');
   const selectedStatus: 'pending' | 'approved' | 'rejected' = [
     'pending',
@@ -151,7 +152,9 @@ const LeaveAndAbsentScreen = ({
       serializeLeaveTableFiltersForApi(tableFilters.filter((filter) => filter.column !== 'status')),
     [tableFilters]
   );
-  const skipLeaveQueries = !scope.academicYearId || !scope.educationMediumId;
+  const skipLeaveQueries =
+    !scope.academicYearId ||
+    (context.params.get('dashboard') !== 'pending' && !scope.educationMediumId);
   const query = {
     sorting: context.params.get('leaveSort') || '',
     filterText: context.params.get('leaveSearch') || undefined,
@@ -344,6 +347,7 @@ const LeaveAndAbsentScreen = ({
           const student = row.studentName || 'student';
           return (
             <LeaveRequestActions
+              editDisabled={requiresMediumSelection}
               studentName={student}
               onApprove={() => {
                 setWhichStatus(EmployeeLeaveStatusType.Approved);
@@ -356,6 +360,7 @@ const LeaveAndAbsentScreen = ({
                 confirmRejectDialog.onTrue();
               }}
               onEdit={() => {
+                if (requiresMediumSelection) return;
                 setEditingLeave(row);
                 dialog.onTrue();
               }}
@@ -366,7 +371,7 @@ const LeaveAndAbsentScreen = ({
     ],
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canWrite]
+    [canWrite, requiresMediumSelection]
   );
 
   return (
@@ -423,6 +428,7 @@ const LeaveAndAbsentScreen = ({
             <Button
               size="small"
               variant="contained"
+              disabled={requiresMediumSelection}
               startIcon={<Iconify icon="mdi:plus" />}
               sx={{ ml: 'auto' }}
               onClick={() => {
@@ -435,6 +441,12 @@ const LeaveAndAbsentScreen = ({
           )}
         </Box>
       </Card>
+      {canWrite && requiresMediumSelection && (
+        <Alert severity="info">
+          Select a medium in the filters to add or edit leave requests. You can still review,
+          approve, or reject requests across all mediums.
+        </Alert>
+      )}
       {isError && (
         <Alert severity="error" action={<Button onClick={refetch}>Retry</Button>}>
           Leave requests could not be loaded.
@@ -484,6 +496,7 @@ const LeaveAndAbsentScreen = ({
             {canWrite && !context.params.get('leaveSearch') && !tableFilters.length && (
               <Button
                 size="small"
+                disabled={requiresMediumSelection}
                 onClick={() => {
                   setEditingLeave(null);
                   dialog.onTrue();

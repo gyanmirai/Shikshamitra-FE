@@ -57,7 +57,7 @@ export function AssessmentPanelActions({
               ? 'Waive assessment'
               : action === 'book' && assessment.policy.schedulingEnabled
                 ? compact
-                  ? 'Book assessment slot'
+                  ? 'Book Assessment Slot'
                   : 'Book session'
                 : assessmentActionLabels[action]}
           </Button>

@@ -188,6 +188,28 @@ beforeEach(() => {
 });
 
 describe('Student List workspace', () => {
+  it('restores the dashboard year and preserves it while paging the exact scoped population', () => {
+    mocks.params = new URLSearchParams(
+      'dashboard=directory&year=year-2&board=board-1&class=class-1&division=division-1'
+    );
+    render(<StudentDirectory />);
+    expect(mocks.input).toMatchObject({
+      academicYearId: 'year-2',
+      boardId: 'board-1',
+      standardId: 'class-1',
+      divisionId: 'division-1',
+    });
+    expect(mocks.optionsInput).toEqual({ academicYearId: 'year-2' });
+    mocks.table.onServerPagination(1, 25);
+    expect(pushedParams()).toMatchObject({
+      dashboard: 'directory',
+      year: 'year-2',
+      board: 'board-1',
+      class: 'class-1',
+      division: 'division-1',
+      page: '1',
+    });
+  });
   it('restores server table context and preserves it in both native profile links', () => {
     mocks.params = new URLSearchParams(
       'population=Former&year=all&page=2&pageSize=25&search=Shah&sort=grNumber%20desc&board=board-1'

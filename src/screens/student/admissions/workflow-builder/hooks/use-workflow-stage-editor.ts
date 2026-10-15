@@ -184,6 +184,13 @@ function validateConfiguration(
     return error ? { configurationJson: error } : {};
   }
   if (values.stageType === 1) {
+    const selectedId = readStageConfiguration(values.configurationJson)?.formDefinitionId;
+    if (forms.some((form) => form.id === selectedId && form.purpose === 0)) {
+      return {
+        configurationJson:
+          'Select a published registration form. Inquiry forms cannot be used in this stage.',
+      };
+    }
     const error = getAdmissionFormStageConfigurationError(values.configurationJson, forms);
     return error ? { configurationJson: error } : {};
   }

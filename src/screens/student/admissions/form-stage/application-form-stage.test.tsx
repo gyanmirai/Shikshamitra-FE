@@ -98,29 +98,33 @@ beforeEach(() => {
 });
 
 describe('compact form-stage verification', () => {
-  it('starts with a compact disclosure and preserves policy, blockers and disabled controls inside it', async () => {
+  it('opens verification only on button click and preserves blockers and disabled controls inside it', async () => {
     const user = userEvent.setup();
     renderStage();
     expect(screen.queryByText('Managed application form')).not.toBeInTheDocument();
     expect(screen.queryByText('Owner: staff')).not.toBeInTheDocument();
     const disclosure = screen.getByRole('button', { name: /Section verification/ });
-    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText(/Submit the application before staff verification./)).toBeVisible();
+    expect(disclosure).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(disclosure).toHaveClass('MuiButton-sizeSmall');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Student details')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pending')).not.toBeInTheDocument();
     await user.click(disclosure);
+    expect(screen.getByRole('dialog', { name: 'Section Verification' })).toBeVisible();
     expect(screen.getByText(/0 of 3 submission attempts used/)).toBeVisible();
     expect(screen.getByText('Submit the form before verification.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
   });
 
-  it('opens submitted verification automatically and retains Verify and Request correction', async () => {
+  it('keeps submitted verification closed until requested and retains Verify and Request correction', async () => {
     const user = userEvent.setup();
     Object.assign(state.summary!, { formStatus: 1, canVerify: true, canRequestCorrection: true });
     renderStage();
-    expect(screen.getByRole('button', { name: /Section verification/ })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Section verification/ }));
     await user.click(screen.getByRole('button', { name: 'Verify Student details' }));
     expect(state.verify).toHaveBeenCalledWith(state.summary!.sections[0]);
     await user.click(screen.getByRole('button', { name: 'Request correction' }));
@@ -138,8 +142,10 @@ describe('compact form-stage verification', () => {
     state.canEdit = false;
     state.canReopen = false;
     const complete = renderStage();
+    await user.click(screen.getByRole('button', { name: /Section verification/ }));
     expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
     await user.click(screen.getByRole('button', { name: 'Continue admission' }));
     expect(complete).toHaveBeenCalledOnce();
   });
@@ -148,8 +154,16 @@ describe('compact form-stage verification', () => {
     state.error = true;
     renderStage();
     const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Section verification/ }));
     await user.click(screen.getByRole('button', { name: /Retry/i }));
     expect(state.retry).toHaveBeenCalledOnce();
     expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+  });
+
+  it('omits the verification button when no sections require verification and keeps correction access', () => {
+    state.summary!.sections = [];
+    renderStage();
+    expect(screen.queryByRole('button', { name: /Section verification/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Request correction' })).toBeDisabled();
   });
 });

@@ -10,7 +10,6 @@ import { fDateTime } from 'src/utils/format-time';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useState, useEffect, useCallback } from 'react';
-import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomAccordion from 'src/components/custom-accordian';
 import { LoadingButton } from 'src/components/loading-button';
@@ -19,6 +18,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
+import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   Box,
   Alert,
@@ -132,6 +133,19 @@ export default function AdmissionApplicationDetailScreen({
   }, []);
   const { applicationQuery, formQuery, workflowQuery } = detail;
   const application = applicationQuery.data;
+  const canReadOfferingContext =
+    Boolean(application?.admissionOfferingId) &&
+    hasGrantedPermission(permissions, studentPermissions.enrollment.settings.offerings);
+  // Read the application's own Offering, never infer its academic identity from list filters.
+  const offeringContext = useGetAdmissionOfferingQuery(application?.admissionOfferingId ?? '', {
+    skip: !canReadOfferingContext,
+  });
+  const academicOffering = canReadOfferingContext ? offeringContext.currentData : undefined;
+  const academicContext = [
+    application?.standardName || academicOffering?.standardName,
+    academicOffering?.boardName,
+    academicOffering?.mediumName,
+  ].filter((value): value is string => Boolean(value?.trim()));
   // Withdrawn cases belong to Applications history even when no decision stage was entered.
   const decisionWorkspace = application?.hasReachedDecision === true || application?.status === 2;
   const workspaceKnown = application?.hasReachedDecision != null || application?.status === 2;
@@ -293,7 +307,7 @@ export default function AdmissionApplicationDetailScreen({
           (detail.formStageQuery.currentData?.canSubmit ?? application.status === 0)
         }
         managedFormStage={Boolean(selectedStage?.formStageEnabled)}
-        beforeActions={
+        sectionActions={
           workspace.view === 'journey' && isFormStage(selectedStage)
             ? renderManagedStages()
             : undefined
@@ -363,6 +377,11 @@ export default function AdmissionApplicationDetailScreen({
         onReadinessChange={onStageReadinessChange}
         onOpenAssessments={(url) => leaveGuard.requestNavigation(() => router.push(url))}
         onFeeSelectionStateChange={setFeeEditorState}
+        onDeferFeeCollection={async (reason) => {
+          if (!canLeaveFeeEditor || historical || !selectedCurrentStage || !detail.canAdvance)
+            return false;
+          return detail.advance({ reason, deferFeeCollection: true });
+        }}
         onComplete={(stamp) => {
           if (canLeaveFeeEditor && !historical && selectedCurrentStage)
             detail.advance(stamp ? { concurrencyStamp: stamp } : undefined);
@@ -432,6 +451,11 @@ export default function AdmissionApplicationDetailScreen({
         role="region"
         aria-label={selectedStage?.name ?? 'Admission stage'}
         spacing={1.5}
+        sx={
+          selectedStage?.stageType === 4 || isFormStage(selectedStage)
+            ? { flex: 1, minWidth: 0 }
+            : undefined
+        }
       >
         {historical && selectedStage && (
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
@@ -511,18 +535,12 @@ export default function AdmissionApplicationDetailScreen({
         }}
       >
         <CustomBreadcrumbs
-          heading="Applicant 360"
+          heading={decisionWorkspace ? 'Applications' : 'Pipeline'}
           description="Review or prepare any admission stage. Continue admission advances the current stage when its requirements are complete."
           links={[
             { name: 'Students', href: studentPaths.dashboard },
             { name: 'Admissions', href: studentPaths.enrollment.root },
-            {
-              name: decisionWorkspace ? 'Applications' : 'Pipeline',
-              href: decisionWorkspace
-                ? studentPaths.enrollment.applications
-                : studentPaths.enrollment.pipeline,
-            },
-            { name: 'Applicant 360' },
+            { name: decisionWorkspace ? 'Applications' : 'Pipeline' },
           ]}
           action={
             <Button
@@ -577,13 +595,32 @@ export default function AdmissionApplicationDetailScreen({
                 )}
               </Stack>
               {application && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ overflowWrap: 'anywhere' }}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  flexWrap="wrap"
+                  alignItems="center"
+                  aria-label="Application academic context"
+                  sx={{ color: 'text.secondary', mt: 0.25 }}
                 >
-                  {formatAdmissionReference(application.applicationNumber)}
-                </Typography>
+                  {[
+                    formatAdmissionReference(application.applicationNumber),
+                    ...academicContext,
+                  ].map((value, index) => (
+                    <Typography
+                      key={`${index}-${value}`}
+                      variant="body2"
+                      component="span"
+                      sx={{
+                        overflowWrap: 'anywhere',
+                        ...(index > 0 && { borderLeft: 1, borderColor: 'divider', pl: 1 }),
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  ))}
+                </Stack>
               )}
             </Box>
             {!isLoading && !isError && application && (
@@ -602,7 +639,15 @@ export default function AdmissionApplicationDetailScreen({
                   disabled={workspaceBusy || finalizationOpen}
                   onBusyChange={onCounsellorBusyChange}
                   renderHeaderAction={({ canEdit, onEdit, busy }) => (
-                    <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+                    <Box
+                      sx={{
+                        ml: 'auto',
+                        pl: 1.5,
+                        borderLeft: 1,
+                        borderColor: 'divider',
+                        flexShrink: 0,
+                      }}
+                    >
                       <Button
                         size="small"
                         variant="outlined"
@@ -838,7 +883,17 @@ export default function AdmissionApplicationDetailScreen({
                           />
                         </Box>
                       </Box>
-                      <Box sx={{ minWidth: 0, p: { xs: 1.5, sm: 2 } }}>{renderLoadedContent()}</Box>
+                      <Box
+                        sx={{
+                          minWidth: 0,
+                          p: { xs: 1.5, sm: 2 },
+                          ...(isFormStage(selectedStage) && { pb: 0.5 }),
+                          display: 'flex',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        {renderLoadedContent()}
+                      </Box>
                     </Box>
                   </FormBusyRegion>
                 </Box>

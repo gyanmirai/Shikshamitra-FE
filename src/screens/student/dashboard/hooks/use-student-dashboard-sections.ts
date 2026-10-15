@@ -1,4 +1,5 @@
 import type {
+  StudentDashboardScope,
   StudentDashboardSectionKey,
   StudentModuleDashboardSection,
 } from 'src/redux/student/dashboard/student-module-dashboard-types';
@@ -17,16 +18,21 @@ export type StudentSectionQueries = Record<StudentDashboardSectionKey, StudentSe
 export function useStudentDashboardSections(
   sections: StudentDashboardSectionKey[],
   identityKey: string,
-  academicYearId?: string
+  academicYearId?: string,
+  scope: StudentDashboardScope = {},
+  enabled = true
 ): StudentSectionQueries {
   const options = (section: StudentDashboardSectionKey) => ({
-    skip: !academicYearId || !sections.includes(section),
+    skip: !enabled || !academicYearId || !sections.includes(section),
     refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
   });
   const input = (section: StudentDashboardSectionKey) => ({
     identityKey,
     academicYearId: academicYearId ?? '',
     section,
+    ...scope,
   });
   const records = useGetStudentModuleDashboardSectionQuery(input('records'), options('records'));
   const admissions = useGetStudentModuleDashboardSectionQuery(

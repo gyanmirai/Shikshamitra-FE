@@ -83,6 +83,19 @@ it('does not advance a changed step or close the error dialog', async () => {
   expect(mocks.advance).not.toHaveBeenCalled();
   expect(close).not.toHaveBeenCalled();
 });
+it('retains the exact command and key when retrying a lost response', async () => {
+  const close = vi.fn();
+  mocks.advance.mockReturnValueOnce({ unwrap: () => Promise.reject(new Error('Response lost')) });
+  renderDialog(close);
+  await userEvent.click(screen.getByRole('button', { name: /^Continue$/ }));
+  expect(await screen.findByText('Response lost')).toBeInTheDocument();
+  const sent = mocks.advance.mock.calls[0][0];
+  mocks.getWorkflow.mockReturnValue(resolved({ currentStageInstanceId: 'next-stage', stages: [] }));
+  await userEvent.click(screen.getByRole('button', { name: /^Continue$/ }));
+  expect(mocks.advance).toHaveBeenNthCalledWith(2, sent);
+  expect(mocks.getWorkflow).toHaveBeenCalledTimes(1);
+  expect(close).toHaveBeenCalledOnce();
+});
 it('refuses newly blocked evidence even if the row was previously ready', async () => {
   mocks.getAssessment.mockReturnValue(
     resolved({ ...assessmentResponse, canComplete: false, blockers: ['Review is pending'] })

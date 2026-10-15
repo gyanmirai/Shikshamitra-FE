@@ -1,148 +1,61 @@
 import type { IColumn, ICustomizableTableProps } from 'src/components/customizabaleTable/types';
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
 
-import dayjs from 'dayjs';
-import { useState } from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { useResponsive } from 'src/hooks/use-responsive';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Menu, Stack, Tooltip, MenuItem, IconButton, Typography } from '@mui/material';
+import { Box, Button, Tooltip, Checkbox, Typography } from '@mui/material';
 
-import { normalizeAssessmentDateTime } from './assessment-date-time';
+import { latestAssessmentAttempt } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
-import { assessmentQueues, getAssessmentRowActions } from './assessment-workbench-model';
-import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
+import { getPrimaryAssessmentAction } from './assessment-workbench-model';
 
 import type { AssessmentAction } from './assessment-action-model';
 
-const outcomeLabels = {
-  pending: 'Not recorded',
-  passed: 'Passed',
-  failed: 'Failed',
-  absent: 'Absent',
-  retake: 'Retake allowed',
-  waived: 'Waived',
+const resultLabels: Record<string, string> = { passed: 'Pass', failed: 'Failed', waived: 'Waived' };
+const progressLabels: Record<string, string> = {
+  pending: 'Pending',
+  ongoing: 'Ongoing',
+  complete: 'Complete',
 };
+const resultLabel = (outcome?: string) => resultLabels[outcome ?? ''] ?? '—';
 const attendanceLabels = { pending: 'Pending', present: 'Present', absent: 'Absent' };
 const nextActionLabel = (row: AssessmentRosterItem) =>
-  row.assessment.blockers[0] ??
-  {
-    toBook: row.assessment.policy?.schedulingEnabled ? 'Book session' : 'Start assessment',
-    attendance: 'Record attendance',
-    result: 'Record result',
-    review: 'Review result',
-    ready: 'Continue to next stage',
-    attention: 'Review assessment details',
-    completed: 'View history',
-  }[row.queue];
+  ({
+    toBook: row.assessment.policy?.schedulingEnabled ? 'Book' : 'Start',
+    attendance: 'Attendance',
+    result: 'Result',
+    review: 'Review',
+    ready: 'Continue',
+    attention: 'View details',
+    completed: 'View details',
+  })[row.queue];
 
 type Props = Omit<ICustomizableTableProps, 'columns' | 'data' | 'tableId'> & {
   items: AssessmentRosterItem[];
   selectedSessionId?: string;
+  selectedIds?: ReadonlySet<string>;
+  onSelectionChange?: (rows: AssessmentRosterItem[], checked: boolean) => void;
   canAdvance: boolean;
   onAction: (row: AssessmentRosterItem, action: AssessmentAction | 'continue') => void;
   onDetails: (row: AssessmentRosterItem) => void;
 };
-const actionIcons: Record<AssessmentAction | 'continue', string> = {
-  book: 'mdi:calendar-plus',
-  attendance: 'mdi:account-check-outline',
-  result: 'mdi:pencil-outline',
-  retake: 'mdi:refresh',
-  cancel: 'mdi:cancel',
-  waive: 'mdi:shield-check-outline',
-  continue: 'mdi:arrow-right',
-};
-function RowActions({
-  row,
-  canAdvance,
-  onAction,
-  onDetails,
-}: Pick<Props, 'canAdvance' | 'onAction' | 'onDetails'> & { row: AssessmentRosterItem }) {
-  const permissions = useAssessmentPermissions();
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const actions: (AssessmentAction | 'continue')[] = getAssessmentRowActions(row, permissions);
-  if (row.isActive && row.assessment.canComplete && canAdvance) actions.unshift('continue');
-  const label = (action: AssessmentAction | 'continue') =>
-    action === 'continue'
-      ? 'Continue to next stage'
-      : action === 'book' && row.assessment.policy?.schedulingEnabled
-        ? 'Book session'
-        : assessmentActionLabels[action];
-  const direct = actions.length + 1 <= 3 ? actions : [];
-  return (
-    <Stack direction="row" spacing={0.5}>
-      {direct.map((action) => (
-        <Tooltip key={action} title={label(action)}>
-          <IconButton
-            size="small"
-            aria-label={`${label(action)} for ${row.applicantName}`}
-            onClick={() => onAction(row, action)}
-          >
-            <Iconify icon={actionIcons[action]} />
-          </IconButton>
-        </Tooltip>
-      ))}
-      {actions.length + 1 <= 3 && (
-        <Tooltip title="Assessment details">
-          <IconButton
-            size="small"
-            aria-label={`Assessment details for ${row.applicantName}`}
-            onClick={() => onDetails(row)}
-          >
-            <Iconify icon="mdi:eye-outline" />
-          </IconButton>
-        </Tooltip>
-      )}
-      {!direct.length && actions.length > 0 && (
-        <>
-          <Tooltip title="Assessment actions">
-            <IconButton
-              size="small"
-              aria-label={`Assessment actions for ${row.applicantName}`}
-              aria-haspopup="menu"
-              aria-expanded={!!anchor}
-              onClick={(event) => setAnchor(event.currentTarget)}
-            >
-              <Iconify icon="mdi:dots-vertical" />
-            </IconButton>
-          </Tooltip>
-          <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
-            {actions.map((action) => (
-              <MenuItem
-                key={action}
-                onClick={() => {
-                  setAnchor(null);
-                  onAction(row, action);
-                }}
-              >
-                <Iconify icon={actionIcons[action]} sx={{ mr: 1 }} />
-                {label(action)}
-              </MenuItem>
-            ))}
-            <MenuItem
-              onClick={() => {
-                setAnchor(null);
-                onDetails(row);
-              }}
-            >
-              <Iconify icon="mdi:eye-outline" sx={{ mr: 1 }} />
-              Assessment details
-            </MenuItem>
-          </Menu>
-        </>
-      )}
-    </Stack>
-  );
-}
-
 export function AssessmentApplicantTable({
   items,
   selectedSessionId,
+  selectedIds = new Set<string>(),
+  onSelectionChange,
   canAdvance,
   onAction,
   onDetails,
   ...table
 }: Props) {
+  const permissions = useAssessmentPermissions();
+  const narrow = useResponsive('down', 'sm');
+  const selectable = items.filter((row) => row.isActive && !!row.assessment.policy);
+  const pageSelectionReason = selectable.length
+    ? ''
+    : 'No active managed assessments on this page. Open a student row to view assessment details.';
   const displayAttempt = (row: AssessmentRosterItem) =>
     !row.isActive && selectedSessionId
       ? latestAssessmentAttempt({
@@ -153,10 +66,90 @@ export function AssessmentApplicantTable({
         })
       : latestAssessmentAttempt(row.assessment);
   const columns: IColumn[] = [
+    ...(onSelectionChange
+      ? [
+          {
+            id: 'selection',
+            label: (
+              <Tooltip title={pageSelectionReason} describeChild>
+                <Box
+                  component="span"
+                  tabIndex={pageSelectionReason ? 0 : undefined}
+                  aria-label={pageSelectionReason ? 'Why page selection is unavailable' : undefined}
+                  sx={{ display: 'inline-flex' }}
+                >
+                  <Checkbox
+                    size="small"
+                    sx={narrow ? { width: 44, height: 44 } : undefined}
+                    checked={
+                      selectable.length > 0 &&
+                      selectable.every((row) => selectedIds.has(row.stageInstanceId))
+                    }
+                    indeterminate={
+                      selectable.some((row) => selectedIds.has(row.stageInstanceId)) &&
+                      !selectable.every((row) => selectedIds.has(row.stageInstanceId))
+                    }
+                    disabled={!selectable.length}
+                    inputProps={{
+                      'aria-label': 'Select applicants on this page',
+                      'aria-description': pageSelectionReason || undefined,
+                    }}
+                    onChange={(_, checked) => onSelectionChange(selectable, checked)}
+                  />
+                </Box>
+              </Tooltip>
+            ),
+            isSort: false,
+            isFilter: false,
+            excludeFromExport: true,
+            width: 44,
+            headerSx: narrow ? { px: 0 } : undefined,
+            cellSx: narrow ? { px: 0 } : undefined,
+            render: (_: unknown, data: Record<string, unknown>) => {
+              const row = data as AssessmentRosterItem;
+              const selectionReason = !row.isActive
+                ? 'This assessment stage is no longer active. Open the student row to view its history.'
+                : !row.assessment.policy
+                  ? 'Managed assessment is not configured for this stage.'
+                  : '';
+              return (
+                <Tooltip title={selectionReason} describeChild>
+                  <Box
+                    component="span"
+                    tabIndex={selectionReason ? 0 : undefined}
+                    aria-label={
+                      selectionReason
+                        ? `Why selection is unavailable for ${row.applicantName}`
+                        : undefined
+                    }
+                    sx={{ display: 'inline-flex' }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Checkbox
+                      size="small"
+                      sx={narrow ? { width: 44, height: 44 } : undefined}
+                      checked={selectedIds.has(row.stageInstanceId)}
+                      disabled={!row.isActive || !row.assessment.policy}
+                      inputProps={{
+                        'aria-label': `Select ${row.applicantName}`,
+                        'aria-description': selectionReason || undefined,
+                      }}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(_event, checked) => onSelectionChange([row], checked)}
+                    />
+                  </Box>
+                </Tooltip>
+              );
+            },
+          },
+        ]
+      : []),
     {
       id: 'applicantName',
-      label: 'Applicant',
-      minWidth: 200,
+      label: 'Student Name',
+      minWidth: narrow ? 120 : 200,
+      headerSx: narrow ? { px: 0.5 } : undefined,
+      cellSx: narrow ? { px: 0.5, overflowWrap: 'anywhere' } : undefined,
       render: (_, data) => (
         <Box>
           <Typography variant="subtitle2">{data.applicantName}</Typography>
@@ -168,85 +161,94 @@ export function AssessmentApplicantTable({
     },
     { id: 'applicationNumber', label: 'Application number', defaultHidden: true },
     {
-      id: 'sessionStartsAt',
+      id: 'className',
+      label: 'Class',
+      isSort: false,
+      isFilter: false,
+      minWidth: 100,
+      render: (_, row) => row.className || '—',
+    },
+    {
+      id: 'sessionName',
       label: 'Session',
-      minWidth: 180,
-      render: (_, data) => {
-        const attempt = displayAttempt(data as AssessmentRosterItem);
-        return (
-          <Box>
-            <Typography variant="body2">
-              {attempt?.sessionName ??
-                (data.assessment.policy?.schedulingEnabled ? 'Not booked' : 'Without session')}
-            </Typography>
-            {attempt?.sessionStartsAt && (
-              <Typography variant="caption" color="text.secondary">
-                {dayjs(normalizeAssessmentDateTime(attempt.sessionStartsAt)).format(
-                  'DD MMM YYYY, h:mm A'
-                )}
-              </Typography>
-            )}
-          </Box>
-        );
-      },
+      isSort: false,
+      isFilter: false,
+      minWidth: 150,
+      render: (_, data) => displayAttempt(data as AssessmentRosterItem)?.sessionName ?? '—',
     },
     {
       id: 'attendance',
       label: 'Attendance',
       isSort: false,
+      isFilter: false,
       render: (_, data) => {
-        const attendance = displayAttempt(data as AssessmentRosterItem)?.attendance;
-        return attendance ? attendanceLabels[attendance] : '—';
+        const value = displayAttempt(data as AssessmentRosterItem)?.attendance ?? 'pending';
+        return (
+          <Label color={value === 'present' ? 'success' : value === 'absent' ? 'error' : 'warning'}>
+            {attendanceLabels[value]}
+          </Label>
+        );
       },
     },
     {
       id: 'result',
       label: 'Result',
       isSort: false,
-      render: (_, data) => {
-        const attempt = displayAttempt(data as AssessmentRosterItem);
-        return attempt
-          ? `${outcomeLabels[attempt.outcome]}${attempt.marks != null ? ` · ${attempt.marks}/${data.assessment.policy?.totalMarks ?? '—'}` : ''}`
-          : '—';
-      },
-    },
-    {
-      id: 'queue',
-      label: 'Status',
-      isSort: false,
-      render: (_, data) => (
-        <Label
-          color={
-            data.queue === 'ready' ? 'success' : data.queue === 'attention' ? 'warning' : 'default'
-          }
-        >
-          {assessmentQueues.find((item) => item.value === data.queue)?.label ?? 'Unknown'}
-        </Label>
-      ),
+      isFilter: false,
+      render: (_, data) => resultLabel(displayAttempt(data as AssessmentRosterItem)?.outcome),
     },
     {
       id: 'nextAction',
-      label: 'Next action',
+      label: 'Next Action',
       isSort: false,
-      minWidth: 180,
+      isFilter: false,
+      minWidth: 120,
       render: (_, data) => {
         const row = data as AssessmentRosterItem;
-        return nextActionLabel(row);
+        const action = getPrimaryAssessmentAction(row, permissions, canAdvance);
+        const labels = {
+          book: row.assessment.policy?.schedulingEnabled ? 'Book' : 'Start',
+          attendance: 'Attendance',
+          result: 'Result',
+          retake: 'Retake',
+          cancel: 'Cancel',
+          waive: 'Waive',
+          continue: 'Continue',
+        };
+        return action ? (
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ minHeight: { xs: 44, sm: 32 } }}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAction(row, action);
+            }}
+            aria-label={`${labels[action]} for ${row.applicantName}`}
+          >
+            {labels[action]}
+          </Button>
+        ) : (
+          nextActionLabel(row)
+        );
       },
     },
     {
-      id: 'actions',
-      label: 'Actions',
+      id: 'status',
+      label: 'Status',
       isSort: false,
-      excludeFromExport: true,
-      minWidth: 130,
+      isFilter: false,
+      sticky: true,
+      stickyPosition: 'right',
+      minWidth: 90,
       render: (_, data) => (
-        <RowActions
-          row={data as AssessmentRosterItem}
-          canAdvance={canAdvance}
-          onAction={onAction}
-          onDetails={onDetails}
-        />
+        <Label
+          color={
+            data.status === 'complete' ? 'success' : data.status === 'ongoing' ? 'info' : 'warning'
+          }
+        >
+          {progressLabels[data.status as string] ?? '—'}
+        </Label>
       ),
     },
   ];
@@ -255,21 +257,41 @@ export function AssessmentApplicantTable({
     return {
       ...row,
       id: row.stageInstanceId,
-      sessionStartsAt: attempt?.sessionStartsAt ?? '',
-      attendance: attempt ? attendanceLabels[attempt.attendance] : '',
-      result: attempt
-        ? `${outcomeLabels[attempt.outcome]}${attempt.marks != null ? ` · ${attempt.marks}` : ''}`
-        : '',
+      sessionName: attempt?.sessionName ?? '',
+      attendance: attendanceLabels[attempt?.attendance ?? 'pending'],
+      result: resultLabel(attempt?.outcome),
       nextAction: nextActionLabel(row),
     };
   });
   return (
     <CustomizableTable
       {...table}
-      tableId="admission-assessment-applicants"
+      tableId="admission-assessment-students-v3"
+      handleRowClick={(row) => onDetails(row as AssessmentRosterItem)}
+      rowProps={(record) => ({
+        tabIndex: 0,
+        'aria-label': `Assessment details for ${record.applicantName}`,
+        onKeyDown: (event) => {
+          if (
+            event.target === event.currentTarget &&
+            (event.key === 'Enter' || event.key === ' ')
+          ) {
+            event.preventDefault();
+            onDetails(record as AssessmentRosterItem);
+          }
+        },
+        sx: {
+          cursor: 'pointer',
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: -2,
+          },
+        },
+      })}
       columns={columns}
       data={data}
-      tableTitle="Assessment applicants"
+      tableTitle="Assessment students"
       exportLabel="Export current page"
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
@@ -280,7 +302,7 @@ export function AssessmentApplicantTable({
       serverSideSort
       serverSideSortMode="single"
       searchFieldProps={{
-        placeholder: 'Search applicants or application number',
+        placeholder: 'Search students or application number',
         inputProps: { 'aria-label': 'Search assessment applicants', maxLength: 128 },
       }}
     />

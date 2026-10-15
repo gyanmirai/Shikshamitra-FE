@@ -26,6 +26,11 @@ export function useAdmissionAcademicFilters() {
   const pathname = usePathname();
   const params = useSearchParams();
   const currentYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const dashboardScope = [
+    'active-applications',
+    'admission-decisions',
+    'inquiry-followups',
+  ].includes(params.get('dashboard') ?? '');
   const boardId = readAcademicFilterIds(params.get('board'))[0] ?? '';
   const mediumId = readAcademicFilterIds(params.get('medium'))[0] ?? '';
   const [standardId, setStandardId] = useUrlFilterValue(params.get('class') ?? '');
@@ -40,7 +45,13 @@ export function useAdmissionAcademicFilters() {
         next.delete('medium');
         next.delete('class');
       } else if (key === 'medium') next.delete('class');
+      next.delete('division');
       next.delete('page');
+      if (pathname.endsWith('/assessments')) {
+        next.delete('assessmentPage');
+        next.delete('assessmentScope');
+        next.delete('assessmentSession');
+      }
       const query = next.toString();
       if (query === params.toString()) return;
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
@@ -52,13 +63,22 @@ export function useAdmissionAcademicFilters() {
     const next = new URLSearchParams(params.toString());
     setStandardId('');
     next.delete('class');
+    next.delete('division');
     next.delete('page');
     const query = next.toString();
     if (query === params.toString()) return;
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [params, pathname, router, setStandardId]);
 
-  return { academicYearId: currentYearId, boardId, mediumId, standardId, update, clear };
+  return {
+    academicYearId: dashboardScope ? params.get('year') || currentYearId : currentYearId,
+    boardId,
+    mediumId,
+    standardId,
+    update,
+    clear,
+    dashboardScope,
+  };
 }
 
 export function AdmissionAcademicFilters({
@@ -69,6 +89,7 @@ export function AdmissionAcademicFilters({
   onClear,
   filterAction,
   disabled = false,
+  allowAllHierarchy = false,
 }: {
   boardId: string;
   mediumId: string;
@@ -77,11 +98,19 @@ export function AdmissionAcademicFilters({
   onClear?: () => void;
   filterAction?: ReactNode;
   disabled?: boolean;
+  allowAllHierarchy?: boolean;
 }) {
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const params = useSearchParams();
+  const dashboardScope = [
+    'active-applications',
+    'admission-decisions',
+    'inquiry-followups',
+  ].includes(params.get('dashboard') ?? '');
+  const effectiveYearId = dashboardScope ? params.get('year') || academicYearId : academicYearId;
   const hierarchy = useGetAcademicOrganizationOptionsQuery(
-    { academicYearId: academicYearId ?? '' },
-    { skip: !academicYearId }
+    { academicYearId: effectiveYearId ?? '' },
+    { skip: !effectiveYearId }
   );
   const classes = useGetClassByMediumQuery(mediumId, { skip: !mediumId });
   const { boards, mediums } = getAdmissionHierarchyOptions(
@@ -96,7 +125,7 @@ export function AdmissionAcademicFilters({
   );
 
   useEffect(() => {
-    if (disabled || !hierarchy.currentData) return;
+    if (disabled || !hierarchy.currentData || dashboardScope || allowAllHierarchy) return;
     if (!boards.some((item) => item.id === boardId)) {
       if (boards[0]) onChange('board', boards[0].id);
       return;
@@ -116,6 +145,8 @@ export function AdmissionAcademicFilters({
     boardId,
     boards,
     disabled,
+    allowAllHierarchy,
+    dashboardScope,
     classes.currentData,
     hierarchy.currentData,
     mediumId,
@@ -161,8 +192,12 @@ export function AdmissionAcademicFilters({
             label="Board"
             labelKey="name"
             valueKey="id"
-            options={boards}
-            value={boardId}
+            options={
+              dashboardScope || allowAllHierarchy
+                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All boards' }, ...boards]
+                : boards
+            }
+            value={allowAllHierarchy && !boardId ? ALL : boardId}
             isLoading={hierarchy.isFetching}
             disabled={disabled || !academicYearId || hierarchy.isError}
             onChange={(value) => onChange('board', String(value))}
@@ -172,8 +207,12 @@ export function AdmissionAcademicFilters({
             label="Medium"
             labelKey="name"
             valueKey="id"
-            options={mediums}
-            value={mediumId}
+            options={
+              dashboardScope || allowAllHierarchy
+                ? [{ id: allowAllHierarchy ? ALL : '', name: 'All mediums' }, ...mediums]
+                : mediums
+            }
+            value={allowAllHierarchy && !mediumId ? ALL : mediumId}
             isLoading={hierarchy.isFetching}
             disabled={disabled || !boardId || hierarchy.isError}
             onChange={(value) => onChange('medium', String(value))}

@@ -3,6 +3,8 @@
 import * as Yup from 'yup';
 import { useEffect } from 'react';
 import { useFormik } from 'formik';
+import { Label } from 'src/components/label';
+import { fDateTime } from 'src/utils/format-time';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -14,6 +16,8 @@ import {
   useConfirmStudentOnboardingFeeStructureMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import AdmissionFeeCollectionPanel from '../../admissions/fee-selection/admission-fee-collection-panel';
+
 export default function StudentOnboardingFees({
   caseId,
   canManage,
@@ -23,14 +27,26 @@ export default function StudentOnboardingFees({
 }) {
   const item = useGetStudentOnboardingCaseQuery(caseId);
   const selection = useGetStudentOnboardingFeeStructureQuery(caseId);
-  const candidates = useGetStudentOnboardingFeeCandidatesQuery(caseId);
+  const caseState = item.currentData;
+  const feeState = selection.currentData;
+  const lockedSnapshot = feeState?.isLocked ? feeState.selection : undefined;
+  const candidates = useGetStudentOnboardingFeeCandidatesQuery(caseId, {
+    skip: Boolean(lockedSnapshot),
+  });
+  const structures = lockedSnapshot ? [lockedSnapshot] : (candidates.currentData ?? []);
+  const readError = item.isError || selection.isError || (!lockedSnapshot && candidates.isError);
+  const retry = () => {
+    item.refetch();
+    selection.refetch();
+    if (!lockedSnapshot) candidates.refetch();
+  };
   const [confirm, saving] = useConfirmStudentOnboardingFeeStructureMutation();
   const form = useFormik({
     enableReinitialize: true,
     initialValues: {
-      structureId: selection.data?.selection?.structureId ?? '',
+      structureId: feeState?.selection?.structureId ?? '',
       optionalHeadIds:
-        selection.data?.selection?.heads
+        feeState?.selection?.heads
           .filter((head) => head.isOptional)
           .map((head) => head.feeHeadId) ?? ([] as string[]),
     },
@@ -38,10 +54,17 @@ export default function StudentOnboardingFees({
       structureId: Yup.string().required('Choose a published fee structure.'),
     }),
     onSubmit: async (values) => {
-      if (!canManage || !item.data || saving.isLoading) return;
-      const selected = candidates.data?.find(
-        (candidate) => candidate.structureId === values.structureId
-      );
+      if (
+        !canManage ||
+        !caseState ||
+        readError ||
+        item.isFetching ||
+        selection.isFetching ||
+        saving.isLoading ||
+        (lockedSnapshot && form.dirty)
+      )
+        return;
+      const selected = structures.find((candidate) => candidate.structureId === values.structureId);
       if (!selected) {
         form.setStatus('The selected structure is unavailable. Refresh the list and choose again.');
         return;
@@ -57,7 +80,7 @@ export default function StudentOnboardingFees({
       try {
         await confirm({
           id: caseId,
-          concurrencyStamp: item.data.concurrencyStamp,
+          concurrencyStamp: caseState.concurrencyStamp,
           ...values,
         }).unwrap();
         form.setStatus(undefined);
@@ -72,22 +95,15 @@ export default function StudentOnboardingFees({
   });
   const { setFieldValue } = form;
   useEffect(() => {
-    if (!form.values.structureId && candidates.data?.length === 1)
-      setFieldValue('structureId', candidates.data[0].structureId);
-  }, [candidates.data, form.values.structureId, setFieldValue]);
-  if (item.isError || selection.isError || candidates.isError)
+    if (!lockedSnapshot && !form.values.structureId && candidates.currentData?.length === 1)
+      setFieldValue('structureId', candidates.currentData[0].structureId);
+  }, [candidates.currentData, form.values.structureId, setFieldValue, lockedSnapshot]);
+  if (readError && (!caseState || !feeState))
     return (
       <Alert
         severity="error"
         action={
-          <Button
-            size="small"
-            onClick={() => {
-              item.refetch();
-              selection.refetch();
-              candidates.refetch();
-            }}
-          >
+          <Button size="small" onClick={retry}>
             Retry
           </Button>
         }
@@ -95,31 +111,56 @@ export default function StudentOnboardingFees({
         Fee structures could not be loaded.
       </Alert>
     );
-  if (!item.data || !selection.data || candidates.isLoading)
+  if (!caseState || !feeState || (!lockedSnapshot && candidates.isLoading))
     return (
       <Stack role="status" aria-label="Loading fee structures">
         <Skeleton height={64} />
         <Skeleton height={40} />
       </Stack>
     );
-  const chosen = candidates.data?.find(
-    (candidate) => candidate.structureId === form.values.structureId
-  );
+  const chosen = structures.find((candidate) => candidate.structureId === form.values.structureId);
   const disabled =
     !canManage ||
+    readError ||
+    item.isFetching ||
     saving.isLoading ||
     selection.isFetching ||
-    candidates.isFetching ||
-    Boolean(item.data.studentEnrollmentId) ||
-    item.data.status === 5;
+    (!lockedSnapshot && candidates.isFetching) ||
+    Boolean(caseState.studentEnrollmentId) ||
+    caseState.status === 5;
   return (
     <Stack spacing={1.5} component="form" onSubmit={form.handleSubmit}>
-      {selection.data.onboardingConfirmed && (
-        <Alert severity="success">
-          Fee structure confirmed: {selection.data.selection?.structureName}
+      {feeState.feeCollectionDeferral && (
+        <Stack spacing={0.5}>
+          <Label color="warning" sx={{ alignSelf: 'flex-start' }}>
+            Collection deferred from Admissions
+          </Label>
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            {feeState.feeCollectionDeferral.reason}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Deferred {fDateTime(feeState.feeCollectionDeferral.deferredAt)}
+          </Typography>
+        </Stack>
+      )}
+      {readError && (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={retry}>
+              Retry
+            </Button>
+          }
+        >
+          Fee structures could not be refreshed. Retry before making changes.
         </Alert>
       )}
-      {!candidates.data?.length && (
+      {feeState.onboardingConfirmed && (
+        <Alert severity="success">
+          Fee structure confirmed: {feeState.selection?.structureName}
+        </Alert>
+      )}
+      {!structures.length && (
         <Alert severity="info">
           No published fee structure matches this student&apos;s academic year and Class. Ask
           Finance to publish the matching structure.
@@ -132,11 +173,11 @@ export default function StudentOnboardingFees({
         fullWidth
         isSearch
         value={form.values.structureId}
-        options={(candidates.data ?? []).map((candidate) => ({
+        options={structures.map((candidate) => ({
           value: candidate.structureId,
           label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
         }))}
-        disabled={disabled || !candidates.data?.length}
+        disabled={disabled || feeState.isLocked || !structures.length}
         onChange={(value) => {
           setFieldValue('structureId', String(value));
           setFieldValue('optionalHeadIds', []);
@@ -164,7 +205,7 @@ export default function StudentOnboardingFees({
               options={chosen.heads
                 .filter((head) => head.isOptional)
                 .map((head) => ({ value: head.feeHeadId, label: head.feeHeadName }))}
-              disabled={disabled}
+              disabled={disabled || feeState.isLocked}
               onChange={(value) => setFieldValue('optionalHeadIds', value)}
             />
           )}
@@ -176,11 +217,25 @@ export default function StudentOnboardingFees({
         size="small"
         variant="contained"
         loading={saving.isLoading}
-        disabled={disabled || !chosen}
+        disabled={disabled || !chosen || (feeState.isLocked && form.dirty)}
         sx={{ alignSelf: 'flex-end' }}
       >
         Confirm fee structure
       </Button>
+      {feeState.selection && caseState.applicationId && (
+        <AdmissionFeeCollectionPanel
+          key={caseState.applicationId}
+          applicationId={caseState.applicationId}
+          disabled={
+            readError ||
+            form.dirty ||
+            saving.isLoading ||
+            item.isFetching ||
+            selection.isFetching ||
+            caseState.status === 5
+          }
+        />
+      )}
     </Stack>
   );
 }

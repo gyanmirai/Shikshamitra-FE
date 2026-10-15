@@ -38,6 +38,7 @@ export function buildAdmissionApplicationsColumns({
       id: 'applicantName',
       label: 'Applicant',
       minWidth: 220,
+      sticky: true,
       isSort: true,
       render: (_, row) => (
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>

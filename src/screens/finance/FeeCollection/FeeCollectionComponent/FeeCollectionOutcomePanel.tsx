@@ -20,11 +20,15 @@ import {
 type FeeCollectionOutcomePanelProps = {
   collectResponse: CollectFeeOutput;
   onClose?: () => void;
+  showAuditTrail?: boolean;
+  receiptAccessUnavailable?: boolean;
 };
 
 export default function FeeCollectionOutcomePanel({
   collectResponse,
   onClose,
+  showAuditTrail = true,
+  receiptAccessUnavailable = false,
 }: FeeCollectionOutcomePanelProps) {
   const summary = collectResponse.auditSummary;
   const lines = summary?.allocationLines ?? [];
@@ -50,6 +54,11 @@ export default function FeeCollectionOutcomePanel({
         {(summary?.totalAmount ?? collectResponse.receivedAmount).toLocaleString('en-IN')}
         {collectResponse.receiptNumber && ` · Receipt ${collectResponse.receiptNumber}`}
       </Typography>
+      {receiptAccessUnavailable && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          Payment recorded. Receipt access is unavailable for your account.
+        </Typography>
+      )}
 
       {lines.length > 0 && (
         <Table size="small" sx={{ mb: 2 }}>
@@ -75,15 +84,17 @@ export default function FeeCollectionOutcomePanel({
       )}
 
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        <Button
-          component={NextLink}
-          href={auditTrailHref}
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:history" width={18} />}
-        >
-          View in audit trail
-        </Button>
+        {showAuditTrail && (
+          <Button
+            component={NextLink}
+            href={auditTrailHref}
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:history" width={18} />}
+          >
+            View in audit trail
+          </Button>
+        )}
         {onClose && (
           <Button
             startIcon={<Iconify icon="mdi:close" />}

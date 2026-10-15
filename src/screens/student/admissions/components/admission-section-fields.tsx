@@ -8,12 +8,16 @@ type Field = { code: string; fieldType: number; validationJson?: string | null }
 type Props<T extends Field> = {
   fields: T[];
   columns: number;
+  spacing?: number;
+  fullWidthFieldTypes?: readonly number[];
   renderField: (field: T) => ReactNode;
 };
 
 export function AdmissionSectionFields<T extends Field>({
   fields,
   columns,
+  spacing = 1,
+  fullWidthFieldTypes = [1],
   renderField,
 }: Props<T>) {
   if (!fields.length) return null;
@@ -25,10 +29,10 @@ export function AdmissionSectionFields<T extends Field>({
 
   return (
     <Grid size={{ xs: 12 }} sx={{ minWidth: 0 }}>
-      <Grid container spacing={1} alignItems="flex-start">
+      <Grid container spacing={spacing} alignItems="flex-start">
         {!!photos.length && (
           <Grid size={{ xs: 12, md: 3, lg: 2.4 }} aria-label="Profile photos" sx={{ minWidth: 0 }}>
-            <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'center' }}>
+            <Stack spacing={spacing} alignItems={{ xs: 'flex-start', md: 'center' }}>
               {photos.map((field) => (
                 <Box key={field.code}>{renderField(field)}</Box>
               ))}
@@ -44,17 +48,22 @@ export function AdmissionSectionFields<T extends Field>({
             <Box
               sx={(theme) => ({
                 display: 'grid',
-                gap: 1,
+                gap: spacing,
                 gridTemplateColumns: {
                   xs: 'minmax(0, 1fr)',
-                  sm: `repeat(auto-fit, minmax(min(100%, max(240px, calc((100% - ${theme.spacing(count - 1)}) / ${count}))), 1fr))`,
+                  sm: `repeat(auto-fit, minmax(min(100%, max(240px, calc((100% - ${theme.spacing((count - 1) * spacing)}) / ${count}))), 1fr))`,
                 },
               })}
             >
               {ordinaryFields.map((field) => (
                 <Box
                   key={field.code}
-                  sx={{ minWidth: 0, gridColumn: field.fieldType === 1 ? '1 / -1' : undefined }}
+                  sx={{
+                    minWidth: 0,
+                    gridColumn: fullWidthFieldTypes.includes(field.fieldType)
+                      ? '1 / -1'
+                      : undefined,
+                  }}
                 >
                   {renderField(field)}
                 </Box>

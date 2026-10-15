@@ -8,16 +8,15 @@ import type {
 import { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { fDateTime } from 'src/utils/format-time';
-import CustomSelect from 'src/components/custom-select';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { LoadingButton } from 'src/components/loading-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Stack, Button, MenuItem, Typography } from '@mui/material';
+import { Stack, Button, MenuItem, Typography } from '@mui/material';
 
 import { assessmentActionLabels } from './assessment-action-model';
-import { normalizeAssessmentDateTime } from './assessment-date-time';
 import { useAssessmentPermissions } from './use-assessment-permissions';
+import { AssessmentResultEntry as ResultEntry } from './assessment-result-entry';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
@@ -50,57 +49,6 @@ const outcomeLabels = {
 };
 const attendanceLabels = { pending: 'Pending', present: 'Present', absent: 'Absent' };
 
-function ResultEntry({
-  assessment,
-  quick,
-  disabled,
-  formId,
-}: Pick<EditableProps, 'assessment' | 'quick' | 'disabled'> & { formId: string }) {
-  const { formik } = quick;
-  return (
-    <Box
-      component="form"
-      id={formId}
-      noValidate
-      onSubmit={formik.handleSubmit}
-      sx={{ minWidth: 160 }}
-    >
-      <Stack direction="row" spacing={1} alignItems="flex-start">
-        {assessment.policy.scoringEnabled ? (
-          <NumericFormatCustom
-            fullWidth
-            size="small"
-            prefix=""
-            roundToWholeRupees={false}
-            decimalScale={2}
-            name="marks"
-            label={`Marks / ${assessment.policy.totalMarks}`}
-            value={formik.values.marks}
-            disabled={disabled || !quick.canRecordResult}
-            onBlur={formik.handleBlur}
-            onValueChange={({ floatValue }) => quick.changeResult('marks', floatValue ?? '')}
-            error={Boolean(formik.touched.marks && formik.errors.marks)}
-            helperText={formik.touched.marks ? formik.errors.marks : undefined}
-          />
-        ) : (
-          <CustomSelect
-            label="Result"
-            value={formik.values.outcome}
-            disabled={disabled || !quick.canRecordResult}
-            options={[
-              { value: 'passed', label: 'Passed' },
-              { value: 'failed', label: 'Failed' },
-            ]}
-            onChange={(value) => quick.changeResult('outcome', String(value))}
-            error={Boolean(formik.touched.outcome && formik.errors.outcome)}
-            helperText={formik.touched.outcome ? formik.errors.outcome : undefined}
-          />
-        )}
-      </Stack>
-    </Box>
-  );
-}
-
 /** Embedded attempt records within Applicant 360; the surrounding journey owns its footer. */
 export function AssessmentAttemptTable({
   assessment,
@@ -110,6 +58,7 @@ export function AssessmentAttemptTable({
   onAction,
 }: Props) {
   const permissions = useAssessmentPermissions();
+  const narrow = useResponsive('down', 'sm');
   const resultFormId = `assessment-result-${assessment.applicationId}-${assessment.stageInstanceId}`;
   const scoringEnabled =
     assessment.policy?.scoringEnabled ??
@@ -137,14 +86,11 @@ export function AssessmentAttemptTable({
       isSort: false,
       label: 'Attempt',
       filterType: 'number',
-      minWidth: 150,
+      minWidth: 104,
       isFilter: false,
       render: (_, row) => (
         <Stack spacing={0.25} sx={{ overflowWrap: 'anywhere' }}>
           <Typography variant="subtitle2">Attempt {row.attemptNumber}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {fDateTime(row.createdAt)}
-          </Typography>
           {row.notes && (
             <Typography variant="caption" sx={{ whiteSpace: 'pre-wrap' }}>
               {row.notes}
@@ -167,7 +113,7 @@ export function AssessmentAttemptTable({
       id: 'sessionName',
       label: 'Session',
       filterType: 'string',
-      minWidth: 170,
+      minWidth: 136,
       isFilter: false,
       isSort: false,
       render: (_, row) => (
@@ -180,19 +126,6 @@ export function AssessmentAttemptTable({
                   ? 'No session required'
                   : 'No scheduled session')}
           </Typography>
-          {row.sessionStartsAt && (
-            <Typography variant="caption" color="text.secondary">
-              {fDateTime(normalizeAssessmentDateTime(row.sessionStartsAt))}
-              {row.sessionEndsAt
-                ? ` – ${fDateTime(normalizeAssessmentDateTime(row.sessionEndsAt))}`
-                : ''}
-            </Typography>
-          )}
-          {row.sessionLocation && (
-            <Typography variant="caption" color="text.secondary">
-              {row.sessionLocation}
-            </Typography>
-          )}
         </Stack>
       ),
     },
@@ -200,7 +133,7 @@ export function AssessmentAttemptTable({
       id: 'attendance',
       label: 'Attendance',
       filterType: 'enum',
-      minWidth: readOnly ? 110 : 165,
+      minWidth: readOnly ? 100 : 160,
       isFilter: false,
       isSort: false,
       enumOptions: Object.entries(attendanceLabels).map(([value, label]) => ({ value, label })),
@@ -240,7 +173,7 @@ export function AssessmentAttemptTable({
       align: 'right',
       label: scoringEnabled ? (totalMarks != null ? `Marks / ${totalMarks}` : 'Marks') : 'Result',
       filterType: 'number',
-      minWidth: readOnly ? 110 : 192,
+      minWidth: readOnly ? 100 : 142,
       isFilter: false,
       isSort: false,
       render: (_, row) =>
@@ -271,7 +204,7 @@ export function AssessmentAttemptTable({
       id: 'statusLabel',
       label: 'Status',
       filterType: 'enum',
-      minWidth: 110,
+      minWidth: 80,
       width: 110,
       enumOptions: [...Object.values(outcomeLabels), 'Awaiting review', 'Cancelled'].map(
         (label) => ({ value: label, label })
@@ -302,9 +235,11 @@ export function AssessmentAttemptTable({
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 144,
-      width: 144,
-      align: 'right',
+      minWidth: 130,
+      width: 130,
+      align: 'left',
+      headerSx: { minWidth: { xs: 144, sm: 130 } },
+      cellSx: { minWidth: { xs: 144, sm: 130 } },
       isFilter: false,
       isSort: false,
       sticky: true,
@@ -325,7 +260,7 @@ export function AssessmentAttemptTable({
         const showSave =
           !readOnly && quick && latest && row.status === 'pending' && assessment.policy;
         return (
-          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-start">
             {showSave && (
               <LoadingButton
                 type="submit"
@@ -342,7 +277,14 @@ export function AssessmentAttemptTable({
             {actions.length > 0 && (
               <ThreeDotsActions
                 moreLabel={`More actions for attempt ${row.attemptNumber}`}
-                sx={{ justifyContent: 'flex-end' }}
+                placement={narrow ? 'bottom-right' : 'top-right'}
+                sx={{
+                  justifyContent: 'flex-start',
+                  '& [data-testid="table-action-more"]': {
+                    width: { xs: 44, sm: 30 },
+                    height: { xs: 44, sm: 30 },
+                  },
+                }}
                 actions={({ popover }) =>
                   actions.map((action) => (
                     <MenuItem

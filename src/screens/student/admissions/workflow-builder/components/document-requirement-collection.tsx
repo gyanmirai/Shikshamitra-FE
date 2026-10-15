@@ -10,6 +10,8 @@ import { Alert, Stack, Button, Typography, IconButton, InputAdornment } from '@m
 
 import { DocumentUploadLimits } from './document-upload-limits';
 
+const ADMISSION_EVIDENCE = '__admission_evidence__';
+
 export type DocumentCategoryQueryState = {
   documentTypesLoading?: boolean;
   documentTypesError?: boolean;
@@ -55,12 +57,15 @@ export function DocumentRequirementCollection({
     });
   };
   const mappings = [
-    { value: '', label: 'Keep as admission evidence' },
+    { value: ADMISSION_EVIDENCE, label: 'Keep as admission evidence' },
     ...documentTypes.map((item) => ({ value: item.id, label: item.name })),
   ];
   const categoriesEmpty = !documentTypes.length && !documentTypesLoading && !documentTypesError;
   if (categoriesEmpty)
-    mappings.push({ value: '__no_categories__', label: 'No student document categories configured' });
+    mappings.push({
+      value: '__no_categories__',
+      label: 'No student document categories configured',
+    });
   if (values.documentTypeId && !documentTypes.some((item) => item.id === values.documentTypeId)) {
     mappings.push({
       value: values.documentTypeId,
@@ -104,9 +109,9 @@ export function DocumentRequirementCollection({
             </CustomTooltip>
           </InputAdornment>
         }
-        value={values.documentTypeId ?? ''}
+        value={values.documentTypeId || ADMISSION_EVIDENCE}
         options={mappings}
-        onChange={(id) => changeMapping(String(id))}
+        onChange={(id) => changeMapping(id === ADMISSION_EVIDENCE ? '' : String(id))}
         onBlur={() => formik.setFieldTouched('documentTypeId')}
         error={Boolean(touched.documentTypeId && errors.documentTypeId)}
         helperText={

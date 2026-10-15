@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   cancel: vi.fn(),
   clearResults: vi.fn(),
   replace: vi.fn(),
+  query: vi.fn(),
   push: vi.fn(),
   options: {
     academicYears: [],
@@ -61,15 +62,18 @@ vi.mock('../onboarding-settings-context', () => ({
   useOnboardingSettings: () => ({ settings: { grNumber: { assignmentMode: 'both' } } }),
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
-  useGetStudentOnboardingCasesQuery: () => ({
-    currentData: mocks.casesAvailable
-      ? { items: mocks.rows, totalCount: mocks.rows.length }
-      : undefined,
-    isLoading: false,
-    isFetching: mocks.casesFetching,
-    isError: mocks.casesError,
-    refetch: vi.fn(),
-  }),
+  useGetStudentOnboardingCasesQuery: (args: unknown, options: unknown) => {
+    mocks.query(args, options);
+    return {
+      currentData: mocks.casesAvailable
+        ? { items: mocks.rows, totalCount: mocks.rows.length }
+        : undefined,
+      isLoading: false,
+      isFetching: mocks.casesFetching,
+      isError: mocks.casesError,
+      refetch: vi.fn(),
+    };
+  },
   useGetStudentOnboardingCaseQuery: () => ({ currentData: undefined }),
   useGetStudentOnboardingFilterOptionsQuery: () => ({
     currentData: mocks.options,
@@ -414,6 +418,25 @@ describe('Student Setup workspace selection wiring', () => {
       expect(screen.queryByText('Automatic + manual')).not.toBeInTheDocument();
     }
   );
+
+  it.each([
+    'unfinished',
+    'attention',
+    'ready',
+    'documents',
+    'credentials',
+    'division',
+    'gr-number',
+    'roll-number',
+  ])('preserves the %s dashboard queue without default narrowing', (queue) => {
+    mocks.params = new URLSearchParams(`dashboard=${queue}&year=year-2`);
+    render(element);
+    expect(mocks.query).toHaveBeenCalledWith(
+      expect.objectContaining({ academicYearId: 'year-2', dashboardQueue: queue }),
+      expect.objectContaining({ skip: false })
+    );
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
 
   it('uses the real unsaved-navigation guard before abandoning manual edits', () => {
     mocks.dirty = true;

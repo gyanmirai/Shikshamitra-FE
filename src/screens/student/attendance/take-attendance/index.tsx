@@ -1,12 +1,17 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
+import type { AcademicYear } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import { Suspense } from 'react';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
+import { useGetYearByIdQuery } from 'src/redux/year/yearApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { toDateOnly, formatDateOnly } from 'src/utils/date-only';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -25,6 +30,7 @@ import {
 } from '@mui/material';
 
 import { useDailyAttendance } from './use-daily-attendance';
+import AttendanceRegisterQueue from './attendance-register-queue';
 
 const links = [
   { name: 'Student', href: studentPaths.dashboard },
@@ -32,8 +38,12 @@ const links = [
   { name: 'Daily Attendance' },
 ];
 
-function DailyAttendanceWorkspace() {
-  const v = useDailyAttendance();
+function DailyAttendanceWorkspace({
+  academicYearOverride,
+}: {
+  academicYearOverride?: AcademicYear;
+}) {
+  const v = useDailyAttendance(academicYearOverride);
   return (
     <Box
       sx={{
@@ -398,6 +408,52 @@ function DailyAttendanceWorkspace() {
   );
 }
 
+function AttendanceWorkspaceRoute() {
+  const params = useSearchParams();
+  const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
+  const queue = params.get('dashboard') === 'pending-registers';
+  const requestedYear = params.get('year');
+  const [linkedYear, setLinkedYear] = useState<AcademicYear | undefined>(() =>
+    currentYear?.id === requestedYear ? currentYear : undefined
+  );
+  const cachedYear = linkedYear?.id === requestedYear ? linkedYear : undefined;
+  const globalYear = currentYear?.id === requestedYear ? currentYear : undefined;
+  const resolveYear = !queue && Boolean(requestedYear && !cachedYear && !globalYear);
+  const year = useGetYearByIdQuery(requestedYear || '', { skip: !resolveYear });
+  const effectiveYear =
+    cachedYear ||
+    globalYear ||
+    (!year.isError && year.currentData?.id === requestedYear
+      ? (year.currentData as AcademicYear)
+      : undefined);
+  useEffect(() => {
+    if (effectiveYear && effectiveYear.id !== linkedYear?.id) setLinkedYear(effectiveYear);
+  }, [effectiveYear, linkedYear?.id]);
+  if (!queue && requestedYear && !effectiveYear) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <CustomBreadcrumbs
+          heading="Daily Attendance"
+          description="Review students and record daily attendance."
+          links={links}
+        />
+        {year.isError ? (
+          <Alert severity="error" action={<Button onClick={() => year.refetch()}>Retry</Button>}>
+            The academic year for this register could not be loaded.
+          </Alert>
+        ) : (
+          <LinearProgress aria-label="Loading register academic year" />
+        )}
+      </Box>
+    );
+  }
+  return queue ? (
+    <AttendanceRegisterQueue />
+  ) : (
+    <DailyAttendanceWorkspace academicYearOverride={requestedYear ? effectiveYear : undefined} />
+  );
+}
+
 export default function TakeAttendanceScreen() {
   return (
     <Suspense
@@ -413,7 +469,7 @@ export default function TakeAttendanceScreen() {
         </Box>
       }
     >
-      <DailyAttendanceWorkspace />
+      <AttendanceWorkspaceRoute />
     </Suspense>
   );
 }

@@ -78,6 +78,20 @@ describe('inquiryWorkState', () => {
 });
 
 describe('admission inquiry columns', () => {
+  it('shows the selected class name without offering or cycle details', () => {
+    const column = buildAdmissionInquiryColumns(columnOptions).find(
+      (item) => item.id === 'admissionOfferingId'
+    )!;
+    const row = inquiry({
+      standardName: '1',
+      admissionOfferingCode: 'ADM-CLASS-1',
+      admissionCycleName: 'General Admission Cycle',
+    });
+    expect(column.render?.(row.admissionOfferingId, row)).toBe('1');
+    expect(column.render?.(undefined, inquiry({ standardName: 'LKG' }))).toBe('LKG');
+    expect(column.render?.(undefined, inquiry())).toBe('—');
+  });
+
   it('keeps identity left, operations right, and moves next action into Actions', () => {
     const columns = buildAdmissionInquiryColumns(columnOptions);
 

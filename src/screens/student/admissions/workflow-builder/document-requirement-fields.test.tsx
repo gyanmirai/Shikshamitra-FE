@@ -63,10 +63,12 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
     expect(dialog.closest('.MuiPopover-root')).toBeInTheDocument();
     await chooseDocumentOption(user, 'Student document category (optional)', category.name);
-    expect(within(dialog).getByRole('combobox', { name: 'Student document category (optional)' }))
-      .toHaveTextContent(category.name);
-    expect(within(dialog).getByRole('combobox', { name: 'Allowed file formats' }))
-      .toHaveTextContent('PDF, PNG');
+    expect(
+      within(dialog).getByRole('combobox', { name: 'Student document category (optional)' })
+    ).toHaveTextContent(category.name);
+    expect(
+      within(dialog).getByRole('combobox', { name: 'Allowed file formats' })
+    ).toHaveTextContent('PDF, PNG');
     await user.click(within(dialog).getByRole('button', { name: 'Save requirement' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0]).toMatchObject({
@@ -89,10 +91,14 @@ describe('document requirement fields', { timeout: 15000 }, () => {
         onSave={save}
       />
     );
-    await user.click(screen.getByRole('combobox', { name: 'Student document category (optional)' }));
-    expect(screen.getByRole('option', { name: /No student document categories configured/ }))
-      .toHaveAttribute('aria-disabled', 'true');
+    const selector = screen.getByRole('combobox', { name: 'Student document category (optional)' });
+    expect(selector).toHaveTextContent('Keep as admission evidence');
+    await user.click(selector);
+    expect(
+      screen.getByRole('option', { name: /No student document categories configured/ })
+    ).toHaveAttribute('aria-disabled', 'true');
     await user.click(screen.getByRole('option', { name: 'Keep as admission evidence' }));
+    expect(selector).toHaveTextContent('Keep as admission evidence');
     await user.click(screen.getByRole('button', { name: 'Save requirement' }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     expect(save.mock.calls[0][0].documentTypeId).toBeUndefined();
@@ -116,7 +122,40 @@ describe('document requirement fields', { timeout: 15000 }, () => {
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Document name *' })).toHaveValue('Identity');
-    expect(screen.getByRole('combobox', { name: 'Allowed file formats' }))
-      .toHaveTextContent('PDF, JPG, JPEG, PNG');
+    expect(screen.getByRole('combobox', { name: 'Allowed file formats' })).toHaveTextContent(
+      'PDF, JPG, JPEG, PNG'
+    );
+  });
+
+  it('clears a category with the keyboard without closing the document editor or losing limits', async () => {
+    const user = userEvent.setup();
+    const save = vi.fn();
+    renderDocumentUi(
+      <DocumentRequirementDialog
+        initial={{
+          ...createDocumentRequirement('IDENTITY', 'Identity'),
+          documentTypeId: category.id,
+          allowedExtensions: ['pdf', 'png'],
+          maxFileSizeMb: 5,
+        }}
+        documentTypes={[category]}
+        existingCodes={[]}
+        onClose={vi.fn()}
+        onSave={save}
+      />
+    );
+    const selector = screen.getByRole('combobox', { name: 'Student document category (optional)' });
+    expect(selector).toHaveTextContent(category.name);
+    await user.click(selector);
+    await user.keyboard('{Home}{Enter}');
+    expect(selector).toHaveTextContent('Keep as admission evidence');
+    expect(screen.getByRole('dialog', { name: 'Configure document requirement' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Save requirement' }));
+    await waitFor(() => expect(save).toHaveBeenCalledOnce());
+    expect(save.mock.calls[0][0]).toMatchObject({
+      documentTypeId: undefined,
+      allowedExtensions: ['pdf', 'png'],
+      maxFileSizeMb: 5,
+    });
   });
 });

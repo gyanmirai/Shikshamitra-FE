@@ -72,6 +72,58 @@ describe('admission academic filters', () => {
     );
   });
 
+  it('restores an explicit dashboard year and leaves all boards and mediums selected', () => {
+    mocks.query = 'dashboard=active-applications&year=year-2&division=division-a';
+    const { result } = renderHook(() => useAdmissionAcademicFilters());
+    expect(result.current).toMatchObject({
+      academicYearId: 'year-2',
+      dashboardScope: true,
+      boardId: '',
+      mediumId: '',
+    });
+    const onChange = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionAcademicFilters boardId="" mediumId="" standardId="" onChange={onChange} />
+      </ThemeProvider>
+    );
+    expect(onChange).not.toHaveBeenCalled();
+    act(() => result.current.update('board', 'board-1'));
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/student/admissions/pipeline?dashboard=active-applications&year=year-2&board=board-1',
+      { scroll: false }
+    );
+  });
+
+  it('keeps the all-applicants hierarchy when explicitly enabled', () => {
+    mocks.query = '';
+    const onChange = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionAcademicFilters
+          allowAllHierarchy
+          boardId=""
+          mediumId=""
+          standardId=""
+          onChange={onChange}
+        />
+      </ThemeProvider>
+    );
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByText('All boards')).toBeInTheDocument();
+  });
+
+  it('retains the default hierarchy selection for other admissions screens', () => {
+    mocks.query = '';
+    const onChange = vi.fn();
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionAcademicFilters boardId="" mediumId="" standardId="" onChange={onChange} />
+      </ThemeProvider>
+    );
+    expect(onChange).toHaveBeenCalledWith('board', 'board-1');
+  });
+
   it('clears the class with its medium and preserves unrelated search', () => {
     const { result } = renderHook(() => useAdmissionAcademicFilters());
 

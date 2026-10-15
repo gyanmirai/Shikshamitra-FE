@@ -1,12 +1,11 @@
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { useEffect } from 'react';
-import { Iconify } from 'src/components/iconify';
+import { Alert, Stack, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import { Alert, Stack, Button, Typography } from '@mui/material';
 
-import { AssessmentAttemptTable } from './assessment-attempt-table';
+import { AssessmentAttemptCard } from './assessment-attempt-card';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { useAssessmentQuickActions } from './use-assessment-quick-actions';
 
@@ -41,34 +40,32 @@ export function AssessmentAttemptWorkspace({
   return (
     <FormBusyRegion busy={busy} label="Updating assessment…">
       <Stack spacing={1.5} sx={{ minWidth: 0 }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          gap={1}
-          flexWrap="wrap"
-        >
-          <Typography variant="subtitle2">Assessment attempts</Typography>
-          {!readOnly && assessment.canBook && permissions.book && (
-            <Button
-              size="small"
-              variant="contained"
-              disabled={disabled || busy || dirty}
-              onClick={() => onAction('book')}
-            >
-              {assessment.policy.schedulingEnabled ? 'Book assessment slot' : 'Start assessment'}
-            </Button>
-          )}
-        </Stack>
+        {!readOnly && assessment.canBook && permissions.book && (
+          <Button
+            size="small"
+            variant="contained"
+            disabled={disabled || busy || dirty}
+            sx={{ alignSelf: 'flex-end' }}
+            onClick={() => onAction('book')}
+          >
+            {assessment.policy.schedulingEnabled ? 'Book Assessment Slot' : 'Start assessment'}
+          </Button>
+        )}
         {quick.error && <Alert severity="error">{quick.error}</Alert>}
         {assessment.attempts.length ? (
-          <AssessmentAttemptTable
-            assessment={assessment}
-            quick={quick}
-            disabled={disabled || busy}
-            readOnly={readOnly}
-            onAction={onAction}
-          />
+          [...assessment.attempts]
+            .sort((a, b) => b.attemptNumber - a.attemptNumber)
+            .map((attempt) => (
+              <AssessmentAttemptCard
+                key={attempt.id}
+                assessment={assessment}
+                attempt={attempt}
+                quick={quick}
+                disabled={disabled || busy}
+                readOnly={readOnly}
+                onAction={onAction}
+              />
+            ))
         ) : (
           <EmptyContent
             title="No assessment attempt yet"
@@ -98,18 +95,6 @@ export function AssessmentAttemptWorkspace({
             Waive assessment
           </Button>
         )}
-        {assessment.canComplete ? (
-          <Stack direction="row" spacing={1} alignItems="center" role="status">
-            <Iconify icon="mdi:check-circle-outline" color="success.main" width={18} />
-            <Typography variant="body2" color="text.secondary">
-              Assessment requirements are complete. Continue to apply the configured workflow route.
-            </Typography>
-          </Stack>
-        ) : !readOnly && quick.canRecordAttendance ? (
-          <Typography variant="caption" color="text.secondary">
-            Mark attendance first. Record the result when it becomes available.
-          </Typography>
-        ) : null}
       </Stack>
     </FormBusyRegion>
   );

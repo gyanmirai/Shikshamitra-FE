@@ -82,12 +82,10 @@ async function setup(
   return { onSave, onClose, user: userEvent.setup() };
 }
 describe('combined assessment setup', { timeout: 15000 }, () => {
-  it('collapses assessment setup without changing its policy or hiding common stage controls', async () => {
+  it('shows assessment settings directly without changing its policy or hiding stage controls', async () => {
     const { user, onSave } = await setup();
-    const settings = screen.getByRole('button', { name: 'Assessment settings' });
-    expect(settings).toHaveAttribute('aria-expanded', 'true');
-    await user.click(settings);
-    expect(settings).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Assessment settings' })).not.toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Total marks *' })).toBeVisible();
     expect(screen.getByText('Required stage')).toBeVisible();
     expect(screen.getByText('End of journey')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
@@ -167,11 +165,7 @@ describe('combined assessment setup', { timeout: 15000 }, () => {
       JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, version: 2 } })
     );
     expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Assessment settings' }));
-    expect(screen.getByRole('button', { name: 'Assessment settings' })).toHaveAttribute(
-      'aria-expanded',
-      'true'
-    );
+    expect(screen.queryByRole('button', { name: 'Assessment settings' })).not.toBeInTheDocument();
     expect(screen.getByText(/unsupported or incomplete/)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();

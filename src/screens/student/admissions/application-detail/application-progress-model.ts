@@ -142,7 +142,7 @@ export function getStageGuidance(
   if ([3, 6, 8].includes(stage.stageType))
     return 'This stage type is no longer supported. Select a current admission workflow.';
   if (stage.stageType === 4)
-    return 'Confirm the applicable Finance fee structure below, then continue. Fee collection is managed in Finance.';
+    return 'Select a fee structure to collect fees here, or record a reason to collect later in Onboarding.';
   if (stage.seatStageEnabled)
     return 'Manage the admission capacity below. Confirm a current reservation or record another configured outcome before continuing.';
   if (stage.documentVerificationEnabled)

@@ -6,6 +6,7 @@ import type {
   StudentDashboardQueryIdentity,
   StudentModuleDashboardContext,
   StudentModuleDashboardSection,
+  StudentDashboardFilterOptions,
 } from './student-module-dashboard-types';
 
 const unwrap = <T>(response: T | { data: T }): T =>
@@ -27,19 +28,37 @@ export const studentModuleDashboardApi = api.injectEndpoints({
       StudentModuleDashboardSection,
       StudentDashboardSectionInput
     >({
-      query: ({ section, academicYearId }) => ({
+      query: ({ section, academicYearId, boardId, mediumId, standardId, divisionId }) => ({
         url: `/students/dashboard/sections/${section}`,
-        params: { academicYearId },
+        params: { academicYearId, boardId, mediumId, standardId, divisionId },
       }),
       transformResponse: (
         response: StudentModuleDashboardSection | { data: StudentModuleDashboardSection }
       ) => unwrap(response),
-      providesTags: [{ type: studentType.student, id: 'MODULE-DASHBOARD' }],
+      providesTags: (_result, _error, { section }) => [
+        { type: studentType.student, id: 'MODULE-DASHBOARD' },
+        { type: studentType.student, id: `MODULE-DASHBOARD-${section}` },
+      ],
       keepUnusedDataFor: 0,
+    }),
+    getStudentModuleDashboardFilters: builder.query<
+      StudentDashboardFilterOptions,
+      StudentDashboardQueryIdentity & { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: '/students/dashboard/filters',
+        params: { academicYearId },
+      }),
+      transformResponse: (
+        response: StudentDashboardFilterOptions | { data: StudentDashboardFilterOptions }
+      ) => unwrap(response),
+      keepUnusedDataFor: 0,
+      providesTags: [{ type: studentType.student, id: 'MODULE-DASHBOARD' }],
     }),
   }),
 });
 export const {
   useGetStudentModuleDashboardContextQuery,
   useGetStudentModuleDashboardSectionQuery,
+  useGetStudentModuleDashboardFiltersQuery,
 } = studentModuleDashboardApi;

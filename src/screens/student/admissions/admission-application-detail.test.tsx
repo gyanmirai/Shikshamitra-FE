@@ -13,6 +13,11 @@ const formRefetch = vi.fn();
 const workflowRefetch = vi.fn();
 let detailState: any;
 let permissions = [{ name: 'Students.Admissions.Applicants.View', isGranted: true }];
+const offeringContext = vi.hoisted(() => vi.fn());
+vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
+  useGetAdmissionOfferingQuery: offeringContext,
+}));
+beforeEach(() => offeringContext.mockReturnValue({ currentData: undefined }));
 
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) => selector({ auth: { permissions } }),
@@ -285,6 +290,36 @@ describe('AdmissionApplicationDetailScreen', () => {
     applicationRefetch.mockReset();
     formRefetch.mockReset();
     workflowRefetch.mockReset();
+  });
+
+  it('uses the application Offering for academic context without borrowing list-filter identity', () => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.admissionOfferingId = 'actual-offering';
+    detailState.applicationQuery.data.standardName = 'Class 1';
+    permissions.push({ name: 'Students.Admissions.Offerings.View', isGranted: true });
+    offeringContext.mockReturnValue({
+      currentData: { standardName: 'Class 1', boardName: 'CBSE', mediumName: 'English' },
+    });
+    render(<AdmissionApplicationDetailScreen />);
+    expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: false });
+    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('Class 1');
+    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('CBSE');
+    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('English');
+  });
+
+  it('keeps application access without issuing an unauthorized Offering context read', () => {
+    loadPaymentDetail();
+    detailState.applicationQuery.data.admissionOfferingId = 'actual-offering';
+    detailState.applicationQuery.data.standardName = 'Class 1';
+    offeringContext.mockReturnValue({
+      currentData: { boardName: 'Cached board', mediumName: 'Cached medium' },
+    });
+    render(<AdmissionApplicationDetailScreen />);
+    expect(offeringContext).toHaveBeenCalledWith('actual-offering', { skip: true });
+    expect(screen.getByLabelText('Application academic context')).toHaveTextContent('Class 1');
+    expect(screen.getByRole('button', { name: 'More' })).toBeEnabled();
+    expect(screen.queryByText('Cached board')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cached medium')).not.toBeInTheDocument();
   });
 
   it('retains applicant notes without discarding unsaved application answers and locks navigation while saving', () => {
@@ -646,6 +681,8 @@ describe('Applicant 360 phase navigation', () => {
 
   it('moves to Applications and returns to its decision worklist after the handoff', () => {
     render(<AdmissionApplicationDetailScreen />);
+    expect(screen.getByRole('heading', { name: 'Applications' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Applicant 360' })).not.toBeInTheDocument();
     expect(replace).toHaveBeenCalledWith(
       '/student/admissions/applications/application-1?returnTo=%2Fstudent%2Fadmissions%2Fapplications',
       { scroll: false }
@@ -714,6 +751,7 @@ describe('Applicant 360 phase navigation', () => {
     returnParams = new URLSearchParams();
     detailState.applicationQuery.data.hasReachedDecision = false;
     const { rerender } = render(<AdmissionApplicationDetailScreen />);
+    expect(screen.getByRole('heading', { name: 'Pipeline' })).toBeInTheDocument();
     expect(replace.mock.calls[0][0]).toContain(
       '/student/admissions/pipeline/applications/application-1?'
     );

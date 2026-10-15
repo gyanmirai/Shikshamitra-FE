@@ -7,6 +7,7 @@ import { Box, Alert, Button, Skeleton, LinearProgress } from '@mui/material';
 
 import useStudentDashboard from './hooks/use-student-dashboard';
 import StudentDashboardWorkspace from './components/student-dashboard-workspace';
+import AdminDashboardWorkspace from './admin-workspace/admin-dashboard-workspace';
 
 export default function StudentDashboardScreen() {
   const {
@@ -22,6 +23,19 @@ export default function StudentDashboardScreen() {
     isError,
     refetch,
   } = useStudentDashboard();
+  if (context?.mode === 'admin') {
+    return (
+      <AdminDashboardWorkspace
+        context={context}
+        links={links}
+        permissions={permissions}
+        identityKey={identityKey}
+        year={year}
+        refresh={refresh}
+        confirmingAccess={isFetching}
+      />
+    );
+  }
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 2, minWidth: 0 }}>
       <CustomBreadcrumbs
@@ -32,10 +46,10 @@ export default function StudentDashboardScreen() {
           context && (
             <Button
               variant="outlined"
+              size="small"
               onClick={refresh}
               disabled={isFetching}
               startIcon={<Iconify icon="mdi:refresh" />}
-              sx={{ minHeight: 44 }}
             >
               Refresh dashboard
             </Button>

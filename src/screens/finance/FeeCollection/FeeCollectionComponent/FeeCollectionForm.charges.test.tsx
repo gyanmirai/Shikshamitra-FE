@@ -346,9 +346,7 @@ const expectSelection = async (count: number, amount: number) => {
   expect(
     within(screen.getByText('Items selected').parentElement!).getByText(`${count} items`)
   ).toBeVisible();
-  const money = new RegExp(
-    `^₹\\s*${amount.toLocaleString('en-IN').replaceAll(',', ',\\s*')}\\.\\s*00$`
-  );
+  const money = new RegExp(`^₹\\s*${amount.toLocaleString('en-IN').replaceAll(',', ',\\s*')}$`);
   expect(
     within(screen.getByText('Working Total').parentElement!.parentElement!).getByText(money)
   ).toBeVisible();
@@ -651,11 +649,11 @@ describe('Fee Collection independent additional charges', () => {
 
   it('uses fresh fee and charge balances instead of the stale Collections row', () => {
     const view = render(<FeeCollectComponentForm student={student} />);
-    expect(outstandingRow().getByText(/^₹\s*2,\s*400\.\s*00$/)).toBeVisible();
+    expect(outstandingRow().getByText(/^₹\s*2,\s*400$/)).toBeVisible();
 
     mocks.data = buildForm(true);
     view.rerender(<FeeCollectComponentForm student={student} />);
-    expect(outstandingRow().getByText(/^₹\s*400\.\s*00$/)).toBeVisible();
+    expect(outstandingRow().getByText(/^₹\s*400$/)).toBeVisible();
     expect(screen.getByText('Additional Charges')).toBeVisible();
     lateFees.forEach((charge) => expect(screen.getByText(charge.name)).toBeVisible());
   });
@@ -688,7 +686,7 @@ describe('Fee Collection independent additional charges', () => {
         expect(within(row).getByRole('checkbox')).toBeEnabled();
       });
     });
-    expect(outstandingRow().getByText(/^₹\s*400\.\s*00$/)).toBeVisible();
+    expect(outstandingRow().getByText(/^₹\s*400$/)).toBeVisible();
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));

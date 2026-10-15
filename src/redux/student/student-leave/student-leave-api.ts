@@ -2,6 +2,7 @@ import { api } from 'src/redux/service';
 import { studentType, studentLeaveType, studentTakeAttendanceType } from 'src/redux/tagTypes';
 
 export type StudentLeaveListQuery = {
+  boardId?: string;
   academicYearId?: string;
   filterText?: string;
   tableFilters?: string;
@@ -35,11 +36,15 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [
-        studentLeaveType.studentLeave,
-        studentTakeAttendanceType.studentTakeAttendance,
-        studentType.student,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: studentType.student, id: 'MODULE-DASHBOARD-attendance' },
+              studentLeaveType.studentLeave,
+              studentTakeAttendanceType.studentTakeAttendance,
+              studentType.student,
+            ],
     }),
     updateStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
@@ -47,7 +52,13 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: [studentLeaveType.studentLeave],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              studentLeaveType.studentLeave,
+              { type: studentType.student, id: 'MODULE-DASHBOARD-attendance' },
+            ],
     }),
     approveStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
@@ -55,11 +66,15 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [
-        studentLeaveType.studentLeave,
-        studentTakeAttendanceType.studentTakeAttendance,
-        studentType.student,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: studentType.student, id: 'MODULE-DASHBOARD-attendance' },
+              studentLeaveType.studentLeave,
+              studentTakeAttendanceType.studentTakeAttendance,
+              studentType.student,
+            ],
     }),
     rejectStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
@@ -67,11 +82,15 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [
-        studentLeaveType.studentLeave,
-        studentTakeAttendanceType.studentTakeAttendance,
-        studentType.student,
-      ],
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: studentType.student, id: 'MODULE-DASHBOARD-attendance' },
+              studentLeaveType.studentLeave,
+              studentTakeAttendanceType.studentTakeAttendance,
+              studentType.student,
+            ],
     }),
   }),
 });

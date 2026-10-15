@@ -6,10 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Stack } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomAccordion from 'src/components/custom-accordian';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { WorkflowFormSettings } from './workflow-form-settings';
 import { WorkflowFormStageBasics } from './workflow-form-stage-basics';
@@ -39,13 +36,6 @@ export function WorkflowFormStageFields(props: Props) {
     onRetryFormDetails,
     readOnly,
   } = props;
-  const completion = useBoolean(true);
-  const completionNeedsAttention = Boolean(
-    formDetailsLoading ||
-    formDetailsError ||
-    !formDefinitionId ||
-    getAdmissionFormStageConfigurationError(formik.values.configurationJson, forms)
-  );
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
@@ -59,22 +49,15 @@ export function WorkflowFormStageFields(props: Props) {
         </FormSectionCard>
 
         <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
-          <CustomAccordion
-            title="Submission and verification"
-            expanded={completion.value || completionNeedsAttention}
-            onChange={completion.onToggle}
-            content={
-              <WorkflowFormSettings
-                formik={formik}
-                forms={forms}
-                formDefinitionId={formDefinitionId}
-                formDetailsLoading={formDetailsLoading}
-                formDetailsError={formDetailsError}
-                onRetryFormDetails={onRetryFormDetails}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('form') === true}
-              />
-            }
+          <WorkflowFormSettings
+            formik={formik}
+            forms={forms}
+            formDefinitionId={formDefinitionId}
+            formDetailsLoading={formDetailsLoading}
+            formDetailsError={formDetailsError}
+            onRetryFormDetails={onRetryFormDetails}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('form') === true}
           />
         </FormSectionCard>
         <WorkflowFormStageSettings {...props} />

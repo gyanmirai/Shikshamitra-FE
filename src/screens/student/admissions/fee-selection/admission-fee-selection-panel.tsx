@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
@@ -25,7 +26,9 @@ import {
   useConfirmAdmissionFeeSelectionOnboardingMutation,
 } from 'src/redux/student/admissions/admission-fee-selection-api';
 
+import AdmissionFeeCollectionPanel from './admission-fee-collection-panel';
 import { AdmissionFeeSelectionEditor } from './admission-fee-selection-editor';
+import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-permissions';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
 import { AdmissionFeeHeads, AdmissionFeeSelectionSummary } from './admission-fee-selection-summary';
@@ -42,6 +45,9 @@ type Props = {
   completionStageId?: string;
   continuing?: boolean;
   onContinue?: () => void;
+  onCollectLater?: () => void;
+  onCollectionOpenChange?: (open: boolean) => void;
+  editorBlocked?: boolean;
   onEditorStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
   compact?: boolean;
   readOnly?: boolean;
@@ -79,18 +85,29 @@ export default function AdmissionFeeSelectionPanel({
   completionStageId,
   continuing = false,
   onContinue,
+  onCollectLater,
+  onCollectionOpenChange,
+  editorBlocked = false,
   onEditorStateChange,
   compact = false,
   readOnly = false,
   onReadinessChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const workspaceLayout = compact && mode === 'admissions';
   const canRead = hasGrantedPermission(permissions, readPermissions);
   const query = useGetAdmissionFeeSelectionQuery(applicationId, {
     skip: !applicationId || !canRead,
   });
   const [editing, setEditing] = useState(false);
-  const [editorDismissed, setEditorDismissed] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const collectionOpenChanged = useCallback(
+    (open: boolean) => {
+      setCollectionOpen(open);
+      onCollectionOpenChange?.(open);
+    },
+    [onCollectionOpenChange]
+  );
   const [confirm, confirmState] = useConfirmAdmissionFeeSelectionOnboardingMutation();
   const [confirmationError, setConfirmationError] = useState<string>();
   const state = query.currentData;
@@ -101,6 +118,8 @@ export default function AdmissionFeeSelectionPanel({
       !readOnly &&
       !editing &&
       state?.selection &&
+      (mode !== 'admissions' || state.hasRecordedFeePayment) &&
+      !collectionOpen &&
       !query.isError &&
       (!completionStageId || state.currentStageId === completionStageId)
     ),
@@ -118,6 +137,29 @@ export default function AdmissionFeeSelectionPanel({
         <Skeleton variant="text" width="42%" height={18} />
         <Skeleton variant="rounded" height={44} sx={{ mt: 1 }} />
       </Stack>
+    ) : workspaceLayout ? (
+      <Stack role="status" aria-label="Loading fee structure" spacing={1.5} sx={{ flex: 1 }}>
+        <Typography variant="subtitle1">Payment</Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' },
+            gap: 2,
+            flex: 1,
+          }}
+        >
+          {[0, 1].map((key) => (
+            <Stack
+              key={key}
+              spacing={1.5}
+              sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5 }}
+            >
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="rounded" height={80} />
+            </Stack>
+          ))}
+        </Box>
+      </Stack>
     ) : (
       <Box aria-label="Loading fee structure">
         <Skeleton height={90} />
@@ -125,16 +167,19 @@ export default function AdmissionFeeSelectionPanel({
     );
   if (!state)
     return (
-      <Alert
-        severity="error"
-        action={
-          <Button size="small" onClick={() => query.refetch()}>
-            Retry
-          </Button>
-        }
-      >
-        Fee structure details could not be loaded.
-      </Alert>
+      <Stack spacing={1.5} sx={{ flex: workspaceLayout ? 1 : undefined }}>
+        {workspaceLayout && <Typography variant="subtitle1">Payment</Typography>}
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => query.refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Fee structure details could not be loaded.
+        </Alert>
+      </Stack>
     );
   if ((mode === 'onboarding' && !state.selection) || (!state.available && !state.selection))
     return null;
@@ -151,28 +196,67 @@ export default function AdmissionFeeSelectionPanel({
     state.canConfirmOnboarding &&
     hasGrantedPermission(permissions, 'Students.Onboarding.Add');
   const { selection } = state;
-  const showEditor = canEdit && (editing || (compact && !selection && !editorDismissed));
+  const showEditor = canEdit && editing;
+  const showCollection =
+    mode === 'admissions' && !readOnly && getAdmissionFeeCollectionAccess(permissions).canView;
+  const selectionAction = canEdit && !showEditor && (
+    <Button
+      size="small"
+      variant={!selection ? 'contained' : 'outlined'}
+      startIcon={<Iconify icon="mdi:file-document-outline" width={16} />}
+      disabled={query.isFetching || query.isError || continuing || collectionOpen}
+      onClick={() => setEditing(true)}
+    >
+      {selection ? 'Change fee structure' : 'Select fee structure'}
+    </Button>
+  );
+  const deferralAction = onCollectLater && mode === 'admissions' && !readOnly && (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={<Iconify icon="mdi:clock-outline" width={16} />}
+      disabled={query.isFetching || query.isError || continuing || editorBlocked || collectionOpen}
+      onClick={onCollectLater}
+      sx={{ flexShrink: 0 }}
+    >
+      Collect later in Onboarding
+    </Button>
+  );
 
   return (
     <Box
       component="section"
-      aria-label="Fee structure"
+      aria-label={workspaceLayout ? 'Payment' : 'Fee structure'}
       sx={{
         minWidth: 0,
+        ...(workspaceLayout && { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }),
         ...(outlined &&
           !compact && { p: 2.5, mb: 2, border: 1, borderColor: 'divider', borderRadius: 2 }),
       }}
     >
-      <Stack spacing={compact ? 1 : 1.5}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+      <Stack
+        spacing={compact ? 1 : 1.5}
+        useFlexGap
+        sx={{ flex: workspaceLayout ? 1 : undefined, minHeight: 0 }}
+      >
+        <Stack
+          direction={workspaceLayout ? 'row' : { xs: 'column', sm: 'row' }}
+          alignItems={workspaceLayout ? 'center' : undefined}
+          justifyContent="space-between"
+          spacing={1}
+        >
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography variant="subtitle1">
-              {compact && mode === 'admissions' ? 'Fee structure confirmation' : 'Fee structure'}
-              {state.isRequired && !selection ? ' *' : ''}
+              {compact && mode === 'admissions' ? 'Payment' : 'Fee structure'}
             </Typography>
             {mode === 'admissions' && (
-              <CustomTooltip title="Confirm the published fee structure and any optional fee heads. Finance handles fee assignment, dues and payment separately.">
-                <IconButton size="small" color="info" aria-label="Fee structure information">
+              <CustomTooltip title="Select a published fee structure to collect fees here, or record a reason to collect later in Onboarding.">
+                <IconButton
+                  size="small"
+                  color="info"
+                  aria-label="Fee structure information"
+                  sx={{ width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } }}
+                >
                   <Iconify icon="mdi:information-outline" width={16} />
                 </IconButton>
               </CustomTooltip>
@@ -184,23 +268,13 @@ export default function AdmissionFeeSelectionPanel({
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:refresh" width={16} />}
-                disabled={query.isFetching || continuing || editing}
+                disabled={query.isFetching || continuing || editing || collectionOpen}
                 onClick={() => query.refetch()}
               >
                 Refresh
               </Button>
             )}
-            {canEdit && !showEditor && (
-              <Button
-                size="small"
-                variant={compact && !selection ? 'contained' : 'outlined'}
-                sx={compact ? { alignSelf: 'flex-start' } : undefined}
-                disabled={query.isFetching || query.isError || continuing}
-                onClick={() => setEditing(true)}
-              >
-                {selection ? 'Change fee structure' : 'Select fee structure'}
-              </Button>
-            )}
+            {!workspaceLayout && selectionAction}
           </Stack>
         </Stack>
         {query.isFetching && <LinearProgress aria-label="Refreshing fee structure" />}
@@ -217,66 +291,188 @@ export default function AdmissionFeeSelectionPanel({
             before saving or confirming.
           </Alert>
         )}
-        {showEditor ? (
-          <AdmissionFeeSelectionEditor
-            key={applicationId}
-            state={state}
-            disabled={query.isError || query.isFetching || continuing}
-            onClose={() => {
-              setEditing(false);
-              setEditorDismissed(true);
-            }}
-            onEditorStateChange={onEditorStateChange}
-            compact={compact}
-          />
-        ) : selection ? (
-          <>
-            <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
-              {selection.structureName} · Revision {selection.revisionNumber}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Fee structure confirmed {fDateTime(selection.savedAt)}
-              {state.ownerStageName ? ` in ${state.ownerStageName}` : ''}
-            </Typography>
-            {compact && mode === 'admissions' ? (
-              <Box
-                sx={{
+        <Box
+          sx={
+            workspaceLayout
+              ? {
                   display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'minmax(0, 1fr)',
-                    lg: 'minmax(0, 1.2fr) minmax(0, 1fr)',
-                  },
-                  gap: 1.5,
-                }}
-              >
-                <Stack
-                  spacing={1.5}
-                  sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }}
-                >
-                  <Typography variant="subtitle2">Published fee heads</Typography>
-                  <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
-                </Stack>
-                <AdmissionFeeSelectionSummary
-                  structureName={selection.structureName}
-                  revisionNumber={selection.revisionNumber}
-                  heads={selection.heads}
-                  currency={selection.currency}
-                />
-              </Box>
-            ) : (
-              <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+                  gridTemplateColumns: showCollection
+                    ? { xs: 'minmax(0, 1fr)', lg: 'repeat(2, minmax(0, 1fr))' }
+                    : 'minmax(0, 1fr)',
+                  gap: 2,
+                  flex: 1,
+                  minWidth: 0,
+                  alignItems: 'stretch',
+                }
+              : { display: 'flex', flexDirection: 'column', gap: 1.5 }
+          }
+        >
+          <Stack
+            component={workspaceLayout ? 'section' : 'div'}
+            aria-label={workspaceLayout ? 'Fee structure' : undefined}
+            spacing={1.5}
+            useFlexGap
+            sx={
+              workspaceLayout
+                ? { p: 2, border: 1, borderColor: 'divider', borderRadius: 1.5, minWidth: 0 }
+                : undefined
+            }
+          >
+            {workspaceLayout && (
+              <Typography variant="subtitle2" component="h3">
+                Fee structure
+              </Typography>
             )}
-            <Typography variant="caption" color="text.secondary">
-              Published amounts are shown for reference. Fee assignment and payment readiness remain
-              managed in Finance.
+            {showEditor ? (
+              <AdmissionFeeSelectionEditor
+                key={applicationId}
+                state={state}
+                disabled={query.isError || query.isFetching || continuing}
+                onClose={() => {
+                  setEditing(false);
+                }}
+                onEditorStateChange={onEditorStateChange}
+                compact={compact}
+              />
+            ) : selection ? (
+              <>
+                <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
+                  {selection.structureName} · Revision {selection.revisionNumber}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Fee structure confirmed {fDateTime(selection.savedAt)}
+                  {state.ownerStageName ? ` in ${state.ownerStageName}` : ''}
+                </Typography>
+                {compact && mode === 'admissions' ? (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        xs: 'minmax(0, 1fr)',
+                        lg: 'minmax(0, 1fr)',
+                      },
+                      gap: 1.5,
+                    }}
+                  >
+                    <Stack
+                      spacing={1.5}
+                      sx={{
+                        p: 2,
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1.5,
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography variant="subtitle2">Published fee heads</Typography>
+                      <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+                    </Stack>
+                    <AdmissionFeeSelectionSummary
+                      structureName={selection.structureName}
+                      revisionNumber={selection.revisionNumber}
+                      heads={selection.heads}
+                      currency={selection.currency}
+                    />
+                  </Box>
+                ) : (
+                  <AdmissionFeeHeads heads={selection.heads} currency={selection.currency} />
+                )}
+                {!workspaceLayout && (
+                  <Typography variant="caption" color="text.secondary">
+                    Fees can be collected here using Finance. Partial collection is allowed; the
+                    remaining dues stay available in Onboarding.
+                  </Typography>
+                )}
+              </>
+            ) : workspaceLayout ? (
+              <EmptyContent
+                title={
+                  <Stack component="span" spacing={1.5} alignItems="center">
+                    <Iconify
+                      icon="mdi:file-document-outline"
+                      width={32}
+                      sx={{ color: 'text.disabled' }}
+                    />
+                    <Typography component="span" variant="subtitle2" color="text.primary">
+                      No fee structure selected
+                    </Typography>
+                  </Stack>
+                }
+                description={
+                  readOnly
+                    ? 'No fee structure was selected in this step.'
+                    : 'Select a published structure to enable fee collection.'
+                }
+                sx={{ flex: 1, height: 'auto', py: 3, minWidth: 0 }}
+                slotProps={{
+                  img: { display: 'none' },
+                  description: { typography: 'body2', color: 'text.secondary' },
+                }}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                {readOnly
+                  ? 'No fee structure was selected in this step.'
+                  : 'Select a fee structure to collect fees now, or continue with a reason to collect later in Onboarding.'}
+              </Typography>
+            )}
+            {workspaceLayout &&
+              !showEditor &&
+              (selectionAction || (!showCollection && deferralAction)) && (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  flexWrap="wrap"
+                  justifyContent="flex-end"
+                  sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider' }}
+                >
+                  {!showCollection && deferralAction}
+                  {selectionAction}
+                </Stack>
+              )}
+            {workspaceLayout && !showCollection && showEditor && deferralAction}
+          </Stack>
+          {showCollection && (
+            <AdmissionFeeCollectionPanel
+              key={applicationId}
+              applicationId={applicationId}
+              disabled={
+                query.isError || query.isFetching || editorBlocked || continuing || showEditor
+              }
+              onOpenChange={collectionOpenChanged}
+              stretch={workspaceLayout}
+              footerAction={workspaceLayout ? deferralAction : undefined}
+            />
+          )}
+        </Box>
+        {!workspaceLayout && deferralAction && (
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ sm: 'center' }}
+            spacing={1}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {state.hasRecordedFeePayment
+                ? 'Any unpaid balance remains available for collection in Onboarding.'
+                : 'Collection is optional at this stage. A reason is required to collect later.'}
             </Typography>
-          </>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {state.isRequired
-              ? 'Confirm the applicable Finance fee structure before completing this step.'
-              : 'No fee structure selected. Selection is optional for this application.'}
-          </Typography>
+            {deferralAction}
+          </Stack>
+        )}
+        {state.feeCollectionDeferral && (
+          <Alert severity="info">
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2">Collection deferred to Onboarding</Typography>
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
+                {state.feeCollectionDeferral.reason}
+              </Typography>
+              <Typography variant="caption">
+                {fDateTime(state.feeCollectionDeferral.deferredAt)}
+              </Typography>
+            </Stack>
+          </Alert>
         )}
         {onContinue && !readOnly && mode === 'admissions' && (
           <Stack spacing={1}>
@@ -292,6 +488,8 @@ export default function AdmissionFeeSelectionPanel({
                 continuing ||
                 editing ||
                 !selection ||
+                !state.hasRecordedFeePayment ||
+                collectionOpen ||
                 query.isFetching ||
                 query.isError ||
                 (Boolean(completionStageId) && state.currentStageId !== completionStageId)

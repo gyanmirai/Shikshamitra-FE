@@ -41,7 +41,11 @@ vi.mock('@mui/icons-material', async () => {
     WarningAmber: WarningAmber.default,
   };
 });
-addIcon('mdi:chevron-down', { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
+['mdi:chevron-down', 'mdi:calendar-outline', 'mdi:clock-outline', 'mdi:map-marker-outline'].forEach(
+  (icon) => {
+    addIcon(icon, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
+  }
+);
 const completedStage: AdmissionApplicationStage = {
   id: 'stage-1',
   definitionStageId: 'definition-1',
@@ -130,7 +134,7 @@ it('fetches completed assessment history only when expanded and keeps action con
 });
 
 it.each([true, false])(
-  'renders a selected completed stage in the shared read-only table with policy=%s',
+  'renders a selected completed stage as a read-only card with policy=%s',
   async (hasPolicy) => {
     let requests = 0;
     mswServer.use(
@@ -165,7 +169,8 @@ it.each([true, false])(
       })
     );
     const store = setup(true, true);
-    expect(await screen.findByRole('table', { name: 'Assessment attempts table' })).toBeVisible();
+    expect(await screen.findByRole('article', { name: 'Assessment attempt 1' })).toBeVisible();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByText(hasPolicy ? '85 / 100' : '85')).toBeVisible();
     expect(screen.getByText('Entrance exam morning')).toBeVisible();
     expect(screen.getByText('Assessment hall A')).toBeVisible();

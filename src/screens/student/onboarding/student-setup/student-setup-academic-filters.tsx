@@ -11,6 +11,7 @@ const ALL_STANDARDS = '__all__';
 
 export function StudentSetupFilters({
   options,
+  allowAllScope = false,
   isLoading = false,
   disabled = false,
   selectedBoardId,
@@ -25,6 +26,7 @@ export function StudentSetupFilters({
   onTodayChange,
 }: {
   options?: StudentOnboardingFilterOptions;
+  allowAllScope?: boolean;
   isLoading?: boolean;
   disabled?: boolean;
   selectedBoardId: string;
@@ -38,8 +40,14 @@ export function StudentSetupFilters({
   todayOnly?: boolean;
   onTodayChange?: (value: boolean) => void;
 }) {
-  const mediums = (options?.mediums ?? []).filter((item) => item.parentId === selectedBoardId);
-  const standards = (options?.standards ?? []).filter((item) => item.parentId === selectedMediumId);
+  const mediums = (options?.mediums ?? []).filter(
+    (item) => !selectedBoardId || item.parentId === selectedBoardId
+  );
+  const standards = (options?.standards ?? []).filter((item) =>
+    selectedMediumId
+      ? item.parentId === selectedMediumId
+      : mediums.some((medium) => medium.id === item.parentId)
+  );
   const divisions = (options?.divisions ?? []).filter((item) =>
     !readAcademicFilterIds(selectedStandardId).length
       ? standards.some((standard) => standard.id === item.parentId)
@@ -55,7 +63,11 @@ export function StudentSetupFilters({
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
         <CustomSelect
           fullWidth
-          options={options?.boards ?? []}
+          options={
+            allowAllScope
+              ? [{ id: '', name: 'All boards' }, ...(options?.boards ?? [])]
+              : (options?.boards ?? [])
+          }
           label="Board"
           value={selectedBoardId}
           isLoading={isLoading}
@@ -66,14 +78,14 @@ export function StudentSetupFilters({
         />
         <CustomSelect
           fullWidth
-          options={mediums}
+          options={allowAllScope ? [{ id: '', name: 'All mediums' }, ...mediums] : mediums}
           label="Medium"
           value={selectedMediumId}
           onChange={(value) => onMediumChange(String(value))}
           labelKey="name"
           valueKey="id"
           isLoading={isLoading}
-          disabled={disabled || !selectedBoardId}
+          disabled={disabled || (!allowAllScope && !selectedBoardId)}
         />
         <CustomSelect
           fullWidth
@@ -91,7 +103,7 @@ export function StudentSetupFilters({
           labelKey="name"
           valueKey="id"
           isSearch
-          disabled={disabled || !selectedMediumId}
+          disabled={disabled || (!allowAllScope && !selectedMediumId)}
         />
         <CustomSelect
           fullWidth
@@ -114,7 +126,7 @@ export function StudentSetupFilters({
           }
           labelKey="name"
           valueKey="id"
-          disabled={disabled || !selectedMediumId}
+          disabled={disabled || (!allowAllScope && !selectedMediumId)}
         />
         {onTodayChange && (
           <FormControlLabel

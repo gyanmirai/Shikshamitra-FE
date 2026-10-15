@@ -19,6 +19,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { readDashboardAcademicScope } from 'src/utils/student-dashboard-drilldown';
 import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
 import {
   Box,
@@ -91,6 +92,9 @@ export default function StudentRecordChanges() {
     navigationGuard.requestNavigation(() => navigate(values));
   const list = useGetStudentRecordChangesQuery(
     {
+      ...(params.get('dashboard') === 'approvable'
+        ? { ...readDashboardAcademicScope(params), approvableOnly: true }
+        : {}),
       studentId: studentId || undefined,
       status: status || undefined,
       skipCount: page * 25,
@@ -325,10 +329,19 @@ export default function StudentRecordChanges() {
                   ]}
                   onChange={(value) => update({ status: String(value), page: 0 })}
                 />
-                <Button onClick={() => update({ status: undefined, student: undefined, page: 0 })}>
+                <Button
+                  onClick={() =>
+                    update({ status: undefined, student: undefined, dashboard: undefined, page: 0 })
+                  }
+                >
                   Clear filters
                 </Button>
               </Stack>
+              {params.get('dashboard') === 'approvable' && (
+                <Typography variant="caption" color="text.secondary">
+                  Requests awaiting your approval in the selected dashboard scope.
+                </Typography>
+              )}
             </Paper>
             {list.isError && (
               <Alert

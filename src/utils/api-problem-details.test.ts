@@ -3,6 +3,24 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it.each(['problem', 'abp'])(
+    'shows the assessment room conflict reason in %s responses',
+    (format) => {
+      const reason = "Room is reserved for 'Entrance exam' (Exam) from 14:15 to 15:05.";
+      const message =
+        'This assessment action is not available in the current state. Refresh the record and check its requirements.';
+      const code = 'Admissions:Assessment:InvalidState';
+      const data =
+        format === 'problem'
+          ? { errorCode: code, detail: message, data: { Reason: reason } }
+          : { error: { code, message, data: { Reason: reason } } };
+
+      expect(parseApiProblemDetail({ status: 400, data })).toEqual({
+        detail: reason,
+        errorCode: code,
+      });
+    }
+  );
   it.each([
     ['UserScope:InvalidHierarchy', 'same branch'],
     ['UserScope:UsersNotFound', 'linked account'],

@@ -15,10 +15,17 @@ const ALL_DIVISIONS = 'All Divisions';
 
 export default function LeaveRequestsPage() {
   const context = useAttendanceContext();
+  const dashboardScope = context.params.get('dashboard') === 'pending';
   const boards: Board[] = context.currentYear?.boards ?? [];
-  const board = boards.find((item) => item.id === context.params.get('board')) ?? boards[0];
-  const mediums = board?.educationMediums ?? [];
-  const medium = mediums.find((item) => item.id === context.params.get('medium')) ?? mediums[0];
+  const board =
+    boards.find((item) => item.id === context.params.get('board')) ??
+    (dashboardScope ? undefined : boards[0]);
+  const mediums =
+    board?.educationMediums ??
+    (dashboardScope ? boards.flatMap((item) => item.educationMediums) : []);
+  const medium =
+    mediums.find((item) => item.id === context.params.get('medium')) ??
+    (dashboardScope ? undefined : mediums[0]);
   const organizations = medium?.educationMediumStages ?? [];
   const organization = organizations.find((item) => item.id === context.params.get('organization'));
   const standards = organization
@@ -46,7 +53,7 @@ export default function LeaveRequestsPage() {
             size="small"
             label="Board"
             value={board?.id ?? ''}
-            options={boards}
+            options={dashboardScope ? [{ id: '', name: 'All boards' }, ...boards] : boards}
             labelKey="name"
             valueKey="id"
             disabled={!boards.length}
@@ -66,10 +73,10 @@ export default function LeaveRequestsPage() {
             size="small"
             label="Medium"
             value={medium?.id ?? ''}
-            options={mediums}
+            options={dashboardScope ? [{ id: '', name: 'All mediums' }, ...mediums] : mediums}
             labelKey="name"
             valueKey="id"
-            disabled={!board}
+            disabled={!dashboardScope && !board}
             onChange={(value) =>
               context.update({
                 medium: String(value),
@@ -147,11 +154,16 @@ export default function LeaveRequestsPage() {
       </Paper>
       <LeaveRequests
         scope={{
-          academicYearId: context.currentYear?.id,
-          educationMediumId: medium?.id,
+          academicYearId: dashboardScope
+            ? context.params.get('year') || context.currentYear?.id
+            : context.currentYear?.id,
+          ...(dashboardScope ? { boardId: context.params.get('board') || undefined } : {}),
+          educationMediumId: dashboardScope
+            ? context.params.get('medium') || undefined
+            : medium?.id,
           organizationId: organization?.id,
-          standardId: standard?.id,
-          divisionId: division?.id,
+          standardId: dashboardScope ? context.params.get('class') || undefined : standard?.id,
+          divisionId: dashboardScope ? context.params.get('division') || undefined : division?.id,
         }}
         selectedMedium={medium}
         selectedOrganizationId={organization?.id}
