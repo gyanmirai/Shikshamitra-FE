@@ -336,7 +336,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   return (
     <>
       <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <FinanceAcademicContextFilter
             boards={boards}
             mediums={mediums}
@@ -374,6 +374,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             sx={{
               '& .MuiTabs-flexContainer': { gap: 2 },
               flexGrow: 1,
+              px: 1
             }}
           >
             {TABS.map((tab) => (
@@ -585,92 +586,92 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                       onClick: () => onViewConcession?.(row as IStudentInfo),
                     },
                     ...(isPending &&
-                    canApprove &&
-                    (row.availableActions?.includes('approve') || isOwnRequest)
+                      canApprove &&
+                      (row.availableActions?.includes('approve') || isOwnRequest)
                       ? [
-                          {
-                            id: 'approve',
-                            label: `Approve ${row.studentIdentity}`,
-                            icon: 'solar:check-circle-bold',
-                            color: 'success.main',
-                            disabled: !canDecide,
-                            tooltip: !canDecide ? decisionTooltip : undefined,
-                            onClick: () => {
-                              setApprovalPreview(null);
-                              setApprovalRequest(row as ConcessionApplication);
-                            },
+                        {
+                          id: 'approve',
+                          label: `Approve ${row.studentIdentity}`,
+                          icon: 'solar:check-circle-bold',
+                          color: 'success.main',
+                          disabled: !canDecide,
+                          tooltip: !canDecide ? decisionTooltip : undefined,
+                          onClick: () => {
+                            setApprovalPreview(null);
+                            setApprovalRequest(row as ConcessionApplication);
                           },
-                        ]
+                        },
+                      ]
                       : []),
                     ...(isPending &&
-                    canReject &&
-                    (row.availableActions?.includes('reject') || isOwnRequest)
+                      canReject &&
+                      (row.availableActions?.includes('reject') || isOwnRequest)
                       ? [
-                          {
-                            id: 'reject',
-                            label: `Reject ${row.studentIdentity}`,
-                            icon: 'solar:close-circle-bold',
-                            color: 'error.main',
-                            disabled: !canDecide,
-                            tooltip: !canDecide ? decisionTooltip : undefined,
-                            onClick: () => onReject(row as IStudentInfo),
-                          },
-                        ]
+                        {
+                          id: 'reject',
+                          label: `Reject ${row.studentIdentity}`,
+                          icon: 'solar:close-circle-bold',
+                          color: 'error.main',
+                          disabled: !canDecide,
+                          tooltip: !canDecide ? decisionTooltip : undefined,
+                          onClick: () => onReject(row as IStudentInfo),
+                        },
+                      ]
                       : []),
                     ...(isDraft && canEdit && serverAllows('edit')
                       ? [
-                          {
-                            id: 'edit',
-                            label: `Edit ${row.studentIdentity}`,
-                            icon: GlobalIcons.edit,
-                            onClick: () => onEditConcession?.(row as IStudentInfo),
-                          },
-                        ]
+                        {
+                          id: 'edit',
+                          label: `Edit ${row.studentIdentity}`,
+                          icon: GlobalIcons.edit,
+                          onClick: () => onEditConcession?.(row as IStudentInfo),
+                        },
+                      ]
                       : []),
                     ...(isDraft && canDelete && serverAllows('delete')
                       ? [
-                          {
-                            id: 'delete',
-                            label: `Delete ${row.studentIdentity}`,
-                            icon: GlobalIcons.delete,
-                            color: 'error.main',
-                            onClick: () => {
-                              setSelectedConcession(row as ConcessionApplication);
-                              deleteCommandKey.current = window.crypto.randomUUID();
-                              removeConcessionDialog.onTrue();
-                            },
+                        {
+                          id: 'delete',
+                          label: `Delete ${row.studentIdentity}`,
+                          icon: GlobalIcons.delete,
+                          color: 'error.main',
+                          onClick: () => {
+                            setSelectedConcession(row as ConcessionApplication);
+                            deleteCommandKey.current = window.crypto.randomUUID();
+                            removeConcessionDialog.onTrue();
                           },
-                        ]
+                        },
+                      ]
                       : []),
                     ...(canCancelRow
                       ? [
-                          {
-                            id: 'cancel',
-                            label: `Cancel request for ${row.studentIdentity}`,
-                            icon: 'solar:close-circle-bold',
-                            onClick: () => {
-                              setSelectedConcession(row as ConcessionApplication);
-                              cancelConcessionDialog.onTrue();
-                            },
+                        {
+                          id: 'cancel',
+                          label: `Cancel request for ${row.studentIdentity}`,
+                          icon: 'solar:close-circle-bold',
+                          onClick: () => {
+                            setSelectedConcession(row as ConcessionApplication);
+                            cancelConcessionDialog.onTrue();
                           },
-                        ]
+                        },
+                      ]
                       : []),
                     ...(canReplaceRow
                       ? [
-                          {
-                            id: 'replace',
-                            label: `Create replacement for ${row.studentIdentity}`,
-                            icon: 'solar:copy-bold',
-                            onClick: () =>
-                              onRequestConcession?.({
-                                ...(row as unknown as IStudentInfo),
-                                id: undefined,
-                                concessionRequestId: undefined,
-                                studentConcessionTypeRequestId: undefined,
-                                sourceRequestId: row.id,
-                              }),
-                          },
-                        ]
+                        {
+                          id: 'replace',
+                          label: `Create replacement for ${row.studentIdentity}`,
+                          icon: 'solar:copy-bold',
+                          onClick: () =>
+                            onRequestConcession?.({
+                              ...(row as unknown as IStudentInfo),
+                              id: undefined,
+                              concessionRequestId: undefined,
+                              studentConcessionTypeRequestId: undefined,
+                              sourceRequestId: row.id,
+                            }),
+                        },
+                      ]
                       : []),
                   ]}
                 />
@@ -788,7 +789,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                     );
                     setSelectedConcession(null);
                   },
-                  onUndoRestore: () => {},
+                  onUndoRestore: () => { },
                   onCommit: () => {
                     if (!deleteCommandKey.current) {
                       deleteCommandKey.current = window.crypto.randomUUID();

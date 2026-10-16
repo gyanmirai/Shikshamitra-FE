@@ -5,22 +5,9 @@ import type {
 } from 'src/redux/finance/ConcessionManagement/types';
 
 import React, { useMemo, useCallback } from 'react';
-import PercentIcon from '@mui/icons-material/Percent';
-import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import { formatNumber } from 'src/utils/formate_number';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Tooltip,
-  Divider,
-  TextField,
-  Typography,
-  IconButton,
-  CardContent,
-  InputAdornment,
-} from '@mui/material';
 
 interface Props {
   formik: any;
@@ -103,28 +90,40 @@ const ValueEntryStep: React.FC<Props> = ({
   return (
     <Box>
       {policy?.valueSource === 'RequestEnteredWithinLimits' ? (
-        <RequestEnteredInstallments formik={formik} requestContext={requestContext} policy={policy} preview={preview} />
-      ) : selectedTypes.map((ct: any) => (
-        <ValueEntryStepItem
-          key={ct.id}
-          concessionType={ct}
-          values={values}
-          setEntry={setEntry}
+        <RequestEnteredInstallments
+          formik={formik}
           requestContext={requestContext}
           policy={policy}
           preview={preview}
         />
-      ))}
+      ) : (
+        selectedTypes.map((ct: any) => (
+          <ValueEntryStepItem
+            key={ct.id}
+            concessionType={ct}
+            values={values}
+            setEntry={setEntry}
+            requestContext={requestContext}
+            policy={policy}
+            preview={preview}
+          />
+        ))
+      )}
       {selectedTypes.every((ct: any) => (values.selectedFeeHeads[ct.id] || []).length === 0) && (
         <Typography color="text.disabled" textAlign="center" py={4}>
-          No fee heads selected. Go back to Step 3.
+          Select fee heads above to enter concession values.
         </Typography>
       )}
     </Box>
   );
 };
 
-function RequestEnteredInstallments({ formik, requestContext, policy, preview }: {
+function RequestEnteredInstallments({
+  formik,
+  requestContext,
+  policy,
+  preview,
+}: {
   formik: any;
   requestContext?: ConcessionRequestContext;
   policy: ConcessionPolicyOption;
@@ -132,78 +131,133 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
 }) {
   const { values, setFieldValue } = formik;
   const selectedHeads = new Set<string>(values.selectedFeeHeads[values.concessionTypeId] || []);
-  const lines = (requestContext?.eligibleDueFees || []).filter((line) =>
-    selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0);
+  const lines = (requestContext?.eligibleDueFees || []).filter(
+    (line) => selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0
+  );
   const groups = lines.reduce<Record<string, typeof lines>>((acc, line) => {
     const key = `${line.year}-${line.installmentLabel}`;
     (acc[key] ||= []).push(line);
     return acc;
   }, {});
-  const entries: Record<string, number> = values.dueFeeEntries || {};
+  const entries: Record<string, number | string> = values.dueFeeEntries || {};
   const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
   const percentage = policy.calculationMethod === 'Percentage';
-  const maximum = percentage ? Math.min(100, policy.maximumPercentage ?? 100)
-    : policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY;
-  const money = (amount: number) => new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(Math.ceil(amount));
+  const maximum = percentage
+    ? Math.min(100, policy.maximumPercentage ?? 100)
+    : (policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY);
+  const money = (amount: number) => formatNumber(amount, 'INR');
 
   return (
-    <Stack spacing={2}>
-      <Typography variant="body2" color="text.secondary">
-        Enter a {percentage ? 'percentage' : 'rupee amount'} for each eligible installment line.
-        {policy.applyOn === 'AllFees'
-          ? policy.autoCreateRefund === false
-            ? 'Paid amounts can be discounted. The paid concession is refundable; create linked refund requests manually after approval.'
-            : 'Paid amounts can be discounted. The paid concession automatically creates linked refund requests after approval.'
-          : 'Only the remaining outstanding balance can be discounted.'}
-      </Typography>
+    <Stack
+      spacing={0}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
+    >
       {Object.entries(groups).map(([installment, rows]) => (
-        <Card key={installment} variant="outlined">
-          <CardContent>
-            <Typography variant="subtitle1" fontWeight={700} mb={1}>{installment.substring(5)}</Typography>
-            <Stack spacing={1.5}>
-              {(rows || []).map((line) => {
-                const value = Number(entries[line.dueFeeId] || 0);
-                const estimate = percentage
-                  ? Math.round(line.eligibleConcessionAmount * value) / 100
-                  : Math.min(value, line.eligibleConcessionAmount);
-                return (
-                  <Grid container spacing={1} alignItems="center" key={line.dueFeeId}>
-                    <Grid size={{ xs: 12, sm: 5 }}>
-                      <Typography variant="body2" fontWeight={600}>{line.feeHeadName}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Paid {money(line.paidAmount)} · eligible {money(line.eligibleConcessionAmount)}
-                      </Typography>
-                    </Grid>
-                    <Grid size={{ xs: 7, sm: 3 }}>
-                      <TextField fullWidth size="small" type="number"
-                        label={percentage ? 'Concession %' : 'Concession ₹'}
-                        value={entries[line.dueFeeId] ?? ''}
-                        inputProps={{ min: 0, max: percentage ? maximum : line.eligibleConcessionAmount, step: 0.01 }}
-                        onChange={(event) => {
-                          const next = event.target.value === '' ? 0 : Number(event.target.value);
-                          if (!Number.isFinite(next) || next < 0 || next >
-                            (percentage ? maximum : line.eligibleConcessionAmount)) return;
-                          if (!percentage && enteredTotal - value + next > maximum) return;
-                          setFieldValue('dueFeeEntries', { ...entries, [line.dueFeeId]: next });
-                        }} />
-                    </Grid>
-                    <Grid size={{ xs: 5, sm: 4 }} sx={{ textAlign: 'right' }}>
-                      <Typography variant="body2" color="success.main">−{money(estimate)}</Typography>
-                    </Grid>
-                  </Grid>
-                );
-              })}
-            </Stack>
-          </CardContent>
-        </Card>
+        <Box key={installment} sx={{ '& + &': { borderTop: 1, borderColor: 'divider' } }}>
+          <Box sx={{ px: 1.5, py: 1, bgcolor: 'background.neutral' }}>
+            <Typography variant="subtitle2" component="h3">
+              {installment.substring(5)}
+              <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                {rows[0]?.year}
+              </Typography>
+            </Typography>
+          </Box>
+          <Stack spacing={0}>
+            {(rows || []).map((line) => {
+              const value = Number(entries[line.dueFeeId] || 0);
+              const estimate = percentage
+                ? Math.round(line.eligibleConcessionAmount * value) / 100
+                : Math.min(value, line.eligibleConcessionAmount);
+              return (
+                <Box
+                  key={line.dueFeeId}
+                  sx={{
+                    display: 'grid',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: 1.5,
+                    gridTemplateColumns: {
+                      xs: 'minmax(0, 1fr) minmax(0, 1fr)',
+                      sm: 'minmax(0, 1fr) minmax(140px, 200px) minmax(110px, 160px)',
+                    },
+                    '& + &': { borderTop: 1, borderColor: 'divider' },
+                  }}
+                >
+                  <Box sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {line.feeHeadName}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Original {money(line.originalAmount)} · paid {money(line.paidAmount)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Eligible {money(line.eligibleConcessionAmount)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <NumericFormatCustom
+                      fullWidth
+                      size="small"
+                      name={`dueFeeEntries.${line.dueFeeId}`}
+                      label={percentage ? 'Concession %' : 'Concession amount'}
+                      value={entries[line.dueFeeId] ?? ''}
+                      roundToWholeRupees={false}
+                      decimalScale={2}
+                      prefix={percentage ? '' : '₹ '}
+                      suffix={percentage ? '%' : ''}
+                      slotProps={{
+                        inputLabel: { shrink: true },
+                        htmlInput: {
+                          'aria-label': `${line.installmentLabel} ${line.feeHeadName} ${percentage ? 'concession percentage' : 'concession amount'}`,
+                        },
+                      }}
+                      isAllowed={({ floatValue }) =>
+                        floatValue === undefined ||
+                        (floatValue <= (percentage ? maximum : line.eligibleConcessionAmount) &&
+                          (percentage || enteredTotal - value + floatValue <= maximum))
+                      }
+                      onValueChange={(input, source) => {
+                        if (source.source === 'event')
+                          setFieldValue('dueFeeEntries', {
+                            ...entries,
+                            [line.dueFeeId]: input.value,
+                          });
+                      }}
+                      onBlur={formik.handleBlur}
+                      error={Boolean(
+                        formik.touched.dueFeeEntries?.[line.dueFeeId] &&
+                        formik.errors.dueFeeEntries?.[line.dueFeeId]
+                      )}
+                      helperText={
+                        (formik.touched.dueFeeEntries?.[line.dueFeeId] &&
+                          formik.errors.dueFeeEntries?.[line.dueFeeId]) ||
+                        `Max ${percentage ? `${maximum}%` : money(Math.min(line.eligibleConcessionAmount, maximum))}`
+                      }
+                      FormHelperTextProps={{ sx: { minHeight: '1.5em', mx: 0 } }}
+                    />
+                  </Box>
+                  <Box sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Estimated reduction
+                    </Typography>
+                    <Typography variant="subtitle2">−{money(estimate)}</Typography>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
       ))}
-      {lines.length === 0 && <Typography color="text.secondary">Select eligible fee heads to enter installment amounts.</Typography>}
-      {!percentage && Number.isFinite(maximum) && (
-        <Typography variant="caption">Entered total {money(enteredTotal)} of {money(maximum)} allowed</Typography>
+      {lines.length === 0 && (
+        <Typography color="text.secondary">
+          Select eligible fee heads to enter installment amounts.
+        </Typography>
       )}
-      {preview && <Typography variant="subtitle2">Calculated concession: {money(preview.totalConcessionAmount)}</Typography>}
+      {!percentage && Number.isFinite(maximum) && (
+        <Typography variant="caption">
+          Entered total {money(enteredTotal)} of {money(maximum)} allowed
+        </Typography>
+      )}
     </Stack>
   );
 }
@@ -216,22 +270,23 @@ const ValueEntryStepItem = ({
   policy,
   preview,
 }: any) => {
-  const assignedStructureData = requestContext && policy
-    ? {
-        concessionValueSource: policy.valueSource,
-        concessionCalculationMethod: policy.calculationMethod,
-        maximumConcessionPercentage: policy.maximumPercentage,
-        maximumConcessionFixedAmount: policy.maximumFixedAmount,
-        concessionPercentageValue: policy.percentageValue,
-        concessionFixedAmount: policy.fixedAmount,
-        concessionPolicyName: policy.policyName,
-        concessionPolicyVersion: policy.version,
-        feeHeads: requestContext.feeHeads.map((feeHead: any) => ({
-          ...feeHead,
-          amount: feeHead.eligibleOutstanding,
-        })),
-      }
-    : undefined;
+  const assignedStructureData =
+    requestContext && policy
+      ? {
+          concessionValueSource: policy.valueSource,
+          concessionCalculationMethod: policy.calculationMethod,
+          maximumConcessionPercentage: policy.maximumPercentage,
+          maximumConcessionFixedAmount: policy.maximumFixedAmount,
+          concessionPercentageValue: policy.percentageValue,
+          concessionFixedAmount: policy.fixedAmount,
+          concessionPolicyName: policy.policyName,
+          concessionPolicyVersion: policy.version,
+          feeHeads: requestContext.feeHeads.map((feeHead: any) => ({
+            ...feeHead,
+            amount: feeHead.eligibleOutstanding,
+          })),
+        }
+      : undefined;
 
   const selectedFeeHeadIds: string[] = values.selectedFeeHeads[concessionType.id] || [];
   const isPolicyFixed = assignedStructureData?.concessionValueSource === 'PolicyFixed';
@@ -318,13 +373,7 @@ const ValueEntryStepItem = ({
 
   if (selectedFeeHeads.length === 0) return null;
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(Math.ceil(amount));
-
+  const formatCurrency = (amount: number) => formatNumber(amount, 'INR');
   const selectedBaseTotal = selectedFeeHeads.reduce(
     (sum: number, feeHead: any) => sum + Number(feeHead.amount || 0),
     0
@@ -335,7 +384,6 @@ const ValueEntryStepItem = ({
     0
   );
   const setRequestFixedTotal = (requestedTotal: number) => {
-    requestedTotal = Math.ceil(requestedTotal);
     requestedTotal = Math.ceil(requestedTotal);
     let remaining = requestedTotal;
     const updates: Record<string, { basedOn: number; amount: number; netAmount: number }> = {};
@@ -359,217 +407,125 @@ const ValueEntryStepItem = ({
   };
 
   return (
-    <Card sx={{ borderRadius: 2, boxShadow: 'var(--shadows-4)' }} variant="outlined">
-      <Box
-        sx={{
-          p: 1,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          bgcolor: 'background.default', // distinctive header background
-        }}
-      >
-        <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'primary.main' }}>
-          {concessionType.concessionName || concessionType.name}
+    <Stack spacing={1.5}>
+      <Typography variant="body2" fontWeight={600}>
+        {concessionType.concessionName || concessionType.name}
+      </Typography>
+      {isPolicyFixed && (
+        <Typography variant="caption" color="text.secondary">
+          Values are calculated automatically by {assignedStructureData?.concessionPolicyName} v
+          {assignedStructureData?.concessionPolicyVersion} and cannot be edited.
         </Typography>
-      </Box>
-
-      <CardContent sx={{ p: 1 }}>
-        {isPolicyFixed && (
-          <Box sx={{ px: 1, pb: 1 }}>
-            <Typography variant="caption" color="info.main">
-              Values are calculated automatically by {assignedStructureData?.concessionPolicyName} v
-              {assignedStructureData?.concessionPolicyVersion} and cannot be edited.
-            </Typography>
-          </Box>
-        )}
-        {isRequestEnteredFixed && (
-          <Box sx={{ px: 1, pb: 1.5 }}>
-            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-              Total fixed concession for this request (allocated proportionally by the server)
-            </Typography>
-            <NumericFormatCustom
-              size="small"
-              fullWidth
-              value={requestFixedTotal || ''}
-              isAllowed={(input) =>
-                input.floatValue === undefined ||
-                input.floatValue <= Math.min(selectedBaseTotal, maximumValue ?? selectedBaseTotal)
-              }
-              onValueChange={(input) => setRequestFixedTotal(input.floatValue ?? 0)}
-              onChange={undefined}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CurrencyRupeeIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              helperText={`Maximum per request: ${formatCurrency(maximumValue ?? selectedBaseTotal)}`}
-            />
-          </Box>
-        )}
+      )}
+      {isRequestEnteredFixed && (
+        <Box sx={{ maxWidth: 320 }}>
+          <NumericFormatCustom
+            size="small"
+            fullWidth
+            label="Total concession amount"
+            name={`valueEntries.${concessionType.id}.total`}
+            value={requestFixedTotal || ''}
+            isAllowed={({ floatValue }) =>
+              floatValue === undefined ||
+              floatValue <= Math.min(selectedBaseTotal, maximumValue ?? selectedBaseTotal)
+            }
+            onValueChange={(input, source) => {
+              if (source.source === 'event') setRequestFixedTotal(input.floatValue ?? 0);
+            }}
+            helperText={`Maximum per request: ${formatCurrency(maximumValue ?? selectedBaseTotal)}`}
+          />
+        </Box>
+      )}
+      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
         {selectedFeeHeads.map((fh: any, index: number) => {
           const fhId = fh.feeHeadId;
-          const entry = values.valueEntries[concessionType.id]?.[fhId] || {
-            basedOn: 0,
-            amount: 0,
-          };
+          const entry = values.valueEntries[concessionType.id]?.[fhId] || { basedOn: 0, amount: 0 };
           const isPercentage = permittedBasedOn === 1;
-
           const baseAmount = fh.amount || 0;
           const serverLine = preview?.feeHeadConcessions?.find(
             (line: any) => line.feeHeadId === fhId
           );
           const discountAmount = serverLine?.discountAmount ?? 0;
           const netAmount = serverLine?.netAmount ?? baseAmount;
-
           return (
-            <React.Fragment key={fhId}>
-              {index > 0 && <Divider />}
-              <Box sx={{ p: 1 }}>
-                <Grid container spacing={2} alignItems="center">
-                  {/* Fee Head Info */}
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Typography variant="subtitle1" fontWeight={600} color="text.primary">
-                      {fh.feeHeadName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      Eligible outstanding:{' '}
-                      <Box component="span" fontWeight={500} color="text.primary">
-                        {formatCurrency(baseAmount)}
-                      </Box>
-                    </Typography>
-                  </Grid>
-
-                  {/* Input Section */}
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    {isPolicyFixed ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Calculated by policy · {calculationMethod === 'Percentage'
-                          ? `${assignedStructureData?.concessionPercentageValue ?? 0}%`
-                          : calculationMethod === 'FixedAmount'
-                            ? formatCurrency(assignedStructureData?.concessionFixedAmount ?? 0)
-                            : 'Full waiver'}
-                      </Typography>
-                    ) : isPercentage ? (
-                      /* ---- Percentage mode: plain number 0-100 ---- */
-                      <TextField
-                        disabled={isPolicyFixed || isRequestEnteredFixed}
-                        size="small"
-                        fullWidth
-                        type="number"
-                        value={entry.amount === 0 ? '' : entry.amount}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '') {
-                            setEntry(concessionType.id, fhId, 'amount', 0, baseAmount);
-                            return;
-                          }
-                          const numVal = parseFloat(val);
-                          if (numVal < 0 || numVal > Math.min(100, maximumValue ?? 100)) return;
-                          const newDiscount = (baseAmount * numVal) / 100;
-                          setEntry(
-                            concessionType.id,
-                            fhId,
-                            'amount',
-                            numVal,
-                            baseAmount - newDiscount
-                          );
-                        }}
-                        inputProps={{
-                          min: 0,
-                          max: Math.min(100, maximumValue ?? 100),
-                          step: 'any',
-                        }}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Tooltip title="Percentage is required by the assigned policy">
-                                <IconButton disabled size="small">
-                                  <PercentIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </InputAdornment>
-                          ),
-                        }}
-                        placeholder="0"
-                      />
-                    ) : (
-                      /* ---- Rupee mode: formatted with ₹ and commas ---- */
-                      <NumericFormatCustom
-                        disabled={isPolicyFixed || isRequestEnteredFixed}
-                        size="small"
-                        fullWidth
-                        placeholder="0"
-                        value={entry.amount === 0 ? '' : entry.amount}
-                        isAllowed={(vals) => {
-                          const { floatValue } = vals;
-                          return (
-                            floatValue === undefined ||
-                            floatValue <= Math.min(baseAmount, maximumValue ?? baseAmount)
-                          );
-                        }}
-                        onValueChange={(vals) => {
-                          const numVal = vals.floatValue ?? 0;
-                          setEntry(concessionType.id, fhId, 'amount', numVal, baseAmount - numVal);
-                        }}
-                        // suppress the default onChange so NumericFormat doesn't fight with onValueChange
-                        onChange={undefined}
-                        prefix=""
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Tooltip
-                                title={
-                                  isRequestEnteredFixed
-                                    ? 'Allocated from the request total above'
-                                    : 'Fixed amount is required by the assigned policy'
-                                }
-                              >
-                                <IconButton disabled size="small">
-                                  <CurrencyRupeeIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    )}
-                  </Grid>
-
-                  {/* Calculation Result */}
-                  <Grid size={{ xs: 12, sm: 4 }} sx={{ textAlign: 'right' }}>
-                    <Stack direction="column" alignItems="flex-end">
-                      <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{
-                          fontWeight: 700,
-                          color: 'success.dark',
-                          display: 'flex',
-                          alignItems: 'center',
-                        }}
-                      >
-                        - {formatCurrency(discountAmount)}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Net:{' '}
-                        <Box component="span" fontWeight={600} color="text.primary">
-                          {formatCurrency(netAmount)}
-                        </Box>
-                      </Typography>
-                    </Stack>
-                  </Grid>
+            <Box key={fhId} sx={{ p: 1.5, borderTop: index > 0 ? 1 : 0, borderColor: 'divider' }}>
+              <Grid container spacing={1.5} alignItems="center">
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {fh.feeHeadName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Eligible outstanding: {formatCurrency(baseAmount)}
+                  </Typography>
                 </Grid>
-              </Box>
-            </React.Fragment>
+                <Grid size={{ xs: 7, sm: 4 }}>
+                  {isPolicyFixed ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Calculated by policy ·{' '}
+                      {calculationMethod === 'Percentage'
+                        ? `${assignedStructureData?.concessionPercentageValue ?? 0}%`
+                        : calculationMethod === 'FixedAmount'
+                          ? formatCurrency(assignedStructureData?.concessionFixedAmount ?? 0)
+                          : 'Full waiver'}
+                    </Typography>
+                  ) : (
+                    <NumericFormatCustom
+                      disabled={isRequestEnteredFixed}
+                      size="small"
+                      fullWidth
+                      name={`valueEntries.${concessionType.id}.${fhId}.amount`}
+                      label={isPercentage ? 'Concession %' : 'Concession amount'}
+                      value={entry.amount === 0 ? '' : entry.amount}
+                      prefix={isPercentage ? '' : '₹ '}
+                      suffix={isPercentage ? '%' : ''}
+                      roundToWholeRupees={false}
+                      decimalScale={2}
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      isAllowed={({ floatValue }) =>
+                        floatValue === undefined ||
+                        floatValue <=
+                          (isPercentage
+                            ? Math.min(100, maximumValue ?? 100)
+                            : Math.min(baseAmount, maximumValue ?? baseAmount))
+                      }
+                      onValueChange={(input, source) => {
+                        if (source.source !== 'event') return;
+                        const numVal = input.floatValue ?? 0;
+                        const discount = isPercentage ? (baseAmount * numVal) / 100 : numVal;
+                        setEntry(
+                          concessionType.id,
+                          fhId,
+                          'amount',
+                          input.value,
+                          baseAmount - discount
+                        );
+                      }}
+                      helperText={
+                        isPercentage
+                          ? `Max ${Math.min(100, maximumValue ?? 100)}%`
+                          : 'Allocated from the request total'
+                      }
+                    />
+                  )}
+                </Grid>
+                <Grid
+                  size={{ xs: 5, sm: 4 }}
+                  sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Concession
+                  </Typography>
+                  <Typography variant="subtitle2">−{formatCurrency(discountAmount)}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Net payable: {formatCurrency(netAmount)}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
           );
         })}
-      </CardContent>
-    </Card>
+      </Box>
+    </Stack>
   );
 };
 

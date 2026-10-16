@@ -1,3 +1,4 @@
+import { Iconify } from 'src/components/iconify';
 import React, { useState } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { ComponentBlock } from 'src/components/component-block';
@@ -74,10 +75,20 @@ const FinanceBudgetEditBudgetDialog: React.FC<FinanceBudgetEditBudgetDialogProps
         ))}
 
         <DialogActions>
-          <Button onClick={onClose} variant="contained" size="small">
+          <Button
+            startIcon={<Iconify icon="mdi:close" />}
+            onClick={onClose}
+            variant="contained"
+            size="small"
+          >
             Cancel
           </Button>
-          <Button onClick={() => onSave(sliderData)} variant="contained" size="small">
+          <Button
+            startIcon={<Iconify icon="mdi:check-circle-outline" />}
+            onClick={() => onSave(sliderData)}
+            variant="contained"
+            size="small"
+          >
             Submit Adjustments
           </Button>
         </DialogActions>

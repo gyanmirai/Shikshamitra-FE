@@ -225,6 +225,7 @@ const FinanceBudgetCategorySettings = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             loading={isDeleting}
             color="error"

@@ -14,10 +14,10 @@ import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import { DetailSection } from 'src/components/detail-view';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -61,23 +61,6 @@ interface AssignmentValues {
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
 const steps = ['Structure & policies', 'Fees & dates', 'Review & assign'];
-const stepContent = [
-  {
-    title: 'Structure & policies',
-    icon: 'mdi:file-document-outline',
-    help: 'Choose a published revision for the selected year. Bulk eligibility is verified during preview.',
-  },
-  {
-    title: 'Fees & dates',
-    icon: 'mdi:format-list-checks',
-    help: 'Review required fees, select optional fees and configure permitted service-date changes for this student.',
-  },
-  {
-    title: 'Review & assign',
-    icon: 'mdi:clipboard-check-outline',
-    help: 'Review server-calculated obligations and schedules before assigning. Successful assignments are preserved when retrying remaining students.',
-  },
-];
 
 // Observe the shared Formik values without creating another form-state owner.
 function AssignmentDirtyState({ dirty }: { dirty: boolean }) {
@@ -342,7 +325,7 @@ export default function AssignmentWorkflow({
     );
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.neutral' }}>
+    <Box sx={{ flex: 1, minHeight: 0, pt: 2, bgcolor: 'background.paper' }}>
       <CustomStepperWithFormik
         initialValues={initialValues}
         steps={steps}
@@ -525,12 +508,7 @@ export default function AssignmentWorkflow({
                   </Alert>
                 )}
               {activeStep === 0 && (
-                <FormSectionCard
-                  title="Fee structure"
-                  contentSpacing={1.5}
-                  icon="mdi:file-document-outline"
-                  descriptionTooltip={stepContent[0].help}
-                >
+                <DetailSection title="Fee structure" icon="mdi:file-document-outline">
                   {candidates.isError && (
                     <Alert
                       severity="error"
@@ -550,6 +528,7 @@ export default function AssignmentWorkflow({
                   <CustomSelect
                     name="structureId"
                     label="Fee structure"
+                    size="small"
                     value={values.structureId}
                     isLoading={candidates.isLoading}
                     disabled={busy || committedIds.size > 0}
@@ -603,7 +582,7 @@ export default function AssignmentWorkflow({
                       </Typography>
                     </Stack>
                   )}
-                </FormSectionCard>
+                </DetailSection>
               )}
               {(activeStep > 0 || Boolean(candidate)) &&
                 (() => {
@@ -638,11 +617,7 @@ export default function AssignmentWorkflow({
                       }}
                     >
                       {isBulk && (
-                        <FormSectionCard
-                          title="Selected students"
-                          icon="mdi:account-group-outline"
-                          descriptionTooltip="Select a student to configure their fees and policies or inspect their preview and outcome."
-                        >
+                        <DetailSection title="Selected students" icon="mdi:account-group-outline">
                           <TextField
                             size="small"
                             fullWidth
@@ -757,80 +732,64 @@ export default function AssignmentWorkflow({
                               onChange={(_, next) => setStudentPage(next)}
                             />
                           )}
-                        </FormSectionCard>
+                        </DetailSection>
                       )}
                       <Stack spacing={2} sx={{ minWidth: 0 }}>
-                        <Stack
-                          direction="row"
-                          justifyContent="space-between"
-                          alignItems="center"
-                          spacing={1}
-                        >
-                          <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
-                            {student.studentName || 'Student'}
-                          </Typography>
-                          {candidate && activeStep < 2 && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ overflowWrap: 'anywhere' }}
-                            >
-                              {candidate.name} · r{candidate.revisionNumber}
-                            </Typography>
-                          )}
-                          {outcome && (showResults || outcome.result) && (
-                            <Label color={outcome.result ? 'success' : 'warning'}>
-                              {outcome.outcome === 'AlreadyAssigned'
-                                ? 'Already assigned'
-                                : outcome.outcome}
-                            </Label>
-                          )}
-                        </Stack>
+                        {(isBulk || (outcome && (showResults || outcome.result))) && (
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            spacing={1}
+                          >
+                            {isBulk && (
+                              <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
+                                {student.studentName || 'Student'}
+                              </Typography>
+                            )}
+                            {outcome && (showResults || outcome.result) && (
+                              <Label color={outcome.result ? 'success' : 'warning'}>
+                                {outcome.outcome === 'AlreadyAssigned'
+                                  ? 'Already assigned'
+                                  : outcome.outcome}
+                              </Label>
+                            )}
+                          </Stack>
+                        )}
                         {outcome?.result ? (
                           <AssignmentReview data={outcome.result.assignment} committed />
                         ) : (
                           <>
                             {activeStep === 0 && candidate && request && (
-                              <FormSectionCard
-                                title="Policies"
-                                contentSpacing={1.5}
-                                icon="mdi:shield-check-outline"
-                                descriptionTooltip="Policy defaults and permitted overrides for this student. Changes require a reason."
-                              >
-                                <AssignmentPolicies
-                                  studentId={request.studentId}
-                                  academicYearId={academicYearId}
-                                  defaults={candidate.policies ?? []}
-                                  selections={request.policies ?? []}
-                                  reason={request.policyOverrideReason ?? ''}
-                                  canOverride={canOverridePolicies}
-                                  disabled={busy}
-                                  flat
-                                  onChange={(policies, policyOverrideReason) =>
-                                    updateRequest({ ...request, policies, policyOverrideReason })
-                                  }
-                                />
-                              </FormSectionCard>
+                              <AssignmentPolicies
+                                key={request.studentId}
+                                studentId={request.studentId}
+                                academicYearId={academicYearId}
+                                defaults={candidate.policies ?? []}
+                                selections={request.policies ?? []}
+                                reason={request.policyOverrideReason ?? ''}
+                                canOverride={canOverridePolicies}
+                                disabled={busy}
+                                flat
+                                onChange={(policies, policyOverrideReason) =>
+                                  updateRequest({ ...request, policies, policyOverrideReason })
+                                }
+                              />
                             )}
                             {activeStep === 1 && candidate && request && (
-                              <FormSectionCard
-                                  title="Fees & dates"
-                                  contentSpacing={1}
-                                  icon="mdi:format-list-checks"
-                                  descriptionTooltip={stepContent[1].help}
-                                >
-                                  <AssignmentStudentInputs
-                                    key={student.studentId}
-                                    candidate={candidate}
-                                    request={request}
-                                    onChange={updateRequest}
-                                    canOverrideDates={canOverrideDates}
-                                    disabled={busy}
-                                    yearBounds={yearBounds}
-                                    showErrors={showInputErrors}
-                                    flat
-                                  />
-                                </FormSectionCard>
+                              <DetailSection title="Fees & dates" icon="mdi:format-list-checks">
+                                <AssignmentStudentInputs
+                                  key={student.studentId}
+                                  candidate={candidate}
+                                  request={request}
+                                  onChange={updateRequest}
+                                  canOverrideDates={canOverrideDates}
+                                  disabled={busy}
+                                  yearBounds={yearBounds}
+                                  showErrors={showInputErrors}
+                                  flat
+                                />
+                              </DetailSection>
                             )}
                             {outcome?.errorMessage && !studentPreview?.preview && (
                               <Alert severity="error">{outcome.errorMessage}</Alert>
@@ -839,13 +798,7 @@ export default function AssignmentWorkflow({
                               <Alert severity="error">{studentPreview.errorMessage}</Alert>
                             )}
                             {activeStep === 2 && !showResults && studentPreview?.preview && (
-                              <AssignmentReview
-                                data={studentPreview.preview}
-                                onEdit={(step) => {
-                                  invalidate();
-                                  setActiveStep(step);
-                                }}
-                              />
+                              <AssignmentReview data={studentPreview.preview} />
                             )}
                             {showResults && !outcome && (
                               <Alert severity="warning">

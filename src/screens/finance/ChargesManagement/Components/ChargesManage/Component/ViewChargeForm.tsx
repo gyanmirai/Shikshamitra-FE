@@ -6,14 +6,13 @@ import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Description } from '@mui/icons-material';
-import { fCurrency } from 'src/utils/format-number';
-import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Stack, Alert, Button, DialogActions } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useGetChargeByIdQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
-import { Box, Grid, Paper, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,
@@ -53,14 +52,19 @@ const ChargeDetailsCard: React.FC<Props> = ({
         id: 'collectedAmount',
         label: 'Collected',
         align: 'left',
-        render: (value) => fCurrency(value),
+        render: (value) => formatNumber(value, 'INR'),
       },
-      { id: 'waivedAmount', label: 'Waived', align: 'left', render: (value) => fCurrency(value) },
+      {
+        id: 'waivedAmount',
+        label: 'Waived',
+        align: 'left',
+        render: (value) => formatNumber(value, 'INR'),
+      },
       {
         id: 'outstandingAmount',
         label: 'Outstanding',
         align: 'left',
-        render: (value) => fCurrency(value),
+        render: (value) => formatNumber(value, 'INR'),
       },
       {
         id: 'workflowStatus',
@@ -93,7 +97,12 @@ const ChargeDetailsCard: React.FC<Props> = ({
     []
   );
 
-  const { data: selectedCharge, isLoading: isChargeLoading } = useQueryAndMutation({
+  const {
+    data: selectedCharge,
+    isLoading: isChargeLoading,
+    isError,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeByIdQuery,
     params: { id: charge?.chargeId ?? '' },
@@ -105,100 +114,50 @@ const ChargeDetailsCard: React.FC<Props> = ({
   }
 
   return (
-    <Box display="flex" flexDirection="column" height="100%">
-      <Scrollbar sx={{ height: '100%', p: 2 }}>
-        <Grid container spacing={2}>
-          {/* Charge Details and Requestor Info */}
-          <Grid size={{ xs: 12, md: 7 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
+        {isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={refetch}>
+                Retry
+              </Button>
+            }
+          >
+            Charge details could not be loaded.
+          </Alert>
+        ) : selectedCharge ? (
+          <Stack spacing={2}>
             <ChargeViewDetailsCard charge={selectedCharge} />
-          </Grid>
-          <Grid size={{ xs: 12, md: 5 }}>
             <RequestorInfoCard charge={selectedCharge} />
-          </Grid>
-
-          {/* Approval Details Section */}
-          {selectedCharge && (
-            <Grid size={{ xs: 12 }}>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 1.5,
-                  borderRadius: 2,
-                  transition: 'box-shadow 0.2s ease',
-                  '&:hover': { boxShadow: 4 },
-                }}
+            <DetailSection title="Approval Details" icon="mdi:check-circle-outline">
+              <DetailGrid>
+                <DetailField
+                  label="Approved by"
+                  value={selectedCharge.approvalDetails?.approvedByName || 'Pending'}
+                />
+                <DetailField
+                  label="Approved on"
+                  value={
+                    selectedCharge.approvalDetails?.approvedOn
+                      ? dayjs(selectedCharge.approvalDetails.approvedOn).format('DD-MM-YYYY')
+                      : 'Pending'
+                  }
+                />
+                <DetailField
+                  fullWidth
+                  label="Approval notes"
+                  value={selectedCharge.approvalDetails?.approvalNotes}
+                />
+              </DetailGrid>
+            </DetailSection>
+            {selectedCharge.students?.length > 0 && (
+              <DetailSection
+                title="Student List"
+                icon="mdi:account-group-outline"
+                helpText="Students included in this charge, with collection and approval status."
               >
-                <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                  <Iconify
-                    icon="solar:check-circle-bold-duotone"
-                    width={18}
-                    sx={{ color: 'primary.main' }}
-                  />
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Approval Details
-                  </Typography>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <InfoItem
-                      icon={<Iconify icon="solar:user-rounded-bold-duotone" />}
-                      label="Approved By"
-                      value={selectedCharge?.approvalDetails?.approvedByName || 'Pending'}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <InfoItem
-                      icon={<Iconify icon="solar:calendar-bold-duotone" />}
-                      label="Approved On"
-                      value={
-                        selectedCharge?.approvalDetails?.approvedOn
-                          ? dayjs(selectedCharge.approvalDetails.approvedOn).format('DD-MM-YYYY')
-                          : 'Pending'
-                      }
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <InfoItem
-                      icon={<Description />}
-                      label="Approval Notes"
-                      value={selectedCharge?.approvalDetails?.approvalNotes || 'N/A'}
-                    />
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-          )}
-
-          {/* Students List Section */}
-          {selectedCharge?.students && selectedCharge.students.length > 0 && (
-            <Grid size={{ xs: 12 }}>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 1.5,
-                  borderRadius: 2,
-                  transition: 'box-shadow 0.2s ease',
-                  '&:hover': { boxShadow: 4 },
-                }}
-              >
-                <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                  <Iconify
-                    icon="solar:users-group-rounded-bold-duotone"
-                    width={18}
-                    sx={{ color: 'primary.main' }}
-                  />
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Student List
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Review students for this charge
-                    </Typography>
-                  </Box>
-                </Stack>
-
                 <CustomizableTable
                   tableId="view-charge-student-list"
                   tableTitle="Student List"
@@ -207,28 +166,24 @@ const ChargeDetailsCard: React.FC<Props> = ({
                   isFilter={false}
                   isLoading={isChargeLoading}
                   noDataText="No students found"
-                  wrapperProps={{ minHeight: 320 }}
+                  wrapperProps={{ sx: { height: 'auto', flex: 'unset' } }}
+                  tableContainerProps={{ sx: { height: 'auto' } }}
                 />
-
-                <Box sx={{ mt: 2, p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Total Students: <strong>{selectedCharge.students.length}</strong>
-                  </Typography>
-                </Box>
-              </Paper>
-            </Grid>
-          )}
-        </Grid>
+              </DetailSection>
+            )}
+          </Stack>
+        ) : (
+          <Alert severity="info">Charge details are unavailable.</Alert>
+        )}
       </Scrollbar>
-
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
         <Button
           variant="outlined"
           onClick={onCancel}
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
-          Cancel
+          Close
         </Button>
       </DialogActions>
     </Box>

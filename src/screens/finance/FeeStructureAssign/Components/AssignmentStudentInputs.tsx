@@ -12,7 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { AcademicDatePicker } from 'src/components/academic-date-picker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 import { useAssignmentTransportSourcesQuery } from 'src/redux/finance/studentFeeAssignment';
 import {
@@ -107,6 +107,99 @@ export default function AssignmentStudentInputs({
             expandedHeads.includes(head.feeHeadId) ||
             head.isVariable ||
             (showErrors && Boolean(dateErrors.start || dateErrors.end || dateErrors.reason));
+          const manualDateFields = (
+            <Box sx={{ gridColumn: '1 / -1', minWidth: 0 }}>
+              {!yearBounds && (
+                <Alert severity="error">Selected academic year dates are unavailable.</Alert>
+              )}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'minmax(0, 1fr)',
+                    sm: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr)',
+                  },
+                  gap: 1,
+                  alignItems: 'start',
+                  '& > *': { minWidth: 0 },
+                }}
+              >
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  label="Start date"
+                  value={period.startDate ? dayjs(period.startDate.slice(0, 10)) : null}
+                  disabled={disabled || !yearBounds}
+                  minDate={yearBounds?.start}
+                  maxDate={yearBounds?.end}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      required: true,
+                      name: `${head.feeHeadId}-start`,
+                      onBlur: () => touchDate(`${head.feeHeadId}-start`),
+                      error: Boolean(dateError('start')),
+                      helperText: dateError('start'),
+                    },
+                  }}
+                  onChange={(date) => {
+                    touchDate(`${head.feeHeadId}-start`);
+                    updatePeriod({
+                      ...period,
+                      startDate: serializeServiceDate(date),
+                    });
+                  }}
+                />
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  label="End date"
+                  value={period.endDate ? dayjs(period.endDate.slice(0, 10)) : null}
+                  disabled={disabled || !yearBounds}
+                  minDate={
+                    period.startDate &&
+                    yearBounds &&
+                    dayjs(period.startDate).isValid() &&
+                    !dayjs(period.startDate).isBefore(yearBounds.start, 'day') &&
+                    !dayjs(period.startDate).isAfter(yearBounds.end, 'day')
+                      ? dayjs(period.startDate.slice(0, 10))
+                      : yearBounds?.start
+                  }
+                  maxDate={yearBounds?.end}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      required: true,
+                      name: `${head.feeHeadId}-end`,
+                      onBlur: () => touchDate(`${head.feeHeadId}-end`),
+                      error: Boolean(dateError('end')),
+                      helperText: dateError('end'),
+                    },
+                  }}
+                  onChange={(date) => {
+                    touchDate(`${head.feeHeadId}-end`);
+                    updatePeriod({
+                      ...period,
+                      endDate: serializeServiceDate(date),
+                    });
+                  }}
+                />
+                <TextField
+                  label="Reason for changing dates"
+                  size="small"
+                  fullWidth
+                  required
+                  value={period.reason ?? ''}
+                  disabled={disabled}
+                  inputProps={{ maxLength: 500 }}
+                  onBlur={() => touchDate(`${head.feeHeadId}-reason`)}
+                  error={Boolean(dateError('reason'))}
+                  helperText={dateError('reason')}
+                  onChange={(e) => updatePeriod({ ...period, reason: e.target.value })}
+                />
+              </Box>
+            </Box>
+          );
           return (
             <Box
               key={head.feeHeadId}
@@ -256,24 +349,46 @@ export default function AssignmentStudentInputs({
                         sm:
                           head.isVariable && !flat ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
                       },
-                      gap: 2,
+                      gap: 1,
                       alignItems: 'start',
                     }}
                   >
                     <Stack spacing={1}>
                       {(canOverrideDates || (head.supportsTransportSource && !head.isVariable)) && (
                         <CustomSelect
+                          size="small"
                           name={`${head.feeHeadId}-source`}
                           label="Service period"
                           value={period.source}
                           disabled={disabled}
+                          optionDescriptionKey="description"
                           options={[
-                            { value: 'AcademicYear', label: 'Academic year' },
+                            {
+                              value: 'AcademicYear',
+                              label: 'Academic year',
+                              description: yearBounds
+                                ? `${fDate(yearBounds.start)} – ${fDate(yearBounds.end)}`
+                                : 'Academic year dates are unavailable.',
+                            },
                             ...(head.supportsTransportSource && !head.isVariable
-                              ? [{ value: 'TransportService', label: 'Transport service' }]
+                              ? [
+                                  {
+                                    value: 'TransportService',
+                                    label: 'Transport service',
+                                    description:
+                                      'Use the service dates from the selected verified transport record.',
+                                  },
+                                ]
                               : []),
                             ...(canOverrideDates
-                              ? [{ value: 'ManualOverride', label: 'Custom dates' }]
+                              ? [
+                                  {
+                                    value: 'ManualOverride',
+                                    label: 'Custom dates',
+                                    description:
+                                      'Set the charge coverage within the academic year. Start date, end date and a reason are required; preview shows any applicable service adjustment.',
+                                  },
+                                ]
                               : []),
                           ]}
                           onChange={(value) =>
@@ -284,14 +399,11 @@ export default function AssignmentStudentInputs({
                           }
                         />
                       )}
-                      {period.source === 'AcademicYear' && yearBounds && (
-                        <Typography variant="caption" color="text.secondary">
-                          {fDate(yearBounds.start)} – {fDate(yearBounds.end)}
-                        </Typography>
-                      )}
                       {period.source === 'TransportService' && (
                         <>
                           <CustomSelect
+                            size="small"
+                            name={`${head.feeHeadId}-transport`}
                             label="Transport record"
                             value={period.sourceReferenceId ?? ''}
                             isLoading={transport.isLoading}
@@ -326,99 +438,7 @@ export default function AssignmentStudentInputs({
                           )}
                         </>
                       )}
-                      {period.source === 'ManualOverride' && (
-                        <>
-                          {!yearBounds && (
-                            <Alert severity="error">
-                              Selected academic year dates are unavailable.
-                            </Alert>
-                          )}
-                          <Stack
-                            direction={flat ? 'column' : { xs: 'column', sm: 'row' }}
-                            spacing={1.5}
-                          >
-                            <AcademicDatePicker
-                              label="Start date"
-                              academicYearId={request.academicYearId}
-                              blockedDayTypes={[]}
-                              showCalendarMarkers={false}
-                              value={period.startDate ? dayjs(period.startDate.slice(0, 10)) : null}
-                              disabled={disabled || !yearBounds}
-                              minDate={yearBounds?.start}
-                              maxDate={yearBounds?.end}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  size: 'small',
-                                  required: true,
-                                  name: `${head.feeHeadId}-start`,
-                                  onBlur: () => touchDate(`${head.feeHeadId}-start`),
-                                  error: Boolean(dateError('start')),
-                                  helperText: dateError('start'),
-                                  sx: { mb: dateError('start') ? 3 : 0 },
-                                },
-                              }}
-                              onChange={(date) => {
-                                touchDate(`${head.feeHeadId}-start`);
-                                updatePeriod({
-                                  ...period,
-                                  startDate: serializeServiceDate(date),
-                                });
-                              }}
-                            />
-                            <AcademicDatePicker
-                              label="End date"
-                              academicYearId={request.academicYearId}
-                              blockedDayTypes={[]}
-                              showCalendarMarkers={false}
-                              value={period.endDate ? dayjs(period.endDate.slice(0, 10)) : null}
-                              disabled={disabled || !yearBounds}
-                              minDate={
-                                period.startDate &&
-                                yearBounds &&
-                                dayjs(period.startDate).isValid() &&
-                                !dayjs(period.startDate).isBefore(yearBounds.start, 'day') &&
-                                !dayjs(period.startDate).isAfter(yearBounds.end, 'day')
-                                  ? dayjs(period.startDate.slice(0, 10))
-                                  : yearBounds?.start
-                              }
-                              maxDate={yearBounds?.end}
-                              slotProps={{
-                                textField: {
-                                  fullWidth: true,
-                                  size: 'small',
-                                  required: true,
-                                  name: `${head.feeHeadId}-end`,
-                                  onBlur: () => touchDate(`${head.feeHeadId}-end`),
-                                  error: Boolean(dateError('end')),
-                                  helperText: dateError('end'),
-                                  sx: { mb: dateError('end') ? 3 : 0 },
-                                },
-                              }}
-                              onChange={(date) => {
-                                touchDate(`${head.feeHeadId}-end`);
-                                updatePeriod({
-                                  ...period,
-                                  endDate: serializeServiceDate(date),
-                                });
-                              }}
-                            />
-                          </Stack>
-                          <TextField
-                            label="Reason for changing dates"
-                            size="small"
-                            fullWidth
-                            required
-                            value={period.reason ?? ''}
-                            disabled={disabled}
-                            inputProps={{ maxLength: 500 }}
-                            onBlur={() => touchDate(`${head.feeHeadId}-reason`)}
-                            error={Boolean(dateError('reason'))}
-                            helperText={dateError('reason')}
-                            onChange={(e) => updatePeriod({ ...period, reason: e.target.value })}
-                          />
-                        </>
-                      )}
+                      {!flat && period.source === 'ManualOverride' && manualDateFields}
                     </Stack>
                     {head.isVariable && (
                       <Stack spacing={1.5}>
@@ -488,6 +508,7 @@ export default function AssignmentStudentInputs({
                   </Box>
                 </Collapse>
               )}
+              {included && flat && period.source === 'ManualOverride' && manualDateFields}
             </Box>
           );
         })}
@@ -499,7 +520,7 @@ export default function AssignmentStudentInputs({
         sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}
       >
         <Typography variant="subtitle2">Selected fees</Typography>
-        <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+        <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {selectedTotal == null ? '—' : formatNumber(selectedTotal, 'INR')}
         </Typography>
       </Stack>

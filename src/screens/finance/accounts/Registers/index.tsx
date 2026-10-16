@@ -338,7 +338,7 @@ function RegisterContent({
             display: 'flex',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: 2,
+            gap: 1,
           }}
         >
           <Box sx={{ width: { xs: '100%', sm: 210 } }}>
@@ -361,13 +361,13 @@ function RegisterContent({
                 { value: 'all', label: 'All sources' },
                 ...(income
                   ? [
-                      { value: 'collection', label: 'Student payments' },
-                      { value: 'income', label: 'Other income' },
-                    ]
+                    { value: 'collection', label: 'Student payments' },
+                    { value: 'income', label: 'Other income' },
+                  ]
                   : [
-                      { value: 'expense', label: 'School expenses' },
-                      { value: 'refund', label: 'Student refunds' },
-                    ]),
+                    { value: 'expense', label: 'School expenses' },
+                    { value: 'refund', label: 'Student refunds' },
+                  ]),
               ]}
               onChange={(value) => {
                 setSource(String(value));

@@ -1,3 +1,4 @@
+import { Iconify } from 'src/components/iconify';
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import CustomDialog from 'src/components/customDialog';
@@ -97,7 +98,12 @@ const ViewReceipt: React.FC<ViewReceiptProps> = ({ dialogValue, onClose }) => {
 
         {/* Print Button */}
         <Box mt={3} display="flex" justifyContent="flex-end">
-          <Button variant="contained" color="primary" onClick={() => handlePrint()}>
+          <Button
+            startIcon={<Iconify icon="mdi:printer" />}
+            variant="contained"
+            color="primary"
+            onClick={() => handlePrint()}
+          >
             Print Receipt
           </Button>
         </Box>

@@ -177,7 +177,7 @@ const ChargesTable = ({
   return (
     <>
       <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <FinanceAcademicContextFilter
             boards={boards}
             mediums={mediums}
@@ -214,6 +214,7 @@ const ChargesTable = ({
             sx={{
               '& .MuiTabs-flexContainer': { gap: 2 },
               flexGrow: 1,
+              px: 1
             }}
           >
             {TABS.map((tab) => (
@@ -407,57 +408,57 @@ const ChargesTable = ({
                     },
                     ...(canEdit
                       ? [
-                          {
-                            id: 'edit',
-                            label: `Edit ${name}`,
-                            icon: GlobalIcons.edit,
-                            onClick: () => onEdit(row as IChargeData),
-                          },
-                        ]
+                        {
+                          id: 'edit',
+                          label: `Edit ${name}`,
+                          icon: GlobalIcons.edit,
+                          onClick: () => onEdit(row as IChargeData),
+                        },
+                      ]
                       : []),
                     ...(canApprove
                       ? [
-                          {
-                            id: 'approve',
-                            label: `Approve ${name}`,
-                            icon: 'mdi:approve',
-                            color: 'success.main',
-                            onClick: () => onApprove(row as IChargeData),
-                          },
-                        ]
+                        {
+                          id: 'approve',
+                          label: `Approve ${name}`,
+                          icon: 'mdi:approve',
+                          color: 'success.main',
+                          onClick: () => onApprove(row as IChargeData),
+                        },
+                      ]
                       : []),
                     ...(canReject
                       ? [
-                          {
-                            id: 'reject',
-                            label: `Reject ${name}`,
-                            icon: 'mdi:close',
-                            color: 'error.main',
-                            onClick: () => onReject(row as IChargeData),
-                          },
-                        ]
+                        {
+                          id: 'reject',
+                          label: `Reject ${name}`,
+                          icon: 'mdi:close',
+                          color: 'error.main',
+                          onClick: () => onReject(row as IChargeData),
+                        },
+                      ]
                       : []),
                     ...(canDelete
                       ? [
-                          {
-                            id: 'delete',
-                            label: `Delete ${name}`,
-                            icon: GlobalIcons.delete,
-                            color: 'error.main',
-                            onClick: () => onRemove(row as IChargeData),
-                          },
-                        ]
+                        {
+                          id: 'delete',
+                          label: `Delete ${name}`,
+                          icon: GlobalIcons.delete,
+                          color: 'error.main',
+                          onClick: () => onRemove(row as IChargeData),
+                        },
+                      ]
                       : []),
                     ...(canVoid
                       ? [
-                          {
-                            id: 'void',
-                            label: `Void uncollected ${name}`,
-                            icon: 'mdi:cancel-circle-outline',
-                            color: 'warning.main',
-                            onClick: () => onVoid(row as IChargeData),
-                          },
-                        ]
+                        {
+                          id: 'void',
+                          label: `Void uncollected ${name}`,
+                          icon: 'mdi:cancel-circle-outline',
+                          color: 'warning.main',
+                          onClick: () => onVoid(row as IChargeData),
+                        },
+                      ]
                       : []),
                   ]}
                 />

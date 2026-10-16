@@ -2,6 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -258,6 +259,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon={nextStatus ? 'mdi:check-circle-outline' : 'mdi:cancel'} />}
             loading={isStatusLoading}
             disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"

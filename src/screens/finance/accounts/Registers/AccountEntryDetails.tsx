@@ -6,41 +6,17 @@ import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSectionCard } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Stack, Alert, Button, Skeleton, DialogActions } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { PaymentMethod, PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetAccountsActivityDetailQuery } from 'src/redux/finance/accountsActivityApi';
-import {
-  Box,
-  Grid,
-  Stack,
-  Alert,
-  Button,
-  Skeleton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
 
 function methodLabel(method?: string) {
   if (!method) return undefined;
   const names = ['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'CreditCard', 'DebitCard', 'Upi'];
   const index = names.findIndex((name) => name.toLowerCase() === method.toLowerCase());
   return index >= 0 ? PaymentMethodLabels[index as PaymentMethod] : method;
-}
-function Fact({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', fontWeight: 500, mt: 0.5 }}
-      >
-        {value || '—'}
-      </Typography>
-    </Grid>
-  );
 }
 export default function AccountEntryDetails({
   row,
@@ -87,7 +63,7 @@ export default function AccountEntryDetails({
       guardUnsavedChanges={false}
       paperProps={{ sx: { backgroundImage: 'none' } }}
     >
-      <DialogScrollContent sx={{ bgcolor: 'background.neutral' }}>
+      <DialogScrollContent>
         {query.isFetching && !data && (
           <Stack spacing={1} role="status" aria-label="Loading transaction details">
             {[1, 2, 3, 4].map((value) => (
@@ -108,9 +84,9 @@ export default function AccountEntryDetails({
                 expenses.
               </Alert>
             )}
-            <FormSectionCard icon="mdi:receipt-text-outline" title="Transaction details">
-              <Grid container spacing={1.5}>
-                <Fact
+            <DetailSection icon="mdi:receipt-text-outline" title="Transaction details">
+              <DetailGrid>
+                <DetailField
                   label="Source"
                   value={
                     {
@@ -121,55 +97,64 @@ export default function AccountEntryDetails({
                     }[data.source]
                   }
                 />
-                <Fact label="Amount for this entry" value={formatNumber(data.amount, 'INR')} />
-                <Fact
+                <DetailField
+                  label="Amount for this entry"
+                  value={formatNumber(data.amount, 'INR')}
+                />
+                <DetailField
                   label={data.sourceStatus === 'Awaiting payout' ? 'Request date' : 'Payment date'}
                   value={fDateTime(data.occurredAt)}
                 />
-                <Fact label="Category" value={data.categoryName} />
-                <Fact label="Academic year" value={data.academicYearName} />
-                <Fact label="School bank account" value={data.bankLabel} />
+                <DetailField label="Category" value={data.categoryName} />
+                <DetailField label="Academic year" value={data.academicYearName} />
+                <DetailField label="School bank account" value={data.bankLabel} />
                 {data.counterparty && (
-                  <Fact
+                  <DetailField
                     label={data.source === 'Income' ? 'Received from' : 'Paid to'}
                     value={data.counterparty}
                   />
                 )}
-                {data.notes && <Fact label="Notes" value={data.notes} />}
-              </Grid>
-            </FormSectionCard>
+                {data.notes && <DetailField fullWidth label="Notes" value={data.notes} />}
+              </DetailGrid>
+            </DetailSection>
             {data.studentId && (
-              <FormSectionCard icon="mdi:account-school-outline" title="Student details">
-                <Grid container spacing={1.5}>
-                  <Fact label="Student" value={data.studentName} />
-                  <Fact label="GR / admission number" value={data.grNumber} />
-                  <Fact label="Class" value={data.className} />
-                  <Fact label="Division" value={data.divisionName} />
-                </Grid>
-              </FormSectionCard>
+              <DetailSection icon="mdi:account-school-outline" title="Student details">
+                <DetailGrid>
+                  <DetailField label="Student" value={data.studentName} />
+                  <DetailField label="GR / admission number" value={data.grNumber} />
+                  <DetailField
+                    label="Class / division"
+                    value={[data.className, data.divisionName].filter(Boolean).join(' / ')}
+                  />
+                </DetailGrid>
+              </DetailSection>
             )}
             {data.source === 'Refund' && (
-              <FormSectionCard icon="mdi:cash-refund" title="Refund details">
-                <Grid container spacing={1.5}>
-                  <Fact label="Original receipt" value={data.originalReceiptNumber} />
-                  <Fact label="Refund status" value={data.refundStatus} />
-                  <Fact label="Reason" value={data.refundReason} />
-                  <Fact label="Approval notes" value={data.approvalNotes} />
-                  <Fact
+              <DetailSection icon="mdi:cash-refund" title="Refund details">
+                <DetailGrid>
+                  <DetailField label="Original receipt" value={data.originalReceiptNumber} />
+                  <DetailField label="Refund status" value={data.refundStatus} />
+                  <DetailField fullWidth label="Reason" value={data.refundReason} />
+                  <DetailField fullWidth label="Approval notes" value={data.approvalNotes} />
+                  <DetailField
                     label="Approved payout method"
                     value={methodLabel(data.approvedPaymentMethod)}
                   />
                   {data.processedAt && (
-                    <Fact label="Confirmed at" value={fDateTime(data.processedAt)} />
+                    <DetailField label="Confirmed at" value={fDateTime(data.processedAt)} />
                   )}
                   {data.failureReason && (
-                    <Fact label="Failure / return reason" value={data.failureReason} />
+                    <DetailField
+                      fullWidth
+                      label="Failure / return reason"
+                      value={data.failureReason}
+                    />
                   )}
-                </Grid>
-              </FormSectionCard>
+                </DetailGrid>
+              </DetailSection>
             )}
             {data.categoryAmounts.length > 0 && (
-              <FormSectionCard icon="mdi:shape-outline" title="Related category entries">
+              <DetailSection icon="mdi:shape-outline" title="Related category entries">
                 <CustomizableTable
                   wrapperProps={{ sx: { height: 'auto', flex: 'unset' } }}
                   tableContainerProps={{ sx: { height: 'auto' } }}
@@ -199,10 +184,10 @@ export default function AccountEntryDetails({
                   ]}
                   data={data.categoryAmounts}
                 />
-              </FormSectionCard>
+              </DetailSection>
             )}
             {data.allocations.length > 0 && (
-              <FormSectionCard
+              <DetailSection
                 icon="mdi:format-list-bulleted"
                 title={
                   data.source === 'Refund'
@@ -248,10 +233,10 @@ export default function AccountEntryDetails({
                   ]}
                   data={data.allocations}
                 />
-              </FormSectionCard>
+              </DetailSection>
             )}
             {data.payments.length > 0 && (
-              <FormSectionCard icon="mdi:bank-transfer" title="Payment details">
+              <DetailSection icon="mdi:bank-transfer" title="Payment details">
                 <CustomizableTable
                   wrapperProps={{ sx: { height: 'auto', flex: 'unset' } }}
                   tableContainerProps={{ sx: { height: 'auto' } }}
@@ -302,7 +287,7 @@ export default function AccountEntryDetails({
                   ]}
                   data={data.payments}
                 />
-              </FormSectionCard>
+              </DetailSection>
             )}
           </Stack>
         )}

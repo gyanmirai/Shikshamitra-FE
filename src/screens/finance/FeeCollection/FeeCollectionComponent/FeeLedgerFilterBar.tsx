@@ -3,17 +3,13 @@
 import type { RootState } from 'src/redux/store';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-import { CustomTabs } from 'src/components/custom-tabs';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
+import { Paper, Stack, Checkbox, Typography, FormControlLabel } from '@mui/material';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
-import { Box, Tab, Chip, Card, Checkbox, Typography, FormControlLabel } from '@mui/material';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,7 +104,6 @@ const FeeLedgerFilterBar = ({
   selectionStates,
   onSelectionFilterChange,
 }: FeeLedgerFilterBarProps) => {
-  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const resolvedYearId = academicYearId ?? currentYear?.id;
   const tabs = useTabs(filters.activeTab);
@@ -157,209 +152,86 @@ const FeeLedgerFilterBar = ({
   ];
 
   return (
-    <Card
-      component={motion.div}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      sx={{
-        borderRadius: 1.5,
-        bgcolor: 'background.paper',
-        display: 'flex',
-        flexDirection: 'column',
-        p: { xs: 1.25, md: 1.5 },
-        boxShadow: (t) => `var(--shadows-4)`,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
-      }}
-    >
-      {/* ── Header row: title + tabs ── */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          mb: 1.25,
-        }}
-      >
-        {/* Title + entry count */}
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box
-            sx={{
-              width: 30,
-              height: 30,
-              borderRadius: 1.25,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              flexShrink: 0,
-            }}
-          >
-            <Iconify
-              icon="solar:document-text-bold"
-              sx={{ color: 'primary.main', width: 16, height: 16 }}
-            />
-          </Box>
-          <Typography
-            variant="subtitle1"
-            fontWeight={700}
-            sx={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}
-          >
-            Fee Ledger
-          </Typography>
-          {entryCount !== undefined && (
-            <Chip
-              label={`${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`}
-              size="small"
-              variant="soft"
-              color="default"
-              sx={{
-                borderRadius: 999,
-                fontWeight: 600,
-                fontSize: '0.7rem',
-                height: 22,
-              }}
-            />
-          )}
-        </Box>
-
-        {/* View toggle tabs */}
-        <CustomTabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{
-            minHeight: 30,
-            '& .MuiTabs-indicator': { borderRadius: 999 },
-          }}
-          slotProps={{
-            scroller: { p: 0.375 },
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              label={tab.label}
-              icon={tab.icon ? <Iconify icon={tab.icon} width={13} /> : undefined}
-              iconPosition="start"
-              sx={{
-                minHeight: 30,
-                py: 0.5,
-                px: 1.5,
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                letterSpacing: '0.01em',
-              }}
-            />
-          ))}
-        </CustomTabs>
-      </Box>
-
-      {/* ── Filter dropdowns ── */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1.25,
-          flexWrap: 'wrap',
-          pt: 1,
-          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
-        }}
-      >
+    <Paper variant="outlined" sx={{ p: 1, flexShrink: 0 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <CustomSelect
+          fullWidth
           label="Month"
           options={monthOptions}
-          labelKey="label"
-          valueKey="value"
           value={filters.month}
-          isLoading={isMonthsLoading}
-          onChange={(value) => onFilterChange({ ...filters, month: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
+          isLoading={isMonthsLoading}
+          onChange={(value) => onFilterChange({ ...filters, month: String(value) })}
         />
-
         <CustomSelect
+          fullWidth
           label="Fee Head"
           options={feeHeadOptions}
           labelKey="name"
           valueKey="id"
           value={filters.feeHead}
-          isLoading={isFeeHeadLoading || isFeeHeadFetching}
-          onChange={(value) => onFilterChange({ ...filters, feeHead: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
+          isLoading={isFeeHeadLoading || isFeeHeadFetching}
+          onChange={(value) => onFilterChange({ ...filters, feeHead: String(value) })}
         />
-
         <CustomSelect
+          fullWidth
           label="Status"
           options={STATUS_OPTIONS}
-          labelKey="label"
-          valueKey="value"
           value={filters.status}
-          onChange={(value) => onFilterChange({ ...filters, status: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
+          onChange={(value) => onFilterChange({ ...filters, status: String(value) })}
         />
-
-        <Box
-          sx={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 1,
-            pt: 0.5,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" fontWeight={700}>
-            Selection Filters
-          </Typography>
-
-          {SELECTION_FILTER_OPTIONS.map((option) => (
-            <FormControlLabel
-              key={option.key}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={
-                    selectionStates?.[option.key]?.checked ?? filters.selectionFilters[option.key]
-                  }
-                  indeterminate={selectionStates?.[option.key]?.indeterminate ?? false}
-                  slotProps={{
-                    input: {
-                      'aria-checked': selectionStates?.[option.key]?.indeterminate
-                        ? 'mixed'
-                        : undefined,
-                    },
-                  }}
-                  disabled={
-                    (option.key === 'firstSixMonths' || option.key === 'lastSixMonths') &&
-                    (isMonthsLoading || !academicYearMonths?.length)
-                  }
-                  onChange={(_, checked) => handleSelectionFilterToggle(option.key, checked)}
-                />
-              }
-              label={option.label}
-              sx={{
-                mr: 0.5,
-                ml: 0,
-                borderRadius: 999,
-                px: 0.5,
-                py: 0.5,
-                bgcolor: filters.selectionFilters[option.key]
-                  ? alpha(theme.palette.primary.main, 0.08)
-                  : 'transparent',
-                '& .MuiFormControlLabel-label': {
-                  fontSize: '0.78rem',
-                  fontWeight: 500,
-                },
-              }}
-            />
-          ))}
-        </Box>
-      </Box>
-    </Card>
+        <CustomSelect
+          fullWidth
+          label="Group by"
+          options={TABS}
+          value={tabs.value as string}
+          size="small"
+          onChange={(value) => handleTabChange({} as React.SyntheticEvent, String(value))}
+        />
+      </Stack>
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        flexWrap="wrap"
+        alignItems="center"
+        sx={{ pt: 0.5 }}
+      >
+        <Typography variant="caption" color="text.secondary">
+          {entryCount ?? 0} entries · Select fees
+        </Typography>
+        {SELECTION_FILTER_OPTIONS.map((option) => (
+          <FormControlLabel
+            key={option.key}
+            sx={{ m: 0 }}
+            label={<Typography variant="body2">{option.label}</Typography>}
+            control={
+              <Checkbox
+                size="small"
+                checked={
+                  selectionStates?.[option.key]?.checked ?? filters.selectionFilters[option.key]
+                }
+                indeterminate={selectionStates?.[option.key]?.indeterminate ?? false}
+                slotProps={{
+                  input: {
+                    'aria-checked': selectionStates?.[option.key]?.indeterminate
+                      ? 'mixed'
+                      : undefined,
+                  },
+                }}
+                disabled={
+                  (option.key === 'firstSixMonths' || option.key === 'lastSixMonths') &&
+                  (isMonthsLoading || !academicYearMonths?.length)
+                }
+                onChange={(_, checked) => handleSelectionFilterToggle(option.key, checked)}
+              />
+            }
+          />
+        ))}
+      </Stack>
+    </Paper>
   );
 };
 

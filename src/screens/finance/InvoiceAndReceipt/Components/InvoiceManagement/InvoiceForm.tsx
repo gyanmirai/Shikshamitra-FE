@@ -788,6 +788,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
           Cancel
         </Button>
         <Button
+          startIcon={<Iconify icon="mdi:file-eye-outline" />}
           endIcon={<Iconify icon="mdi:arrow-right" />}
           type="button"
           variant="contained"

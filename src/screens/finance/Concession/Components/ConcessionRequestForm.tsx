@@ -9,44 +9,42 @@ import type {
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSession } from 'next-auth/react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
-import { formatCurrency } from 'src/utils/cureencyFormater';
 import { shikshaMitraToast } from 'src/components/toast';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ShakingTextField from 'src/components/shaking-text-field';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import {
   Box,
   Grid,
-  Card,
   Paper,
   Stack,
   Alert,
   Button,
-  Divider,
   Checkbox,
   Skeleton,
   TextField,
   Typography,
   IconButton,
   Autocomplete,
+  FormControlLabel,
 } from '@mui/material';
 import {
   useGetConcessionRequestByIdQuery,
@@ -60,6 +58,7 @@ import {
 
 import ConcessionDocumentList from './ConcessionDocumentList';
 import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
+import ConcessionImpactSummary from './ConcessionImpactSummary';
 
 import type { IConcessionFormProps } from '../type';
 
@@ -67,7 +66,7 @@ import type { IConcessionFormProps } from '../type';
 // Types
 // ---------------------------------------------------------------------------
 
-type ValueEntry = { basedOn: 0 | 1; amount: number; netAmount: number };
+type ValueEntry = { basedOn: 0 | 1; amount: number | string; netAmount: number };
 
 const FEE_STRUCTURE_ASSIGNMENT_REQUIRED = 'Finance:Concession:010029';
 const FEE_STRUCTURE_ASSIGNMENT_MESSAGE =
@@ -99,7 +98,7 @@ type FormValues = {
   concessionTypeDocuments: any[];
   selectedFeeHeads: Record<string, string[]>;
   valueEntries: Record<string, Record<string, ValueEntry>>;
-  dueFeeEntries: Record<string, number>;
+  dueFeeEntries: Record<string, number | string>;
   concessionRequestId: string;
   remarks: string;
 };
@@ -107,14 +106,6 @@ type FormValues = {
 // ---------------------------------------------------------------------------
 // Module-level helpers (no React deps)
 // ---------------------------------------------------------------------------
-
-const paperSx = {
-  p: 1.5,
-  mb: 1.5,
-  borderRadius: 2,
-  transition: 'box-shadow 0.2s ease',
-  '&:hover': { boxShadow: 4 },
-} as const;
 
 function buildInitialValues(
   detailData?: any,
@@ -170,8 +161,9 @@ function buildInitialValues(
       concessionTypeDocuments: [{ concessionTypeId: typeId, documents: docs }],
       selectedFeeHeads,
       valueEntries,
-      dueFeeEntries: Object.fromEntries((detailData.dueFeeConcessions || []).map((line: any) =>
-        [line.dueFeeId, line.amount])),
+      dueFeeEntries: Object.fromEntries(
+        (detailData.dueFeeConcessions || []).map((line: any) => [line.dueFeeId, line.amount])
+      ),
       concessionRequestId: detailData.concessionRequestId || detailData.id || '',
       remarks: detailData.remarks || '',
     };
@@ -216,14 +208,16 @@ const buildFeeHeadConcessions = (values: FormValues) => {
   const typeId = values.concessionTypeId;
   return (values.selectedFeeHeads[typeId] || []).map((feeHeadId) => {
     const entry = values.valueEntries[typeId]?.[feeHeadId] || { basedOn: 0, amount: 0 };
-    return { feeHeadId, basedOn: entry.basedOn, amount: entry.amount };
+    return { feeHeadId, basedOn: entry.basedOn, amount: Number(entry.amount) };
   });
 };
 
 const buildDueFeeConcessions = (values: FormValues, context?: ConcessionRequestContext) => {
   const selectedHeads = new Set(values.selectedFeeHeads[values.concessionTypeId] || []);
   return (context?.eligibleDueFees || [])
-    .filter((line) => selectedHeads.has(line.feeHeadId) && Number(values.dueFeeEntries[line.dueFeeId]) > 0)
+    .filter(
+      (line) => selectedHeads.has(line.feeHeadId) && Number(values.dueFeeEntries[line.dueFeeId]) > 0
+    )
     .map((line) => ({
       dueFeeId: line.dueFeeId,
       feeHeadId: line.feeHeadId,
@@ -379,10 +373,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     onSubmit: async (values) => {
       try {
         const typeId = values.concessionTypeId;
-        const feeHeadConcessions = selectedPolicy?.valueSource === 'PolicyFixed'
-          ? buildFeeHeadConcessions(values) : [];
-        const dueFeeConcessions = selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
-          ? buildDueFeeConcessions(values, requestContext) : [];
+        const feeHeadConcessions =
+          selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [];
+        const dueFeeConcessions =
+          selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
+            ? buildDueFeeConcessions(values, requestContext)
+            : [];
         const latestPreview = await previewConcessionRequest({
           academicYearId: currentYear?.id || '',
           studentId: values.studentId,
@@ -394,16 +390,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           dueFeeConcessions,
         }).unwrap();
 
-        const adminSnapshot = JSON.stringify({ values, fingerprint: latestPreview.previewFingerprint });
+        const adminSnapshot = JSON.stringify({
+          values,
+          fingerprint: latestPreview.previewFingerprint,
+        });
         if (isAdminCreator && confirmedAdminSnapshotRef.current !== adminSnapshot) {
           setAdminConfirmation({
             snapshot: adminSnapshot,
             studentName: values.studentName,
             amount: latestPreview.totalConcessionAmount,
             autoCreateRefund: selectedPolicy?.autoCreateRefund === true,
-            concessionType: requestContext?.concessionTypes.find(
-              (type) => type.concessionTypeId === values.concessionTypeId
-            )?.name ?? 'Concession',
+            concessionType:
+              requestContext?.concessionTypes.find(
+                (type) => type.concessionTypeId === values.concessionTypeId
+              )?.name ?? 'Concession',
             policyName: latestPreview.concessionPolicyName,
           });
           return;
@@ -469,9 +469,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           });
         } else {
           shikshaMitraToast.success({
-            message: savedStatus === 1
-              ? 'Concession request created and approved.'
-              : 'Concession request submitted for approval.',
+            message:
+              savedStatus === 1
+                ? 'Concession request created and approved.'
+                : 'Concession request submitted for approval.',
           });
         }
         confirmedAdminSnapshotRef.current = null;
@@ -496,24 +497,28 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   }, [currentYear?.id]); // Log formik values on every change for debugging
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-  const { currentData: studentsData, isLoading: studentLoading, isFetching: studentFetching, isError: studentsError } =
-    useGetStudentsByScopeQuery(
-      {
-        academicYearId: currentYear?.id || '',
-        boardId: values.boardId,
-        educationMediumId: values.mediumId,
-        classIds: [values.standardId],
-        divisionIds: [values.divisionId],
-      },
-      {
-        skip:
-          !currentYear?.id ||
-          !values.boardId ||
-          !values.mediumId ||
-          !values.standardId ||
-          !values.divisionId,
-      }
-    );
+  const {
+    currentData: studentsData,
+    isLoading: studentLoading,
+    isFetching: studentFetching,
+    isError: studentsError,
+  } = useGetStudentsByScopeQuery(
+    {
+      academicYearId: currentYear?.id || '',
+      boardId: values.boardId,
+      educationMediumId: values.mediumId,
+      classIds: [values.standardId],
+      divisionIds: [values.divisionId],
+    },
+    {
+      skip:
+        !currentYear?.id ||
+        !values.boardId ||
+        !values.mediumId ||
+        !values.standardId ||
+        !values.divisionId,
+    }
+  );
   const studentOptions = useMemo(
     () => studentsData?.map((item) => ({ ...item, name: item.studentName })) || [],
     [studentsData]
@@ -568,21 +573,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
 
   useEffect(() => {
-    if (!values.concessionTypeId || values.concessionPolicyId || concessionPoliciesList.length !== 1) return;
+    if (
+      !values.concessionTypeId ||
+      values.concessionPolicyId ||
+      concessionPoliciesList.length !== 1
+    )
+      return;
     const initialPolicy = concessionPoliciesList[0];
     setFieldValue('concessionPolicyId', initialPolicy.concessionPolicyId, false);
     setFieldValue('concessionPolicyVersionId', initialPolicy.concessionPolicyVersionId, false);
-  }, [
-    concessionPoliciesList,
-    setFieldValue,
-    values.concessionPolicyId,
-    values.concessionTypeId,
-  ]);
+  }, [concessionPoliciesList, setFieldValue, values.concessionPolicyId, values.concessionTypeId]);
 
   const feeHeads: any[] = useMemo(
     () =>
-      (requestContext?.feeHeads || [])
-        .map((item) => ({
+      (requestContext?.feeHeads || []).map((item) => ({
         ...item,
         amount: item.eligibleOutstanding,
       })),
@@ -601,10 +605,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       concessionPolicyId: values.concessionPolicyId,
       concessionPolicyVersionId: values.concessionPolicyVersionId,
       concessionTypeId: values.concessionTypeId,
-      feeHeadConcessions: selectedPolicy?.valueSource === 'PolicyFixed'
-        ? buildFeeHeadConcessions(values) : [],
-      dueFeeConcessions: selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
-        ? buildDueFeeConcessions(values, requestContext) : [],
+      feeHeadConcessions:
+        selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [],
+      dueFeeConcessions:
+        selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
+          ? buildDueFeeConcessions(values, requestContext)
+          : [],
     }),
     [currentYear?.id, requestContext, selectedPolicy?.valueSource, values]
   );
@@ -612,10 +618,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const previewReady =
     Boolean(
       previewRequest.academicYearId &&
-        previewRequest.studentId &&
-        previewRequest.concessionPolicyId &&
-        previewRequest.concessionPolicyVersionId &&
-        previewRequest.concessionTypeId
+      previewRequest.studentId &&
+      previewRequest.concessionPolicyId &&
+      previewRequest.concessionPolicyVersionId &&
+      previewRequest.concessionTypeId
     ) &&
     (selectedPolicy?.valueSource === 'PolicyFixed'
       ? previewRequest.feeHeadConcessions.length > 0
@@ -653,9 +659,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     };
   }, [previewConcessionRequest, previewReady, previewRequest]);
 
-  const totalFees = Number(authoritativePreview?.totalEligibleBase ?? 0);
-  const computedConcessionAmount = Number(authoritativePreview?.totalConcessionAmount ?? 0);
-
   // -- Derived state for selected type / preview ----------------------------
 
   const selectedConcessionType = useMemo(
@@ -680,17 +683,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const hasMissingRequiredDocuments = selectedTypeRequirements.some(
     (requirement) => requirement.isRequired && !submittedDocumentIds.has(requirement.documentId)
   );
-
-  const previewData = useMemo(() => {
-    if (!authoritativePreview || computedConcessionAmount <= 0) return null;
-    return {
-      totalFees,
-      concessionAmount: computedConcessionAmount,
-      netPayable: Number(authoritativePreview.netPayable),
-      savingsPercent:
-        totalFees > 0 ? ((computedConcessionAmount / totalFees) * 100).toFixed(1) : '0',
-    };
-  }, [authoritativePreview, totalFees, computedConcessionAmount]);
 
   const selectedFeeHeadCount = (values.selectedFeeHeads[values.concessionTypeId] || []).length;
   const hasSelectedFeeHeads = selectedFeeHeadCount > 0;
@@ -738,10 +730,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       concessionTypeId: typeId,
       sourceRequestId: student?.sourceRequestId,
       remarks: values.remarks,
-      feeHeadConcessions: selectedPolicy?.valueSource === 'PolicyFixed'
-        ? buildFeeHeadConcessions(values) : [],
-      dueFeeConcessions: selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
-        ? buildDueFeeConcessions(values, requestContext) : [],
+      feeHeadConcessions:
+        selectedPolicy?.valueSource === 'PolicyFixed' ? buildFeeHeadConcessions(values) : [],
+      dueFeeConcessions:
+        selectedPolicy?.valueSource === 'RequestEnteredWithinLimits'
+          ? buildDueFeeConcessions(values, requestContext)
+          : [],
       documents,
     };
 
@@ -866,20 +860,18 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   if (isLoadingConcession || isFetchingConcession) {
     return (
-      <Box sx={{ p: 1, height: '100%', overflow: 'auto' }}>
+      <Stack spacing={1.5} sx={{ p: { xs: 1.5, sm: 2 }, height: '100%', overflow: 'auto' }}>
         {/* Student Information skeleton */}
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
           <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-            <Skeleton variant="circular" width={18} height={18} />
+            <Skeleton variant="rounded" width={36} height={36} />
             <Box>
               <Skeleton variant="text" width={140} height={20} />
-              <Skeleton variant="text" width={220} height={16} />
             </Box>
           </Stack>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             {[...Array(4)].map((_, i) => (
-              <Grid size={{ xs: 6, md: 3 }} key={i}>
+              <Grid size={{ xs: 12, sm: 6 }} key={i}>
                 <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
               </Grid>
             ))}
@@ -890,16 +882,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         </Paper>
 
         {/* Concession Details skeleton */}
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
           <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-            <Skeleton variant="circular" width={18} height={18} />
+            <Skeleton variant="rounded" width={36} height={36} />
             <Box>
               <Skeleton variant="text" width={140} height={20} />
-              <Skeleton variant="text" width={200} height={16} />
             </Box>
           </Stack>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
             </Grid>
@@ -910,15 +900,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         </Paper>
 
         {/* Fee Head Mapping skeleton */}
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
           <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-            <Skeleton variant="circular" width={18} height={18} />
+            <Skeleton variant="rounded" width={36} height={36} />
             <Box>
               <Skeleton variant="text" width={130} height={20} />
-              <Skeleton variant="text" width={210} height={16} />
             </Box>
           </Stack>
-          <Divider sx={{ mb: 2 }} />
           <Grid container spacing={1}>
             {[...Array(8)].map((_, i) => (
               <Grid size={{ xs: 6, sm: 4, md: 3 }} key={i}>
@@ -927,40 +915,40 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             ))}
           </Grid>
         </Paper>
-      </Box>
+      </Stack>
     );
   }
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" height="100%">
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <Box sx={{ p: 1 }}>
-              <Grid container spacing={0}>
+        <Box display="flex" flexDirection="column" height="100%" minHeight={0}>
+          <Box
+            role="region"
+            aria-label="Concession request form fields"
+            tabIndex={0}
+            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}
+          >
+            <Box
+              sx={{
+                p: { xs: 1.5, sm: 2 },
+                containerType: 'inline-size',
+                '& .MuiCard-root': { boxShadow: 'none' },
+              }}
+            >
+              <Grid container spacing={1.5}>
                 {/* 1. Student Information */}
                 <Grid size={{ xs: 12 }}>
-                  <Paper variant="outlined" sx={paperSx}>
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="solar:users-group-rounded-bold-duotone"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          Student Information
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Select board, class, and student to proceed
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Divider sx={{ mb: 2 }} />
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 6, md: 3 }}>
+                  <FormSectionCard
+                    icon="solar:users-group-rounded-bold-duotone"
+                    title="Student information"
+                    descriptionTooltip="Select the board, medium, class, division, and student for this request."
+                  >
+                    <Grid container spacing={1.5}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
                           <CustomSelect
+                            size="small"
                             label="Board *"
                             options={boards}
                             labelKey="name"
@@ -987,9 +975,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           />
                         </ShakingTextField>
                       </Grid>
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
                           <CustomSelect
+                            size="small"
                             label="Medium *"
                             disabled={isEditMode || !values.boardId}
                             options={mediums}
@@ -1014,9 +1003,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           />
                         </ShakingTextField>
                       </Grid>
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
                           <CustomSelect
+                            size="small"
                             label="Class *"
                             disabled={isEditMode || !values.mediumId}
                             options={classes || []}
@@ -1040,9 +1030,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           />
                         </ShakingTextField>
                       </Grid>
-                      <Grid size={{ xs: 6, md: 3 }}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
                           <CustomSelect
+                            size="small"
                             label="Division *"
                             disabled={isEditMode || !values.standardId}
                             options={allDivisions}
@@ -1066,16 +1057,23 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       <Grid size={{ xs: 12 }}>
                         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
                           <Autocomplete
+                            size="small"
                             loading={studentLoading || studentFetching}
-                            noOptionsText={studentsError ? 'Unable to load students' : 'No Student Found'}
+                            noOptionsText={
+                              studentsError ? 'Unable to load students' : 'No Student Found'
+                            }
                             fullWidth
                             disabled={isEditMode || !values.divisionId}
                             options={studentOptions}
                             value={
                               studentOptions.find((s) => s.studentId === values.studentId) ||
-                              (isEditMode && values.studentId ? { studentId: values.studentId, name: values.studentName } : null)
+                              (isEditMode && values.studentId
+                                ? { studentId: values.studentId, name: values.studentName }
+                                : null)
                             }
-                            isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
+                            isOptionEqualToValue={(option, value) =>
+                              option.studentId === value.studentId
+                            }
                             onChange={(_e, value: any) => {
                               setSelectedAssignmentId('');
                               setFieldValue('studentId', value?.studentId || '');
@@ -1106,17 +1104,22 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         </ShakingTextField>
                       </Grid>
                     </Grid>
-                  </Paper>
+                  </FormSectionCard>
                 </Grid>
                 {requestContext?.assignmentSelectionRequired && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={paperSx}>
-                      <Alert severity="info" sx={{ mb: 1.5 }}>
+                    <FormSectionCard
+                      icon="solar:bill-list-bold-duotone"
+                      title="Fee assignment"
+                      descriptionTooltip="Choose the fee assignment whose dues this concession will apply to."
+                    >
+                      <Alert severity="info">
                         This student has more than one fee assignment. Select the assignment that
                         owns the dues for this request. You will choose the concession policy in
                         this request.
                       </Alert>
                       <CustomSelect
+                        size="small"
                         label="Fee assignment *"
                         options={requestContext.assignments.map((assignment) => ({
                           ...assignment,
@@ -1140,22 +1143,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           setFieldValue('concessionTypeDocuments', []);
                         }}
                       />
-                    </Paper>
+                    </FormSectionCard>
                   </Grid>
                 )}
                 {/* Fee structure loading skeleton */}
                 {values.studentId && feeStructureLoading && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+                    <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
                       <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Skeleton variant="circular" width={18} height={18} />
+                        <Skeleton variant="rounded" width={36} height={36} />
                         <Box>
                           <Skeleton variant="text" width={160} height={20} />
-                          <Skeleton variant="text" width={220} height={16} />
                         </Box>
                       </Stack>
-                      <Divider sx={{ mb: 2 }} />
-                      <Grid container spacing={2}>
+                      <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, md: 6 }}>
                           <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
                         </Grid>
@@ -1215,37 +1216,29 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 )}
 
                 {values.studentId && !feeStructureLoading && selectedPolicy && (
-                    <Grid size={{ xs: 12 }}>
-                      <Alert severity="info" variant="outlined" sx={{ mb: 1.5 }}>
-                        Policy: <strong>{selectedPolicy.policyName}</strong> (
-                        {selectedPolicy.policyCode}, version {selectedPolicy.version}). It applies
-                        to{' '}
-                        {selectedPolicy.applyOn === 'AllFees'
-                          ? ' all installments, including those already paid'
-                          : selectedPolicy.applyOn === 'AllOutstanding'
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="info" variant="outlined">
+                      Policy: <strong>{selectedPolicy.policyName}</strong> (
+                      {selectedPolicy.policyCode}, version {selectedPolicy.version}). It applies to{' '}
+                      {selectedPolicy.applyOn === 'AllFees'
+                        ? ' all installments, including those already paid'
+                        : selectedPolicy.applyOn === 'AllOutstanding'
                           ? ' all outstanding installments'
                           : selectedPolicy.applyOn === 'CurrentInstallment'
                             ? ' the earliest unpaid installment'
                             : ' installments after the earliest unpaid installment'}
-                        .
-                        {selectedPolicy.applyOn === 'AllFees' && (selectedPolicy.autoCreateRefund === false
+                      .
+                      {selectedPolicy.applyOn === 'AllFees' &&
+                        (selectedPolicy.autoCreateRefund === false
                           ? ' The paid concession is refundable; create its linked refund requests manually after approval.'
                           : ' The paid concession automatically creates linked refund requests after approval.')}
-                      </Alert>
-                    </Grid>
-                  )}
-
-                {previewLoading && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="info" sx={{ mb: 1.5 }}>
-                      Calculating the live eligible balance...
                     </Alert>
                   </Grid>
                 )}
 
                 {previewIsError && previewReady && (
                   <Grid size={{ xs: 12 }}>
-                    <Alert severity="error" sx={{ mb: 1.5 }}>
+                    <Alert severity="error">
                       {(previewError as any)?.data?.error?.message ||
                         (previewError as any)?.data?.message ||
                         'The server could not calculate this concession. Review the selected heads and values.'}
@@ -1253,101 +1246,21 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   </Grid>
                 )}
 
-                {/* 3. Fee Summary */}
-                {values.studentId && totalFees > 0 && (
-                  <Grid size={{ xs: 12 }} pb={1}>
-                    <Grid container spacing={2}>
-                      {[
-                        {
-                          icon: 'mdi:currency-inr',
-                          title: 'Eligible Outstanding',
-                          value: totalFees,
-                          color: 'text.primary',
-                          /* UI-ONLY: accent strip color token per card type */
-                          accentColor: '#1976d2',
-                          bgColor: 'rgba(25,118,210,0.06)',
-                        },
-                        {
-                          icon: 'mdi:tag-minus-outline',
-                          title: 'Concession Amount',
-                          value: computedConcessionAmount,
-                          color: computedConcessionAmount > 0 ? 'error.main' : 'text.disabled',
-                          accentColor: '#d32f2f',
-                          bgColor: 'rgba(211,47,47,0.06)',
-                        },
-                        {
-                          icon: 'mdi:cash-check',
-                          title: 'Net Payable',
-                          value: Number(authoritativePreview?.netPayable ?? 0),
-                          color: 'success.main',
-                          accentColor: '#2e7d32',
-                          bgColor: 'rgba(46,125,50,0.06)',
-                        },
-                      ].map((item) => (
-                        <Grid size={{ xs: 12, sm: 4 }} key={item.title}>
-                          <Card
-                            sx={{
-                              p: 1.5,
-                              height: '100%',
-                              bgcolor: 'background.paper',
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              borderLeft: `4px solid ${item.accentColor}`,
-                              borderRadius: '10px',
-                              boxShadow: 'none',
-                              transition: 'box-shadow 0.25s ease, transform 0.2s ease',
-                              '&:hover': {
-                                boxShadow: '0 6px 20px rgba(0,0,0,0.10)',
-                                transform: 'translateY(-2px)',
-                              },
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              fontWeight={600}
-                              textTransform="uppercase"
-                              letterSpacing={0.8}
-                              display="block"
-                              mb={0.5}
-                            >
-                              {item.title}
-                            </Typography>
-                            <Typography variant="h6" color={item.color} fontWeight={800}>
-                              {formatNumber(item.value, 'INR')}
-                            </Typography>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Grid>
-                )}
                 {/* 2. Concession Details */}
                 {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={paperSx}>
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Iconify
-                          icon="solar:tag-price-bold-duotone"
-                          width={18}
-                          sx={{ color: 'primary.main' }}
-                        />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Concession Details
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Choose concession type and add remarks
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Divider sx={{ mb: 2 }} />
-                      <Grid container spacing={2}>
+                    <FormSectionCard
+                      icon="solar:tag-price-bold-duotone"
+                      title="Concession details"
+                      descriptionTooltip="Choose the concession policy and type, then add remarks for the request."
+                    >
+                      <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, md: 6 }}>
                           <ShakingTextField
                             error={!!(touched.concessionPolicyId && errors.concessionPolicyId)}
                           >
                             <Autocomplete
+                              size="small"
                               options={concessionPoliciesList}
                               disabled={feeStructureLoading || !requestContext}
                               value={selectedPolicy || null}
@@ -1364,7 +1277,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 setFieldValue('valueEntries', {});
                                 setFieldValue('dueFeeEntries', {});
                               }}
-                              size="small"
                               getOptionLabel={(option) =>
                                 `${option.policyName} (${option.policyCode}, v${option.version})`
                               }
@@ -1372,18 +1284,22 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 <TextField
                                   {...params}
                                   size="small"
-                                  label="Concession Policy *"
+                                  label="Concession policy *"
                                   fullWidth
-                                  error={
-                                    !!errors.concessionPolicyId && touched.concessionPolicyId
-                                  }
+                                  error={!!errors.concessionPolicyId && touched.concessionPolicyId}
                                   helperText={
-                                    !values.studentId ? 'Choose a student to load policies.' :
-                                    feeStructureIsError ? 'Could not load concession policies. Retry or check the student fee assignment.' :
-                                    feeStructureLoading ? 'Loading active policies…' :
-                                    !requestContext ? 'Select the student fee assignment to continue.' :
-                                    concessionPoliciesList.length === 0 ? 'No active concession policy for this academic year.' :
-                                    (touched.concessionPolicyId && errors.concessionPolicyId) as string
+                                    !values.studentId
+                                      ? 'Choose a student to load policies.'
+                                      : feeStructureIsError
+                                        ? 'Could not load concession policies. Retry or check the student fee assignment.'
+                                        : feeStructureLoading
+                                          ? 'Loading active policies…'
+                                          : !requestContext
+                                            ? 'Select the student fee assignment to continue.'
+                                            : concessionPoliciesList.length === 0
+                                              ? 'No active concession policy for this academic year.'
+                                              : ((touched.concessionPolicyId &&
+                                                  errors.concessionPolicyId) as string)
                                   }
                                 />
                               )}
@@ -1400,6 +1316,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                             error={!!(touched.concessionTypeId && errors.concessionTypeId)}
                           >
                             <Autocomplete
+                              size="small"
                               options={concessionTypesList}
                               value={
                                 concessionTypesList.find(
@@ -1420,7 +1337,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 setFieldValue('dueFeeEntries', {});
                               }}
                               disabled={isEditMode}
-                              size="small"
                               getOptionLabel={(option: any) => option.name || ''}
                               renderOption={(props, option: any) => (
                                 <Box
@@ -1455,7 +1371,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 <TextField
                                   {...params}
                                   size="small"
-                                  label="Concession Type *"
+                                  label="Concession type *"
                                   fullWidth
                                   error={!!errors.concessionTypeId && touched.concessionTypeId}
                                   helperText={
@@ -1478,30 +1394,18 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           />
                         </Grid>
                       </Grid>
-                    </Paper>
+                    </FormSectionCard>
                   </Grid>
                 )}
 
                 {/* 4. Fee Head Mapping */}
                 {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={paperSx}>
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Iconify
-                          icon="solar:bill-list-bold-duotone"
-                          width={18}
-                          sx={{ color: 'primary.main' }}
-                        />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Fee Head Mapping
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Select fee heads; the selection applies to every eligible installment shown below
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Divider sx={{ mb: 2 }} />
+                    <FormSectionCard
+                      icon="solar:bill-list-bold-duotone"
+                      title="Fee heads"
+                      descriptionTooltip="Select fee heads; the selection applies to every eligible installment shown below."
+                    >
                       {!values.concessionPolicyId ? (
                         <Typography color="text.secondary" textAlign="center" py={2}>
                           Please select a concession policy above to calculate eligible fee heads.
@@ -1543,8 +1447,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           return (
                             <Grid container spacing={1}>
                               {displayFeeHeads.map((fh: any) => {
-                                const installmentLines = (requestContext?.eligibleDueFees || [])
-                                  .filter((line) => line.feeHeadId === fh.feeHeadId);
+                                const installmentLines = (
+                                  requestContext?.eligibleDueFees || []
+                                ).filter((line) => line.feeHeadId === fh.feeHeadId);
                                 const isChecked = (
                                   values.selectedFeeHeads[values.concessionTypeId] || []
                                 ).includes(fh.feeHeadId);
@@ -1560,16 +1465,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                         alignItems: 'stretch',
                                         border: '1.5px solid',
                                         borderColor: isChecked ? 'primary.main' : 'divider',
-                                        borderRadius: '8px',
+                                        borderRadius: 1.5,
                                         p: '6px 10px',
                                         cursor: 'pointer',
-                                        bgcolor: isChecked
-                                          ? 'rgba(25,118,210,0.08)'
-                                          : 'background.paper',
-                                        transition: 'all 0.2s ease',
-                                        boxShadow: isChecked
-                                          ? '0 1px 6px rgba(25,118,210,0.14)'
-                                          : 'none',
+                                        bgcolor: isChecked ? 'action.selected' : 'background.paper',
+                                        transition:
+                                          'border-color 0.2s ease, background-color 0.2s ease',
+                                        '@media (prefers-reduced-motion: reduce)': {
+                                          transition: 'none',
+                                        },
                                         '&:hover': {
                                           borderColor: 'primary.light',
                                           bgcolor: 'action.hover',
@@ -1584,37 +1488,57 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                           gap: 1,
                                         }}
                                       >
-                                        <Checkbox
-                                          size="small"
-                                          checked={isChecked}
-                                          inputProps={{ 'aria-label': `Apply concession to ${fh.feeHeadName}` }}
-                                          onChange={() =>
-                                            handleFeeHeadToggle(
-                                              values.concessionTypeId,
-                                              fh.feeHeadId
-                                            )
+                                        <FormControlLabel
+                                          onClick={(event) => event.stopPropagation()}
+                                          sx={{
+                                            m: 0,
+                                            minWidth: 0,
+                                            flex: 1,
+                                            alignItems: 'flex-start',
+                                            '& .MuiFormControlLabel-label': { minWidth: 0 },
+                                          }}
+                                          control={
+                                            <Checkbox
+                                              size="small"
+                                              checked={isChecked}
+                                              onChange={() =>
+                                                handleFeeHeadToggle(
+                                                  values.concessionTypeId,
+                                                  fh.feeHeadId
+                                                )
+                                              }
+                                              sx={{ p: 0.5, mr: 0.5 }}
+                                            />
                                           }
-                                          onClick={(e) => e.stopPropagation()}
-                                          sx={{ p: 0.25, flexShrink: 0 }}
+                                          label={
+                                            <Box sx={{ pt: 0.5 }}>
+                                              <Typography
+                                                variant="body2"
+                                                fontWeight={600}
+                                                sx={{ overflowWrap: 'anywhere' }}
+                                              >
+                                                {fh.feeHeadName}
+                                              </Typography>
+                                              {fh.categoryName && (
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                >
+                                                  {fh.categoryName}
+                                                </Typography>
+                                              )}
+                                            </Box>
+                                          }
                                         />
-                                        <Box sx={{ minWidth: 0 }}>
-                                          <Typography
-                                            variant="subtitle2"
-                                            color="text.primary"
-                                            fontWeight={isChecked ? 600 : 400}
-                                          >
-                                            {fh.feeHeadName}
-                                          </Typography>
-                                          {fh.categoryName && (
-                                            <Typography variant="caption" noWrap display="block">
-                                              {fh.categoryName}
-                                            </Typography>
-                                          )}
-                                        </Box>
                                         <Typography
                                           variant="subtitle2"
                                           color={isChecked ? 'primary.main' : 'text.secondary'}
-                                          sx={{ fontWeight: 700, whiteSpace: 'nowrap', ml: 0.5, flexShrink: 0 }}
+                                          sx={{
+                                            fontWeight: 700,
+                                            whiteSpace: 'nowrap',
+                                            ml: 0.5,
+                                            flexShrink: 0,
+                                          }}
                                         >
                                           {formatNumber(fh.amount, 'INR')}
                                         </Typography>
@@ -1632,7 +1556,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                                 {line.installmentLabel} ({line.year})
                                               </Typography>
                                               <Typography variant="caption" color="text.secondary">
-                                                {formatNumber(line.outstandingAmount, 'INR')} outstanding
+                                                {formatNumber(line.outstandingAmount, 'INR')}{' '}
+                                                outstanding
                                               </Typography>
                                             </Stack>
                                           ))}
@@ -1646,30 +1571,18 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           );
                         })()
                       )}
-                    </Paper>
+                    </FormSectionCard>
                   </Grid>
                 )}
 
                 {/* 5. Concession Values */}
                 {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={paperSx}>
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Iconify
-                          icon="solar:calculator-bold-duotone"
-                          width={18}
-                          sx={{ color: 'primary.main' }}
-                        />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Concession Values
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Enter concession amounts per fee head
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Divider sx={{ mb: 2 }} />
+                    <FormSectionCard
+                      icon="solar:calculator-bold-duotone"
+                      title="Concession values"
+                      descriptionTooltip="Enter concession amounts per fee head and review the eligible installments."
+                    >
                       <ValueEntryStep
                         formik={{
                           ...formik,
@@ -1683,123 +1596,29 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         policy={selectedPolicy}
                         preview={authoritativePreview ?? undefined}
                       />
-                    </Paper>
+                    </FormSectionCard>
                   </Grid>
                 )}
 
-                {/* 6. Concession Preview */}
-                {previewData && (
+                {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        mb: 1.5,
-                        borderRadius: 2,
-                        border: '1.5px solid',
-                        borderColor: 'primary.main',
-                        transition: 'box-shadow 0.2s ease',
-                        '&:hover': { boxShadow: 4 },
-                      }}
-                    >
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Iconify icon="mdi:eye-outline" width={18} sx={{ color: 'primary.main' }} />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Concession Preview
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Summary of concession impact on fees
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Divider sx={{ mb: 2 }} />
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          borderRadius: '10px',
-                          overflow: 'hidden',
-                          border: '1px solid',
-                          borderColor: 'divider',
-                        }}
-                      >
-                        <Box sx={{ px: 2.5, py: 1.5 }}>
-                          <Typography
-                            variant="h6"
-                            fontWeight={600}
-                            letterSpacing={0.1}
-                            color="text.primary"
-                          >
-                            {selectedConcessionType?.name || 'Concession'} — Impact Summary
-                          </Typography>
-                        </Box>
-                        <Divider />
-                        <Box sx={{ p: 2.5 }}>
-                          <Stack spacing={2}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                              <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                                Eligible Outstanding
-                              </Typography>
-                              <Typography variant="body2" fontWeight={700}>
-                                {formatNumber(previewData.totalFees, 'INR')}
-                              </Typography>
-                            </Box>
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                              <Typography variant="body2" color="error.main" fontWeight={600}>
-                                (-) Concession Discount
-                              </Typography>
-                              <Typography variant="body2" fontWeight={700} color="error.main">
-                                - {formatNumber(previewData.concessionAmount, 'INR')}
-                              </Typography>
-                            </Box>
-                            <Divider />
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                Net Payable
-                              </Typography>
-                              <Typography variant="subtitle1" fontWeight={800} color="success.main">
-                                {formatNumber(previewData.netPayable, 'INR')}
-                              </Typography>
-                            </Box>
-                            <Alert
-                              severity="success"
-                              variant="outlined"
-                              icon={<Iconify icon="mdi:tag-check-outline" width={20} />}
-                              sx={{ borderRadius: '8px', mt: 0.5 }}
-                            >
-                              <Typography variant="body2">
-                                Student saves{' '}
-                                <strong>{formatNumber(previewData.concessionAmount, 'INR')}</strong>{' '}
-                                ({previewData.savingsPercent}% of total fees)
-                              </Typography>
-                            </Alert>
-                          </Stack>
-                        </Box>
-                      </Card>
-                    </Paper>
+                    <ConcessionImpactSummary
+                      preview={authoritativePreview}
+                      loading={previewLoading}
+                      concessionName={selectedConcessionType?.name}
+                      selectedFeeHeadCount={selectedFeeHeadCount}
+                    />
                   </Grid>
                 )}
 
                 {/* 7. Documents */}
                 {values.concessionTypeId && (
                   <Grid size={{ xs: 12 }}>
-                    <Paper variant="outlined" sx={paperSx}>
-                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                        <Iconify
-                          icon="solar:document-bold-duotone"
-                          width={18}
-                          sx={{ color: 'primary.main' }}
-                        />
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={700}>
-                            Documents
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Upload required supporting documents
-                          </Typography>
-                        </Box>
-                      </Stack>
-                      <Divider sx={{ mb: 2 }} />
+                    <FormSectionCard
+                      icon="solar:document-bold-duotone"
+                      title="Documents"
+                      descriptionTooltip="Upload the required supporting documents for the selected concession type."
+                    >
                       <ConcessionDocumentList
                         concessionId={values.concessionTypeId}
                         concessionName={selectedConcessionType?.name || ''}
@@ -1815,18 +1634,19 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           can still save this request as a draft.
                         </Alert>
                       )}
-                    </Paper>
+                    </FormSectionCard>
                   </Grid>
                 )}
               </Grid>
             </Box>
-          </Scrollbar>
+          </Box>
 
           {/* ── Sticky Action Bar ── */}
           <Box
             sx={{
               flexShrink: 0,
-              borderTop: `1px solid`,
+              bgcolor: 'background.paper',
+              borderTop: '1px solid',
               borderColor: 'divider',
               backdropFilter: 'blur(12px)',
               px: { xs: 2, md: 3 },
@@ -1845,7 +1665,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               flexWrap="wrap"
               gap={1}
             >
-              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+              <Stack
+                direction="row"
+                spacing={1.5}
+                useFlexGap
+                flexWrap="wrap"
+                justifyContent="flex-end"
+              >
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.cancel} />}
                   onClick={() => onClose(null, false)}
@@ -1910,12 +1736,23 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           onClose={() => setAdminConfirmation(null)}
           content={
             <Stack spacing={1}>
-              <Typography>{adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}</Typography>
-              <Typography>{adminConfirmation?.concessionType} · {adminConfirmation?.policyName}</Typography>
-              <Typography>Concession: {formatCurrency(adminConfirmation?.amount ?? 0)}</Typography>
-              <Typography>This request will be approved automatically when you confirm and will affect dues immediately.</Typography>
+              <Typography>
+                {adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}
+              </Typography>
+              <Typography>
+                {adminConfirmation?.concessionType} · {adminConfirmation?.policyName}
+              </Typography>
+              <Typography>
+                Concession: {formatNumber(adminConfirmation?.amount ?? 0, 'INR')}
+              </Typography>
+              <Typography>
+                This request will be approved automatically when you confirm and will affect dues
+                immediately.
+              </Typography>
               {adminConfirmation?.autoCreateRefund && (
-                <Typography>Any linked refund request follows its own approval workflow.</Typography>
+                <Typography>
+                  Any linked refund request follows its own approval workflow.
+                </Typography>
               )}
             </Stack>
           }

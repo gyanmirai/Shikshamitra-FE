@@ -6,11 +6,11 @@ import { fDate } from 'src/utils/format-time';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSectionCard } from 'src/components/form-section-card';
+import { Box, Link, Stack, Alert, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Alert, Button, IconButton, Typography } from '@mui/material';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 import { groupAssignmentInstallments } from './assignmentReviewPresentation';
@@ -30,11 +30,9 @@ const embeddedTableProps = {
 export default function AssignmentReview({
   data,
   committed = false,
-  onEdit,
 }: {
   data: AssignmentPreview;
   committed?: boolean;
-  onEdit?: (step: number) => void;
 }) {
   const [showInstallments, setShowInstallments] = useState(false);
   const installments = groupAssignmentInstallments(data.lines);
@@ -42,24 +40,16 @@ export default function AssignmentReview({
   const tableId = `assignment-${data.studentId}-${data.structureId}-${committed ? 'saved' : 'preview'}`;
   const money = (value: number) => formatNumber(value, data.currency);
   const summary = (
-    <FormSectionCard
+    <DetailSection
       icon="mdi:cash-multiple"
       title="Assignment total"
-      contentSpacing={1.5}
-      descriptionTooltip="Recorded assignment amounts before and after service adjustment. Prices and obligations are calculated by the server."
+      helpText="Totals are calculated by the server. Service reduction is the difference between the full scheduled amount and the amount assigned for the selected service dates."
     >
-      <Box
-        component="dl"
-        sx={{
-          m: 0,
-          p: 0,
-          borderRadius: 1,
-
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr)',
-          gap: 2,
-        }}
-      >
+      <DetailField
+        label="Fee Structure"
+        value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
+      />
+      <DetailGrid>
         {[
           { label: committed ? 'Assigned amount' : 'Total to assign', value: data.proratedTotal },
           ...(!legacy
@@ -68,84 +58,25 @@ export default function AssignmentReview({
                 { label: 'Service reduction', value: data.reductionTotal },
               ]
             : []),
-        ].map((metric, index) => (
-          <Box key={metric.label}>
-            <Typography component="dt" variant="caption" color="text.secondary">
-              {metric.label}
-            </Typography>
-            <Typography
-              component="dd"
-              variant={index === 0 ? 'h4' : 'subtitle2'}
-              sx={{ m: 0, fontVariantNumeric: 'tabular-nums' }}
-            >
-              {money(metric.value)}
-            </Typography>
-          </Box>
+        ].map((metric) => (
+          <DetailField key={metric.label} label={metric.label} value={money(metric.value)} />
         ))}
-      </Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-          {data.structureName} · {data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}
-        </Typography>
-        {onEdit && (
-          <Button
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.edit} />}
-            onClick={() => onEdit(0)}
-            aria-label="Edit fee structure"
-          >
-            Edit
-          </Button>
-        )}
-      </Stack>
+      </DetailGrid>
 
-      {(data.overrideReason || data.policyOverrideReason) && (
-        <CustomTooltip
-          title={
-            <Stack spacing={0.5}>
-              {data.overrideReason && (
-                <Typography variant="caption">Amount override: {data.overrideReason}</Typography>
-              )}
-              {data.policyOverrideReason && (
-                <Typography variant="caption">
-                  Policy override: {data.policyOverrideReason}
-                </Typography>
-              )}
-            </Stack>
-          }
-          arrow
-          placement="right"
-        >
-          <IconButton
-            size="small"
-            color="info"
-            aria-label="Assignment override reasons"
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            <Iconify icon="mdi:information-outline" width={18} />
-          </IconButton>
-        </CustomTooltip>
+      {data.overrideReason && (
+        <DetailField label="Amount override reason" value={data.overrideReason} />
       )}
-    </FormSectionCard>
+      {data.policyOverrideReason && (
+        <DetailField label="Policy override reason" value={data.policyOverrideReason} />
+      )}
+    </DetailSection>
   );
   return (
     <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
       <Stack spacing={1.5}>
         {data.warnings.map((warning) => (
-          <Alert
-            key={warning}
-            severity="warning"
-            action={
-              /due dates.*past/i.test(warning) ? (
-                <CustomTooltip title={warning} arrow placement="right">
-                  <IconButton size="small" color="inherit" aria-label="Past due dates information">
-                    <Iconify icon="mdi:information-outline" width={18} />
-                  </IconButton>
-                </CustomTooltip>
-              ) : undefined
-            }
-          >
-            {/due dates.*past/i.test(warning) ? 'Some due dates are in the past.' : warning}
+          <Alert key={warning} severity="warning">
+            {warning}
           </Alert>
         ))}
 
@@ -156,32 +87,11 @@ export default function AssignmentReview({
             gridTemplateColumns: 'minmax(0, 1fr)',
             gridTemplateAreas: '"summary" "details"',
             alignItems: 'start',
-            '@container (min-width: 740px)': {
-              gridTemplateColumns: 'minmax(0, 1fr) 250px',
-              gridTemplateAreas: '"details summary"',
-            },
           }}
         >
           <Box sx={{ gridArea: 'summary', minWidth: 0, alignSelf: 'start' }}>{summary}</Box>
           <Stack spacing={1.5} sx={{ gridArea: 'details', minWidth: 0 }}>
-            <FormSectionCard
-              icon="mdi:format-list-bulleted"
-              title="Fee breakdown"
-              contentSpacing={1}
-              descriptionTooltip="Review included fees and obligations. Each row's info icon contains its service verification and amount evidence."
-              action={
-                onEdit && (
-                  <Button
-                    size="small"
-                    startIcon={<Iconify icon={GlobalIcons.edit} />}
-                    aria-label="Edit fees and dates"
-                    onClick={() => onEdit(1)}
-                  >
-                    Edit
-                  </Button>
-                )
-              }
-            >
+            <DetailSection icon="mdi:format-list-bulleted" title="Fee breakdown">
               <CustomizableTable
                 {...embeddedTableProps}
                 tableId={`${tableId}-heads`}
@@ -191,7 +101,7 @@ export default function AssignmentReview({
                 columns={[
                   {
                     id: 'feeHeadName',
-                    label: 'Fee head',
+                    label: 'Fee Head',
                     minWidth: 180,
                     width: '25%',
                     isSort: false,
@@ -214,78 +124,24 @@ export default function AssignmentReview({
                     ),
                   },
                   {
-                    id: 'servicePeriod',
-                    label: 'Service / payment term',
+                    id: 'paymentTermName',
+                    label: 'Payment Term',
                     minWidth: 180,
                     isSort: false,
                     isFilter: false,
                     render: (_value, head) =>
                       head.included ? (
                         <Stack spacing={0.5}>
-                          {head.servicePeriod && (
-                            <Typography variant="body2">
-                              {head.servicePeriod.startDate
-                                ? fDate(head.servicePeriod.startDate)
-                                : '—'}{' '}
-                              –{' '}
-                              {head.servicePeriod.endDate ? fDate(head.servicePeriod.endDate) : '—'}
-                            </Typography>
-                          )}
                           {head.paymentTermName && (
                             <Typography variant="body2">
                               {head.paymentTermName} · v{head.paymentTermVersionNumber ?? '—'}
                             </Typography>
                           )}
-                          <CustomTooltip
-                            title={
-                              <Stack spacing={0.5}>
-                                {head.verification && (
-                                  <Typography variant="caption">{head.verification}</Typography>
-                                )}
-                                {head.servicePeriod?.reason && (
-                                  <Typography variant="caption">
-                                    Service override: {head.servicePeriod.reason}
-                                  </Typography>
-                                )}
-                                {!legacy && (
-                                  <Typography variant="caption">
-                                    {head.isVariable ? 'Student amount' : 'Configured amount'}:{' '}
-                                    {(head.isVariable
-                                      ? head.effectiveAmount
-                                      : head.configuredAmount) == null
-                                      ? '—'
-                                      : money(
-                                          head.isVariable
-                                            ? head.effectiveAmount
-                                            : head.configuredAmount
-                                        )}{' '}
-                                    · {head.amountBasis === 'OneTime' ? 'One-time' : 'Term total'}
-                                  </Typography>
-                                )}
-                                {!legacy &&
-                                  !head.isVariable &&
-                                  head.effectiveAmount !== head.configuredAmount && (
-                                    <Typography variant="caption">
-                                      Authorized service total:{' '}
-                                      {head.effectiveAmount == null
-                                        ? '—'
-                                        : money(head.effectiveAmount)}
-                                    </Typography>
-                                  )}
-                              </Stack>
-                            }
-                            arrow
-                            placement="right"
-                          >
-                            <IconButton
-                              size="small"
-                              color="info"
-                              aria-label={`${head.feeHeadName} service details`}
-                              sx={{ alignSelf: 'flex-start' }}
-                            >
-                              <Iconify icon="mdi:information-outline" width={16} />
-                            </IconButton>
-                          </CustomTooltip>
+                          {head.servicePeriod?.reason && (
+                            <Typography variant="caption" color="text.secondary">
+                              {head.servicePeriod.reason}
+                            </Typography>
+                          )}
                         </Stack>
                       ) : (
                         '—'
@@ -293,7 +149,7 @@ export default function AssignmentReview({
                   },
                   {
                     id: 'obligation',
-                    label: legacy ? 'Recorded obligation' : 'Obligation',
+                    label: legacy ? 'Recorded Amount' : 'Assigned Amount',
                     minWidth: 130,
                     align: 'right',
                     isSort: false,
@@ -305,7 +161,7 @@ export default function AssignmentReview({
                         </Typography>
                         {!head.included && (
                           <Typography variant="caption" color="text.secondary">
-                            No obligation
+                            Not assigned
                           </Typography>
                         )}
                       </Stack>
@@ -313,22 +169,40 @@ export default function AssignmentReview({
                   },
                 ]}
               />
-            </FormSectionCard>
+            </DetailSection>
 
-            <FormSectionCard
+            <DetailSection
               icon="mdi:calendar-clock-outline"
               title="Installment schedule"
-              contentSpacing={1}
-              descriptionTooltip="Terms with the same sequence and dates are grouped. View all to inspect the original fee-head shares and amounts."
               action={
-                <Button
-                  size="small"
+                <Link
+                  component="button"
+                  type="button"
+                  variant="body2"
+                  underline="hover"
+                  color="text.primary"
                   disabled={!data.lines.length}
-                  startIcon={<Iconify icon={GlobalIcons.eye} />}
                   onClick={() => setShowInstallments(true)}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    fontWeight: 600,
+                    p: 0,
+                    bgcolor: 'transparent',
+                    border: 0,
+                    '&:focus-visible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: 4,
+                      borderRadius: 0.5,
+                    },
+                    '&:disabled': { color: 'text.disabled', cursor: 'default' },
+                  }}
                 >
+                  <Iconify icon={GlobalIcons.eye} width={18} aria-hidden />
                   View all
-                </Button>
+                </Link>
               }
             >
               <CustomizableTable
@@ -361,6 +235,12 @@ export default function AssignmentReview({
                   {
                     id: 'demandDate',
                     label: 'Demand date',
+                    renderColumn: () => (
+                      <InfoTooltipIcon
+                        label="About demand dates"
+                        title="The date this installment becomes available for collection."
+                      />
+                    ),
                     minWidth: 110,
                     isSort: false,
                     isFilter: false,
@@ -369,6 +249,12 @@ export default function AssignmentReview({
                   {
                     id: 'dueDate',
                     label: 'Due date',
+                    renderColumn: () => (
+                      <InfoTooltipIcon
+                        label="About due dates"
+                        title="The payment deadline for this installment. Assignment preserves the configured date."
+                      />
+                    ),
                     minWidth: 110,
                     isSort: false,
                     isFilter: false,
@@ -376,7 +262,7 @@ export default function AssignmentReview({
                   },
                   {
                     id: 'obligation',
-                    label: 'Obligation',
+                    label: 'Assigned Amount',
                     minWidth: 110,
                     align: 'right',
                     isSort: false,
@@ -407,26 +293,9 @@ export default function AssignmentReview({
                     : []),
                 ]}
               />
-            </FormSectionCard>
+            </DetailSection>
 
-            <FormSectionCard
-              icon="mdi:shield-check-outline"
-              title="Applicable policies"
-              contentSpacing={1}
-              action={
-                onEdit && (
-                  <Button
-                    size="small"
-                    startIcon={<Iconify icon={GlobalIcons.edit} />}
-                    aria-label="Edit policies"
-                    onClick={() => onEdit(0)}
-                  >
-                    Edit
-                  </Button>
-                )
-              }
-              descriptionTooltip="Policy versions and fee-head treatment recorded for this assignment."
-            >
+            <DetailSection icon="mdi:shield-check-outline" title="Applicable policies">
               <Box
                 sx={{
                   display: 'grid',
@@ -437,46 +306,11 @@ export default function AssignmentReview({
                 {selectableAssignmentPolicyFamilies.map((family) => {
                   const policy = data.policies.find((p) => p.family === family);
                   return (
-                    <Box key={family}>
-                      <Typography variant="subtitle2" sx={{ textTransform: 'capitalize' }}>
-                        {family} policy:{' '}
-                        {policy ? `${policy.name} · v${policy.version}` : 'No policy assigned'}
-                      </Typography>
-                      {policy && (
-                        <CustomTooltip
-                          title={
-                            <Stack spacing={0.5}>
-                              {policy && (
-                                <Typography variant="caption">
-                                  {policy.source === 'StudentOverride'
-                                    ? 'Student override'
-                                    : 'Fee structure default'}
-                                  {policy.description ? ` · ${policy.description}` : ''}
-                                </Typography>
-                              )}
-                              {policy &&
-                                data.heads
-                                  .filter((h) => h.included && policy.headTreatment?.[h.feeHeadId])
-                                  .map((h) => (
-                                    <Typography key={h.feeHeadId} variant="body2">
-                                      {h.feeHeadName}: {policy.headTreatment[h.feeHeadId]}
-                                    </Typography>
-                                  ))}
-                            </Stack>
-                          }
-                          arrow
-                          placement="right"
-                        >
-                          <IconButton
-                            size="small"
-                            color="info"
-                            aria-label={`${family} policy information`}
-                          >
-                            <Iconify icon="mdi:information-outline" width={18} />
-                          </IconButton>
-                        </CustomTooltip>
-                      )}
-                    </Box>
+                    <DetailField
+                      key={family}
+                      label={`${family} policy`}
+                      value={policy ? `${policy.name} · v${policy.version}` : 'No policy assigned'}
+                    />
                   );
                 })}
                 {committed &&
@@ -488,30 +322,21 @@ export default function AssignmentReview({
                       ) &&
                       !data.policies.some((current) => current.versionId === original.versionId)
                   ) && (
-                    <CustomTooltip
-                      title={`Policies recorded when assigned: ${data.originalPolicies
+                    <DetailField
+                      fullWidth
+                      label="Policies when assigned"
+                      value={data.originalPolicies
                         .filter((policy) =>
                           selectableAssignmentPolicyFamilies.some(
                             (family) => family === policy.family
                           )
                         )
-                        .map((p) => `${p.family}: ${p.name} · v${p.version}`)
-                        .join('; ')}. Existing charges retain this calculation evidence.`}
-                      arrow
-                      placement="right"
-                    >
-                      <IconButton
-                        size="small"
-                        color="info"
-                        aria-label="Original assigned policies information"
-                        sx={{ justifySelf: 'start' }}
-                      >
-                        <Iconify icon="mdi:information-outline" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
+                        .map((policy) => `${policy.family}: ${policy.name} · v${policy.version}`)
+                        .join('; ')}
+                    />
                   )}
               </Box>
-            </FormSectionCard>
+            </DetailSection>
           </Stack>
         </Box>
       </Stack>
@@ -519,15 +344,22 @@ export default function AssignmentReview({
         <CustomDialog
           open
           title="Installment details"
-          maxWidth="lg"
+          maxWidth={committed ? 'lg' : 'md'}
           hasForm={false}
           guardUnsavedChanges={false}
           handleClose={() => setShowInstallments(false)}
-          titleInfo="Recorded fee-head installments. Closing this view preserves your assignment changes."
         >
           <DialogScrollContent>
             <CustomizableTable
               {...embeddedTableProps}
+              tableContainerProps={{
+                sx: {
+                  height: 'auto',
+                  flex: 'none',
+                  '& .MuiTableCell-root': { py: 1, px: 1.5 },
+                  '& .MuiTableCell-head': { whiteSpace: 'nowrap' },
+                },
+              }}
               tableId={`${tableId}-installments`}
               tableTitle={
                 committed ? 'Assigned fee installments and balances' : 'Preview fee installments'
@@ -546,14 +378,18 @@ export default function AssignmentReview({
                   isSort: false,
                   isFilter: false,
                   render: (_value, line) => (
-                    <Stack spacing={0.5}>
-                      <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}
+                      >
                         {line.feeHeadName} · {line.installmentLabel}
                       </Typography>
                       {line.explanation && (
-                        <Typography variant="caption" color="text.secondary">
-                          {line.explanation}
-                        </Typography>
+                        <InfoTooltipIcon
+                          label={`${line.feeHeadName} ${line.installmentLabel} calculation details`}
+                          title={line.explanation}
+                        />
                       )}
                     </Stack>
                   ),
@@ -561,6 +397,12 @@ export default function AssignmentReview({
                 {
                   id: 'allocationPercentage',
                   label: 'Share',
+                  renderColumn: () => (
+                    <InfoTooltipIcon
+                      label="About installment shares"
+                      title="The percentage of this fee allocated to the installment by its saved payment term. Service-date adjustments do not change this share."
+                    />
+                  ),
                   minWidth: 80,
                   align: 'right',
                   isSort: false,
@@ -570,6 +412,12 @@ export default function AssignmentReview({
                 {
                   id: 'demandDate',
                   label: 'Demand date',
+                  renderColumn: () => (
+                    <InfoTooltipIcon
+                      label="About installment demand dates"
+                      title="The date this installment becomes available for collection."
+                    />
+                  ),
                   minWidth: 125,
                   isSort: false,
                   isFilter: false,
@@ -578,6 +426,12 @@ export default function AssignmentReview({
                 {
                   id: 'dueDate',
                   label: 'Due date',
+                  renderColumn: () => (
+                    <InfoTooltipIcon
+                      label="About installment due dates"
+                      title="The payment deadline for this installment. Assignment preserves the configured date."
+                    />
+                  ),
                   minWidth: 125,
                   isSort: false,
                   isFilter: false,
@@ -586,6 +440,12 @@ export default function AssignmentReview({
                 {
                   id: 'proratedAmount',
                   label: 'Obligation',
+                  renderColumn: () => (
+                    <InfoTooltipIcon
+                      label="About installment obligations"
+                      title="The amount assigned to this installment after applicable service-date adjustments. This is not the outstanding balance after payments."
+                    />
+                  ),
                   minWidth: 125,
                   align: 'right',
                   isSort: false,

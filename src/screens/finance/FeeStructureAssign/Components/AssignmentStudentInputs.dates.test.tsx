@@ -1,11 +1,11 @@
 import type {
-  AssignmentCandidate,
   AssignmentRequest,
+  AssignmentCandidate,
 } from 'src/redux/finance/studentFeeAssignment';
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import AssignmentStudentInputs from './AssignmentStudentInputs';
@@ -26,11 +26,12 @@ vi.mock('src/components/custom-select', () => ({
     </select>
   ),
 }));
-vi.mock('src/components/academic-date-picker', () => ({
-  AcademicDatePicker: ({ label, value, minDate, maxDate, disabled, slotProps, onChange }: any) => (
-    <label>
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: ({ label, value, minDate, maxDate, disabled, slotProps, onChange }: any) => (
+    <div>
       {label}
       <input
+        id={`date-${label}`}
         aria-label={label}
         disabled={disabled}
         value={value?.format('YYYY-MM-DD') ?? ''}
@@ -39,7 +40,7 @@ vi.mock('src/components/academic-date-picker', () => ({
         onChange={(e) => onChange(e.target.value ? dayjs(e.target.value) : null)}
       />
       {slotProps.textField.helperText && <span role="alert">{slotProps.textField.helperText}</span>}
-    </label>
+    </div>
   ),
 }));
 

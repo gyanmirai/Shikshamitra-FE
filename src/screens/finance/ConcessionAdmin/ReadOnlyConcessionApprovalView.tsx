@@ -2,10 +2,13 @@
 
 import { useRef, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Alert, Stack, Button, Divider, TextField, Typography } from '@mui/material';
+import { Box, Alert, Stack, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
   useApproveConcessionRequestMutation,
   useGetConcessionApprovalContextQuery,
@@ -14,12 +17,7 @@ import {
 
 import type { IFeeHeadApprovalViewProps } from './type';
 
-const money = (value: number) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(Math.ceil(value));
+const money = (value: number) => formatNumber(value, 'INR');
 
 export default function ReadOnlyConcessionApprovalView({
   selectedItem,
@@ -29,6 +27,7 @@ export default function ReadOnlyConcessionApprovalView({
   const {
     data: context,
     isLoading,
+    isError,
     refetch,
   } = useGetConcessionApprovalContextQuery(requestId, {
     skip: !requestId,
@@ -83,78 +82,172 @@ export default function ReadOnlyConcessionApprovalView({
   };
 
   return (
-    <Box sx={{ p: 3, overflowY: 'auto', height: '100%' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Approve concession</Typography>
-        <Button startIcon={<Iconify icon="mdi:close" />} onClick={onBack} >Back</Button>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Typography variant="subtitle1" component="h2" fontWeight={700}>
+          Approve concession
+        </Typography>
+        <Button
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onBack}
+          disabled={isApproving}
+        >
+          Back
+        </Button>
       </Stack>
-      {isLoading && <Typography>Loading financial impact…</Typography>}
-      {context && (
-        <Stack spacing={2}>
-          <Typography variant="body2" color="text.secondary">
-            {context.concessionPolicyName} · version {context.concessionPolicyVersion}
-          </Typography>
-          {changed && (
-            <Alert severity="warning">
-              The live fee balance or policy calculation has changed since submission. Refresh or
-              create a new request; approval cannot reduce the submitted amount.
-            </Alert>
-          )}
-          {context.feeHeadGroups.map((group) => (
-            <Box
-              key={group.feeHeadId}
-              sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2 }}
-            >
-              <Stack direction="row" justifyContent="space-between" mb={1}>
-                <Typography fontWeight={600}>{group.feeHeadName}</Typography>
-                <Typography fontWeight={700}>{money(group.requestedConcessionAmount)}</Typography>
-              </Stack>
-              {group.dueFeeLines
-                .filter((line) => line.suggestedConcessionAmount > 0)
-                .map((line) => (
-                  <Stack
-                    key={line.dueFeeId}
-                    direction="row"
-                    justifyContent="space-between"
-                    py={0.5}
-                  >
-                    <Typography variant="body2">
-                      {line.monthLabel} {line.year} · paid {money(line.paidAmount)} · outstanding{' '}
-                      {money(line.outstandingAmount)}
-                    </Typography>
-                    <Typography variant="body2">
-                      −{money(line.suggestedConcessionAmount)}
-                    </Typography>
-                  </Stack>
-                ))}
-            </Box>
-          ))}
-          <Divider />
-          <Stack direction="row" justifyContent="space-between">
-            <Typography fontWeight={700}>Requested concession</Typography>
-            <Typography fontWeight={700}>
-              {money(context.totalRequestedConcessionAmount)}
-            </Typography>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          p: { xs: 1.5, sm: 2 },
+          '& .MuiCard-root': { boxShadow: 'none' },
+        }}
+      >
+        {isLoading && (
+          <Stack spacing={1.5} aria-label="Loading financial impact" aria-busy="true">
+            <Skeleton variant="rounded" height={90} />
+            <Skeleton variant="rounded" height={180} />
           </Stack>
-          {previewTotal !== null && (
-            <Alert severity="info">
-              Approval will apply {money(previewTotal)}.
-              {previewRefund > 0 &&
-                (autoCreateRefund
-                  ? ` The paid concession of ${money(previewRefund)} will create linked refund requests for separate review and payout.`
-                  : ` The paid concession of ${money(previewRefund)} is refundable. Create its linked refund requests manually after approval.`)}
-            </Alert>
-          )}
-          <TextField
-            label="Approval note (optional)"
-            multiline
-            minRows={2}
-            value={message}
-            onChange={(event) => {
-              setMessage(event.target.value);
-              setPreviewTotal(null);
-            }}
-          />
+        )}
+        {isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button size="small" onClick={() => refetch()}>
+                Retry
+              </Button>
+            }
+          >
+            Unable to load financial impact. Try again.
+          </Alert>
+        )}
+        {context && (
+          <Stack spacing={2}>
+            <FormSectionCard
+              title={selectedItem.concessionTypeName || 'Concession request'}
+              icon="mdi:tag-outline"
+              contentSpacing={1.5}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                {context.concessionPolicyName} · version {context.concessionPolicyVersion}
+              </Typography>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                gap={0.5}
+                sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
+              >
+                <Typography variant="body2">Requested concession</Typography>
+                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {money(context.totalRequestedConcessionAmount)}
+                </Typography>
+              </Stack>
+            </FormSectionCard>
+            {changed && (
+              <Alert severity="warning">
+                The live fee balance or policy calculation has changed since submission. Refresh or
+                create a new request; approval cannot reduce the submitted amount.
+              </Alert>
+            )}
+            {context.feeHeadGroups.map((group) => (
+              <FormSectionCard
+                key={group.feeHeadId}
+                title={group.feeHeadName}
+                icon="mdi:format-list-bulleted"
+                action={
+                  <Typography variant="body2" fontWeight={600}>
+                    {money(group.requestedConcessionAmount)} requested
+                  </Typography>
+                }
+                contentSpacing={1}
+              >
+                {group.dueFeeLines
+                  .filter((line) => line.suggestedConcessionAmount > 0)
+                  .map((line) => (
+                    <Box
+                      key={line.dueFeeId}
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: 'repeat(2, minmax(0, 1fr))',
+                          sm: 'minmax(0, 1fr) repeat(4, minmax(70px, 0.6fr))',
+                        },
+                        gap: 1,
+                        py: 1,
+                        '& + &': { borderTop: 1, borderColor: 'divider' },
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Installment
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {line.monthLabel} {line.year}
+                        </Typography>
+                      </Box>
+                      {[
+                        { label: 'Original fee', amount: line.originalAmount },
+                        { label: 'Paid', amount: line.paidAmount },
+                        { label: 'Outstanding', amount: line.outstandingAmount },
+                        { label: 'Concession', amount: line.suggestedConcessionAmount },
+                      ].map((metric) => (
+                        <Box
+                          key={metric.label}
+                          sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            {metric.label}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={metric.label === 'Concession' ? 600 : 400}
+                          >
+                            {money(metric.amount)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  ))}
+              </FormSectionCard>
+            ))}
+            {previewTotal !== null && (
+              <Alert severity="info">
+                Approval will apply {money(previewTotal)}.
+                {previewRefund > 0 &&
+                  (autoCreateRefund
+                    ? ` The paid concession of ${money(previewRefund)} will create linked refund requests for separate review and payout.`
+                    : ` The paid concession of ${money(previewRefund)} is refundable. Create its linked refund requests manually after approval.`)}
+              </Alert>
+            )}
+            <TextField
+              size="small"
+              fullWidth
+              disabled={isApproving}
+              label="Approval note (optional)"
+              multiline
+              minRows={2}
+              value={message}
+              onChange={(event) => {
+                setMessage(event.target.value);
+                setPreviewTotal(null);
+              }}
+            />
+          </Stack>
+        )}
+      </Box>
+      {context && (
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}
+        >
           <LoadingButton
             startIcon={
               <Iconify
@@ -166,7 +259,7 @@ export default function ReadOnlyConcessionApprovalView({
               />
             }
             variant="contained"
-            color="success"
+            size="small"
             disabled={changed || isLoading}
             loading={isPreviewing || isApproving}
             onClick={handleAction}

@@ -3,6 +3,19 @@ import { fileURLToPath } from 'node:url';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
 export default defineConfig({
+  plugins: [
+    {
+      name: 'assignment-fixture-class-api',
+      enforce: 'pre',
+      resolveId(source, importer) {
+        if (
+          source === '../service' &&
+          importer?.replaceAll('\\', '/').endsWith('/src/redux/class/classApi.ts')
+        )
+          return `${here}/mock-service.ts`;
+      },
+    },
+  ],
   root: here,
   cacheDir: `${repo}/node_modules/.vite/fee-assignment`,
   publicDir: `${repo}/public`,

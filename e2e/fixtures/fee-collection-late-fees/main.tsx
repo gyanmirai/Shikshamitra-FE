@@ -49,7 +49,7 @@ function Fixture() {
   return (
     <Stack sx={{ height: '100vh', p: 2, bgcolor: 'background.neutral' }} spacing={1}>
       <Alert severity="info">Synthetic browser contract fixture · actual Collections components · no backend writes · 2026-2027</Alert>
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         <Button onClick={() => { close(); resetFixture(); store.dispatch(api.util.resetApiState()); }}>Reset synthetic scenario</Button>
         <Button onClick={() => { close(); resetFixture('statuses'); store.dispatch(api.util.resetApiState()); }}>Mixed statuses</Button>
         <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
@@ -61,7 +61,7 @@ function Fixture() {
         <FeeCollectionTable onAddFee={dialog} onDelete={() => {}} onCollectFee={open} onView={() => {}} onGiveAdjustment={() => {}} academicFilters={filters} />
       </Box>
       {showRequests && <Box component="pre" sx={{ maxHeight: 250, overflow: 'auto', fontSize: 12 }}>{JSON.stringify(requests.filter((request) => request.method === 'POST'), null, 2)}</Box>}
-      <CustomDialog open={dialog.value} fullScreen title={`Fee Collection - ${student?.name ?? 'Student'} · synthetic fixture`} handleClose={close}>
+      <CustomDialog open={dialog.value} fullScreen title={`Collect Fees – ${student?.name ?? 'Student'}`} handleClose={close}>
         <Button onClick={() => { refreshSelectionBalances(); store.dispatch(api.util.invalidateTags([financeModuleType.feeDetails, financeModuleType.feeCollection])); }}>Refresh selection balances</Button>
         {dialog.value && <FeeCollectComponentForm student={student} onCancel={close} />}
       </CustomDialog>

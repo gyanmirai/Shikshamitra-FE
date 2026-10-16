@@ -53,10 +53,10 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
     refundAmount: item.approvedAmount > 0 ? item.approvedAmount : item.calculatedAmount,
     requestDate: item.creationTime
       ? new Date(item.creationTime).toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
       : '',
     reasonOfRefund: item.reason ?? '',
     status: item.status as FeeRefundStatusType,
@@ -149,7 +149,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
   return (
     <>
       <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           <FinanceAcademicContextFilter
             boards={boards}
             mediums={mediums}
@@ -294,28 +294,28 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
                       },
                       ...(isDraft
                         ? [
-                            {
-                              id: 'edit',
-                              label: 'Edit',
-                              icon: 'solar:pen-bold',
-                              onClick: () => {
-                                onEdit?.(row as IStudentFeeData);
-                              },
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: 'solar:pen-bold',
+                            onClick: () => {
+                              onEdit?.(row as IStudentFeeData);
                             },
-                          ]
+                          },
+                        ]
                         : []),
                       ...(actions.includes('delete')
                         ? [
-                            {
-                              id: 'delete',
-                              label: 'Delete',
-                              icon: 'solar:trash-bin-trash-bold',
-                              onClick: () => {
-                                onDelete?.(row as IStudentFeeData);
-                              },
-                              color: 'error.main',
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: 'solar:trash-bin-trash-bold',
+                            onClick: () => {
+                              onDelete?.(row as IStudentFeeData);
                             },
-                          ]
+                            color: 'error.main',
+                          },
+                        ]
                         : []),
                     ]}
                     placement="right-top"
