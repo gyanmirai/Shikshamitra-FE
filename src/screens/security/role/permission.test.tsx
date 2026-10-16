@@ -86,7 +86,7 @@ const entry = (name: string): CataloguePermission => ({
   grantedProviders: [],
 });
 function renderPermissions(granted = true, disabled = false, providerName = 'R') {
-  const names = ['View', 'Create', 'Edit', 'Withdraw'].map((action) => `${base}.${action}`);
+  const names = ['View', 'Add', 'Delete'].map((action) => `${base}.${action}`);
   const setGrants = vi.fn();
   renderWithProviders(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -155,7 +155,7 @@ it('switches submodules and clears stale selection on a different module', () =>
 it('maps grouped Student actions and their dependencies without individual backend tiles', () => {
   const { names, setGrants } = renderPermissions();
   fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
-  ['View', 'Add', 'Delete'].forEach((action) => {
+  ['View', 'Add/Update', 'Delete'].forEach((action) => {
     expect(editor(action).getByRole('radio', { name: 'Allow' })).toBeChecked();
   });
   expect(
@@ -165,12 +165,12 @@ it('maps grouped Student actions and their dependencies without individual backe
   expect(new Set(setGrants.mock.calls[0][0])).toEqual(new Set(names));
   expect(setGrants.mock.calls[0][1]).toBe(false);
 });
-it('granting grouped Add includes mapped edits and View', () => {
+it('granting Add/Update changes only the canonical Add and View grants', () => {
   const { setGrants } = renderPermissions(false);
   fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
-  fireEvent.click(editor('Add').getByRole('radio', { name: 'Allow' }));
+  fireEvent.click(editor('Add/Update').getByRole('radio', { name: 'Allow' }));
   expect(new Set(setGrants.mock.calls[0][0])).toEqual(
-    new Set(['View', 'Create', 'Edit'].map((action) => `${base}.${action}`))
+    new Set(['View', 'Add'].map((action) => `${base}.${action}`))
   );
   expect(setGrants.mock.calls[0][1]).toBe(true);
 });

@@ -51,9 +51,10 @@ export default function StudentRecordTransitions() {
   const pathname = usePathname();
   const params = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Transitions.Create');
-  const canApprove = hasGrantedPermission(permissions, 'Students.Records.Transitions.Approve');
-  const canApply = hasGrantedPermission(permissions, 'Students.Records.Transitions.Apply');
+  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Transitions.Add');
+  const canApprove = hasGrantedPermission(permissions, 'Students.Records.Transitions.Add');
+  const canApply = hasGrantedPermission(permissions, 'Students.Records.Transitions.Add');
+  const canCancel = hasGrantedPermission(permissions, 'Students.Records.Transitions.Add');
   const canViewApplications = hasGrantedPermission(
     permissions,
     'Students.Admissions.Applications.View'
@@ -109,6 +110,7 @@ export default function StudentRecordTransitions() {
   };
   const runCommand = async (previewOnly = false) => {
     if (!command || !reason.trim()) return;
+    if (command === 'cancel' ? !canCancel : !canCreate) return;
     setFailure(null);
     try {
       if (selected && command === 'correct') {
@@ -574,7 +576,7 @@ export default function StudentRecordTransitions() {
                   <Button onClick={() => setCommand('approve')}>Approve stage</Button>
                 </>
               )}
-              {selected?.canCancel && canCreate && (
+              {selected?.canCancel && canCancel && (
                 <Button onClick={() => setCommand('cancel')}>Cancel transition</Button>
               )}
               {selected?.canCorrect && canCreate && (

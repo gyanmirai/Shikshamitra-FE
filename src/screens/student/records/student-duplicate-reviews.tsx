@@ -35,8 +35,8 @@ export default function StudentDuplicateReviews({
   onStatus: (status: string) => void;
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
-  const canApprove = hasGrantedPermission(permissions, 'Students.Records.Changes.Approve');
+  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
+  const canApprove = hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const list = useGetStudentDuplicateReviewsQuery({
     studentId,
     status,

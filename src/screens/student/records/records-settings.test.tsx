@@ -146,7 +146,7 @@ let saved: StudentRecordsSettings;
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams();
-  mocks.permissions = ['Students.Records.Settings.Add', 'Students.Records.Settings.Publish'].map(
+  mocks.permissions = ['Students.Records.Settings.Add'].map(
     (name) => ({ name, isGranted: true })
   );
   saved = {

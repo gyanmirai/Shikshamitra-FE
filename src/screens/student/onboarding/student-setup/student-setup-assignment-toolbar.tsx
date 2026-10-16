@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Stack, Paper, Button, TextField, Typography } from '@mui/material';
+import { Box, Stack, Paper, Button, Tooltip, Skeleton, TextField, Typography } from '@mui/material';
 
 import type { StudentSetupView, StudentSetupTaskScope } from './student-setup-view';
 
@@ -14,6 +14,10 @@ export default function StudentSetupAssignmentToolbar({
   title,
   scope,
   pendingCount,
+  pendingLoading = false,
+  selectedCount = 0,
+  onClearSelection,
+  automaticDisabledReason,
   onScopeChange,
   busy,
   unavailable = false,
@@ -35,7 +39,11 @@ export default function StudentSetupAssignmentToolbar({
   view: Exclude<StudentSetupView, 'readiness'>;
   title: string;
   scope: StudentSetupTaskScope;
-  pendingCount: number;
+  pendingCount?: number;
+  pendingLoading?: boolean;
+  selectedCount?: number;
+  onClearSelection?: () => void;
+  automaticDisabledReason?: string;
   onScopeChange: (scope: StudentSetupTaskScope) => void;
   busy: boolean;
   unavailable?: boolean;
@@ -69,9 +77,13 @@ export default function StudentSetupAssignmentToolbar({
               <Typography variant="subtitle2" noWrap>
                 {title}
               </Typography>
-              <Label variant="soft" color={pendingCount ? 'warning' : 'success'}>
-                {pendingCount} pending
-              </Label>
+              {pendingLoading ? (
+                <Skeleton width={72} aria-label="Loading pending count" />
+              ) : pendingCount !== undefined ? (
+                <Label variant="soft" color={pendingCount ? 'warning' : 'success'}>
+                  {pendingCount} pending
+                </Label>
+              ) : null}
             </Stack>
             <Stack
               direction="row"
@@ -113,15 +125,19 @@ export default function StudentSetupAssignmentToolbar({
                   </>
                 ) : (
                   <>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<Iconify icon="mdi:auto-fix" />}
-                      onClick={onAuto}
-                      disabled={busy || unavailable || !automaticCount}
-                    >
-                      Auto
-                    </Button>
+                    <Tooltip title={automaticDisabledReason || ''}>
+                      <Box component="span" sx={{ display: 'inline-flex' }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<Iconify icon="mdi:auto-fix" />}
+                          onClick={onAuto}
+                          disabled={busy || unavailable || !automaticCount}
+                        >
+                          Auto
+                        </Button>
+                      </Box>
+                    </Tooltip>
                     <Button
                       size="small"
                       variant="outlined"
@@ -137,6 +153,27 @@ export default function StudentSetupAssignmentToolbar({
             </Stack>
           </Stack>
         </Box>
+        {view === 'division' && selectedCount > 0 && (
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={1}
+            sx={{ px: 1, borderRadius: 1, bgcolor: 'action.selected' }}
+          >
+            <Typography variant="body2" role="status">
+              {selectedCount} selected
+            </Typography>
+            <Button size="small" disabled={busy || manualEditing} onClick={onClearSelection}>
+              Clear selection
+            </Button>
+          </Stack>
+        )}
+        {!manualEditing && automaticDisabledReason && !busy && !unavailable && (
+          <Typography variant="caption" color="text.secondary" role="status">
+            {automaticDisabledReason}
+          </Typography>
+        )}
         {manualEditing && needsReason && (
           <ShakingTextField error={Boolean(reasonError)}>
             <TextField

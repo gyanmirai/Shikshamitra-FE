@@ -77,7 +77,7 @@ export default function StudentRecordReports() {
   const update = (values: Record<string, string | number | undefined>) =>
     router.push(recordsQueryUrl(pathname, params.toString(), values), { scroll: false });
   const canGenerate = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
-  const canCancel = hasGrantedPermission(permissions, 'Students.Records.Reports.Delete');
+  const canCancel = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
   const canRead = (type: RecordsReportType) =>
     types
       .find((x) => x.value === type)!

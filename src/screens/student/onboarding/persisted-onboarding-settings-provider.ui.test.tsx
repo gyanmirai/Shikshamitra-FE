@@ -1,5 +1,5 @@
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent, renderHook } from '@testing-library/react';
 
 import { useOnboardingSettings } from './onboarding-settings-context';
 import { defaultOnboardingSettings } from './onboarding-settings-model';
@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   year: { id: 'year-a', name: '2026-2027' },
   query: {} as Record<string, unknown>,
   pathname: '/student/onboarding/setup',
+  permissions: [] as Array<{ name: string; isGranted: boolean }>,
+  save: vi.fn(),
+  remove: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({ usePathname: () => mocks.pathname }));
@@ -38,15 +41,15 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
 }));
 vi.mock('react-redux', () => ({
   useSelector: (select: (state: unknown) => unknown) =>
-    select({ globalState: { currentYear: mocks.year } }),
+    select({ globalState: { currentYear: mocks.year }, auth: { permissions: mocks.permissions } }),
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingSettingsQuery: () => mocks.query,
-  useSaveStudentOnboardingSettingsMutation: () => [vi.fn()],
-  useDeleteStudentOnboardingSettingsMutation: () => [vi.fn()],
+  useSaveStudentOnboardingSettingsMutation: () => [mocks.save],
+  useDeleteStudentOnboardingSettingsMutation: () => [mocks.remove],
 }));
 
 const record = (year: string | null, documents: boolean) => ({
@@ -76,10 +79,34 @@ const view = () => (
 
 describe('Persisted onboarding settings year isolation', () => {
   beforeEach(() => {
+    mocks.permissions = [{ name: 'Students.Onboarding.View', isGranted: true }];
+    mocks.save.mockReset().mockReturnValue({ unwrap: async () => record('year-a', false) });
+    mocks.remove.mockReset().mockReturnValue({ unwrap: async () => undefined });
     mocks.year = { id: 'year-a', name: '2026-2027' };
     mocks.pathname = '/student/onboarding/setup';
     const rows = [record('year-a', true)];
     mocks.query = { data: rows, currentData: rows, isLoading: false, isError: false };
+  });
+
+  it('enforces independent Add/Update and Delete grants at the persistence boundary', async () => {
+    const { result, rerender } = renderHook(() => useOnboardingSettings(), {
+      wrapper: PersistedOnboardingSettingsProvider,
+    });
+    await act(async () => {
+      await expect(result.current.applyReadinessAccess(result.current.settings.readinessAccess)).rejects.toThrow('Add/Update');
+      await expect(result.current.resetToInherited()).rejects.toThrow('Delete');
+    });
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+    mocks.permissions.push({ name: 'Students.Onboarding.Add', isGranted: true });
+    rerender();
+    await act(async () => { await result.current.applyReadinessAccess(result.current.settings.readinessAccess); });
+    expect(mocks.save).toHaveBeenCalledOnce();
+    await act(async () => { await expect(result.current.resetToInherited()).rejects.toThrow('Delete'); });
+    mocks.permissions = [{ name: 'Students.Onboarding.Delete', isGranted: true }];
+    rerender();
+    await act(async () => { await result.current.resetToInherited(); });
+    expect(mocks.remove).toHaveBeenCalledOnce();
   });
 
   it('waits for the selected year instead of mounting defaults from the previous response', () => {

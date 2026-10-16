@@ -1,13 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { UploadAvatar } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { studentPermissions } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -26,6 +31,8 @@ import {
 } from '@mui/material';
 
 const UploadStudentPhotoScreen = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
   const { data: classes, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -156,6 +163,8 @@ const UploadStudentPhotoScreen = () => {
                 render(value, row) {
                   return (
                     <IconButton
+                      disabled={!canWrite}
+                      aria-label={`Upload photo for ${row.fullName}`}
                       onClick={() => {
                         setSelectedStudent(row);
                         dialog.onTrue();
@@ -184,7 +193,7 @@ const UploadStudentPhotoScreen = () => {
       )}
 
       <CustomDialog
-        open={dialog.value}
+        open={dialog.value && canWrite}
         handleClose={() => {
           dialog.onFalse();
           setSelectedStudent(null);
@@ -208,11 +217,13 @@ const UploadStudentPhotoScreen = () => {
 export default UploadStudentPhotoScreen;
 
 const UploadPhotoFlow = ({ student, onClose }: { student: any; onClose: () => void }) => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
   const [file, setFile] = useState<null | File>(null);
   const [uploadPhoto, { isLoading }] = useUploadStudentPhotoMutation();
 
   const handleSave = async () => {
-    if (!file) return;
+    if (!canWrite || !file) return;
     const formData = new FormData();
     formData.append('file', file);
     try {
@@ -242,7 +253,7 @@ const UploadPhotoFlow = ({ student, onClose }: { student: any; onClose: () => vo
         <LoadingButton
           variant="contained"
           loading={isLoading}
-          disabled={!file}
+          disabled={!canWrite || !file}
           onClick={handleSave}
         >
           Save

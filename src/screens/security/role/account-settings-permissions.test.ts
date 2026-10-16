@@ -164,7 +164,7 @@ it('exposes every server-defined generic action, including disabled grants', () 
   );
 });
 
-it('groups specialized Student Admissions actions behind View, Add, and Delete', () => {
+it('uses only canonical Student actions and never grants retired or unknown actions', () => {
   const base = 'Students.Admissions.Inquiries';
   const actions = ['View', 'Add', 'Delete', 'Manage', 'Create', 'Edit', 'Assign'];
   const catalog = actions.map((action) => ({ name: `${base}.${action}`, isGranted: false }));
@@ -175,16 +175,15 @@ it('groups specialized Student Admissions actions behind View, Add, and Delete',
     `${base}.View`,
   ]);
   expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Add', catalog)).toEqual(
-    ['Add', 'Manage', 'Create', 'Edit', 'Assign'].map((action) => `${base}.${action}`)
+    [`${base}.Add`]
   );
   expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Delete', catalog)).toEqual([
     `${base}.Delete`,
   ]);
   expect(getNodeActionPermissionNames({ permissionName: `${base}.View` }, catalog)).toEqual(
-    ['View', 'Add', 'Manage', 'Create', 'Edit', 'Assign', 'Delete'].map(
-      (action) => `${base}.${action}`
-    )
+    ['View', 'Add', 'Delete'].map((action) => `${base}.${action}`)
   );
+  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Approve', catalog)).toEqual([]);
 });
 
 it('includes assignment policy overrides in the existing assignment Add control', () => {
@@ -205,7 +204,7 @@ it('includes assignment policy overrides in the existing assignment Add control'
 
 it('grants the Student View group when Add is enabled', () => {
   const base = 'Students.Admissions.Inquiries';
-  const catalog = ['View', 'Manage', 'Create', 'Edit', 'Assign'].map((action) => ({
+  const catalog = ['View', 'Add'].map((action) => ({
     name: `${base}.${action}`,
     isGranted: false,
   }));

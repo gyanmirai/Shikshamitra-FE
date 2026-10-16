@@ -547,7 +547,7 @@ it('offers the existing Records correction only for a missing guardian email wit
   setRecipients([{ ...fatherRecipient, email: null, canSend: false }]);
   mocks.permissions.push(
     { name: 'Students.Records.Changes.View', isGranted: true },
-    { name: 'Students.Records.Changes.Create', isGranted: true }
+    { name: 'Students.Records.Changes.Add', isGranted: true }
   );
   panel();
   await waitFor(() =>
@@ -567,7 +567,7 @@ it('offers the existing Records correction only for a missing guardian email wit
 
 it('does not offer a Records correction without both View and Create grants', async () => {
   setRecipients([{ ...fatherRecipient, email: null, canSend: false }]);
-  mocks.permissions.push({ name: 'Students.Records.Changes.Create', isGranted: true });
+  mocks.permissions.push({ name: 'Students.Records.Changes.Add', isGranted: true });
   panel();
   await waitFor(() => expect(type()).toHaveValue('guardian'));
   expect(screen.queryByRole('button', { name: 'Correct Saved Email' })).not.toBeInTheDocument();

@@ -26,7 +26,7 @@ export default function CertificateBatchDialog({ batchId, certificateType, label
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canIssue = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
-  const canVoid = hasGrantedPermission(permissions, 'Students.Records.Certificates.Delete');
+  const canVoid = hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
   const query = useGetRecordCertificateBatchQuery({ batchId, certificateType });
   const [view, setView] = useState<CertificateResponse | null>(null);
   const [decision, setDecision] = useState<{ action: 'Reprint' | 'Duplicate' | 'Void'; certificate: CertificateResponse } | null>(null);

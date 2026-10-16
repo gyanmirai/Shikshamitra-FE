@@ -8,11 +8,15 @@ import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { fDate } from 'src/utils/format-time';
 import { GenderType } from 'src/enums/gender';
+import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
+import calculateAge from 'src/utils/calculate-age';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Stack, Alert, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Stack, Alert, Button, Divider, Skeleton, Typography } from '@mui/material';
+
+import { profileOverviewContacts } from './student-profile-overview-model';
 
 export function ProfileValues({ values }: { values: { label: string; value: unknown }[] }) {
   return (
@@ -46,9 +50,12 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
     student.admissionOnboarding?.[0];
   if (!journey)
     return (
-      <Typography variant="body2" color="text.secondary">
-        No linked admission or onboarding history is available for this record.
-      </Typography>
+      <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+          No linked journey available.
+        </Typography>
+        <Label color="default">Not linked</Label>
+      </Stack>
     );
   const credentialsReady = ['Completed', 'Ready', 'Provisioned'].includes(
     journey.credentialsStatus ?? ''
@@ -163,6 +170,8 @@ export function StudentProfileOverview({
   changesLoading = false,
   changesError = false,
   canReadChanges = true,
+  detailsLoading = false,
+  detailsError = false,
 }: {
   student: StudentRecordProfile;
   details?: StudentRecordDetails;
@@ -171,6 +180,8 @@ export function StudentProfileOverview({
   changesLoading?: boolean;
   changesError?: boolean;
   canReadChanges?: boolean;
+  detailsLoading?: boolean;
+  detailsError?: boolean;
 }) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const board = currentYear?.boards?.find((item: Board) =>
@@ -182,13 +193,8 @@ export function StudentProfileOverview({
     (currentYear?.id === student.academicYearId || !student.academicYearId
       ? currentYear?.name
       : null);
-  const general = details?.structuredSections.find(
-    (item) => item.section === 'general' && !item.isMasked
-  )?.data;
-  const family = details?.structuredSections.find(
-    (item) => item.section === 'family' && !item.isMasked
-  )?.data;
-  const guardian = family?.guardianDetails as { fullName?: string } | undefined;
+  const birthDate = student.dateOfBirth ? new Date(student.dateOfBirth) : null;
+  const validBirthDate = birthDate && !Number.isNaN(birthDate.getTime());
   const entry = student.entrySource
     ? {
         ActivatedOnboarding: 'Enrollment activated',
@@ -196,64 +202,131 @@ export function StudentProfileOverview({
         LegacyOverride: 'Approved historical entry',
         Provisioning: 'Provisioning',
       }[student.entrySource]
-    : 'Historical record';
+    : undefined;
   return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
-        gridAutoRows: { xs: 'auto', md: '1fr' },
-        gap: 1.5,
-        alignItems: 'stretch',
-      }}
+    <Stack
+      component={Paper}
+      variant="outlined"
+      spacing={1.5}
+      sx={{ minWidth: 0, p: { xs: 1.5, sm: 2 }, bgcolor: 'background.paper', borderRadius: 2 }}
     >
-      <FormSectionCard icon="mdi:school-outline" title="Academic context">
-        <Divider />
-        <ProfileValues
-          values={[
-            { label: 'Academic year', value: yearName },
-            { label: 'Board', value: board?.name },
-          ]}
-        />
-        <Divider />
-        <ProfileValues values={[{ label: 'Record source', value: entry }]} />
-      </FormSectionCard>
-      <FormSectionCard icon="mdi:account-school-outline" title="Admission & Onboarding">
-        <Divider />
-        <EnrollmentMilestones student={student} />
-      </FormSectionCard>
-      <FormSectionCard
-        icon="mdi:account-outline"
-        title="Student details"
-        action={
-          <Button size="small" component={RouterLink} href={viewHref('details')}>
-            View All Details
-          </Button>
-        }
+      <Paper component="section" aria-label="Academic context" variant="outlined">
+        <Box
+          sx={{
+            m: 0,
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          }}
+        >
+          {[
+            { label: 'Academic year', value: yearName, icon: 'mdi:school-outline' },
+            { label: 'Board', value: board?.name, icon: 'mdi:book-open-outline' },
+            { label: 'Record source', value: entry, icon: 'mdi:file-document-outline' },
+          ].map((field) => (
+            <Stack
+              key={field.label}
+              direction="row"
+              spacing={1.5}
+              alignItems="center"
+              sx={{
+                p: { xs: 1.5, sm: 2 },
+                minWidth: 0,
+                '&:not(:last-of-type)': {
+                  borderStyle: 'solid',
+                  borderWidth: 0,
+                  borderBottomWidth: { xs: 1, sm: 0 },
+                  borderRightWidth: { xs: 0, sm: 1 },
+                  borderColor: 'divider',
+                },
+              }}
+            >
+              <Iconify
+                icon={field.icon}
+                width={24}
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
+              <Box component="dl" sx={{ m: 0, minWidth: 0 }}>
+                <Typography component="dt" variant="caption" color="text.secondary">
+                  {field.label}
+                </Typography>
+                <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
+                  {field.value || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          ))}
+        </Box>
+      </Paper>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))' },
+          gridAutoRows: '1fr',
+          gap: 1.5,
+          alignItems: 'stretch',
+        }}
       >
-        <Divider />
-        <ProfileValues
-          values={[
-            {
-              label: 'Date of birth',
-              value: student.dateOfBirth ? fDate(student.dateOfBirth) : null,
-            },
-            {
-              label: 'Gender',
-              value: student.gender != null ? GenderType[student.gender] : null,
-            },
-            ...(guardian?.fullName
-              ? [{ label: 'Primary guardian', value: guardian.fullName }]
-              : []),
-            ...(general?.primaryContactNo
-              ? [{ label: 'Contact', value: general.primaryContactNo }]
-              : []),
-          ]}
-        />
-      </FormSectionCard>
+        <FormSectionCard
+          icon="mdi:account-outline"
+          title="Student details"
+          sx={{ minWidth: 0, height: 1 }}
+          action={
+            <Button size="small" component={RouterLink} href={viewHref('details')}>
+              View All Details
+            </Button>
+          }
+        >
+          <Divider />
+          <ProfileValues
+            values={[
+              {
+                label: 'Date of birth',
+                value: validBirthDate ? fDate(student.dateOfBirth) : null,
+              },
+              {
+                label: 'Age',
+                value:
+                  validBirthDate && birthDate <= new Date()
+                    ? calculateAge(student.dateOfBirth!)
+                    : null,
+              },
+              {
+                label: 'Gender',
+                value: student.gender != null ? GenderType[student.gender] : null,
+              },
+            ]}
+          />
+        </FormSectionCard>
+        <FormSectionCard
+          icon="mdi:account-group-outline"
+          title="Guardian & contact"
+          sx={{ minWidth: 0, height: 1 }}
+          action={
+            <Button size="small" component={RouterLink} href={viewHref('details')}>
+              View Details
+            </Button>
+          }
+        >
+          <Divider />
+          {detailsLoading ? (
+            <Stack aria-label="Loading guardian and contact details" spacing={1}>
+              {Array.from({ length: 4 }, (_, index) => (
+                <Skeleton key={index} height={24} />
+              ))}
+            </Stack>
+          ) : detailsError && !details ? (
+            <Typography variant="body2" color="text.secondary">
+              Guardian and contact details could not be loaded. Use Retry details above to try
+              again.
+            </Typography>
+          ) : (
+            <ProfileValues values={profileOverviewContacts(details)} />
+          )}
+        </FormSectionCard>
+      </Box>
       <FormSectionCard
         icon="mdi:history"
-        title="Recent changes"
+        title="Record activity"
         action={
           <Button size="small" component={RouterLink} href={viewHref('history')}>
             View History
@@ -261,46 +334,91 @@ export function StudentProfileOverview({
         }
       >
         <Divider />
-        {!canReadChanges ? (
-          <Typography variant="body2" color="text.secondary">
-            Record change history is not available with your current access.
-          </Typography>
-        ) : changesLoading ? (
-          <Stack aria-label="Loading recent changes">
-            <Skeleton height={40} />
-            <Skeleton height={40} />
-          </Stack>
-        ) : changesError ? (
-          <Typography variant="body2" color="text.secondary">
-            Recent changes could not be loaded.
-          </Typography>
-        ) : changes.length ? (
-          <Stack spacing={1.5}>
-            {changes.slice(0, 3).map((change) => (
-              <Stack key={change.id} spacing={0.5}>
-                <Typography variant="body2">
-                  {change.section === 'custom-details' || change.section === 'registration-form'
-                    ? 'Student details'
-                    : change.section.replace(/-/g, ' ')}{' '}
-                  change
-                </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Label color={change.status === 'Applied' ? 'success' : 'default'}>
-                    {change.status}
-                  </Label>
-                  <Typography variant="caption" color="text.secondary">
-                    {fDate(change.appliedAt ?? change.creationTime)}
-                  </Typography>
-                </Stack>
+        <Stack spacing={2} divider={<Divider />}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: 'minmax(160px, 1fr) minmax(0, 2fr)',
+              },
+              gap: 1.5,
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="flex-start">
+              <Iconify
+                icon="mdi:account-school-outline"
+                width={20}
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
+              <Typography component="h3" variant="subtitle2">
+                Admission & Onboarding
+              </Typography>
+            </Stack>
+            <EnrollmentMilestones student={student} />
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: 'minmax(160px, 1fr) minmax(0, 2fr)',
+              },
+              gap: 1.5,
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="flex-start">
+              <Iconify
+                icon="mdi:history"
+                width={20}
+                sx={{ color: 'text.secondary', flexShrink: 0 }}
+              />
+              <Typography component="h3" variant="subtitle2">
+                Recent changes
+              </Typography>
+            </Stack>
+            {!canReadChanges ? (
+              <Typography variant="body2" color="text.secondary">
+                Record change history is not available with your current access.
+              </Typography>
+            ) : changesLoading ? (
+              <Stack aria-label="Loading recent changes">
+                <Skeleton height={40} />
+                <Skeleton height={40} />
               </Stack>
-            ))}
-          </Stack>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            No record changes are available.
-          </Typography>
-        )}
+            ) : changesError ? (
+              <Typography variant="body2" color="text.secondary">
+                Recent changes could not be loaded.
+              </Typography>
+            ) : changes.length ? (
+              <Stack spacing={1.5}>
+                {changes.slice(0, 3).map((change) => (
+                  <Stack key={change.id} spacing={0.5}>
+                    <Typography variant="body2">
+                      {change.section === 'custom-details' || change.section === 'registration-form'
+                        ? 'Student details'
+                        : change.section.replace(/-/g, ' ')}{' '}
+                      change
+                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Label color={change.status === 'Applied' ? 'success' : 'default'}>
+                        {change.status}
+                      </Label>
+                      <Typography variant="caption" color="text.secondary">
+                        {fDate(change.appliedAt ?? change.creationTime)}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                ))}
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No record changes are available.
+              </Typography>
+            )}
+          </Box>
+        </Stack>
       </FormSectionCard>
-    </Box>
+    </Stack>
   );
 }

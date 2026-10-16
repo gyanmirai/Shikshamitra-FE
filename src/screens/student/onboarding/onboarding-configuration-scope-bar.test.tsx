@@ -1,9 +1,18 @@
-import { it, expect, describe } from 'vitest';
-import { renderWithProviders } from 'src/test/test-utils';
-import { screen, fireEvent } from '@testing-library/react';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { OnboardingConfigurationScopeBar } from './onboarding-configuration-scope-bar';
 import { useOnboardingSettings, OnboardingSettingsProvider } from './onboarding-settings-context';
+
+const auth = vi.hoisted(() => ({ canDelete: true }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+beforeEach(() => { auth.canDelete = true; });
+vi.mock('react-redux', () => ({
+  useSelector: (select: any) => select({
+    globalState: { currentYear: { id: 'year-1', name: '2026-27' } },
+    auth: { permissions: [{ name: 'Students.Onboarding.Delete', isGranted: auth.canDelete }] },
+  }),
+}));
 
 function SettingsChangeProbe() {
   const { settings, applyReadinessAccess } = useOnboardingSettings();
@@ -25,18 +34,11 @@ function SettingsChangeProbe() {
 
 describe('OnboardingConfigurationScopeBar', () => {
   it('switches to the current academic year and restores inherited defaults', () => {
-    renderWithProviders(
+    render(
       <OnboardingSettingsProvider>
         <OnboardingConfigurationScopeBar />
         <SettingsChangeProbe />
-      </OnboardingSettingsProvider>,
-      {
-        preloadedState: {
-          globalState: {
-            currentYear: { id: 'year-1', name: '2026-27' },
-          },
-        },
-      }
+      </OnboardingSettingsProvider>
     );
 
     expect(screen.getByText('Inherited defaults')).toBeInTheDocument();
@@ -59,5 +61,13 @@ describe('OnboardingConfigurationScopeBar', () => {
     expect(
       screen.queryByRole('button', { name: 'Use inherited defaults' })
     ).not.toBeInTheDocument();
+  });
+
+  it('requires Delete before offering removal of a saved override', () => {
+    auth.canDelete = false;
+    render(<OnboardingSettingsProvider><OnboardingConfigurationScopeBar /><SettingsChangeProbe /></OnboardingSettingsProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Change active scope' }));
+    expect(screen.getByText('Customized')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Use inherited defaults' })).not.toBeInTheDocument();
   });
 });

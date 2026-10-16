@@ -16,10 +16,10 @@ export const eligibilityStage: AdmissionApplicationStage = {
 };
 export function renderEligibilityUi(
   children: ReactNode,
-  permissions = ['View', 'Evaluate', 'RequestException', 'ReviewException']
+  permissions = ['View', 'Add']
 ) {
   return renderDocumentUi(
     children,
-    permissions.map((action) => `Students.Admissions.Eligibility.${action}`)
+    permissions.map((action) => `Students.Admissions.Eligibility.${['Evaluate', 'RequestException', 'ReviewException'].includes(action) ? 'Add' : action}`)
   );
 }

@@ -10,12 +10,12 @@ export const studentSetupViews: Array<{
   label: string;
   icon: string;
 }> = [
-  { value: 'readiness', label: 'Readiness', icon: 'mdi:clipboard-check-outline' },
+  { value: 'readiness', label: 'Setup Status', icon: 'mdi:clipboard-check-outline' },
   { value: 'division', label: 'Division', icon: 'mdi:google-classroom' },
   { value: 'gr-number', label: 'GR Number', icon: 'mdi:identifier' },
   { value: 'roll-number', label: 'Roll Number', icon: 'mdi:format-list-numbered' },
   { value: 'fees', label: 'Fees', icon: 'mdi:receipt-text-outline' },
-  { value: 'credentials', label: 'Credentials', icon: 'mdi:account-key-outline' },
+  { value: 'credentials', label: 'App Login', icon: 'mdi:account-key-outline' },
 ];
 
 const validViews = new Set<StudentSetupView>(studentSetupViews.map((view) => view.value));

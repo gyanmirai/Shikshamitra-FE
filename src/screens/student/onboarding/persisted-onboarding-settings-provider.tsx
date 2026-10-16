@@ -7,10 +7,11 @@ import type { StudentOnboardingSettingsRecord } from 'src/redux/student/onboardi
 import { useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 import { shikshaMitraToast } from 'src/components/toast';
-import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Stack, Alert, Button, LinearProgress } from '@mui/material';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import {
   useGetStudentOnboardingSettingsQuery,
   useSaveStudentOnboardingSettingsMutation,
@@ -65,7 +66,7 @@ function SettingsStateHeader({ pathname }: { pathname: string }) {
   const isSettings = pathname.startsWith(studentPaths.onboarding.settings);
   const heading = isSettings ? 'Onboarding Settings' : 'Student Setup';
   const description = isSettings
-    ? 'Configure portal access, GR numbers and roll numbers.'
+    ? 'Configure app login, GR numbers and roll numbers.'
     : 'Prepare admission students for activation and complete their app access.';
   return (
     <CustomBreadcrumbs
@@ -83,6 +84,9 @@ function SettingsStateHeader({ pathname }: { pathname: string }) {
 export function PersistedOnboardingSettingsProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canConfigure = hasGrantedPermission(permissions, studentPermissions.onboarding.configure);
+  const canDelete = hasGrantedPermission(permissions, studentPermissions.onboarding.delete);
   const academicYearId = currentYear?.id;
   const settingsQuery = useGetStudentOnboardingSettingsQuery(
     academicYearId ? { academicYearId } : undefined
@@ -126,6 +130,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
 
   const persist = useCallback(
     async (scope: OnboardingConfigurationScope, configuration: OnboardingSettingsConfiguration) => {
+      if (!canConfigure) throw new Error('Add/Update permission is required to save onboarding settings.');
       const scopeAcademicYearId = scope.level === 'academic-year' ? scope.academicYearId : null;
       if (scope.level === 'academic-year' && !scopeAcademicYearId) {
         throw new Error('Select an academic year before saving this onboarding override.');
@@ -149,11 +154,12 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
         throw error;
       }
     },
-    [saveSettings]
+    [canConfigure, saveSettings]
   );
 
   const removeOverride = useCallback(
     async (scope: OnboardingConfigurationScope) => {
+      if (!canDelete) throw new Error('Delete permission is required to remove an onboarding override.');
       const scopeAcademicYearId = scope.level === 'academic-year' ? scope.academicYearId : null;
       const recordKey = getRecordKey(scopeAcademicYearId);
       const currentRecord = recordsRef.current.get(recordKey);
@@ -173,7 +179,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
         throw error;
       }
     },
-    [deleteSettings]
+    [canDelete, deleteSettings]
   );
 
   const isLoading = settingsQuery.isLoading || (!records && !settingsQuery.isError);

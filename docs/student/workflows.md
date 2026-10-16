@@ -14,8 +14,13 @@ Student browser tasks are staff tasks. The staff member's existing Academic assi
 
 ## Shared permission editing
 
-The original [Security editor layout](../security/workflows.md) is retained, with complete catalogue coverage and independent action toggles.
-Do not enumerate grants from a fixed CRUD list, infer action bundles, or restore revoked access through reseeding.
+The original [Security editor layout](../security/workflows.md) is retained, with the complete Student catalogue shown as View, Add/Update and supported Delete actions.
+Student Add/Update grants include View; Delete grants include Add/Update and View, matching the existing editor dependencies.
+Unavailable operations remain disabled and no grant is invented for them.
+Sensitive Student commands use the owning feature's Add/Update action, including approvals, waivers, finalization, activation and lock/unlock.
+Route entry requires the exact feature View grant; action controls and handlers check the current effective grant and server capability.
+Role/user permissions control actions and teacher assignments control the accessible student/class scope.
+Development builds use the same Student guards.
 The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md) owns authorization and approved repair rules.
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
@@ -139,45 +144,58 @@ Inquiry rows expose separate Edit, Follow-up, and Move to next stage actions. Fo
 Configure the academic structure and Admission Offering before preparing students in Onboarding.
 
 1. Select the academic year in the Student header and open **Onboarding Settings**.
-2. In **Portal Access**, choose whether student and parent/guardian logins are required.
-   New schools default to Student No and Parent/Guardian Yes; existing saved choices and delivery preferences remain intact.
+2. In **App Login**, choose Not needed, Optional or Required separately for student and parent/guardian accounts.
+   Optional allows an account without holding setup open; Required must be prepared before completion. New schools default to Student Not needed, Parent/Guardian Required and **Staff sends manually**. Existing saved automatic preferences remain intact.
+   Manual uses the existing **Send Credentials** action and saves activation timing, so staff chooses when to send. **Send automatically** reveals **When to send**: after activation or after setup is complete. Only saved profile emails are eligible; with multiple saved parents, staff chooses the recipient instead of automatic guessing.
+   Cancel confirms discarding unsaved changes. Failed saves retain the draft; permission and loading states disable writes. The automatic-check explanation is collapsed by default.
 3. Admission and its published workflow supply the common readiness and document requirements automatically, without a named readiness rule or Offering linkage.
 4. In the **GR Number** or **Roll Number** settings tab, configure numbering separately; new series start as Draft and require Publish before use.
    GR applicability uses Board/Medium/Class and retains School Level for GSEB; Roll uses Board/Medium/Class.
    The removed scope/reset/format/effective-date controls and Division Changes menu are not prerequisites.
-5. Finalize the accepted application and open its case in **Readiness**.
+5. Finalize the accepted application and open its case in **Setup Status**.
    New and existing pending cases adopt common admission requirements and current saved account choices automatically, while keeping published document policies frozen.
    Activated, completed and cancelled cases retain their historical snapshots.
-6. Use the pending count by hover, keyboard focus or tap, then choose a task to open the same case in its contextual tab/drawer.
-   **Today** means cases that entered Onboarding today, rather than all students created today.
+6. Read **Pending work** and use the named next-step action to open the same case in its contextual tab/drawer.
+   When several tasks remain, **+N more** expands the remaining task links without requiring hover.
+   **Added today** means cases that entered Onboarding today, rather than all students created today.
 7. Verify required documents, reserve Division, prepare GR and Roll separately, and confirm an existing published fee structure in **Fees**.
    Fees selects optional heads where supported and confirms the admission snapshot without collecting money or opening a Finance assignment drawer.
 8. Activate after a fresh backend eligibility preview, then find the active enrollment in Student Records.
-9. Complete required account creation/linking and enabled credential-email sending in **Credentials** after activation using the saved automatic/manual mode.
+9. Complete required account creation/linking and enabled credential-email sending in **App Login** after activation using the saved automatic/manual mode.
    An account or email failure remains pending access work on the active enrollment and can be retried by an authorized user.
 
-Student Setup orders its tabs as Readiness, Division, GR Number, Roll Number, Fees and Credentials.
-Readiness has no student-selection checkboxes, and Entered onboarding today sits inside the academic filters card.
+Student Setup orders its tabs as Setup Status, Division, GR Number, Roll Number, Fees and App Login; route keys remain unchanged.
+Setup Status defaults to five columns: Student, Class & Division, Pending work, Status and Action.
+Admission route, identifiers, account access and Owner remain optional through Columns, including the existing Owner filter and sort.
+Named task buttons reuse the existing destinations; **Review & activate** opens the existing guarded review rather than submitting activation.
+This labeled next-step button is the approved, local exception to the icon-only row-action pattern; shared table components are unchanged.
+Simple status labels reflect the server lifecycle, never the number of pending tasks; **Finishing setup** and **Setup complete** remain distinct, and a completed case can still have optional App Login work.
+Setup Status has no student-selection checkboxes, and Added today sits inside the academic filters card.
 Student drawers combine Details and Checks into Details & Checks, retaining Tasks and History.
 
-Division, GR, Roll, Fees and Credentials use one scope button instead of a Students dropdown.
+Division, GR, Roll, Fees and App Login use one scope button instead of a Students dropdown.
 Click **All Students** to show all rows; the button then becomes **Remaining Students**, which returns to pending rows (unassigned students in Division).
 The compact row keeps only the task heading, pending count and controls; static descriptions, policy badges and selection guidance are omitted.
 All buttons stay aligned on one line, with contained horizontal scrolling on narrow screens rather than document overflow; required manual-change reasons and validation remain visible when applicable.
 GR, Roll and Division tables have no separate Select all visible button or Actions column; the student-name button still opens the case.
 Auto operates on eligible students on the current page, or selected Division rows when exactly one Class is selected.
 Division checkboxes appear only with that single-Class filter; selecting multiple classes or changing the worklist clears selection.
+The selection count offers **Clear selection**; checkboxes and clearing are locked during a Manual draft so visible targets stay aligned with the saved draft.
 Auto Division requires an explicit target with current server capacity checks; it does not invent an automatic placement policy or Division lock.
+Division/GR Auto and the Roll batch workspace use a right-side assignment drawer with a scrolling body and stable footer, retaining existing commands and close guards.
+Roll Auto always previews the eligible full Class/Division/year cohort, not just the visible page or current search. Required school approvals and separate apply commands remain intact.
 Manual opens eligible table cells and saves only changed rows, with the published manual-entry rules and existing-number change reasons enforced.
+During Manual editing, **Save** and **Cancel Editing** replace Auto/Manual. Assignment tables show task status once; Owner, setup lifecycle status and Division's roll column remain available through Columns.
+Unread pending counts show a loading placeholder rather than zero; empty remaining-assignment lists offer **View all students**. Only current prerequisites, errors and validation add visible guidance.
 Each case is refreshed and saved sequentially; saved rows are not repeated after a partial failure, while failed edits remain available for review.
 Concurrent changes are not overwritten: cancel editing and reopen Manual to review the latest values before entering a new correction.
 Drafts are protected when changing filters, page, scope or tabs, and an external academic-scope change blocks saving the old draft.
-Fees and Credentials retain their per-student Review actions without selection checkboxes or Auto/Manual controls.
+Fees and App Login retain their per-student Review actions without selection checkboxes or Auto/Manual controls.
 
 The retained per-student GR and Roll dialogs contain only their own inputs; a GR action never opens the Roll form or requires a Roll preview.
 Roll numbering starts at 1 within each Class/Division/year, so Class 5-A and 5-B may each contain Roll 1.
 Select exactly one Division in GR or Roll and use Lock/Unlock in the assignment toolbar for that identifier's whole Division/year group, including off-page students; Division placement itself remains editable.
-An administrator with the required Repair capability can unlock with a reason, while a new student in a locked group receives the next automatic identifier.
+An operator with Onboarding Add/Update and scope for the selected division can unlock with a reason, while a new student in a locked group receives the next automatic identifier.
 Changing an existing GR requires a reason; first assignment does not.
 Postactivation identifier corrections belong to Student Records.
 CBSE GR uses the backend school-wide uniqueness rule across boards; changes to GSEB uniqueness and promotion remain backlog.
@@ -394,7 +412,7 @@ Daily Attendance uses the same active Student List population and Board, Medium,
 
 The rightmost sticky Attendance column contains Present, Absent, Pending and policy-enabled Half-day icons. Absent rows expose optional inline remarks in Details (maximum 500 characters). There is no Edit/Actions column or Draft breadcrumb badge. Ineligible students remain visible with a reason and disabled marking; they do not count as pending expected attendance.
 
-Save draft permits partial marking. Submit attendance requires the complete eligible register, including rows outside the current search or page. Admin Lock is separate and applies to a submitted reviewed register. Mark pending as Present acts on eligible pending rows across the class while preserving saved marks, approved leave and rows requiring review. Existing correction safeguards remain; this change adds no correction queue, menu or Student List shortcut.
+Save draft permits partial marking. Submit attendance requires the complete eligible register, including rows outside the current search or page. Lock is separate and applies to a submitted reviewed register; it requires Add/Update and the same assigned-class scope as marking. Mark pending as Present acts on eligible pending rows across the class while preserving saved marks, approved leave and rows requiring review. Existing correction safeguards remain; this change adds no correction queue, menu or Student List shortcut.
 
 ## Student List and profile
 
@@ -414,7 +432,7 @@ Student List keeps Student, GR number, Class / Division, Roll number, Status and
 
 ### Edit the retained offering form and review audit history
 
-Overview uses equal-height desktop cards with thin dividers and leaves Class/Division, Roll, GR and Medium in the identity header rather than repeating them in cards. Cards stack naturally on narrow screens.
+Overview uses a compact Academic year / Board / Record source strip, matching-height Student details and Guardian & contact cards, and one Record activity panel for linked admission/onboarding milestones and recent changes. Thin theme dividers separate each group; summary cards stack at narrow widths and retain matching heights. Class/Division, Roll, GR and Medium stay in the identity header. Contact and address values come only from permitted saved structured sections; student or father email is never substituted for guardian email. Missing values display `—`, masked sections display `Restricted`, and a missing entry source is not inferred as a historical record. Age is derived from a valid saved date of birth. Existing detail/history reads supply the overview, with local contact loading/error states and the existing retry actions.
 Details displays the retained offering Registration form in its original field order and configured grid, including supported mapped and custom fields. Edit details opens the same form inline. Policy-masked fields and protected identifiers, placement, file/photo or read-only fields cannot be changed through this form.
 Editing a school form later does not add its new questions to existing profiles or reinterpret their original submissions.
 Admission/onboarding milestones remain on Overview; the separate Admission & Onboarding tab has been removed. Inquiry remains in its existing Admissions workspace.

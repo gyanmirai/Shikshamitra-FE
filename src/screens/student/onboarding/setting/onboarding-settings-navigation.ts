@@ -1,5 +1,5 @@
 export const onboardingSettingsTabs = [
-  { value: 'portal-access', label: 'Portal Access', icon: 'mdi:account-key-outline' },
+  { value: 'portal-access', label: 'App Login', icon: 'mdi:account-key-outline' },
   { value: 'gr-number', label: 'GR Number', icon: 'mdi:identifier' },
   { value: 'roll-number', label: 'Roll Number', icon: 'mdi:format-list-numbered' },
 ] as const;

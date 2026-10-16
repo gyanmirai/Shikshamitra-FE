@@ -1,13 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { studentPermissions } from 'src/constants/student-menu';
 import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -30,6 +35,8 @@ import {
 } from '@mui/material';
 
 const UploadStudentDocumentsScreen = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
   const { data: classes, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
@@ -172,6 +179,8 @@ const UploadStudentDocumentsScreen = () => {
                 render(value, row) {
                   return (
                     <IconButton
+                      disabled={!canWrite}
+                      aria-label={`Upload documents for ${row.fullName}`}
                       onClick={() => {
                         setSelectedStudent(row);
                         dialog.onTrue();
@@ -200,7 +209,7 @@ const UploadStudentDocumentsScreen = () => {
       )}
 
       <CustomDialog
-        open={dialog.value}
+        open={dialog.value && canWrite}
         handleClose={() => {
           dialog.onFalse();
           setSelectedStudent(null);
@@ -224,6 +233,8 @@ const UploadStudentDocumentsScreen = () => {
 export default UploadStudentDocumentsScreen;
 
 const UploadDocumentsFlow = ({ student, onClose }: { student: any; onClose: () => void }) => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, studentPermissions.records.manageStudent);
   const [file, setFile] = useState<File | null>(null);
   const [documentTypeId, setDocumentTypeId] = useState('');
   const { data: documents, isLoading } = useGetStudentDocumentsQuery({
@@ -237,7 +248,7 @@ const UploadDocumentsFlow = ({ student, onClose }: { student: any; onClose: () =
       : [];
 
   const handleSave = async () => {
-    if (!file || !documentTypeId) return;
+    if (!canWrite || !file || !documentTypeId) return;
     const formData = new FormData();
     formData.append('documentTypeId', documentTypeId);
     formData.append('file', file);
@@ -287,7 +298,7 @@ const UploadDocumentsFlow = ({ student, onClose }: { student: any; onClose: () =
         <LoadingButton
           variant="contained"
           loading={isUploading}
-          disabled={!file || !documentTypeId}
+          disabled={!canWrite || !file || !documentTypeId}
           onClick={handleSave}
         >
           Save

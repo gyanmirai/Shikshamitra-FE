@@ -433,7 +433,7 @@ export default function AdmissionCyclesScreen() {
                 },
               ]
             : []),
-          ...(canDelete && canCloseCycle(cycle)
+          ...(canAdd && canCloseCycle(cycle)
             ? [
                 {
                   id: 'close',
@@ -443,7 +443,7 @@ export default function AdmissionCyclesScreen() {
                 },
               ]
             : []),
-          ...(canDelete && canArchiveCycle(cycle)
+          ...(canAdd && canArchiveCycle(cycle)
             ? [
                 {
                   id: 'archive',

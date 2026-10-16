@@ -82,9 +82,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams();
   mocks.permissions = [
-    'Students.Records.Transitions.Create',
-    'Students.Records.Transitions.Approve',
-    'Students.Records.Transitions.Apply',
+    'Students.Records.Transitions.Add',
+    'Students.Records.Transitions.Delete',
   ].map((name) => ({ name, isGranted: true }));
   mocks.row = {
     id: 'transition-1',
@@ -104,6 +103,19 @@ beforeEach(() => {
   mocks.decide.mockImplementation(() => ({ unwrap: () => Promise.resolve(mocks.row) }));
 });
 describe('Transition command permissions', () => {
+  it.each([
+    { grant: 'Add', canCancel: true, canApprove: true },
+    { grant: 'Delete', canCancel: false, canApprove: false },
+    { grant: 'View', canCancel: false, canApprove: false },
+  ])('requires Add/Update for cancellation and approval with $grant access', ({ grant, canCancel, canApprove }) => {
+    mocks.permissions = [{ name: `Students.Records.Transitions.${grant}`, isGranted: true }];
+    mocks.row.canCancel = true;
+    mocks.row.canApprove = true;
+    render(<StudentRecordTransitions />);
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+    expect(Boolean(screen.queryByRole('button', { name: 'Cancel transition' }))).toBe(canCancel);
+    expect(Boolean(screen.queryByRole('button', { name: 'Approve stage' }))).toBe(canApprove);
+  });
   it('does not advertise approval or application when the server denies the current actor', () => {
     render(<StudentRecordTransitions />);
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));

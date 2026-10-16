@@ -28,7 +28,7 @@ vi.hoisted(() => {
 const grants = [
   'Students.Records.StudentList.View',
   'Students.Records.Changes.View',
-  'Students.Records.Changes.Create',
+  'Students.Records.Changes.Add',
 ];
 const formPath = '*/api/students/records/:studentId/details/form';
 const snapshotPath = '*/api/students/records/:studentId/details/form-snapshot';

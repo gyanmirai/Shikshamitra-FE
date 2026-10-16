@@ -110,7 +110,7 @@ it('keeps the Today switch inside the academic filter card and reports the contr
   );
   const { rerender } = render(element(false));
   const today = within(screen.getByTestId('student-setup-academic-filters')).getByRole('switch', {
-    name: 'Entered onboarding today',
+    name: 'Added today',
   });
   expect(today).not.toBeChecked();
   fireEvent.click(today);
@@ -140,12 +140,12 @@ it('renders task tabs in workflow order as links with accessible panel relations
     'tab'
   );
   expect(tabs.map((tab) => tab.textContent)).toEqual([
-    'Readiness',
+    'Setup Status',
     'Division',
     'GR Number',
     'Roll Number',
     'Fees',
-    'Credentials',
+    'App Login',
   ]);
   const values = ['readiness', 'division', 'gr-number', 'roll-number', 'fees', 'credentials'];
   tabs.forEach((tab, index) => {

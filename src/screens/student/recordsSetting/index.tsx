@@ -20,6 +20,7 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -43,11 +44,14 @@ import {
   useUpdateStudentGroupMutation,
 } from 'src/redux/student/student-group/student-group';
 
-import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 import { IGroup } from './type';
+import { StudentAcademicScopeFilters } from '../student-academic-scope-filters';
 
 
 const HouseSetting = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
+  const canDelete = hasGrantedPermission(permissions, 'Students.Records.Settings.Delete');
   const { currentMedium } = useStudentAcademicScope();
   const [query, setQuery] = useState({
     sorting: '',
@@ -118,8 +122,8 @@ const HouseSetting = () => {
         render(value, row) {
           return (
             <ThreeDotsActions
-              showEditIcon
-              showDeleteIcon
+              showEditIcon={canWrite}
+              showDeleteIcon={canDelete}
               showThreeDots={false}
               handleEditClick={() => {
                 setEditData(row as any);
@@ -159,8 +163,7 @@ const HouseSetting = () => {
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canWrite, canDelete, dialog, confirm]
   );
 
   return (
@@ -178,7 +181,8 @@ const HouseSetting = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
-            onClick={dialog.onTrue}
+            onClick={canWrite ? dialog.onTrue : undefined}
+            disabled={!canWrite}
             sx={{ px: '32px' }}
           >
             House
@@ -192,7 +196,7 @@ const HouseSetting = () => {
         noDataText={
           <>
             No House Data Found{' '}
-            <Box
+            {canWrite && <Box
               onClick={dialog.onTrue}
               color="primary.main"
               fontWeight={600}
@@ -205,7 +209,7 @@ const HouseSetting = () => {
               }}
             >
               Add House
-            </Box>{' '}
+            </Box>}{' '}
           </>
         }
         totalCount={currentMedium?.id && !isError ? groupData?.data?.length || 0 : 0}
@@ -237,7 +241,7 @@ const HouseSetting = () => {
         }}
       />{' '}
       <CustomDialog
-        open={dialog.value}
+        open={dialog.value && canWrite}
         handleClose={() => {
           setEditData(null);
           dialog.onFalse();
@@ -263,7 +267,7 @@ const HouseSetting = () => {
         <GroupManagementForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
       <ConfirmDialog
-        open={confirm.value}
+        open={confirm.value && canDelete}
         onClose={() => {
           setEditData(null);
           confirm.onFalse();
@@ -280,7 +284,9 @@ const HouseSetting = () => {
             color="error"
             size="small"
             loading={isDeleteLoading}
+            disabled={!canDelete}
             onClick={async () => {
+              if (!canDelete) return;
               confirmWithUndo({
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
@@ -325,6 +331,8 @@ const GroupManagementForm = ({
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
   const { currentMedium } = useStudentAcademicScope();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
 
   // Hooks for adding and updating student groups using custom query and mutation hook
   const [addGroup, { isLoading }] = useQueryAndMutation({
@@ -357,6 +365,7 @@ const GroupManagementForm = ({
     }),
     // Handle form submission for both add and update operations
     onSubmit: async (values) => {
+      if (!canWrite) return;
       try {
         // Helper: convert File → base64 (without data URI prefix)
         const getBase64String = async (file?: File | string) => {
@@ -480,6 +489,7 @@ const GroupManagementForm = ({
           type="submit"
           variant="contained"
           loading={isLoading || isUpdateLoading}
+          disabled={!canWrite}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

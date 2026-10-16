@@ -24,7 +24,7 @@ export function getAssessmentPermissions(permissions: GrantedPermission[] | unde
     attendance: canAddOrUpdate,
     results: canAddOrUpdate,
     review: canAddOrUpdate,
-    waive: granted('Delete'),
+    waive: canAddOrUpdate,
   };
 }
 

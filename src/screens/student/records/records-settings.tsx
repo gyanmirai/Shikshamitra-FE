@@ -121,7 +121,7 @@ function RecordsSettingsEditor({
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canEdit = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
-  const canPublish = hasGrantedPermission(permissions, 'Students.Records.Settings.Publish');
+  const canPublish = hasGrantedPermission(permissions, 'Students.Records.Settings.Add');
   const [record, setRecord] = useState(initial);
   const [preview, setPreview] = useState<{
     result: RecordsPolicyPreview;

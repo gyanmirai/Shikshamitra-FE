@@ -111,7 +111,7 @@ it('uses Student Directory with no unauthorised row actions', () => {
 });
 
 it('routes authorised status edits through the existing audited change request', () => {
-  state.permissions = ['Students.Records.Changes.View', 'Students.Records.Changes.Create'].map(
+  state.permissions = ['Students.Records.Changes.View', 'Students.Records.Changes.Add'].map(
     (name) => ({ name, isGranted: true })
   );
   render(<StudentProfile />);

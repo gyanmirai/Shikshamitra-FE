@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
@@ -75,6 +79,8 @@ const StudentRecordsReportPreviewDrawer = ({
   reportRequest,
   reportTitle,
 }: StudentRecordsReportPreviewDrawerProps) => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canExport = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -147,7 +153,7 @@ const StudentRecordsReportPreviewDrawer = ({
   );
 
   const handleDownload = useCallback(async () => {
-    if (!reportRequest || downloadPhase !== 'idle') return;
+    if (!canExport || !reportRequest || downloadPhase !== 'idle') return;
 
     setDownloadPhase('creating');
     setJobStatusLabel('');
@@ -197,6 +203,7 @@ const StudentRecordsReportPreviewDrawer = ({
   }, [
     reportRequest,
     downloadPhase,
+    canExport,
     createExport,
     pollJobStatus,
     triggerDownload,
@@ -404,7 +411,7 @@ const StudentRecordsReportPreviewDrawer = ({
         <Button
           variant="contained"
           size="small"
-          disabled={isDownloadInProgress || isPreviewLoading}
+          disabled={!canExport || isDownloadInProgress || isPreviewLoading}
           startIcon={
             isDownloadInProgress ? (
               <CircularProgress size={16} color="inherit" />

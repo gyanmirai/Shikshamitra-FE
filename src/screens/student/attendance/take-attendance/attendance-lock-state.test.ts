@@ -39,7 +39,7 @@ describe('student attendance lock button state', () => {
     ).toBe(true);
   });
 
-  it('blocks lock and unlock actions without the Delete permission', () => {
+  it('blocks lock and unlock actions without the Add/Update permission', () => {
     const state = getAttendanceLockButtonState({
       isLocked: true,
       attendanceDayId: 'attendance-day-1',

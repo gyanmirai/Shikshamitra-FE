@@ -1,14 +1,17 @@
 'use client';
 
-import { Box, Tab } from '@mui/material';
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
+import { Box, Tab, Alert } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSlider } from 'src/components/form-slider';
 import { Iconify } from 'src/components/iconify/iconify';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import React, { useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import ExamNotificationManagement from 'src/screens/student/studentNotification/Components/ExamNotification';
 import AttendanceNotificationManagement from 'src/screens/student/studentNotification/Components/AttendanceNotification';
 import EnrollmentNotificationManagement from 'src/screens/student/studentNotification/Components/EnrollmentNotification';
 
@@ -16,7 +19,6 @@ import EnrollmentNotificationManagement from 'src/screens/student/studentNotific
 // new function identities on every render (which cases remount + re-fetch loops)
 const AttendanceNotificationTab = (props: any) => <AttendanceNotificationManagement {...props} />;
 const EnrollmentNotificationTab = (props: any) => <EnrollmentNotificationManagement {...props} />;
-const ExamNotificationTab = (props: any) => <ExamNotificationManagement {...props} />;
 
 const TABS = [
   {
@@ -24,27 +26,35 @@ const TABS = [
     label: 'Attendance',
     icon: <Iconify icon="mdi:calendar-check-outline" width={20} />,
     component: AttendanceNotificationTab,
+    permissions: ['Students.Notification.AttendanceManagement.View'],
   },
   {
     value: 'enrollment',
     label: 'Enrollment',
     icon: <Iconify icon="mdi:account-school-outline" width={20} />,
     component: EnrollmentNotificationTab,
-  },
-  {
-    value: 'exam',
-    label: 'Exam',
-    icon: <Iconify icon="mdi:file-document-edit-outline" width={20} />,
-    component: ExamNotificationTab,
+    permissions: [
+      'Students.Notification.InquiryManagement.View',
+      'Students.Notification.RegistrationManagement.View',
+      'Students.Notification.AdmissionManagement.View',
+    ],
   },
 ];
 
 const StudentNotificationScreen = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const visibleTabs = useMemo(
+    () => TABS.filter((tab) => hasGrantedPermission(permissions, tab.permissions)),
+    [permissions]
+  );
   // Read tab directly from the URL to prevent useSearchParam custom hook loop
   const nativeSearchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const activeTab = nativeSearchParams.get('tab') || 'attendance';
+  const requestedTab = nativeSearchParams.get('tab');
+  const activeTab = visibleTabs.some((tab) => tab.value === requestedTab)
+    ? requestedTab!
+    : visibleTabs[0]?.value ?? '';
 
   const setActiveTab = useCallback(
     (tab: string) => {
@@ -58,10 +68,10 @@ const StudentNotificationScreen = () => {
   const dialog = useBoolean(false);
 
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === activeTab),
-    [activeTab]
+    () => visibleTabs.find((tab) => tab.value === activeTab),
+    [activeTab, visibleTabs]
   );
-  const currentIndex = useMemo(() => TABS.findIndex((tab) => tab.value === activeTab), [activeTab]);
+  const currentIndex = visibleTabs.findIndex((tab) => tab.value === activeTab);
 
   const [isViewMode, setIsViewMode] = useState(false);
   const [isBackClick, setIsBackClick] = useState(false);
@@ -74,7 +84,7 @@ const StudentNotificationScreen = () => {
       {dialog.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
-          description="Configure notifications for student attendance, enrollment, and exam management."
+          description="Configure notifications for student attendance and enrollment."
           links={[
             { name: 'Student', href: '/student/dashboard' },
             {
@@ -95,7 +105,7 @@ const StudentNotificationScreen = () => {
       ) : (
         <CustomBreadcrumbs
           heading="Notification"
-          description="Configure notifications for student attendance, enrollment, and exam management."
+          description="Configure notifications for student attendance and enrollment."
           links={[
             { name: 'Student', href: '/student/dashboard' },
             { name: 'Notification', href: '/student/attendance/notification' },
@@ -104,11 +114,11 @@ const StudentNotificationScreen = () => {
         />
       )}
 
-      {!dialog.value && (
+      {!dialog.value && visibleTabs.length > 0 && (
         <CustomTabs
           value={activeTab}
           onChange={(e, value) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            const newIndex = visibleTabs.findIndex((tab) => tab.value === value);
             setIsBackClick(currentIndex > newIndex);
             setActiveTab(value);
           }}
@@ -120,14 +130,17 @@ const StudentNotificationScreen = () => {
           }}
           role="tablist"
         >
-          {TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
       )}
 
-      <FormSlider
-        steps={TABS}
+      {visibleTabs.length === 0 && (
+        <Alert severity="info">No notification workspace is available for your current access.</Alert>
+      )}
+      {currentIndex >= 0 && <FormSlider
+        steps={visibleTabs}
         isBackClick={isBackClick}
         step={currentIndex}
         containerProps={{
@@ -143,7 +156,7 @@ const StudentNotificationScreen = () => {
         <Box sx={{ height: '100%', flex: 1 }}>
           {ActiveComponent && <ActiveComponent dialog={dialog} setIsViewMode={setIsViewMode} />}
         </Box>
-      </FormSlider>
+      </FormSlider>}
     </Box>
   );
 };

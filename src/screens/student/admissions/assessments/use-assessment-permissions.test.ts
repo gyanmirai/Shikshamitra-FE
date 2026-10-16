@@ -6,6 +6,16 @@ import {
 } from './use-assessment-permissions';
 
 describe('getAssessmentPermissions', () => {
+  it('allows waivers with Add/Update and rejects Delete-only, View-only and revoked grants', () => {
+    expect(getAssessmentPermissions([
+      { name: 'Students.Admissions.Assessments.Add', isGranted: true },
+    ]).waive).toBe(true);
+    [
+      [{ name: 'Students.Admissions.Assessments.View', isGranted: true }],
+      [{ name: 'Students.Admissions.Assessments.Delete', isGranted: true }],
+      [{ name: 'Students.Admissions.Assessments.Add', isGranted: false }],
+    ].forEach((permissions) => expect(getAssessmentPermissions(permissions).waive).toBe(false));
+  });
   it('maps backend Add and Delete grants to assessment workflow actions', () => {
     const result = getAssessmentPermissions([
       { name: 'Students.Admissions.Assessments.View', isGranted: true },

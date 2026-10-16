@@ -26,6 +26,7 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
     loading,
     isAuthenticated,
     permissionsInitialized,
+    permissions,
     sessionContext,
     user,
     initializationError,
@@ -46,12 +47,14 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
     user?.tenantid === sessionData?.profile?.tenantid &&
     Boolean(sessionData?.accessToken) &&
     !sessionData?.error;
-  const wrongWorkspace = sessionContext ? isWrongWorkspace(sessionContext, pathname) : false;
+  const wrongWorkspace = sessionContext
+    ? isWrongWorkspace(sessionContext, pathname, permissions)
+    : false;
 
   useEffect(() => {
     if (verifiedIdentity && wrongWorkspace && sessionContext)
-      router.replace(workspaceLanding(sessionContext));
-  }, [verifiedIdentity, wrongWorkspace, router, sessionContext]);
+      router.replace(workspaceLanding(sessionContext, permissions));
+  }, [verifiedIdentity, wrongWorkspace, router, sessionContext, permissions]);
 
   useEffect(() => {
     const hasUsableSession =

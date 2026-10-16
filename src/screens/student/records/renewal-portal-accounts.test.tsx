@@ -49,7 +49,7 @@ const renewal = {
   concurrencyStamp: 'renewal-stamp-1',
 } as any;
 const requiredGrants = [
-  'Students.Records.Transitions.Create',
+  'Students.Records.Transitions.Add',
   'Students.Onboarding.Add',
   'AbpIdentity.Users.Create',
 ];

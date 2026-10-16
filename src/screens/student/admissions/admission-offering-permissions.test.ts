@@ -3,7 +3,7 @@ import { it, expect, describe } from 'vitest';
 import { getAdmissionOfferingPermissions } from './admission-offering-permissions';
 
 describe('getAdmissionOfferingPermissions', () => {
-  it('uses the backend Add permission for every additive offering command', () => {
+  it('uses Add/Update for setup and lifecycle commands', () => {
     expect(
       getAdmissionOfferingPermissions([
         { name: 'Students.Admissions.Offerings.Add', isGranted: true },
@@ -14,12 +14,12 @@ describe('getAdmissionOfferingPermissions', () => {
       edit: true,
       clone: true,
       activate: true,
-      deactivate: false,
+      deactivate: true,
       delete: false,
     });
   });
 
-  it('uses the backend Delete permission for destructive offering commands', () => {
+  it('limits Delete permission to deleting an offering', () => {
     expect(
       getAdmissionOfferingPermissions([
         { name: 'Students.Admissions.Offerings.Delete', isGranted: true },
@@ -30,7 +30,7 @@ describe('getAdmissionOfferingPermissions', () => {
       edit: false,
       clone: false,
       activate: false,
-      deactivate: true,
+      deactivate: false,
       delete: true,
     });
   });

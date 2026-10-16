@@ -319,9 +319,8 @@ export function useDailyAttendance(academicYearOverride?: AcademicYear) {
   const counts = useMemo(() => getAttendanceCounts(rows), [rows]);
   const canAdd = hasGrantedPermission(permissions, 'Students.Attendance.MarkAttendance.Add');
   const canManageLock =
-    context?.isAdmin === true &&
-    context.canManageLock &&
-    hasGrantedPermission(permissions, 'Students.Attendance.MarkAttendance.Delete');
+    context?.canManageLock === true &&
+    canAdd;
   const editable =
     !!snapshot &&
     !!authoritative?.canMark &&
