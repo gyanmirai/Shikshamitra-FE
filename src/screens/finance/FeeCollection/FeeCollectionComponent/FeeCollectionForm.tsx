@@ -36,6 +36,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRef, useMemo, useState, Fragment, useEffect } from 'react';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
@@ -70,6 +71,7 @@ import {
   IconButton,
   Typography,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 
 import { toPeriod } from './FeeLedgerShared';
@@ -89,6 +91,11 @@ import {
   safeRoundingDifference,
 } from './preview/paymentAllocationUtils';
 import {
+  collectionDisplayStudent,
+  FeeCollectionWaiverContext,
+  isCollectionOutcomeUncertain,
+} from './feeCollectionContext';
+import {
   selectionItemKey,
   applySelectionFilter,
   selectionFilterState,
@@ -102,6 +109,7 @@ import {
 import type { FeeLedgerFilters } from './FeeLedgerFilterBar';
 import type { LedgerSelection, SelectionFilterKey } from './feeLedgerSelection';
 import type { AllocatedFeeRow, AllocatedChargeRow } from './preview/paymentAllocationUtils';
+import type { FeeCollectionAdapter, FeeCollectionAcademicYear } from './feeCollectionContext';
 import type {
   IFeeCharge,
   IStudentFee,
@@ -296,18 +304,32 @@ const isChargeSelectable = (charge: IFeeCharge): boolean =>
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
+export type { FeeCollectionAdapter, FeeCollectionAcademicYear } from './feeCollectionContext';
+
 const FeeCollectComponentForm = ({
-  student,
+  student: studentRecord = null,
   onCancel,
+  academicYear,
+  collectionAdapter,
+  onBusyChange,
+  onDirtyChange,
 }: {
-  student: IStudentFee | null;
+  student?: IStudentFee | null;
   onCancel?: (e: any, isSubmit: boolean) => void;
+  academicYear?: FeeCollectionAcademicYear;
+  collectionAdapter?: FeeCollectionAdapter;
+  onBusyChange?: (busy: boolean) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) => {
   const theme = useTheme();
   const layouts = useTabs('ledger');
   const studentInformation = useBoolean();
   const allocationOrder = useBoolean();
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear: selectedAcademicYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
+  const currentYear = academicYear ?? selectedAcademicYear;
+  const isAdaptedContext = Boolean(collectionAdapter);
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
   const selectionOwnership = useRef(createSelectionOwnership());
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -322,26 +344,46 @@ const FeeCollectComponentForm = ({
   const [chargeReceiptBlobUrl, setChargeReceiptBlobUrl] = useState<string | null>(null);
   const [lastCollectResponse, setLastCollectResponse] = useState<CollectFeeOutput | null>(null);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [collectionError, setCollectionError] = useState<string | null>(null);
+  const [collectionOutcomeUncertain, setCollectionOutcomeUncertain] = useState(false);
+  const lifecycleCallbacks = useRef({ onBusyChange, onDirtyChange });
+  lifecycleCallbacks.current = { onBusyChange, onDirtyChange };
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
-  const resolvedStudentName =
-    lastCollectResponse?.studentName?.trim() || student?.name?.trim() || '';
 
   // ── Fetch collect form data from V2 API ────────────────────────────────────
   const {
-    data: collectFormData,
-    isLoading: collectFormLoading,
-    isFetching: collectFormFetching,
-    refetch: refetchCollectForm,
+    data: studentCollectFormData,
+    isLoading: studentCollectFormLoading,
+    isFetching: studentCollectFormFetching,
+    error: studentCollectFormError,
+    refetch: refetchStudentCollectForm,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCollectFormQuery,
     params: {
-      studentId: String(student?.id ?? ''),
+      studentId: String(studentRecord?.id ?? ''),
       academicYearId: currentYear?.id ?? '',
     },
-    options: { skip: !student?.id || !currentYear?.id },
+    options: { skip: Boolean(collectionAdapter) || !studentRecord?.id || !currentYear?.id },
   });
+
+  const formData = collectionAdapter ? collectionAdapter.data : studentCollectFormData;
+  const collectFormLoading = collectionAdapter
+    ? collectionAdapter.isLoading
+    : studentCollectFormLoading;
+  const collectFormFetching = collectionAdapter
+    ? collectionAdapter.isFetching
+    : studentCollectFormFetching;
+  const collectFormError = collectionAdapter ? collectionAdapter.error : studentCollectFormError;
+  const refetchCollectForm = collectionAdapter?.refetch ?? refetchStudentCollectForm;
+  const student = useMemo(
+    () => (isAdaptedContext ? collectionDisplayStudent(formData) : studentRecord),
+    [isAdaptedContext, formData, studentRecord]
+  );
+  const resolvedStudentName =
+    lastCollectResponse?.studentName?.trim() || student?.name?.trim() || '';
+  const contextKey = `${collectionAdapter?.contextKey ?? studentRecord?.id ?? ''}:${currentYear?.id ?? ''}`;
 
   const {
     data: bankAccountsData,
@@ -354,21 +396,37 @@ const FeeCollectComponentForm = ({
     options: { skip: !currentYear?.id },
   });
 
-  const [collectFee, { isLoading: collectLoading }] = useQueryAndMutation({
+  const [collectFee, { isLoading: studentCollectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCollectFeeMutation,
   });
+  const collectLoading =
+    submitting || (collectionAdapter ? collectionAdapter.isCollecting : studentCollectLoading);
+  const adaptedOutcomeUnresolved = Boolean(collectionAdapter && collectionOutcomeUncertain);
+  const collectionReadBlocked = Boolean(collectFormError || collectFormFetching);
 
-  const submissionRef = useRef<{ fingerprint: string; key: string } | null>(null);
+  const submissionRef = useRef<{
+    contextKey: string;
+    command: Omit<CollectFeeInput, 'studentId'>;
+  } | null>(null);
+  const submissionInFlight = useRef(false);
   const withIdempotencyKey = (
-    payload: Omit<CollectFeeInput, 'idempotencyKey'>
-  ): CollectFeeInput => {
-    const fingerprint = JSON.stringify(payload);
-    if (!submissionRef.current || submissionRef.current.fingerprint !== fingerprint) {
-      submissionRef.current = { fingerprint, key: crypto.randomUUID() };
-    }
-    return { ...payload, idempotencyKey: submissionRef.current.key };
+    payload: Omit<CollectFeeInput, 'idempotencyKey' | 'studentId'>
+  ): Omit<CollectFeeInput, 'studentId'> => {
+    // Freeze the wire command. A response may be lost after Finance commits,
+    // so refreshed balances must never recalculate the same payment on retry.
+    const command = JSON.parse(
+      JSON.stringify({ ...payload, idempotencyKey: crypto.randomUUID() })
+    ) as Omit<CollectFeeInput, 'studentId'>;
+    submissionRef.current = { contextKey, command };
+    return command;
   };
+  const submitCollection = (
+    input: Omit<CollectFeeInput, 'studentId'>
+  ): Promise<CollectFeeOutput> =>
+    collectionAdapter
+      ? collectionAdapter.collect(input)
+      : collectFee({ ...input, studentId: String(studentRecord?.id ?? '') }).unwrap();
 
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
@@ -386,7 +444,7 @@ const FeeCollectComponentForm = ({
       ? {
           id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
           receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
-          studentId: lastCollectResponse.studentId,
+          studentId: lastCollectResponse.studentId ?? '',
           studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
           totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
@@ -402,7 +460,7 @@ const FeeCollectComponentForm = ({
       ? {
           id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
           receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
-          studentId: lastCollectResponse.studentId,
+          studentId: lastCollectResponse.studentId ?? '',
           studentName: resolvedStudentName,
           academicYearId: lastCollectResponse.academicYearId,
           totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
@@ -415,8 +473,6 @@ const FeeCollectComponentForm = ({
           auditSummary: lastCollectResponse.auditSummary,
         }
       : undefined;
-
-  const formData = collectFormData;
 
   const academicMonthsFromContext = useMemo(
     () =>
@@ -767,9 +823,37 @@ const FeeCollectComponentForm = ({
       }));
     },
     onSubmit: () => {
+      if (adaptedOutcomeUnresolved || collectLoading || collectionReadBlocked) return;
       setPreviewOpen(true);
     },
   });
+
+  const previousContextKey = useRef(contextKey);
+  const { resetForm: resetCollectionForm } = formik;
+  useEffect(() => {
+    if (previousContextKey.current !== contextKey) {
+      previousContextKey.current = contextKey;
+      selectionOwnership.current = createSelectionOwnership();
+      submissionRef.current = null;
+      setFilters(FEE_LEDGER_INITIAL_FILTERS);
+      setCollectionError(null);
+      setCollectionOutcomeUncertain(false);
+      resetCollectionForm({ values: buildInitialValues(student) });
+    }
+  }, [contextKey, resetCollectionForm, student]);
+  useEffect(() => {
+    onBusyChange?.(Boolean(collectLoading || adaptedOutcomeUnresolved));
+  }, [collectLoading, adaptedOutcomeUnresolved, onBusyChange]);
+  useEffect(() => {
+    onDirtyChange?.(formik.dirty && !lastCollectResponse);
+  }, [formik.dirty, lastCollectResponse, onDirtyChange]);
+  useEffect(
+    () => () => {
+      lifecycleCallbacks.current.onBusyChange?.(false);
+      lifecycleCallbacks.current.onDirtyChange?.(false);
+    },
+    []
+  );
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce(
@@ -810,6 +894,7 @@ const FeeCollectComponentForm = ({
   const balancePaise = toPaise(finalAmount) - toPaise(totalAllocated);
 
   useEffect(() => {
+    if (submissionRef.current) return;
     formik.setFieldValue('payment.amount', subtotal > 0 ? String(subtotal) : '', false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtotal]);
@@ -838,6 +923,8 @@ const FeeCollectComponentForm = ({
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSelectionChange = (items: SelectedItem[]) => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     recordManualSelection(
       selectionOwnership.current,
       { items: formik.values.selectedItems, charges: formik.values.charges },
@@ -847,6 +934,8 @@ const FeeCollectComponentForm = ({
   };
 
   const handleChargesChange = (chargeIds: string[]) => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     recordManualSelection(
       selectionOwnership.current,
       { items: formik.values.selectedItems, charges: formik.values.charges },
@@ -856,6 +945,8 @@ const FeeCollectComponentForm = ({
   };
 
   const handlePaymentMethodChange = (method: string) => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     formik.setFieldValue('payment', {
       paymentMethod: method,
       amount: formik.values.payment.amount,
@@ -866,8 +957,11 @@ const FeeCollectComponentForm = ({
     });
   };
 
-  const updatePayment = (field: keyof FeeCollectionPayment, value: any) =>
+  const updatePayment = (field: keyof FeeCollectionPayment, value: any) => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     formik.setFieldValue('payment', { ...formik.values.payment, [field]: value });
+  };
 
   const buildPaymentPayload = (paymentMethodNum: number, receivedAmount: number) => [
     {
@@ -895,9 +989,9 @@ const FeeCollectComponentForm = ({
 
   const loadFeeReceiptPdf = async (receiptId: string) => {
     try {
-      const blob = await downloadReceiptPdf({
-        receiptId,
-      }).unwrap();
+      const blob = collectionAdapter
+        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'fee')
+        : await downloadReceiptPdf({ receiptId }).unwrap();
       const objectUrl = URL.createObjectURL(blob);
       setFeeReceiptBlobUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
@@ -910,9 +1004,9 @@ const FeeCollectComponentForm = ({
 
   const loadChargeReceiptPdf = async (receiptId: string) => {
     try {
-      const blob = await downloadReceiptPdf({
-        receiptId,
-      }).unwrap();
+      const blob = collectionAdapter
+        ? await collectionAdapter.downloadReceiptPdf(receiptId, 'charge')
+        : await downloadReceiptPdf({ receiptId, receiptType: 'charge' }).unwrap();
       const objectUrl = URL.createObjectURL(blob);
       setChargeReceiptBlobUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
@@ -930,86 +1024,92 @@ const FeeCollectComponentForm = ({
   };
 
   // Final submission: collects fee and generates receipt immediately
+  const prepareCollectionCommand = (
+    confirmNonCash: boolean
+  ): Omit<CollectFeeInput, 'studentId'> => {
+    if (submissionRef.current?.contextKey === contextKey) return submissionRef.current.command;
+    const receivedAmount = Number(String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, ''));
+
+    const paymentMethodNum = Number(
+      Object.entries(PaymentMethodLabels).find(
+        ([, label]) => label === formik.values.payment.paymentMethod
+      )?.[0] ?? 0
+    );
+
+    const isCashierDecided =
+      paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
+
+    const allocation = allocatePayment(
+      formik.values.selectedItems,
+      chargesData.filter((c) => formik.values.charges.includes(c.chargeId)),
+      feeHeadMap,
+      receivedAmount
+    );
+
+    const dueFeePayments = allocation.allocatedRows
+      .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
+      .map((r) => {
+        const matchingItem = formik.values.selectedItems.find(
+          (item) =>
+            (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
+            (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
+        );
+        if (!matchingItem) {
+          throw new Error(`Matching item not found for key ${r.key}`);
+        }
+        const [yearStr, monthStr] = matchingItem.period.split('-');
+        const feeMonthIdx = Number(monthStr) - 1;
+        const dueFeeId =
+          r.dueFeeId ??
+          matchingItem.dueFeeId ??
+          dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
+
+        return {
+          dueFeeId,
+          feeHeadId: matchingItem.feeHeadId,
+          amount: r.principalPaidAmount,
+        };
+      });
+
+    const lateFeePayments = allocation.allocatedRows
+      .filter(
+        (r): r is AllocatedFeeRow | AllocatedChargeRow =>
+          (r.type === 'fee' && r.lateFeePaidAmount > 0) ||
+          (r.type === 'charge' && r.sourceType === 'LateFee' && r.paidAmount > 0)
+      )
+      .map((r) => ({
+        dueFeeId: r.type === 'fee' ? resolveAllocatedDueFeeId(r) : r.sourceId,
+        amount: r.type === 'fee' ? r.lateFeePaidAmount : r.paidAmount,
+      }));
+
+    const chargePayments = allocation.allocatedRows
+      .filter(
+        (r): r is AllocatedChargeRow =>
+          r.type === 'charge' && r.sourceType === 'Charge' && r.paidAmount > 0
+      )
+      .map((r) => ({
+        chargeId: r.key,
+        amount: r.paidAmount,
+      }));
+
+    return withIdempotencyKey({
+      academicYearId: currentYear?.id ?? '',
+      notes: formik.values.remarks ?? undefined,
+      paymentConfirmed: isCashierDecided ? confirmNonCash : undefined,
+      dueFeePayments,
+      lateFeePayments,
+      chargePayments,
+      payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
+    });
+  };
+
   const handleFinalCollect = async () => {
+    if (submissionInFlight.current || collectLoading) return;
+    submissionInFlight.current = true;
+    setSubmitting(true);
+    setCollectionError(null);
     try {
-      const receivedAmount = Number(
-        String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
-      );
-
-      const paymentMethodNum = Number(
-        Object.entries(PaymentMethodLabels).find(
-          ([, label]) => label === formik.values.payment.paymentMethod
-        )?.[0] ?? 0
-      );
-
-      const isCashierDecided =
-        paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
-
-      const allocation = allocatePayment(
-        formik.values.selectedItems,
-        chargesData.filter((c) => formik.values.charges.includes(c.chargeId)),
-        feeHeadMap,
-        receivedAmount
-      );
-
-      const dueFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
-        .map((r) => {
-          const matchingItem = formik.values.selectedItems.find(
-            (item) =>
-              (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
-              (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
-          );
-          if (!matchingItem) {
-            throw new Error(`Matching item not found for key ${r.key}`);
-          }
-          const [yearStr, monthStr] = matchingItem.period.split('-');
-          const feeMonthIdx = Number(monthStr) - 1;
-          const dueFeeId =
-            r.dueFeeId ??
-            matchingItem.dueFeeId ??
-            dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
-
-          return {
-            dueFeeId,
-            feeHeadId: matchingItem.feeHeadId,
-            amount: r.principalPaidAmount,
-          };
-        });
-
-      const lateFeePayments = allocation.allocatedRows
-        .filter(
-          (r): r is AllocatedFeeRow | AllocatedChargeRow =>
-            (r.type === 'fee' && r.lateFeePaidAmount > 0) ||
-            (r.type === 'charge' && r.sourceType === 'LateFee' && r.paidAmount > 0)
-        )
-        .map((r) => ({
-          dueFeeId: r.type === 'fee' ? resolveAllocatedDueFeeId(r) : r.sourceId,
-          amount: r.type === 'fee' ? r.lateFeePaidAmount : r.paidAmount,
-        }));
-
-      const chargePayments = allocation.allocatedRows
-        .filter(
-          (r): r is AllocatedChargeRow =>
-            r.type === 'charge' && r.sourceType === 'Charge' && r.paidAmount > 0
-        )
-        .map((r) => ({
-          chargeId: r.key,
-          amount: r.paidAmount,
-        }));
-
-      const collectResponse = await collectFee(
-        withIdempotencyKey({
-          studentId: String(student?.id ?? ''),
-          academicYearId: currentYear?.id ?? '',
-          notes: formik.values.remarks ?? undefined,
-          paymentConfirmed: isCashierDecided ? true : undefined,
-          dueFeePayments,
-          lateFeePayments,
-          chargePayments,
-          payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
-        })
-      ).unwrap();
+      const collectResponse = await submitCollection(prepareCollectionCommand(true));
 
       shikshaMitraToast.success({
         message: collectResponse.auditSummary?.headline || 'Fee collected successfully',
@@ -1017,101 +1117,37 @@ const FeeCollectComponentForm = ({
       setFinalReviewOpen(false);
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
+      setCollectionOutcomeUncertain(false);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
-        if (collectResponse.auditSummary) {
+        if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
         } else {
           onCancel?.(null, true);
         }
       }
     } catch (err) {
-      console.error(err);
-      shikshaMitraToast.error({ message: 'Failed to collect fee. Please try again.' });
+      const message =
+        parseApiProblemDetail(err).detail || 'Failed to collect fee. Please try again.';
+      setCollectionError(message);
+      setCollectionOutcomeUncertain(
+        Boolean(submissionRef.current) && isCollectionOutcomeUncertain(err)
+      );
+      shikshaMitraToast.error({ message });
       setFinalReviewOpen(false);
+    } finally {
+      submissionInFlight.current = false;
+      setSubmitting(false);
     }
   };
 
   // Save as pending verification (non-cash): calls API with pending status
   const handleSavePending = async () => {
+    if (submissionInFlight.current || collectLoading) return;
+    submissionInFlight.current = true;
+    setSubmitting(true);
+    setCollectionError(null);
     try {
-      const receivedAmount = Number(
-        String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
-      );
-
-      const paymentMethodNum = Number(
-        Object.entries(PaymentMethodLabels).find(
-          ([, label]) => label === formik.values.payment.paymentMethod
-        )?.[0] ?? 0
-      );
-
-      const isCashierDecided =
-        paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
-
-      const allocation = allocatePayment(
-        formik.values.selectedItems,
-        chargesData.filter((c) => formik.values.charges.includes(c.chargeId)),
-        feeHeadMap,
-        receivedAmount
-      );
-
-      const dueFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
-        .map((r) => {
-          const matchingItem = formik.values.selectedItems.find(
-            (item) =>
-              (r.dueFeeId && item.dueFeeId === r.dueFeeId) ||
-              (!r.dueFeeId && `${item.feeHeadId}-${item.period}` === r.key)
-          );
-          if (!matchingItem) {
-            throw new Error(`Matching item not found for key ${r.key}`);
-          }
-          const [yearStr, monthStr] = matchingItem.period.split('-');
-          const feeMonthIdx = Number(monthStr) - 1;
-          const dueFeeId =
-            r.dueFeeId ??
-            matchingItem.dueFeeId ??
-            dueFeeIdMap[`${matchingItem.feeHeadId}|${feeMonthIdx}|${yearStr}`];
-
-          return {
-            dueFeeId,
-            feeHeadId: matchingItem.feeHeadId,
-            amount: r.principalPaidAmount,
-          };
-        });
-
-      const lateFeePayments = allocation.allocatedRows
-        .filter(
-          (r): r is AllocatedFeeRow | AllocatedChargeRow =>
-            (r.type === 'fee' && r.lateFeePaidAmount > 0) ||
-            (r.type === 'charge' && r.sourceType === 'LateFee' && r.paidAmount > 0)
-        )
-        .map((r) => ({
-          dueFeeId: r.type === 'fee' ? resolveAllocatedDueFeeId(r) : r.sourceId,
-          amount: r.type === 'fee' ? r.lateFeePaidAmount : r.paidAmount,
-        }));
-
-      const chargePayments = allocation.allocatedRows
-        .filter(
-          (r): r is AllocatedChargeRow =>
-            r.type === 'charge' && r.sourceType === 'Charge' && r.paidAmount > 0
-        )
-        .map((r) => ({
-          chargeId: r.key,
-          amount: r.paidAmount,
-        }));
-
-      const collectResponse = await collectFee(
-        withIdempotencyKey({
-          studentId: String(student?.id ?? ''),
-          academicYearId: currentYear?.id ?? '',
-          notes: formik.values.remarks ?? undefined,
-          paymentConfirmed: isCashierDecided ? false : undefined,
-          dueFeePayments,
-          lateFeePayments,
-          chargePayments,
-          payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
-        })
-      ).unwrap();
+      const collectResponse = await submitCollection(prepareCollectionCommand(false));
 
       shikshaMitraToast.success({
         message: collectResponse.auditSummary?.headline || 'Payment saved as pending verification',
@@ -1119,21 +1155,32 @@ const FeeCollectComponentForm = ({
       setFinalReviewOpen(false);
       submissionRef.current = null;
       setLastCollectResponse(collectResponse);
+      setCollectionOutcomeUncertain(false);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
-        if (collectResponse.auditSummary) {
+        if (collectResponse.auditSummary || collectionAdapter) {
           setOutcomeDialogOpen(true);
         } else {
           onCancel?.(null, true);
         }
       }
     } catch (err) {
-      console.error(err);
-      shikshaMitraToast.error({ message: 'Failed to save payment. Please try again.' });
+      const message =
+        parseApiProblemDetail(err).detail || 'Failed to save payment. Please try again.';
+      setCollectionError(message);
+      setCollectionOutcomeUncertain(
+        Boolean(submissionRef.current) && isCollectionOutcomeUncertain(err)
+      );
+      shikshaMitraToast.error({ message });
       setFinalReviewOpen(false);
+    } finally {
+      submissionInFlight.current = false;
+      setSubmitting(false);
     }
   };
 
   const handleRemoveAll = () => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     selectionOwnership.current = createSelectionOwnership();
     setFilters((previous) => ({
       ...previous,
@@ -1214,7 +1261,7 @@ const FeeCollectComponentForm = ({
   const setCollectionValues = formik.setValues;
 
   useEffect(() => {
-    if (!formData || collectFormLoading || collectFormFetching) return;
+    if (!formData || collectFormLoading || collectFormFetching || submissionRef.current) return;
     const next = reconcileLedgerSelection(
       selectionOwnership.current,
       { items: selectedFeeItems, charges: selectedChargeIds },
@@ -1262,6 +1309,8 @@ const FeeCollectComponentForm = ({
   );
 
   const handleSelectionFilterChange = (key: SelectionFilterKey, checked: boolean) => {
+    if (adaptedOutcomeUnresolved) return;
+    submissionRef.current = null;
     const next = applySelectionFilter(
       selectionOwnership.current,
       currentSelection,
@@ -1280,6 +1329,7 @@ const FeeCollectComponentForm = ({
     );
   };
   const handleFilterChange = (nextFilters: FeeLedgerFilters) => {
+    if (adaptedOutcomeUnresolved) return;
     const changedKey = (Object.keys(nextFilters.selectionFilters) as SelectionFilterKey[]).find(
       (key) => nextFilters.selectionFilters[key] !== filters.selectionFilters[key]
     );
@@ -1303,6 +1353,12 @@ const FeeCollectComponentForm = ({
     return map;
   }, [ledgerData]);
 
+  const adapterFeeHeads = useMemo(
+    () =>
+      Object.entries(feeHeadMap).map(([feeHeadId, feeHeadName]) => ({ feeHeadId, feeHeadName })),
+    [feeHeadMap]
+  );
+
   useEffect(
     () => () => {
       if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
@@ -1312,8 +1368,36 @@ const FeeCollectComponentForm = ({
   );
 
   // ── Show skeleton while loading ─────────────────────────────────────────────
-  if (collectFormLoading || collectFormFetching) {
+  if (collectFormLoading || (!formData && collectFormFetching)) {
     return <FeeCollectionFormSkeleton />;
+  }
+  const collectFormAccessDenied =
+    typeof collectFormError === 'object' &&
+    collectFormError !== null &&
+    'status' in collectFormError &&
+    (collectFormError.status === 401 || collectFormError.status === 403);
+  if (collectFormAccessDenied || !currentYear?.id || !formData) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            currentYear?.id && (
+              <Button size="small" onClick={() => refetchCollectForm?.()}>
+                Retry
+              </Button>
+            )
+          }
+        >
+          {collectFormError
+            ? parseApiProblemDetail(collectFormError).detail ||
+              'Unable to load fees. Please try again.'
+            : !currentYear?.id
+              ? 'Academic year is required to collect fees.'
+              : 'Fee collection details are unavailable. Please try again.'}
+        </Alert>
+      </Box>
+    );
   }
 
   // ── Fee Structure Not Assigned: show empty state ───────────────────────────
@@ -1328,6 +1412,7 @@ const FeeCollectComponentForm = ({
 
   const showGeneratedReceiptDialog = async (collectResponse: CollectFeeOutput) => {
     setLastCollectResponse(collectResponse);
+    if (collectionAdapter && !collectionAdapter.canViewReceipts) return false;
     const hasFeeReceipt = collectResponse.feeReceiptId;
     const hasChargeReceipt = collectResponse.chargeReceiptId;
 
@@ -1420,49 +1505,54 @@ const FeeCollectComponentForm = ({
           No Fee Structure Assigned
         </Typography>
         <Typography variant="body2" color="text.secondary" maxWidth={400}>
-          A fee structure must be assigned to this student before collecting fees. Please assign a
-          fee structure first.
+          {collectionAdapter
+            ? 'Confirm the applicable fee structure in the admission journey before collecting fees.'
+            : 'A fee structure must be assigned to this student before collecting fees. Please assign a fee structure first.'}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="solar:add-circle-bold" />}
-          onClick={() => setFeeStructureDialogOpen(true)}
-          sx={{ mt: 1 }}
-        >
-          Assign Fee Structure
-        </Button>
+        {!collectionAdapter && (
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="solar:add-circle-bold" />}
+            onClick={() => setFeeStructureDialogOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Assign Fee Structure
+          </Button>
+        )}
 
         {/* Fee Structure Assignment Dialog */}
-        <CustomDialog
-          open={feeStructureDialogOpen}
-          handleClose={() => setFeeStructureDialogOpen(false)}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Assign Fee Structure</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-          maxWidth="md"
-        >
-          <FeeStructureAssignmentForm
-            student={
-              formData?.student
-                ? ({
-                    studentId: formData.student.studentId,
-                    standardId: formData.student.standardId,
-                  } as any)
-                : null
+        {!collectionAdapter && (
+          <CustomDialog
+            open={feeStructureDialogOpen}
+            handleClose={() => setFeeStructureDialogOpen(false)}
+            title={
+              <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+                <Typography variant="h5">Assign Fee Structure</Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
+                >
+                  <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                </CustomTooltip>
+              </Box>
             }
-            handleClose={handleFeeStructureDialogClose}
-          />
-        </CustomDialog>
+            maxWidth="md"
+          >
+            <FeeStructureAssignmentForm
+              student={
+                formData?.student
+                  ? ({
+                      studentId: formData.student.studentId,
+                      standardId: formData.student.standardId,
+                    } as any)
+                  : null
+              }
+              handleClose={handleFeeStructureDialogClose}
+            />
+          </CustomDialog>
+        )}
       </Box>
     );
   }
@@ -1470,6 +1560,14 @@ const FeeCollectComponentForm = ({
   return (
     <Box
       component={motion.div}
+      onChangeCapture={(event) => {
+        if (adaptedOutcomeUnresolved) {
+          event.stopPropagation();
+          return;
+        }
+        const { name } = event.target as HTMLInputElement;
+        if (name === 'remarks' || name?.startsWith('payment.')) submissionRef.current = null;
+      }}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -1480,10 +1578,65 @@ const FeeCollectComponentForm = ({
         minHeight: 0,
         overflow: 'hidden',
         bgcolor: 'background.default',
+        position: 'relative',
       }}
     >
+      {formData && collectFormError && (
+        <Alert
+          severity="error"
+          sx={{ mx: 1.5, mt: 1 }}
+          action={
+            <Button size="small" disabled={collectLoading} onClick={() => refetchCollectForm?.()}>
+              Refresh fees
+            </Button>
+          }
+        >
+          Fee details could not be refreshed. Retry before recording a new payment. Any previous
+          payment can be retried safely using the same request.
+        </Alert>
+      )}
+      {collectionError && (
+        <Alert
+          severity="error"
+          sx={{ mx: 1.5, mt: 1 }}
+          action={
+            submissionRef.current ? (
+              <Button
+                type="button"
+                size="small"
+                disabled={collectLoading}
+                onClick={async () => {
+                  if (submissionRef.current?.command.paymentConfirmed === false)
+                    await handleSavePending();
+                  else await handleFinalCollect();
+                }}
+              >
+                Retry payment
+              </Button>
+            ) : undefined
+          }
+        >
+          {collectionError}
+          {collectionOutcomeUncertain ? (
+            <Typography variant="caption" display="block">
+              {submissionRef.current
+                ? collectionAdapter
+                  ? 'Payment may already have been recorded. Editing and closing are blocked until you retry the previous payment safely using the same request.'
+                  : 'Payment outcome is not confirmed; it may already have been recorded. Retry the previous payment or check receipts before collecting again.'
+                : 'The previous payment outcome is not confirmed; it may already have been recorded. Payment details have changed. Check receipts before starting another payment.'}
+            </Typography>
+          ) : (
+            submissionRef.current && (
+              <Typography variant="caption" display="block">
+                Retry checks the previous payment using the same request.
+              </Typography>
+            )
+          )}
+        </Alert>
+      )}
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Stack
+          inert={collectLoading || adaptedOutcomeUnresolved || collectionReadBlocked || undefined}
           spacing={1}
           sx={{ flex: 1, minHeight: 0, p: 1, overflow: { xs: 'auto', md: 'hidden' } }}
         >
@@ -1553,7 +1706,7 @@ const FeeCollectComponentForm = ({
             role="tabpanel"
             aria-labelledby={`collection-layout-${layouts.value}`}
             component="fieldset"
-            disabled={collectLoading}
+            disabled={collectLoading || adaptedOutcomeUnresolved || collectionReadBlocked}
             aria-busy={collectLoading}
             sx={{
               m: 0,
@@ -1582,7 +1735,9 @@ const FeeCollectComponentForm = ({
                 selectionStates={selectionStates}
                 onSelectionFilterChange={handleSelectionFilterChange}
                 entryCount={entryCount}
-                studentId={String(student?.id ?? '')}
+                studentId={collectionAdapter ? undefined : String(student?.id ?? '')}
+                academicYearId={currentYear?.id}
+                feeHeads={collectionAdapter ? adapterFeeHeads : undefined}
               />
               {formik.submitCount > 0 &&
                 !formik.values.selectedItems.length &&
@@ -1606,27 +1761,31 @@ const FeeCollectComponentForm = ({
                   flexDirection: 'column',
                 }}
               >
-                <CollectionLedgerTable
-                  data={filteredLedgerData}
-                  activeTab={filters.activeTab}
-                  layout={layouts.value as CollectionLayout}
-                  onPeriodFocus={(period) => {
-                    const [periodYear, periodMonth] = period.split('-');
-                    handleFilterChange({
-                      ...filters,
-                      month: `${Number(periodMonth) - 1}-${periodYear}`,
-                    });
-                  }}
-                  selectedItems={formik.values.selectedItems}
-                  charges={formik.values.charges}
-                  chargesData={filteredChargesData}
-                  hasActiveFilters={
-                    filters.status !== 'All' || filters.month !== 'All' || filters.feeHead !== 'All'
-                  }
-                  onSelectionChange={handleSelectionChange}
-                  onChargesChange={handleChargesChange}
-                  year={currentYear?.year ?? new Date().getFullYear()}
-                />
+                <FeeCollectionWaiverContext.Provider value={!collectionAdapter}>
+                  <CollectionLedgerTable
+                    data={filteredLedgerData}
+                    activeTab={filters.activeTab}
+                    layout={layouts.value as CollectionLayout}
+                    onPeriodFocus={(period) => {
+                      const [periodYear, periodMonth] = period.split('-');
+                      handleFilterChange({
+                        ...filters,
+                        month: `${Number(periodMonth) - 1}-${periodYear}`,
+                      });
+                    }}
+                    selectedItems={formik.values.selectedItems}
+                    charges={formik.values.charges}
+                    chargesData={filteredChargesData}
+                    hasActiveFilters={
+                      filters.status !== 'All' ||
+                      filters.month !== 'All' ||
+                      filters.feeHead !== 'All'
+                    }
+                    onSelectionChange={handleSelectionChange}
+                    onChargesChange={handleChargesChange}
+                    year={currentYear?.year ?? new Date().getFullYear()}
+                  />
+                </FeeCollectionWaiverContext.Provider>
               </Box>
             </Stack>
             <Box sx={{ minWidth: 0, minHeight: 0, overflowY: { xs: 'visible', md: 'auto' } }}>
@@ -1992,8 +2151,10 @@ const FeeCollectComponentForm = ({
                           sensors={sensors}
                           collisionDetection={closestCenter}
                           onDragEnd={(event: DragEndEvent) => {
+                            if (adaptedOutcomeUnresolved || collectLoading) return;
                             const { active, over } = event;
                             if (over && active.id !== over.id) {
+                              submissionRef.current = null;
                               const oldIdx = formik.values.selectedItems.findIndex(
                                 (i) => selectionItemKey(i) === active.id
                               );
@@ -2041,8 +2202,10 @@ const FeeCollectComponentForm = ({
                             sensors={sensors}
                             collisionDetection={closestCenter}
                             onDragEnd={(event: DragEndEvent) => {
+                              if (adaptedOutcomeUnresolved || collectLoading) return;
                               const { active, over } = event;
                               if (over && active.id !== over.id) {
+                                submissionRef.current = null;
                                 const oldIdx = formik.values.charges.indexOf(active.id as string);
                                 const newIdx = formik.values.charges.indexOf(over.id as string);
                                 formik.setFieldValue(
@@ -2090,6 +2253,26 @@ const FeeCollectComponentForm = ({
           </Box>
         </Stack>
       </BackPopUpChecked>
+      {collectLoading && (
+        <Box
+          role="status"
+          aria-live="polite"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            bgcolor: (t) => alpha(t.palette.background.paper, 0.72),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          <CircularProgress size={24} />
+          <Typography variant="body2">Recording payment…</Typography>
+        </Box>
+      )}
       {/* ── Bottom Actions ── */}
       <DialogActions
         sx={{
@@ -2116,7 +2299,7 @@ const FeeCollectComponentForm = ({
             variant="outlined"
             color="inherit"
             onClick={() => onCancel?.(null, false)}
-            disabled={collectLoading}
+            disabled={collectLoading || adaptedOutcomeUnresolved}
             size="small"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
             sx={{ minWidth: 88 }}
@@ -2126,6 +2309,8 @@ const FeeCollectComponentForm = ({
           <LoadingButton
             disabled={
               collectLoading ||
+              adaptedOutcomeUnresolved ||
+              collectionReadBlocked ||
               (!formik.values.selectedItems.length && !formik.values.charges.length)
             }
             variant="contained"
@@ -2199,7 +2384,10 @@ const FeeCollectComponentForm = ({
 
             {/* Outcome Panel (if available) */}
             {lastCollectResponse?.auditSummary && (
-              <FeeCollectionOutcomePanel collectResponse={lastCollectResponse} />
+              <FeeCollectionOutcomePanel
+                collectResponse={lastCollectResponse}
+                showAuditTrail={!collectionAdapter}
+              />
             )}
           </Box>
         </Scrollbar>
@@ -2230,6 +2418,10 @@ const FeeCollectComponentForm = ({
         {lastCollectResponse && (
           <FeeCollectionOutcomePanel
             collectResponse={lastCollectResponse}
+            showAuditTrail={!collectionAdapter}
+            receiptAccessUnavailable={Boolean(
+              collectionAdapter && !collectionAdapter.canViewReceipts
+            )}
             onClose={() => {
               setOutcomeDialogOpen(false);
               setLastCollectResponse(null);

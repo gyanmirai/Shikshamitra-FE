@@ -26,15 +26,24 @@ const store = configureStore({
     }),
   },
 });
-const item = {
+const item: IConcessionRequestItem = {
   studentConcessionTypeRequestId: 'synthetic',
+  concessionTypeId: 'sibling-tuition',
   concessionTypeName: 'Sibling Tuition Concession',
   status: 6,
   totalRequestedAmount: 275,
   totalAmount: 275,
+  totalApprovedAmount: 0,
+  totalReversedAmount: 0,
+  netApprovedAmount: 0,
+  feeHeads: [],
   requesterId: 'maker',
   submittedById: 'maker',
   createdAt: '2026-10-15T11:13:33Z',
+  updatedAt: '2026-10-15T11:13:33Z',
+  message: '',
+  approvedAt: '',
+  concurrencyStamp: 'synthetic-stamp',
   submittedDocuments: [],
   availableActions: ['edit', 'delete'],
   requiredDocuments: [
@@ -45,10 +54,12 @@ const item = {
     documentName,
     isRequired: true,
     isUploaded: true,
+    maxFileSizeBytes: 5 * 1024 * 1024,
+    acceptedFormats: [],
     url: '/certificate.svg',
   })),
-  timeline: [{ action: 'created', occurredAt: '2026-10-15T11:13:33Z' }],
-} as IConcessionRequestItem;
+  timeline: [{ action: 'created', status: 6, occurredAt: '2026-10-15T11:13:33Z' }],
+};
 function Fixture() {
   const [lastAction, setLastAction] = React.useState('');
   const [deleteOpen, setDeleteOpen] = React.useState(false);

@@ -28,12 +28,12 @@ const summary: FinanceAuditSummary = {
 describe('paymentReceiptSummary', () => {
   it('shows readable paid, status, and pending values for a partial fee payment', () => {
     expect(paymentReceiptSummary(summary, 2200, true)).toBe(
-      'Paid: ₹2,200.00 | Status: Partial | Pending: ₹300.00'
+      'Paid: ₹2,200 | Status: Partial | Pending: ₹300'
     );
   });
 
   it('does not show fee pending balance on a charge receipt', () => {
-    expect(paymentReceiptSummary(summary, 500, false)).toBe('Paid: ₹500.00 | Status: Partial');
+    expect(paymentReceiptSummary(summary, 500, false)).toBe('Paid: ₹500 | Status: Partial');
   });
 
   it('uses a readable verification status and omits absent fields', () => {
@@ -47,6 +47,34 @@ describe('paymentReceiptSummary', () => {
         100,
         true
       )
-    ).toBe('Paid: ₹100.00 | Status: Pending verification');
+    ).toBe('Paid: ₹100 | Status: Pending verification');
+  });
+
+  it('rounds only the displayed totals and preserves fractional source balances', () => {
+    const fractionalSummary: FinanceAuditSummary = {
+      ...summary,
+      totalAmount: 2200.25,
+      allocationLines: [
+        {
+          ...summary.allocationLines[0],
+          amountPaid: 2200.25,
+          pendingBefore: 2500.5,
+          pendingAfter: 300.25,
+        },
+        {
+          ...summary.allocationLines[0],
+          dueFeeId: 'due-2',
+          amountPaid: 0,
+          pendingBefore: 0.25,
+          pendingAfter: 0.25,
+        },
+      ],
+    };
+    const original = structuredClone(fractionalSummary);
+
+    expect(paymentReceiptSummary(fractionalSummary, 2200.25, true)).toBe(
+      'Paid: ₹2,201 | Status: Partial | Pending: ₹301'
+    );
+    expect(fractionalSummary).toEqual(original);
   });
 });

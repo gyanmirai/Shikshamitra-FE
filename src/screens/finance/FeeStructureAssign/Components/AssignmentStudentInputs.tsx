@@ -361,6 +361,8 @@ export default function AssignmentStudentInputs({
                           label="Service period"
                           value={period.source}
                           disabled={disabled}
+                          labelKey="label"
+                          valueKey="value"
                           optionDescriptionKey="description"
                           options={[
                             {

@@ -97,17 +97,25 @@ describe('Finance applicant summary actions', () => {
 
     const applicant = within(screen.getByTestId('account-one'));
     expect(applicant.getByText('800')).toBeVisible();
-    expect(applicant.getByRole('button', { name: 'Collect Fee' })).toBeDisabled();
-    expect(applicant.getByRole('button', { name: 'View Details' })).toBeDisabled();
-    expect(applicant.getByRole('button', { name: 'Give Fees Adjustment' })).toBeDisabled();
-    fireEvent.click(applicant.getByRole('button', { name: 'Collect Fee' }));
+    expect(
+      applicant.getByRole('button', { name: 'Collect fee for QA Applicant One' })
+    ).toBeDisabled();
+    expect(
+      applicant.getByRole('button', { name: 'View details for QA Applicant One' })
+    ).toBeDisabled();
+    expect(
+      applicant.getByRole('button', { name: 'Give fee adjustment for QA Applicant One' })
+    ).toBeDisabled();
+    fireEvent.click(applicant.getByRole('button', { name: 'Collect fee for QA Applicant One' }));
     expect(collect).not.toHaveBeenCalled();
     expect(view).not.toHaveBeenCalled();
     expect(adjust).not.toHaveBeenCalled();
     expect(screen.getByTestId('account-two')).toBeVisible();
 
     fireEvent.click(
-      within(screen.getByTestId('real-student')).getByRole('button', { name: 'Collect Fee' })
+      within(screen.getByTestId('real-student')).getByRole('button', {
+        name: 'Collect fee for QA Linked Student',
+      })
     );
     expect(collect).toHaveBeenCalledOnce();
     expect(collect.mock.calls[0][0].id).toBe('real-student');
