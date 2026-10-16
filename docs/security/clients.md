@@ -10,6 +10,14 @@ audience: humans-and-agents
 
 # Security API clients
 
+## Permission-denied feedback
+
+The shared RTK base query normalizes generic HTTP 403 errors before generated hooks, manual handlers, and `useQueryAndMutation` consume them. `normalize-permission-response.ts` decodes failed download bodies as well as ordinary JSON errors; successful responses are unchanged.
+`permission-denied.ts` supplies reviewed endpoint-operation labels and an administrator recovery message. Unknown endpoints use an action-neutral fallback; request URLs, record IDs, payload values, and inferred grant names never become feedback labels.
+`parseApiProblemDetail` supports RFC problem details, ABP envelopes, legacy message fields, and Axios-style errors. Specific business, tenant, scope, and staff-policy prerequisite explanations retain their existing contract. The legacy fetch client also normalizes permission denials.
+`shikshaMitraToast.error` presents shared permission guidance as an Access required warning, keeps it visible for ten seconds, and reuses one notice for an identical message. Existing screen-owned inline errors and `popupConfig.error: false` remain authoritative; the base query does not emit a global 403 toast or modal.
+The backend's [permission feedback contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md) owns server context and authorization. These presentation changes do not grant access or change 401/inactive-school sign-out handling.
+
 ## Session initialization and request ownership
 
 `src/redux/auth/load-session.tsx` initializes private account context and effective permissions only outside the `(public-route)` route group. Public inquiry and employee-application pages do not trigger private bootstrap requests or automatic sign-out. Authenticated route guards still require a usable session and verified matching user/tenant context before rendering protected content.
@@ -40,6 +48,7 @@ Statutory Schemes Edit maps to the existing `Edit`, `Activate`, `ManageEnrollmen
 The matrix edits only explicitly mapped actions. Undisplayed and unfamiliar server actions remain unchanged.
 Delete remains disabled while no matching server permission exists.
 The full server catalogue is retained in the draft, including permissions outside the displayed navigation groups.
+Visibility rows come only from `src/constants/navigation.tsx` and its imported module menus. `buildVisibilityPanels` accepts that navigation without an API catalogue; API responses supply grant states and provider eligibility, not additional visibility rows. The layout navigation module re-exports the constants for existing consumers.
 Unrelated permissions are preserved rather than rewritten by a grouped save.
 Presentation-only feature groups are never sent as permission names.
 Role saves submit only changed direct `{ name, isGranted }` entries under `permissions`.
@@ -48,8 +57,20 @@ User saves submit only changed `{ name, state }` entries, where `state` is `inhe
 The typed user response includes an `overrides` dictionary; absent entries follow the role.
 
 The form derives role grants from exact `grantedProviders` identities and user states from the override response.
-Both dialogs offer compact segmented Role, Allow, and Deny choices for eligible user permissions. Role means Follow role and retains that accessible label. The segments use native radio semantics, support single-click selection, and allow keyboard users to move through a choice group with arrow keys. The reference layout uses slim module navigation, a role-default summary, an override-action count, and inherited/override source icons. All colors come from theme tokens, including the soft primary selection fill.
-Matrix cells show direct action choices, effective access, and its role-default or user-override source. The access label's tooltip shows the contributing role names and current role default. Desktop controls are 32px tall; narrow-screen controls retain 44px touch targets. Selected choices and the review/save buttons use the primary theme palette.
+Both dialogs offer compact segmented Role, Allow, and Deny choices for eligible user permissions.
+Role means Follow role and retains that accessible label.
+The segments use native radio semantics, support single-click selection, and allow keyboard users to move through a choice group with arrow keys.
+The layout uses slim module navigation and an override-action count.
+Matrix cells show action choices without status lines underneath; effective access, grant provenance, contributing role names, and the current role default remain available through hover and keyboard-focus tooltips and an accessible description.
+The permission table starts at the theme's `lg` breakpoint (1200px); narrower viewports use cards so pinned columns cannot obscure the selectors.
+Inline selectors and bulk buttons are 32px tall in the table layout and retain 44px touch targets below `lg`.
+Selected Allow, Revoke/Deny, and user Role choices use the primary, error, and info palettes respectively, each at 0.12 background opacity; review/save buttons retain their existing theme treatment.
+Grant all, Revoke all, and user Follow role use compact grouped buttons with regular-weight labels and matching primary, error, and info tints; disabled bulk actions remain neutral.
+Selected-module bulk controls sit beside search.
+Sibling groups align consistently, while nested group headers and feature names use depth-based indentation.
+Desktop row-level Grant all and Revoke all controls occupy a separate Bulk actions column pinned to the right; Feature stays pinned to the left so the target and direct bulk controls remain visible during horizontal scrolling.
+Sticky cells retain opaque row backgrounds and headers stay above scrolling content.
+Cards below 1200px keep their bulk controls beneath the feature name within the same indentation level.
 Provider-ineligible actions remain disabled.
 Follow role removes explicit user allow/deny and resumes the current combined role defaults.
 Allow and Deny remain unchanged when role grants change. Deny suppresses inherited access in the displayed effective state.

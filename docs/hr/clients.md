@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-12
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,11 @@ Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shiksham
 `src/redux/hr/pf-coverage-api.ts` owns PF school-coverage history and effective-dated writes, invalidating PF, salary, and payroll caches.
 `esi-configuration-api.ts` carries ESIC calculation settings and effective months; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
 Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
+
+`employeeApi.ts` supplies `getEmployeeAssignableRoles` at `/employees/assignable-roles` for the Add/Edit Staff Role field, with role-cache invalidation.
+The form's `use-employee-policy-access.ts` coordinates effective-permission checks and `use-employee-default-policies.ts` owns the three default-policy queries and retries.
+Policy denial is handled by `employee-policy-access-notice.tsx`, including the backend's policy-specific submission error, while other save errors retain the existing form handler.
+The access-refresh action reads the current user's permission catalogue; it never calls a permission-update endpoint.
 
 ## Client map
 

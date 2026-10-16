@@ -13,6 +13,7 @@ import CustomDialog from '../customDialog';
 import SubjectPalette from './SubjectPalette';
 import AssignRoomDialog from './AssignRoomDialog';
 import AssignTeacherDialog from './AssignTeacherDialog';
+import { useDivisionRoomDefaults } from './useDivisionRoomDefaults';
 import {
   SLOT_HEIGHT_BASE,
   TIMELINE_END_HOUR,
@@ -20,11 +21,11 @@ import {
   TIMELINE_START_HOUR,
   generateTimelineStamps,
 } from './utils';
-import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 import type { RoomAssignment } from './AssignRoomDialog';
 import type { TeacherAssignment } from './AssignTeacherDialog';
 import type { Subject, TimeSlot, DayOfWeek, SlotSubject } from './types';
+import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 export interface TimetableBoardProps {
   slots: Record<DayOfWeek, TimeSlot[]>;
@@ -56,6 +57,8 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   timetableStatus,
   validateSlots,
 }) => {
+  useDivisionRoomDefaults({ slots, onChange, divisionId, readOnly });
+
   const { timelineStartHour, timelineEndHour, timelineStamps } = useMemo(() => {
     let minMin = Infinity;
     let maxMin = 0;

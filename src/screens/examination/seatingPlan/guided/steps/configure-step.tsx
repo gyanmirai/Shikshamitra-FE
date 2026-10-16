@@ -1,13 +1,23 @@
+import dynamic from 'next/dynamic';
 import Stack from '@mui/material/Stack';
+import Skeleton from '@mui/material/Skeleton';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { RoomsStep } from './rooms-step';
 import { AllocationStep } from './allocation-step';
 import { AllocationModeStep } from './allocation-mode-step';
-import { GuidedManualEditor } from '../manual/guided-manual-editor';
 import { AutomaticSeatingPreview } from './automatic-seating-preview';
 
 import type { GuidedStepProps } from '../types';
+
+const GuidedManualEditor = dynamic(
+  () => import('../manual/guided-manual-editor').then((module) => module.GuidedManualEditor),
+  {
+    loading: () => (
+      <Skeleton variant="rounded" height={460} aria-label="Loading classroom editor" />
+    ),
+  }
+);
 
 export function ConfigureStep(props: GuidedStepProps) {
   const { workflow } = props;

@@ -7,6 +7,7 @@ import { signOut } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { tagTypes } from './tagTypes';
+import { normalizePermissionResponse } from './normalize-permission-response';
 import {
   getCachedAuthSession,
   clearCachedAuthSession,
@@ -105,6 +106,8 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
         toast.error('Unauthorized access');
         await signOut({ callbackUrl: '/login' });
       }
+
+      result.error = await normalizePermissionResponse(result.error, api.endpoint);
     }
 
     return result;

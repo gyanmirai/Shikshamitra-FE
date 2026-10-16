@@ -7,9 +7,11 @@ const source = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf
 describe('permission security wiring', () => {
   it('gates deployment on the executable security workflow', () => {
     expect(source('.github/workflows/deploy.yml')).toMatch(
-      /security:\s*uses: \.\/\.github\/workflows\/security-regression\.yml/
+      /security:\s*if: github\.ref == 'refs\/heads\/main'\s*uses: \.\/\.github\/workflows\/security-regression\.yml/
     );
-    expect(source('.github/workflows/deploy.yml')).toMatch(/build:\s*needs: security/);
+    expect(source('.github/workflows/deploy.yml')).toMatch(
+      /build:\s*if: github\.ref == 'refs\/heads\/main'\s*needs: security/
+    );
     expect(source('.github/workflows/security-regression.yml')).toContain('workflow_call:');
   });
 

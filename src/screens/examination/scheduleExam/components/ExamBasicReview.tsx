@@ -10,6 +10,7 @@ import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
 import { useExamBasicReviewData } from './use-exam-basic-review-data';
 import { hasSchedulableExamSubject } from './schedulable-exam-subjects';
+import { reviewCardSx, reviewChipSx, reviewFactsSx } from './exam-review-styles';
 
 import type { IExamFormValues } from '../type';
 
@@ -44,8 +45,8 @@ const ExamBasicReview = ({
       status={statusLabel}
     >
       <Grid container spacing={2} alignItems="stretch">
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper variant="outlined" sx={reviewCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Iconify
                 icon="mdi:clipboard-text-outline"
@@ -56,20 +57,13 @@ const ExamBasicReview = ({
                 Exam setup
               </Typography>
             </Box>
-            <Divider sx={{ my: 1.5 }} />
+            <Divider sx={{ my: 2 }} />
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'minmax(0, 1fr)',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  md:
-                    values.examName?.length > 24
-                      ? 'minmax(0, 1.5fr) repeat(2, minmax(0, 1fr))'
-                      : 'repeat(3, minmax(0, 1fr))',
+                ...reviewFactsSx,
+                '@container (min-width: 560px)': {
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                 },
-                columnGap: 2,
-                rowGap: 2,
               }}
             >
               <ExamReviewInfoItem label="Exam Name" value={values.examName || '-'} />
@@ -79,33 +73,24 @@ const ExamBasicReview = ({
               />
               <ExamReviewInfoItem label="Grading Scale" value={gradingScaleName} />
               {values.description && (
-                <ExamReviewInfoItem label="Description" value={values.description} />
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <ExamReviewInfoItem label="Description" value={values.description} />
+                </Box>
               )}
             </Box>
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper variant="outlined" sx={reviewCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Iconify icon="mdi:school-outline" width={20} sx={{ color: 'text.secondary' }} />
               <Typography variant="subtitle2" fontWeight={700}>
                 Class & subjects
               </Typography>
             </Box>
-            <Divider sx={{ my: 1.5 }} />
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'minmax(0, 1fr)',
-                  sm: 'repeat(2, minmax(0, 1fr))',
-                  md: 'repeat(3, minmax(0, 1fr))',
-                },
-                columnGap: 2,
-                rowGap: 2,
-              }}
-            >
+            <Divider sx={{ my: 2 }} />
+            <Box sx={reviewFactsSx}>
               <ExamReviewInfoItem label="Class" value={className || '-'} />
               <ExamReviewInfoItem
                 label="Divisions"
@@ -118,6 +103,7 @@ const ExamBasicReview = ({
                           label={division.name}
                           size="small"
                           variant="outlined"
+                          sx={reviewChipSx}
                         />
                       ))}
                     </Box>
@@ -126,25 +112,28 @@ const ExamBasicReview = ({
                   )
                 }
               />
-              <ExamReviewInfoItem
-                label="Subjects"
-                value={
-                  values.subjects.length > 0 ? (
-                    <Box display="flex" flexWrap="wrap" gap={0.75}>
-                      {values.subjects.filter(hasSchedulableExamSubject).map((subject) => (
-                        <Chip
-                          key={subject.subjectId}
-                          label={subject.subjectName}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  ) : (
-                    '-'
-                  )
-                }
-              />
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <ExamReviewInfoItem
+                  label="Subjects"
+                  value={
+                    values.subjects.length > 0 ? (
+                      <Box display="flex" flexWrap="wrap" gap={0.75}>
+                        {values.subjects.filter(hasSchedulableExamSubject).map((subject) => (
+                          <Chip
+                            key={subject.subjectId}
+                            label={subject.subjectName}
+                            size="small"
+                            variant="outlined"
+                            sx={reviewChipSx}
+                          />
+                        ))}
+                      </Box>
+                    ) : (
+                      '-'
+                    )
+                  }
+                />
+              </Box>
             </Box>
           </Paper>
         </Grid>

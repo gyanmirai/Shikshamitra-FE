@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
+  Tooltip,
   Accordion,
   IconButton,
   Typography,
@@ -27,6 +29,7 @@ export function ExamReviewAccordion({
   status,
 }: ExamReviewAccordionProps) {
   const [expanded, setExpanded] = useState(true);
+  const sectionId = useId();
 
   return (
     <Accordion
@@ -34,15 +37,37 @@ export function ExamReviewAccordion({
       onChange={(_, isExpanded) => setExpanded(isExpanded)}
       disableGutters
       elevation={0}
+      slotProps={{ region: { id: `${sectionId}-content`, 'aria-labelledby': sectionId } }}
       sx={{
         boxShadow: 'none',
-        bgcolor: 'transparent',
-        mb: 3,
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+        '&.Mui-expanded': { boxShadow: 'none', borderRadius: 2 },
         '&:before': { display: 'none' },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: { xs: 1.5, sm: 2.5 },
+          py: 0.5,
+          bgcolor: 'background.neutral',
+          borderRadius: 'inherit',
+          ...(expanded && {
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+          }),
+        }}
+      >
         <AccordionSummary
+          id={sectionId}
+          aria-controls={`${sectionId}-content`}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -68,7 +93,7 @@ export function ExamReviewAccordion({
             >
               <Iconify icon={icon} width={18} />
             </Box>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>
               {title}
             </Typography>
             {status}
@@ -76,20 +101,24 @@ export function ExamReviewAccordion({
         </AccordionSummary>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
           {onEdit && (
-            <IconButton
-              size="small"
-              aria-label={`Edit ${title}`}
-              onClick={onEdit}
-              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
-            >
-              <Iconify icon="solar:pen-bold" width={18} />
-            </IconButton>
+            <Tooltip title={`Edit ${title}`}>
+              <IconButton
+                size="small"
+                aria-label={`Edit ${title}`}
+                onClick={onEdit}
+                sx={{ width: 44, height: 44, borderRadius: 1 }}
+              >
+                <Iconify icon={GlobalIcons.edit} width={18} />
+              </IconButton>
+            </Tooltip>
           )}
           <IconButton
             size="small"
             aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
             aria-expanded={expanded}
+            aria-controls={`${sectionId}-content`}
             onClick={() => setExpanded((current) => !current)}
+            sx={{ width: 44, height: 44 }}
           >
             <Iconify
               icon="eva:chevron-down-fill"
@@ -100,7 +129,7 @@ export function ExamReviewAccordion({
         </Box>
       </Box>
 
-      <AccordionDetails sx={{ px: 0, pt: 1.5, pb: 0 }}>{children}</AccordionDetails>
+      <AccordionDetails sx={{ p: { xs: 1.5, sm: 2.5 } }}>{children}</AccordionDetails>
     </Accordion>
   );
 }

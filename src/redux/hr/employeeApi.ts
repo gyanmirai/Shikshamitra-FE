@@ -1,3 +1,4 @@
+import type { IdentityRoleOption } from 'src/redux/role/roleApi';
 import type {
   BulkUserScopeAssignmentScope,
   BulkUserScopeAssignmentResult,
@@ -5,7 +6,7 @@ import type {
 } from 'src/utils/userScopeBulkAssignPayload';
 
 import { api } from 'src/redux/service';
-import { tagTypes, allTagTypes, employeeType } from 'src/redux/tagTypes';
+import { tagTypes, roleType, allTagTypes, employeeType } from 'src/redux/tagTypes';
 
 export type { BulkUserScopeAssignmentScope, BulkUserScopeAssignmentPayload };
 
@@ -162,6 +163,10 @@ export const employeePayrollInvalidationTags = [
 
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getEmployeeAssignableRoles: builder.query<{ items: IdentityRoleOption[] }, void>({
+      query: () => ({ url: '/employees/assignable-roles' }),
+      providesTags: [roleType.role],
+    }),
     // Basic Employee CRUD Operations
     getEmployeeOptions: builder.query<EmployeeOptionsResponse, EmployeeOptionsInput>({
       query: (params) => ({ url: '/employees/options', params }),
@@ -459,6 +464,7 @@ export const employeeApi = api.injectEndpoints({
 });
 
 export const {
+  useGetEmployeeAssignableRolesQuery,
   useGetEmployeeByIdQuery,
   useLazyGetEmployeeByIdQuery,
   useGetCurrentEmployeeQuery,

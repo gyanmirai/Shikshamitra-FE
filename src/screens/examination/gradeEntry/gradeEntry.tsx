@@ -16,7 +16,9 @@ import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
@@ -82,6 +84,11 @@ import type {
 } from './type';
 
 const GradeEntry = (props: TabComponentType) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canManageMarks = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.recordMarks}.Add`
+  );
   const dialog = useBoolean();
   const { searchParams } = props;
 
@@ -395,7 +402,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Bulk operation actions stay local; Save Draft persists them in one API call.
   const queueBulkEdit = useCallback(
     (action: 'attendance' | 'marks' | 'remark' | 'clear', value?: number | string) => {
-      if (selectedStudents.length === 0) return;
+      if (!canManageMarks || selectedStudents.length === 0) return;
       setBulkEditRequest({
         id: Date.now(),
         studentIds: selectedStudents,
@@ -406,7 +413,7 @@ const GradeEntry = (props: TabComponentType) => {
       setIsDirty(true);
       setSaveState('idle');
     },
-    [selectedStudents]
+    [canManageMarks, selectedStudents]
   );
 
   const handleBulkMarkAttendance = async (attendance: number) => {
@@ -498,6 +505,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleImportSpreadsheet = async (importedRows: any[]) => {
+    if (!canManageMarks) return;
     try {
       await bulkSaveMarks({
         examId,
@@ -516,7 +524,7 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Review before submit validation trigger
   const handleTriggerReview = async () => {
-    if (!examId || !division || !subject || isReviewLoading) return;
+    if (!canManageMarks || !examId || !division || !subject || isReviewLoading) return;
 
     setIsReviewLoading(true);
     try {
@@ -554,6 +562,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleFinalSubmit = async () => {
+    if (!canManageMarks) return;
     try {
       await submitMarksForVerification({
         examId,
@@ -570,7 +579,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handlePublishMarks = async () => {
-    if (!examId || !division || !subject) return;
+    if (!canManageMarks || !examId || !division || !subject) return;
     try {
       await publishExamMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
       publishMarksDialog.onFalse();
@@ -599,7 +608,7 @@ const GradeEntry = (props: TabComponentType) => {
   );
 
   const handleWorkflowAction = async (action: 'draft' | 'verify') => {
-    if (!examId || !division || !subject) return;
+    if (!canManageMarks || !examId || !division || !subject) return;
     const params = { examId, divisionId: division, subjectId: subject };
     const actionMap = {
       draft: {
@@ -634,7 +643,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleRetrySave = async () => {
-    if (!examId || !division || !subject) return;
+    if (!canManageMarks || !examId || !division || !subject) return;
     setSaveState('saving');
     try {
       await bulkSaveMarks({
@@ -651,6 +660,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleRequestChanges = async () => {
+    if (!canManageMarks) return;
     const note = reviewerNote.trim();
     if (!note) {
       setReviewerNoteError('Reviewer note is required. Describe what needs to be corrected.');
@@ -670,6 +680,7 @@ const GradeEntry = (props: TabComponentType) => {
   };
 
   const handleUnlockMarks = async () => {
+    if (!canManageMarks) return;
     const reason = unlockReason.trim();
     if (!reason) {
       setUnlockReasonError('Unlock reason is required for the audit trail.');
@@ -717,6 +728,7 @@ const GradeEntry = (props: TabComponentType) => {
 
   const actions = useCallback(
     ({ row, isLocked: locked }: any) => {
+      if (!canManageMarks) return null;
       if (locked) {
         return (
           <CustomTooltip
@@ -748,13 +760,13 @@ const GradeEntry = (props: TabComponentType) => {
         </CustomTooltip>
       );
     },
-    [viewSubmissionDialog, subject, examId]
+    [canManageMarks, viewSubmissionDialog, subject, examId]
   );
 
   const isGradeEntryEditable =
     workflowStatus === GradeEntryWorkflowStatus.Draft ||
     workflowStatus === GradeEntryWorkflowStatus.ChangesRequested;
-  const isGradeEntryLocked = !isGradeEntryEditable;
+  const isGradeEntryLocked = !canManageMarks || !isGradeEntryEditable;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -971,7 +983,7 @@ const GradeEntry = (props: TabComponentType) => {
                   <Typography variant="caption" color="text.secondary" aria-live="polite">
                     {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Not saved ·'}
                   </Typography>
-                  {saveState === 'failed' && (
+                  {canManageMarks && saveState === 'failed' && (
                     <Button
                       size="small"
                       variant="text"
@@ -995,6 +1007,7 @@ const GradeEntry = (props: TabComponentType) => {
                 View all insights
               </Button>
               <GradeEntryToolbarActions
+                canManageMarks={canManageMarks}
                 workflowStatus={workflowStatus}
                 allMarksAssigned={allMarksAssigned}
                 isSaveDraftLoading={isSaveDraftLoading}
@@ -1104,7 +1117,7 @@ const GradeEntry = (props: TabComponentType) => {
 
         {/* Dialogs and drawers */}
         <CustomDialog
-          open={viewSubmissionDialog.value}
+          open={canManageMarks && viewSubmissionDialog.value}
           handleClose={() => {
             viewSubmissionDialog.onFalse();
             setTimeout(() => {
@@ -1149,7 +1162,7 @@ const GradeEntry = (props: TabComponentType) => {
         </CustomDialog>
 
         <ImportMarksPreviewDialog
-          open={importMarksDialog.value}
+          open={canManageMarks && importMarksDialog.value}
           onClose={importMarksDialog.onFalse}
           studentList={tableRows.map((r) => ({
             studentId: r.studentId,
@@ -1162,7 +1175,7 @@ const GradeEntry = (props: TabComponentType) => {
         />
 
         <GradeEntryReviewDialog
-          open={reviewDialog.value}
+          open={canManageMarks && reviewDialog.value}
           onClose={reviewDialog.onFalse}
           stats={{
             totalCount: analyticsStats?.totalCount ?? 0,
@@ -1341,7 +1354,7 @@ const GradeEntry = (props: TabComponentType) => {
 
         {/* Request Changes Note Dialog */}
         <CustomDialog
-          open={requestChangesDialog.value}
+          open={canManageMarks && requestChangesDialog.value}
           handleClose={requestChangesDialog.onFalse}
           title={
             <Box
@@ -1418,7 +1431,7 @@ const GradeEntry = (props: TabComponentType) => {
 
         {/* Unlock Marks Reason Dialog */}
         <CustomDialog
-          open={unlockDialog.value}
+          open={canManageMarks && unlockDialog.value}
           handleClose={unlockDialog.onFalse}
           title={
             <Box
@@ -1517,7 +1530,7 @@ const GradeEntry = (props: TabComponentType) => {
         />
 
         <ConfirmDialog
-          open={publishMarksDialog.value}
+          open={canManageMarks && publishMarksDialog.value}
           onClose={() => {
             publishMarksDialog.onFalse();
           }}

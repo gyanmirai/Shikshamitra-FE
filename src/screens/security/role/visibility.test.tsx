@@ -8,7 +8,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import Visibility from './visibility';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/layouts/config-nav-dashboard', () => ({
+vi.mock('src/constants/navigation', () => ({
   fullSecurityNavData: () => [
     {
       items: [

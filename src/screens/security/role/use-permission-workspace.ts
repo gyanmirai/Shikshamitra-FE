@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
+import { fullSecurityNavData } from 'src/constants/navigation';
 
 import { getAffectedNodePermissionNames } from './account-settings-permissions';
 import { actionMatrixRows, visibilityMatrixRows } from './permission-matrix-model';
@@ -32,10 +32,10 @@ export function usePermissionWorkspace({
   const [dependencyNote, setDependencyNote] = useState('');
   const module = modules.find((item) => item.title === moduleTitle);
   const selected = module?.submodule?.length
-    ? module.submodule.find((item) => item.title === submoduleTitle)
+    ? module.submodule.find((item) => item.title === submoduleTitle) ?? module
     : module;
   const visibilityPanels = visibility
-    ? buildVisibilityPanels(catalogueEntries(catalogue), modules)
+    ? buildVisibilityPanels(modules)
     : [];
   const navigation = visibility
     ? visibilityPanels.map((panel) => ({ title: panel.title, icon: panel.icon }))
@@ -46,7 +46,7 @@ export function usePermissionWorkspace({
   const rows = useMemo(() => {
     const model = { catalogue, provider, states };
     if (!visibility) return selected ? actionMatrixRows(selected, model) : [];
-    const panel = buildVisibilityPanels(catalogueEntries(catalogue), modules).find(
+    const panel = buildVisibilityPanels(modules).find(
       (item) => item.title === moduleTitle
     );
     return panel ? visibilityMatrixRows(panel, model) : [];
@@ -89,13 +89,14 @@ export function usePermissionWorkspace({
     );
   };
   const onModule = (node: NavigationPermission) => {
-    if (node.title === moduleTitle) return;
+    if (node.title === moduleTitle && !submoduleTitle) return;
     setModuleTitle(node.title);
     setSubmoduleTitle('');
     setDependencyNote('');
   };
 
   return {
+    modules,
     moduleTitle,
     submoduleTitle,
     dependencyNote,

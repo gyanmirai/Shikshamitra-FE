@@ -1,4 +1,5 @@
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { normalizePermissionDeniedError } from 'src/utils/permission-denied';
 
 const messages: Record<string, string> = {
   'ShikshaMitra:InitialSetup:EarlierStepsRequired': 'Complete the earlier setup steps first.',
@@ -27,8 +28,9 @@ export function setupError(error: unknown) {
   const status = error && typeof error === 'object' && 'status' in error ? error.status : undefined;
   if (status === 409)
     return 'Another administrator changed this setup. Your entries are still here. Reload the saved setup before continuing.';
-  if (status === 403) return 'You do not have permission to make this change.';
-  const problem = parseApiProblemDetail(error);
+  const problem = parseApiProblemDetail(
+    normalizePermissionDeniedError(error, { operation: 'change institute setup' })
+  );
   if (problem.errorCode && messages[problem.errorCode]) return messages[problem.errorCode];
   return problem.detail === 'Something went wrong'
     ? 'Unable to save your progress. Your entries are still here; please retry.'

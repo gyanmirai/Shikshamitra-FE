@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Paper, Stack, Typography } from '@mui/material';
-import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
+import { fullSecurityNavData } from 'src/constants/navigation';
 
 import VisibilityDetails from './visibility-details';
 import { setPermissionGrants } from './permission-grants';
@@ -31,13 +31,14 @@ export default function Visibility({
   /** Memoization Justification: the static navigation tree constructs icon elements;
    * retaining its reference avoids rebuilding the complete tree on every grant edit. */
   const navigation = useMemo(() => fullSecurityNavData().flatMap((item) => item.items), []);
-  const data = buildVisibilityPanels(visibility, navigation);
+  const data = buildVisibilityPanels(navigation);
   const current = data.find((item) => item.title === selectedTitle);
   const effective = effectivePermissionGrants(visibility, inherited);
   const stateFor = (name: string) => groupGrantState([name], visibility, inherited);
   const canManage = (name: string) =>
     !!name &&
     isVisibilityPermission(name) &&
+    visibility.some((grant) => grant.name === name) &&
     !disabled &&
     (!manageableNames || manageableNames.has(name)) &&
     (!!overrides || !stateFor(name).inheritedOnly);

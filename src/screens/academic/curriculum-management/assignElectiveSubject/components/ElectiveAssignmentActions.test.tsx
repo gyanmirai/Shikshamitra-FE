@@ -19,6 +19,7 @@ const renderActions = (overrides = {}) => {
   const view = render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <ElectiveAssignmentActions
+        canManage
         isLocked={false}
         hasUnsavedChanges={false}
         isSaving={false}
@@ -67,4 +68,24 @@ describe('ElectiveAssignmentActions', () => {
     expect(within(actionGroup).queryByRole('button', { name: 'Discard' })).toBeNull();
     expect(within(actionGroup).queryByRole('button', { name: 'Save Draft' })).toBeNull();
   });
+});
+it('hides write actions without management access', () => {
+  const { getByRole } = renderActions({ canManage: false, hasUnsavedChanges: true, canLock: true });
+  const actions = within(getByRole('group', { name: 'Elective assignment actions' }));
+
+  expect(actions.getByRole('button', { name: 'View full insights' })).toBeEnabled();
+  expect(actions.queryByRole('button', { name: 'Save Draft' })).toBeNull();
+  expect(actions.queryByRole('button', { name: 'Discard' })).toBeNull();
+  expect(actions.queryByRole('button', { name: 'Review & Lock' })).toBeNull();
+});
+
+it('allows saving and review with management access', () => {
+  const { getByRole, onSaveDraft, onReviewLock } = renderActions({
+    canManage: true, hasUnsavedChanges: true, canLock: true,
+  });
+
+  fireEvent.click(getByRole('button', { name: 'Save Draft' }));
+  fireEvent.click(getByRole('button', { name: 'Review & Lock' }));
+  expect(onSaveDraft).toHaveBeenCalledOnce();
+  expect(onReviewLock).toHaveBeenCalledOnce();
 });

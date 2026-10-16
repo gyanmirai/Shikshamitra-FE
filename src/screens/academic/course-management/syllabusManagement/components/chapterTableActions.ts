@@ -48,20 +48,22 @@ export function getChapterTableActions(
     });
   }
 
-  actions.push(
-    {
+  if (options.onCreateQuestion) {
+    actions.push({
       id: 'create-question',
       label: 'Create question',
       icon: 'mingcute:question-line',
       onClick: () => options.onCreateQuestion?.(chapter),
-    },
-    {
+    });
+  }
+  if (options.onViewQuestions) {
+    actions.push({
       id: 'view-questions',
       label: 'View questions',
       icon: 'mingcute:list-check-line',
       onClick: () => options.onViewQuestions?.(chapter),
-    }
-  );
+    });
+  }
 
   return actions;
 }

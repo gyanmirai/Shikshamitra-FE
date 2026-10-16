@@ -5,6 +5,7 @@ type ClassTeacherAssignmentParameterSelectProps = {
   options: readonly string[];
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 };
 
 export function ClassTeacherAssignmentParameterSelect({
@@ -12,9 +13,11 @@ export function ClassTeacherAssignmentParameterSelect({
   options,
   value,
   onChange,
+  disabled = false,
 }: ClassTeacherAssignmentParameterSelectProps) {
   return (
     <CustomSelect
+      disabled={disabled}
       options={options.map((option) => ({ label: option, value: option }))}
       value={value}
       onChange={(selectedValue) => onChange(String(selectedValue))}

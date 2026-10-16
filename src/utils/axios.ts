@@ -1,5 +1,7 @@
 import { CONFIG } from 'src/config-global';
 
+import { normalizePermissionDeniedError } from './permission-denied';
+
 // ----------------------------------------------------------------------
 
 const baseURL = CONFIG.site.serverUrl;
@@ -18,6 +20,9 @@ async function request(method: string, url: string, config?: FetchConfig) {
       errorData = await response.json();
     } catch {
       // ignore parse errors
+    }
+    if (response.status === 403) {
+      return Promise.reject(normalizePermissionDeniedError({ status: 403, data: errorData }).data);
     }
     return Promise.reject(errorData || 'Something went wrong!');
   }

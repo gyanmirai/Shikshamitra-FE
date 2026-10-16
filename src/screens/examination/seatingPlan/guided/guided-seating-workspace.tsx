@@ -2,12 +2,18 @@
 
 import type { SeatingPlanWorkspaceDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
+import dynamic from 'next/dynamic';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 
 import { GuidedSeatingStepper } from './guided-seating-stepper';
 import { useGuidedSeatingWorkflow } from './use-guided-seating-workflow';
-import { PublishedSeatingView } from './published/published-seating-view';
+import { GuidedSeatingWorkspaceSkeleton } from './guided-seating-workspace-skeleton';
+
+const PublishedSeatingView = dynamic(
+  () => import('./published/published-seating-view').then((module) => module.PublishedSeatingView),
+  { loading: () => <GuidedSeatingWorkspaceSkeleton /> }
+);
 
 export function GuidedSeatingWorkspace({ workspace }: { workspace: SeatingPlanWorkspaceDto }) {
   if (workspace.readiness.isPublished) return <PublishedSeatingView workspace={workspace} />;

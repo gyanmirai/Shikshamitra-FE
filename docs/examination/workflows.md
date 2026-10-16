@@ -3,7 +3,7 @@ module: examination
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,6 +24,11 @@ It shows subject coverage and plan-group count on focused phone cards and the fu
 The list stores the selected class and exam-status filter in URL query parameters. Opening setup, returning through its header, saving a validated plan, and publishing preserve that list context. A class outside the current academic context falls back to the first available class.
 Subjects already owned by a plan are excluded from the creation picker.
 The workspace uses full-width section cards, compact controls and section info icons; there is no right summary rail. Readiness counts remain visible, while routine planning and room-capacity guidance is available through the info icons. Blocking errors stay visible.
+Room and allocation-rule changes generate an automatic preview without locking the form or showing the stepper's saving overlay.
+The preview section owns its loading and retry state; continuation waits for a proposal matching the current selection.
+Room layout and proposal requests start independently, and older proposal responses cannot replace the current selection.
+Classroom rendering, the manual editor, and the published viewer load on demand with skeletons inside their owning regions.
+Draft saves, applying assignments, validation, and publication retain the blocking workflow state.
 First-use and filtered empty states explain why no plans are visible and provide the next useful action.
 Draft reset removes only seating plans and seat assignments; examination schedules and subjects remain intact.
 Changing the subjects of a populated draft plan clearly warns that its existing seats will be cleared.

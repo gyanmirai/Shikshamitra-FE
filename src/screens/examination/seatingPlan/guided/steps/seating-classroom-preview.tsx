@@ -4,27 +4,36 @@ import type {
   GuidedAllocationPreviewDto,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
+import dynamic from 'next/dynamic';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
-import { DndContext } from '@dnd-kit/core';
 import Skeleton from '@mui/material/Skeleton';
 import { useGetSeatLayoutQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import RoomSwitcher from '../../components/workspace/RoomSwitcher';
-import { GuidedClassroomPanel } from '../manual/guided-classroom-panel';
 import { mapClassroomPreview } from './seating-classroom-preview-mapper';
 
 import type { ManualLayoutResponseDto } from '../manual/manual-editor-types';
 
-const ignoreSeatAction = () => undefined;
+const SeatingClassroomPreviewCanvas = dynamic(
+  () =>
+    import('./seating-classroom-preview-canvas').then(
+      (module) => module.SeatingClassroomPreviewCanvas
+    ),
+  {
+    loading: () => (
+      <Skeleton variant="rounded" height={460} aria-label="Loading classroom preview" />
+    ),
+  }
+);
 
 interface Props {
   workspace: SeatingPlanWorkspaceDto;
   plan: SeatingPlanGroupDto;
   roomIds: string[];
-  preview: GuidedAllocationPreviewDto;
+  preview?: GuidedAllocationPreviewDto;
 }
 
 export function SeatingClassroomPreview({ workspace, plan, roomIds, preview }: Props) {
@@ -44,7 +53,7 @@ export function SeatingClassroomPreview({ workspace, plan, roomIds, preview }: P
    * Keep that work and the canvas data stable across unrelated Formik and workflow renders. */
   const data = useMemo(
     () =>
-      currentData
+      currentData && preview
         ? mapClassroomPreview(
             plan,
             { ...(currentData as ManualLayoutResponseDto), roomId },
@@ -54,7 +63,7 @@ export function SeatingClassroomPreview({ workspace, plan, roomIds, preview }: P
     [currentData, plan, preview, roomId]
   );
   const counts = new Map<string, number>();
-  preview.assignments.forEach((assignment) => {
+  preview?.assignments.forEach((assignment) => {
     counts.set(assignment.roomId, (counts.get(assignment.roomId) ?? 0) + 1);
   });
   const rooms = plan.availableRooms
@@ -67,29 +76,30 @@ export function SeatingClassroomPreview({ workspace, plan, roomIds, preview }: P
     }));
 
   return (
-    <Box aria-label="Read-only classroom seating preview" sx={{ minWidth: 0 }}>
-      <RoomSwitcher rooms={rooms} activeRoomId={roomId} onSwitch={setSelectedRoomId} />
+    <Box
+      aria-label="Read-only classroom seating preview"
+      aria-busy={!data && !isError}
+      sx={{ minWidth: 0 }}
+    >
+      {preview && <RoomSwitcher rooms={rooms} activeRoomId={roomId} onSwitch={setSelectedRoomId} />}
       {isError ? (
         <Alert severity="error" action={<Button onClick={() => refetch()}>Try again</Button>}>
           The classroom layout could not be loaded.
         </Alert>
       ) : !data || (isFetching && !currentData) ? (
-        <Skeleton variant="rounded" height={460} aria-label="Loading classroom preview" />
+        <Skeleton
+          variant="rounded"
+          height={460}
+          aria-label={
+            preview ? 'Loading classroom preview' : 'Generating automatic seating preview'
+          }
+        />
       ) : (
-        <DndContext>
-          <GuidedClassroomPanel
-            rooms={data.rooms}
-            assignments={data.assignments}
-            students={data.students}
-            activeRoomId={roomId}
-            isReadOnly
-            hideRoomSwitcher
-            readOnlyDescription="Automatic seating preview is read-only. Change rooms or allocation rules to update the proposal."
-            onSwitchRoom={setSelectedRoomId}
-            onAssign={ignoreSeatAction}
-            onUnassign={ignoreSeatAction}
-          />
-        </DndContext>
+        <SeatingClassroomPreviewCanvas
+          data={data}
+          roomId={roomId}
+          onSwitchRoom={setSelectedRoomId}
+        />
       )}
     </Box>
   );

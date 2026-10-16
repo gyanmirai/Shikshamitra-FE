@@ -117,7 +117,7 @@ export const academicPermissions = {
   curriculum: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,
     subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
-    electiveAssignment: `${defaultAcademicPermissionName}CurriculumManagement.ElectiveAssignment`,
+    electiveAssignment: 'ClassManagement.StudentElectiveAssignment',
     chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     lessonPlan: `${defaultAcademicPermissionName}CurriculumManagement.LessonPlan`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,
@@ -157,7 +157,7 @@ export const academicPermissions = {
     schedule: `${defaultAcademicPermissionName}Examination.ScheduleExam`,
     seatAllocation: `${defaultAcademicPermissionName}Examination.SeatAllocation`,
     recordMarks: `${defaultAcademicPermissionName}Examination.RecordMarks`,
-    resultCreation: `${defaultAcademicPermissionName}Examination.Result`,
+    resultCreation: `${defaultAcademicPermissionName}Examination.ResultCreation`,
     questionBank: `${defaultAcademicPermissionName}Examination.QuestionBank`,
     questionPapers: `${defaultAcademicPermissionName}Examination.QuestionPapers`,
     quizManagement: `${defaultAcademicPermissionName}Examination.QuizManagement`,

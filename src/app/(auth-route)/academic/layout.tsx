@@ -4,9 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
+import { usePathname } from 'next/navigation';
 import { SplashScreen } from 'src/components/loading-screen';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { academicPermissions } from 'src/constants/academic-menu';
+import { canAccessAcademicRoute } from 'src/utils/academic-navigation-access';
 import { AcademicModuleUiProvider } from 'src/screens/academic/components/AcademicModuleUiProvider';
 
 const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
@@ -18,7 +18,8 @@ const AcademicLayout: React.FC<{ children: React.ReactNode }> = ({
     (state: RootState) => state.auth
   );
 
-  const hasPermission = hasGrantedPermission(permissions, academicPermissions.root);
+  const pathname = usePathname();
+  const hasPermission = canAccessAcademicRoute(pathname, permissions);
 
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? (

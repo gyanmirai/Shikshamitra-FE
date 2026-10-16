@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
@@ -17,6 +19,7 @@ export default function PermissionMatrixToolbar({
   onlyOverrides,
   onOverrides,
   overrideCount,
+  bulkActions,
 }: {
   search: string;
   onSearch: (value: string) => void;
@@ -25,6 +28,7 @@ export default function PermissionMatrixToolbar({
   onlyOverrides: boolean;
   onOverrides: (value: boolean) => void;
   overrideCount: number;
+  bulkActions?: ReactNode;
 }) {
   return (
     <Stack
@@ -85,6 +89,7 @@ export default function PermissionMatrixToolbar({
           </Box>
         </Stack>
       )}
+      {bulkActions}
     </Stack>
   );
 }

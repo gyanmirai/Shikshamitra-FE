@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { vi, it, expect, describe } from 'vitest';
 
 import { getChapterTableActions } from './chapterTableActions';
 
@@ -10,6 +10,19 @@ const chapter = {
 } as IChapter;
 
 describe('getChapterTableActions', () => {
+  it('does not expose question actions when the caller lacks their permissions', () => {
+    const actions = getChapterTableActions(chapter, {
+      canAdd: false,
+      canView: true,
+      canDelete: false,
+      onViewDocuments: vi.fn(),
+      onEdit: vi.fn(),
+      onDelete: vi.fn(),
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(['view-documents']);
+  });
+
   it('keeps the first three chapter actions direct and later actions in order', () => {
     const actions = getChapterTableActions(chapter, {
       canAdd: true,

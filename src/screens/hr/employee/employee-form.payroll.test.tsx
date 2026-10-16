@@ -25,6 +25,9 @@ vi.mock('src/redux/hr/hr-policy-api', () => ({
   useGetAttendancePoliciesQuery: () => ({}),
 }));
 vi.mock('src/redux/hr/leaveApi', () => ({ useGetLeavePoliciesQuery: () => ({}) }));
+vi.mock('src/redux/permission/permissionApi', () => ({
+  useLazyGetPermissionsQuery: () => [vi.fn()],
+}));
 vi.mock('./employee-form-fields', () => ({ allFields: [] }));
 vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
 vi.mock('src/components/form-section-card', () => ({

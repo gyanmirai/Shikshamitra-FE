@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -16,6 +18,7 @@ export type PermissionMatrixProps = {
   user: boolean;
   disabled: boolean;
   visibility?: boolean;
+  bulkActions?: ReactNode;
   onChange: (row: MatrixRow, action: MatrixAction, state: PermissionOverrideState) => void;
 };
 export default function PermissionMatrix({
@@ -23,10 +26,11 @@ export default function PermissionMatrix({
   user,
   disabled,
   visibility = false,
+  bulkActions,
   onChange,
 }: PermissionMatrixProps) {
   const theme = useTheme();
-  const desktop = useMediaQuery(theme.breakpoints.up('md'));
+  const desktop = useMediaQuery(theme.breakpoints.up('lg'));
   const [search, setSearch] = useState('');
   const [onlyOverrides, setOnlyOverrides] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -63,6 +67,7 @@ export default function PermissionMatrix({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <PermissionMatrixToolbar
+        bulkActions={bulkActions}
         search={search}
         onSearch={setSearch}
         user={user}
@@ -107,7 +112,7 @@ export default function PermissionMatrix({
         <Iconify icon="solar:link-linear" width={16} sx={{ flexShrink: 0 }} />
         <Typography variant="caption">
           {user
-            ? 'Role = follow assigned roles. Allow / Deny = override for this user.'
+            ? 'Grant all allows access for this user. Revoke all denies access, including role grants. Follow role clears user overrides.'
             : 'Allow grants access to this role. Revoke removes its direct grant; inherited access can remain.'}
         </Typography>
       </Stack>

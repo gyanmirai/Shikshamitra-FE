@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
+import { http, HttpResponse } from 'msw';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { mswServer } from 'src/test/mswServer';
@@ -116,7 +117,7 @@ it('shows editable role defaults without creating a dirty draft', async () => {
   ['View', 'Add', 'Delete'].forEach((action) => {
     expect(editor(action).getByRole('radio', { name: 'Follow role' })).toBeChecked();
     expect(editor(action).getByRole('radio', { name: 'Deny' })).toBeEnabled();
-    expect(editor(action).getByText('Allowed')).toBeInTheDocument();
+    expect(editor(action).getByRole('radiogroup')).toHaveAccessibleDescription(/^Allowed\./);
   });
   expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
   expect(store.getState().confirmPopup.isChanges).toBe(false);
@@ -132,13 +133,13 @@ it('persists a deny through role changes and removes it with Follow role', async
   cleanup();
   const again = await open();
   expect(editor('Add').getByRole('radio', { name: 'Deny' })).toBeChecked();
-  expect(editor('Add').getByText('Denied')).toBeInTheDocument();
+  expect(editor('Add').getByRole('radiogroup')).toHaveAccessibleDescription(/^Denied\./);
   fixture.writes.length = 0;
   select('Add', 'Follow role');
   await save(again);
   cleanup();
   await open();
-  expect(editor('Add').getByText('Allowed')).toBeInTheDocument();
+  expect(editor('Add').getByRole('radiogroup')).toHaveAccessibleDescription(/^Allowed\./);
   expect(fixture.denies.size).toBe(0);
 });
 it('clears an explicit allow on Follow role when the role has no grant', async () => {
@@ -149,7 +150,7 @@ it('clears an explicit allow on Follow role when the role has no grant', async (
   select('Add', 'Follow role');
   await save(saved);
   expect(fixture.direct.size).toBe(0);
-  expect(editor('Add').getByText('Denied')).toBeInTheDocument();
+  expect(editor('Add').getByRole('radiogroup')).toHaveAccessibleDescription(/^Denied\./);
 });
 it('keeps visibility overrides independent from action grants and retains nested flags', async () => {
   const saved = await open('visibility');
@@ -158,6 +159,52 @@ it('keeps visibility overrides independent from action grants and retains nested
   await save(saved);
   expect(fixture.writes).toEqual([[{ name: visibilityNames[1], state: 'deny' }]]);
   expect(fixture.role.has(actionNames[0])).toBe(true);
+});
+it('keeps server-only visibility out of the feature list and saves only an edited constant flag', async () => {
+  const serverOnlyNames = [
+    'ShikshaMitra.Module.Academics.ServerOnlyFeature',
+    'ShikshaMitra.Module.ServerOnlyModule',
+  ];
+  mswServer.use(
+    http.get('*/api/shikshamitra-permissions/users/:userId/permissions', () =>
+      HttpResponse.json({
+        overrides: Object.fromEntries([...fixture.denies].map((name) => [name, 'deny'])),
+        groups: [{
+          name: 'Academics',
+          displayName: 'Academics',
+          permissions: [...actionNames, ...visibilityNames, ...serverOnlyNames].map((name) => ({
+            name,
+            displayName: name,
+            isGranted: !fixture.denies.has(name),
+            allowedProviders: [],
+            grantedProviders: [{ providerName: 'R', providerKey: 'HOD' }],
+          })),
+        }],
+      })
+    )
+  );
+  const saved = await open('visibility');
+  expect(screen.queryByRole('button', { name: 'Additional visibility' })).not.toBeInTheDocument();
+  expect(screen.queryByTestId('permission-Server Only Feature')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Server Only Module' })).not.toBeInTheDocument();
+  expect(screen.getByTestId('permission-Curriculum / Settings')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
+  select('Visible', 'Deny', 'Curriculum');
+  await save(saved);
+  expect(fixture.writes).toEqual([[{ name: visibilityNames[1], state: 'deny' }]]);
+});
+it('shows constants missing from the server catalogue with unavailable controls', async () => {
+  await open('visibility');
+  expect(screen.getByTestId('permission-Timetable')).toBeInTheDocument();
+  const timetable = editor('Visible', 'Timetable');
+  expect(timetable.getByRole('radiogroup')).toHaveAccessibleDescription(/^Unavailable\./);
+  ['Follow role', 'Allow', 'Deny'].forEach((value) => {
+    const choice = timetable.getByRole('radio', { name: value });
+    expect(choice).toBeDisabled();
+    fireEvent.click(choice);
+  });
+  expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
+  expect(fixture.writes).toEqual([]);
 });
 it('keeps role actions editable while provider-restricted user actions are unavailable', async () => {
   await open('actions', 'R');
@@ -172,11 +219,11 @@ it('combines assigned role defaults while an explicit deny wins', async () => {
   fixture.secondRole.add(actionNames[0]);
   fixture.role.delete(actionNames[0]);
   await open();
-  expect(editor('View').getByText('Allowed')).toBeInTheDocument();
+  expect(editor('View').getByRole('radiogroup')).toHaveAccessibleDescription(/^Allowed\./);
   cleanup();
   fixture.denies.add(actionNames[0]);
   await open();
-  expect(editor('View').getByText('Denied')).toBeInTheDocument();
+  expect(editor('View').getByRole('radiogroup')).toHaveAccessibleDescription(/^Denied\./);
 });
 it('refreshes Follow role defaults without manufacturing a user grant', async () => {
   await open();
@@ -184,7 +231,7 @@ it('refreshes Follow role defaults without manufacturing a user grant', async ()
   fixture.role.clear();
   await open();
   ['View', 'Add', 'Delete'].forEach((action) => {
-    expect(editor(action).getByText('Denied')).toBeInTheDocument();
+    expect(editor(action).getByRole('radiogroup')).toHaveAccessibleDescription(/^Denied\./);
   });
   expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
   expect(fixture.writes).toEqual([]);

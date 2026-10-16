@@ -22,6 +22,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -142,10 +143,12 @@ const TeacherAssignmentCell = ({
   row,
   teachers,
   onChange,
+  disabled,
 }: {
   row: AssignmentTableRow;
   teachers: ClassTeacherEligibleTeacher[];
   onChange: (teacher: ClassTeacherEligibleTeacher | null) => void;
+  disabled: boolean;
 }) => {
   const selectedTeacher =
     teachers.find((teacher) => teacher.teacherId === row.classTeacher) ??
@@ -177,6 +180,7 @@ const TeacherAssignmentCell = ({
       fullWidth
       options={teachers}
       value={selectedTeacher}
+      disabled={disabled}
       onChange={(_, value) => onChange(value)}
       getOptionLabel={(option) => option.teacherName || ''}
       isOptionEqualToValue={(option, value) => option.teacherId === value.teacherId}
@@ -469,6 +473,9 @@ const ReviewDrawer = ({
 
 const ClassTeacherAssignment = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canView = hasGrantedPermission(permissions, 'ClassManagement.ClassTeacherAssignment.View');
+  const canAdd = hasGrantedPermission(permissions, 'ClassManagement.ClassTeacherAssignment.Add');
   const [organization, setOrganization] = useState<string>('');
   const [pendingOrganization, setPendingOrganization] = useState<string | null>(null);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -494,21 +501,24 @@ const ClassTeacherAssignment = () => {
     refetch: refetchAssignments,
     isLoading: isClassAssignmentLoading,
     isFetching: isClassAssignmentFetching,
-  } = useGetClassTeacherAssignmentsQuery({ organizationId: organization }, { skip: !organization });
+  } = useGetClassTeacherAssignmentsQuery(
+    { organizationId: organization },
+    { skip: !canView || !organization }
+  );
 
   const { data: apiSummary } = useGetClassTeacherAssignmentSummaryQuery(
     { organizationId: organization },
-    { skip: !organization }
+    { skip: !canView || !organization }
   );
 
   const { data: eligibleTeachers = [] } = useGetClassTeacherEligibleTeachersQuery(
     { organizationId: organization },
-    { skip: !organization }
+    { skip: !canView || !organization }
   );
 
   const { data: history = [] } = useGetClassTeacherAssignmentHistoryQuery(
     { organizationId: organization },
-    { skip: !organization || !historyOpen }
+    { skip: !canView || !organization || !historyOpen }
   );
 
   const [validateAssignments, { isLoading: isValidating }] =
@@ -634,6 +644,7 @@ const ClassTeacherAssignment = () => {
   });
 
   const updateRow = (rowKey: string, patch: Partial<AssignmentTableRow>) => {
+    if (!canAdd) return;
     setTableData((prev) =>
       prev.map((row) => (getRowKey(row) === rowKey ? { ...row, ...patch } : row))
     );
@@ -689,7 +700,7 @@ const ClassTeacherAssignment = () => {
   };
 
   const handleSaveDraft = async () => {
-    if (!organization) return;
+    if (!canAdd || !organization) return;
     try {
       await updateAssignments(buildPayload(true)).unwrap();
       shikshaMitraToast.success({ message: 'Class teacher draft saved.' });
@@ -700,7 +711,7 @@ const ClassTeacherAssignment = () => {
   };
 
   const handleReview = async () => {
-    if (!hasPendingChanges) return;
+    if (!canAdd || !hasPendingChanges) return;
     try {
       const result = await validateAssignments(buildPayload(false)).unwrap();
       setValidationResult(result);
@@ -711,6 +722,7 @@ const ClassTeacherAssignment = () => {
   };
 
   const handleConfirm = async () => {
+    if (!canAdd) return;
     try {
       await updateAssignments(buildPayload(false)).unwrap();
       shikshaMitraToast.success({ message: 'Class teacher assignments confirmed.' });
@@ -753,35 +765,39 @@ const ClassTeacherAssignment = () => {
           <Button size="small" variant="outlined" startIcon={<History />} onClick={() => setHistoryOpen(true)}>
             History
           </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<RestartAlt />}
-            disabled={!hasChanges}
-            onClick={() => setDiscardOpen(true)}
-          >
-            Discard Changes
-          </Button>
-          <LoadingButton
-            size="small"
-            variant="outlined"
-            startIcon={<Save />}
-            disabled={!hasChanges}
-            loading={isSaving}
-            onClick={handleSaveDraft}
-          >
-            Save Draft
-          </LoadingButton>
-          <LoadingButton
-            size="small"
-            variant="contained"
-            startIcon={<FactCheck />}
-            disabled={!hasPendingChanges}
-            loading={isValidating}
-            onClick={handleReview}
-          >
-            Review & Confirm
-          </LoadingButton>
+          {canAdd && (
+            <>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<RestartAlt />}
+                disabled={!hasChanges}
+                onClick={() => setDiscardOpen(true)}
+              >
+                Discard Changes
+              </Button>
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                startIcon={<Save />}
+                disabled={!hasChanges}
+                loading={isSaving}
+                onClick={handleSaveDraft}
+              >
+                Save Draft
+              </LoadingButton>
+              <LoadingButton
+                size="small"
+                variant="contained"
+                startIcon={<FactCheck />}
+                disabled={!hasPendingChanges}
+                loading={isValidating}
+                onClick={handleReview}
+              >
+                Review & Confirm
+              </LoadingButton>
+            </>
+          )}
         </Stack>
       </Stack>
 
@@ -861,6 +877,7 @@ const ClassTeacherAssignment = () => {
                 return (
                   <TeacherAssignmentCell
                     row={typedRow}
+                    disabled={!canAdd}
                     teachers={draftEligibleTeachers}
                     onChange={(teacher) => handleTeacherChange(typedRow, teacher)}
                   />
@@ -916,6 +933,7 @@ const ClassTeacherAssignment = () => {
                 const typedRow = row as unknown as AssignmentTableRow;
                 return (
                   <DatePicker
+                    disabled={!canAdd}
                     value={typedRow.effectiveFromDraft ? dayjs(typedRow.effectiveFromDraft) : null}
                     onChange={(newValue) =>
                       updateRow(getRowKey(typedRow), {
@@ -938,6 +956,7 @@ const ClassTeacherAssignment = () => {
                 const typedRow = row as unknown as AssignmentTableRow;
                 return (
                   <ClassTeacherAssignmentParameterSelect
+                    disabled={!canAdd}
                     ariaLabel={`${typedRow.className} ${typedRow.divisionName} Assignment Type`}
                     options={assignmentTypes}
                     value={typedRow.assignmentTypeDraft}
@@ -958,6 +977,7 @@ const ClassTeacherAssignment = () => {
                 const typedRow = row as unknown as AssignmentTableRow;
                 return (
                   <ClassTeacherAssignmentParameterSelect
+                    disabled={!canAdd}
                     ariaLabel={`${typedRow.className} ${typedRow.divisionName} Change Reason`}
                     options={changeReasons}
                     value={typedRow.changeReasonDraft}
@@ -990,7 +1010,7 @@ const ClassTeacherAssignment = () => {
       </Box>
 
       <ReviewDrawer
-        open={reviewOpen}
+        open={canAdd && reviewOpen}
         validation={validationResult}
         changedRows={pendingRows}
         isSaving={isSaving}

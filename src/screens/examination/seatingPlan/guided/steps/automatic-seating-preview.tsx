@@ -1,6 +1,5 @@
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Skeleton from '@mui/material/Skeleton';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { SeatingClassroomPreview } from './seating-classroom-preview';
@@ -22,15 +21,9 @@ export function AutomaticSeatingPreview({ workspace, workflow }: GuidedStepProps
         <Alert severity="error" action={<Button onClick={retry}>Try again</Button>}>
           {error}
         </Alert>
-      ) : !preview ? (
-        <Skeleton
-          variant="rounded"
-          height={460}
-          aria-label="Generating automatic seating preview"
-        />
       ) : (
         <>
-          {preview.unallocatedStudentIds.length > 0 && (
+          {preview && preview.unallocatedStudentIds.length > 0 && (
             <Alert severity="warning" sx={{ mb: 1 }}>
               {preview.unallocatedStudentIds.length} students still need a seat. Add rooms or adjust
               the rules.
