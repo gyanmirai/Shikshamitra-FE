@@ -3,12 +3,44 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Roll-number flow validation (2026-10-16)
+
+The four focused roll settings, Student Setup wiring, immutable batch workspace and RTK Query suites pass 57 tests with one worker and a 20-second test timeout under workstation memory pressure.
+They cover saved grouping/name/direction, fixed sequencing, whole-division Auto rather than current-page targets, server pagination, reason/confirmation, blocked rows, stale-error write guards and separate approval/apply commands.
+Affected files pass focused TypeScript using the existing theme augmentations and repository-rule ESLint.
+The full-project check is not certified: its generated `build/dev/types/routes.d.ts` has pre-existing parse errors, and the initial broad run exhausted its default heap.
+No generated route file was changed to make validation pass.
+
+The drawer and workspace reuse the existing shared controls, neutral action treatment, two-column responsive fields, busy/unsaved guards and embedded preview table.
+Responsive footer wrapping is present in source; authenticated visual, mobile and save/reload acceptance remain unverified because `http://localhost:3000` refused connection.
+No real student data or Finance code was changed by these checks.
+The protected Finance baseline matches all 824 frontend files and 755 backend files.
+
+### Inconsistencies
+
+No inconsistencies remain in the verified component/request checks.
+Live visual acceptance is an open gate, not a passing check.
+
+## Admissions configuration UI follow-up (2026-10-16)
+
+The 16-screenshot request covers workflow checklist/action presentation, toast-only workflow validation, same-version workflow restoration, intake guidance/review layout, Offering empty/preview states, public-link creation/copy presentation, PAN normalization, inquiry handoff loading, and assessment title help. Source multiselect is explicitly deferred; the single-source API contract remains unchanged.
+
+Focused public inquiry/PAN regression initially passed 42 tests. A subsequent regression ensures the newly created link remains copyable when the initial list request fails, bringing this scope to 43 cases. The changed public-link suite passed 29 of 36 cases during memory contention; a fresh-process retry passed all eight selected cases (the new case plus seven timeout/cascade failures) without further source or assertion changes. Offering/assessment presentation regression passed 48 tests, with 13 overlapping cases rerun after the final UI adjustments. Intake, inquiry handoff and shared action-loading regression passed 50 distinct tests across seven suites. Three workers timed out during an initial concurrent run; those three suites passed all 20 tests when rerun with one thread worker. These tests preserve validation, permissions, concurrency handling, retry, draft protection and existing payloads; they do not establish live API persistence.
+
+The workflow follow-up passed its seven dedicated suites, including checklist editors, navigation, next-stage flow, single final publish toast, Re-open concurrency and Offering list/detail cache refresh. The broader run reported 36 passed and four failures in older Offering/Form row-action expectations. The affected row-action source is unchanged from HEAD, where View is already absent and the Form action is in the overflow menu; those unrelated assertions were preserved. The two workflow cases in that shared suite passed. Backend restoration regression passed 12 Domain, four Application/PostgreSQL and six HTTP contract tests with no skips. The PostgreSQL case uses a disposable local database to verify the publication lock. Application and HTTP checks used verified dependency outputs and disabled analyzers; HTTP tests used isolated output with one unrelated RollNumber contract source excluded because of five existing CS0121 errors. Fresh HttpApi and Host leaf builds passed, and the Host started successfully. Earlier compiler OOM/cancellation attempts are not counted as successful builds; these focused checks do not establish a full-repository build.
+
+The consolidated focused source typecheck covers 32 intentionally changed source files with the project compiler options and theme augmentation, and reports zero diagnostics. The two root regression test files also pass a focused typecheck. Strict ESLint passes all 34 files with zero errors or warnings. After the final Offering-cache, test and public-link refinements, a six-file focused TypeScript check again reported zero diagnostics and strict eight-file ESLint reported zero errors or warnings. The final three-case smoke passed workflow Draft actions, authorized archived Re-open and the public-link heading/Title Case drawer assertion (39 unrelated cases were intentionally filtered). The lint retry required a 4 GiB heap after the 2 GiB process exhausted memory; only import ordering was corrected. Student documentation and whitespace validation pass. A full-repository TypeScript process was stopped under workstation memory pressure and is not a passed gate.
+
+Authenticated localhost intake checks covered 1440×900, 768×1024 and 390×844. The desktop drawer is 960 px wide and both review cards measured 379.22 px high. Smaller viewports stack the cards without document horizontal overflow; the mobile action footer remains inside the viewport. Required-name validation, routing toast, counsellor-only choices and unsaved-close confirmation were checked, then the temporary intake draft was discarded. The workflow editor displayed the revised selected-document checklist and direct Edit/Duplicate/Delete stage actions. No workflow change, restore or applicant transition was submitted during browser checks.
+
+The requested actual local public link, `Local admission inquiry — 16 Oct 2026`, was created for General Admission Cycle / General Inquiry Form v1 with Website source and no intake setup (manual assignment). The new row displayed Active, its Copy action succeeded, and the public page loaded with the period shown once and Board/Medium/Class selection. No applicant submission was made. The first open redirected both tabs to login; a fresh sign-in and retry succeeded. Source inspection identified existing global session-load failure handling that can sign out public and authenticated tabs. The subsequent authorized session fix and its verification are recorded in [Security testing](../security/testing.md#login-and-session-redirect-regression-2026-10-16). Browser evidence for the original UI work is under `.artifacts/admissions-ui-16oct/`, and the viewport override was reset. Remaining Offering/assessment states and PAN normalization have focused automated coverage; a complete dark-theme/all-screen browser walkthrough and staging acceptance were not performed.
 
 ## Admission form workspace (2026-10-15)
 
@@ -531,6 +563,8 @@ For an isolated browser fixture, clearly report that requests were mocked and th
 Assessment delivery validation on 2026-09-10: the command above passed 30 files and 156 tests. TypeScript, focused ESLint, the student documentation validator, and diff checks passed. An isolated browser fixture exercised stage setup, session creation, booking, attendance, recorded results, review, retakes, and completion. The main scheduling-to-completion smoke was also performed in the Codex in-app browser. Its final native discard-confirmation check stalled the browser controls; six automated dialog regressions cover local dirty-state preservation, legacy behavior, and the browser-refresh guard. Browser fixtures used simulated API responses and did not write tenant data. See the [backend testing notes](../../../Shikshamitra-BE/docs/modules/student/testing.md) for domain, integration, migration, and pre-existing suite limitations.
 
 ## Managed document verification checks
+
+The document table and preview regression suites cover direct icon actions and tooltips, original/waiver/review capability gates, read-only and busy locks, hidden advice/blocker copy, actual file formats, pagination/search, and separate preview/history access. Preview coverage includes authenticated image/PDF reads, image zoom/fit, denied/unsupported content, retry, decode errors, closing during a request, focus restoration and object URL cleanup. Private bytes and temporary URLs must not enter Redux state. Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/student/admissions/document-verification src/redux/student/admissions/admission-document-download-api.test.ts --pool=threads --maxWorkers=2` for this focused regression group. Browser checks must distinguish a local source-component fixture from an authenticated application/API journey.
 
 Stage editor coverage is in `workflow-document-editor.test.tsx`, with transition presets in `workflow-document-route.test.tsx`. Policy tests cover existing workflows, future-version protection, preserved metadata, null optional values, unique requirement codes, file limits, and conditional rules. `managed-document-compatibility.test.ts` verifies that managed stages use the checklist while existing stages retain their completion controls.
 

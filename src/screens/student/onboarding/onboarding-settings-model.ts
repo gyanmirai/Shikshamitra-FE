@@ -179,6 +179,8 @@ export type RollNumberConfiguration = AcademicApplicableRule &
     className: string;
     arrangeBy: RollArrangeBy;
     arrangeType: RollArrangeType;
+    grouping?: 'mixed' | 'boys-first' | 'girls-first';
+    nameFormat?: 'first-name-first' | 'surname-first';
     startingNumber: number;
     preserveExisting: boolean;
     numberingScope: RollNumberScope;
@@ -394,15 +396,14 @@ export const defaultRollNumberConfiguration: RollNumberConfiguration = {
   className: 'All classes',
   arrangeBy: 'studentName',
   arrangeType: 'ascending',
+  grouping: 'mixed',
+  nameFormat: 'first-name-first',
   startingNumber: 1,
   preserveExisting: true,
   numberingScope: 'class-division',
   assignmentTiming: 'after-division',
   midYearHandling: 'next-available',
-  orderingRules: [
-    { field: 'studentName', direction: 'ascending' },
-    { field: 'admissionNumber', direction: 'ascending' },
-  ],
+  orderingRules: [{ field: 'studentName', direction: 'ascending' }],
   allowIndividualLocks: true,
   requireChangeReason: true,
   requireApproval: false,

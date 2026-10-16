@@ -3,9 +3,9 @@ import type {
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { fDateTime } from 'src/utils/format-time';
 import { Label } from 'src/components/label';
-import { Alert, Card, Stack, Typography } from '@mui/material';
+import { fDateTime } from 'src/utils/format-time';
+import { Card, Alert, Stack, Typography } from '@mui/material';
 
 import { WORKFLOW_STATUS_LABELS } from '../workflow-builder-types';
 
@@ -20,6 +20,7 @@ const ACTION_LABELS = [
   'Superseded',
   'Archived',
   'Rollback draft created',
+  'Reopened',
 ] as const;
 
 export function WorkflowGovernanceHistory({

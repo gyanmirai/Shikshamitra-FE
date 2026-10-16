@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentType } from 'src/redux/tagTypes';
+import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
 
@@ -134,6 +134,7 @@ export const studentRecordChangesApi = api.injectEndpoints({
         'section' in response ? response : unwrapRecordsResult<RecordSnapshot>(response),
       providesTags: (_result, _error, { studentId, section }) => [
         { type: studentType.student, id: `RECORDS-SNAPSHOT-${studentId}-${section}` },
+        ...(section === 'placement' ? [studentOnboardingType.rollNumberBatch] : []),
       ],
     }),
     createStudentRecordChange: builder.mutation<RecordChange, CreateRecordChange>({

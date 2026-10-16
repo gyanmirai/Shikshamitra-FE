@@ -15,6 +15,7 @@ import {
   useCloneAdmissionWorkflowMutation,
   useCreateAdmissionWorkflowMutation,
   useDeleteAdmissionWorkflowMutation,
+  useReopenAdmissionWorkflowMutation,
   useArchiveAdmissionWorkflowMutation,
   useCreateAdmissionWorkflowVersionMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
@@ -26,7 +27,7 @@ import type { WorkflowDetails } from '../admission-workflow-dialog';
 
 export type PendingWorkflowConfirmation = {
   workflow: AdmissionWorkflow;
-  action: 'archive' | 'delete';
+  action: 'archive' | 'delete' | 'reopen';
 } | null;
 
 export function useWorkflowListActions() {
@@ -47,12 +48,15 @@ export function useWorkflowListActions() {
     canClone: workflowAccess.canManage,
     canCreateVersion: workflowAccess.canManage,
     canArchive: workflowAccess.canDelete,
+    canReopen: workflowAccess.canManage,
     canViewUsage: workflowAccess.canView,
   };
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();
   const [createVersion] = useCreateAdmissionWorkflowVersionMutation();
   const [archiveWorkflow, archiveState] = useArchiveAdmissionWorkflowMutation();
+  const [reopenWorkflow, reopenState] = useReopenAdmissionWorkflowMutation();
+  const confirmingRef = useRef(false);
   const [deleteWorkflow, deleteState] = useDeleteAdmissionWorkflowMutation();
   const [getLatestWorkflow, latestWorkflowState] = useLazyGetAdmissionWorkflowQuery();
   const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
@@ -125,14 +129,18 @@ export function useWorkflowListActions() {
     setConfirmationNotice(null);
     setPendingConfirmation(null);
   };
-  const showLatestWorkflow = (workflow: AdmissionWorkflow, action: 'archive' | 'delete') => {
+  const showLatestWorkflow = (
+    workflow: AdmissionWorkflow,
+    action: 'archive' | 'delete' | 'reopen'
+  ) => {
     setPendingConfirmation({ workflow, action });
     setConfirmationNotice(
       'This workflow changed after the list was loaded. The latest version is now loaded. Review and confirm the action again.'
     );
   };
   const confirm = async () => {
-    if (!pendingConfirmation) return;
+    if (!pendingConfirmation || confirmingRef.current) return;
+    confirmingRef.current = true;
     const { workflow, action } = pendingConfirmation;
     try {
       const latest = await getLatestWorkflow(workflow.id, false).unwrap();
@@ -146,6 +154,8 @@ export function useWorkflowListActions() {
           id: latest.id,
           concurrencyStamp: latest.concurrencyStamp,
         }).unwrap();
+      } else if (action === 'reopen') {
+        await reopenWorkflow({ id: latest.id, concurrencyStamp: latest.concurrencyStamp }).unwrap();
       } else {
         await archiveWorkflow({
           id: latest.id,
@@ -153,7 +163,12 @@ export function useWorkflowListActions() {
         }).unwrap();
       }
       shikshaMitraToast.success({
-        message: action === 'delete' ? 'Workflow draft deleted' : 'Workflow archived',
+        message:
+          action === 'delete'
+            ? 'Workflow draft deleted'
+            : action === 'reopen'
+              ? 'Workflow reopened'
+              : 'Workflow archived',
       });
       closeConfirmation();
     } catch (error) {
@@ -171,6 +186,8 @@ export function useWorkflowListActions() {
       shikshaMitraToast.error({
         message: problem.detail || 'Unable to complete the workflow action.',
       });
+    } finally {
+      confirmingRef.current = false;
     }
   };
 
@@ -190,6 +207,7 @@ export function useWorkflowListActions() {
     openingCreatedWorkflow,
     cloneState,
     archiveState,
+    reopenState,
     deleteState,
     navigate,
     create,

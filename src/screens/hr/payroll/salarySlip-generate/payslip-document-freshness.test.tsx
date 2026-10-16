@@ -19,7 +19,12 @@ const originalApiUrl = vi.hoisted(() => {
   return original;
 });
 const loadPreview = vi.hoisted(() => vi.fn());
-vi.mock('src/redux/session-cache', () => ({ getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }), clearCachedAuthSession: vi.fn() }));
+vi.mock('src/redux/session-cache', () => ({
+  getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }),
+  clearCachedAuthSession: vi.fn(),
+  getAuthSessionCacheRevision: () => 0,
+  isAuthSessionCacheCurrent: () => true,
+}));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@mui/icons-material', () => ({ ExpandMore: () => null }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn(), error: vi.fn() } }));

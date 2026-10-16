@@ -86,7 +86,8 @@ export function AdmissionSpecializedRuntimeField({
         label={labelWithRequired(field)}
         maxLength={10}
         groupBy={5}
-        pattern="^[A-Z0-9]*$"
+        pattern="^[A-Za-z0-9]*$"
+        inputMode="text"
         disabled={disabled}
         value={value}
         onChange={(nextValue) => onChange(nextValue.toUpperCase())}

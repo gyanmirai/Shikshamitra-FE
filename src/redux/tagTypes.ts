@@ -544,6 +544,7 @@ export const studentAdmissionsCrmType = {
 
 // ===== Student Onboarding API (reducerPath: api) =====
 export const studentOnboardingType = {
+  rollNumberBatch: 'StudentRollNumberBatch',
   onboardingCaseList: 'StudentOnboardingCaseList',
   onboardingCaseDetail: 'StudentOnboardingCase',
   onboardingAnalytics: 'StudentOnboardingAnalytics',

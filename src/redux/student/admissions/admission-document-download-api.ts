@@ -4,6 +4,25 @@ import { DOCUMENT_VERIFICATION_URL } from './admission-document-types';
 
 export const admissionDocumentDownloadApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    previewAdmissionDocument: builder.mutation<
+      { previewed: true },
+      { evidenceId: string; receive: (file: Blob) => void }
+    >({
+      async queryFn({ evidenceId, receive }, queryApi, _options, baseQuery) {
+        const result = await baseQuery({
+          url: `${DOCUMENT_VERIFICATION_URL}/evidence/${evidenceId}/download`,
+          responseHandler: (response) => (response.ok ? response.blob() : response.json()),
+        });
+        if (result.error) return { error: result.error };
+        if (!(result.data instanceof Blob))
+          return {
+            error: { status: 'CUSTOM_ERROR', error: 'The document could not be previewed.' },
+          };
+        // Deliver private bytes directly to the viewer; neither bytes nor object URLs enter Redux.
+        if (!queryApi.signal.aborted) receive(result.data);
+        return { data: { previewed: true } };
+      },
+    }),
     downloadAdmissionDocument: builder.mutation<
       { downloaded: true },
       { evidenceId: string; fileName: string; studentId?: string }
@@ -38,4 +57,5 @@ export const admissionDocumentDownloadApi = api.injectEndpoints({
     }),
   }),
 });
-export const { useDownloadAdmissionDocumentMutation } = admissionDocumentDownloadApi;
+export const { useDownloadAdmissionDocumentMutation, usePreviewAdmissionDocumentMutation } =
+  admissionDocumentDownloadApi;

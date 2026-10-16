@@ -3,12 +3,22 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Security API clients
+
+## Session initialization and request ownership
+
+`src/redux/auth/load-session.tsx` initializes private account context and effective permissions only outside the `(public-route)` route group. Public inquiry and employee-application pages do not trigger private bootstrap requests or automatic sign-out. Authenticated route guards still require a usable session and verified matching user/tenant context before rendering protected content.
+
+Account-context and permission reads fail closed. Network errors, ordinary 403 responses, server errors, and malformed context show the shared account-access retry state without destroying the Auth.js session. Explicit retry reloads verification, including after a later setup-completion refresh fails. Current 401 responses, invalid private sessions, and 403 `TENANT_INACTIVE` still invalidate authentication; the latter retains the inactive-school login reason. Token-refresh policy in `src/auth-token.ts` is unchanged.
+
+Bootstrap and employee requests are cancelled on token, identity or public-route transitions. Request IDs and tenant checks prevent late completions from restoring old state. The shared RTK Query service captures the session-cache revision and access token: invalidated lookups stop before dispatch, and obsolete 401/inactive-school responses cannot sign out a replacement session. Requests are not automatically replayed.
+
+## Permission clients
 
 `src/redux/permission/permissionApi.ts` retains the existing RTK Query contracts.
 

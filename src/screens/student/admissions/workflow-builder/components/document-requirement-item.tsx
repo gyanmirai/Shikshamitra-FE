@@ -23,10 +23,19 @@ export function DocumentRequirementItem({
   onRemove: () => void;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+    <Paper component="li" variant="outlined" sx={{ p: 1.5, borderRadius: 1, listStyle: 'none' }}>
       <Stack spacing={1}>
         <Stack direction="row" alignItems="flex-start" spacing={1}>
-          <Box sx={{ pt: 0.5, color: 'text.secondary', flexShrink: 0 }}>
+          <Box
+            sx={{
+              p: 1,
+              bgcolor: 'background.neutral',
+              borderRadius: 1,
+              color: 'text.secondary',
+              flexShrink: 0,
+              display: 'flex',
+            }}
+          >
             <Iconify icon="mdi:file-document-outline" width={20} />
           </Box>
           <Stack spacing={0.75} sx={{ flex: 1, minWidth: 0 }}>
@@ -34,32 +43,19 @@ export function DocumentRequirementItem({
               {item.name}
             </Typography>
             <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
-              <Label>
+              <Label color={item.requirement === 'conditional' ? 'warning' : 'default'}>
                 {item.requirement === 'conditional'
                   ? 'Conditional'
                   : item.requirement === 'required'
                     ? 'Required'
                     : 'Optional'}
               </Label>
-              <Typography variant="caption" color="text.secondary">
-                {collectionLabels[item.collectionMode]}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {item.standardIds
-                  ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
-                  : 'All classes'}
-              </Typography>
             </Stack>
           </Stack>
           {!readOnly && (
             <Stack direction="row" sx={{ flexShrink: 0 }}>
               <CustomTooltip title="Edit requirement">
-                <IconButton
-                  size="small"
-                  aria-label={`Edit ${item.name}`}
-                  onClick={onEdit}
-                  sx={{ width: 44, height: 44 }}
-                >
+                <IconButton size="small" aria-label={`Edit ${item.name}`} onClick={onEdit}>
                   <Iconify icon="mdi:pencil-outline" width={20} />
                 </IconButton>
               </CustomTooltip>
@@ -69,7 +65,6 @@ export function DocumentRequirementItem({
                   color="error"
                   aria-label={`Remove ${item.name}`}
                   onClick={onRemove}
-                  sx={{ width: 44, height: 44 }}
                 >
                   <Iconify icon="mdi:delete-outline" width={20} />
                 </IconButton>
@@ -82,11 +77,20 @@ export function DocumentRequirementItem({
             {item.description}
           </Typography>
         )}
-        {item.collectionMode !== 'original' && (
-          <Typography variant="caption" color="text.secondary">
-            {item.allowedExtensions.join(', ').toUpperCase()} · Up to {item.maxFileSizeMb} MB
+        <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} sx={{ color: 'text.secondary' }}>
+          <Typography variant="caption">{collectionLabels[item.collectionMode]}</Typography>
+          <Typography variant="caption">
+            ·{' '}
+            {item.standardIds
+              ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
+              : 'All classes'}
           </Typography>
-        )}
+          {item.collectionMode !== 'original' && (
+            <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+              · {item.allowedExtensions.join(', ').toUpperCase()} · Up to {item.maxFileSizeMb} MB
+            </Typography>
+          )}
+        </Stack>
       </Stack>
     </Paper>
   );

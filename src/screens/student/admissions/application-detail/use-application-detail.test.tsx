@@ -1,10 +1,24 @@
 import { act, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useApplicationDetail } from './use-application-detail';
 
-const requests = vi.hoisted(() => ({ update: vi.fn(), submit: vi.fn(), end: vi.fn(), formStage: vi.fn() }));
-const context = vi.hoisted(() => ({ manage: false, canEndJourney: true, stageId: 'current-form' }));
+const requests = vi.hoisted(() => ({
+  update: vi.fn(),
+  submit: vi.fn(),
+  end: vi.fn(),
+  formStage: vi.fn(),
+  form: vi.fn(),
+  history: vi.fn(),
+  workflow: vi.fn(),
+}));
+const context = vi.hoisted(() => ({
+  manage: false,
+  canEndJourney: true,
+  stageId: 'current-form',
+  applicationLoaded: true,
+}));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
 const application = { id: 'application', concurrencyStamp: 'current', status: 0 };
 const form = {
@@ -33,27 +47,48 @@ const form = {
 
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('react-redux', () => ({
-  useSelector: (selector: (state: unknown) => unknown) => selector({ auth: { permissions: [
-    { name: 'Students.Admissions.Applications.Add', isGranted: context.manage },
-  ] } }),
+  useSelector: (selector: (state: unknown) => unknown) =>
+    selector({
+      auth: {
+        permissions: [{ name: 'Students.Admissions.Applications.Add', isGranted: context.manage }],
+      },
+    }),
 }));
 vi.mock('src/redux/student/admissions/admission-form-stage-api', () => ({
-  useGetAdmissionFormStageQuery: (input: unknown) => { requests.formStage(input); return {}; },
+  useGetAdmissionFormStageQuery: (input: unknown) => {
+    requests.formStage(input);
+    return {};
+  },
 }));
 vi.mock('src/redux/student/admissions/admission-applications-api', () => {
   const mutation = () => [vi.fn(), { isLoading: false }];
   return {
-    useGetAdmissionApplicationQuery: () => ({ data: { ...application, canEndJourney: context.canEndJourney } }),
-    useGetAdmissionApplicationFormQuery: () => ({ data: form }),
-    useGetAdmissionApplicationWorkflowQuery: () => ({ data: {
-      currentStageInstanceId: context.stageId,
-      stages: [
-        { id: 'current-form', formStageEnabled: true },
-        { id: 'future-form', formStageEnabled: true },
-        { id: 'documents', formStageEnabled: false },
-      ],
-    } }),
-    useGetAdmissionApplicationFormHistoryQuery: () => ({}),
+    useGetAdmissionApplicationQuery: () => ({
+      data: context.applicationLoaded
+        ? { ...application, canEndJourney: context.canEndJourney }
+        : undefined,
+    }),
+    useGetAdmissionApplicationFormQuery: (input: unknown) => {
+      requests.form(input);
+      return { data: input === skipToken ? undefined : form };
+    },
+    useGetAdmissionApplicationWorkflowQuery: (input: unknown) => {
+      requests.workflow(input);
+      return {
+        data: {
+          currentStageInstanceId: context.stageId,
+          stages: [
+            { id: 'current-form', stageType: 1, formStageEnabled: true },
+            { id: 'future-form', stageType: 1, formStageEnabled: true },
+            { id: 'documents', stageType: 5, formStageEnabled: false },
+          ],
+        },
+      };
+    },
+    useGetAdmissionApplicationFormHistoryQuery: (input: unknown) => {
+      requests.history(input);
+      return {};
+    },
     useUpdateAdmissionApplicationFormValuesMutation: () => [requests.update, { isLoading: false }],
     useSubmitAdmissionApplicationMutation: () => [requests.submit, { isLoading: false }],
     useReopenAdmissionApplicationFormMutation: mutation,
@@ -68,6 +103,7 @@ describe('application answer validation timing', () => {
     context.manage = false;
     context.canEndJourney = true;
     context.stageId = 'current-form';
+    context.applicationLoaded = true;
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
     requests.update.mockReturnValue({ unwrap: async () => ({}) });
     requests.submit.mockReturnValue({
@@ -75,9 +111,46 @@ describe('application answer validation timing', () => {
     });
   });
 
+  it('starts workflow without waiting for the application response', () => {
+    context.applicationLoaded = false;
+    renderHook(() => useApplicationDetail('application'));
+    expect(requests.workflow).toHaveBeenLastCalledWith('application');
+    expect(requests.form).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.history).toHaveBeenLastCalledWith(skipToken);
+  });
+
+  it('does not fetch form answers or history for the document journey', () => {
+    context.stageId = 'documents';
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    expect(requests.form).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.history).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.formStage).toHaveBeenLastCalledWith(skipToken);
+    expect(result.current.requiresForm).toBe(false);
+  });
+
+  it('loads form answers and history only when their view is opened', () => {
+    context.stageId = 'documents';
+    const { rerender } = renderHook(
+      ({ view }: { view: 'form' | 'history' | 'journey' }) =>
+        useApplicationDetail('application', undefined, view),
+      { initialProps: { view: 'journey' } }
+    );
+    rerender({ view: 'form' });
+    expect(requests.form).toHaveBeenLastCalledWith('application');
+    expect(requests.history).toHaveBeenLastCalledWith(skipToken);
+    rerender({ view: 'history' });
+    expect(requests.form).toHaveBeenLastCalledWith(skipToken);
+    expect(requests.history).toHaveBeenLastCalledWith('application');
+    rerender({ view: 'journey' });
+    expect(requests.history).toHaveBeenLastCalledWith(skipToken);
+  });
+
   it('loads the selected future form policy without submitting or advancing', () => {
     renderHook(() => useApplicationDetail('application', 'future-form'));
-    expect(requests.formStage).toHaveBeenLastCalledWith({ applicationId: 'application', stageId: 'future-form' });
+    expect(requests.formStage).toHaveBeenLastCalledWith({
+      applicationId: 'application',
+      stageId: 'future-form',
+    });
     expect(requests.submit).not.toHaveBeenCalled();
   });
 
@@ -97,15 +170,24 @@ describe('application answer validation timing', () => {
     context.manage = true;
     const { result } = renderHook(() => useApplicationDetail('application'));
     await act(async () => result.current.setFieldValue('FirstName', 'Vivaan'));
-    requests.end.mockReturnValue({ unwrap: async () => {
-      throw Object.assign(new Error('Application changed'), {
-        data: { detail: 'Application changed. Refresh and try again.' },
-      });
-    } });
-    await act(async () => expect(await result.current.endJourney('  Parent withdrew  ')).toBe(false));
+    requests.end.mockReturnValue({
+      unwrap: async () => {
+        throw Object.assign(new Error('Application changed'), {
+          data: { detail: 'Application changed. Refresh and try again.' },
+        });
+      },
+    });
+    await act(async () =>
+      expect(await result.current.endJourney('  Parent withdrew  ')).toBe(false)
+    );
     expect(result.current.currentValues.FirstName).toBe('Vivaan');
-    expect(requests.end).toHaveBeenCalledWith({ id: 'application', input: { reason: 'Parent withdrew', concurrencyStamp: 'current' } });
-    expect(toast.error).toHaveBeenCalledWith({ message: 'Application changed. Refresh and try again.' });
+    expect(requests.end).toHaveBeenCalledWith({
+      id: 'application',
+      input: { reason: 'Parent withdrew', concurrencyStamp: 'current' },
+    });
+    expect(toast.error).toHaveBeenCalledWith({
+      message: 'Application changed. Refresh and try again.',
+    });
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
     await act(async () => expect(await result.current.endJourney('Parent withdrew')).toBe(true));
     expect(result.current.hasUnsavedAnswers).toBe(false);

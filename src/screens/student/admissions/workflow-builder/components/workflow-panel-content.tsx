@@ -3,13 +3,12 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowUsage,
   AdmissionWorkflowTransition,
-  AdmissionWorkflowValidationResult,
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Alert, Stack, Skeleton, Typography, AlertTitle } from '@mui/material';
+import { Box, Card, Alert, Stack, Skeleton, Typography } from '@mui/material';
 
 import { WorkflowVersionHistory } from './workflow-version-history';
 import { WorkflowSimulationPanel } from './workflow-simulation-panel';
@@ -23,7 +22,6 @@ type Props = {
   workflow: AdmissionWorkflow;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
-  validation: AdmissionWorkflowValidationResult | null;
   versions?: AdmissionWorkflow[];
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
@@ -37,7 +35,6 @@ export function WorkflowPanelContent({
   workflow,
   stages,
   transitions,
-  validation,
   versions,
   usage,
   usageLoading,
@@ -48,7 +45,6 @@ export function WorkflowPanelContent({
   if (panel === 'preview') return <WorkflowPreview stages={stages} transitions={transitions} />;
   if (panel === 'simulation')
     return <WorkflowSimulationPanel stages={stages} transitions={transitions} />;
-  if (panel === 'validation') return <ValidationResults validation={validation} />;
   if (panel === 'versions')
     return (
       <WorkflowVersionHistory
@@ -132,44 +128,6 @@ function WorkflowPreview({
       </Card>
     );
   });
-}
-
-function ValidationResults({
-  validation,
-}: {
-  validation: AdmissionWorkflowValidationResult | null;
-}) {
-  if (!validation) {
-    return (
-      <Alert severity="info">Run validation to check whether this draft can be published.</Alert>
-    );
-  }
-  if (validation?.issues.length === 0)
-    return <Alert severity="success">No validation issues found.</Alert>;
-  return validation?.issues.map((issue) => (
-    <Alert
-      key={`${issue.code}-${issue.stageId}-${issue.transitionId}`}
-      severity={issue.severity === 0 ? 'error' : 'warning'}
-      onClick={() => {
-        const targetId = issue.stageId
-          ? `workflow-stage-${issue.stageId}`
-          : issue.transitionId
-            ? `workflow-transition-${issue.transitionId}`
-            : null;
-        if (targetId) {
-          document
-            .getElementById(targetId)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }}
-      sx={{ cursor: issue.stageId || issue.transitionId ? 'pointer' : 'default' }}
-    >
-      <AlertTitle>
-        {issue.severity === 0 ? 'Fix before publishing' : 'Review this warning'}
-      </AlertTitle>
-      {issue.message}
-    </Alert>
-  ));
 }
 
 function WorkflowUsage({ usage, loading }: { usage?: AdmissionWorkflowUsage; loading: boolean }) {

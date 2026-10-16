@@ -14,6 +14,26 @@ vi.mock('../iconify', () => ({
 describe('ThreeDotsActions', () => {
   const theme = createTheme(defaultSettings);
 
+  it('announces loading and prevents repeated direct action clicks', () => {
+    const onClick = vi.fn();
+    render(
+      <ThemeProvider theme={theme}>
+        <ThreeDotsActions
+          showThreeDots={false}
+          directActions={[
+            { id: 'move', label: 'Move inquiry', icon: 'mdi:arrow-right', loading: true, onClick },
+          ]}
+        />
+      </ThemeProvider>
+    );
+    const button = screen.getByRole('button', { name: 'Move inquiry' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('progressbar')).toBeVisible();
+    fireEvent.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
   it('opens contextual actions from the project-standard menu button', async () => {
     render(
       <ThemeProvider theme={theme}>

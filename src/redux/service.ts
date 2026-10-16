@@ -7,7 +7,12 @@ import { signOut } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { tagTypes } from './tagTypes';
-import { getCachedAuthSession, clearCachedAuthSession } from './session-cache';
+import {
+  getCachedAuthSession,
+  clearCachedAuthSession,
+  isAuthSessionCacheCurrent,
+  getAuthSessionCacheRevision,
+} from './session-cache';
 
 // 🔹 Base query (like axios base config)
 // Note: Content-Type is NOT set globally — it's set per-request in baseQueryWithAuth
@@ -21,6 +26,8 @@ const rawBaseQuery = fetchBaseQuery({
 // 🔹 Custom baseQuery (like interceptors)
 const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) => {
   try {
+    const sessionRevision = getAuthSessionCacheRevision();
+    let sessionAccessToken: string | undefined;
     //  Request interceptor logic
     const headers: any = {
       accept: '*/*',
@@ -30,6 +37,18 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     if (typeof window !== 'undefined') {
       const session: any = await getCachedAuthSession();
       const token = session?.accessToken;
+
+      // An account change can invalidate an in-flight session lookup. Do not
+      // continue that request anonymously or attach the replacement account.
+      if (!isAuthSessionCacheCurrent(sessionRevision, token)) {
+        return {
+          error: {
+            status: 'CUSTOM_ERROR',
+            error: 'The authentication session changed. Please retry the request.',
+          },
+        };
+      }
+      sessionAccessToken = token;
 
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -68,7 +87,10 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     if (result.error) {
       const { status } = result.error;
       const data = result.error.data as { errorCode?: string } | undefined;
-      if (status === 403 && data?.errorCode === 'TENANT_INACTIVE') {
+      const isCurrentSession =
+        typeof window === 'undefined' ||
+        isAuthSessionCacheCurrent(sessionRevision, sessionAccessToken);
+      if (isCurrentSession && status === 403 && data?.errorCode === 'TENANT_INACTIVE') {
         clearCachedAuthSession();
         api.dispatch({ type: 'auth/clearUser' });
         api.dispatch({ type: 'globalState/setCurrentYear', payload: {} });
@@ -78,7 +100,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
         await signOut({ callbackUrl: '/login?reason=tenant-inactive' });
       }
 
-      if (status === 401) {
+      if (isCurrentSession && status === 401) {
         clearCachedAuthSession();
         toast.error('Unauthorized access');
         await signOut({ callbackUrl: '/login' });

@@ -10,6 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { isWrongWorkspace, workspaceLanding } from 'src/redux/host-tenants/workspace-landing';
 
 import { SplashScreen } from '../loading-screen';
+import SessionInitializationError from './session-initialization-error';
 
 /**
  * AuthRouteLayout Component
@@ -21,9 +22,14 @@ import { SplashScreen } from '../loading-screen';
 const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   // Get authentication state from Redux store
 
-  const { loading, isAuthenticated, permissionsInitialized, sessionContext, user } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const {
+    loading,
+    isAuthenticated,
+    permissionsInitialized,
+    sessionContext,
+    user,
+    initializationError,
+  } = useSelector((state: RootState) => state.auth);
 
   const session: any = useSession();
   const { data: sessionData, status } = session;
@@ -32,10 +38,12 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
   const verifiedIdentity =
+    status === 'authenticated' &&
     isAuthenticated &&
     permissionsInitialized &&
     Boolean(sessionContext) &&
     user?.sub === sessionData?.profile?.sub &&
+    user?.tenantid === sessionData?.profile?.tenantid &&
     Boolean(sessionData?.accessToken) &&
     !sessionData?.error;
   const wrongWorkspace = sessionContext ? isWrongWorkspace(sessionContext, pathname) : false;
@@ -47,14 +55,22 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const hasUsableSession =
-      sessionData?.profile && sessionData?.accessToken && !sessionData?.error;
+      sessionData?.profile?.sub && sessionData?.accessToken && !sessionData?.error;
 
     if (status !== 'loading' && !hasUsableSession) {
       router.push('/login');
     }
   }, [status, sessionData, router]);
 
-  const hasUsableSession = sessionData?.profile && sessionData?.accessToken && !sessionData?.error;
+  const hasUsableSession =
+    status === 'authenticated' &&
+    sessionData?.profile?.sub &&
+    sessionData?.accessToken &&
+    !sessionData?.error;
+
+  if (hasUsableSession && initializationError && !loading) {
+    return <SessionInitializationError message={initializationError} />;
+  }
 
   if (
     status === 'loading' ||
@@ -62,12 +78,13 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
       (loading ||
         !permissionsInitialized ||
         user?.sub !== sessionData?.profile?.sub ||
+        user?.tenantid !== sessionData?.profile?.tenantid ||
         wrongWorkspace))
   ) {
     return <SplashScreen />;
   }
 
-  if (hasUsableSession && isAuthenticated && sessionContext) {
+  if (hasUsableSession && verifiedIdentity) {
     return children;
   }
 

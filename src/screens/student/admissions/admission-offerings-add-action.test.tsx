@@ -25,8 +25,8 @@ vi.mock('./admission-offering-more-filters', () => ({
   AdmissionOfferingMoreFilters: () => <button type="button">Filters</button>,
 }));
 vi.mock('./admission-offering-table', () => ({
-  AdmissionOfferingTable: ({ loading }: { loading: boolean }) => (
-    <div data-testid="offering-table-loading">{String(loading)}</div>
+  AdmissionOfferingTable: ({ loading, filteredEmpty }: { loading: boolean; filteredEmpty?: boolean }) => (
+    <div data-testid="offering-table-loading" data-filtered-empty={filteredEmpty}>{String(loading)}</div>
   ),
 }));
 vi.mock('./admission-offering-dialog', () => ({
@@ -147,6 +147,14 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.getByText('Bulk offering drawer')).toBeVisible();
+  });
+  it('uses the table empty state for filtered results without a repeated information banner', () => {
+    const state = screenState();
+    state.filters.boardId = 'board-1';
+    useAdmissionOfferingsScreen.mockReturnValue(state);
+    render(<AdmissionOfferingsScreen />);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByTestId('offering-table-loading')).toHaveAttribute('data-filtered-empty', 'true');
   });
   it('leaves table rows intact when only the edit detail request is loading', () => {
     useAdmissionOfferingsScreen.mockReturnValue({

@@ -25,9 +25,12 @@ const hooks = vi.hoisted(() => ({
   },
   create: vi.fn(),
   infoToast: vi.fn(),
+  successToast: vi.fn(),
+  errorToast: vi.fn(),
   close: vi.fn(),
   setupQuery: vi.fn(),
   optionsQuery: vi.fn(),
+  tableProps: vi.fn(),
   options: {
     currentData: [] as AdmissionPublicInquiryLinkOption[] | undefined,
     isLoading: false,
@@ -35,7 +38,9 @@ const hooks = vi.hoisted(() => ({
     isError: false,
     refetch: vi.fn(),
   },
-  links: [] as AdmissionPublicInquiryLink[],
+  links: [] as AdmissionPublicInquiryLink[] | undefined,
+  linksError: false,
+  linksRefetch: vi.fn(),
   revoke: vi.fn(),
   setForm: vi.fn(),
   revokeLoading: false,
@@ -54,7 +59,12 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
     hooks.setupQuery(...args);
     return hooks.setups;
   },
-  useGetAdmissionPublicInquiryLinksQuery: () => ({ data: hooks.links, isLoading: false }),
+  useGetAdmissionPublicInquiryLinksQuery: () => ({
+    data: hooks.links,
+    isLoading: false,
+    isError: hooks.linksError,
+    refetch: hooks.linksRefetch,
+  }),
   useGetAdmissionPublicInquiryLinkOptionsQuery: (...args: unknown[]) => {
     hooks.optionsQuery(...args);
     return hooks.options;
@@ -87,26 +97,30 @@ vi.mock('src/components/customizabaleTable', () => ({
     columns,
     handleRowClick,
     rowProps,
-  }: ComponentProps<typeof CustomizableTable>) => (
-    <table aria-label="Public admission inquiry links">
-      <tbody>
-        {data.map((row, index) => {
-          const { sx: _sx, ...props } = rowProps?.(row, index) ?? {};
-          return (
-            <tr key={String(row.id)} {...props} onClick={() => handleRowClick?.(row, index)}>
-              {columns.map((column) => (
-                <td key={column.id}>
-                  {column.render
-                    ? column.render(row[column.id], row)
-                    : String(row[column.id] ?? '')}
-                </td>
-              ))}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  ),
+    ...tableProps
+  }: ComponentProps<typeof CustomizableTable>) => {
+    hooks.tableProps({ ...tableProps, data });
+    return (
+      <table aria-label="Public admission inquiry links">
+        <tbody>
+          {data.map((row, index) => {
+            const { sx: _sx, ...props } = rowProps?.(row, index) ?? {};
+            return (
+              <tr key={String(row.id)} {...props} onClick={() => handleRowClick?.(row, index)}>
+                {columns.map((column) => (
+                  <td key={column.id}>
+                    {column.render
+                      ? column.render(row[column.id], row)
+                      : String(row[column.id] ?? '')}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  },
 }));
 vi.mock('src/components/customDialog', () => ({
   default: ({
@@ -135,7 +149,11 @@ vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => 
 }));
 vi.mock('@mui/x-date-pickers', () => ({ DateTimePicker: () => null }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), info: hooks.infoToast },
+  shikshaMitraToast: {
+    success: hooks.successToast,
+    info: hooks.infoToast,
+    error: hooks.errorToast,
+  },
 }));
 
 const activeSetup = {
@@ -173,6 +191,7 @@ describe('create public inquiry link', () => {
     hooks.setups.isFetching = false;
     hooks.setups.isError = false;
     hooks.links = [];
+    hooks.linksError = false;
     hooks.options.currentData = [
       { counsellorAssignmentProfileId: 'routing-profile-1', inquiryFormDefinitionId: 'form-1' },
     ];
@@ -184,7 +203,9 @@ describe('create public inquiry link', () => {
     hooks.forms.isFetching = false;
     hooks.forms.isError = false;
     hooks.revokeLoading = false;
-    hooks.create.mockReturnValue({ unwrap: () => Promise.resolve({ token: 'fixture-token' }) });
+    hooks.create.mockReturnValue({
+      unwrap: () => Promise.resolve({ ...activeLink, name: 'School fair', token: 'fixture-token' }),
+    });
   });
 
   it('requests fresh setup options each time the drawer opens', () => {
@@ -418,7 +439,7 @@ describe('create public inquiry link', () => {
       'true'
     );
     expect(screen.getByText('No setup — manual assignment')).toBeVisible();
-    expect(screen.getByText(/Inquiries from this link stay Unassigned/)).toBeVisible();
+    expect(screen.queryByText(/Inquiries from this link stay Unassigned/)).not.toBeInTheDocument();
     expect(hooks.create).not.toHaveBeenCalled();
   });
 
@@ -470,6 +491,113 @@ describe('create public inquiry link', () => {
       })
     );
     expect(hooks.close).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the newly created address in its row action before the refreshed list arrives', async () => {
+    hooks.setups.data = [activeSetup];
+    hooks.links = [{ ...activeLink, id: 'older-link', name: 'Existing link' }];
+    const user = userEvent.setup();
+    const clipboard = vi.spyOn(navigator.clipboard, 'writeText');
+    const { rerender, unmount } = renderDrawer();
+    await fillLink(user);
+    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+
+    const createdRow = await screen.findByRole('row', { name: /School fair/ });
+    expect(hooks.tableProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 0,
+        searchTerm: '',
+        filters: [],
+        sorts: [],
+        data: [
+          expect.objectContaining({ id: activeLink.id }),
+          expect.objectContaining({ id: 'older-link' }),
+        ],
+      })
+    );
+    expect(hooks.tableProps.mock.lastCall?.[0].data[0]).not.toHaveProperty('token');
+    const copy = within(createdRow).getByRole('button', {
+      name: 'Copy inquiry link for School fair',
+    });
+    expect(copy).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Copy inquiry link for Existing link' })
+    ).toBeDisabled();
+    expect(screen.queryByText(/Copy this link now/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'New inquiry link' })).not.toBeInTheDocument();
+    await user.click(copy);
+    expect(clipboard).toHaveBeenCalledWith(
+      `${window.location.origin}/admission-inquiry/fixture-token`
+    );
+    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Inquiry link copied.' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    hooks.links = [{ ...activeLink, name: 'School fair' }];
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+    expect(screen.getAllByRole('row', { name: /School fair/ })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Copy inquiry link for School fair' })).toBeEnabled();
+    unmount();
+    renderList();
+    expect(
+      screen.getByRole('button', { name: 'Copy inquiry link for School fair' })
+    ).toBeDisabled();
+  });
+
+  it('keeps a newly created row copyable when the initial list request failed', async () => {
+    hooks.setups.data = [activeSetup];
+    hooks.links = undefined;
+    hooks.linksError = true;
+    const user = userEvent.setup();
+    const clipboard = vi.spyOn(navigator.clipboard, 'writeText');
+    const { rerender } = renderDrawer();
+    await fillLink(user);
+    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+
+    const copy = await screen.findByRole('button', { name: 'Copy inquiry link for School fair' });
+    expect(screen.getByText('Unable to load inquiry links.')).toBeVisible();
+    expect(copy).toBeEnabled();
+    await user.click(copy);
+    expect(clipboard).toHaveBeenCalledWith(
+      `${window.location.origin}/admission-inquiry/fixture-token`
+    );
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(hooks.linksRefetch).toHaveBeenCalledOnce();
+    expect(copy).toBeEnabled();
+  });
+
+  it('keeps row copy retryable after a clipboard failure', async () => {
+    hooks.setups.data = [activeSetup];
+    const user = userEvent.setup();
+    const clipboard = vi
+      .spyOn(navigator.clipboard, 'writeText')
+      .mockRejectedValueOnce(new Error('denied'));
+    const { rerender } = renderDrawer();
+    await fillLink(user);
+    await user.click(screen.getByRole('button', { name: 'Create link' }));
+    await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
+    rerender(
+      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
+    );
+
+    const copy = await screen.findByRole('button', { name: 'Copy inquiry link for School fair' });
+    await user.click(copy);
+    expect(hooks.errorToast).toHaveBeenCalledWith({
+      message: 'Unable to copy the link. Allow clipboard access and try again.',
+    });
+    expect(copy).toBeEnabled();
+    await user.click(copy);
+    expect(clipboard).toHaveBeenCalledTimes(2);
+    expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Inquiry link copied.' });
   });
 
   it('explains counsellor eligibility failures and preserves the form for correction', async () => {
@@ -567,6 +695,7 @@ describe('create public inquiry link', () => {
 
   it('uses the blue heading tooltip and removes hints without removing validation', async () => {
     renderDrawer();
+    expect(screen.getByRole('dialog', { name: 'Create Inquiry Link' })).toBeVisible();
     const user = userEvent.setup();
     const info = screen.getByRole('button', { name: 'Create inquiry link information' });
     expect(info).toHaveClass('MuiIconButton-colorInfo');
@@ -574,6 +703,10 @@ describe('create public inquiry link', () => {
     expect(screen.queryByText(/This exact form will appear/)).not.toBeInTheDocument();
     expect(screen.queryByText(/New inquiries enter/)).not.toBeInTheDocument();
     expect(screen.queryByText(/This link uses the setup/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Forms linked to active Inquiry or Both Offerings/)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Inquiries are automatically routed/)).not.toBeInTheDocument();
 
     await user.hover(info);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
@@ -600,7 +733,9 @@ describe('create public inquiry link', () => {
       await user.click(screen.getByRole('option', { name: 'Regular admission' }));
       await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
       await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
-      expect(screen.getByText(/Inquiries from this link stay Unassigned/)).toBeVisible();
+      expect(
+        screen.queryByText(/Inquiries from this link stay Unassigned/)
+      ).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'Create link' }));
       await waitFor(() =>
         expect(hooks.create).toHaveBeenCalledWith(
@@ -659,6 +794,7 @@ describe('public inquiry link details and actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     hooks.links = [activeLink];
+    hooks.linksError = false;
     hooks.formLoading = false;
     hooks.revokeLoading = false;
   });
@@ -707,12 +843,15 @@ describe('public inquiry link details and actions', () => {
     expect(hooks.revoke).not.toHaveBeenCalled();
   });
 
-  it('preserves action loading guards', () => {
+  it('preserves action loading guards', async () => {
     hooks.formLoading = true;
     hooks.revokeLoading = true;
     renderList();
     expect(screen.getByTestId('table-action-form')).toBeDisabled();
-    expect(screen.getByTestId('table-action-revoke')).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole('button', { name: `More actions for ${activeLink.name}` })
+    );
+    expect(screen.getByTestId('menu-action-revoke')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('keeps revoked links viewable while hiding unavailable actions', async () => {

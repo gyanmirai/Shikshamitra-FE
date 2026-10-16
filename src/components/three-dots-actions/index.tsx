@@ -121,7 +121,9 @@ const ThreeDotsActions = ({
                 event.stopPropagation();
                 action.onClick(event);
               }}
-              disabled={action.disabled}
+              disabled={action.disabled || action.loading}
+              loading={action.loading}
+              aria-busy={action.loading || undefined}
               sx={COMPACT_ACTION_BUTTON_SX}
             >
               <Iconify

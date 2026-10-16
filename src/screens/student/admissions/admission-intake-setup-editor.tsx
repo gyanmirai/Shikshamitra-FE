@@ -157,6 +157,17 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const formikRef = useRef<FormikProps<AdmissionIntakeSetupValues> | null>(null);
   const pendingValues = useRef<AdmissionIntakeSetupValues | null>(null);
+  const routingGuidanceShown = useRef(false);
+  const changeStep = (nextStep: number) => {
+    if (nextStep === 1 && !routingGuidanceShown.current) {
+      shikshaMitraToast.info({
+        message:
+          'New inquiries go to the eligible counsellor with the fewest active cases. That counsellor remains the journey owner through admission and onboarding.',
+      });
+      routingGuidanceShown.current = true;
+    }
+    setStep(nextStep);
+  };
   const counsellors = useGetAdmissionIntakeCounsellorsQuery(
     { counsellorOnly: true },
     { refetchOnMountOrArgChange: true }
@@ -340,7 +351,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                 validateForwardStepClick
                 isStepClickable={(index) => index <= step}
                 completedSteps={Array.from({ length: step }, (_, index) => index)}
-                onStepClick={(index) => setStep(index)}
+                onStepClick={changeStep}
                 nextButtonLabel="Next"
                 finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
                 disableSubmit={Boolean(
@@ -352,10 +363,10 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                 )}
                 saveAndNextButtonProps={{ loading: saving }}
                 onCancel={requestClose}
-                handleBack={() => setStep((current) => Math.max(0, current - 1))}
+                handleBack={() => changeStep(Math.max(0, step - 1))}
                 handleNext={(isLastStep, values: AdmissionIntakeSetupValues) => {
                   if (isLastStep) finish(values);
-                  else setStep((current) => Math.min(2, current + 1));
+                  else changeStep(Math.min(2, step + 1));
                 }}
                 renderItem={({ formik, activeStep }) => {
                   const form = formik as FormikProps<AdmissionIntakeSetupValues>;
@@ -382,7 +393,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                           usage={usage.data}
                           usageError={usage.isError}
                           onRetryUsage={() => usage.refetch()}
-                          onEdit={setStep}
+                          onEdit={changeStep}
                           saving={saving}
                         />
                       )}
@@ -604,10 +615,6 @@ function CounsellorRoutingStep({
       descriptionTooltip="Choose who may own cases and who receives overflow when everyone reaches capacity. Capacity includes open inquiries, applications, and onboarding cases."
     >
       <Stack spacing={2}>
-        <AdmissionIntakeNotice severity="info">
-          New inquiries go to the eligible counsellor with the fewest active cases. That counsellor
-          remains the journey owner through admission and onboarding.
-        </AdmissionIntakeNotice>
         {loadError && (
           <Alert
             severity="error"
@@ -769,6 +776,14 @@ function ReviewStep({
         </AdmissionIntakeNotice>
       )}
       {editing && usage && <UsageNames usage={usage} />}
+      <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+        <Typography variant="body2" color="text.secondary">
+          Setup name
+        </Typography>
+        <Typography variant="subtitle1" component="h2">
+          {values.name}
+        </Typography>
+      </Box>
       <Grid container spacing={1} alignItems="stretch">
         <Grid
           size={{ xs: 12, md: 6 }}
@@ -777,7 +792,7 @@ function ReviewStep({
           <FormSectionCard
             icon="mdi:clipboard-text-outline"
             title="Inquiry handling"
-            titleTypographyProps={sectionTitleProps}
+            titleTypographyProps={{ ...sectionTitleProps, id: 'intake-review-inquiry' }}
             action={
               <Button
                 size="small"
@@ -791,8 +806,7 @@ function ReviewStep({
               </Button>
             }
           >
-            <Stack spacing={1}>
-              <SummaryRow label="Setup name" value={values.name} />
+            <Stack spacing={1.5}>
               <SummaryRow
                 label="First contact"
                 value={
@@ -811,9 +825,11 @@ function ReviewStep({
               />
               <SummaryRow
                 label="Follow-up"
-                value={`Every ${values.inquiryRules.followUpDueInDays} days · Up to ${
-                  values.inquiryRules.maxOpenFollowUps
-                } open`}
+                value={`Every ${values.inquiryRules.followUpDueInDays} days`}
+              />
+              <SummaryRow
+                label="Open follow-ups"
+                value={`Up to ${values.inquiryRules.maxOpenFollowUps}`}
               />
               <Divider />
               <Typography variant="body2" color="text.secondary">
@@ -846,7 +862,7 @@ function ReviewStep({
           <FormSectionCard
             icon="mdi:account-switch-outline"
             title="Counsellor routing"
-            titleTypographyProps={sectionTitleProps}
+            titleTypographyProps={{ ...sectionTitleProps, id: 'intake-review-routing' }}
             action={
               <Button
                 size="small"
@@ -860,7 +876,7 @@ function ReviewStep({
               </Button>
             }
           >
-            <Stack spacing={1}>
+            <Stack spacing={1.5}>
               <Typography variant="body2" color="text.secondary">
                 Counsellor pool
               </Typography>
@@ -874,6 +890,11 @@ function ReviewStep({
                       variant="soft"
                       color="default"
                       label={person ? person.name || person.userName : 'Unavailable counsellor'}
+                      sx={{
+                        maxWidth: 1,
+                        height: 'auto',
+                        '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
+                      }}
                     />
                   );
                 })}
@@ -897,16 +918,11 @@ function ReviewStep({
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      spacing={0.5}
-      justifyContent="space-between"
-      sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
-    >
-      <Typography variant="body2" color="text.secondary">
+    <Stack component="dl" spacing={0.5} sx={{ m: 0, minWidth: 0, overflowWrap: 'anywhere' }}>
+      <Typography component="dt" variant="body2" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} textAlign={{ sm: 'right' }}>
+      <Typography component="dd" variant="body2" fontWeight={600} sx={{ m: 0 }}>
         {value}
       </Typography>
     </Stack>

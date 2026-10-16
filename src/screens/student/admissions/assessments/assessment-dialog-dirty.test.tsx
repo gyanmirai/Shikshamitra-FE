@@ -63,6 +63,14 @@ afterEach(() => {
 
 // Keep keyboard and dialog lifecycle checks bounded without timing out mid-interaction.
 describe('assessment dialog dirty-state interactions', { timeout: 15000 }, () => {
+it('keeps assessment context in the accessible title tooltip instead of a repeated subtitle', async () => {
+  setup('session');
+  expect(screen.getByRole('dialog', { name: 'Create Assessment Session' })).toBeVisible();
+  expect(screen.queryByText(/Grade 6/)).not.toBeInTheDocument();
+  const info = screen.getByRole('button', { name: 'Create Assessment Session information' });
+  await userEvent.hover(info);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent('Set the session time, location, and capacity for Grade 6');
+});
 it.each(['session', 'action'] as const)('closing a clean %s dialog preserves the parent page guard', async (kind) => {
   const confirm = vi.fn().mockReturnValue(true);
   vi.stubGlobal('confirm', confirm);

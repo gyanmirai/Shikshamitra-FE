@@ -26,6 +26,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { SettingsDrawer, SettingsSectionCard } from './onboarding-settings-drawer';
 import { useOnboardingAcademicStructure } from './use-onboarding-academic-structure';
@@ -91,7 +92,15 @@ const grSchema = Yup.object({
       }
     ),
 });
-const rollSchema = Yup.object(academicSchema);
+const rollSchema = Yup.object({
+  ...academicSchema,
+  grouping: Yup.string().oneOf(['mixed', 'boys-first', 'girls-first']),
+  nameFormat: Yup.string().oneOf(['first-name-first', 'surname-first']),
+  arrangeBy: Yup.string()
+    .oneOf(['studentName', 'grNumber', 'admissionDate', 'admissionNumber'])
+    .required(),
+  arrangeType: Yup.string().oneOf(['ascending', 'descending']).required(),
+});
 
 function academicTableValues(configuration: Configuration, boards: Board[]) {
   const options = buildOnboardingAcademicStructureOptions(boards);
@@ -207,6 +216,24 @@ function NumberingRulesScreen({
             numberingScope: 'class-division',
             requireApproval: false,
             preserveExisting: true,
+            assignmentTiming: 'after-division',
+            midYearHandling: 'next-available',
+            arrangeBy:
+              (values as RollNumberConfiguration).orderingRules?.[0]?.field ??
+              (values as RollNumberConfiguration).arrangeBy,
+            arrangeType:
+              (values as RollNumberConfiguration).orderingRules?.[0]?.direction ??
+              (values as RollNumberConfiguration).arrangeType,
+            orderingRules: [
+              {
+                field:
+                  (values as RollNumberConfiguration).orderingRules?.[0]?.field ??
+                  (values as RollNumberConfiguration).arrangeBy,
+                direction:
+                  (values as RollNumberConfiguration).orderingRules?.[0]?.direction ??
+                  (values as RollNumberConfiguration).arrangeType,
+              },
+            ],
             allowIndividualLocks: true,
           };
       try {
@@ -484,20 +511,62 @@ function NumberingRulesScreen({
                 formik.setStatus(undefined);
               }}
             />
-            {!isGr && (
-              <FormControlLabel
-                label="Require reason for Roll number changes"
-                control={
-                  <Switch
-                    size="small"
-                    name="requireChangeReason"
-                    checked={roll.requireChangeReason}
-                    onChange={formik.handleChange}
-                  />
-                }
-              />
-            )}
           </SettingsSectionCard>
+          {!isGr && (
+            <>
+              <SettingsSectionCard
+                icon="mdi:account-group-outline"
+                title="Student Ordering"
+                description=""
+                descriptionDisplay="tooltip"
+              >
+                <RollOrderingFields
+                  value={roll}
+                  errors={errors}
+                  touched={touched}
+                  onBlur={(field) => {
+                    formik.setFieldTouched(field, true);
+                  }}
+                  onChange={(values) => {
+                    formik.setValues({ ...formik.values, ...values }, true);
+                    formik.setStatus(undefined);
+                  }}
+                />
+              </SettingsSectionCard>
+              <SettingsSectionCard
+                icon="mdi:cog-outline"
+                title="Change Control"
+                description=""
+                descriptionDisplay="tooltip"
+              >
+                <FormControlLabel
+                  label="Require reason for roll number changes"
+                  control={
+                    <Switch
+                      size="small"
+                      name="requireChangeReason"
+                      checked={roll.requireChangeReason}
+                      onChange={formik.handleChange}
+                    />
+                  }
+                />
+                <Stack divider={<Box sx={{ borderTop: 1, borderColor: 'divider' }} />} spacing={1}>
+                  <Stack direction="row" justifyContent="space-between" spacing={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      Sequence
+                    </Typography>
+                    <Typography variant="body2">Each division starts at 1</Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" spacing={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      New students
+                    </Typography>
+                    <Typography variant="body2">Continue after last issued number</Typography>
+                  </Stack>
+                </Stack>
+              </SettingsSectionCard>
+            </>
+          )}
           {isGr ? (
             <>
               <SettingsSectionCard

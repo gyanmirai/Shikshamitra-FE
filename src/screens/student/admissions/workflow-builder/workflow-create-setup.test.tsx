@@ -10,6 +10,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { vi, it, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { shikshaMitraToast } from 'src/components/toast';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { act, render, screen, waitFor, fireEvent, renderHook } from '@testing-library/react';
 
@@ -20,6 +21,10 @@ import { useWorkflowBuilderCommands } from './hooks/use-workflow-builder-command
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+}));
 
 vi.mock('../use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
 vi.mock('next-auth/react', () => ({ getSession: vi.fn().mockResolvedValue(null) }));
@@ -62,6 +67,7 @@ const makeStore = () =>
   });
 
 afterEach(() => {
+  vi.clearAllMocks();
   mswServer.resetHandlers();
 });
 
@@ -114,58 +120,82 @@ it('returns to saved workflow details through its completed step and locks it wh
   expect(screen.getByRole('button', { name: 'Back to workflow details' })).toBeDisabled();
 });
 
-it('saves the current journey, validates, reloads its stamp and publishes immediately once', async () => {
-  const store = makeStore();
-  const requests: string[] = [];
-  let saved = workflow;
-  mswServer.use(
-    http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) => {
-      requests.push('save');
-      saved = {
-        ...workflow,
-        ...((await request.json()) as object),
-        concurrencyStamp: 'saved-stamp',
-      };
-      return HttpResponse.json({ data: saved });
-    }),
-    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () => {
-      requests.push('validate');
-      saved = { ...saved, status: 3, concurrencyStamp: 'validated-stamp' };
-      return HttpResponse.json({ data: { isValid: true, issues: [] } });
-    }),
-    http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () => {
-      requests.push('refresh');
-      return HttpResponse.json({ data: saved });
-    }),
-    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/publish', ({ request }) => {
-      requests.push('publish');
-      expect(new URL(request.url).searchParams.get('concurrencyStamp')).toBe('validated-stamp');
-      expect(new URL(request.url).searchParams.has('effectiveAt')).toBe(false);
-      return HttpResponse.json({ data: { ...saved, status: 1 } });
-    })
-  );
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
-  const { result } = renderHook(
-    () => {
-      const draft = useWorkflowBuilderDraft(workflow, null);
-      return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
-    },
-    { wrapper }
-  );
-  act(() => result.current.draft.markDirty());
-  await act(async () => {
-    const first = result.current.commands.publish();
-    const duplicate = await result.current.commands.publish();
-    expect(duplicate).toBeNull();
-    expect((await first)?.status).toBe(1);
-  });
-  expect(requests.slice(0, 4)).toEqual(['save', 'validate', 'refresh', 'publish']);
-  expect(requests.filter((request) => request === 'publish')).toHaveLength(1);
-  expect(result.current.draft.dirty).toBe(false);
-  store.dispatch(api.util.resetApiState());
-});
+it.each([
+  { issues: [] },
+  { issues: [{ code: 'OptionalStage', message: 'Review the optional stage.', severity: 1 }] },
+])(
+  'saves, validates and publishes immediately once with one final toast: $issues',
+  async ({ issues }) => {
+    const store = makeStore();
+    const requests: string[] = [];
+    let saved = workflow;
+    mswServer.use(
+      http.put('*/api/student/enrollment/admissions/workflows/workflow-1', async ({ request }) => {
+        requests.push('save');
+        saved = {
+          ...workflow,
+          ...((await request.json()) as object),
+          concurrencyStamp: 'saved-stamp',
+        };
+        return HttpResponse.json({ data: saved });
+      }),
+      http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () => {
+        requests.push('validate');
+        saved = { ...saved, status: 3, concurrencyStamp: 'validated-stamp' };
+        return HttpResponse.json({ data: { isValid: true, issues } });
+      }),
+      http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () => {
+        requests.push('refresh');
+        return HttpResponse.json({ data: saved });
+      }),
+      http.post(
+        '*/api/student/enrollment/admissions/workflows/workflow-1/publish',
+        ({ request }) => {
+          requests.push('publish');
+          expect(new URL(request.url).searchParams.get('concurrencyStamp')).toBe('validated-stamp');
+          expect(new URL(request.url).searchParams.has('effectiveAt')).toBe(false);
+          return HttpResponse.json({ data: { ...saved, status: 1 } });
+        }
+      )
+    );
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    );
+    const { result } = renderHook(
+      () => {
+        const draft = useWorkflowBuilderDraft(workflow, null);
+        return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+      },
+      { wrapper }
+    );
+    act(() => result.current.draft.markDirty());
+    await act(async () => {
+      const first = result.current.commands.publish();
+      const duplicate = await result.current.commands.publish();
+      expect(duplicate).toBeNull();
+      expect((await first)?.status).toBe(1);
+    });
+    expect(requests.slice(0, 4)).toEqual(['save', 'validate', 'refresh', 'publish']);
+    expect(requests.filter((request) => request === 'publish')).toHaveLength(1);
+    expect(result.current.draft.dirty).toBe(false);
+    expect(result.current.draft.sidePanel).toBeNull();
+    if (issues.length) {
+      expect(shikshaMitraToast.warning).toHaveBeenCalledOnce();
+      expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Workflow published with warnings:\nReview the optional stage.',
+        })
+      );
+      expect(shikshaMitraToast.success).not.toHaveBeenCalled();
+    } else {
+      expect(shikshaMitraToast.success).toHaveBeenCalledExactlyOnceWith({
+        message: 'Workflow published',
+      });
+      expect(shikshaMitraToast.warning).not.toHaveBeenCalled();
+    }
+    store.dispatch(api.util.resetApiState());
+  }
+);
 
 it('keeps an invalid workflow in the builder without publishing', async () => {
   const store = makeStore();
@@ -196,7 +226,7 @@ it('keeps an invalid workflow in the builder without publishing', async () => {
   );
   await act(async () => expect(await result.current.commands.publish()).toBeNull());
   expect(publish).not.toHaveBeenCalled();
-  expect(result.current.draft.sidePanel).toBe('validation');
+  expect(result.current.draft.sidePanel).toBeNull();
   store.dispatch(api.util.resetApiState());
 });
 
@@ -356,5 +386,56 @@ it('retains the original graph and stamp when saving a replacement fails', async
   expect(result.current.draft.stages).toBe(previousStages);
   expect(result.current.draft.loadedStamp).toBe('stamp-1');
   expect(result.current.commands.getCurrentDetails()?.name).toBe('Fresh admission');
+  store.dispatch(api.util.resetApiState());
+});
+
+it('reports all publishing validation issues in one toast without opening a panel or publishing', async () => {
+  const store = makeStore();
+  const publishRequest = vi.fn();
+  mswServer.use(
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/validate', () =>
+      HttpResponse.json({
+        data: {
+          isValid: false,
+          issues: [
+            {
+              code: 'stage-required',
+              message: 'Add at least one stage before publishing.',
+              severity: 0,
+            },
+            { code: 'final-required', message: 'Choose a final stage.', severity: 0 },
+          ],
+        },
+      })
+    ),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/publish', () => {
+      publishRequest();
+      return HttpResponse.json({ data: workflow });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(
+    () => {
+      const draft = useWorkflowBuilderDraft({ ...workflow, stages: [] }, null);
+      return { draft, commands: useWorkflowBuilderCommands(workflow.id, workflow, draft) };
+    },
+    { wrapper }
+  );
+  await act(async () => {
+    await result.current.commands.publish();
+  });
+  expect(publishRequest).not.toHaveBeenCalled();
+  expect(result.current.draft.sidePanel).toBeNull();
+  expect(shikshaMitraToast.warning).toHaveBeenCalledOnce();
+  expect(shikshaMitraToast.warning).toHaveBeenCalledWith(
+    expect.objectContaining({
+      message:
+        'Fix before publishing:\nAdd at least one stage before publishing.\nChoose a final stage.',
+    })
+  );
+  expect(shikshaMitraToast.success).not.toHaveBeenCalled();
+  expect(result.current.commands.publishState.isLoading).toBe(false);
   store.dispatch(api.util.resetApiState());
 });

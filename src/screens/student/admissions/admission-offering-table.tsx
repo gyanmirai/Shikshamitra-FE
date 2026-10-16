@@ -3,8 +3,8 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
-import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
+import { Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { buildAdmissionOfferingColumns } from './admission-offering-columns';
@@ -18,6 +18,8 @@ type Props = AdmissionOfferingActionProps & {
   page: number;
   rowsPerPage: number;
   search: string;
+  filteredEmpty?: boolean;
+  onClearFilters?: () => void;
   onSearch: (value: string) => void;
   onSort: (value: string) => void;
   onPagination: (page: number, rowsPerPage: number) => void;
@@ -38,6 +40,8 @@ export function AdmissionOfferingTable(props: Props) {
     page,
     rowsPerPage,
     search,
+    filteredEmpty = false,
+    onClearFilters,
     onSearch,
     onSort,
     onPagination,
@@ -139,9 +143,18 @@ export function AdmissionOfferingTable(props: Props) {
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
       noDataText={
-        <Box component="span" sx={{ color: 'text.secondary' }}>
-          No admission offering has been configured.
-        </Box>
+        <Stack spacing={1} alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            {filteredEmpty
+              ? 'No admission offerings match the selected filters.'
+              : 'No admission offering has been configured.'}
+          </Typography>
+          {filteredEmpty && onClearFilters && (
+            <Button size="small" color="inherit" onClick={onClearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </Stack>
       }
     />
   );

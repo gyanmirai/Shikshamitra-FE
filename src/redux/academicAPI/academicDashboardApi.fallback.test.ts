@@ -12,6 +12,8 @@ vi.hoisted(() => {
 vi.mock('src/redux/session-cache', () => ({
   getCachedAuthSession: vi.fn().mockResolvedValue(null),
   clearCachedAuthSession: vi.fn(),
+  getAuthSessionCacheRevision: () => 0,
+  isAuthSessionCacheCurrent: () => true,
 }));
 
 const createDashboardStore = () =>

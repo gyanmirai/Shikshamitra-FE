@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { signOut, useSession } from 'next-auth/react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useSelectedLayoutSegments } from 'next/navigation';
 
 import { api } from '../service';
 import { clearCachedAuthSession } from '../session-cache';
@@ -10,7 +11,7 @@ import { openLibraryApi } from '../library/LibraryDataSearch';
 import { loadUser, clearUser, getEmployee } from './authSlice';
 import { setCurrentYear, setCurrentBoard, setCurrentMedium } from '../globalState/globalSlice';
 
-import type { AppDispatch } from '../store';
+import type { RootState, AppDispatch } from '../store';
 
 type ApplicationSession = {
   profile?: { sub?: string; tenantid?: string; role?: unknown };
@@ -28,14 +29,36 @@ export default function LoadSession() {
   const dispatch = useDispatch<AppDispatch>();
   const { data, status } = useSession();
   const session = data as ApplicationSession | null;
+  const sessionRef = useRef(session);
+  const isPublicRoute = useSelectedLayoutSegments().includes('(public-route)');
+  const initializationVersion = useSelector((state: RootState) => state.auth.initializationVersion);
   const loadedIdentity = useRef<string | null>(null);
+  const loadedVersion = useRef<number | null>(null);
   const invalidatedToken = useRef<string | null>(null);
+  const previousToken = useRef<string | undefined>(undefined);
+  const userId = session?.profile?.sub;
+  const tenantId = session?.profile?.tenantid;
+  const accessToken = session?.accessToken;
+  const sessionError = session?.error;
+  const needsEmployee = shouldLoadEmployee(session?.profile?.role);
 
   useEffect(() => {
-    const userId = session?.profile?.sub;
-    const accessToken = session?.accessToken;
-    const identity = userId ? `${userId}:${session?.profile?.tenantid ?? 'host'}` : null;
-    const usable = status === 'authenticated' && Boolean(userId && accessToken) && !session?.error;
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    const currentSession = sessionRef.current;
+    const identity = userId ? `${userId}:${tenantId ?? 'host'}` : null;
+    const usable = status === 'authenticated' && Boolean(userId && accessToken) && !sessionError;
+    let active = true;
+    let contextRequest: ReturnType<ReturnType<typeof loadUser>> | undefined;
+    let employeeRequest: ReturnType<ReturnType<typeof getEmployee>> | undefined;
+    // A late response from a previous token/identity/route must not invalidate this session.
+    const isCurrent = () =>
+      active &&
+      sessionRef.current?.accessToken === accessToken &&
+      sessionRef.current?.profile?.sub === userId &&
+      sessionRef.current?.profile?.tenantid === tenantId;
     const clear = () => {
       clearCachedAuthSession();
       dispatch(clearUser());
@@ -46,53 +69,73 @@ export default function LoadSession() {
       dispatch(openLibraryApi.util.resetApiState());
       loadedIdentity.current = null;
     };
-    const expire = () => {
+    const expire = (inactiveTenant = false) => {
       const key = accessToken || 'missing-access-token';
       if (invalidatedToken.current === key) return;
       invalidatedToken.current = key;
       clearCachedAuthSession();
-      signOut({ callbackUrl: '/login' });
+      signOut({ callbackUrl: inactiveTenant ? '/login?reason=tenant-inactive' : '/login' });
     };
-    if (usable && identity && loadedIdentity.current !== identity) {
-      clear();
-      loadedIdentity.current = identity;
-      const request = dispatch(loadUser(session));
-      request
-        .unwrap()
-        .then(async (result) => {
-          if (loadedIdentity.current !== identity) return;
-          invalidatedToken.current = null;
-          if (
-            result.sessionContext.accountMode === 'tenant' &&
-            shouldLoadEmployee(session?.profile?.role)
-          ) {
-            try {
-              await dispatch(getEmployee(session)).unwrap();
-            } catch (failure) {
-              if (loadedIdentity.current !== identity) return;
-              if (
-                typeof failure === 'object' &&
-                failure !== null &&
-                'status' in failure &&
-                failure.status === 401
-              ) {
-                clear();
-                expire();
-              }
-            }
-          }
-        })
-        .catch(() => {
-          if (loadedIdentity.current === identity) {
-            clear();
-            expire();
-          }
-        });
-    } else if (status === 'unauthenticated' || (status === 'authenticated' && !usable)) {
-      clear();
-      if (status === 'authenticated') expire();
-      else invalidatedToken.current = null;
+    const handleFailure = (failure: unknown) => {
+      if (!isCurrent() || typeof failure !== 'object' || failure === null) return;
+      const { status: failureStatus, errorCode } = failure as {
+        status?: number;
+        errorCode?: string;
+      };
+      const inactiveTenant = failureStatus === 403 && errorCode === 'TENANT_INACTIVE';
+      if (failureStatus === 401 || inactiveTenant) {
+        clear();
+        expire(inactiveTenant);
+      }
+      // Other bootstrap failures stay fail-closed in Redux, with an explicit retry in route guards.
+    };
+    const loadEmployee = () => {
+      if (!tenantId || !needsEmployee) return;
+      employeeRequest = dispatch(getEmployee(currentSession));
+      employeeRequest.unwrap().catch(handleFailure);
+    };
+
+    if (previousToken.current !== accessToken) {
+      clearCachedAuthSession();
+      previousToken.current = accessToken;
     }
-  }, [dispatch, session, status]);
+    if (status === 'unauthenticated' || (status === 'authenticated' && !usable)) {
+      clear();
+      if (status === 'authenticated' && !isPublicRoute) expire();
+      else invalidatedToken.current = null;
+    } else if (usable && identity && !isPublicRoute) {
+      if (loadedIdentity.current !== identity || loadedVersion.current !== initializationVersion) {
+        clear();
+        contextRequest = dispatch(loadUser(currentSession));
+        contextRequest
+          .unwrap()
+          .then((result) => {
+            if (!isCurrent()) return;
+            loadedIdentity.current = identity;
+            loadedVersion.current = initializationVersion;
+            invalidatedToken.current = null;
+            if (result.sessionContext.accountMode === 'tenant') loadEmployee();
+          })
+          .catch(handleFailure);
+      } else {
+        loadEmployee();
+      }
+    }
+    return () => {
+      active = false;
+      contextRequest?.abort();
+      employeeRequest?.abort();
+    };
+  }, [
+    dispatch,
+    status,
+    userId,
+    tenantId,
+    accessToken,
+    sessionError,
+    needsEmployee,
+    isPublicRoute,
+    initializationVersion,
+  ]);
   return null;
 }

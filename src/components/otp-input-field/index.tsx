@@ -64,6 +64,7 @@ export interface OtpInputFieldProps {
   value: string;
   maxLength: number;
   pattern?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
   /** Insert a separator every N chars (e.g. 4 for Aadhaar groups) */
   groupBy?: number;
   onChange: (val: string) => void;
@@ -79,6 +80,7 @@ const OtpInputField: React.FC<OtpInputFieldProps> = ({
   value,
   maxLength,
   pattern,
+  inputMode = 'numeric',
   groupBy,
   onChange,
   onBlur,
@@ -113,6 +115,7 @@ const OtpInputField: React.FC<OtpInputFieldProps> = ({
         onChange={onChange}
         onBlur={onBlur}
         pattern={pattern}
+        inputMode={inputMode}
         disabled={disabled}
         pasteTransformer={pasteTransformer}
         containerClassName=""

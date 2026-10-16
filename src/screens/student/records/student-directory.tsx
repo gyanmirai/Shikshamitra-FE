@@ -21,6 +21,7 @@ import StudentDirectoryTable from './student-directory-table';
 import StudentDirectoryFilters from './student-directory-filters';
 import { recordsQueryUrl, positivePageValue } from './records-url-state';
 import StudentDirectoryFilterFields from './student-directory-filter-fields';
+import StudentRollNumberWorkspace from '../onboarding/student-setup/student-roll-number-workspace';
 
 import type { DirectoryRowActions } from './student-directory-columns';
 
@@ -34,6 +35,7 @@ export default function StudentDirectory({ rowActions }: Props) {
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const legacyOpen = useBoolean();
+  const rollOpen = useBoolean();
   const canUseLegacy = hasGrantedPermission(permissions, [
     'Students.Records.Overrides.Request',
     'Students.Records.Overrides.Approve',
@@ -122,11 +124,29 @@ export default function StudentDirectory({ rowActions }: Props) {
           { name: 'Student List' },
         ]}
         action={
-          canUseLegacy ? (
-            <Button variant="outlined" color="inherit" onClick={legacyOpen.onTrue}>
-              Historical entry
-            </Button>
-          ) : undefined
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            {population === 'Active' && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                disabled={!year || !standardId || !divisionId || options.isError}
+                title={
+                  standardId && divisionId
+                    ? 'Review division roll numbering and approval batches'
+                    : 'Choose one Class and one Division first'
+                }
+                onClick={rollOpen.onTrue}
+              >
+                Manage Roll Numbers
+              </Button>
+            )}
+            {canUseLegacy && (
+              <Button variant="outlined" color="inherit" onClick={legacyOpen.onTrue}>
+                Historical entry
+              </Button>
+            )}
+          </Stack>
         }
       />
       {options.isError && (
@@ -177,6 +197,13 @@ export default function StudentDirectory({ rowActions }: Props) {
         />
       </Box>
       {legacyOpen.value && <LegacyRecordEntry open onClose={legacyOpen.onFalse} />}
+      {rollOpen.value && year && standardId && divisionId && (
+        <StudentRollNumberWorkspace
+          key={`${year}:${standardId}:${divisionId}`}
+          scope={{ academicYearId: year, standardId, divisionId }}
+          onClose={rollOpen.onFalse}
+        />
+      )}
     </Box>
   );
 }

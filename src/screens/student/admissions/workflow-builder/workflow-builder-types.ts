@@ -5,7 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 export type WorkflowSidePanel =
-  'preview' | 'simulation' | 'validation' | 'versions' | 'usage' | 'governance' | null;
+  'preview' | 'simulation' | 'versions' | 'usage' | 'governance' | null;
 
 export type WorkflowBuilderDraft = {
   stages: AdmissionWorkflowStage[];

@@ -3,6 +3,7 @@ import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { Iconify } from '../iconify';
 import CustomTooltip from '../custom-tooltip';
@@ -20,12 +21,17 @@ type OverflowActionMenuItemProps = {
 function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProps) {
   const menuItem = (
     <MenuItem
-      disabled={action.disabled}
+      disabled={action.disabled || action.loading}
+      aria-busy={action.loading || undefined}
       data-testid={`menu-action-${action.id}`}
       onClick={onSelect}
       sx={{ color: action.disabled ? 'text.disabled' : action.color }}
     >
-      <Iconify icon={action.icon} width={16} aria-hidden sx={{ mr: 1 }} />
+      {action.loading ? (
+        <CircularProgress size={16} color="inherit" aria-label={action.label} sx={{ mr: 1 }} />
+      ) : (
+        <Iconify icon={action.icon} width={16} aria-hidden sx={{ mr: 1 }} />
+      )}
       {action.label}
     </MenuItem>
   );

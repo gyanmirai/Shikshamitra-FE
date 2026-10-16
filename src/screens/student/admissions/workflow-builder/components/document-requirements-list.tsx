@@ -2,6 +2,7 @@ import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/a
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { useRef, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Button, Typography } from '@mui/material';
@@ -49,18 +50,20 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
           Add a standard or custom document to build the applicant checklist.
         </Typography>
       )}
-      {requirements.map((item, index) => (
-        <DocumentRequirementItem
-          key={`${item.code}-${index}`}
-          item={item}
-          readOnly={readOnly}
-          onEdit={(event) => {
-            setAnchorEl(event.currentTarget);
-            setEditing({ index, value: item });
-          }}
-          onRemove={() => setRemoving(index)}
-        />
-      ))}
+      <Stack component="ul" aria-label="Selected documents" spacing={1} sx={{ m: 0, p: 0 }}>
+        {requirements.map((item, index) => (
+          <DocumentRequirementItem
+            key={`${item.code}-${index}`}
+            item={item}
+            readOnly={readOnly}
+            onEdit={(event) => {
+              setAnchorEl(event.currentTarget);
+              setEditing({ index, value: item });
+            }}
+            onRemove={() => setRemoving(index)}
+          />
+        ))}
+      </Stack>
       {!readOnly && (
         <>
           <Box ref={standardDocumentAnchor}>
@@ -87,6 +90,8 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
           <Button
             size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:plus" />}
+            sx={{ alignSelf: 'flex-start' }}
             disabled={requirements.length >= 30}
             onClick={addCustom}
           >

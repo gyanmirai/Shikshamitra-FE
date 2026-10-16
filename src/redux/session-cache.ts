@@ -15,6 +15,11 @@ let cacheExpiresAt = 0;
 let pendingSession: Promise<AuthSession | null> | null = null;
 let cacheRevision = 0;
 
+export const getAuthSessionCacheRevision = () => cacheRevision;
+
+export const isAuthSessionCacheCurrent = (revision: number, accessToken?: string) =>
+  revision === cacheRevision && cachedSession?.accessToken === accessToken;
+
 const getTokenExpiresAt = (session: AuthSession | null) => {
   const exp = Number(session?.profile?.exp);
 

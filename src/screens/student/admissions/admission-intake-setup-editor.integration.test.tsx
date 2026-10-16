@@ -27,12 +27,13 @@ const hooks = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   close: vi.fn(),
+  info: vi.fn(),
 }));
 
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: { success: vi.fn(), error: vi.fn(), info: hooks.info },
 }));
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
   useGetAdmissionIntakeCounsellorsQuery: (...args: unknown[]) => {
@@ -81,6 +82,8 @@ it('shows the simplified inquiry controls and saves API-selected pool and fallba
     target: { value: 'General intake' },
   });
   await user.click(screen.getByRole('button', { name: 'Next' }));
+  expect(hooks.info).toHaveBeenCalledOnce();
+  expect(screen.queryByText(/New inquiries go to the eligible counsellor/)).not.toBeInTheDocument();
   await user.click(screen.getByRole('combobox', { name: 'Counsellor pool *' }));
   await user.click(screen.getByRole('option', { name: 'Admissions Counselor' }));
   await user.keyboard('{Escape}');
@@ -149,6 +152,7 @@ it('keeps source and pool checkbox menus open for multiple selections and review
   await user.click(screen.getByRole('button', { name: 'Edit inquiry handling' }));
   expect(screen.getByRole('textbox', { name: 'Setup name *' })).toHaveValue('Multiple sources');
   await user.click(screen.getByRole('button', { name: 'Next' }));
+  expect(hooks.info).toHaveBeenCalledOnce();
   await user.click(screen.getByRole('button', { name: 'Next' }));
   await user.click(screen.getByRole('button', { name: 'Create setup' }));
   await waitFor(() =>

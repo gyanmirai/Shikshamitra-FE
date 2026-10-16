@@ -9,6 +9,7 @@ export type WorkflowActionPermissions = {
   canClone: boolean;
   canCreateVersion: boolean;
   canArchive: boolean;
+  canReopen: boolean;
   canViewUsage: boolean;
 };
 
@@ -19,6 +20,7 @@ type Props = WorkflowActionPermissions & {
   onCreateVersion: () => void;
   onUsage: () => void;
   onArchive: () => void;
+  onReopen: () => void;
   onDelete: () => void;
 };
 
@@ -29,28 +31,37 @@ export function WorkflowRowActions({
   canClone,
   canCreateVersion,
   canArchive,
+  canReopen,
   canViewUsage,
   onEdit,
   onClone,
   onCreateVersion,
   onUsage,
   onArchive,
+  onReopen,
   onDelete,
 }: Props) {
   const actions: AdaptiveThreeDotsAction[] = [];
+  if (canReopen && workflow.status === 2)
+    actions.push({
+      id: 'reopen',
+      label: 'Re-open',
+      icon: 'mdi:archive-arrow-up-outline',
+      onClick: onReopen,
+    });
   if (canEdit)
     actions.push({
       id: 'edit',
-      label: `Edit `,
-      icon: 'solar:pen-bold',
+      label: `Edit ${workflow.name}`,
+      icon: 'mdi:pencil-outline',
       disabled: workflow.status !== 0,
       onClick: onEdit,
     });
   if (canDelete)
     actions.push({
       id: 'delete',
-      label: `Delete `,
-      icon: 'solar:trash-bin-trash-bold',
+      label: `Delete ${workflow.name}`,
+      icon: 'mdi:delete-outline',
       color: workflow.status === 0 ? 'error.main' : 'text.disabled',
       disabled: workflow.status !== 0,
       onClick: onDelete,
@@ -58,28 +69,28 @@ export function WorkflowRowActions({
   if (canClone)
     actions.push({
       id: 'clone',
-      label: `Clone  as draft`,
+      label: 'Clone as draft',
       icon: 'mdi:content-copy',
       onClick: onClone,
     });
   if (canCreateVersion && [1, 2, 7].includes(workflow.status))
     actions.push({
       id: 'new-version',
-      label: `Create new version `,
+      label: 'Create new version',
       icon: 'mdi:file-plus-outline',
       onClick: onCreateVersion,
     });
   if (canViewUsage)
     actions.push({
       id: 'usage',
-      label: `View usage `,
+      label: 'View usage',
       icon: 'mdi:chart-box-outline',
       onClick: onUsage,
     });
   if (canArchive && [1, 7].includes(workflow.status))
     actions.push({
       id: 'archive',
-      label: `Archive `,
+      label: 'Archive',
       icon: 'mdi:archive-outline',
       color: 'warning.main',
       onClick: onArchive,
@@ -88,7 +99,7 @@ export function WorkflowRowActions({
   return (
     <AdaptiveThreeDotsActions
       placement="right-top"
-      moreLabel={`More actions  `}
+      moreLabel={`Actions for ${workflow.name}`}
       mobileDirectActionLimit={0}
       sx={{
         gap: 0,

@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { screen, within, waitFor } from '@testing-library/react';
+import { renderWithProviders as render } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { BulkAdmissionOfferingDialog } from './bulk-admission-offering-dialog';

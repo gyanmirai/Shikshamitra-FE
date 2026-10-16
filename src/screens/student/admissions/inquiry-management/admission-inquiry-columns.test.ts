@@ -78,6 +78,21 @@ describe('inquiryWorkState', () => {
 });
 
 describe('admission inquiry columns', () => {
+  it('shows progress only on the moving inquiry and blocks competing actions', () => {
+    const options = { ...columnOptions, isMoving: true, movingInquiryId: 'inquiry-1' };
+    const moving = getAdmissionInquiryActions(inquiry(), options);
+    expect(moving.find((action) => action.id === 'move')).toMatchObject({
+      loading: true,
+      disabled: true,
+      tooltip: 'Moving inquiry…',
+    });
+    expect(moving.every((action) => action.disabled)).toBe(true);
+    expect(
+      getAdmissionInquiryActions(inquiry({ id: 'inquiry-2' }), options).find(
+        (action) => action.id === 'move'
+      )
+    ).toMatchObject({ loading: false, disabled: true });
+  });
   it('shows the selected class name without offering or cycle details', () => {
     const column = buildAdmissionInquiryColumns(columnOptions).find(
       (item) => item.id === 'admissionOfferingId'

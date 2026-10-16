@@ -20,6 +20,9 @@ vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: auth.session, status: 'authenticated' }),
   signOut: vi.fn(),
 }));
+vi.mock('next/navigation', () => ({
+  useSelectedLayoutSegments: () => ['(auth-route)'],
+}));
 
 afterEach(() => {
   cleanup();
