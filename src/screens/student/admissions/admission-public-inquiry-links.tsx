@@ -1,8 +1,11 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AdmissionPublicInquiryLink } from 'src/redux/student/admissions/admission-intake-profiles-api';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type {
+  AdmissionPublicInquiryLink,
+  CreatedAdmissionPublicInquiryLink,
+} from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -136,7 +139,13 @@ export function AdmissionPublicInquiryLinks({
   const [viewLink, setViewLink] = useState<LinkRow | null>(null);
   const [optionalOpen, setOptionalOpen] = useState(true);
   const [formMenuOpen, setFormMenuOpen] = useState(false);
-  const [newUrl, setNewUrl] = useState('');
+  const [createdLinks, setCreatedLinks] = useState<
+    Record<string, CreatedAdmissionPublicInquiryLink>
+  >({});
+  const [copyingLinkId, setCopyingLinkId] = useState<string | null>(null);
+  const [createdTableContext, setCreatedTableContext] = useState<
+    Pick<IParams, 'page' | 'searchTerm' | 'filters' | 'sorts'> | undefined
+  >();
   const [error, setError] = useState('');
   const publishedCycles = (cycles.data?.items ?? []).filter((cycle) => cycle.status === 1);
   const publishedForms = (forms.data?.items ?? []).filter(
@@ -188,11 +197,14 @@ export function AdmissionPublicInquiryLinks({
           sourceDetail: values.detail.trim() || null,
           expiresAtUtc: values.expiresAt?.toISOString() ?? null,
         }).unwrap();
-        setNewUrl(`${window.location.origin}/admission-inquiry/${result.token}`);
+        setCreatedLinks((current) => ({ ...current, [result.id]: result }));
+        setCreatedTableContext({ page: 0, searchTerm: '', filters: [], sorts: [] });
         formik.resetForm();
         appliedInitialSetup.current = null;
         onCreateClose();
-        shikshaMitraToast.success({ message: 'Inquiry link created. Copy it now.' });
+        shikshaMitraToast.success({
+          message: 'Inquiry link created. Copy it from the row actions before leaving this page.',
+        });
       } catch (problem) {
         const parsed = parseApiProblemDetail(problem);
         setError(
@@ -340,6 +352,11 @@ export function AdmissionPublicInquiryLinks({
     setError('');
     try {
       await revoke({ id, concurrencyStamp }).unwrap();
+      setCreatedLinks((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
       shikshaMitraToast.success({ message: 'Inquiry link revoked.' });
       setRevokeTarget(null);
     } catch (problem) {
@@ -347,7 +364,30 @@ export function AdmissionPublicInquiryLinks({
     }
   };
 
-  const rows: LinkRow[] = (links.data ?? []).map((link) => {
+  const copyLink = async (link: AdmissionPublicInquiryLink) => {
+    const token = createdLinks[link.id]?.token;
+    if (!token || copyingLinkId) return;
+    setCopyingLinkId(link.id);
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/admission-inquiry/${token}`);
+      shikshaMitraToast.success({ message: 'Inquiry link copied.' });
+    } catch {
+      shikshaMitraToast.error({
+        message: 'Unable to copy the link. Allow clipboard access and try again.',
+      });
+    } finally {
+      setCopyingLinkId(null);
+    }
+  };
+
+  const listedLinks = links.data ?? [];
+  const sessionLinks = Object.values(createdLinks)
+    .reverse()
+    .map(
+      ({ token: _token, ...link }) => listedLinks.find((listed) => listed.id === link.id) ?? link
+    );
+  const visibleLinks = [...sessionLinks, ...listedLinks.filter((link) => !createdLinks[link.id])];
+  const rows: LinkRow[] = visibleLinks.map((link) => {
     const expired = Boolean(link.expiresAtUtc && Date.parse(link.expiresAtUtc) <= Date.now());
     return {
       ...link,
@@ -433,9 +473,9 @@ export function AdmissionPublicInquiryLinks({
       isFilter: false,
       excludeFromExport: true,
       align: 'right',
-      minWidth: 104,
-      headerSx: { width: { xs: 76, sm: 104 }, minWidth: { xs: 76, sm: 104 } },
-      cellSx: { width: { xs: 76, sm: 104 }, minWidth: { xs: 76, sm: 104 } },
+      minWidth: 120,
+      headerSx: { width: { xs: 76, sm: 120 }, minWidth: { xs: 76, sm: 120 } },
+      cellSx: { width: { xs: 76, sm: 120 }, minWidth: { xs: 76, sm: 120 } },
       render: (_value, row) => {
         const link = row as LinkRow;
         return (
@@ -454,6 +494,22 @@ export function AdmissionPublicInquiryLinks({
             actions={
               link.isActive
                 ? [
+                    {
+                      id: 'copy',
+                      label: isMobile ? 'Copy inquiry link' : `Copy inquiry link for ${link.name}`,
+                      icon: 'mdi:content-copy',
+                      disabled:
+                        !createdLinks[link.id]?.token ||
+                        link.status !== 'Active' ||
+                        Boolean(copyingLinkId),
+                      tooltip:
+                        link.status !== 'Active'
+                          ? 'This inquiry link has expired.'
+                          : createdLinks[link.id]?.token
+                            ? 'Copy this link before leaving the page. Its full address is only available after creation.'
+                            : 'The full address is only available during the session in which this link was created.',
+                      onClick: () => copyLink(link),
+                    },
                     {
                       id: 'form',
                       label: isMobile ? 'Set inquiry form' : `Set inquiry form for ${link.name}`,
@@ -486,31 +542,7 @@ export function AdmissionPublicInquiryLinks({
             {error}
           </Alert>
         )}
-        {newUrl && (
-          <Alert
-            severity="success"
-            action={
-              <Button
-                size="small"
-                startIcon={<Iconify icon="mdi:content-copy" />}
-                onClick={() => navigator.clipboard.writeText(newUrl)}
-              >
-                Copy link
-              </Button>
-            }
-          >
-            Copy this link now. Its full address is shown only once.
-            <TextField
-              fullWidth
-              size="small"
-              aria-label="New inquiry link"
-              value={newUrl}
-              sx={{ mt: 1 }}
-              slotProps={{ input: { readOnly: true } }}
-            />
-          </Alert>
-        )}
-        {links.isError && !links.data ? (
+        {links.isError && !links.data && (
           <Alert
             severity="error"
             action={
@@ -521,7 +553,8 @@ export function AdmissionPublicInquiryLinks({
           >
             Unable to load inquiry links.
           </Alert>
-        ) : (
+        )}
+        {(!links.isError || links.data || rows.length > 0) && (
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <CustomizableTable
               tableId="admission-public-inquiry-links"
@@ -530,6 +563,7 @@ export function AdmissionPublicInquiryLinks({
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}
               data={rows}
+              {...createdTableContext}
               handleRowClick={(row) => setViewLink(row as LinkRow)}
               rowProps={(row) => ({
                 tabIndex: 0,
@@ -687,7 +721,7 @@ export function AdmissionPublicInquiryLinks({
         <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
             <Typography id="create-inquiry-link-title" variant="h6">
-              Create inquiry link
+              Create Inquiry Link
             </Typography>
             <CustomTooltip
               title="Share a link for a website, QR code, or event."
@@ -786,7 +820,6 @@ export function AdmissionPublicInquiryLinks({
                   aria-label="Loading published inquiry forms"
                 >
                   <Skeleton variant="rounded" height={40} />
-                  <Skeleton variant="text" width="70%" />
                 </Stack>
               ) : (
                 <TextField
@@ -830,13 +863,7 @@ export function AdmissionPublicInquiryLinks({
                   }}
                   onBlur={formik.handleBlur}
                   error={Boolean(formik.touched.formId && formik.errors.formId)}
-                  helperText={
-                    formik.touched.formId && formik.errors.formId
-                      ? formik.errors.formId
-                      : !formik.values.cycleId
-                        ? 'Choose an admission period to load linked inquiry forms.'
-                        : 'Forms linked to active Inquiry or Both Offerings in this period.'
-                  }
+                  helperText={formik.touched.formId ? formik.errors.formId : undefined}
                 >
                   <MenuItem value="">Choose form</MenuItem>
                   {availableForms.map((form) => (
@@ -864,13 +891,7 @@ export function AdmissionPublicInquiryLinks({
                 InputLabelProps={{ shrink: true }}
                 SelectProps={{ displayEmpty: true }}
                 error={Boolean(formik.touched.setupId && formik.errors.setupId)}
-                helperText={
-                  formik.touched.setupId && formik.errors.setupId
-                    ? formik.errors.setupId
-                    : formik.values.setupId
-                      ? 'Inquiries are automatically routed through this setup.'
-                      : 'Inquiries from this link stay Unassigned. Staff can assign a counsellor later.'
-                }
+                helperText={formik.touched.setupId ? formik.errors.setupId : undefined}
               >
                 <MenuItem value="">{setupPlaceholder}</MenuItem>
                 {availableSetups.map((setup) => (

@@ -41,6 +41,7 @@ export default function AdmissionWorkflowsScreen() {
     onCreateVersion: actions.createVersion,
     onUsage: (workflow) => actions.navigate(workflow, 'usage'),
     onArchive: (workflow) => actions.requestConfirmation(workflow, 'archive'),
+    onReopen: (workflow) => actions.requestConfirmation(workflow, 'reopen'),
     onDelete: (workflow) => actions.requestConfirmation(workflow, 'delete'),
   });
   return (

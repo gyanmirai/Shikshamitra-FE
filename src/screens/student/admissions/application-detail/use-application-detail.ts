@@ -41,20 +41,39 @@ export type AdvanceOptions = {
   deferFeeCollection?: boolean;
 };
 
-export function useApplicationDetail(id: string, selectedStageId?: string) {
+export function useApplicationDetail(
+  id: string,
+  selectedStageId?: string,
+  view: 'journey' | 'form' | 'history' = 'journey'
+) {
   const applicationQuery = useGetAdmissionApplicationQuery(id);
-  const applicationId = applicationQuery.data ? id : skipToken;
-  const formQuery = useGetAdmissionApplicationFormQuery(applicationId);
-  const workflowQuery = useGetAdmissionApplicationWorkflowQuery(applicationId);
+  // Both endpoints enforce application access. Neither response depends on the other.
+  const workflowQuery = useGetAdmissionApplicationWorkflowQuery(id);
+  const selectedStage =
+    workflowQuery.data?.stages.find(
+      (stage) => stage.id === (selectedStageId ?? workflowQuery.data?.currentStageInstanceId)
+    ) ??
+    workflowQuery.data?.stages.find(
+      (stage) => stage.id === workflowQuery.data?.currentStageInstanceId
+    ) ??
+    [...(workflowQuery.data?.stages ?? [])].reverse().find((stage) => stage.status >= 2);
+  const requiresForm = view === 'form' || (view === 'journey' && selectedStage?.stageType === 1);
+  const formQuery = useGetAdmissionApplicationFormQuery(
+    applicationQuery.data && requiresForm ? id : skipToken
+  );
   const selectedFormStage = workflowQuery.data?.stages.find(
     (stage) =>
       stage.id === (selectedStageId ?? workflowQuery.data?.currentStageInstanceId) &&
       stage.formStageEnabled
   );
   const formStageQuery = useGetAdmissionFormStageQuery(
-    selectedFormStage ? { applicationId: id, stageId: selectedFormStage.id } : skipToken
+    view === 'journey' && selectedFormStage
+      ? { applicationId: id, stageId: selectedFormStage.id }
+      : skipToken
   );
-  const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(applicationId);
+  const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(
+    applicationQuery.data && view === 'history' ? id : skipToken
+  );
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [updateValues, updateState] = useUpdateAdmissionApplicationFormValuesMutation();
   const [submit, submitState] = useSubmitAdmissionApplicationMutation();
@@ -303,6 +322,7 @@ export function useApplicationDetail(id: string, selectedStageId?: string) {
     workflowQuery,
     formStageQuery,
     formHistoryQuery,
+    requiresForm,
     currentValues,
     hasUnsavedAnswers: formik.dirty,
     discardUnsavedAnswers: () => {

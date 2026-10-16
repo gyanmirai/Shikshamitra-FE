@@ -9,6 +9,7 @@ export interface AdaptiveThreeDotsAction {
   icon: string;
   color?: string;
   disabled?: boolean;
+  loading?: boolean;
   tooltip?: ReactNode;
   onClick: () => void;
 }

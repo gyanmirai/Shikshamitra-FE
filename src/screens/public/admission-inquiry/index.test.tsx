@@ -120,6 +120,7 @@ describe('public admission availability gate', () => {
     await select('English', 'Medium');
     await select('Class 1', 'Class');
     await screen.findByRole('textbox', { name: 'Student name' });
+    expect(screen.getAllByText('Admission period: 2026-27')).toHaveLength(1);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('?offeringId=offer-1'),
       expect.anything()

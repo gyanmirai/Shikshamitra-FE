@@ -124,15 +124,14 @@ describe('WorkflowBuilderCanvas', () => {
       }),
     };
     render(<Canvas stages={[stage, next]} transitions={[special]} />, { wrapper: Wrapper });
-    fireEvent.click(screen.getByRole('button', { name: `Actions for ${stage.name}` }));
     expect(
-      await screen.findByRole('menuitem', { name: 'View route to Next stage' })
+      await screen.findByRole('button', { name: 'View route to Next stage' })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole('menuitem', { name: 'Edit route to Next stage' })
+      screen.queryByRole('button', { name: 'Edit route to Next stage' })
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('menuitem', { name: 'Remove route to Next stage' })
+      screen.queryByRole('button', { name: 'Remove route to Next stage' })
     ).not.toBeInTheDocument();
   });
   it('removes special outcome actions from connected stage cards and their menus', async () => {
@@ -146,12 +145,11 @@ describe('WorkflowBuilderCanvas', () => {
     };
     render(<Canvas stages={[stage, next]} transitions={[usual]} />, { wrapper: Wrapper });
     expect(screen.queryByRole('button', { name: 'Add special outcome' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: `Actions for ${stage.name}` }));
     expect(
-      await screen.findByRole('menuitem', { name: 'Edit route to Next stage' })
+      await screen.findByRole('button', { name: 'Edit route to Next stage' })
     ).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Add special outcome' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Edit route to Next stage' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit route to Next stage' }));
     expect(handlers.onEditTransition).toHaveBeenCalledWith(usual);
   });
   it('shows the journey directly and keeps empty-state creation usable', () => {
@@ -191,6 +189,7 @@ describe('WorkflowBuilderCanvas', () => {
     const viewButton = screen.getByRole('button', { name: `View ${stage.name}` });
     fireEvent.click(viewButton);
     expect(handlers.onEditStage).toHaveBeenCalledWith(stage);
+    expect(document.querySelector('[data-icon="mdi:eye-outline"]')).toBeNull();
     expect(
       screen.queryByRole('button', { name: `Actions for ${stage.name}` })
     ).not.toBeInTheDocument();
@@ -203,7 +202,13 @@ describe('WorkflowBuilderCanvas', () => {
     expect(screen.queryByText(stage.code)).not.toBeInTheDocument();
     fireEvent.click(editButton);
     expect(handlers.onEditStage).toHaveBeenCalledWith(stage);
-    expect(screen.getByRole('button', { name: `Actions for ${stage.name}` })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `Actions for ${stage.name}` })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: `Duplicate ${stage.name}` }));
+    expect(handlers.onDuplicateStage).toHaveBeenCalledWith(stage);
+    fireEvent.click(screen.getByRole('button', { name: `Delete ${stage.name}` }));
+    expect(handlers.onDeleteStage).toHaveBeenCalledWith(stage);
   });
 
   it('describes connected stages without claiming full publishing validation', () => {

@@ -1,12 +1,20 @@
+import type { ReactElement } from 'react';
 import type { BulkAdmissionOfferingResult } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen, within } from '@testing-library/react';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { screen, within } from '@testing-library/react';
+import { renderWithProviders } from 'src/test/test-utils';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { BulkAdmissionOfferingPreview } from './bulk-admission-offering-preview';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+const themed = (ui: ReactElement) =>
+  <ThemeProvider theme={createTheme(defaultSettings)}>{ui}</ThemeProvider>;
+const render = (ui: ReactElement) => renderWithProviders(themed(ui));
 
 const item = {
   standardId: 'class-1',
@@ -42,7 +50,7 @@ describe('Bulk offering preview', () => {
     ).not.toBeNull();
     expect(screen.getByText('1 offering ready to create')).toBeVisible();
     expect(screen.getByText('Class 1')).toBeVisible();
-    expect(screen.getByText('Offering code')).toBeVisible();
+    expect(screen.getByRole('columnheader', { name: 'Class / offering code' })).toBeVisible();
     expect(screen.getByText('ADM-CLASS-1')).toBeVisible();
     expect(screen.getByText(/saved as Inactive/)).toBeVisible();
     expect(screen.queryByText('After creation')).not.toBeInTheDocument();
@@ -65,7 +73,7 @@ describe('Bulk offering preview', () => {
       false
     );
     expect(screen.getByText('1 of 2 classes need changes')).toBeVisible();
-    const row = screen.getByText('Class 1').closest('li')!;
+    const row = screen.getByText('Class 1').closest('tr')!;
     expect(within(row).getAllByText(duplicate.message)).toHaveLength(1);
     expect(within(row).getByText('Cannot create')).toBeVisible();
     expect(screen.getByText(/Nothing will be created until all class issues/)).toBeVisible();
@@ -149,7 +157,7 @@ describe('Bulk offering preview', () => {
     expect(
       within(inquiry).getByText('Before activation: Published Inquiry Form is required.')
     ).toBeVisible();
-    const row = screen.getByText('Class 1').closest('li')!;
+    const row = screen.getByText('Class 1').closest('tr')!;
     expect(within(row).queryByText(/Published Inquiry Form/)).not.toBeInTheDocument();
     expect(within(row).getByText('An offering already exists for this class.')).toBeVisible();
   });
@@ -176,7 +184,22 @@ describe('Bulk offering preview', () => {
     const view = render(<BulkAdmissionOfferingPreview {...props} />);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Edit selection' }));
     expect(onEdit).toHaveBeenCalledOnce();
-    view.rerender(<BulkAdmissionOfferingPreview {...props} busy />);
+    view.rerender(themed(<BulkAdmissionOfferingPreview {...props} busy />));
     expect(screen.getByRole('button', { name: 'Edit selection' })).toBeDisabled();
+  });
+
+  it('keeps the whole batch visible in a compact review table without pagination or utilities', () => {
+    renderPreview(
+      preview(Array.from({ length: 15 }, (_, index) => ({
+        ...item,
+        standardId: `class-${index + 1}`,
+        code: `ADM-CLASS-${index + 1}`,
+      })))
+    );
+    const table = screen.getByRole('table', { name: 'Offerings to create table' });
+    expect(within(table).getAllByRole('row')).toHaveLength(16);
+    expect(within(table).getByText('ADM-CLASS-15')).toBeVisible();
+    expect(screen.queryByRole('textbox', { name: /search/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Rows per page:')).not.toBeInTheDocument();
   });
 });

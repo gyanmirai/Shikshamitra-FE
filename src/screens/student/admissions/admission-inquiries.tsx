@@ -136,6 +136,7 @@ export default function AdmissionInquiriesScreen() {
       canManage,
       canMove: handoff.canMove,
       isMoving: handoff.moving,
+      movingInquiryId: handoff.movingInquiryId,
       ...rowOptions,
       onManage: openInquiry,
       onFollowUp: setFollowUpInquiry,
@@ -144,7 +145,15 @@ export default function AdmissionInquiriesScreen() {
       ...column,
       isSort: column.isSort === false ? false : sortable.has(column.id),
     }));
-  }, [canManage, rowOptions, handoff.canMove, handoff.moving, handoff.move, openInquiry]);
+  }, [
+    canManage,
+    rowOptions,
+    handoff.canMove,
+    handoff.moving,
+    handoff.movingInquiryId,
+    handoff.move,
+    openInquiry,
+  ]);
   const activeInquiry =
     selectedInquiry ??
     (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??

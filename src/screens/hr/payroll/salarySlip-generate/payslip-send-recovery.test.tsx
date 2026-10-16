@@ -19,6 +19,8 @@ const previousApiUrl = vi.hoisted(() => {
 vi.mock('src/redux/session-cache', () => ({
   getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }),
   clearCachedAuthSession: vi.fn(),
+  getAuthSessionCacheRevision: () => 0,
+  isAuthSessionCacheCurrent: () => true,
 }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn(), error: vi.fn() } }));

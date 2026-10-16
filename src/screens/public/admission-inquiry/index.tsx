@@ -189,10 +189,22 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
     <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', px: 2, py: { xs: 3, sm: 6 } }}>
       <Card variant="outlined" sx={{ maxWidth: 640, mx: 'auto', p: { xs: 2, sm: 4 } }}>
         <Stack spacing={2}>
-          {context?.bannerUrl && <Box component="img" src={`${process.env.NEXT_PUBLIC_API_URL}${context.bannerUrl}`}
-            alt="School banner" sx={{ width: 1, maxHeight: 160, objectFit: 'contain' }} />}
-          {context?.logoUrl && !context.bannerUrl && <Box component="img" src={`${process.env.NEXT_PUBLIC_API_URL}${context.logoUrl}`}
-            alt="School logo" sx={{ width: 64, height: 64, objectFit: 'contain' }} />}
+          {context?.bannerUrl && (
+            <Box
+              component="img"
+              src={`${process.env.NEXT_PUBLIC_API_URL}${context.bannerUrl}`}
+              alt="School banner"
+              sx={{ width: 1, maxHeight: 160, objectFit: 'contain' }}
+            />
+          )}
+          {context?.logoUrl && !context.bannerUrl && (
+            <Box
+              component="img"
+              src={`${process.env.NEXT_PUBLIC_API_URL}${context.logoUrl}`}
+              alt="School logo"
+              sx={{ width: 64, height: 64, objectFit: 'contain' }}
+            />
+          )}
           <Box>
             <Typography variant="h4" component="h1">
               Admission inquiry
@@ -330,7 +342,9 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
                     context={formContext}
                     offering={matching.find((item) => item.id === offeringId)!}
                     draft={draft.current}
-                    onDraft={(value) => { draft.current = value; }}
+                    onDraft={(value) => {
+                      draft.current = value;
+                    }}
                     onBusy={setSaving}
                     onSubmitted={() => setSubmitted(true)}
                   />
@@ -448,7 +462,6 @@ function InquiryForm({
   return (
     <Box component="form" noValidate onSubmit={formik.handleSubmit}>
       <Stack spacing={2}>
-        <Alert severity="info">Admission period: {context.admissionCycleName}</Alert>
         {context.form && (
           <>
             <Typography variant="h6" component="h2">

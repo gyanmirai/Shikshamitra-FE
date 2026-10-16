@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe, afterEach } from 'vitest';
 
-import authReducer, { loadUser, clearUser } from './authSlice';
+import authReducer, { setUser, loadUser, clearUser, getEmployee } from './authSlice';
 
 const createStore = () => configureStore({ reducer: { auth: authReducer } });
 const hostContext = {
@@ -121,5 +121,49 @@ describe('loadUser authentication bootstrap', () => {
     const store = createStore();
     await store.dispatch(loadUser(session));
     expect(store.getState().auth.isAuthenticated).toBe(false);
+  });
+
+  it('does not restore employee data from an earlier visit to the same account', async () => {
+    let resolveOldEmployee!: (value: unknown) => void;
+    const fetch = vi
+      .fn()
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOldEmployee = resolve;
+        })
+      )
+      .mockResolvedValueOnce(response({ id: 'new-employee' }));
+    vi.stubGlobal('fetch', fetch);
+    const store = createStore();
+    const employeeSession = { ...session, profile: { sub: 'user-1', tenantid: 'tenant-1' } };
+    store.dispatch(setUser(employeeSession.profile));
+    const oldRequest = store.dispatch(getEmployee(employeeSession));
+    store.dispatch(clearUser());
+    store.dispatch(setUser(employeeSession.profile));
+    await store.dispatch(getEmployee(employeeSession));
+    resolveOldEmployee(response({ id: 'old-employee' }));
+    await oldRequest;
+    expect(store.getState().auth.employee).toEqual({ id: 'new-employee' });
+  });
+
+  it('does not apply an employee response to the same user in a different tenant', async () => {
+    let resolveEmployee!: (value: unknown) => void;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveEmployee = resolve;
+        })
+      )
+    );
+    const store = createStore();
+    store.dispatch(setUser({ sub: 'user-1', tenantid: 'tenant-1' }));
+    const pending = store.dispatch(
+      getEmployee({ ...session, profile: { sub: 'user-1', tenantid: 'tenant-1' } })
+    );
+    store.dispatch(setUser({ sub: 'user-1', tenantid: 'tenant-2' }));
+    resolveEmployee(response({ id: 'old-employee' }));
+    await pending;
+    expect(store.getState().auth.employee).toBeNull();
   });
 });

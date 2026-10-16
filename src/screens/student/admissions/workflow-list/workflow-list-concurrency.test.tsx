@@ -3,12 +3,12 @@ import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-w
 
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
-import auth from 'src/redux/auth/authSlice';
 import { http, HttpResponse } from 'msw';
+import auth from 'src/redux/auth/authSlice';
 import { mswServer } from 'src/test/mswServer';
 import { configureStore } from '@reduxjs/toolkit';
-import { act, renderHook, waitFor } from '@testing-library/react';
 import { it, vi, expect, afterEach, beforeEach } from 'vitest';
+import { act, waitFor, renderHook } from '@testing-library/react';
 
 import { useWorkflowListActions } from './use-workflow-list-actions';
 
@@ -85,4 +85,33 @@ it('reloads a changed workflow and requires confirmation again before deleting',
 
   await waitFor(() => expect(result.current.pendingConfirmation).toBeNull());
   expect(deleteStamps).toEqual(['fresh-stamp']);
+});
+
+it('rechecks the archived version before reopening that same record with its current stamp', async () => {
+  const archived = { ...staleWorkflow, status: 2 as const };
+  const reopenStamps: string[] = [];
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/workflows/workflow-1', () =>
+      HttpResponse.json({ data: { ...archived, concurrencyStamp: 'fresh-stamp' } })
+    ),
+    http.post('*/api/student/enrollment/admissions/workflows/workflow-1/reopen', ({ request }) => {
+      reopenStamps.push(new URL(request.url).searchParams.get('concurrencyStamp') ?? '');
+      return HttpResponse.json({
+        data: { ...archived, status: 1, concurrencyStamp: 'reopened-stamp' },
+      });
+    })
+  );
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
+  );
+  const { result } = renderHook(() => useWorkflowListActions(), { wrapper });
+  act(() => result.current.requestConfirmation(archived, 'reopen'));
+  await act(async () => result.current.confirm());
+  expect(reopenStamps).toEqual([]);
+  expect(result.current.pendingConfirmation?.workflow.concurrencyStamp).toBe('fresh-stamp');
+  await act(async () => {
+    await Promise.all([result.current.confirm(), result.current.confirm()]);
+  });
+  expect(reopenStamps).toEqual(['fresh-stamp']);
+  expect(result.current.pendingConfirmation).toBeNull();
 });

@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -234,15 +234,28 @@ Product rules and persistence are owned by `../../../Shikshamitra-BE/src/Shiksha
 
 ## Cache behavior
 
-The managed document checklist uses `admission-document-verification-api.ts` and `admission-document-types.ts`. Uploads send `FormData` through the global authenticated API, while acceptance and replacement decisions use typed mutations. Original-check and waiver actions are not exposed in the supported checklist. All document commands invalidate the application tag, including rejected stale writes, so the current checklist and concurrency stamp refresh. The application-level stamp is captured when the action dialog opens.
+The managed document checklist uses `admission-document-verification-api.ts` and `admission-document-types.ts`. Uploads send `FormData` through the global authenticated API, while acceptance and replacement decisions use typed mutations. Table actions retain the existing server capability, policy and canonical permission checks for review, original collection and waivers. All document commands invalidate the application tag, including rejected stale writes, so the current checklist and concurrency stamp refresh. The application-level stamp is captured when the action dialog opens.
+
+`admission-document-download-api.ts` loads previews through the existing authenticated evidence download endpoint; preview requires document View and the selected upload's `canDownload` flag. Its receiver delivers bytes directly to `use-document-preview.ts`, leaving only a completion flag in RTK Query state. Object URLs are local to the preview, requests are cancelled on close, and URLs are revoked on retry/unmount. Only supported raster-image MIME types and PDF are embedded; other content uses a download fallback. A newer denied upload never falls back to an older downloadable copy. No backend endpoint or permission is added.
 
 `admission-document-download-api.ts` downloads authorized attachments through the global API, keeps file bytes outside the Redux cache, and revokes temporary browser URLs after initiating the download. `student-admission-evidence-api.ts` reads retained evidence for the student Documents tab; its downloads use the student-scoped endpoint. No public storage URL is exposed by these clients.
 
 The existing `getStudentById` query in `src/redux/student/index.ts` reads `/students/records/{studentId}/profile` through the global API. `student-profile-types.ts` unwraps the response and validates the canonical Student GUID. The profile data boundary mounts tabs only when the returned identity matches the requested student; failed reads show an alert and Retry. Document and admission-evidence queries therefore receive the resolved Student ID. The protected endpoint and direct-record scope rules are owned by the [backend student module](../../../Shikshamitra-BE/docs/modules/student/README.md).
 
 Admissions mutations invalidate the relevant `studentAdmissionsCrmType` tag so lists and detail screens reload configuration or runtime state after a successful change.
+
+`admission-workflows-api.ts` exposes `reopenAdmissionWorkflow`, posting the latest `concurrencyStamp` as a query parameter to `/student/enrollment/admissions/workflows/{id}/reopen` and normalizing the returned workflow.
+The owning confirmation refreshes workflow detail before the mutation and asks for a renewed confirmation when the stamp changed.
+The mutation invalidates workflow and Offering cache tags, refreshing workflow detail, lists, sibling version histories, workflow selectors and linked Offering readiness. It does not activate an Offering. The [backend Student API contract](../../../Shikshamitra-BE/docs/modules/student/api.md) owns lifecycle eligibility and restored status.
+
 The setup drawer shares one `/student/enrollment/admissions/intake-profiles/counsellors?counsellorOnly=true` read between pool and fallback choices; other lookup consumers retain the default unfiltered request.
 `admission-intake-profiles-api.ts` reads `/student/enrollment/admissions/public-inquiry-links/options?admissionCycleId=...` for compatible setup/form pairs, including null-profile options for manual assignment. The link DTO accepts a nullable assignment profile; an empty optional setup sends null and leaves captured inquiries Unassigned. That query uses Offering, Form, and Cycle cache tags and refreshes when the creation drawer opens or its period changes. The drawer uses `currentData` to avoid submitting cached choices from a previous period. A setup lookup failure does not prevent a compatible manual link from being created.
+
+The public-link create response provides its raw token once; `admission-public-inquiry-links.tsx` retains it only in component memory for the matching row's Copy inquiry link action.
+Creation immediately displays the new row, resets table search, filters, sorting and pagination, and merges the refreshed list without duplicating the record or passing its token into table data.
+Copy reports clipboard success or a retryable failure through the shared toast; leaving or reloading the page removes copy access, and revocation clears the retained token.
+No raw token is written to browser storage or recovered from the list endpoint.
+
 Bulk preview is read-like and does not invalidate the offering cache; successful bulk commit does.
 
 Bulk offering feedback maps the server's named validation codes to their existing controls. Registration-form checks belong to Published workflow because the workflow owns that form; duplicate/hierarchy checks belong to Class. Shared messages are deduplicated, class-specific checks retain readable class names, and unknown codes remain visible in Preview. This presentation does not replace `canCommit`/`canSaveInactive` or turn activation-only checks into creation blockers. The manual-assignment menu uses a display-only value so its label stays visible; the payload still sends both intake profile IDs as null. Missing optional workflow selection is also serialized as null, not an empty GUID. No new endpoint or permission change is introduced.
@@ -301,3 +314,12 @@ The simplified Credentials panel does not invoke a policy correction or change a
 Explicit manual sends use the backend's audited manual-intent contract even when automatic email is Off.
 
 Assessments progress uses the additive roster `status` query and `statusCounts` response, independently of legacy action queues. Roster items and session scopes include the actual `className`; Classes in session setup map to exact authorized Offering/stage pairs. Numeric marks remain available to entry/history consumers.
+
+## Roll-number batch client
+
+`src/redux/student/onboarding/student-roll-number-batches-api.ts` owns context, preview, immutable paged review, submit, decision and apply calls through the backend roll-number controller.
+Preview sends academic scope and operation only, never current-page student IDs or client-computed roll numbers.
+Commands retain the server stamp and stable batch key; failed commands are not automatically retried or reported as successful.
+Applied batches refresh Onboarding cases/counts, Records Directory, placement snapshots, profiles and Changes history through Student-owned tags.
+Approval-only responses refresh batch status without claiming rolls changed.
+No Finance client or command is changed.

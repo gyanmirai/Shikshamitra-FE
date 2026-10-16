@@ -214,9 +214,6 @@ export default function AdmissionIntakeAssignmentScreen() {
   const view = searchParams.get('view') === 'links' ? 'links' : 'setups';
   const preselectedSetupId = searchParams.get('intakeSetupId');
   const granted = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector(
-    (state: RootState) => state.auth.user?.sub as string | undefined
-  );
   const canEdit = hasGrantedPermission(granted, 'Students.Admissions.Offerings.Add');
   const setups = useGetAdmissionIntakeSetupsQuery({ includeArchived: true });
   const [editorSetup, setEditorSetup] = useState<AdmissionIntakeSetup | null | undefined>();
@@ -458,14 +455,6 @@ export default function AdmissionIntakeAssignmentScreen() {
             gap: 1,
           }}
         >
-          <AdmissionIntakeNotice
-            severity="info"
-            icon={<Iconify icon="mdi:source-branch" />}
-            dismissalKey={currentUserId ? `admission-intake-guidance:${currentUserId}` : undefined}
-          >
-            <strong>How it works:</strong> Capture inquiry rules → assign the lowest-load journey
-            owner → use the setup in an Admission Offering or public inquiry link.
-          </AdmissionIntakeNotice>
           {!canEdit && (
             <AdmissionIntakeNotice severity="info">
               You have view-only access. An Admission Head or Admin can create and update setups.

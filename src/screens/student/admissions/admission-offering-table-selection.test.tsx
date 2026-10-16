@@ -7,7 +7,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { AdmissionOfferingTable } from './admission-offering-table';
 
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data, handleRowClick, rowProps }: ICustomizableTableProps) => (
+  default: ({ columns, data, handleRowClick, rowProps, noDataText }: ICustomizableTableProps) => (
     <table>
       <thead>
         <tr>
@@ -17,6 +17,7 @@ vi.mock('src/components/customizabaleTable', () => ({
         </tr>
       </thead>
       <tbody>
+        {data.length === 0 && <tr><td colSpan={columns.length}>{noDataText}</td></tr>}
         {data.map((row, index) => (
           <tr key={row.id} {...rowProps?.(row, index)} onClick={() => handleRowClick?.(row, index)}>
             {columns.map((column) => (
@@ -129,5 +130,20 @@ describe('Offering table selection', () => {
     expect(
       screen.getByRole('checkbox', { name: 'Select all eligible offerings on this page' })
     ).toBeDisabled();
+  });
+
+  it('offers filter recovery inside the empty table instead of claiming no offerings exist', () => {
+    const onClearFilters = vi.fn();
+    render(<AdmissionOfferingTable {...props()} rows={[]} filteredEmpty onClearFilters={onClearFilters} />);
+    expect(screen.getByText('No admission offerings match the selected filters.')).toBeVisible();
+    expect(screen.queryByText('No admission offering has been configured.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(onClearFilters).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a distinct initial empty state without a filter reset action', () => {
+    render(<AdmissionOfferingTable {...props()} rows={[]} />);
+    expect(screen.getByText('No admission offering has been configured.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
   });
 });

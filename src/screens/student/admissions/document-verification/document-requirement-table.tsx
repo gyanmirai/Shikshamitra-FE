@@ -5,7 +5,8 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { useMemo, useState } from 'react';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { useResponsive } from 'src/hooks/use-responsive';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
@@ -13,6 +14,7 @@ import { DocumentFileControl } from './document-file-control';
 import { DocumentTableActions } from './document-table-actions';
 import { DocumentDownloadButton } from './document-download-button';
 import { DocumentEvidenceHistory } from './document-evidence-history';
+import { DocumentPreviewDialog } from './document-preview-dialog';
 import { DocumentStatusLabel, documentStatusLabels } from './document-status';
 import { getDocumentTableFile, getDocumentTableFormat } from './document-table-model';
 
@@ -34,8 +36,12 @@ export function DocumentRequirementTable({
   readOnly: boolean;
   onAction: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
 }) {
-  const [selectedCode, setSelectedCode] = useState<string | null>(null);
-  const selected = summary.requirements.find((item) => item.code === selectedCode);
+  const compact = useResponsive('down', 'sm');
+  const [selection, setSelection] = useState<{ code: string; mode: 'preview' | 'history' } | null>(
+    null
+  );
+  const selected = summary.requirements.find((item) => item.code === selection?.code);
+  const selectedFile = selected && getDocumentTableFile(selected);
   const data = useMemo(
     () =>
       requirements.map((requirement) => {
@@ -43,8 +49,8 @@ export function DocumentRequirementTable({
         return {
           id: requirement.code,
           name: requirement.name,
-          format: format.actual || format.accepted || format.fallback,
-          formatDetails: format,
+          format:
+            format.actual || (requirement.collectionMode === 'original' ? format.fallback : '—'),
           status: documentStatusLabels[requirement.status],
           requirement,
           file: getDocumentTableFile(requirement),
@@ -61,11 +67,11 @@ export function DocumentRequirementTable({
         isSort: true,
         filterType: 'string',
         render: (_, row) => (
-          <Stack spacing={0.25}>
-            <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+          <Stack spacing={0.25} alignItems="flex-start">
+            <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere', maxWidth: 1 }}>
               {row.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 1 }}>
               {row.requirement.isRequired
                 ? 'Required'
                 : row.requirement.requirement === 'conditional'
@@ -73,51 +79,16 @@ export function DocumentRequirementTable({
                   : 'Optional'}
               {row.file ? ` · Copy version ${row.file.versionNumber}` : ''}
             </Typography>
-            {row.requirement.description && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ overflowWrap: 'anywhere' }}
-              >
-                {row.requirement.description}
-              </Typography>
-            )}
-            {row.requirement.blockers.map((blocker: string) => (
-              <Typography
-                key={blocker}
-                variant="caption"
-                color="warning.main"
-                sx={{ overflowWrap: 'anywhere' }}
-              >
-                {blocker}
-              </Typography>
-            ))}
+            {compact && <DocumentStatusLabel status={row.requirement.status} />}
           </Stack>
         ),
       },
       {
         id: 'format',
         label: 'Format',
-        minWidth: 120,
+        minWidth: 90,
         filterType: 'string',
-        render: (_, row) => (
-          <Stack spacing={0.25}>
-            <Typography variant="body2">{row.format}</Typography>
-            {row.formatDetails.actual && row.formatDetails.accepted && (
-              <Typography variant="caption" color="text.secondary">
-                Accepted: {row.formatDetails.accepted}
-              </Typography>
-            )}
-          </Stack>
-        ),
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        minWidth: 110,
-        filterType: 'string',
-        isSort: true,
-        render: (_, row) => <DocumentStatusLabel status={row.requirement.status} />,
+        render: (_, row) => <Typography variant="body2">{row.format}</Typography>,
       },
       {
         id: 'upload',
@@ -155,15 +126,17 @@ export function DocumentRequirementTable({
         excludeFromExport: true,
         render: (_, row) => (
           <DocumentFileControl
-            label={`View document details for ${row.name}`}
+            label={`Preview document for ${row.name}`}
             icon="mdi:eye-outline"
-            disabled={!row.file || !permissions.view}
+            disabled={!row.file?.canDownload || !permissions.view || !permissions.download}
             reason={
               !row.file
                 ? 'No uploaded file is available. Recorded originals and waivers are in evidence history.'
-                : 'Document access permission is required.'
+                : !permissions.view || !permissions.download
+                  ? 'Document access permission is required.'
+                  : 'Preview is not available for this evidence.'
             }
-            onClick={() => setSelectedCode(row.requirement.code)}
+            onClick={() => setSelection({ code: row.requirement.code, mode: 'preview' })}
           />
         ),
       },
@@ -197,13 +170,25 @@ export function DocumentRequirementTable({
           ),
       },
       {
+        id: 'status',
+        label: 'Status',
+        minWidth: 110,
+        filterType: 'string',
+        isSort: true,
+        sticky: true,
+        stickyPosition: 'right',
+        stickyOnMobile: false,
+        render: (_, row) => <DocumentStatusLabel status={row.requirement.status} />,
+      },
+      {
         id: 'actions',
         label: 'Actions',
         isSort: false,
         isFilter: false,
         sticky: true,
         stickyPosition: 'right',
-        minWidth: 80,
+        minWidth: 144,
+        width: 144,
         align: 'center',
         excludeFromExport: true,
         render: (_, row) => (
@@ -214,12 +199,12 @@ export function DocumentRequirementTable({
             readOnly={readOnly}
             allowWaivers={summary.policy?.allowWaivers === true}
             onAction={(action) => onAction(action, row.requirement)}
-            onHistory={() => setSelectedCode(row.requirement.code)}
+            onHistory={() => setSelection({ code: row.requirement.code, mode: 'history' })}
           />
         ),
       },
     ],
-    [permissions, disabled, readOnly, summary.policy?.allowWaivers, onAction]
+    [permissions, disabled, readOnly, summary.policy?.allowWaivers, onAction, compact]
   );
   return (
     <>
@@ -241,16 +226,28 @@ export function DocumentRequirementTable({
         }}
         tableContainerProps={{
           'aria-label': 'Admission document requirements',
-          sx: { minWidth: 0 },
+          sx: { minWidth: 0, height: 1 },
         }}
-        wrapperProps={{ sx: { minWidth: 0, minHeight: 0 } }}
+        wrapperProps={{ sx: { minWidth: 0, minHeight: 0, flex: 1 } }}
         noDataText="No applicable document requirements."
       />
-      {selected && permissions.view && (
+      {selected &&
+        selectedFile?.canDownload &&
+        permissions.view &&
+        permissions.download &&
+        selection?.mode === 'preview' && (
+          <DocumentPreviewDialog
+            key={selectedFile.id}
+            evidence={selectedFile}
+            name={selected.name}
+            onClose={() => setSelection(null)}
+          />
+        )}
+      {selected && permissions.view && selection?.mode === 'history' && (
         <CustomDialog
           open
           title={`${selected.name} · Document Details`}
-          handleClose={() => setSelectedCode(null)}
+          handleClose={() => setSelection(null)}
           maxWidth="sm"
           hasForm={false}
           guardUnsavedChanges={false}
@@ -265,9 +262,9 @@ export function DocumentRequirementTable({
                 Uploaded file information, recorded originals, waivers and review history.
               </Typography>
               {selected.blockers.map((blocker) => (
-                <Alert key={blocker} severity="info">
+                <Typography key={blocker} variant="body2" color="text.secondary">
                   {blocker}
-                </Alert>
+                </Typography>
               ))}
               <DocumentEvidenceHistory
                 evidence={selected.evidence}

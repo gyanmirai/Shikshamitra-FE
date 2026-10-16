@@ -37,7 +37,7 @@ export function DocumentChecklistContent({
     (item) => item.status === 'accepted' || item.status === 'waived'
   ).length;
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} sx={layout === 'table' ? { flex: 1, minWidth: 0, minHeight: 0 } : undefined}>
       {required.length > 0 && (
         <Stack spacing={0.5}>
           <Typography variant="body2">
@@ -50,7 +50,7 @@ export function DocumentChecklistContent({
           />
         </Stack>
       )}
-      {!readOnly && summary.blockers.length > 0 && (
+      {layout !== 'table' && !readOnly && summary.blockers.length > 0 && (
         <Alert severity="info">
           <Stack spacing={0.5}>
             {summary.blockers.map((blocker) => (
@@ -67,7 +67,7 @@ export function DocumentChecklistContent({
           </Stack>
         </Alert>
       )}
-      {!readOnly && summary.canComplete && summary.blockers.length === 0 && (
+      {layout !== 'table' && !readOnly && summary.canComplete && summary.blockers.length === 0 && (
         <Alert severity="success">
           Document requirements are complete. Continue to the next workflow step.
         </Alert>

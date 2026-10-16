@@ -168,15 +168,7 @@ describe('Admissions settings row actions', () => {
       status: 0,
     } as AdmissionForm;
 
-    render(
-      <FormRowActions
-        form={form}
-        canManage
-        canPublish
-        canDelete
-        {...handlers}
-      />
-    );
+    render(<FormRowActions form={form} canManage canPublish canDelete {...handlers} />);
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
@@ -185,10 +177,12 @@ describe('Admissions settings row actions', () => {
     await user.click(screen.getByRole('button', { name: 'More actions' }));
     expect(screen.getByRole('menuitem', { name: 'Clone as draft' })).toBeVisible();
     expect(screen.getByRole('menuitem', { name: 'History & versions' })).toBeVisible();
-    expect(screen.queryByRole('menuitem', { name: /approve|request changes/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: /approve|request changes/i })
+    ).not.toBeInTheDocument();
   });
 
-  it('offers distinct workflow preview and edit actions for a draft', () => {
+  it('keeps workflow draft edit and delete available without a redundant preview icon', () => {
     const handlers = {
       onView: vi.fn(),
       onEdit: vi.fn(),
@@ -196,6 +190,7 @@ describe('Admissions settings row actions', () => {
       onCreateVersion: vi.fn(),
       onUsage: vi.fn(),
       onArchive: vi.fn(),
+      onReopen: vi.fn(),
       onDelete: vi.fn(),
     };
     const workflow = {
@@ -212,13 +207,45 @@ describe('Admissions settings row actions', () => {
         canClone
         canCreateVersion
         canArchive
+        canReopen
         canViewUsage
         {...handlers}
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Preview Fresh admission journey' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'Preview Fresh admission journey' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit Fresh admission journey' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Delete Fresh admission journey' })).toBeEnabled();
+  });
+
+  it('offers Re-open only for an archived workflow with publication authority', async () => {
+    const onReopen = vi.fn();
+    const props = {
+      workflow: { id: 'archived-workflow', name: 'Archived journey', status: 2 } as AdmissionWorkflow,
+      canEdit: false,
+      canDelete: false,
+      canClone: false,
+      canCreateVersion: false,
+      canArchive: false,
+      canViewUsage: false,
+      canReopen: true,
+      onReopen,
+      onEdit: vi.fn(),
+      onClone: vi.fn(),
+      onCreateVersion: vi.fn(),
+      onUsage: vi.fn(),
+      onArchive: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const { rerender } = render(<WorkflowRowActions {...props} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Re-open' }));
+    expect(onReopen).toHaveBeenCalledOnce();
+    expect(props.onClone).not.toHaveBeenCalled();
+    rerender(<WorkflowRowActions {...props} canReopen={false} />);
+    expect(screen.queryByRole('button', { name: 'Re-open' })).not.toBeInTheDocument();
+    rerender(<WorkflowRowActions {...props} workflow={{ ...props.workflow, status: 1 }} />);
+    expect(screen.queryByRole('button', { name: 'Re-open' })).not.toBeInTheDocument();
   });
 });

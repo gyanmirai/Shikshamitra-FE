@@ -13,6 +13,7 @@ export interface ThreeDotsDirectAction {
   icon: string;
   color?: string;
   disabled?: boolean;
+  loading?: boolean;
   tooltip?: ReactNode;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }

@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,22 @@ audience: humans-and-agents
 # Validate Security frontend changes
 
 TL;DR: validate permission mappings, override persistence, review/discard, and the responsive matrix using current evidence.
+
+## Login and session redirect regression (2026-10-16)
+
+The global loader previously ran private verification on public pages and signed out after every bootstrap failure. A red regression run reproduced that behavior (16 failed / five passed before the loader fix). Because Auth.js sign-out broadcasts across tabs, a public-page failure could also invalidate an open staff workspace. The original browser incident did not retain its failing HTTP response, so its exact transport status is not claimed.
+
+The recovery suite covers anonymous/valid/invalid sessions on both public route families, context and permission failures, explicit retry, malformed responses, genuine 401/inactive-school invalidation, token/tenant transitions, A-to-B-to-A races, employee-response ownership, and cancellation on public navigation/unmount. Guard tests verify fail-closed retry UI, unchanged host/school/setup landing, and same-user tenant changes. Cache/service regressions preserve current-session invalidation while rejecting stale auth side effects; refresh and credential-request regressions preserve the existing policies.
+
+Run these focused files with one worker on memory-constrained Windows workstations:
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/redux/auth src/redux/session-cache.test.ts src/redux/service.auth-session.test.ts src/components/auth-route-layout/index.test.tsx src/components/normal-route-layout/index.test.tsx src/redux/host-tenants/session-context.test.ts src/redux/host-tenants/workspace-landing.test.ts src/auth-token.test.ts src/auth-request.test.ts src/utils/permissions.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism
+```
+
+The authenticated localhost browser check verified an existing-session login landing, public inquiry alongside the staff tab, staff-page reload, explicit logout, fresh DDVS sign-in, and return to the protected Public inquiry links table. No applicant, permission, or school-setting mutation was submitted. Failure injection is covered by component/request fixtures rather than live API disruption. Staging/production acceptance and a full-repository build are separate gates.
+
+Final focused validation passed 147 tests across 20 files: 30 loader/recovery cases, 20 cache/service/token-refresh cases, and 97 route/slice/credential/permission and existing Academic/HR transport cases. Strict ESLint passed all 22 changed source/test files with repository ignores disabled; the final recovery-test additions passed a separate one-file refresh. Focused TypeScript passed 14 session source/test files with the project theme and Vitest matcher setup included. This does not certify unrelated repository files. Security/Student documentation and scoped whitespace checks passed. Browser screenshots, the scoped typecheck runner and regression log are in `.artifacts/session-redirect-20261016*`.
 
 ## Role deletion
 

@@ -75,7 +75,14 @@ export function ApplicationManagedStages({
   )
     return null;
   return (
-    <Stack spacing={1} sx={stage?.stageType === 4 ? { flex: 1, minWidth: 0 } : undefined}>
+    <Stack
+      spacing={1}
+      sx={
+        stage?.stageType === 4 || (compact && stage?.documentVerificationEnabled)
+          ? { flex: 1, minWidth: 0, minHeight: 0 }
+          : undefined
+      }
+    >
       {stage?.formStageEnabled && !historical && (
         <ApplicationFormStage
           applicationId={application.id}

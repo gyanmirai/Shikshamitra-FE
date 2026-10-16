@@ -43,6 +43,10 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/student/onboarding/setup',
   useSearchParams: () => mocks.params,
 }));
+vi.mock('src/redux/student/onboarding/student-roll-number-batches-api', () => ({
+  useGetRollNumberBatchContextQuery: () => ({ currentData: { unassignedCount: 83, canAssignMissing: true }, isFetching: false, isError: false }),
+}));
+vi.mock('./student-roll-number-workspace', () => ({ default: () => <div role="dialog">Roll Number Workspace</div> }));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
   useSelector: (select: (state: unknown) => unknown) =>
@@ -313,6 +317,15 @@ describe('Student Setup workspace selection wiring', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
     expect(screen.getByTestId('auto-targets')).toHaveTextContent(/^case-1$/);
     expect(mocks.clearResults).toHaveBeenCalledOnce();
+  });
+
+  it('opens the full server roll workspace instead of reusing current-page automatic targets', () => {
+    setRoute('roll-number', 'grade-6'); mocks.params.set('division', 'division-a');
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Roll Number Workspace');
+    expect(screen.queryByTestId('auto-targets')).not.toBeInTheDocument();
+    expect(mocks.clearResults).not.toHaveBeenCalled();
   });
 
   it('disables Division Auto when more than one Class is selected', () => {

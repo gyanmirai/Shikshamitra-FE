@@ -88,7 +88,8 @@ export default function AdmissionApplicationDetailScreen({
   const [workspace, setWorkspace] = useState<WorkspaceView>({ view: 'journey' });
   const detail = useApplicationDetail(
     applicationId ?? params.id,
-    workspace.view === 'journey' ? workspace.stageId : undefined
+    workspace.view === 'journey' ? workspace.stageId : undefined,
+    workspace.view
   );
   const completionDialog = useBoolean();
   const endJourneyDialog = useBoolean();
@@ -168,13 +169,16 @@ export default function AdmissionApplicationDetailScreen({
   const stageDraftDirty = Boolean(
     stageReadiness?.stageId === selectedStage?.id && stageReadiness?.dirty
   );
-  const isLoading = applicationQuery.isLoading || formQuery.isLoading || workflowQuery.isLoading;
+  const requiresForm =
+    workspace.view === 'form' || (workspace.view === 'journey' && isFormStage(selectedStage));
+  const isLoading =
+    applicationQuery.isLoading || workflowQuery.isLoading || (requiresForm && formQuery.isLoading);
   const applicationNotFound = isAdmissionApplicationNotFound(applicationQuery.error);
   const isError =
     applicationQuery.isError ||
-    formQuery.isError ||
+    (requiresForm && formQuery.isError) ||
     workflowQuery.isError ||
-    (!isLoading && (!application || !form));
+    (!isLoading && (!application || !workflow || (requiresForm && !form)));
   const workspaceBusy =
     panelBusy.counsellor ||
     panelBusy.decision ||
@@ -389,7 +393,7 @@ export default function AdmissionApplicationDetailScreen({
       />
     );
   const renderLoadedContent = () => {
-    if (!application || !form) return null;
+    if (!application) return null;
     if (workspace.view === 'history') {
       const hasJourneyClosure =
         application.status === 2 && Boolean(application.decisionReason?.trim());
@@ -404,7 +408,11 @@ export default function AdmissionApplicationDetailScreen({
               Current Step
             </Button>
           </Stack>
-          {hasHistory ? (
+          {detail.formHistoryQuery.isLoading ? (
+            <Skeleton variant="rounded" height={160} aria-label="Loading application history" />
+          ) : detail.formHistoryQuery.isError ? (
+            <AdmissionQueryError onRetry={detail.formHistoryQuery.refetch} />
+          ) : hasHistory ? (
             <>
               {hasJourneyClosure && (
                 <Alert severity="info">
@@ -452,8 +460,10 @@ export default function AdmissionApplicationDetailScreen({
         aria-label={selectedStage?.name ?? 'Admission stage'}
         spacing={1.5}
         sx={
-          selectedStage?.stageType === 4 || isFormStage(selectedStage)
-            ? { flex: 1, minWidth: 0 }
+          selectedStage?.stageType === 4 ||
+          isFormStage(selectedStage) ||
+          selectedStage?.documentVerificationEnabled
+            ? { flex: 1, minWidth: 0, minHeight: 0 }
             : undefined
         }
       >
@@ -801,7 +811,7 @@ export default function AdmissionApplicationDetailScreen({
                 <AdmissionQueryError
                   onRetry={() => {
                     applicationQuery.refetch();
-                    formQuery.refetch();
+                    if (requiresForm && !formQuery.isUninitialized) formQuery.refetch();
                     workflowQuery.refetch();
                   }}
                 />

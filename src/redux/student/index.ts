@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentType } from 'src/redux/tagTypes';
+import { studentType, studentOnboardingType } from 'src/redux/tagTypes';
 
 import { unwrapStudentRecordProfile } from './student-profile-types';
 
@@ -60,6 +60,7 @@ export const StudentApi = api.injectEndpoints({
       transformResponse: unwrapStudentRecordProfile,
       providesTags: (_result, _error, input) => [
         studentType.student,
+        studentOnboardingType.rollNumberBatch,
         {
           type: studentType.student,
           id: `RECORDS-PROFILE-${typeof input === 'string' ? input : input.studentId}`,

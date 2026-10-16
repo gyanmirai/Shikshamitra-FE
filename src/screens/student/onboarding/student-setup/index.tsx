@@ -19,6 +19,7 @@ import {
   readAcademicFilterIds,
   academicClassFilterInput,
 } from 'src/utils/student-academic-filter-query';
+import { useGetRollNumberBatchContextQuery } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 import {
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingCasesQuery,
@@ -32,6 +33,7 @@ import StudentSetupDrawer from './student-setup-drawer';
 import { StudentSetupFilters } from './student-setup-academic-filters';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
+import StudentRollNumberWorkspace from './student-roll-number-workspace';
 import { useStudentSetupAssignment } from './use-student-setup-assignment';
 import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
 import StudentIdentifierLockControls from './student-identifier-lock-controls';
@@ -151,6 +153,7 @@ export default function StudentSetupScreen() {
     students: StudentOnboardingItem[];
   } | null>(null);
   const [lockInteraction, setLockInteraction] = useState(false);
+  const [rollWorkspace, setRollWorkspace] = useState<'manage' | 'assign-missing' | null>(null);
   const navigationRef = useRef<(action: () => void) => void>((action) => action());
   const navigate = useCallback((action: () => void) => navigationRef.current(action), []);
   const [assignmentRequest, setAssignmentRequest] = useState<{
@@ -593,9 +596,18 @@ export default function StudentSetupScreen() {
     totalCount: onboardingQuery.currentData?.totalCount ?? 0,
   });
   const { displayedRows } = assignment;
+  const rollClassIds = readAcademicFilterIds(selectedStandardId);
+  const rollDivisionIds = readAcademicFilterIds(selectedDivisionId);
+  const rollScope =
+    academicYearId && rollClassIds.length === 1 && rollDivisionIds.length === 1
+      ? { academicYearId, standardId: rollClassIds[0], divisionId: rollDivisionIds[0] }
+      : undefined;
+  const rollContext = useGetRollNumberBatchContextQuery(rollScope!, {
+    skip: activeView !== 'roll-number' || !rollScope,
+  });
   const interactionBusy = assignment.busy || lockInteraction;
   const { requestNavigation, confirmation } = useUnsavedNavigation(assignment.form.dirty, {
-    blockNavigation: interactionBusy || Boolean(autoAssignment),
+    blockNavigation: interactionBusy || Boolean(autoAssignment) || Boolean(rollWorkspace),
     push: (href) => {
       assignment.cancel();
       router.push(href);
@@ -921,7 +933,15 @@ export default function StudentSetupScreen() {
                   !onboardingQuery.currentData
                 }
                 automaticCount={
-                  activeView === 'division' && !showDivisionSelection ? 0 : automaticTargets.length
+                  activeView === 'roll-number'
+                    ? rollContext.currentData?.canAssignMissing &&
+                      !rollContext.isFetching &&
+                      !rollContext.isError
+                      ? rollContext.currentData.unassignedCount
+                      : 0
+                    : activeView === 'division' && !showDivisionSelection
+                      ? 0
+                      : automaticTargets.length
                 }
                 manualCount={manualTargets.length}
                 manualEditing={assignment.manualEditing}
@@ -929,6 +949,10 @@ export default function StudentSetupScreen() {
                   assignment.contextChanged || !canManageOnboarding ? 0 : assignment.changedCount
                 }
                 onAuto={() => {
+                  if (activeView === 'roll-number' && rollScope) {
+                    navigate(() => setRollWorkspace('assign-missing'));
+                    return;
+                  }
                   if (assignmentType && automaticTargets.length) {
                     assignment.clearResults();
                     setAutoAssignment({ type: assignmentType, students: automaticTargets });
@@ -948,25 +972,43 @@ export default function StudentSetupScreen() {
                 onReasonBlur={() => assignment.form.setFieldTouched('reason')}
                 locks={
                   activeView === 'gr-number' || activeView === 'roll-number' ? (
-                    <StudentIdentifierLockControls
-                      academicYearId={academicYearId}
-                      divisionId={
-                        readAcademicFilterIds(selectedDivisionId).length === 1
-                          ? readAcademicFilterIds(selectedDivisionId)[0]
-                          : undefined
-                      }
-                      identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
-                      canLock={canManageOnboarding}
-                      canUnlock={
-                        canManageOnboarding &&
-                        !filterOptionsQuery.isError &&
-                        filterOptionsQuery.currentData?.canUnlockIdentifiers === true
-                      }
-                      disabled={
-                        assignment.manualEditing || assignment.busy || onboardingQuery.isFetching
-                      }
-                      onInteractionChange={setLockInteraction}
-                    />
+                    <>
+                      {activeView === 'roll-number' && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="inherit"
+                          title={
+                            rollScope
+                              ? 'Review division roll numbering and approval batches'
+                              : 'Choose one Class and one Division first'
+                          }
+                          disabled={!rollScope || interactionBusy || assignment.manualEditing}
+                          onClick={() => navigate(() => setRollWorkspace('manage'))}
+                        >
+                          Manage Roll Numbers
+                        </Button>
+                      )}
+                      <StudentIdentifierLockControls
+                        academicYearId={academicYearId}
+                        divisionId={
+                          readAcademicFilterIds(selectedDivisionId).length === 1
+                            ? readAcademicFilterIds(selectedDivisionId)[0]
+                            : undefined
+                        }
+                        identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
+                        canLock={canManageOnboarding}
+                        canUnlock={
+                          canManageOnboarding &&
+                          !filterOptionsQuery.isError &&
+                          filterOptionsQuery.currentData?.canUnlockIdentifiers === true
+                        }
+                        disabled={
+                          assignment.manualEditing || assignment.busy || onboardingQuery.isFetching
+                        }
+                        onInteractionChange={setLockInteraction}
+                      />
+                    </>
                   ) : undefined
                 }
               />
@@ -1120,6 +1162,15 @@ export default function StudentSetupScreen() {
         />
       )}
       {confirmation}
+      {rollWorkspace && rollScope && (
+        <StudentRollNumberWorkspace
+          key={`${rollScope.academicYearId}:${rollScope.standardId}:${rollScope.divisionId}`}
+          scope={rollScope}
+          operation={rollWorkspace === 'assign-missing' ? 'assign-missing' : undefined}
+          onClose={() => setRollWorkspace(null)}
+          onInteractionChange={setLockInteraction}
+        />
+      )}
     </Stack>
   );
 }

@@ -3,7 +3,6 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowUsage,
   AdmissionWorkflowTransition,
-  AdmissionWorkflowValidationResult,
   AdmissionWorkflowGovernanceHistory,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
@@ -17,7 +16,6 @@ import type { WorkflowSidePanel } from '../workflow-builder-types';
 const TITLES: Record<Exclude<WorkflowSidePanel, null>, string> = {
   preview: 'Workflow preview',
   simulation: 'Test workflow routes',
-  validation: 'Validation results',
   versions: 'Version history',
   usage: 'Workflow usage',
   governance: 'Governance history',
@@ -26,7 +24,6 @@ const TITLES: Record<Exclude<WorkflowSidePanel, null>, string> = {
 const DESCRIPTIONS: Record<Exclude<WorkflowSidePanel, null>, string> = {
   preview: 'Review the applicant journey and every configured onward route.',
   simulation: 'Try common admission outcomes before validating or publishing this workflow.',
-  validation: 'Review configuration issues that affect workflow publication.',
   versions: 'Compare this workflow with its earlier and published versions.',
   usage: 'See where this workflow is currently connected and used.',
   governance: 'Review approval decisions and governance activity for this version.',
@@ -37,7 +34,6 @@ type Props = {
   workflow: AdmissionWorkflow;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
-  validation: AdmissionWorkflowValidationResult | null;
   versions?: AdmissionWorkflow[];
   usage?: AdmissionWorkflowUsage;
   usageLoading: boolean;
@@ -52,7 +48,6 @@ export function WorkflowSidePanel({
   workflow,
   stages,
   transitions,
-  validation,
   versions,
   usage,
   usageLoading,
@@ -112,7 +107,6 @@ export function WorkflowSidePanel({
             workflow={workflow}
             stages={stages}
             transitions={transitions}
-            validation={validation}
             versions={versions}
             usage={usage}
             usageLoading={usageLoading}

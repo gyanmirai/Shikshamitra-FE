@@ -89,3 +89,30 @@ it('does not create a downloadable URL when the student evidence endpoint denies
   ).rejects.toMatchObject({ status: 403 });
   expect(createUrl).not.toHaveBeenCalled();
 });
+
+it('authorizes previews while keeping private bytes and URLs out of Redux state', async () => {
+  let authorization = '';
+  mswServer.use(
+    http.get(`${documentPath}/evidence/evidence-1/download`, ({ request }) => {
+      authorization = request.headers.get('authorization') ?? '';
+      return new HttpResponse('private-preview-bytes', {
+        headers: { 'Content-Type': 'image/png' },
+      });
+    })
+  );
+  const receive = vi.fn();
+  const result = await store
+    .dispatch(
+      admissionDocumentDownloadApi.endpoints.previewAdmissionDocument.initiate({
+        evidenceId: 'evidence-1',
+        receive,
+      })
+    )
+    .unwrap();
+  expect(result).toEqual({ previewed: true });
+  expect(authorization).toBe('Bearer test-document-token');
+  expect(receive).toHaveBeenCalledOnce();
+  expect(receive.mock.calls[0][0]).toBeInstanceOf(Blob);
+  expect(await receive.mock.calls[0][0].text()).toBe('private-preview-bytes');
+  expect(JSON.stringify(store.getState().api)).not.toContain('private-preview-bytes');
+});

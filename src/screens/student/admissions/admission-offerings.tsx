@@ -103,28 +103,11 @@ export default function AdmissionOfferingsScreen() {
           activation={screen.bulkActivation}
           disabled={screen.bulkActivationDisabled}
         />
-        {filteredEmpty && (
-          <Alert
-            severity="info"
-            action={
-              <Button
-                size="small"
-                color="inherit"
-                startIcon={<Iconify icon="mdi:filter-remove-outline" />}
-                onClick={screen.clearFilters}
-              >
-                Clear filters
-              </Button>
-            }
-            sx={{ mb: 1 }}
-          >
-            No offerings match the current filters. Clear them to return to all offerings in this
-            admission cycle.
-          </Alert>
-        )}
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <AdmissionOfferingTable
             rows={screen.offeringsQuery.data?.items ?? []}
+            filteredEmpty={filteredEmpty}
+            onClearFilters={screen.clearFilters}
             loading={
               screen.cyclesQuery.isLoading ||
               screen.cyclesQuery.isFetching ||

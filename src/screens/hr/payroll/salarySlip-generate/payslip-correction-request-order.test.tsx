@@ -15,7 +15,12 @@ const originalApiUrl = vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://payslip-correction.test';
   return original;
 });
-vi.mock('src/redux/session-cache', () => ({ getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }), clearCachedAuthSession: vi.fn() }));
+vi.mock('src/redux/session-cache', () => ({
+  getCachedAuthSession: async () => ({ accessToken: 'synthetic-test-token' }),
+  clearCachedAuthSession: vi.fn(),
+  getAuthSessionCacheRevision: () => 0,
+  isAuthSessionCacheCurrent: () => true,
+}));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/hooks/use-unsaved-navigation', () => ({ useUnsavedNavigation: () => ({ requestNavigation: (proceed: () => void) => proceed(), confirmation: null }) }));
 vi.mock('src/components/customDialog', () => ({

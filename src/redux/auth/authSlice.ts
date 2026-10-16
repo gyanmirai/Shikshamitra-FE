@@ -15,6 +15,9 @@ interface AuthState {
   mainModuleVisibility: boolean[];
   sessionContext: HostSessionContext | null;
   currentRequestId: string | null;
+  initializationError: string | null;
+  initializationVersion: number;
+  employeeRequestId: string | null;
 }
 export function extractGrantedPermissions(groups: any): { name: string; isGranted: boolean }[] {
   if (!Array.isArray(groups)) return [];
@@ -54,9 +57,18 @@ const buildModuleVisibility = (permissions: { name: string; isGranted: boolean }
     )
   );
 
+async function readFailureCode(response: Response): Promise<string | undefined> {
+  try {
+    const failure = await response.json();
+    return typeof failure?.errorCode === 'string' ? failure.errorCode : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
-  async (userSession: any, { rejectWithValue }) => {
+  async (userSession: any, { rejectWithValue, signal }) => {
     try {
       const userId = userSession?.profile?.sub;
       const accessToken = userSession?.accessToken;
@@ -71,17 +83,19 @@ export const loadUser = createAsyncThunk(
       };
       const contextResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/host/session-context`,
-        { headers }
+        { headers, signal }
       );
 
-      if (!contextResponse.ok)
+      if (!contextResponse.ok) {
         return rejectWithValue({
           status: contextResponse.status,
+          errorCode: await readFailureCode(contextResponse),
           message: 'Unable to verify the account context.',
         });
+      }
       const sessionContext: unknown = await contextResponse.json();
       if (!isHostSessionContext(sessionContext))
-        return rejectWithValue({ status: 401, message: 'Invalid account context.' });
+        return rejectWithValue({ status: 'INVALID_RESPONSE', message: 'Invalid account context.' });
 
       if (sessionContext.accountMode === 'host') {
         const permissionData = [
@@ -103,12 +117,13 @@ export const loadUser = createAsyncThunk(
 
       const permissionResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${encodeURIComponent(userId)}`,
-        { method: 'GET', headers }
+        { method: 'GET', headers, signal }
       );
 
       if (!permissionResponse.ok) {
         return rejectWithValue({
           status: permissionResponse.status,
+          errorCode: await readFailureCode(permissionResponse),
           message: 'Unable to initialize user permissions.',
         });
       }
@@ -130,7 +145,7 @@ export const loadUser = createAsyncThunk(
 
 export const getEmployee = createAsyncThunk(
   'auth/getEmployee',
-  async (userData: any, { rejectWithValue }) => {
+  async (userData: any, { rejectWithValue, signal }) => {
     try {
       if (!userData?.accessToken || userData?.error) {
         return rejectWithValue({ status: 401, message: 'The authentication session is invalid.' });
@@ -138,6 +153,7 @@ export const getEmployee = createAsyncThunk(
 
       const employeeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/employees/me`, {
         method: 'GET',
+        signal,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userData?.accessToken}`,
@@ -145,6 +161,12 @@ export const getEmployee = createAsyncThunk(
       });
       if (employeeRes.status === 401) {
         return rejectWithValue({ status: 401, message: 'The authentication session has expired.' });
+      }
+      if (
+        employeeRes.status === 403 &&
+        (await readFailureCode(employeeRes)) === 'TENANT_INACTIVE'
+      ) {
+        return rejectWithValue({ status: 403, errorCode: 'TENANT_INACTIVE' });
       }
       if (!employeeRes.ok) {
         return null;
@@ -167,6 +189,9 @@ const initialState: AuthState = {
   mainModuleVisibility: [],
   sessionContext: null,
   currentRequestId: null,
+  initializationError: null,
+  initializationVersion: 0,
+  employeeRequestId: null,
 };
 
 const authSlice = createSlice({
@@ -187,6 +212,14 @@ const authSlice = createSlice({
       state.permissionsInitialized = false;
       state.sessionContext = null;
       state.currentRequestId = null;
+      state.employeeRequestId = null;
+      state.initializationError = null;
+    },
+    retrySessionInitialization: (state) => {
+      state.initializationError = null;
+      state.initializationVersion += 1;
+      state.permissionsInitialized = false;
+      state.loading = true;
     },
     setMainModuleVisibility: (state, action: PayloadAction<boolean[]>) => {
       state.mainModuleVisibility = action.payload;
@@ -200,6 +233,7 @@ const authSlice = createSlice({
     builder
       .addCase(loadUser.pending, (state, action) => {
         state.loading = true;
+        state.initializationError = null;
         state.currentRequestId = action.meta.requestId;
       })
       .addCase(loadUser.fulfilled, (state, action) => {
@@ -212,6 +246,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.permissionsInitialized = true;
         state.sessionContext = action.payload.sessionContext;
+        state.initializationError = null;
       })
       .addCase(loadUser.rejected, (state, action) => {
         if (state.currentRequestId !== action.meta.requestId) return;
@@ -222,19 +257,32 @@ const authSlice = createSlice({
         state.permissions = [];
         state.mainModuleVisibility = [];
         state.loading = false;
-        state.permissionsInitialized = true;
+        state.permissionsInitialized = !action.meta.aborted;
         state.sessionContext = null;
+        const failure = action.payload as { status?: number; errorCode?: string } | undefined;
+        state.initializationError =
+          action.meta.aborted ||
+          failure?.status === 401 ||
+          (failure?.status === 403 && failure?.errorCode === 'TENANT_INACTIVE')
+            ? null
+            : 'We could not verify your account access. Please try again.';
       })
-      .addCase(getEmployee.pending, (state) => {
-        // state.loading = true;
+      .addCase(getEmployee.pending, (state, action) => {
+        state.employeeRequestId = action.meta.requestId;
       })
       .addCase(getEmployee.fulfilled, (state, action) => {
+        if (state.employeeRequestId !== action.meta.requestId) return;
+        state.employeeRequestId = null;
         if (action.meta.arg?.profile?.sub !== state.user?.sub) return;
+        if (action.meta.arg?.profile?.tenantid !== state.user?.tenantid) return;
         state.employee = action.payload;
         // state.loading = false;
       })
       .addCase(getEmployee.rejected, (state, action) => {
+        if (state.employeeRequestId !== action.meta.requestId) return;
+        state.employeeRequestId = null;
         if (action.meta.arg?.profile?.sub !== state.user?.sub) return;
+        if (action.meta.arg?.profile?.tenantid !== state.user?.tenantid) return;
         state.employee = null;
         // state.error = action.payload;
         // state.loading = false;
@@ -242,5 +290,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser, setMainModuleVisibility, setPermissions } = authSlice.actions;
+export const {
+  setUser,
+  clearUser,
+  setMainModuleVisibility,
+  setPermissions,
+  retrySessionInitialization,
+} = authSlice.actions;
 export default authSlice.reducer;

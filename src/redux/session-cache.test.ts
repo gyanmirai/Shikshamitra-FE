@@ -1,7 +1,12 @@
 import { getSession } from 'next-auth/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
-import { getCachedAuthSession, clearCachedAuthSession } from './session-cache';
+import {
+  getCachedAuthSession,
+  clearCachedAuthSession,
+  isAuthSessionCacheCurrent,
+  getAuthSessionCacheRevision,
+} from './session-cache';
 
 vi.mock('next-auth/react', () => ({
   getSession: vi.fn(),
@@ -80,5 +85,44 @@ describe('session cache', () => {
     await getCachedAuthSession();
 
     expect(mockedGetSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not let an old rejected lookup clear the replacement account session', async () => {
+    let rejectOld!: (error: Error) => void;
+    mockedGetSession.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        rejectOld = reject;
+      })
+    );
+    const oldRequest = getCachedAuthSession();
+    const oldFailure = expect(oldRequest).rejects.toThrow('Old session lookup failed');
+    clearCachedAuthSession();
+    const current = buildSession(7200);
+    mockedGetSession.mockResolvedValueOnce(current);
+    await getCachedAuthSession();
+    const currentRevision = getAuthSessionCacheRevision();
+
+    rejectOld(new Error('Old session lookup failed'));
+    await oldFailure;
+
+    expect(isAuthSessionCacheCurrent(currentRevision, current.accessToken)).toBe(true);
+    await expect(getCachedAuthSession()).resolves.toBe(current);
+    expect(mockedGetSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('invalidates request ownership even when the replacement session has the same token', async () => {
+    const current = buildSession();
+    mockedGetSession.mockResolvedValue(current);
+    await getCachedAuthSession();
+    const oldRevision = getAuthSessionCacheRevision();
+    expect(isAuthSessionCacheCurrent(oldRevision, current.accessToken)).toBe(true);
+
+    clearCachedAuthSession();
+    await getCachedAuthSession();
+
+    expect(isAuthSessionCacheCurrent(oldRevision, current.accessToken)).toBe(false);
+    expect(isAuthSessionCacheCurrent(getAuthSessionCacheRevision(), current.accessToken)).toBe(
+      true
+    );
   });
 });

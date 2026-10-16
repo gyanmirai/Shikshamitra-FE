@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,6 +53,14 @@ Admissions Inquiries, Pipeline, Applications, and Admission Offering use one Boa
 Certificates uses the compact icon tabs from Student Setup, with the Generated month picker on the right of the same bar (stacked within that bar on narrow screens). The page header offers a small Create certificate action; Configure template is not shown here. Certificate creation defaults to the first school level, class and division under the selected Board/Medium. Changing a parent selects the first available descendants and clears selected students. Creation, preview, batch review and certificate-action dialogs use the shared dialog shell, Title Case headings, title information tooltips and small footer buttons with leading icons.
 
 ## Configuration workflow
+
+Admission setup UI uses the existing section cards, table, drawer and toast components. Workflow validation reports its messages through the shared toast without opening a second drawer. Read-only stages remain accessible from their titles and route summaries; their eye and overflow icons are removed. Archived workflow versions offer **Re-open**, with a consequence confirmation and stale-data refresh; restored content remains read-only. Document checklist rows group requirement metadata and actions together.
+
+Intake setup retains the right-side drawer. Routing guidance appears once per editor session as a toast; the table's routine “How it works” banner is removed. Review shows the setup name above two equal-height cards on desktop, with stacked label/value details and wrapping counsellor chips; cards stack on narrow screens. Usage warnings, lookup failures, field validation and unsaved-change protection remain visible. Inquiry **Move to next stage** shows progress on the initiating row and blocks competing actions during the request and navigation.
+
+Offering filtered-empty recovery lives inside the table with **Clear filters**. Bulk Preview uses the shared compact table for class/code, status and class-specific issues. Create Assessment Session uses title information in the shared tooltip; the current setup drawer already follows this pattern, and the retained legacy dialog is aligned with it.
+
+New public inquiry links expose **Copy inquiry link** in their table row. Creating a link clears table search/filter/sort and returns to the first page so that row is immediately available. The full address is retained only for the current mounted session; older or reloaded rows explain why copying is unavailable. Routine routing helper text and the public form's repeated admission-period banner are removed; errors and validation remain. PAN typing and paste normalize lowercase characters to uppercase before validation. **Source multiselect is deferred to backlog; each link still has one source.**
 
 1. In **Admission Periods**, an administrator creates or selects the admission cycle that controls the intake window.
 2. In **Admission Form**, the administrator builds, previews, validates, and publishes reusable Inquiry and Registration forms. Correction requests reopen the existing Registration form; consent questions can be included in that form. Document requirements are configured in the Document Verification stage of the Admission Stage workflow.
@@ -374,6 +382,8 @@ Pipeline and Applications open Applicant 360 as a normal page with the left work
 
 Applicant identity, journey navigation, the selected stage and footer share one connected surface. Narrow screens collapse the journey into an expandable navigator and stack stage summaries beneath their controls. The form footer contains Previous, Save and Save & Next (or the final Submit application action); submitted/read-only forms retain navigation without exposing edit actions. Assessment rules use a compact strip, with a focused empty state and actionable booking/error messages. Fee confirmation groups published mandatory/optional heads with their actual revision and selection summary; amounts remain reference values and do not represent collected payment or new dues. Decision review rows open the corresponding guarded stage and use its real recorded status.
 
+The document verification table keeps required-document progress and status labels, without the checklist advice banner, per-row blocker sentences or accepted-format subtitles. Format describes the uploaded file; missing uploads show an em dash. Upload validation still uses the configured extensions and size limit. Eligible review, replacement, original-recording, waiver and evidence-history actions appear as direct icon buttons with record-specific tooltips; this checklist is an explicitly approved exception to the usual action overflow rule. Status and actions remain sticky on desktop. On phones, status also appears below the document name and its separate column scrolls, leaving more reading space beside sticky actions. View opens the actual protected image or PDF in a read-only preview dialog, with image zoom/fit, download, loading and retry states. Evidence history stays separate, and read-only, server capability, permission and continuation rules are unchanged.
+
 The page uses small themed actions, a header More menu and the shared document verification table. More includes the existing authorized counsellor assignment, review/history and workflow actions, plus Notes & Follow-ups. Notes & Follow-ups opens a right drawer with the shared note editor, MUI date-time scheduling form and combined history; the journey no longer repeats the inline follow-up panel. Switching activity type retains both drafts, failed commands preserve input, and closing confirms unsaved notes, scheduling or completion comments. The drawer uses one common custom scrollbar with a fixed header/footer. Inquiry screens retain their existing scheduling popover and history disclosure. Form section navigation uses the common custom scrollbar, while verification aligns each section's status and action without fixed offsets. End journey and Continue admission sit together in the footer; Continue acts only on the actual current stage after its existing requirements pass. End journey requires an audit reason and server eligibility before withdrawing the pre-finalization application. History and evidence remain available. Leaving or switching workspaces confirms unsaved answers/fee changes; blocking mutations lock conflicting actions. Failed saves preserve answers and the selected section. View-only access cannot edit or submit answers.
 
 The runtime screen and field adapter are `admission-application-detail.tsx` and `admission-runtime-field.tsx`.
@@ -502,3 +512,18 @@ The account owner verifies their own mailbox and chooses a password through the 
 Manual Send is allowed even when automatic email is Off, while preserving the school's settings and the case snapshot.
 Missing required access, permission, recipient or readiness still produces one actionable message.
 The legacy audited case-only correction API remains available to its existing authorized consumers but is not part of the simplified Send flow.
+
+## Roll-number settings and division review
+
+1. In Onboarding Settings → Roll Number, select the academic path, grouping, sort field/direction and name format, save a Draft, then Publish through the existing versioned rule flow.
+2. In Student Setup → Roll Number, choose one Class and one Division before Auto; filters, search and page selection do not shrink the server cohort.
+3. Review proposed numbers and flagged records in the shared Roll Number workspace before submitting Assign Missing.
+4. Use Manage Roll Numbers from that toolbar or the active Student Records List to review recent batches and, for server-authorized administrators, Renumber Division.
+5. Renumber requires a reason and explicit confirmation; saved school approval can leave the whole batch Awaiting Approval without changing any numbers.
+6. An eligible independent reviewer approves the whole batch; an authorized operator then applies it after a fresh server check.
+
+The bounded 360 px table is an embedded immutable-batch review surface, not a replacement for the full-height Student worklist.
+It reuses CustomizableTable, CustomDialog, ConfirmDialog, Formik, shared validation controls and existing unsaved/busy guards.
+Shared pagination reports one-based pages; the workspace converts them to API offsets while preserving the frozen cohort.
+Errors retain safe displayed data and disable writes until refresh; missing prerequisites, empty divisions, blocked rows and approval status remain distinct.
+Finance pages and behavior are unchanged.

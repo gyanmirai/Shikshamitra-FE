@@ -58,8 +58,23 @@ export function ApplicationDocumentsPanel({
     concurrencyStamp: summary?.concurrencyStamp,
   });
   return (
-    <Card sx={{ p: historical ? 0 : 2, boxShadow: historical ? 'none' : undefined }}>
-      <Stack spacing={2}>
+    <Card
+      sx={{
+        p: historical ? 0 : 2,
+        boxShadow: historical ? 'none' : undefined,
+        ...(layout === 'table' && {
+          flex: 1,
+          minWidth: 0,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }),
+      }}
+    >
+      <Stack
+        spacing={2}
+        sx={layout === 'table' ? { flex: 1, minWidth: 0, minHeight: 0 } : undefined}
+      >
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
           <Typography variant="h6">{stage.name}</Typography>
           {permissions.view && (

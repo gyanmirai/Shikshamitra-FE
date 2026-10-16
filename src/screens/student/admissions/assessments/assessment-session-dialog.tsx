@@ -7,7 +7,7 @@ import type {
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Button, Typography, DialogActions } from '@mui/material';
+import { Alert, Button, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { AssessmentSessionFields } from './assessment-session-fields';
@@ -50,12 +50,10 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
       hasUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
       maxWidth="sm"
-      title={session ? 'Edit assessment session' : 'Create assessment session'}
+      title={session ? 'Edit Assessment Session' : 'Create Assessment Session'}
+      titleInfo={`Set the session time, location, and capacity for ${assessmentScopeLabel(scope)}.`}
     >
       <DialogScrollContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {assessmentScopeLabel(scope)}
-        </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}

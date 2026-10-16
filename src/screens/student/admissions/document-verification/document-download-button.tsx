@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Button, Tooltip, IconButton } from '@mui/material';
+import { Button, IconButton } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useDownloadAdmissionDocumentMutation } from 'src/redux/student/admissions/admission-document-download-api';
 
@@ -39,8 +40,9 @@ export function DocumentDownloadButton({
   };
   if (compact) {
     return (
-      <Tooltip title={downloading ? 'Downloading…' : label}>
-        <span>
+      <CustomTooltip title={downloading ? 'Downloading…' : label} placement="right" arrow>
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keep the busy tooltip reachable from the keyboard. */}
+        <span tabIndex={downloading ? 0 : undefined}>
           <IconButton
             size="small"
             aria-label={label}
@@ -51,7 +53,7 @@ export function DocumentDownloadButton({
             <Iconify icon="mdi:download" width={16} />
           </IconButton>
         </span>
-      </Tooltip>
+      </CustomTooltip>
     );
   }
   return (

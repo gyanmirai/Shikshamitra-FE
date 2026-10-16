@@ -42,6 +42,7 @@ type Handlers = {
   onCreateVersion: (workflow: AdmissionWorkflow) => void;
   onUsage: (workflow: AdmissionWorkflow) => void;
   onArchive: (workflow: AdmissionWorkflow) => void;
+  onReopen: (workflow: AdmissionWorkflow) => void;
   onDelete: (workflow: AdmissionWorkflow) => void;
 };
 
@@ -132,6 +133,7 @@ export function createWorkflowColumns(
             onCreateVersion={() => handlers.onCreateVersion(workflow)}
             onUsage={() => handlers.onUsage(workflow)}
             onArchive={() => handlers.onArchive(workflow)}
+            onReopen={() => handlers.onReopen(workflow)}
             onDelete={() => handlers.onDelete(workflow)}
           />
         );

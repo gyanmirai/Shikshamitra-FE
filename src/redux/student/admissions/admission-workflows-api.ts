@@ -141,7 +141,7 @@ export type AdmissionWorkflowGovernanceSettings = {
 export type AdmissionWorkflowApprover = { id: string; userName: string; name: string };
 export type AdmissionWorkflowGovernanceHistory = {
   id: string;
-  action: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  action: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   fromStatus?: AdmissionWorkflowStatus | null;
   toStatus: AdmissionWorkflowStatus;
   actorUserId?: string | null;
@@ -518,6 +518,23 @@ export const admissionWorkflowsApi = api.injectEndpoints({
         { type: studentAdmissionsCrmType.admissionWorkflow, id: `VERSIONS-${input.id}` },
       ],
     }),
+    reopenAdmissionWorkflow: builder.mutation<
+      AdmissionWorkflow,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/enrollment/admissions/workflows/${id}/reopen`,
+        method: 'POST',
+        params: { concurrencyStamp },
+      }),
+      transformResponse: (r: Result<AdmissionWorkflow> | AdmissionWorkflow) =>
+        normalizeWorkflow(unwrap(r)),
+      // Restoration affects sibling history, published options, and linked Offering readiness.
+      invalidatesTags: [
+        studentAdmissionsCrmType.admissionWorkflow,
+        studentAdmissionsCrmType.admissionOffering,
+      ],
+    }),
     getAdmissionWorkflowVersions: builder.query<AdmissionWorkflow[], string>({
       query: (id) => ({ url: `/student/enrollment/admissions/workflows/${id}/versions` }),
       transformResponse: (r: Result<AdmissionWorkflow[]> | AdmissionWorkflow[]) =>
@@ -562,6 +579,7 @@ export const {
   useGetAdmissionWorkflowNotificationsQuery,
   useMarkAdmissionWorkflowNotificationReadMutation,
   useArchiveAdmissionWorkflowMutation,
+  useReopenAdmissionWorkflowMutation,
   useGetAdmissionWorkflowVersionsQuery,
   useGetAdmissionWorkflowUsageQuery,
   useGetAdmissionWorkflowStageTypesQuery,

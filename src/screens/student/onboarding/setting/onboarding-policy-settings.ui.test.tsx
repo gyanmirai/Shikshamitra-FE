@@ -237,7 +237,7 @@ describe('Onboarding numbering settings', () => {
     expect(screen.queryByRole('combobox', { name: 'Divisions' })).not.toBeInTheDocument();
   });
 
-  it('saves Roll rules at 1 with class/division scope and the reason control in Academic Path', async () => {
+  it('saves Roll ordering with fixed class/division sequencing and separate change control', async () => {
     const persist = vi.fn().mockResolvedValue(undefined);
     renderSettings(<RollNumberSettingsScreen />, persist);
     fireEvent.click(screen.getByRole('button', { name: 'Add roll number rule' }));
@@ -246,10 +246,14 @@ describe('Onboarding numbering settings', () => {
     expect(screen.queryByRole('combobox', { name: 'Divisions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /Numbering scope/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: /Starting number/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    expect(screen.getByRole('combobox', { name: 'Grouping' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Name Format' })).toBeInTheDocument();
+    choose('Grouping', 'Boys First'); choose('Name Format', 'Surname First');
+    choose('Sort Direction', 'Z–A');
+    expect(screen.getByRole('switch', { name: /Require reason for roll number changes/i })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(persist).toHaveBeenCalledTimes(1));
-    expect(persist.mock.calls[0][1].rollNumber.configurations.at(-1)).toMatchObject({ startingNumber: 1, numberingScope: 'class-division', requireChangeReason: true, status: 'draft', isActive: false });
+    expect(persist.mock.calls[0][1].rollNumber.configurations.at(-1)).toMatchObject({ grouping: 'boys-first', nameFormat: 'surname-first', arrangeType: 'descending', orderingRules: [{ field: 'studentName', direction: 'descending' }], startingNumber: 1, numberingScope: 'class-division', requireChangeReason: true, status: 'draft', isActive: false });
   });
 
   it('creates a new draft identity for a published rule and supersedes it only on publish', async () => {

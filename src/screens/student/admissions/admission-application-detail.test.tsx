@@ -292,6 +292,40 @@ describe('AdmissionApplicationDetailScreen', () => {
     workflowRefetch.mockReset();
   });
 
+  it('opens a managed stage without waiting for unrelated form data', () => {
+    loadPaymentDetail();
+    detailState.formQuery = query({ isLoading: true });
+    render(<AdmissionApplicationDetailScreen />);
+    expect(screen.getByRole('button', { name: 'Fee structure confirmation' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'More' })).toBeEnabled();
+  });
+
+  it('shows loading instead of empty history while the on-demand history request is pending', () => {
+    loadPaymentDetail();
+    detailState.formQuery = query();
+    detailState.formHistoryQuery = query({ isLoading: true });
+    render(<AdmissionApplicationDetailScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    fireEvent.click(screen.getByText('Application History'));
+    expect(screen.getByLabelText('Loading application history')).toBeInTheDocument();
+    expect(
+      screen.queryByText('No application history has been recorded yet.')
+    ).not.toBeInTheDocument();
+  });
+
+  it('retries failed history independently of the unopened form', () => {
+    loadPaymentDetail();
+    detailState.formQuery = query();
+    const retry = vi.fn();
+    detailState.formHistoryQuery = query({ isError: true, refetch: retry });
+    render(<AdmissionApplicationDetailScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'More' }));
+    fireEvent.click(screen.getByText('Application History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(retry).toHaveBeenCalledOnce();
+    expect(formRefetch).not.toHaveBeenCalled();
+  });
+
   it('uses the application Offering for academic context without borrowing list-filter identity', () => {
     loadPaymentDetail();
     detailState.applicationQuery.data.admissionOfferingId = 'actual-offering';
@@ -396,11 +430,11 @@ describe('AdmissionApplicationDetailScreen', () => {
     expect(screen.getByRole('status', { name: 'Loading application details' })).toBeInTheDocument();
   });
 
-  it('keeps a recoverable error state and retries all application resources', () => {
+  it('retries application and workflow without refetching an unopened form', () => {
     detailState = {
       ...baseDetail(),
       applicationQuery: query({ isError: true, refetch: applicationRefetch }),
-      formQuery: query({ isError: true, refetch: formRefetch }),
+      formQuery: query({ isUninitialized: true, refetch: formRefetch }),
       workflowQuery: query({ isError: true, refetch: workflowRefetch }),
     };
 
@@ -408,7 +442,7 @@ describe('AdmissionApplicationDetailScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
 
     expect(applicationRefetch).toHaveBeenCalledOnce();
-    expect(formRefetch).toHaveBeenCalledOnce();
+    expect(formRefetch).not.toHaveBeenCalled();
     expect(workflowRefetch).toHaveBeenCalledOnce();
   });
 

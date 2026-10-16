@@ -1,9 +1,9 @@
 import type { RootState } from 'src/redux/store';
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { useRef, useState, useTransition } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -32,9 +32,21 @@ export function useInquiryHandoff() {
   const canMove = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const [start, state] = useStartAdmissionApplicationMutation();
   const movingRef = useRef(false);
+  const [movingInquiryId, setMovingInquiryId] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [navigating, startNavigation] = useTransition();
   const move = async (inquiry: AdmissionInquiry) => {
-    if (!canMove || movingRef.current || state.isLoading || inquiryHandoffBlocker(inquiry)) return;
+    if (
+      !canMove ||
+      movingRef.current ||
+      navigating ||
+      state.isLoading ||
+      inquiryHandoffBlocker(inquiry)
+    )
+      return;
     movingRef.current = true;
+    setMovingInquiryId(inquiry.id);
+    setStarting(true);
     try {
       const application = await start({
         applicantId: inquiry.applicantId!,
@@ -46,11 +58,13 @@ export function useInquiryHandoff() {
           ? 'Inquiry moved to Applications. Continue the admission decision.'
           : 'Inquiry moved to Pipeline. Continue the application.',
       });
-      router.push(
-        getApplicationWorkspaceUrl(
-          application.id,
-          studentPaths.enrollment.pipeline,
-          application.hasReachedDecision ?? false
+      startNavigation(() =>
+        router.push(
+          getApplicationWorkspaceUrl(
+            application.id,
+            studentPaths.enrollment.pipeline,
+            application.hasReachedDecision ?? false
+          )
         )
       );
     } catch (error) {
@@ -61,7 +75,8 @@ export function useInquiryHandoff() {
       });
     } finally {
       movingRef.current = false;
+      setStarting(false);
     }
   };
-  return { canMove, moving: state.isLoading, move };
+  return { canMove, moving: starting || state.isLoading || navigating, movingInquiryId, move };
 }

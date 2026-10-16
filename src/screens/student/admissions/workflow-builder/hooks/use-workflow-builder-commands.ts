@@ -6,10 +6,10 @@ import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
+  useLazyGetAdmissionWorkflowQuery,
   useUpdateAdmissionWorkflowMutation,
   usePublishAdmissionWorkflowMutation,
   useValidateAdmissionWorkflowMutation,
-  useLazyGetAdmissionWorkflowQuery,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { getWorkflowDetailsJourney } from '../workflow-details-journey';
@@ -95,18 +95,23 @@ export function useWorkflowBuilderCommands(
       throw error;
     }
   };
-  const validateSavedWorkflow = async () => {
+  const validateSavedWorkflow = async (notifySuccess = true) => {
     const normalizedStages = normalizeAdmissionWorkflowStages(draft.stages);
     const requiresFormStageUpgrade = normalizedStages.some(
       (stage, index) => stage !== draft.stages[index]
     );
-    if ((draft.dirty || requiresFormStageUpgrade) && !(await saveDraft())) return null;
     try {
+      if (draft.dirty || requiresFormStageUpgrade) await saveCurrentGraph();
       const result = await validateWorkflow(workflowId).unwrap();
       draft.setValidation(result);
-      draft.setSidePanel('validation');
-      if (result.isValid)
+      if (result.issues.length > 0 && (!result.isValid || notifySuccess)) {
+        shikshaMitraToast.warning({
+          message: `${result.isValid ? 'Review workflow warnings:' : 'Fix before publishing:'}\n${result.issues.map((issue) => issue.message).join('\n')}`,
+          alertProps: { sx: { '& .MuiAlert-message': { whiteSpace: 'pre-line' } } },
+        });
+      } else if (result.isValid && notifySuccess) {
         shikshaMitraToast.success({ message: 'Workflow is valid and ready to publish' });
+      }
       return result;
     } catch (error) {
       showError(error, 'Unable to validate the workflow.');
@@ -118,9 +123,8 @@ export function useWorkflowBuilderCommands(
     publishingRef.current = true;
     setPublishing(true);
     try {
-      const result = await validateSavedWorkflow();
+      const result = await validateSavedWorkflow(false);
       if (!result?.isValid) {
-        if (result) shikshaMitraToast.warning({ message: 'Fix workflow validation issues before publishing.' });
         return null;
       }
       // Validation may update the server stamp. Publish only the freshly loaded version.
@@ -130,7 +134,14 @@ export function useWorkflowBuilderCommands(
         id: workflow.id,
         concurrencyStamp: current.concurrencyStamp,
       }).unwrap();
-      shikshaMitraToast.success({ message: 'Workflow published' });
+      if (result.issues.length > 0) {
+        shikshaMitraToast.warning({
+          message: `Workflow published with warnings:\n${result.issues.map((issue) => issue.message).join('\n')}`,
+          alertProps: { sx: { '& .MuiAlert-message': { whiteSpace: 'pre-line' } } },
+        });
+      } else {
+        shikshaMitraToast.success({ message: 'Workflow published' });
+      }
       draft.setSidePanel(null);
       draft.setDirty(false);
       return published;

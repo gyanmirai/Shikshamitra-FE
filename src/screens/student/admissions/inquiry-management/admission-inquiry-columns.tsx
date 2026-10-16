@@ -23,6 +23,7 @@ type Options = {
   canManage: boolean;
   canMove: boolean;
   isMoving: boolean;
+  movingInquiryId?: string | null;
   pipeline?: boolean;
   canOpenApplication?: boolean;
   counsellorNames: Record<string, string>;
@@ -72,6 +73,8 @@ export function getAdmissionInquiryActions(
       id: 'edit',
       label: `Edit ${reference}`,
       icon: GlobalIcons.edit,
+      disabled: options.isMoving,
+      tooltip: options.isMoving ? 'Wait for the inquiry to move to the next stage.' : undefined,
       onClick: () => options.onManage(inquiry),
     });
   if (options.canManage && options.onFollowUp)
@@ -79,7 +82,9 @@ export function getAdmissionInquiryActions(
       id: 'follow-up',
       label: `Follow-up ${reference}`,
       icon: GlobalIcons.notebook,
-      disabled: Boolean(inquiry.isTransferred || inquiry.applicationId || inquiry.isDuplicate),
+      disabled:
+        options.isMoving ||
+        Boolean(inquiry.isTransferred || inquiry.applicationId || inquiry.isDuplicate),
       tooltip:
         inquiry.isTransferred || inquiry.applicationId
           ? 'Continue this application from Pipeline.'
@@ -94,7 +99,12 @@ export function getAdmissionInquiryActions(
       label: `Move ${reference} to next stage`,
       icon: 'mdi:arrow-right-circle-outline',
       disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
-      tooltip: options.isMoving ? 'Moving inquiry…' : inquiryHandoffBlocker(inquiry),
+      loading: options.isMoving && options.movingInquiryId === inquiry.id,
+      tooltip: options.isMoving
+        ? options.movingInquiryId === inquiry.id
+          ? 'Moving inquiry…'
+          : 'Wait for the current inquiry to finish moving.'
+        : inquiryHandoffBlocker(inquiry),
       onClick: () => options.onMove(inquiry),
     });
   return actions;

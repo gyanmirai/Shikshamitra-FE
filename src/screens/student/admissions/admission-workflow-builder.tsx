@@ -305,7 +305,6 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         workflow={workflow}
         stages={draft.stages}
         transitions={draft.transitions}
-        validation={draft.validation}
         versions={versionsQuery.data}
         usage={usageQuery.data}
         usageLoading={usageQuery.isLoading}
