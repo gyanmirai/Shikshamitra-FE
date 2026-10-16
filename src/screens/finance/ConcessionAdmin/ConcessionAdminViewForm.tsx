@@ -13,50 +13,45 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Cancel, CheckCircle } from '@mui/icons-material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
+import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
 import {
   Box,
   Tab,
   Tabs,
   Card,
   Grid,
-  Chip,
   Stack,
   Paper,
   Button,
-  Divider,
-  Tooltip,
   Skeleton,
   TextField,
   Typography,
   IconButton,
-  CardContent,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
 import {
   useRejectConcessionRequestMutation,
-  useCreateConcessionRefundRequestsMutation,
   useGetStudentConcessionDetailsQuery,
   useUploadConcessionDocumentsMutation,
   useDeleteConcessionApplicationMutation,
   useUploadConcessionDocumentFileMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
+import ConcessionItemCard from './ConcessionItemCard';
 import StudentInformationAccordion from './StucentConcessionCard';
 import ConcessionFeeHeadApprovalView from './ConcessionFeeHeadApprovalView';
+import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
 import {
   getFileAccept,
   getDocumentConstraintText,
@@ -68,7 +63,6 @@ import type {
   IConcessionRequestItem,
   IViewConcessionRequestProps,
 } from './type';
-import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
 
 // ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 
@@ -489,498 +483,6 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
 // ─── Concession Item Card ──────────────────────────────────────────────────────
 
-interface IConcessionCardProps {
-  item: IConcessionRequestItem;
-  onEdit: (item: IConcessionRequestItem) => void;
-  onApprove: (item: IConcessionRequestItem) => void;
-  onReject: (item: IConcessionRequestItem) => void;
-  onCancel: (item: IConcessionRequestItem) => void;
-  onOpenDocs: (item: IConcessionRequestItem) => void;
-  onDelete: (item: IConcessionRequestItem) => void;
-}
-
-const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
-  item,
-  onEdit,
-  onApprove,
-  onReject,
-  onCancel,
-  onOpenDocs,
-  onDelete,
-}) => {
-  const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
-  const actions = financePermissions.fees.concessionActions;
-  const canApprove = hasGrantedPermission(permissions, actions.approve);
-  const canReject = hasGrantedPermission(permissions, actions.reject);
-  const canEdit = hasGrantedPermission(permissions, actions.edit);
-  const canReverse = hasGrantedPermission(permissions, actions.reverse);
-  const canDelete = hasGrantedPermission(permissions, actions.delete);
-  const canViewDocuments = hasGrantedPermission(permissions, actions.viewDocument);
-  const canUploadDocuments = hasGrantedPermission(permissions, actions.uploadDocument);
-  const canCreateRefund = hasGrantedPermission(
-    permissions,
-    financePermissions.fees.refundActions.add
-  );
-  const [createRefundRequests, { isLoading: isCreatingRefund }] =
-    useCreateConcessionRefundRequestsMutation();
-  const refundCommandKey = useRef('');
-  const [refundCreated, setRefundCreated] = useState(false);
-  const handleCreateRefundRequests = async () => {
-    if (isCreatingRefund || refundCreated) return;
-    try {
-      await createRefundRequests({
-        concessionRequestId: item.studentConcessionTypeRequestId || item.id || '',
-        body: {
-          requestConcurrencyStamp: item.concurrencyStamp || '',
-          idempotencyKey: (refundCommandKey.current ||= window.crypto.randomUUID()),
-        },
-      }).unwrap();
-      setRefundCreated(true);
-      shikshaMitraToast.success({
-        message: 'Linked refund requests created for separate review and payout.',
-      });
-    } catch (error) {
-      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
-    }
-  };
-  const serverAllows = (action: string) =>
-    !item.availableActions?.length || item.availableActions.includes(action);
-  const isApproved = item.status === ConcessionStatusType.Approved;
-  const isPartiallyReversed = item.status === ConcessionStatusType.PartiallyReversed;
-  const isRejected = item.status === ConcessionStatusType.Rejected;
-  const isCancelled = item.status === ConcessionStatusType.Cancelled;
-  const isDraft = item.status === ConcessionStatusType.Draft;
-  const isPending = isDraft || item.status === ConcessionStatusType.Pending;
-  const decisionAllowed = canDecideConcession(
-    currentUserId,
-    item.requesterId,
-    item.submittedById
-  );
-  const decisionBlockReason = !currentUserId || !item.requesterId
-    ? 'Decision identity is unavailable'
-    : 'You cannot approve or reject your own request';
-  const statusLabel = isPending
-    ? 'Pending'
-    : (ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType);
-  const statusColor = isPending
-    ? ConcessionStatusTypeColors[ConcessionStatusType.Pending]
-    : (ConcessionStatusTypeColors[item.status as ConcessionStatusType] as LabelColor);
-
-  // Use requiredDocuments if available, otherwise fall back to submittedDocuments
-  const requiredDocs = item.requiredDocuments || [];
-  const uploadedDocs = requiredDocs.filter((d) => d.isUploaded && d.url);
-  const mandatoryDocs = requiredDocs.filter((document) => document.isRequired ?? true);
-  const allMandatoryDocsUploaded = mandatoryDocs.every((document) => document.isUploaded);
-  const pendingCount = mandatoryDocs.filter((document) => !document.isUploaded).length;
-
-  // For cards with no requiredDocuments, fall back to checking submittedDocuments
-  const hasRequiredDocs = requiredDocs.length > 0;
-  const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
-
-  // Approve should be disabled if any required document is not uploaded
-  const approveDisabled = !isPending || !allMandatoryDocsUploaded || !decisionAllowed;
-
-  return (
-    <Card
-      variant="outlined"
-      sx={{
-        borderRadius: 2,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderTop: '4px solid',
-        borderTopColor: (theme) =>
-          isApproved
-            ? theme.vars.palette.success.light
-            : isRejected
-              ? theme.vars.palette.error.light
-              : theme.vars.palette.warning.light,
-      }}
-    >
-      <CardContent sx={{ p: 1.5, flex: 1 }}>
-        {/* Header */}
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600} lineHeight={1.2}>
-                {item.concessionTypeName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {new Date(item.createdAt).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </Typography>
-            </Box>
-          </Box>
-          <Label color={statusColor} variant="soft" sx={{ flexShrink: 0 }}>
-            {statusLabel}
-          </Label>
-        </Box>
-        <Divider />
-        {/* Requested and approved values remain separate throughout the lifecycle. */}
-        <Stack spacing={0.5} mb={1}>
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Typography variant="body2" fontWeight={700}>
-              Requested
-            </Typography>
-            <Typography variant="subtitle1" fontWeight={800}>
-              {formatNumber(item.totalRequestedAmount ?? item.totalAmount, 'INR')}
-            </Typography>
-          </Box>
-          {!isPending && (
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Typography variant="body2" fontWeight={700}>
-                {item.totalReversedAmount > 0 ? 'Net approved' : 'Approved'}
-              </Typography>
-              <Typography variant="subtitle1" fontWeight={800} color="success.main">
-                {formatNumber(
-                  item.totalReversedAmount > 0 ? item.netApprovedAmount : item.totalApprovedAmount,
-                  'INR'
-                )}
-              </Typography>
-            </Box>
-          )}
-        </Stack>
-
-        {(item.paidConcessionAmount ?? 0) > 0 && (
-          <Stack spacing={1} sx={{ mt: 1.5 }}>
-            <Typography variant="body2">
-              Paid concession: {formatNumber(item.paidConcessionAmount ?? 0, 'INR')}. Refund request
-              creation: {item.autoCreateRefund ? 'Automatic' : 'Manual'}.
-            </Typography>
-            {item.canCreateRefundRequests && !refundCreated && canCreateRefund && (
-              <LoadingButton
-                variant="outlined"
-                loading={isCreatingRefund}
-                onClick={handleCreateRefundRequests}
-              >
-                Create refund requests
-              </LoadingButton>
-            )}
-          </Stack>
-        )}
-        {(item.refundRequests?.length ?? 0) > 0 && (
-          <Box mb={1.5}>
-            <Typography variant="overline" color="text.secondary" fontWeight={700}>
-              Refund requests from this concession
-            </Typography>
-            {item.refundRequests?.map((refund) => (
-              <Stack
-                key={refund.refundRequestId}
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={1}
-                py={0.5}
-              >
-                <Typography variant="body2">
-                  {refund.voucherNumber} · {formatNumber(refund.amount, 'INR')}
-                </Typography>
-                <Label variant="soft" color={refund.status === 'Processed' ? 'success' : 'info'}>
-                  {refund.status}
-                </Label>
-              </Stack>
-            ))}
-          </Box>
-        )}
-
-        {/* Documents section - only show uploaded docs + See All */}
-        <Box mb={1.5}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.75}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                sx={{ letterSpacing: 1, fontWeight: 700 }}
-              >
-                Documents
-              </Typography>
-              {hasRequiredDocs && (
-                <Chip
-                  size="small"
-                  label={`${uploadedDocs.length}/${requiredDocs.length}`}
-                  color={allMandatoryDocsUploaded ? 'success' : 'warning'}
-                  sx={{ height: 18, fontSize: '10px' }}
-                />
-              )}
-            </Box>
-            {hasRequiredDocs &&
-              (canViewDocuments || (canUploadDocuments && serverAllows('upload-document'))) && (
-                <Button
-                  size="small"
-                  onClick={() => onOpenDocs(item)}
-                  sx={{ fontSize: '11px', textTransform: 'none', height: 24 }}
-                >
-                  See All
-                </Button>
-              )}
-          </Box>
-
-          {/* Show only uploaded docs (max 1) in the card */}
-          {displayDocs.length > 0 ? (
-            <Stack spacing={0.5}>
-              {(hasRequiredDocs ? displayDocs.slice(0, 1) : displayDocs).map((doc: any) => (
-                <Box
-                  key={doc.documentId}
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{
-                    px: 1.5,
-                    py: 0.75,
-                    borderRadius: 1,
-                    bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.06),
-                    border: '1px solid',
-                    borderColor: 'success.light',
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
-                    <Typography variant="caption" fontWeight={500}>
-                      {doc.documentName}
-                    </Typography>
-                  </Box>
-
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPreviewDoc({ url: doc.url, name: doc.documentName });
-                    }}
-                  >
-                    <Visibility sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
-              ))}
-              {/* Show pending count hint */}
-              {hasRequiredDocs && pendingCount > 0 && (
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap={1}
-                  sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 1,
-                    bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
-                  }}
-                >
-                  <Iconify
-                    icon="mdi:clock-outline"
-                    width={13}
-                    sx={{ color: 'warning.main', flexShrink: 0 }}
-                  />
-                  <Typography variant="caption" color="warning.dark" fontWeight={500}>
-                    {pendingCount} document{pendingCount > 1 ? 's' : ''} pending — click{' '}
-                    <strong>See All</strong> to upload
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
-          ) : hasRequiredDocs ? (
-            // No uploaded docs yet
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{
-                px: 1.5,
-                py: 0.75,
-                borderRadius: 1,
-                bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
-              }}
-            >
-              <Iconify icon="mdi:file-alert-outline" width={14} sx={{ color: 'warning.main' }} />
-              <Typography variant="caption" color="warning.dark" fontWeight={500}>
-                No documents uploaded — click <strong>See All</strong> to upload
-              </Typography>
-            </Box>
-          ) : (
-            <Typography variant="caption" color="text.disabled">
-              No documents required
-            </Typography>
-          )}
-        </Box>
-
-        <DocumentPreviewDialog
-          open={!!previewDoc}
-          onClose={() => setPreviewDoc(null)}
-          url={previewDoc?.url || ''}
-          documentName={previewDoc?.name}
-          directUrl
-        />
-
-        {/* Message */}
-        {item.message && (
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 1,
-              bgcolor: isApproved
-                ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.08)
-                : (theme) => varAlpha(theme.palette.error.mainChannel, 0.06),
-              mb: 1.5,
-            }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              {isApproved ? 'Approved message:' : 'Remark:'}
-            </Typography>
-            <Typography variant="body2" fontWeight={500}>
-              {item.message}
-            </Typography>
-          </Box>
-        )}
-
-        {/* Approved at */}
-        {isApproved && item.approvedAt && (
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={1}
-            sx={{
-              p: 1,
-              borderRadius: 1,
-              bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.08),
-            }}
-          >
-            <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-            <Typography variant="caption" color="success.dark" fontWeight={600}>
-              Approved on{' '}
-              {new Date(item.approvedAt).toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-              })}
-            </Typography>
-          </Box>
-        )}
-        {!!item.timeline?.length && (
-          <Box sx={{ mt: 1.5 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={700}>
-              Activity
-            </Typography>
-            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-              {item.timeline.slice(-3).map((event, index) => (
-                <Box
-                  key={`${event.action}-${event.occurredAt}-${index}`}
-                  display="flex"
-                  justifyContent="space-between"
-                  gap={1}
-                >
-                  <Typography variant="caption" sx={{ textTransform: 'capitalize' }}>
-                    {event.action}
-                    {event.amount ? ` · ${formatNumber(event.amount, 'INR')}` : ''}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(event.occurredAt).toLocaleString('en-IN')}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Box>
-        )}
-      </CardContent>
-
-      {/* Action Buttons */}
-      <Box
-        sx={{
-          px: 1,
-          pb: 1,
-          display: 'flex',
-          gap: 1,
-          alignItems: 'flex-start',
-        }}
-      >
-        {canEdit && isDraft && serverAllows('edit') && (
-          <LoadingButton
-            fullWidth
-            size="small"
-            variant="outlined"
-            color="primary"
-            startIcon={<Iconify icon="solar:pen-bold" width={16} />}
-            onClick={() => onEdit(item)}
-          >
-            Edit
-          </LoadingButton>
-        )}
-        {/* Approve button with tooltip when docs are missing */}
-        {canApprove && serverAllows('approve') && (
-          <Tooltip
-            title={
-              !decisionAllowed
-                ? decisionBlockReason
-                : !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
-                ? `Upload all mandatory documents first — click "See All" to upload pending documents`
-                : ''
-            }
-            placement="top"
-            arrow
-          >
-            {/* span needed so tooltip works on disabled button */}
-            <span style={{ flex: 1 }}>
-              <LoadingButton
-                fullWidth
-                size="small"
-                variant={isApproved ? 'soft' : 'contained'}
-                color="success"
-                disabled={approveDisabled}
-                startIcon={<CheckCircle fontSize="small" />}
-                onClick={() => onApprove(item)}
-              >
-                Approve
-              </LoadingButton>
-            </span>
-          </Tooltip>
-        )}
-        {canReject && serverAllows('reject') && (
-          <Tooltip title={!decisionAllowed ? decisionBlockReason : ''} placement="top" arrow>
-            <span style={{ flex: 1 }}>
-              <LoadingButton
-                fullWidth
-                size="small"
-                variant="soft"
-                color="error"
-                disabled={!isPending || !decisionAllowed}
-                startIcon={<Cancel fontSize="small" />}
-                onClick={() => onReject(item)}
-              >
-                Reject
-              </LoadingButton>
-            </span>
-          </Tooltip>
-        )}
-        {canReverse && serverAllows('reverse') && (
-          <LoadingButton
-            fullWidth
-            size="small"
-            variant="soft"
-            color="warning"
-            disabled={!isApproved && !isPartiallyReversed}
-            startIcon={<Iconify icon="mdi:cancel" width={16} />}
-            onClick={() => onCancel(item)}
-          >
-            Reverse
-          </LoadingButton>
-        )}
-        {canDelete && serverAllows('delete') && (
-          <IconButton
-            onClick={() => onDelete(item)}
-            color="error"
-            disabled={item.status !== ConcessionStatusType.Draft}
-            sx={{ mt: -0.5 }}
-          >
-            <Iconify icon={GlobalIcons.delete} />
-          </IconButton>
-        )}
-      </Box>
-    </Card>
-  );
-};
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
@@ -991,7 +493,9 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
+  const currentUserId = useSelector(
+    (state: RootState) => state.auth.user?.sub as string | undefined
+  );
   const canUploadDocuments = hasGrantedPermission(
     permissions,
     financePermissions.fees.concessionActions.uploadDocument
@@ -1082,7 +586,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Scrollbar sx={{ flex: 1, p: 1 }}>
+      <Scrollbar sx={{ flex: 1, minHeight: 0, p: 2 }}>
         {/* ── Stats Row ─────────────────────────────────────────────── */}
         {isFetchingConcessionData || isLoadingConcessionData ? (
           <Paper
@@ -1177,7 +681,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         {isFetchingConcessionData || isLoadingConcessionData ? (
           <Grid container spacing={2}>
             {[...Array(3)].map((_, i) => (
-              <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Grid key={i} size={{ xs: 12 }}>
                 <Card variant="outlined" sx={{ borderRadius: 2, height: 320, p: 1 }}>
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Box display="flex" gap={1} alignItems="center">
@@ -1240,7 +744,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         ) : (
           <Grid container spacing={2} pb={1}>
             {filteredItems.map((item) => (
-              <Grid key={item.studentConcessionTypeRequestId} size={{ xs: 12, sm: 6, md: 4 }}>
+              <Grid key={item.studentConcessionTypeRequestId} size={{ xs: 12 }}>
                 <ConcessionItemCard
                   item={item}
                   onEdit={() => onEdit?.()}

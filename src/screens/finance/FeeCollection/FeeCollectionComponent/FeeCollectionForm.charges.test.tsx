@@ -1,11 +1,40 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { formatNumber } from 'src/utils/formate_number';
 import { Checkbox, FormControlLabel } from '@mui/material';
-
+import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import { act, screen, within, waitFor, fireEvent, render as rtlRender } from '@testing-library/react';
 
 import FeeCollectComponentForm from './FeeCollectionForm';
+
+const theme = createTheme(defaultSettings);
+const render = (ui: React.ReactElement) =>
+  rtlRender(ui, {
+    wrapper: ({ children }) => <ThemeProvider theme={theme}>{children}</ThemeProvider>,
+  });
+
+vi.mock('@mui/icons-material', () => {
+  const Icon = () => null;
+  return {
+    ArrowDownward: Icon,
+    ArrowUpward: Icon,
+    Clear: Icon,
+    Close: Icon,
+    ExpandLess: Icon,
+    ExpandMore: Icon,
+    RemoveRedEye: Icon,
+    Search: Icon,
+  };
+});
+
+// Browser verification covers sticky-column measurement. These regressions exercise
+// selection, filters, amounts and submission without deferred DOM geometry timers.
+vi.mock('src/components/customizabaleTable/hooks/useStickyColumns', () => ({
+  useStickyColumns: () => ({ getStickyStyle: () => ({}) }),
+}));
 
 const mocks = vi.hoisted(() => ({
   data: {} as any,
@@ -20,7 +49,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({
-  useSelector: () => ({ currentYear: mocks.currentYear }),
+  useSelector: (selector: any) =>
+    selector({
+      globalState: { currentYear: mocks.currentYear },
+      confirmPopup: { isChanges: false },
+    }),
+  useDispatch: () => vi.fn(),
 }));
 // These regressions exercise collection selection and allocations, not drag geometry.
 vi.mock('@dnd-kit/core', () => ({
@@ -92,6 +126,7 @@ vi.mock('src/components/toast', () => ({
 vi.mock('src/components/scrollbar', () => ({ Scrollbar: ({ children }: any) => children }));
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, children }: any) => (open ? children : null),
+  DialogScrollContent: ({ children }: any) => children,
 }));
 vi.mock('src/components/back-popup-check/BackPopUpCheck', () => ({
   BackPopUpChecked: ({ children }: any) => children,
@@ -270,12 +305,19 @@ const selectReceivingBank = async () => {
   }
 };
 
-const outstandingRow = () => within(screen.getByText('Overall Outstanding').parentElement!);
+const outstandingRow = () => {
+  const accordion = screen.getByRole('button', { name: 'Student information' });
+  if (accordion.getAttribute('aria-expanded') !== 'true') fireEvent.click(accordion);
+  return within(screen.getByText('Total outstanding').parentElement!);
+};
 
+const ledger = () => within(screen.getByRole('table', { name: 'Fee ledger table' }));
 const rowCheckbox = (label: string) => {
-  let row = screen.getAllByText(label).find((node) => node.tagName === 'P')!.parentElement;
-  while (row && !within(row).queryByRole('checkbox')) row = row.parentElement;
-  return within(row!).getByRole('checkbox');
+  const row = ledger()
+    .getAllByText(label)
+    .find((node) => node.closest('tr'))!
+    .closest('tr')!;
+  return within(row).getByRole('checkbox');
 };
 
 const buildSelectionForm = () => {
@@ -342,19 +384,87 @@ const buildSelectionForm = () => {
 };
 
 const expectSelection = async (count: number, amount: number) => {
-  expect(screen.getByText(`${count} items selected`)).toBeVisible();
+  const selectedLabel = `${count} ${count === 1 ? 'item' : 'items'} selected`;
+  expect(screen.getByText(selectedLabel)).toBeVisible();
   expect(
-    within(screen.getByText('Items selected').parentElement!).getByText(`${count} items`)
+    within(screen.getByText(selectedLabel).parentElement!).getByText(formatNumber(amount, 'INR'))
   ).toBeVisible();
-  const money = new RegExp(`^₹\\s*${amount.toLocaleString('en-IN').replaceAll(',', ',\\s*')}$`);
-  expect(
-    within(screen.getByText('Working Total').parentElement!.parentElement!).getByText(money)
-  ).toBeVisible();
-  expect(within(screen.getByText('Total Payable').parentElement!).getByText(money)).toBeVisible();
   await waitFor(() =>
-    expect(screen.getByLabelText('Amount *')).toHaveValue(`₹ ${amount.toLocaleString('en-IN')}`)
+    expect(screen.getByLabelText(/Amount to collect/)).toHaveValue(
+      `₹ ${amount.toLocaleString('en-IN')}`
+    )
   );
 };
+
+describe('Collect Fees presentation and shared ledger', () => {
+  beforeEach(() => {
+    mocks.data = buildForm(false);
+    mocks.currentYear = { id: 'year-2026', year: 2026, name: '2026-2027' };
+  });
+
+  it('keeps student information collapsed until expanded', () => {
+    mocks.data.student = {
+      ...mocks.data.student,
+      studentName: 'Diya',
+      grNo: '10092',
+      rollNo: '2',
+      standardName: 'Class 3',
+      divisionName: 'A',
+    };
+    render(<FeeCollectComponentForm student={student} />);
+    const accordion = screen.getByRole('button', { name: 'Student information' });
+    expect(accordion).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(accordion);
+    expect(screen.getByText('10092')).toBeVisible();
+    expect(screen.getByText('Class 3 · A')).toBeVisible();
+    expect(screen.getByText('2026-2027')).toBeVisible();
+  }, 30_000);
+
+  it('preserves an edited partial amount and selection through layouts and sorting', async () => {
+    render(<FeeCollectComponentForm student={student} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
+    await expectSelection(1, 2000);
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Amount to collect/), { target: { value: '500' } });
+    });
+    ['Period First', 'Wide Ledger', 'Ledger + Checkout'].forEach((name) => {
+      fireEvent.click(screen.getByRole('tab', { name }));
+      expect(screen.getByRole('tab', { name })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByLabelText(/Amount to collect/)).toHaveValue('₹ 500');
+      expect(screen.getByText('1 item selected')).toBeVisible();
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Outstanding Amount' }));
+    expect(
+      screen.getByRole('checkbox', { name: 'Select Class 3 Tuition Fee, June 2026' })
+    ).toBeChecked();
+    expect(screen.getByLabelText(/Cash Received/)).toHaveValue('₹ 500');
+  }, 30_000);
+
+  it('shows the fee breakdown from the common View icon and keeps the selection on close', () => {
+    render(<FeeCollectComponentForm student={student} />);
+    const checkbox = screen.getByRole('checkbox', {
+      name: 'Select Class 3 Tuition Fee, June 2026',
+    });
+    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByRole('button', { name: 'View Class 3 Tuition Fee, June 2026' }));
+    expect(screen.getByText('Outstanding principal')).toBeVisible();
+    expect(screen.getByText('Reconciliation amount')).toBeVisible();
+    expect(screen.getByText('Concession')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(checkbox).toBeChecked();
+  }, 30_000);
+
+  it('selects fee and charge rows together from the shared table header', async () => {
+    render(<FeeCollectComponentForm student={student} />);
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Select all visible collectible fees and charges' })
+    );
+    await expectSelection(5, 2400);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all' }));
+    expect(screen.getByText('No fee items selected')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+  }, 30_000);
+});
 
 describe('Fee Collection selection presets', () => {
   beforeEach(() => {
@@ -532,8 +642,8 @@ describe('Fee Collection independent additional charges', () => {
         target: { value: String(FeeCollectionStatusType.Overdue) },
       });
       expect(screen.getByText('1 entries')).toBeVisible();
-      expect(screen.getByText('Class 3 Tuition Fee')).toBeVisible();
-      expect(screen.queryByText('Additional Charges')).not.toBeInTheDocument();
+      expect(ledger().getByText('Class 3 Tuition Fee')).toBeVisible();
+      expect(ledger().queryAllByText('Additional Charges')[0] ?? null).not.toBeInTheDocument();
       [
         FeeCollectionStatusType.Paid,
         FeeCollectionStatusType.Partial,
@@ -543,14 +653,14 @@ describe('Fee Collection independent additional charges', () => {
         fireEvent.change(screen.getByLabelText('Status'), { target: { value: String(status) } });
         expect(screen.getByText('0 entries')).toBeVisible();
         expect(screen.getByText('No entries found for selected filters')).toBeVisible();
-        expect(screen.queryByText('Additional Charges')).not.toBeInTheDocument();
+        expect(ledger().queryAllByText('Additional Charges')[0] ?? null).not.toBeInTheDocument();
       });
       fireEvent.change(screen.getByLabelText('Status'), {
         target: { value: String(FeeCollectionStatusType.Pending) },
       });
       expect(screen.getByText('4 entries')).toBeVisible();
-      expect(screen.getByText('Additional Charges')).toBeVisible();
-      expect(screen.queryByText('Class 3 Tuition Fee')).not.toBeInTheDocument();
+      expect(ledger().getAllByText('Additional Charges')[0]).toBeVisible();
+      expect(ledger().queryByText('Class 3 Tuition Fee')).not.toBeInTheDocument();
       lateFees.forEach((charge) => expect(screen.getByText(charge.name)).toBeVisible());
       fireEvent.click(screen.getByText('Switch ledger view'));
     });
@@ -571,14 +681,13 @@ describe('Fee Collection independent additional charges', () => {
       },
     ];
     render(<FeeCollectComponentForm student={student} />);
-    const firstChargeRow = screen.getByText(lateFees[0].name).parentElement!.parentElement!
-      .parentElement!;
+    const firstChargeRow = ledger().getByText(lateFees[0].name).closest('tr')!;
     fireEvent.click(within(firstChargeRow).getByRole('checkbox'));
     fireEvent.change(screen.getByLabelText('Status'), {
       target: { value: String(FeeCollectionStatusType.Partial) },
     });
     expect(screen.getByText('1 entries')).toBeVisible();
-    expect(screen.queryByText('Additional Charges')).toBeVisible();
+    expect(ledger().queryAllByText('Additional Charges')[0] ?? null).toBeVisible();
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Charges' }));
     await waitFor(() => expect(screen.getByText('5 items selected')).toBeInTheDocument());
     await selectReceivingBank();
@@ -616,9 +725,9 @@ describe('Fee Collection independent additional charges', () => {
     render(<FeeCollectComponentForm student={student} />);
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: String(status) } });
     expect(screen.getByText('2 entries')).toBeVisible();
-    expect(screen.getByText('Additional Charges')).toBeVisible();
+    expect(ledger().getAllByText('Additional Charges')[0]).toBeVisible();
     expect(screen.getByText(lateFees[0].name)).toBeVisible();
-    expect(screen.getByText('Class 3 Tuition Fee')).toBeVisible();
+    expect(ledger().getByText('Class 3 Tuition Fee')).toBeVisible();
   });
 
   it('filters source late fees by month and fee head without assigning scope to unrelated manual charges', () => {
@@ -649,18 +758,18 @@ describe('Fee Collection independent additional charges', () => {
 
   it('uses fresh fee and charge balances instead of the stale Collections row', () => {
     const view = render(<FeeCollectComponentForm student={student} />);
-    expect(outstandingRow().getByText(/^₹\s*2,\s*400$/)).toBeVisible();
+    expect(outstandingRow().getByText(formatNumber(2400, 'INR'))).toBeVisible();
 
     mocks.data = buildForm(true);
     view.rerender(<FeeCollectComponentForm student={student} />);
-    expect(outstandingRow().getByText(/^₹\s*400$/)).toBeVisible();
-    expect(screen.getByText('Additional Charges')).toBeVisible();
+    expect(outstandingRow().getByText(formatNumber(400, 'INR'))).toBeVisible();
+    expect(ledger().getAllByText('Additional Charges')[0]).toBeVisible();
     lateFees.forEach((charge) => expect(screen.getByText(charge.name)).toBeVisible());
   });
 
   it('collects only selected principal and keeps unpaid late fees selectable on reopening', async () => {
     const view = render(<FeeCollectComponentForm student={student} />);
-    const principalRow = screen.getByText('Jun 2026').parentElement!.parentElement!.parentElement!;
+    const principalRow = ledger().getByText('Jun 2026').closest('tr')!;
     fireEvent.click(within(principalRow).getByRole('checkbox'));
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
@@ -681,12 +790,12 @@ describe('Fee Collection independent additional charges', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'All Charges' }));
     await waitFor(() => {
       lateFees.forEach((charge) => {
-        const row = screen.getByText(charge.name).parentElement!.parentElement!.parentElement!;
+        const row = ledger().getByText(charge.name).closest('tr')!;
         expect(within(row).getByRole('checkbox')).toBeChecked();
         expect(within(row).getByRole('checkbox')).toBeEnabled();
       });
     });
-    expect(outstandingRow().getByText(/^₹\s*400$/)).toBeVisible();
+    expect(outstandingRow().getByText(formatNumber(400, 'INR'))).toBeVisible();
     await selectReceivingBank();
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review payment' }));

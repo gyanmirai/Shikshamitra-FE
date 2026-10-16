@@ -67,10 +67,15 @@ vi.mock('./AssignmentStudentInputs', () => ({
   ),
 }));
 vi.mock('./AssignmentReview', () => ({
-  default: ({ data, committed }: any) => (
-    <p>
+  default: ({ data, committed, onEdit }: any) => (
+    <div>
+      {onEdit && (
+        <button type="button" onClick={() => onEdit(1)}>
+          Edit preview
+        </button>
+      )}
       {committed ? 'Committed' : 'Preview'} amount {data.proratedTotal}
-    </p>
+    </div>
   ),
 }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
@@ -158,6 +163,8 @@ async function chooseStructure() {
     target: { value: 'structure' },
   });
   await screen.findByText('Policies');
+  const editPolicies = screen.getByRole('button', { name: 'Edit policies' });
+  if (!editPolicies.hasAttribute('disabled')) fireEvent.click(editPolicies);
 }
 async function selectStructure() {
   await chooseStructure();
@@ -216,6 +223,7 @@ describe('assignment review and commit boundaries', () => {
       target: { value: 'Approved for Aarav' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Select Meera' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toHaveValue(
       'default-version'
     );
@@ -224,6 +232,7 @@ describe('assignment review and commit boundaries', () => {
     });
     expect(screen.queryByRole('button', { name: 'Select Meera' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Select Aarav' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toHaveValue(
       'collection-version'
     );
@@ -347,12 +356,13 @@ describe('assignment review and commit boundaries', () => {
     mount();
     await chooseStructure();
     expect(screen.getByText('School collection · v2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit policies' })).toBeDisabled();
     expect(screen.queryByRole('combobox', { name: 'Collection policy' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Concession policy' })).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Policy override access information' })
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Policy override access information' })
+    ).not.toBeInTheDocument();
   });
   it('keeps refund and collection overrides scoped to one student and permits a reset', async () => {
     mocks.bulkPreview.mockImplementation(({ items }) => ({
@@ -426,6 +436,22 @@ describe('assignment review and commit boundaries', () => {
       })
     );
   });
+  it('keeps the final step read-only and returns to the editable inputs with Back', async () => {
+    mount();
+    await chooseStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('Preview amount 12000');
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Assign fees (1)' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'Include transport for one' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(await screen.findByRole('button', { name: 'Include transport for one' })).toBeEnabled();
+    expect(screen.queryByText('Preview amount 12000')).not.toBeInTheDocument();
+  });
+
   it('invalidates a successful preview when optional heads change', async () => {
     mount();
     await selectStructure();

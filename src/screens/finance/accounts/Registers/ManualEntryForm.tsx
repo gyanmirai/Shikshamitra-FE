@@ -438,7 +438,12 @@ export default function ManualEntryForm({
         content={`Your ${income ? 'income' : 'expense'} entry has unsaved changes. Leaving will discard them.`}
         onClose={() => setDiscardOpen(false)}
         action={
-          <Button variant="contained" color="warning" onClick={onClose}>
+          <Button
+            startIcon={<Iconify icon="mdi:exit-to-app" />}
+            variant="contained"
+            color="warning"
+            onClick={onClose}
+          >
             Discard changes
           </Button>
         }

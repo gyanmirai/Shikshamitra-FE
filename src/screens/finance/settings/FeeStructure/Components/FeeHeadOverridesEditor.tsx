@@ -319,10 +319,11 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
 
               <Divider sx={{ my: 2 }} />
               <Stack direction="row" justifyContent="flex-end" gap={1}>
-                <Button size="small" onClick={onClose}>
+                <Button startIcon={<Iconify icon="mdi:close" />} size="small" onClick={onClose} >
                   Cancel
                 </Button>
                 <LoadingButton
+                  startIcon={<Iconify icon="mdi:content-save-outline" />}
                   size="small"
                   variant="contained"
                   loading={isSaving}
@@ -481,7 +482,11 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
             />
 
             <Stack direction="row" justifyContent="flex-end" gap={1}>
-              <Button size="small" onClick={() => setRuleDialogFeeHeadId(null)}>
+              <Button
+                startIcon={<Iconify icon="mdi:close" />}
+                size="small"
+                onClick={() => setRuleDialogFeeHeadId(null)}
+              >
                 Done
               </Button>
             </Stack>

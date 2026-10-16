@@ -3,9 +3,12 @@ import type {
   AssignmentPolicySelection,
 } from 'src/redux/finance/studentFeeAssignment';
 
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { DetailField, DetailSection } from 'src/components/detail-view';
 import {
   useAssignmentPolicyOptionsQuery,
   selectableAssignmentPolicyFamilies,
@@ -47,6 +50,7 @@ export default function AssignmentPolicies({
   editing?: boolean;
   flat?: boolean;
 }) {
+  const editMode = useBoolean();
   const options = useAssignmentPolicyOptionsQuery(
     { studentId, academicYearId },
     { skip: !canOverride }
@@ -92,6 +96,7 @@ export default function AssignmentPolicies({
               <CustomSelect
                 name={`${studentId}-${family}`}
                 label={label}
+                size="small"
                 value={value}
                 disabled={disabled || !canOverride || options.isLoading || options.isError}
                 options={[
@@ -160,37 +165,11 @@ export default function AssignmentPolicies({
           helperText={!reason.trim() ? 'Enter a reason for changing policies.' : undefined}
         />
       )}
-      {canOverride &&
-        !options.isLoading &&
-        !options.isError &&
-        selectableAssignmentPolicyFamilies.every((family) =>
-          (options.data ?? [])
-            .filter((policy) => policy.family === family)
-            .every(
-              (policy) =>
-                policy.versionId === defaults.find((item) => item.family === family)?.versionId
-            )
-        ) && (
-          <CustomTooltip
-            title="No other policies are available for this academic year."
-            arrow
-            placement="right"
-          >
-            <IconButton
-              size="small"
-              color="info"
-              aria-label="Policy availability information"
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              <Iconify icon="mdi:information-outline" width={18} />
-            </IconButton>
-          </CustomTooltip>
-        )}
     </Stack>
   );
-  return (
+  const policyContent = (
     <Stack spacing={2}>
-      {!editing && (!canOverride || !flat) && (
+      {!editing && (!canOverride || !flat || !editMode.value) && (
         <Box
           sx={{
             display: 'grid',
@@ -207,50 +186,24 @@ export default function AssignmentPolicies({
                 )
               : inherited;
             return (
-              <Stack
+              <DetailField
                 key={family}
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-              >
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ textTransform: 'capitalize' }}
-                  >
-                    {family} policy
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {policy
-                      ? `${policy.name} · v${policy.version}`
-                      : selected?.versionId
-                        ? 'Unavailable policy'
-                        : 'None'}
-                  </Typography>
-                </Box>
-                <CustomTooltip
-                  title={selected ? 'Student override' : 'Fee structure default'}
-                  arrow
-                  placement="right"
-                >
-                  <IconButton
-                    size="small"
-                    color="info"
-                    aria-label={`${family} policy source information`}
-                  >
-                    <Iconify icon="mdi:information-outline" width={16} />
-                  </IconButton>
-                </CustomTooltip>
-              </Stack>
+                label={`${family} policy`}
+                value={
+                  policy
+                    ? `${policy.name} · v${policy.version}`
+                    : selected?.versionId
+                      ? 'Unavailable policy'
+                      : 'No policy assigned'
+                }
+              />
             );
           })}
         </Box>
       )}
       {canOverride &&
         (flat ? (
-          policyControls
+          (editing || editMode.value) && policyControls
         ) : (
           <Accordion
             disableGutters
@@ -266,18 +219,39 @@ export default function AssignmentPolicies({
             <AccordionDetails>{policyControls}</AccordionDetails>
           </Accordion>
         ))}
-      {!canOverride && (
-        <CustomTooltip title="Policy changes require override access." arrow placement="right">
-          <IconButton
-            size="small"
-            color="info"
-            aria-label="Policy override access information"
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            <Iconify icon="mdi:information-outline" width={18} />
-          </IconButton>
-        </CustomTooltip>
-      )}
     </Stack>
+  );
+  if (!flat || editing) return policyContent;
+  const actionLabel = editMode.value ? 'Finish editing policies' : 'Edit policies';
+  return (
+    <DetailSection
+      title="Policies"
+      icon="mdi:shield-check-outline"
+      action={
+        <CustomTooltip
+          title={
+            !canOverride
+              ? 'Policy editing requires fee assignment policy override access.'
+              : actionLabel
+          }
+          arrow
+          placement="right"
+        >
+          <span>
+            <IconButton
+              size="small"
+              aria-label={actionLabel}
+              aria-expanded={editMode.value}
+              disabled={disabled || !canOverride}
+              onClick={editMode.onToggle}
+            >
+              <Iconify icon={editMode.value ? GlobalIcons.submit : GlobalIcons.edit} width={18} />
+            </IconButton>
+          </span>
+        </CustomTooltip>
+      }
+    >
+      {policyContent}
+    </DetailSection>
   );
 }

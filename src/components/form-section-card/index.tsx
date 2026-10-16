@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Theme, SxProps } from '@mui/material/styles';
 
 import { Card, Stack } from '@mui/material';
 
@@ -9,37 +10,38 @@ export { FormSectionHeader } from './section-header';
 interface FormSectionCardProps extends FormSectionHeaderProps {
   children?: ReactNode;
   contentSpacing?: number;
+  sx?: SxProps<Theme>;
 }
 
 export function FormSectionCard({
   icon,
   iconSize,
+  iconContainerSize,
   title,
   titleTypographyProps,
   description,
   descriptionTooltip,
-  descriptionTooltipLabel,
   action,
   actionFullWidthOnMobile,
   children,
   contentSpacing = 2,
+  sx,
 }: FormSectionCardProps) {
   return (
     <Card
       component="section"
-      aria-labelledby={titleTypographyProps?.id}
       variant="outlined"
-      sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}
+      sx={[{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
-      <Stack spacing={2}>
+      <Stack spacing={contentSpacing}>
         <FormSectionHeader
           icon={icon}
           iconSize={iconSize}
+          iconContainerSize={iconContainerSize}
           title={title}
           titleTypographyProps={titleTypographyProps}
           description={description}
           descriptionTooltip={descriptionTooltip}
-          descriptionTooltipLabel={descriptionTooltipLabel}
           action={action}
           actionFullWidthOnMobile={actionFullWidthOnMobile}
         />

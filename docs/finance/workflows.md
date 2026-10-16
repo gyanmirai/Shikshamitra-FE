@@ -17,6 +17,34 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Shared read-only details
+
+Finance policy views, Accounts income/expense transaction dialogs, concessions, charges,
+student fee details, receipt previews and receipts generated after collection use
+`src/components/detail-view`. `DetailSection` extends the common `FormSectionCard`;
+`DetailField` provides the policy reference's uppercase caption and body-value typography.
+`DetailGrid` uses one, two or three columns based on the section's available width.
+Descriptions and notes span the row, and related tables use the full content width.
+The body owns scrolling while dialog headers and action footers remain reachable.
+
+This is a presentation contract: existing feature queries remain the source for saved
+amounts, student context, policy versions, approval statuses and receipt documents.
+Finance owns these views; existing action permissions, payment/approval commands,
+academic scope and server calculations remain in their owning workflows. Missing
+student facts show an unavailable marker rather than sample student data.
+
+## Concession request presentation
+
+Concession requests group student scope, policy/type, selectable fee heads, installment values,
+review and supporting documents in the existing form. Installment rows show original, paid and
+eligible amounts beside compact concession inputs. Request-entered installment values retain raw
+decimal text while editing and convert to numbers at the existing command boundary. Policy-fixed
+values remain read-only. The review keeps eligible fees, concession reduction and net payable in
+one compact summary; only the server preview supplies those amounts. Its layout remains present
+while calculations refresh. Approval presents installment amounts in labeled columns with the
+existing server impact review and confirmation in a persistent footer. Required documents,
+maker/checker permissions, refund behavior, allocation rules and API commands remain unchanged.
+
 ## Fee settings and charge authoring
 
 Payment Terms display usage across all versions with a class, Fee Structure, Fee Head and version breakdown. Create, Edit and Duplicate show the current-to-new default and current-default usage when Default is on; saving a replacement requires Confirm/Cancel. The server impact is refreshed before confirmation. Existing structure assignments retain their saved versions. Archived Fee Category mapped-head status switches are disabled with a restore-category explanation.
@@ -67,7 +95,7 @@ that charge row. Selecting and collecting it sends a `lateFeePayments` allocatio
 
 Collections renders the server's `totalCharges` and `pendingCharges`, including system-generated late fees.
 Paying only fee installments sends no late-fee allocations; unpaid Additional Charges remain visible and selectable individually or through **All Charges** when collection is reopened.
-The checkout's **Overall Outstanding** uses the current collect-form `summary.pendingFee` plus its charge `pendingAmount` values, so a stale Collections row cannot hide unpaid charges.
+The collapsed **Student information** section's **Total outstanding** uses the current collect-form `summary.pendingFee` plus its charge `pendingAmount` values, so a stale Collections row cannot hide unpaid charges.
 Payment and waiver mutations invalidate the Collections and fee-details tags, refreshing subscribed grid, ledger, and details queries together.
 
 The fee-head/month ledger does not show or select the same late fee a second time. These generated
@@ -85,6 +113,22 @@ Fee-line status and overdue classification come from the backend; see the
 [Finance product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md).
 
 ## Fee Collection selection and receiving bank
+
+The Collect Fees dialog opens with Student information collapsed and offers Ledger + Checkout,
+Period First and Wide Ledger layouts. Changing layout or ledger grouping preserves the same
+unsaved collection, filters and allocation order. The embedded shared ledger table shows Fee Head,
+Due Period with installment label, Outstanding Amount, Status and an icon-only View action.
+View opens the row's full breakdown, including proration, concessions, refunds, reconciliation
+and the existing waiver controls. The table owns scrolling and sorting; sorting never reorders
+the selected allocations. Period First adds period selection controls over the same ledger.
+
+Payment shows the selected count and amount, editable Amount to collect, payment method and
+its configured required details. Cash Received is a read-only reflection of the entered cash
+collection amount; this presentation does not add a separate tender/change contract. Non-cash
+methods retain the receiving-bank lookup. Allocation order remains available in a collapsed
+section, while redundant working-total and change/balance summaries are omitted. Hidden selections
+are counted visibly when filters exclude them. Both existing review dialogs and receipt flows
+remain in place.
 
 Selection Filters operate on the student's complete ledger independently of the Month,
 Fee Head, Status, and grouping controls, which only change the visible rows.
@@ -192,6 +236,8 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 7. Version History is available from each row's action menu and shows the audited create, edit, and status changes with actor, timestamp, and changed fields.
 
 ### Concession request and approval
+
+The concession request form follows the charge form's shared `FormSectionCard` layout: neutral section icons, heading help tooltips, responsive two-column academic fields, a scrollable body, and a stable action footer. Student information, fee assignment (when needed), concession details, fee heads, values, preview, and documents retain their existing conditional visibility and validation.
 
 The request form loads active policies for the selected academic year and fee assignment, defaults the designated policy when present, and requires the user to select one policy before calculation. Preview and save commands include the selected policy and immutable version. Concession management presents three operational buckets: Pending includes Draft and Pending, Approved includes Approved/Partially Reversed/Reversed, and Rejected includes Rejected/Cancelled; cards retain the exact audit status.
 

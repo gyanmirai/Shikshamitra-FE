@@ -157,7 +157,7 @@ const FeeCollection = () => {
       )}
       <CustomDialog
         open={studentDialog.value}
-        title={`Fee Collection - ${selectedStudent?.name ?? selectedStudent?.name ?? 'Student'}`}
+        title={`Collect Fees – ${selectedStudent?.name ?? 'Student'}`}
         fullScreen
         transitionDuration={{ enter: 0, exit: 0 }}
         handleClose={() => {

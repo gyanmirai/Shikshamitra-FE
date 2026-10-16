@@ -1,5 +1,6 @@
 'use client';
 
+import { Iconify } from 'src/components/iconify';
 import { useState, useEffect, useRef } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import AutoAwesome from '@mui/icons-material/AutoAwesome';
@@ -451,7 +452,7 @@ export function InstallmentTemplateDialog({
         )}
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={busy}>
+        <Button startIcon={<Iconify icon="mdi:close" />} onClick={onClose} disabled={busy} >
           Cancel
         </Button>
         <Button
@@ -463,7 +464,18 @@ export function InstallmentTemplateDialog({
           {busy ? 'Generating…' : preview ? 'Regenerate preview' : 'Generate preview'}
         </Button>
         {preview && (
-          <Button variant="contained" onClick={handleApply} disabled={!canGenerate}>
+          <Button
+            startIcon={
+              <Iconify
+                icon={
+                  existingInstallmentCount > 0 ? 'mdi:swap-horizontal' : 'mdi:check-circle-outline'
+                }
+              />
+            }
+            variant="contained"
+            onClick={handleApply}
+            disabled={!canGenerate}
+          >
             {existingInstallmentCount > 0 ? 'Replace installments' : 'Apply template'}
           </Button>
         )}

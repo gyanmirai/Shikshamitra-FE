@@ -1494,6 +1494,15 @@ The established shared implementation is exported from `src/screens/hr/employee/
 
 ### 09. Drawer
 
+For read-only Finance sections, use `DetailSection`, `DetailGrid` and `DetailField`
+from `src/components/detail-view`. `DetailSection` reuses the shared
+`FormSectionCard`/`FormSectionHeader` with a compact neutral icon and `subtitle1`
+heading. Fields use uppercase caption labels and `body2` values, matching Finance
+policy views. Use `fullWidth` for long notes and descriptions. The grid adapts to
+the section width: one column below 440px, two from 440px and three from 680px.
+Related tables occupy the full section width and retain their own horizontal
+scrolling. Do not copy these section or field styles into individual views.
+
 **Source paths**
 
 - Shared theme configuration: `src/theme/core/components/drawer.tsx`
@@ -1714,6 +1723,8 @@ Use `EmptyContent` from `src/components/empty-content/` for an explicit empty st
 ### 16. Tooltip
 
 Use `CustomTooltip` from `src/components/custom-tooltip/` for concise supplementary information.
+
+The existing `InfoTooltipIcon` in `src/screens/hr/policies/components/HRPolicySharedUI.tsx` accepts an optional `label` for a named, keyboard-focusable icon button. Use it for explanatory Finance table headers and row details; existing callers without `label` retain their original presentation.
 
 **Rules**
 

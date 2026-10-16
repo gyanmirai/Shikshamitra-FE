@@ -7,7 +7,12 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { classType, financeModuleType, financePolicyType, studentAdmissionType } from 'src/redux/tagTypes';
+import {
+  classType,
+  financeModuleType,
+  financePolicyType,
+  studentAdmissionType,
+} from 'src/redux/tagTypes';
 
 const policyOptions: AssignmentPolicy[] = [
   {
@@ -206,7 +211,7 @@ export const api = createApi({
     ...Object.values(studentAdmissionType),
     ...Object.values(classType),
   ],
-  baseQuery: async (args: { url: string; body?: any }) => {
+  baseQuery: async (args: { url: string; body?: any; params?: any }) => {
     if (args.url.endsWith('/policy-options')) return { data: policyOptions };
     if (args.url.endsWith('/policies')) {
       const id = args.url.split('/').at(-2)!;
@@ -246,7 +251,103 @@ export const api = createApi({
       return {
         data: [{ id: 'class', name: 'Class 5', divisions: [{ id: 'division', name: 'A' }] }],
       };
-    if (args.url.endsWith('/students'))
+    if (args.url.endsWith('/students')) {
+      if (new URLSearchParams(window.location.search).has('studentColumns')) {
+        const params = args.params ?? {};
+        let items = Array.from({ length: 25 }, (_, index) => ({
+          enrollmentId: `columns-${index}`,
+          studentId: `columns-${index}`,
+          studentName:
+            ['Aarav Jay Shah', 'Meera Rao', 'Riya Patel'][index % 3] +
+            (index > 2 ? ` ${index}` : ''),
+          grNumber: `GR-${1001 + index}`,
+          rollNumber: index === 24 ? null : index + 1,
+          standardDivision: `Class 5 - ${index % 2 ? 'B' : 'A'}`,
+          className: 'Class 5',
+          divisionName: index % 2 ? 'B' : 'A',
+          boardName: 'CBSE',
+          mediumName: 'English',
+          stageName: 'Primary',
+          isActive: index !== 23,
+          isFeeStructureAssigned: index % 4 === 0,
+        }));
+        if (params.divisionId) items = items.filter((row) => row.divisionName === 'A');
+        const search = String(params.search ?? '').toLowerCase();
+        items = items.filter((row) =>
+          [row.studentName, row.grNumber, row.rollNumber].some((value) =>
+            String(value ?? '')
+              .toLowerCase()
+              .includes(search)
+          )
+        );
+        const valueFor = (row: (typeof items)[number], column: string): string | number | null => {
+          if (column === 'isActive' || column === 'isFeeStructureAssigned')
+            return row[column] ? 0 : 1;
+          return row[column as keyof typeof row] as string | number | null;
+        };
+        const filters = JSON.parse(params.filters ?? '[]') as {
+          column: string;
+          type: string;
+          value: any;
+        }[];
+        for (const column of new Set(filters.map((filter) => filter.column))) {
+          items = items.filter((row) =>
+            filters
+              .filter((filter) => filter.column === column)
+              .some((filter) => {
+                const value = valueFor(row, column);
+                if (value == null) return false;
+                const text = String(value).toLowerCase();
+                const target = String(filter.value).toLowerCase();
+                switch (filter.type) {
+                  case 'contains':
+                    return text.includes(target);
+                  case 'startsWith':
+                    return text.startsWith(target);
+                  case 'endsWith':
+                    return text.endsWith(target);
+                  case 'greaterThan':
+                    return Number(value) > Number(filter.value);
+                  case 'lessThan':
+                    return Number(value) < Number(filter.value);
+                  case 'between':
+                    return (
+                      Number(value) >= Number(filter.value.min) &&
+                      Number(value) <= Number(filter.value.max)
+                    );
+                  default:
+                    return text === target;
+                }
+              })
+          );
+        }
+        const sort = params.sortBy ?? 'studentName';
+        items.sort((a, b) => {
+          const left = valueFor(a, sort),
+            right = valueFor(b, sort);
+          const comparison =
+            left == null
+              ? -1
+              : right == null
+                ? 1
+                : typeof left === 'number' && typeof right === 'number'
+                  ? left - right
+                  : String(left).localeCompare(String(right));
+          return (
+            comparison * (params.sortOrder === 'desc' ? -1 : 1) ||
+            a.enrollmentId.localeCompare(b.enrollmentId)
+          );
+        });
+        return {
+          data: {
+            totalCount: items.length,
+            items: items.slice(
+              params.skipCount ?? 0,
+              (params.skipCount ?? 0) + (params.maxResultCount ?? 10)
+            ),
+          },
+        };
+      }
       return {
         data: {
           totalCount: 2,
@@ -255,6 +356,14 @@ export const api = createApi({
               enrollmentId: 'one',
               studentId: 'student-one',
               studentName: 'Aarav Shah',
+              grNumber: 'GR-1001',
+              rollNumber: 1,
+              standardDivision: 'Class 5 - A',
+              className: 'Class 5',
+              divisionName: 'A',
+              boardName: 'CBSE',
+              mediumName: 'English',
+              stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-one'),
             },
@@ -262,12 +371,21 @@ export const api = createApi({
               enrollmentId: 'two',
               studentId: 'student-two',
               studentName: 'Meera Rao',
+              grNumber: 'GR-1002',
+              rollNumber: 2,
+              standardDivision: 'Class 5 - A',
+              className: 'Class 5',
+              divisionName: 'A',
+              boardName: 'CBSE',
+              mediumName: 'English',
+              stageName: 'Primary',
               isActive: true,
               isFeeStructureAssigned: saved.has('student-two'),
             },
           ],
         },
       };
+    }
     if (args.url.endsWith('/candidates')) return { data: [candidate] };
     if (args.url.endsWith('/transport-sources'))
       return {

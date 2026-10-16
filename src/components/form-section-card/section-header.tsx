@@ -8,6 +8,7 @@ import { Box, Stack, IconButton, Typography } from '@mui/material';
 export interface FormSectionHeaderProps {
   icon: string;
   iconSize?: number;
+  iconContainerSize?: number;
   title: ReactNode;
   titleTypographyProps?: Partial<TypographyProps>;
   description?: string;
@@ -20,6 +21,7 @@ export interface FormSectionHeaderProps {
 export function FormSectionHeader({
   icon,
   iconSize = 20,
+  iconContainerSize = 36,
   title,
   titleTypographyProps,
   description,
@@ -32,8 +34,8 @@ export function FormSectionHeader({
     <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
       <Box
         sx={{
-          width: 36,
-          height: 36,
+          width: iconContainerSize,
+          height: iconContainerSize,
           borderRadius: 0.75,
           display: 'grid',
           placeItems: 'center',

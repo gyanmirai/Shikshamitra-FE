@@ -129,6 +129,14 @@ export interface AssignmentStudent {
   standardId?: string;
   divisionId?: string;
   studentName: string;
+  grNumber?: string;
+  rollNumber?: number | null;
+  standardDivision?: string;
+  boardName?: string;
+  mediumName?: string;
+  stageName?: string;
+  className?: string;
+  divisionName?: string;
   isActive: boolean;
   isFeeStructureAssigned: boolean;
 }
@@ -236,6 +244,9 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
         boardId?: string;
         educationMediumId?: string;
         search?: string;
+        filters?: string;
+        sortBy?: string;
+        sortOrder?: 'asc' | 'desc';
         skipCount: number;
         maxResultCount: number;
       }

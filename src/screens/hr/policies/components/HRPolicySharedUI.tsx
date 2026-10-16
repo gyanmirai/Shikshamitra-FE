@@ -115,16 +115,26 @@ export function PolicyName({
 
 // --- InfoTooltipIcon ----------------------------------------------------------
 
-export function InfoTooltipIcon({ title }: { title: string }) {
+export function InfoTooltipIcon({ title, label }: { title: string; label?: string }) {
   return (
     <CustomTooltip arrow placement="right" sx={{ textAlign: 'justify' }} title={title}>
-      <Iconify
-        icon="lucide:info"
-        sx={{ cursor: 'pointer' }}
-        color="info.main"
-        width={16}
-        height={16}
-      />
+      {label ? (
+        <IconButton
+          size="small"
+          aria-label={label}
+          sx={{ p: 0.5, color: 'info.main', flexShrink: 0 }}
+        >
+          <Iconify icon="lucide:info" width={16} height={16} aria-hidden />
+        </IconButton>
+      ) : (
+        <Iconify
+          icon="lucide:info"
+          sx={{ cursor: 'pointer' }}
+          color="info.main"
+          width={16}
+          height={16}
+        />
+      )}
     </CustomTooltip>
   );
 }

@@ -26,6 +26,24 @@ npm run docs:check
 
 ## Focused frontend checks
 
+### Concession request form presentation
+
+In the Codex in-app browser, open Concession Request and compare its section cards with Add Charge. Check neutral icons, keyboard-accessible heading help, compact academic fields on desktop and stacked fields on narrow screens. Select a student and verify the fee-assignment warning or the concession details, fee heads, values, preview, and documents as applicable. Confirm the body scrolls while Cancel, Save draft, and the permitted submit action remain reachable, with no horizontal page overflow. Presentation checks do not prove financial persistence or approval behavior.
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run --config e2e/fixtures/concession-request-ui/vitest.config.mts` for decimal/empty numeric entry, percentage limits, the fixed request cap across installments, read-only policy values, stable review metrics, server preview before approval, preserved approval metadata, changed-balance blocking and error retry.
+
+Run `node node_modules/vite/bin/vite.js --config e2e/fixtures/concession-request-ui/vite.config.mts` and open `http://127.0.0.1:4211/` in the Codex in-app browser for the actual value editor, impact summary and approval components with synthetic balances. Check percentage, fixed and policy-controlled modes at 390×844, 768×1024 and 1440×900; verify aligned original/paid/eligible values, no page overflow, persistent labels, and the approval footer. The fixture simulates preview responses and never writes backend financial records. The authenticated request form, document upload, permissions and persisted approval still require the real application session.
+
+### Read-only detail presentation
+
+Run the existing `FinancePolicyDetailsDrawer`, `ViewFeeDetails`, Accounts register,
+ConcessionAdmin and ChargesManagement tests when changing the shared detail components.
+Check the Income/Expenses transaction dialog, concession and charge views, Collections
+details, receipt preview and post-collection receipts in the Codex in-app browser.
+Verify three-column facts on wide cards, stacked facts on narrow cards, wrapping
+names/notes, full-width tables, and reachable Close/Done actions while scrolling.
+Retain loading, unavailable, error/Retry and current status/amount treatments.
+
 ### Concessions and Collections tables
 
 Run `npm run test -- src/screens/finance/Concession/Components/StudentConcessionTable.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.query.test.tsx` for query-state, status, paging and maker/checker controls.
@@ -64,6 +82,16 @@ Use these commands as the first validation set.
 | Payment Term date entry                          | `npm run test -- src/components/custom-date-range-picker/custom-date-range-picker.test.tsx src/screens/finance/settings/PaymentTerm/Components/sections/InstallmentSection.test.tsx src/screens/finance/settings/PaymentTerm/Components/PaymentTermValidationSchema.test.ts` |
 
 ## Add coverage when needed
+
+Collect Fees UI regressions are included in `FeeCollectionForm.charges.test.tsx`: collapsed
+student information, layout changes with an edited payment amount, table sorting without
+selection loss, and row View breakdown access. Run the collection selection/status suites in
+the command table above. The `e2e/fixtures/fee-collection-late-fees` fixture renders the actual
+form against synthetic RTK Query responses. Finish in the in-app browser at 390, 768 and
+1440 px: exercise all three layouts, period selection/Show fees, filtered hidden selections,
+fee/charge details and waiver access, partial collection, Cash/non-cash fields, receiving-bank
+validation, both review dialogs and generated receipts. Confirm the table owns horizontal
+scrolling and the document does not overflow. This fixture does not verify live backend writes.
 
 For the Finance drawer and navigation regressions, run these focused suites serially on memory-constrained Windows hosts:
 

@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -177,6 +178,7 @@ const FinanceIncomeCategoriesScreen = () => {
         }
         action={
           <LoadingButton
+            startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
             size="small"

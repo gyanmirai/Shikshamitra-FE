@@ -152,7 +152,7 @@ const Concession = () => {
                 variant="contained"
                 sx={{ px: '32px' }}
               >
-                Request Concession
+                Concession Request
               </Button>
             ) : undefined
           }

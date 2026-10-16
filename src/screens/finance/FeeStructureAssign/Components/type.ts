@@ -3,10 +3,11 @@ export interface IFeeStructureData {
   studentId: string;
   studentName?: string;
   grNumber?: string;
-  rollNumber?: string;
+  rollNumber?: string | number | null;
   standardDivision?: string;
   boardName?: string;
   mediumName?: string;
+  stageName?: string;
   className?: string;
   divisionName?: string;
   totalFees?: number;

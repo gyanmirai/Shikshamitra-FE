@@ -192,7 +192,7 @@ export default function RefundWorklist({
 
   return (
     <Box sx={{ display: 'flex', flex: 1, minHeight: 0, flexDirection: 'column', gap: 1 }}>
-      <Card sx={{ p: 1, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      <Card sx={{ p: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <FinanceAcademicContextFilter
           boards={filters.boards}
           mediums={filters.mediums}
@@ -200,6 +200,7 @@ export default function RefundWorklist({
           selectedMedium={filters.selectedMedium}
           onBoardChange={filters.setSelectedBoard}
           onMediumChange={filters.setSelectedMedium}
+          selectSx={{ maxWidth: '248px', width: '100%' }}
         />
         <FinanceClassDivisionFilter
           classOptions={filters.classOptions}
@@ -210,6 +211,7 @@ export default function RefundWorklist({
           onClassChange={filters.setSelectedStandardId}
           onDivisionChange={filters.setSelectedDivisionId}
           classesLoading={filters.classesLoading}
+          selectSx={{ maxWidth: '248px', width: '100%' }}
         />
       </Card>
       <Card sx={{ px: 1 }}>
@@ -221,6 +223,11 @@ export default function RefundWorklist({
             setColumnFilters((current) => current.filter((filter) => filter.column !== 'status'));
           }}
           variant="scrollable"
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+            px: 1
+          }}
         >
           {STATUSES.map((entry, index) => (
             <Tab
@@ -317,13 +324,13 @@ export default function RefundWorklist({
               enumOptions:
                 status === -1
                   ? Object.entries(historicalLabels).map(([value, label]) => ({
-                      value: Number(value),
-                      label,
-                    }))
+                    value: Number(value),
+                    label,
+                  }))
                   : STATUSES.filter((entry) => entry.value !== -1).map(({ value, label }) => ({
-                      value,
-                      label,
-                    })),
+                    value,
+                    label,
+                  })),
               render: (value, row) => {
                 const entry = STATUSES.find((item) => item.value === value);
                 return (

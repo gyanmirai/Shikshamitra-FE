@@ -1,17 +1,30 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import React, { useState, useEffect } from 'react';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { formatNumber } from 'src/utils/formate_number';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Skeleton, Typography, CircularProgress } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
+import {
+  Box,
+  Stack,
+  Alert,
+  Button,
+  Skeleton,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 import {
   FEE_RECEIPT_KIND_COLORS,
   FEE_RECEIPT_KIND_LABELS,
   useGetFeeReceiptDetailQuery,
+  FEE_RECEIPT_VERIFICATION_LABELS,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 interface ReceiptPreviewDialogProps {
@@ -100,102 +113,145 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
 
   const receiptKindMeta = getReceiptKindMeta(receipt?.receiptKind);
 
-  const title = (
-    <Box display="flex" flexDirection="column" gap={1} flexGrow={1}>
-      <Box display="flex" alignItems="center" gap={1}>
-        <Typography variant="h6" fontWeight={700}>
-          {receipt?.studentName || 'Receipt Preview'} {receipt?.grNo ? `(${receipt.grNo})` : ''}
-        </Typography>
-        <CustomTooltip
-          arrow
-          placement="right"
-          sx={{ textAlign: 'justify' }}
-          title="You can update the subject details including name and color."
-        >
-          <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-        </CustomTooltip>
-      </Box>
-      <Box display="flex" alignItems="center" gap={1}>
-        {receipt && (
-          <Label
-            variant="soft"
-            color={receiptKindMeta?.color ?? 'default'}
-            sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600 }}
-          >
-            {receiptKindMeta?.label ?? ''}
-          </Label>
-        )}
-        <Typography variant="caption" color="text.secondary">
-          {receipt?.className ?? ''}
-        </Typography>
-      </Box>
-    </Box>
-  );
-
   return (
     <CustomDialog
       open
       handleClose={onClose}
       title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h5">{title}</Typography>
-        </Box>
-      }
-      maxWidth="md"
-      hasForm={false}
-    >
-      {isLoading ? (
-        <Box p={2}>
-          <Skeleton height={40} />
-          <Skeleton height={40} />
-          <Skeleton height={200} />
-        </Box>
-      ) : !receipt ? (
-        <Box p={2}>
-          <Typography color="text.secondary">Receipt not found.</Typography>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            width: '100%',
-            height: { xs: '60vh', sm: '65vh', md: '70vh' },
-            maxHeight: 'calc(100vh - 220px)',
-            minHeight: 420,
-            p: 1,
-          }}
+        <Stack
+          component="span"
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
         >
-          {isPdfLoading ? (
-            <Box
-              sx={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: 1,
-              }}
-            >
-              <CircularProgress size={28} />
-              <Typography variant="body2" color="text.secondary">
-                Loading receipt preview...
-              </Typography>
-            </Box>
-          ) : receiptBlobUrl ? (
-            <iframe
-              title="Fee Receipt PDF"
-              src={receiptBlobUrl}
-              style={{ border: 'none', width: '100%', minHeight: '100%', height: '100%' }}
-            />
-          ) : (
-            <Box p={2}>
-              <Typography variant="body2" color="text.secondary">
-                Receipt preview is not available right now.
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
+          <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
+            {receipt?.receiptNumber || 'Receipt Preview'}
+          </Box>
+          {receiptKindMeta && <Label color={receiptKindMeta.color}>{receiptKindMeta.label}</Label>}
+        </Stack>
+      }
+      titleInfo="Review the saved receipt details and its PDF document."
+      maxWidth="lg"
+      hasForm={false}
+      guardUnsavedChanges={false}
+      paperProps={{
+        sx: {
+          backgroundImage: 'none',
+          height: '90dvh',
+          maxHeight: 'calc(100dvh - 32px)',
+          m: { xs: 1, sm: 2 },
+          width: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)' },
+        },
+      }}
+    >
+      <DialogScrollContent>
+        {isLoading ? (
+          <Stack spacing={2} role="status" aria-label="Loading receipt details">
+            <Skeleton variant="rounded" height={150} />
+            <Skeleton variant="rounded" height={350} />
+          </Stack>
+        ) : !receipt ? (
+          <Alert severity="info">Receipt not found.</Alert>
+        ) : (
+          <Stack spacing={2}>
+            <DetailSection title="Receipt Details" icon="mdi:receipt-text-outline">
+              <DetailGrid>
+                <DetailField
+                  label="Receipt date"
+                  value={receipt.receiptDate ? fDateTime(receipt.receiptDate) : null}
+                />
+                <DetailField
+                  label="Amount paid"
+                  value={formatNumber(receipt.totalPaidAmount, 'INR')}
+                />
+                <DetailField label="Academic year" value={receipt.academicYearName} />
+                {FEE_RECEIPT_VERIFICATION_LABELS[
+                  receipt.verificationStatus as keyof typeof FEE_RECEIPT_VERIFICATION_LABELS
+                ] && (
+                  <DetailField
+                    label="Verification"
+                    value={
+                      FEE_RECEIPT_VERIFICATION_LABELS[
+                        receipt.verificationStatus as keyof typeof FEE_RECEIPT_VERIFICATION_LABELS
+                      ]
+                    }
+                  />
+                )}
+                {receipt.linkedFinalReceiptNumber && (
+                  <DetailField label="Final receipt" value={receipt.linkedFinalReceiptNumber} />
+                )}
+                {receipt.linkedProvisionalReceiptNumber && (
+                  <DetailField
+                    label="Provisional receipt"
+                    value={receipt.linkedProvisionalReceiptNumber}
+                  />
+                )}
+                {receipt.siblingReceiptNumber && (
+                  <DetailField label="Related receipt" value={receipt.siblingReceiptNumber} />
+                )}
+                {receipt.remarks && (
+                  <DetailField fullWidth label="Remarks" value={receipt.remarks} />
+                )}
+              </DetailGrid>
+            </DetailSection>
+            <DetailSection title="Student Information" icon="mdi:account-school-outline">
+              <DetailGrid>
+                <DetailField label="Student name" value={receipt.studentName} />
+                <DetailField label="GR number" value={receipt.grNo} />
+                <DetailField
+                  label="Class / division"
+                  value={[receipt.className, receipt.division].filter(Boolean).join(' / ')}
+                />
+                <DetailField label="Roll number" value={receipt.rollNo} />
+                <DetailField label="Board" value={receipt.boardName} />
+                <DetailField label="Medium" value={receipt.mediumName} />
+              </DetailGrid>
+            </DetailSection>
+            <DetailSection title="Receipt Document" icon="mdi:file-document-outline">
+              {isPdfLoading ? (
+                <Stack
+                  alignItems="center"
+                  justifyContent="center"
+                  spacing={1}
+                  sx={{ minHeight: 240 }}
+                  role="status"
+                >
+                  <CircularProgress size={28} />
+                  <Typography variant="body2" color="text.secondary">
+                    Loading receipt preview...
+                  </Typography>
+                </Stack>
+              ) : receiptBlobUrl ? (
+                <Box
+                  component="iframe"
+                  title="Fee Receipt PDF"
+                  src={receiptBlobUrl}
+                  sx={{
+                    border: 0,
+                    width: '100%',
+                    height: { xs: '55dvh', sm: '65dvh' },
+                    display: 'block',
+                  }}
+                />
+              ) : (
+                <Alert severity="info">Receipt preview is not available right now.</Alert>
+              )}
+            </DetailSection>
+          </Stack>
+        )}
+      </DialogScrollContent>
+      <DialogActions sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={onClose}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Close
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 };

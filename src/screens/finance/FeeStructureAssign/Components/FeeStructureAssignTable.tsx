@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { IData } from 'src/components/customizabaleTable/types';
+import type { IData, IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
@@ -12,6 +12,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import { useAssignmentStudentsQuery } from 'src/redux/finance/studentFeeAssignment';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   ALL_CLASS_OPTION,
@@ -36,9 +37,11 @@ export default function FeeStructureAssignTable({
     `${financePermissions.fees.structureAssign}.Add`
   );
   const context = useFinanceAcademicFilters();
-  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, scope: '' });
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<IParams['filters']>([]);
+  const [sorts, setSorts] = useState<IParams['sorts']>([]);
   const [selected, setSelected] = useState<IFeeStructureData[]>([]);
   const standardId =
     context.selectedStandardId === ALL_CLASS_OPTION.id
@@ -48,6 +51,17 @@ export default function FeeStructureAssignTable({
     context.selectedDivisionId === ALL_DIVISION_OPTION.id
       ? undefined
       : context.selectedDivisionId || undefined;
+  const scope = JSON.stringify([
+    currentYear?.id,
+    standardId,
+    divisionId,
+    context.selectedBoard,
+    context.selectedMedium,
+    search,
+    filters,
+    sorts,
+  ]);
+  const page = pagination.scope === scope ? pagination.page : 1;
   const query = useAssignmentStudentsQuery(
     {
       academicYearId: currentYear?.id ?? '',
@@ -56,22 +70,18 @@ export default function FeeStructureAssignTable({
       boardId: context.selectedBoard,
       educationMediumId: context.selectedMedium,
       search,
+      filters: serializeFinanceTableFilters(filters),
+      sortBy: sorts[0]?.column,
+      sortOrder: sorts[0]?.direction,
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
     },
     { skip: !currentYear?.id || !canView || !context.isReady }
   );
   useEffect(() => {
-    setPage(1);
+    setPagination({ page: 1, scope });
     setSelected([]);
-  }, [
-    currentYear?.id,
-    standardId,
-    divisionId,
-    context.selectedBoard,
-    context.selectedMedium,
-    search,
-  ]);
+  }, [scope]);
   useEffect(() => {
     if (!query.currentData) return;
     const eligibleIds = new Set(
@@ -90,10 +100,7 @@ export default function FeeStructureAssignTable({
   }));
   const eligible = rows.filter((r) => r.isActive && !r.isFeeStructureAssigned);
   return (
-    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-      <Typography variant="subtitle2">
-        Academic year: {currentYear?.name || 'Select an academic year'}
-      </Typography>
+    <Stack sx={{ flex: 1, minHeight: 0, gap: 1 }}>
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <FinanceAcademicContextFilter
@@ -125,22 +132,6 @@ export default function FeeStructureAssignTable({
           />
         </Stack>
       </Paper>
-      {query.isError && (
-        <Alert
-          severity="error"
-          action={
-            <Button
-              size="small"
-              startIcon={<Iconify icon="mdi:refresh" />}
-              onClick={() => query.refetch()}
-            >
-              Retry
-            </Button>
-          }
-        >
-          Student assignments could not be loaded for this year and scope.
-        </Alert>
-      )}
       {selected.length > 0 && canAssign && (
         <Stack
           direction="row"
@@ -172,6 +163,13 @@ export default function FeeStructureAssignTable({
         isLoading={query.isFetching}
         data={rows}
         noDataText="No enrolled students in this academic context"
+        errorContent={
+          query.isError ? (
+            <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+              Student assignments could not be loaded. Try again or clear the filters.
+            </Alert>
+          ) : undefined
+        }
         wrapperProps={{ sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
         tableContainerProps={{
           sx: { height: '100%' },
@@ -183,15 +181,23 @@ export default function FeeStructureAssignTable({
         rowsPerPage={pageSize}
         totalCount={query.currentData?.totalCount ?? 0}
         onServerPagination={(nextPage, size) => {
-          setPage(nextPage);
+          setPagination({ page: nextPage, scope });
           setPageSize(size);
           setSelected([]);
         }}
         serverSideSearch
+        searchTerm={search}
+        serverSideFilter
+        serverSideSort
+        serverSideSortMode="single"
+        filters={filters}
+        sorts={sorts}
+        onServerFilter={setFilters}
+        onServerSort={(_column, nextSorts) => setSorts(nextSorts)}
         searchFieldProps={{
-          placeholder: 'Search students by name',
+          placeholder: 'Search by name, roll no. or GR no.',
           label: '',
-          inputProps: { 'aria-label': 'Search students by name' },
+          inputProps: { 'aria-label': 'Search students by name, roll number or GR number' },
         }}
         onServerSearch={(value) => setSearch(value)}
         columns={[
@@ -202,6 +208,8 @@ export default function FeeStructureAssignTable({
                   label: '',
                   width: 64,
                   isSort: false,
+                  isFilter: false,
+                  excludeFromExport: true,
                   renderColumn: () => (
                     <Checkbox
                       inputProps={{
@@ -240,29 +248,100 @@ export default function FeeStructureAssignTable({
           {
             id: 'studentName',
             label: 'Student',
+            width: 240,
             minWidth: 220,
-            isSort: false,
+            align: 'left',
+            sticky: true,
+            stickyPosition: 'left',
+            stickyOnMobile: false,
+            isSort: true,
+            isFilter: true,
             filterType: 'string',
           },
           {
+            id: 'grNumber',
+            label: 'GR No.',
+            width: 140,
+            minWidth: 130,
+            align: 'left',
+            isFilter: true,
+            isSort: true,
+            filterType: 'string',
+            render: (value: unknown) => (value ? String(value) : '—'),
+          },
+          {
+            id: 'standardDivision',
+            label: 'Class/Division',
+            width: 180,
+            minWidth: 180,
+            align: 'left',
+            isFilter: true,
+            isSort: true,
+            filterType: 'string',
+            render: (value: unknown) => (value ? String(value) : '—'),
+          },
+          {
+            id: 'rollNumber',
+            label: 'Roll No.',
+            width: 130,
+            minWidth: 120,
+            align: 'right',
+            isFilter: true,
+            isSort: true,
+            filterType: 'number',
+            render: (value: unknown) => (value == null ? '—' : String(value)),
+          },
+          ...[
+            { id: 'boardName', label: 'Board' },
+            { id: 'mediumName', label: 'Medium' },
+            { id: 'stageName', label: 'Academic Stage' },
+            { id: 'className', label: 'Class' },
+            { id: 'divisionName', label: 'Division' },
+          ].map(({ id, label }) => ({
+            id,
+            label,
+            width: 170,
+            minWidth: 150,
+            align: 'left' as const,
+            isFilter: true,
+            isSort: true,
+            filterType: 'string' as const,
+            defaultHidden: true,
+            render: (value: unknown) => (value ? String(value) : '—'),
+          })),
+          {
             id: 'isActive',
             label: 'Enrollment',
-            isSort: false,
-            isFilter: false,
+            width: 180,
+            minWidth: 180,
+            align: 'left',
+            isSort: true,
+            isFilter: true,
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Active', value: 0 },
+              { label: 'Inactive', value: 1 },
+            ],
             render: (value: unknown) => (
-              <Label color={value ? 'success' : 'warning'}>
-                {value ? 'Active' : 'Inactive — review required'}
-              </Label>
+              <Label color={value ? 'success' : 'warning'}>{value ? 'Active' : 'Inactive'}</Label>
             ),
           },
           {
             id: 'isFeeStructureAssigned',
             label: 'Assignment',
+            width: 160,
             minWidth: 140,
+            align: 'left',
             sticky: true,
             stickyPosition: 'right',
-            isSort: false,
-            isFilter: false,
+            stickyOnMobile: false,
+            isSort: true,
+            isFilter: true,
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Assigned', value: 0 },
+              { label: 'Unassigned', value: 1 },
+            ],
             render: (value: unknown) => (
               <Label color={value ? 'success' : 'default'}>
                 {value ? 'Assigned' : 'Unassigned'}
@@ -276,6 +355,7 @@ export default function FeeStructureAssignTable({
             align: 'right',
             isSort: false,
             isFilter: false,
+            excludeFromExport: true,
             sticky: true,
             stickyPosition: 'right',
             render: (_value: unknown, rawRow: IData) => {

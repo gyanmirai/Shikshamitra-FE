@@ -6,7 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentReview from './AssignmentReview';
 
@@ -107,9 +107,11 @@ describe('assignment review evidence', () => {
       screen.getByRole('table', { name: 'Assignment fee-head breakdown table' })
     );
     expect(heads.getByText('Not selected')).toBeInTheDocument();
-    expect(heads.getByText('No obligation')).toBeInTheDocument();
+    expect(heads.getByText('Not assigned')).toBeInTheDocument();
     expect(heads.getByText('Monthly · v3')).toBeInTheDocument();
-    fireEvent.mouseOver(heads.getByRole('button', { name: 'Tuition service details' }));
+    expect(
+      heads.queryByRole('button', { name: 'Tuition service details' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Configured dates are in the past.');
     fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(screen.getByRole('table', { name: 'Preview fee installments table' }));
@@ -117,16 +119,33 @@ describe('assignment review evidence', () => {
     expect(schedule.getByText('Tuition · Installment 12')).toBeInTheDocument();
   });
 
-  it('keeps policy versions visible and moves treatment to a focusable info icon', async () => {
+  it('shows policy names and versions with read-only policy view fields', () => {
     mount();
-    expect(screen.getByText(/collection policy: School collection · v2/)).toBeVisible();
-    expect(
-      screen.queryByText('Tuition: Evaluated during collection only.')
-    ).not.toBeInTheDocument();
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'collection policy information' }));
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'Tuition: Evaluated during collection only.'
-    );
+    expect(screen.getByText('collection policy')).toBeVisible();
+    expect(screen.getByText('School collection · v2')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
+  });
+
+  it('opens installment evidence from the text action and exposes explanations on focus', async () => {
+    mount();
+    const viewAll = screen.getByRole('button', { name: 'View all' });
+    expect(viewAll).toHaveClass('MuiLink-root');
+    expect(viewAll).not.toHaveClass('MuiButton-root');
+    fireEvent.click(viewAll);
+    const dialog = within(screen.getByRole('dialog'));
+    const shareHeader = within(dialog.getByRole('columnheader', { name: /Share/ }));
+    expect(shareHeader.getAllByText('Share')).toHaveLength(1);
+    expect(dialog.getByRole('button', { name: 'About installment shares' })).toBeVisible();
+    expect(dialog.getByRole('button', { name: 'About installment demand dates' })).toBeVisible();
+    expect(dialog.getByRole('button', { name: 'About installment due dates' })).toBeVisible();
+    expect(dialog.getByRole('button', { name: 'About installment obligations' })).toBeVisible();
+    expect(dialog.queryByText('Reviewed service charge')).not.toBeInTheDocument();
+    const explanation = dialog.getByRole('button', {
+      name: 'Tuition Installment 1 calculation details',
+    });
+    act(() => explanation.focus());
+    expect(explanation).toHaveFocus();
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Reviewed service charge');
   });
 
   it('closes installment evidence without discarding the parent assignment form', async () => {
@@ -145,7 +164,7 @@ describe('assignment review evidence', () => {
     mount({ ...preview, calculationVersion: 'LegacyUnknown' }, true);
     expect(screen.queryByText('Before service adjustment')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: 'Coverage amount' })).not.toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Recorded obligation' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Recorded Amount' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(
       screen.getByRole('table', { name: 'Assigned fee installments and balances table' })
