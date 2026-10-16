@@ -7,6 +7,8 @@ scope: all-modules
 
 # Stepper UI Rulebook
 
+For page/drawer form steppers, use [the canonical stepper form guide](../../shikshamitra-ui-consistency/references/stepper-forms.md), including the Rubric Template reference and shared component APIs. Its form/section, validation, footer, and unsaved-change rules govern those surfaces. The broader notes below apply only where compatible with the actual workflow; per-step saving and resume require a supported draft contract, not an invented endpoint or storage flow.
+
 This document defines the standard for multi-step workflows such as exam
 setup, timetable creation, onboarding, configuration, and publishing flows.
 The attached screens are reference examples for the intended structure. They
@@ -116,7 +118,7 @@ Saving progress is a core part of every multi-step workflow.
 - Put the most important decision or required fields first.
 - Use the same form grid, label, error, spacing, border, and color rules as
   [forms.md](forms.md).
-- Use the same table rules as [tables.md](tables.md) when a step contains a
+- Use the same table rules as [tables.md](../../shikshamitra-ui-consistency/references/tables.md) when a step contains a
   table or repeated records.
 - Keep optional configuration visually secondary to required setup.
 - Do not fill unused space with decorative panels, duplicate summaries, or

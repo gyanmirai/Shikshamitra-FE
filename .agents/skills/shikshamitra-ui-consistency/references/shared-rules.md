@@ -9,12 +9,19 @@ Read the applicable design-contract section when a rule requires additional deta
 | Concern | Existing source to inspect |
 | --- | --- |
 | Header and breadcrumbs | `src/components/custom-breadcrumbs/custom-breadcrumbs.tsx`, `types.ts` |
+| Empty, search/no-results, skeletons and blocking save | [Empty/loading states](empty-loading-states.md); EmptyContent, SearchNotFound, MUI Skeleton, FormBusyRegion |
 | Record table | `src/components/customizabaleTable/index.tsx`, `types.ts` |
 | Form dialog and scroll body | `src/components/customDialog/index.tsx`, `close-guard.ts` |
 | Confirmation | `src/components/confirm-dialog/confirm-dialog.tsx`, `types.ts` |
 | Form section | `src/components/form-section-card/index.tsx`, `section-header.tsx` |
+| Required-field validation wrapper | `src/components/shaking-text-field/index.tsx`; [usage rules](sections.md#shared-required-field-wrapper) |
+| Select and searchable choices | [CustomSelect](custom-select.md), [searchable dropdowns](searchable-dropdowns.md) |
+| Numeric entry and number display | [NumericFormatCustom](numeric-format-custom.md); `src/utils/formate_number.ts` |
+| Uploads, document validation and file actions | [CustomUpload](custom-upload.md); inspect the actual directory-default versus alternate import |
+| Date and range fields | [Date pickers](date-pickers.md), [range picker](date-range-picker.md) |
 | Submit action | `src/components/submit-button/index.tsx`, `interface.ts` |
 | Cancel action | `src/components/cancel-button/index.tsx`, `inerface.ts` |
+| Button sizes/icons/states and loading alias | [Button family](button-family.md); `src/components/loading-button/index.ts`, `src/components/form-busy-region/index.tsx` |
 | Notifications | `src/components/toast/` |
 | Colors and typography | `src/theme/core/palette.ts`, `typography.ts`, `components/button.tsx` |
 
@@ -26,6 +33,11 @@ Read the applicable design-contract section when a rule requires additional deta
   extend the shared wrapper within the authorized task; never invent unsupported props.
 - Use Formik and Yup for new forms unless the owning feature has a more specific current pattern.
   Do not duplicate the RTK Query base API. Use `shikshaMitraToast` for shared notifications.
+- Every required editable field uses `ShakingTextField` around its actual shared control,
+  with validation feedback gated by touch/submission. This applies in page forms, drawers, and dialogs;
+  preserve required markers, small field styling, visible errors, and the existing validation contract.
+- Every form and corresponding view uses [the same section rules](sections.md), regardless of
+  page/dialog/drawer shell. Retain meaningful saved details and replace inputs with readable values.
 - Keep permission-aware UI aligned with backend actions. Never invent a grant or expose an
   enabled action whose only result is an authorization error.
 

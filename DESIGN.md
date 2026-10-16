@@ -902,90 +902,12 @@ The option arrays and handlers in the example are screen-owned; use the actual d
 
 ### 03. Tabs and CustomTabs
 
-Use `CustomTabs` with the `useTabs` hook for shared tab navigation.
-The component source is `src/components/custom-tabs/`, the state hook is `src/hooks/use-tabs.ts`, and the reference implementation is `src/screens/academic/activityManagement/index.tsx`.
-
-**Configuration**
-
-| Concern            | Required configuration                                                                                                                          |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tab definitions    | Define tabs as objects with exactly the base shape `{ value, label }`.                                                                          |
-| `value`            | Use a stable, unique string identifier such as `'role'` or `'user'`; do not use the visible label as the state contract when labels may change. |
-| `label`            | Use the user-facing plural or task label, such as `Roles` or `Users`.                                                                           |
-| State              | Initialize `useTabs` with the first valid tab value or the page’s explicit default.                                                             |
-| Shared tab control | Render the tab list with `CustomTabs`, passing `value={tabs.value}` and `onChange={tabs.onChange}`.                                             |
-| Tab items          | Map the tab definitions to MUI `Tab` elements with `key`, `value`, and `label`.                                                                 |
-| Tab content        | Render content from the selected tab value; do not render every panel simultaneously when panels are expensive or stateful.                     |
-| Variant            | Use the default variant unless the page layout explicitly requires another supported MUI variant, such as `fullWidth`.                          |
-| URL state          | Use URL-backed state when the selected tab is a durable/shareable page view; preserve the same `{ value, label }` definition shape.             |
-
-**Required tab definition**
-
-```tsx
-const TABS = [
-  { value: 'role', label: 'Roles' },
-  { value: 'user', label: 'Users' },
-];
-```
-
-**Preferred usage**
-
-```tsx
-import { Tab } from '@mui/material';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { useTabs } from 'src/hooks/use-tabs';
-
-const TABS = [
-  { value: 'role', label: 'Roles' },
-  { value: 'user', label: 'Users' },
-];
-
-function AccessManagement() {
-  const tabs = useTabs(TABS[0].value);
-
-  return (
-    <>
-      <CustomTabs value={tabs.value} onChange={tabs.onChange}>
-        {TABS.map((tab) => (
-          <Tab key={tab.value} value={tab.value} label={tab.label} />
-        ))}
-      </CustomTabs>
-
-      {tabs.value === 'role' && <RolesPanel />}
-      {tabs.value === 'user' && <UsersPanel />}
-    </>
-  );
-}
-```
-
-**Rules**
-
-- Always use `CustomTabs` from `src/components/custom-tabs` for this shared tab treatment.
-- Always use `useTabs` from `src/hooks/use-tabs` to own local selected-tab state.
-- Define tab items in the `{ value: string, label: string }` format; do not use parallel arrays for values and labels.
-- Every tab value must be unique, stable, and suitable for state or URL serialization.
-- Render each item with `Tab key={tab.value} value={tab.value} label={tab.label}`.
-- Keep tab definitions outside the render function when they are static.
-- Do not use array indexes as tab keys or tab values.
-- The initial value passed to `useTabs` must exist in the tab definitions and must show valid content immediately.
-- Keep the selected tab and the visible panel synchronized; a selected tab must never render an unrelated panel.
-- Use tabs only for peer content areas within one stable page context; use routes or a stepper for distinct workflows or genuinely ordered tasks.
-- Use URL-backed tab state when users need reload, deep-link, browser back/forward, or modifier-click behavior to preserve the selected view.
-- If a tab is URL-backed, keep one state owner and synchronize `useTabs` with that route contract; do not maintain competing local and URL values.
-- Do not put destructive confirmation logic inside the tab list; the shared `CustomTabs` already coordinates with the existing unsaved-change guard.
-- Keep labels visible and understandable; do not use icon-only primary tabs.
-- Use `fullWidth` only when all peer tabs should intentionally share the available width, as demonstrated in the Academic activity management reference.
-- Use `slotProps` only for deliberate tab styling; do not use it to introduce arbitrary page spacing or change the component’s interaction contract.
-- Preserve keyboard navigation, visible focus, selected contrast, and the tab/tab-panel relationship.
-
-**Validation**
-
-- Verify the tab definitions use the exact `{ value, label }` shape.
-- Verify the default tab renders valid content on first load.
-- Verify selecting each tab changes both the selected state and the visible panel.
-- Verify tab values remain correct after reload and browser navigation when the view is URL-backed.
-- Verify unsaved-change protection behaves correctly when switching tabs.
-- Verify keyboard focus, arrow-key navigation, selected state, and narrow-screen horizontal scrolling.
+The canonical component guide is [CustomTabs](.agents/skills/shikshamitra-ui-consistency/references/custom-tabs.md).
+It consolidates the previous rules from this section with the inspected Learning Tasks reference:
+component/API, stable tab definitions, icons, selected state, spacing, contextual actions,
+URL/local state, tab-panel accessibility, unsaved-change protection, and verification.
+Read that guide when implementing or reviewing peer-panel tabs; do not duplicate its rulebook here.
+Status filters remain governed by [the table guide](.agents/skills/shikshamitra-ui-consistency/references/tables.md).
 
 ### 04. Table family
 
@@ -1140,6 +1062,11 @@ When the API provides paging, search, sorting, or filtering, connect those capab
 
 Use `CustomDialog` from `src/components/customDialog/` for application dialogs.
 Use `DialogScrollContent` from the same module for scrollable dialog bodies, especially for forms.
+For short sectioned forms, header help, sizing, footer icons, and the shared discard popup, follow
+[the CustomDialog reference](.agents/skills/shikshamitra-ui-consistency/references/form-dialogs.md).
+For focused decisions use [the ConfirmDialog reference](.agents/skills/shikshamitra-ui-consistency/references/confirmations.md),
+including Title Case titles, GlobalIcons, small footer buttons, and Keep Editing / Discard Changes
+when cancelling an unsaved form. Keep one close/confirmation owner.
 
 **Configuration**
 
@@ -1151,33 +1078,47 @@ Use `DialogScrollContent` from the same module for scrollable dialog bodies, esp
 | `open`         | Control visibility from the owning screen or workflow state.                                                            |
 | `handleClose`  | Pass the owning close handler so the dialog can reset state, clear selected data, and handle unsaved changes correctly. |
 | `maxWidth`     | Choose the smallest width that supports the content; use a larger width only when the form or content needs it.         |
-| `hasForm`      | Use the form-enabled default for Formik forms; set `hasForm={false}` only for content that is not submitted as a form.  |
+| `hasForm`      | Keep exactly one form element. Use false for non-form content or when the feature supplies its own single Formik form; never nest forms. |
 | `disableClose` | Use only when closing would be unsafe or unsupported; explain the reason through the owning workflow.                   |
 | Body           | Use `DialogScrollContent` for form or long content so the body owns scrolling and the header/footer remain stable.      |
 | Footer         | Use MUI `DialogActions` for form actions, keep Cancel before Submit, and include a relevant icon in every footer button. |
 
 **Required form structure**
 
-When a dialog contains a form, use Formik with a Yup validation schema and follow this structure:
+When a dialog contains a form, use Formik with a Yup validation schema and follow this structure.
+Here `requestClose` is the sole local dirty-close/ConfirmDialog owner, and `busy` combines blocking
+request/submission states. The local owner also supplies navigation protection when applicable.
 
 ```tsx
-<CustomDialog open={open} title="Add Employee" handleClose={handleClose} maxWidth="sm">
-  <DialogScrollContent>{/* Formik fields and validation messages */}</DialogScrollContent>
-
-  <DialogActions>
-    <Button variant="outlined" size="small" onClick={handleClose}>
-      Cancel
-    </Button>
-    <LoadingButton
-      loading={isLoading || isUpdateLoading}
-      variant="contained"
-      size="small"
-      type="submit"
-      onClick={(e: any) => formik.handleSubmit(e)}
-    >
-      Submit
-    </LoadingButton>
-  </DialogActions>
+<CustomDialog
+  open={open}
+  title="Add Employee"
+  titleInfo="Enter the employee's basic details."
+  handleClose={requestClose}
+  maxWidth="sm"
+  hasForm={false}
+  guardUnsavedChanges={false}
+  disableClose={busy}
+>
+  <Box component="form" onSubmit={formik.handleSubmit} sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <DialogScrollContent>
+      <FormSectionCard title="General Information" icon={GlobalIcons.notebook}
+        descriptionTooltip="Employee identity and contact details."
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}>
+        {/* Formik fields and validation messages; affected controls disabled while busy */}
+      </FormSectionCard>
+    </DialogScrollContent>
+    <DialogActions>
+      <Button type="button" variant="outlined" size="small" onClick={requestClose}
+        disabled={busy} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
+        Cancel
+      </Button>
+      <LoadingButton loading={busy} disabled={busy} variant="contained" size="small"
+        type="submit" startIcon={<Iconify icon={GlobalIcons.submit} />}>
+        Submit
+      </LoadingButton>
+    </DialogActions>
+  </Box>
 </CustomDialog>
 ```
 
@@ -1215,8 +1156,8 @@ const formik = useFormik({
 - Disable or prevent duplicate submission while the create or update request is loading.
 - Close the dialog only after a successful mutation unless the workflow explicitly supports closing during a recoverable state.
 - Reset form values, selected records, validation state, and dirty-change state when the dialog closes or after a successful submit.
-- Protect unsaved changes through the owning Formik/confirmation workflow; do not bypass the shared close guard.
-- Use `hasForm={false}` only for preview, read-only, confirmation, or other non-form content.
+- Protect unsaved changes through one owning Formik/confirmation workflow; when a local shared-popup handler owns closure, use `guardUnsavedChanges={false}` only with that complete replacement protection, never a direct unguarded close.
+- Use `hasForm={false}` for preview/read-only/confirmation content, or when the feature supplies the single form element for native Formik submission.
 - Do not place long multi-step workflows inside a small dialog; use a page, drawer, or stepper when the task is larger than a focused decision or edit.
 - Do not place breadcrumbs, page-level filters, tables, or unrelated actions inside a dialog.
 - Keep keyboard focus, Escape behavior, close-button labeling, and mobile sizing provided by the shared dialog implementation.
@@ -1238,6 +1179,19 @@ const formik = useFormik({
 
 Every new form must use Formik for form state and submission, and Yup for schema validation.
 Use `ShakingTextField` to provide the shared validation feedback animation around form controls, and choose the field component that matches the value and interaction required by the field.
+Use the component references for [CustomSelect](.agents/skills/shikshamitra-ui-consistency/references/custom-select.md),
+[searchable dropdowns](.agents/skills/shikshamitra-ui-consistency/references/searchable-dropdowns.md),
+[date pickers](.agents/skills/shikshamitra-ui-consistency/references/date-pickers.md), and
+[date ranges](.agents/skills/shikshamitra-ui-consistency/references/date-range-picker.md).
+For page forms use [the page-form reference](.agents/skills/shikshamitra-ui-consistency/references/page-forms.md).
+Every form and corresponding view detail uses the same meaningful section names/order,
+icons, help, typography, and spacing, whether shown as a page, dialog, or drawer; only the
+input versus saved-value presentation changes. Preserve useful read-only metadata in its section.
+Every required editable field must use this shared wrapper, including in drawers and CustomDialog,
+and for selects, numeric/date inputs, and custom choices as well as text fields. Do not double-wrap
+a control that already composes it. Follow [the required-field wrapper rule](.agents/skills/shikshamitra-ui-consistency/references/sections.md#shared-required-field-wrapper):
+gate its error by touched/submission state, mirror that error on the actual control, and preserve
+the required asterisk, visible helper/error text, small sizing, and established field shape.
 
 **Source of truth**
 
@@ -1333,7 +1287,7 @@ const formik = useFormik({
 - Mark a field as touched through `formik.handleBlur` or an equivalent explicit `formik.setFieldTouched` call before relying on its error display.
 - On submit, validate the complete form, focus or announce the first invalid field when the form pattern supports it, and do not call the mutation with invalid values.
 - Use `CustomSelect` for bounded single- or multi-select values; connect its value through `formik.values` and update it with `formik.setFieldValue`.
-- Use `NumericFormatCustom` for numeric and currency inputs; keep the Formik value in the expected numeric contract and validate bounds with Yup.
+- Use `NumericFormatCustom` for numeric and currency inputs; follow [the numeric field guide](.agents/skills/shikshamitra-ui-consistency/references/numeric-format-custom.md) for raw draft strings, units, precision, required/help/error treatment, and Yup bounds. Use `formatNumber` from `src/utils/formate_number` for displayed numbers; its current whole-number rounding must not silently alter fractional rates or exact-decimal displays. Convert validated drafts to the owning API contract at submission.
 - Use `OtpInputField` for fixed-length OTP or verification-code input; validate length, allowed characters, and required state with Yup.
 - Use `PaginatedSearchSelect` for remote option lists; connect selection and validation to Formik and preserve loading, empty, and error states from the fetch contract.
 - Use the Standard address components for country, state, and city fields; keep dependent values synchronized and clear state/city when their parent selection changes.
@@ -1360,83 +1314,14 @@ const formik = useFormik({
 
 ### 07. Stepper with Formik
 
-Use `CustomStepperWithFormik` from `src/components/custom-stepper/` for ordered multi-step forms and setup flows.
-The component already creates and manages the Formik instance internally, so a standard implementation must not create an additional Formik setup around it.
-
-**Configuration**
-
-| Prop                       | Required configuration                                                                                                       |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `steps`                    | Ordered, user-facing step labels as a string array.                                                                          |
-| `activeStep`               | State owned by the parent workflow and kept within the valid step range.                                                     |
-| `initialValues`            | One complete value object shared across all steps.                                                                           |
-| `formikInstance`           | Compatibility option for an existing owning editor hook; reuse that instance without introducing another form-state owner.   |
-| `validationSchema`         | Yup schema passed to the stepper; use step-aware validation when different steps have different requirements.                |
-| `renderItem`               | Render the active step and use the `formik` instance supplied in the callback.                                               |
-| `handleNext`               | Persist or advance the workflow using the validated values supplied by the stepper.                                          |
-| `handleBack`               | Move to the previous step without creating a second form-state owner.                                                        |
-| `onStepClick`              | Use only when direct step navigation is appropriate; guard forward navigation with validation where required.                |
-| `validateForwardStepClick` | Enable when users may click future steps and those transitions must validate the current step first.                         |
-| `showSaveButton`           | Keep enabled when the workflow supports saving a draft/current step; disable only when that action is not valid.             |
-| `scrollbarHeight`          | Set when the stepper is inside a bounded dialog or drawer; keep the content area scrollable and the footer stable.           |
-| `viewMode`                 | Use `horizontal` by default; use `vertical` for a wide desktop setup workflow when the layout benefits from side navigation. |
-| `footerPlacement` | Keep `outside` by default; use `content` only when the step renders the supplied `footer` once in a stable, reachable panel footer. |
-
-**Preferred usage**
-
-```tsx
-<CustomStepperWithFormik
-  initialValues={initialValues}
-  steps={['Basic Details', 'Configuration', 'Review']}
-  activeStep={activeStep}
-  validationSchema={validationSchema}
-  handleBack={() => setActiveStep((step) => Math.max(step - 1, 0))}
-  handleNext={(isLastStep, values, formik, setIsLoading) =>
-    handleNextStep(isLastStep, values, formik, setIsLoading)
-  }
-  renderItem={({ formik, activeStep: step }) => (
-    <Box sx={{ p: 2 }}>{stepContent[step](formik)}</Box>
-  )}
-/>
-```
-
-The fields inside `renderItem` must use the supplied `formik` object and the form-field rules documented above.
-
-**Rules**
-
-- Always use `CustomStepperWithFormik` for multi-step forms and genuinely ordered setup flows.
-- Do not call `useFormik` again in the parent or step content for the standard implementation; `CustomStepperWithFormik` already creates the Formik instance.
-- Do not wrap the stepper in a second Formik provider or maintain duplicate values, touched state, errors, or submission state.
-- Pass one complete `initialValues` object to the stepper and keep field names consistent across every step.
-- Always pass a Yup `validationSchema`; the internal Formik instance uses it for step submission and navigation validation.
-- Use the `formik` instance supplied by `renderItem` for values, errors, touched state, `handleChange`, `handleBlur`, and `setFieldValue`.
-- Use `ShakingTextField` and the appropriate shared field component inside each step according to the Forms, Formik, and Yup contract.
-- Keep `steps` in the same order as the rendered step content; changing labels or content order must update both together.
-- Use `handleNext` for the validated current values and let the stepper determine whether the current step is the final step.
-- Do not advance to the next step when validation errors exist; the component validates, marks errors as touched, and focuses the first invalid field.
-- Use `validateForwardStepClick` when clicking a future step must validate the current step before navigation.
-- Use `isStepClickable` to restrict direct navigation based on workflow state, permissions, completion, or edit mode.
-- Use `completedSteps` and `errors` only when the parent has an authoritative workflow state to represent; do not show a step as complete merely because it was visited.
-- Keep `activeStep` state in the parent workflow so the parent can coordinate dialogs, drawers, routes, dirty-state protection, and successful submission.
-- Keep the stepper’s scrollable content region separate from its sticky action footer; long step forms must not push actions out of view.
-- Use `handleBack` for backward navigation and preserve entered values unless the workflow explicitly requires a reset.
-- Pass `onCancel` when the first step needs an enabled Cancel action; it must invoke the owning workflow's unsaved-navigation guard.
-- Use optional `backButtonProps` for a workflow-specific icon or to disable backward navigation after a terminal result. The shared stepper still enforces first-step and busy-state disabling and owns the click handler.
-- Keep Save, Save & Next, Back, and Submit semantics clear; do not silently submit the entire workflow when the user selects Save for the current step.
-- Respect the component’s loading state and do not trigger duplicate next, save, or submit requests while it is busy.
-- Use a stepper only for a genuinely ordered sequence; use `CustomTabs` for peer views that can be visited independently.
-- For a dialog or drawer workflow, place the stepper inside the owning `CustomDialog` or drawer and keep the container height bounded so the stepper can own scrolling.
-
-**Validation**
-
-- Verify the implementation uses `CustomStepperWithFormik` and does not create an additional Formik instance.
-- Verify the supplied `validationSchema` blocks invalid forward navigation and submission.
-- Verify each step renders the correct fields using the supplied `formik` instance.
-- Verify errors are marked touched and the first invalid field receives focus when advancing.
-- Verify Back preserves values and does not submit the form.
-- Verify Save, Save & Next, and final Submit show loading states and prevent duplicate requests.
-- Verify direct step clicks follow the configured validation and clickability rules.
-- Verify horizontal and vertical modes, mobile behavior, internal scrolling, sticky actions, and keyboard navigation.
+Use `CustomStepperWithFormik` from `src/components/custom-stepper/` for genuinely ordered forms.
+The canonical [stepper form reference](.agents/skills/shikshamitra-ui-consistency/references/stepper-forms.md)
+consolidates the component/API rules with the Rubric Template screenshot, breadcrumb and drawer
+shells, single authoritative Formik state, shared sections/fields, validation, navigation,
+completion, save/preview/final actions, scroll/footer layout, unsaved work, and verification.
+Use that guide for page and drawer steppers; do not create a second local form or conflicting rulebook.
+Draft persistence/resume requires the actual workflow/backend contract; Next alone does not save.
+For independent peer views use the [CustomTabs guide](.agents/skills/shikshamitra-ui-consistency/references/custom-tabs.md).
 
 ### 08. SectionCard
 
@@ -1471,6 +1356,7 @@ The established shared implementation is exported from `src/screens/hr/employee/
 - Use `SectionCard` whenever a form contains multiple logical groups of fields, especially when those groups are implemented in separate files or step components.
 - Give every section a meaningful title that describes the fields inside it; do not use generic titles such as `Section 1`.
 - Use a neutral leading icon for informational section headings, aligned with the title and optional help icon. The help icon may use the theme info color; reserve other semantic icon colors for status.
+- Standard sections in page/dialog/drawer forms and corresponding views follow [the section reference](.agents/skills/shikshamitra-ui-consistency/references/sections.md): a meaningful leading `GlobalIcons` icon, section info control, Title Case heading, and matching form/view typography. Required editable fields have one asterisk and shared validation wrapper; buttons use leading action icons.
 - Keep one logical field group inside one `SectionCard`; do not combine unrelated domains merely to reduce the number of cards.
 - Keep field components and Formik state in the owning form/step files while using `SectionCard` only for visual grouping and section layout.
 - Pass the same Formik instance into field components; `SectionCard` must not create or own form state.
@@ -1494,14 +1380,19 @@ The established shared implementation is exported from `src/screens/hr/employee/
 
 ### 09. Drawer
 
-For read-only Finance sections, use `DetailSection`, `DetailGrid` and `DetailField`
-from `src/components/detail-view`. `DetailSection` reuses the shared
-`FormSectionCard`/`FormSectionHeader` with a compact neutral icon and `subtitle1`
-heading. Fields use uppercase caption labels and `body2` values, matching Finance
-policy views. Use `fullWidth` for long notes and descriptions. The grid adapts to
-the section width: one column below 440px, two from 440px and three from 680px.
-Related tables occupy the full section width and retain their own horizontal
-scrolling. Do not copy these section or field styles into individual views.
+For form and read-only drawers, follow [the drawer reference](.agents/skills/shikshamitra-ui-consistency/references/drawers.md)
+and [the section reference](.agents/skills/shikshamitra-ui-consistency/references/sections.md).
+Equivalent sections keep the same name/order, leading icon, help, spacing, and
+`subtitle1`/semibold (600) heading. Read-only labels use consistent sentence case
+and restrained weight, with `body2` values. The previous uppercase/extra-bold view
+styling is superseded by the user's form/view consistency requirement.
+Reuse `DetailSection`, `DetailGrid`, and `DetailField` from `src/components/detail-view`,
+aligning shared presentation when implementing rather than copying local styles.
+Current primitives still have legacy overrides; documentation alone does not fix them.
+Use `fullWidth` for long notes/descriptions. The current detail grid responds to
+section width: one column below 440px, two from 440px, three from 680px; choose
+the field composition appropriate to the shared form/view section content.
+Related tables occupy the full section width and retain their own horizontal scrolling.
 
 **Source paths**
 
@@ -1521,6 +1412,10 @@ scrolling. Do not copy these section or field styles into individual views.
 
 ### 10. Button
 
+For shared button APIs, size/spacing, GlobalIcons, loading/disabled states, and form-footer
+integration, use [the button-family guide](.agents/skills/shikshamitra-ui-consistency/references/button-family.md)
+with the owning drawer, dialog, or page-form guide.
+
 **Source paths**
 
 - Theme button configuration: `src/theme/core/components/button.tsx`
@@ -1529,9 +1424,9 @@ scrolling. Do not copy these section or field styles into individual views.
 **Rules**
 
 - Prefer MUI buttons and the shared button variants already configured by the theme.
-- Use `LoadingButton` for async submit or mutation actions and disable duplicate submission while loading.
+- Use shared `SubmitButton` or the supported loading-capable MUI button for async submission; the shared named `LoadingButton` export aliases MUI Button. Disable duplicate submission while loading, including the owning submit handler.
 - Use `variant="outlined"` for secondary or cancel actions and `variant="contained"` for the primary action unless the surrounding component contract says otherwise.
-- For a primary submit, save, or publish action that should use the system's neutral black/white treatment, use the theme's `text.primary` background and `background.paper` foreground so it adapts in light and dark mode; avoid feature-specific accent colors for these actions.
+- For a neutral primary action, prefer the configured contained `color="inherit"` treatment, which adapts in light and dark mode; avoid feature-specific accent colors or local black/white overrides. Ordinary create/edit forms use `Submit` with `GlobalIcons.submit`; consequential actions keep their specific workflow label.
 - Use `size="small"` for standard page actions, table actions, dialog and drawer footer actions, and dense forms.
 - The theme defines small labeled buttons as 30 px high, with its existing typography, icon spacing, and horizontal padding.
 - Do not override their `height`, `minHeight`, padding, or font size locally; `size="small"` together with `minHeight: 44` is not compliant.
@@ -1663,6 +1558,10 @@ shikshaMitraToast.promise(saveRecord(payload).unwrap(), {
 
 ### 14. Upload
 
+Use [the CustomUpload guide](.agents/skills/shikshamitra-ui-consistency/references/custom-upload.md)
+for the actual import/API differences, types/size/count validation, required/helper feedback,
+progress, preview/remove actions, and drawer/dialog/page form integration.
+
 Use `CustomUpload` from `src/components/custom-upload/` for file selection, drag-and-drop upload input, previews, download, and removal.
 
 **Configuration**
@@ -1698,6 +1597,10 @@ Use `CustomUpload` from `src/components/custom-upload/` for file selection, drag
 - Verify keyboard access, focus visibility, mobile layout, and loading/error feedback.
 
 ### 15. EmptyContent
+
+For EmptyContent/SearchNotFound messages, icons/spacing, skeletons and FormBusyRegion, use
+[the empty/loading guide](.agents/skills/shikshamitra-ui-consistency/references/empty-loading-states.md)
+with the owning table, drawer, dialog or page-form guide.
 
 Use `EmptyContent` from `src/components/empty-content/` for an explicit empty state inside a page, table, card, chart, or other stateful region.
 

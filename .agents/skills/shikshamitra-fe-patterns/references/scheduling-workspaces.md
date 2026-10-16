@@ -10,7 +10,7 @@ scope: timetable-availability-substitution-and-planning-workspaces
 This document defines complex scheduling workspaces such as timetable
 management, room availability, substitutions, lecture-slot configuration, and
 seating-related planning. It covers the planning surface around a table or
-grid; ordinary tables remain governed by [tables.md](tables.md), and guided
+grid; ordinary tables remain governed by [tables.md](../../shikshamitra-ui-consistency/references/tables.md), and guided
 multi-step flows remain governed by [steppers.md](steppers.md) and
 [horizontal-steppers.md](horizontal-steppers.md).
 
@@ -87,7 +87,7 @@ Use a small, consistent state vocabulary:
 - Show the smallest useful unit in a cell: subject, teacher, room, or status.
 - Use a detail surface for long notes, full conflict explanations, or history.
 - Keep status and actions at the right edge; use the sticky rules in
-  [tables.md](tables.md) when horizontal scrolling is necessary.
+  [tables.md](../../shikshamitra-ui-consistency/references/tables.md) when horizontal scrolling is necessary.
 - Do not add empty columns merely to fill the width.
 - If a grid is wider than the viewport, preserve a readable minimum width and
   provide intentional horizontal scrolling.

@@ -1,13 +1,15 @@
 ---
 name: shikshamitra-ui-consistency
-description: Build, update, or review ShikshaMitra frontend UI using consistent headers, tables, form dialogs, drawers, confirmations, and detail views. Use when implementing these surfaces or checking their visual and interaction consistency; pair the written rules with supplied reference images. Excludes backend-only work and choosing a new product design system.
+description: Build, update, or review ShikshaMitra frontend UI using consistent tables, sections, page/stepper forms, dialogs, drawers, selects/searchable dropdowns, date/range pickers, confirmations, and detail views. Pair component rules with supplied reference images. Excludes backend-only work and choosing a new product design system.
 ---
 
 # ShikshaMitra UI consistency
 
 Build equivalent UI surfaces with the same shared components, page anatomy, action placement,
-theme defaults, and state behavior. These rules are adapted from the existing frontend pattern
-skill and UI rulebooks. Screenshots will be added by the user; written rules are usable now.
+theme defaults, and state behavior. Tables, row actions, sections, small form dialogs, and form/view drawers are based
+on inspected components and the user's Subject Creation, Charges, Concession Policy, Syllabus,
+Learning Tasks, and Rubric Template images.
+Other surfaces retain their current written guides until their component references are reviewed.
 
 Paths beginning with `src/` are relative to the Shikshamitra-FE repository. This is the canonical
 skill; the wrapper workspace entry only routes here.
@@ -30,16 +32,29 @@ skill; the wrapper workspace entry only routes here.
 
 ## Pattern routing
 
-| Surface | Read | Planned image |
+| Surface | Read | Reference image / pending slot |
 | --- | --- | --- |
+| Shared Submit/Cancel/Close and other buttons: sizes, spacing, icons, loading/disabled states | [button-family.md](references/button-family.md) plus the owning shell guide | Existing [drawer](assets/drawer.png), [dialog](assets/form-dialog.png), [page](assets/page-form-syllabus.png) footers; loading/disabled unpictured |
+| EmptyContent, SearchNotFound, skeletons, refresh/error states, FormBusyRegion | [empty-loading-states.md](references/empty-loading-states.md) plus the owning table/form guide | [Empty Learning Tasks](assets/custom-tabs-learning-tasks.png), [Charges skeletons](assets/table-filters-tabs.png); busy overlay unpictured |
 | Page title, breadcrumbs, filters, tabs, page actions | [page-headers.md](references/page-headers.md) | `assets/page-header.png` |
-| Record table, toolbar, row actions, pagination, table states | [tables.md](references/tables.md) plus page headers | `assets/table-workspace.png` |
-| Short create/edit form in a centered dialog | [form-dialogs.md](references/form-dialogs.md) | `assets/form-dialog.png` |
-| Long form or contextual side panel | [drawers.md](references/drawers.md); also form dialogs for form behavior | `assets/drawer.png` |
-| Delete, archive, discard, publish, or required-reason decision | [confirmations.md](references/confirmations.md) | `assets/confirmation.png` |
-| Read-only record identity, facts, dependencies, restrictions | [detail-pages.md](references/detail-pages.md); also its header/dialog/drawer guide | `assets/detail-page.png` |
+| CustomTabs peer panels, icon tabs, selected state, tab-row actions, URL/dirty navigation | [custom-tabs.md](references/custom-tabs.md) | [Learning Tasks](assets/custom-tabs-learning-tasks.png) |
+| Record table, toolbar, row actions, pagination, table states | [tables.md](references/tables.md), including spacing, buttons, filters/tabs, and component relationships | [Populated](assets/table-workspace.png), [filters/tabs/loading](assets/table-filters-tabs.png) |
+| Adaptive row actions, two direct icons, three-dots overflow, disabled menu entries | [adaptive-three-dots-actions.md](references/adaptive-three-dots-actions.md) plus the host table guide | [Closed](assets/adaptive-three-dots-actions-closed.png), [open](assets/adaptive-three-dots-actions-open.png) |
+| Short create/edit form in a centered CustomDialog, header info, footer, dirty-close popup | [form-dialogs.md](references/form-dialogs.md) and section guide | [Add Subject](assets/form-dialog.png) |
+| Section cards, headings/help, required fields with ShakingTextField, form/view typography | [sections.md](references/sections.md), including the required-field wrapper rule | [Form](assets/drawer.png), [view](assets/drawer-view.png) |
+| Page form or its corresponding view sections | [page-forms.md](references/page-forms.md) and sections | [Syllabus](assets/page-form-syllabus.png) |
+| Ordered stepper form on a page or in a drawer; validation/navigation/save/preview | [stepper-forms.md](references/stepper-forms.md) and the matching shell/section guides | [Rubric Template](assets/stepper-form-rubric-template.png) |
+| CustomSelect labels, required/help, options, and validation | [custom-select.md](references/custom-select.md) | [Closed field context](assets/drawer.png) |
+| NumericFormatCustom amounts/percentages/counts, labels/help/validation, formatNumber display | [numeric-format-custom.md](references/numeric-format-custom.md) | [Percentage field context](assets/drawer.png); other modes/states unpictured |
+| Searchable local or remote dropdown | [searchable-dropdowns.md](references/searchable-dropdowns.md) plus CustomSelect | [Open Staff member list](assets/searchable-dropdown-open.png) |
+| CustomUpload attachments: types/size, required/help/validation, progress, preview/remove | [custom-upload.md](references/custom-upload.md) plus the owning form/section guides | No complete upload-field reference supplied |
+| Single date / date-time and validation | [date-pickers.md](references/date-pickers.md) | Single-date reference pending; range below is distinct |
+| Date-range field, calendar, Apply/Cancel/Reset, validation | [date-range-picker.md](references/date-range-picker.md) | [Closed](assets/page-form-syllabus.png), [open](assets/date-range-picker-open.png) |
+| Long form or contextual record drawer, footer, unsaved-change guard | [sections.md](references/sections.md), then [drawers.md](references/drawers.md); form guide for validation | [Form](assets/drawer.png), [view](assets/drawer-view.png) |
+| Confirmation pop-up: title/icons/spacing, small buttons, Keep Editing / Discard Changes | [confirmations.md](references/confirmations.md); use the owning form's close guard | `assets/confirmation.png` (pending) |
+| Read-only record identity, facts, dependencies, restrictions | [detail-pages.md](references/detail-pages.md); for drawers also sections and drawer guides | [Drawer](assets/drawer-view.png); dedicated page image pending |
 
-For dashboards, calendars, steppers, scheduling, audit logs, or reports, use the relevant routing
+For dashboards, calendars, specialized non-form steppers, scheduling, audit logs, or reports, use the relevant routing
 in [the existing FE pattern skill](../shikshamitra-fe-patterns/SKILL.md). Do not force those
 workspaces into a CRUD-table or form-dialog layout.
 
@@ -66,6 +81,7 @@ workspaces into a CRUD-table or form-dialog layout.
 
 ## Adding images later
 
-Use the six filenames in [image references](references/image-references.md). Mark an image as
-attached only after the file exists and has been inspected. There are no generated screenshots
-or fictional visual targets in this skill.
+Use [image references](references/image-references.md) to find attached assets and pending slots.
+Store additional supplied images in `assets/` and link them from the relevant component guide.
+Mark an image attached only after the file exists and has been inspected. Use the table guide's
+source/relationship links as the model when reviewing the next common component.

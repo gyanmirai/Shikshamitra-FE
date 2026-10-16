@@ -10,7 +10,7 @@ scope: academic-audit-history-diffs-and-activity-views
 This document defines audit-log surfaces that record academic changes and let
 authorized users search, filter, compare, and inspect activity. It applies to
 Academic Audits and Calendar Audit Logs. Audit logs are read-only records;
-ordinary tables remain governed by [tables.md](tables.md), while detail and
+ordinary tables remain governed by [tables.md](../../shikshamitra-ui-consistency/references/tables.md), while detail and
 drawer presentation follow [detail-views.md](detail-views.md) and
 [sidebars.md](sidebars.md).
 

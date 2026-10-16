@@ -7,6 +7,8 @@ scope: horizontal-guided-workflows
 
 # Horizontal Stepper UI Rulebook
 
+For page/drawer form steppers, use [the canonical stepper form guide](../../shikshamitra-ui-consistency/references/stepper-forms.md), including the Rubric Template reference and shared component APIs. Its form/section, validation, footer, and unsaved-change rules govern those surfaces. The broader notes below apply only where compatible with the actual workflow; per-step saving and resume require a supported draft contract, not an invented endpoint or storage flow.
+
 This document defines the horizontal version of the shared stepper pattern.
 The general workflow, save, resume, validation, confirmation, and state rules
 remain in [steppers.md](steppers.md). This document adds the layout rules for

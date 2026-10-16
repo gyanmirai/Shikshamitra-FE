@@ -10,7 +10,7 @@ scope: report-generation-export-jobs-and-downloads
 This document defines report generation, export jobs, generated-file lists,
 AI-assisted report requests, downloads, retries, and expiry behavior. The
 ordinary table toolbar action `Export` remains defined in
-[tables.md](tables.md). This document defines what happens after a report or
+[tables.md](../../shikshamitra-ui-consistency/references/tables.md). This document defines what happens after a report or
 export request is made.
 
 ## 1. Export versus generated report
@@ -39,7 +39,7 @@ A report workspace may contain:
 - Keep page-level title, breadcrumbs, filters, and primary actions governed by
   [page-headers.md](page-headers.md).
 - Keep report history in the standard table region governed by
-  [tables.md](tables.md).
+  [tables.md](../../shikshamitra-ui-consistency/references/tables.md).
 - Do not show a report-history table before explaining the active scope when
   that scope materially affects the result.
 - Avoid summary cards that repeat the same status and count shown in the table.
@@ -119,7 +119,7 @@ Recommended columns are:
 
 - Keep only columns needed to identify, assess, or act on a report.
 - Keep status and actions sticky on wide tables according to
-  [tables.md](tables.md).
+  [tables.md](../../shikshamitra-ui-consistency/references/tables.md).
 - Do not show a large unused action area when only one action is available.
 - Use a compact file-format label such as `PDF` or `CSV`; do not repeat the
   full format name in every cell.

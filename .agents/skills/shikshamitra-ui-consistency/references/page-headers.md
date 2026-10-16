@@ -6,6 +6,8 @@ and [DESIGN.md](../../../../DESIGN.md), including module-family header consisten
 ## When to use
 
 Use for page titles, breadcrumb context, page actions, domain filters, and status navigation.
+For peer-panel tab workspaces, read [CustomTabs](custom-tabs.md), including the Learning Tasks
+reference, selected styling, tab/action-row spacing, and URL/unsaved-navigation behavior.
 
 ## Reference image
 
@@ -39,6 +41,9 @@ An image will establish a reference for its module family, not silently change e
 - Use meaningful URL-backed state for persistent workspace tabs and shareable filters. Exclusive
   domain filters may look like tabs but retain button/radio semantics.
 - Keep the header mounted during content loading, refreshing, and errors.
+- Tabbed workspaces may place contextual insights/create actions once at the right of the
+  contained CustomTabs row, as in Learning Tasks. Tabs stay left, filters follow below, and
+  actions match the active panel. Do not repeat those actions in the breadcrumb header.
 
 ## Responsive and verification rules
 

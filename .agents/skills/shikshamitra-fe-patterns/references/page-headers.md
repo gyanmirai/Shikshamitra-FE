@@ -10,7 +10,7 @@ scope: page-level-context
 This document defines the content above a table or other primary page region:
 page title, breadcrumbs, context, summary metrics, status navigation, domain
 filters, information icons, and page-level actions. Table-specific behavior is
-defined separately in [tables.md](tables.md).
+defined separately in [tables.md](../../shikshamitra-ui-consistency/references/tables.md).
 
 ## 1. Page-header anatomy
 

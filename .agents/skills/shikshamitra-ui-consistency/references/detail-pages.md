@@ -12,19 +12,26 @@ a dedicated page for deep navigation, long history, or a complete record workspa
 
 ## Reference image
 
-Image pending: `assets/detail-page.png`. See [image references](image-references.md).
-Expected callouts: 1 identity/status, 2 key facts, 3 dependencies, 4 real restrictions, 5 related actions.
-Record whether the supplied image depicts a page, dialog, or drawer; do not copy its shell into
-all three surfaces. Read the appropriate shell guide as well.
+The [view drawer reference](../assets/drawer-view.png) depicts saved Concession Policy details.
+For that surface read [sections.md](sections.md) and [drawers.md](drawers.md): preserve its useful
+saved details while matching the form's section structure, Title Case headings, typography,
+icons, and sentence-case field labels. Do not copy its current heavy/all-caps label overrides.
+A dedicated-page reference remains pending at `assets/detail-page.png`; a drawer image does
+not establish a page shell. See [image references](image-references.md).
 
 ## How to build
 
 1. Use the approved page/dialog/drawer shell. Identify the record immediately, with its name and
    meaningful current status; add type/category only when it gives different information.
-2. Organize useful information in this order: identity/status, key metrics/dependencies, related
-   records, real restrictions/impact, and useful actions. Include only sections that have value.
+2. For every form-backed record view, whether page, dialog, or drawer, preserve the form's meaningful
+   section names/order, heading typography, icons, and spacing; place saved details in their
+   corresponding sections. Use [sections.md](sections.md) and the appropriate shell guide. For independent
+   detail workspaces, organize identity/status, useful dependencies, related records, real
+   restrictions/impact, and actions. Include metrics or sections only when they add value.
 3. Render read-only labels and values, not disabled edit controls that make the view look unfinished.
    Use shared status, chip, formatting, spacing, and section components where appropriate.
+   Dropdowns display their saved option labels; dates/ranges use the same readable format/units
+   as the form, following [select](custom-select.md) and [date](date-pickers.md) guidance.
 4. Show metrics from real current record data with precise labels and units. Do not repeat the same
    count in header, metric, section title, and chip unless scopes genuinely differ.
 5. Keep related chips concise and safely wrapping. For long collections, show a useful subset with
