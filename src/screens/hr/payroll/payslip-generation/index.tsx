@@ -14,6 +14,7 @@ export default function SalaryDocumentCenter() {
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
         heading="Salary documents"
+        description="Review monthly payslips, employee salary statements and the school payroll register."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll', href: hrPaths.payroll.runPayroll },

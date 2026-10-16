@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { HrReportSort, HrReportPreview } from 'src/redux/hr/hrReportsApi';
 
 import { useMemo } from 'react';
@@ -14,6 +15,7 @@ type HrReportPreviewTableProps = {
   sorts?: HrReportSort[];
   onSortChange?: (sorts: HrReportSort[]) => void;
   emptyMessage?: string;
+  headerAction?: ReactNode;
 };
 
 export function HrReportPreviewTable({
@@ -26,6 +28,7 @@ export function HrReportPreviewTable({
   sorts,
   onSortChange,
   emptyMessage,
+  headerAction,
 }: HrReportPreviewTableProps) {
   const previewColumns = useMemo(
     () =>
@@ -61,8 +64,19 @@ export function HrReportPreviewTable({
 
   return (
     <Box sx={{ flex: 1, minHeight: 320, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle1">Preview</Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        useFlexGap
+        flexWrap="wrap"
+        spacing={1}
+        sx={{ mb: 1 }}
+      >
+        <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+          <Typography variant="subtitle1">Preview</Typography>
+          {headerAction}
+        </Stack>
         {preview ? (
           <Typography variant="body2" color="text.secondary">
             {preview.totalCount} rows - {sourceLabel ?? preview.dataSource}
