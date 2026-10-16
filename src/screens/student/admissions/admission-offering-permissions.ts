@@ -17,7 +17,7 @@ export const getAdmissionOfferingPermissions = (granted: GrantedPermission[] | u
     edit: canAdd,
     clone: canAdd,
     activate: canAdd,
-    deactivate: canDelete,
+    deactivate: canAdd,
     delete: canDelete,
   };
 };

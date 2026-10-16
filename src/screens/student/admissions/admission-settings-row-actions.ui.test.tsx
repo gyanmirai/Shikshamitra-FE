@@ -32,7 +32,7 @@ vi.mock('src/components/custom-popover', async () => {
 });
 
 describe('Admissions settings row actions', () => {
-  it('keeps offering view, edit, and delete direct while secondary actions use overflow', async () => {
+  it('keeps offering edit and delete direct while secondary actions use overflow', async () => {
     const user = userEvent.setup();
     const handlers = {
       onView: vi.fn(),
@@ -61,14 +61,14 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'View ADM-G6' }));
-    await user.click(screen.getByRole('button', { name: 'Edit ADM-G6' }));
-    await user.click(screen.getByRole('button', { name: 'Delete ADM-G6' }));
-    expect(handlers.onView).toHaveBeenCalledWith(row);
+    expect(screen.queryByRole('button', { name: 'View ADM-G6' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(handlers.onView).not.toHaveBeenCalled();
     expect(handlers.onEdit).toHaveBeenCalledWith(row);
     expect(handlers.onDelete).toHaveBeenCalledWith(row);
 
-    await user.click(screen.getByRole('button', { name: 'Actions for ADM-G6' }));
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     expect(screen.getByRole('menuitem', { name: 'Clone' })).toBeVisible();
     expect(screen.getByRole('menuitem', { name: 'Deactivate' })).toBeVisible();
   });
@@ -104,9 +104,9 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Actions for ADM-G7' }));
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     expect(screen.queryByRole('menuitem', { name: 'Activate' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('menuitem', { name: 'Complete setup to activate' }));
+    await user.click(screen.getByRole('menuitem', { name: /Complete setup.*activate/ }));
 
     expect(handlers.onEdit).toHaveBeenCalledWith(row);
     expect(handlers.onToggleActive).not.toHaveBeenCalled();
@@ -143,14 +143,14 @@ describe('Admissions settings row actions', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Actions for ADM-G8' }));
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     await user.click(screen.getByRole('menuitem', { name: 'Activate' }));
 
     expect(handlers.onToggleActive).toHaveBeenCalledWith(row);
     expect(handlers.onEdit).not.toHaveBeenCalled();
   });
 
-  it('keeps draft edit, publish, and delete direct without approval actions', async () => {
+  it('keeps draft edit and publish direct with delete in overflow and no approval actions', async () => {
     const user = userEvent.setup();
     const handlers = {
       onEdit: vi.fn(),
@@ -172,9 +172,10 @@ describe('Admissions settings row actions', () => {
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeEnabled();
     expect(screen.getByRole('menuitem', { name: 'Clone as draft' })).toBeVisible();
     expect(screen.getByRole('menuitem', { name: 'History & versions' })).toBeVisible();
     expect(
@@ -220,10 +221,49 @@ describe('Admissions settings row actions', () => {
     expect(screen.getByRole('button', { name: 'Delete Fresh admission journey' })).toBeEnabled();
   });
 
+  it.each([0, 3, 1, 2, 4, 5, 6, 7])(
+    'workflow Edit follows builder eligibility for status %s',
+    async (status) => {
+      const onEdit = vi.fn();
+      const props = {
+        workflow: { id: 'edit-workflow', name: 'Edit eligibility', status } as AdmissionWorkflow,
+        canEdit: true,
+        canDelete: false,
+        canClone: false,
+        canCreateVersion: false,
+        canArchive: false,
+        canViewUsage: false,
+        canReopen: false,
+        onEdit,
+        onReopen: vi.fn(),
+        onClone: vi.fn(),
+        onCreateVersion: vi.fn(),
+        onUsage: vi.fn(),
+        onArchive: vi.fn(),
+        onDelete: vi.fn(),
+      };
+      const { rerender } = render(<WorkflowRowActions {...props} />);
+      const edit = screen.getByRole('button', { name: 'Edit Edit eligibility' });
+      if ([0, 3].includes(status)) {
+        expect(edit).toBeEnabled();
+        await userEvent.setup().click(edit);
+        expect(onEdit).toHaveBeenCalledOnce();
+      } else expect(edit).toBeDisabled();
+      rerender(<WorkflowRowActions {...props} canEdit={false} />);
+      expect(
+        screen.queryByRole('button', { name: 'Edit Edit eligibility' })
+      ).not.toBeInTheDocument();
+    }
+  );
+
   it('offers Re-open only for an archived workflow with publication authority', async () => {
     const onReopen = vi.fn();
     const props = {
-      workflow: { id: 'archived-workflow', name: 'Archived journey', status: 2 } as AdmissionWorkflow,
+      workflow: {
+        id: 'archived-workflow',
+        name: 'Archived journey',
+        status: 2,
+      } as AdmissionWorkflow,
       canEdit: false,
       canDelete: false,
       canClone: false,

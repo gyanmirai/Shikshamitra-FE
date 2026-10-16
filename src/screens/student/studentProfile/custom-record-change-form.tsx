@@ -85,7 +85,7 @@ export function CustomRecordChangeForm({
       ? details.registrationSources.some((source) => source.editableFieldCodes.length > 0)
       : loadedDetails.customDetailsEditable) &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const sourceValues = (
     values: Record<string, string>,
     source: StudentRecordDetails['registrationSources'][number]

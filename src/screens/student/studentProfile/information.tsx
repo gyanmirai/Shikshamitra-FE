@@ -112,7 +112,7 @@ export const StudentInformation = React.memo(
       [searchParams.tab]
     );
     const permissions = useSelector((state: RootState) => state.auth.permissions);
-    const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+    const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
     const section = [
       'general',
       'family',

@@ -18,7 +18,7 @@ import { useGetRecordGuardianLinksQuery, useGetRecordGuardianReviewsQuery, useGe
 export default function StudentRecordGuardianAccess({ studentId }: { studentId: string }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'Students.Records.GuardianAccess.View');
-  const canManage = hasGrantedPermission(permissions, 'Students.Records.GuardianAccess.Manage');
+  const canManage = hasGrantedPermission(permissions, 'Students.Records.GuardianAccess.Add');
   const links = useGetRecordGuardianLinksQuery(studentId, { skip: !studentId || !canView });
   const reviews = useGetRecordGuardianReviewsQuery(studentId, { skip: !studentId || !canView });
   const [selected, setSelected] = useState<GuardianReview | null>(null);
@@ -31,7 +31,7 @@ export default function StudentRecordGuardianAccess({ studentId }: { studentId: 
     {(links.currentData ?? []).map(link => <Paper key={link.linkId} variant="outlined" sx={{ p: 1.5 }}><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between"><Typography>{link.relationship} · {link.email}</Typography><Label color={link.isActive && link.emailConfirmed ? 'success' : 'warning'}>{link.emailConfirmed ? 'Verified account' : 'Awaiting owner verification'}</Label></Stack></Paper>)}
     {(reviews.currentData ?? []).map(review => <Paper key={review.id} variant="outlined" sx={{ p: 1.5 }}><Stack spacing={1}><Stack direction="row" justifyContent="space-between" alignItems="center"><Typography variant="subtitle2">Guardian change · {fDate(review.creationTime)}</Typography><Label color={review.status === 'Completed' ? 'success' : 'warning'}>{review.status}</Label></Stack>{review.status === 'Pending' && <Typography variant="body2">{review.onApprovedChangeMode === 'SuspendUntilReview' ? 'Previous access was suspended under the school rule. Verify the guardian before restoring or replacing access.' : 'Previous access remains under the school rule. Review and revoke or confirm it.'}</Typography>}{canManage && review.status === 'Pending' && <Button variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={() => setSelected(review)}>Review guardian access</Button>}</Stack></Paper>)}
     {reviews.currentData?.length === 0 && <Typography variant="body2" color="text.secondary">No guardian access reviews have been created.</Typography>}
-    {selected && <GuardianReviewForm review={selected} currentLinks={links.currentData ?? []} onClose={() => setSelected(null)} />}
+    {selected && canManage && <GuardianReviewForm review={selected} currentLinks={links.currentData ?? []} onClose={() => setSelected(null)} />}
   </Stack>;
 }
 

@@ -46,7 +46,7 @@ describe('Student rows with unavailable actions', () => {
       </ThemeProvider>
     );
 
-    ['View', 'Add', 'Delete'].forEach((action) => {
+    ['View', 'Add/Update', 'Delete'].forEach((action) => {
       expect(screen.getByRole('switch', { name: action })).toBeEnabled();
     });
     expect(screen.getByRole('button', { name: 'Grant All' })).toBeEnabled();
@@ -152,7 +152,7 @@ it('toggles all three Fee Structure switches against canonical API names', () =>
   expect(screen.queryByLabelText('Publish')).not.toBeInTheDocument();
 });
 
-it('shows only View, Add, and Delete for specialized Student Admissions actions', () => {
+it('shows only View, Add/Update, and Delete for Student Admissions actions', () => {
   const root = 'Students.Admissions.Inquiries';
   const toggle = vi.fn();
   const actions = ['View', 'Add', 'Delete', 'Manage', 'Create', 'Edit', 'Assign'];
@@ -178,9 +178,9 @@ it('shows only View, Add, and Delete for specialized Student Admissions actions'
   expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Assign')).not.toBeInTheDocument();
   expect(screen.getByLabelText('View')).toBeEnabled();
-  expect(screen.getByLabelText('Add')).toBeEnabled();
+  expect(screen.getByLabelText('Add/Update')).toBeEnabled();
   expect(screen.getByLabelText('Delete')).toBeEnabled();
-  fireEvent.click(screen.getByLabelText('Add'));
+  fireEvent.click(screen.getByLabelText('Add/Update'));
   expect(toggle).toHaveBeenLastCalledWith(
     expect.objectContaining({ permissionName: `${root}.View` }),
     'Add',
@@ -207,7 +207,7 @@ it('keeps every Student Dashboard permission switch enabled', () => {
     </ThemeProvider>
   );
 
-  ['View', 'Add', 'Delete'].forEach((action) => {
+  ['View', 'Add/Update', 'Delete'].forEach((action) => {
     expect(screen.getByLabelText(action)).toBeEnabled();
   });
   expect(screen.getByRole('button', { name: 'Grant All' })).toBeEnabled();

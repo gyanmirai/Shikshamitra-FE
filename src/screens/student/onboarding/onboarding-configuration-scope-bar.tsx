@@ -7,7 +7,9 @@ import { useMemo, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { studentPermissions } from 'src/constants/student-menu';
 import { Box, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 
 import { useOnboardingSettings } from './onboarding-settings-context';
@@ -90,6 +92,8 @@ export function OnboardingConfigurationScopeSync() {
 }
 
 export function OnboardingConfigurationScopeBar({ compact = false }: { compact?: boolean }) {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canDelete = hasGrantedPermission(permissions, studentPermissions.onboarding.delete);
   const resetConfirm = useBoolean();
   const { academicScope, hasAcademicYear } = useAcademicConfigurationScope();
   const { scope, isInherited, setScope, resetToInherited } = useOnboardingSettings();
@@ -103,6 +107,7 @@ export function OnboardingConfigurationScopeBar({ compact = false }: { compact?:
   };
 
   const handleReset = async () => {
+    if (!canDelete) return;
     await resetToInherited();
     resetConfirm.onFalse();
   };
@@ -170,7 +175,7 @@ export function OnboardingConfigurationScopeBar({ compact = false }: { compact?:
                 Current academic year
               </MenuItem>
             </TextField>
-            {!isInherited ? (
+            {!isInherited && canDelete ? (
               <Button
                 color="inherit"
                 variant="outlined"
@@ -221,7 +226,7 @@ export function OnboardingConfigurationScopeBar({ compact = false }: { compact?:
       </Paper>
 
       <ConfirmDialog
-        open={resetConfirm.value}
+        open={resetConfirm.value && canDelete}
         onClose={resetConfirm.onFalse}
         title="Use Inherited Defaults"
         content={`Remove the current ${scope.label} override and restore inherited onboarding rules for this session.`}

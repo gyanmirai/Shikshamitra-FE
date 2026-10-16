@@ -15,8 +15,14 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
   const session: any = useSession();
   const { data: sessionData, status } = session;
   const router = useRouter();
-  const { sessionContext, permissionsInitialized, user, initializationError, loading } =
-    useSelector((state: RootState) => state.auth);
+  const {
+    sessionContext,
+    permissionsInitialized,
+    permissions,
+    user,
+    initializationError,
+    loading,
+  } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (
@@ -29,7 +35,7 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
       permissionsInitialized &&
       sessionContext
     ) {
-      router.replace(workspaceLanding(sessionContext));
+      router.replace(workspaceLanding(sessionContext, permissions));
     }
   }, [
     status,
@@ -38,6 +44,7 @@ const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
     sessionData?.error,
     router,
     permissionsInitialized,
+    permissions,
     sessionContext,
     user?.sub,
     user?.tenantid,

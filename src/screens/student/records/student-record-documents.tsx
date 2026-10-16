@@ -56,9 +56,9 @@ import {
 
 import { recordsQueryUrl } from './records-url-state';
 import StudentICardBuilder from './student-icard-builder';
-import StudentCertificateWorkspace from './student-certificate-workspace';
 import RecordDocumentTemplates from './record-document-templates';
 import RecordDocumentFilters from './components/record-document-filters';
+import StudentCertificateWorkspace from './student-certificate-workspace';
 import DocumentHistoryActions from './components/document-history-actions';
 
 type HistoryRow = {
@@ -131,7 +131,7 @@ function RecordDocuments({
   );
   const canVoid = hasGrantedPermission(
     permissions,
-    kind === 'ids' ? 'Students.Records.StudentICard.Delete' : 'Students.Records.Certificates.Delete'
+    kind === 'ids' ? 'Students.Records.StudentICard.Add' : 'Students.Records.Certificates.Add'
   );
   const [selectedCertificateType, setSelectedCertificateType] = useState<CertificateType>(1);
   const certificateType = fixedKind === 'certificates'
@@ -550,10 +550,7 @@ function RecordDocuments({
             canIssue={canIssue}
             showCertificateTypeSelect={fixedKind !== 'certificates'}
             showCertificateBatch={fixedKind === 'certificates'}
-            legacyEntryHref={fixedKind === 'certificates' && hasGrantedPermission(permissions, [
-              'Students.Records.Overrides.Request',
-              'Students.Records.Overrides.Approve',
-            ]) ? studentPaths.records.directory : undefined}
+            legacyEntryHref={fixedKind === 'certificates' && hasGrantedPermission(permissions, 'Students.Records.Overrides.View') ? studentPaths.records.directory : undefined}
             selectedStudentId={studentId}
             selectedStudentName={activeBatchStudent
               ? [activeBatchStudent.firstName, activeBatchStudent.middleName,

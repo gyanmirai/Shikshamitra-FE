@@ -34,6 +34,13 @@ Finish with Codex in-app browser checks at desktop and narrow widths. These chec
 
 TL;DR: validate permission mappings, override persistence, review/discard, and the responsive matrix using current evidence.
 
+## Student three-action permission contract
+
+Five editor suites pass 69 tests covering the 36-feature/106-leaf catalogue, View, Add/Update and Delete mapping, unsupported operations, collapsed subtree deduplication, provider eligibility and user Allow/Deny/Follow role behavior.
+The action identifier remains `Add`; the displayed label is Add/Update.
+Seven changed editor files pass targeted ESLint and the scoped diff check.
+Authenticated localhost inspection confirmed the role matrix at desktop and 390-pixel widths, disabled unsupported Delete controls and inherited user actions without submitting any grant changes.
+
 ## Login and session redirect regression (2026-10-16)
 
 The global loader previously ran private verification on public pages and signed out after every bootstrap failure. A red regression run reproduced that behavior (16 failed / five passed before the loader fix). Because Auth.js sign-out broadcasts across tabs, a public-page failure could also invalidate an open staff workspace. The original browser incident did not retain its failing HTTP response, so its exact transport status is not claimed.

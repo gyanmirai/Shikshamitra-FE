@@ -18,7 +18,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Stack,
@@ -39,6 +38,7 @@ import {
 } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 
 import { rollSortOptions, rollGroupingOptions } from '../setting/roll-ordering-fields';
+import StudentAssignmentDrawer from './student-assignment-drawer';
 
 type Props = {
   scope: RollNumberScope;
@@ -245,284 +245,277 @@ export default function StudentRollNumberWorkspace({
     // One initial request per mounted workspace; explicit actions own subsequent previews/reads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const label =
-    batch?.operation === 'renumber' ? 'Renumber Division' : 'Assign Missing Roll Numbers';
+  const label = batch?.operation === 'renumber' ? 'Renumber Division' : 'Auto Roll Numbers';
   return (
     <>
-      <CustomDialog
-        open
+      <StudentAssignmentDrawer
         title={batch ? label : 'Manage Roll Numbers'}
-        maxWidth="md"
-        hasForm={false}
-        handleClose={close}
-        disableClose={busy}
-        guardUnsavedChanges={false}
-        hasUnsavedChanges={form.dirty}
-      >
-        <DialogScrollContent>
-          <Stack spacing={1} aria-busy={busy}>
-            {(busy || context.isFetching) && <LinearProgress aria-label="Loading roll numbering" />}
-            <Typography variant="subtitle2">
-              {batch?.scopeLabel || context.currentData?.scopeLabel}
-            </Typography>
-            {context.isError && (
-              <Alert
-                severity="error"
-                action={
-                  <Button size="small" onClick={() => context.refetch()} disabled={busy}>
-                    Retry
-                  </Button>
-                }
-              >
-                Roll numbering permissions could not be refreshed. Retry before continuing.
-              </Alert>
-            )}
-            {error && <Alert severity="error">{error}</Alert>}
-            {!batch && busy && (
-              <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
-                <CustomizableTable
-                  tableId="student-roll-number-batch-loading"
-                  tableTitle="Roll Number Preview"
-                  columns={columns}
-                  data={[]}
-                  isLoading
-                  isSearch={false}
-                  isFilter={false}
-                  isPagination={false}
-                  wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
-                  tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
-                />
-              </Box>
-            )}
-            {!batch && !busy && (
-              <>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="inherit"
-                    disabled={
-                      !context.currentData?.canAssignMissing ||
-                      context.isFetching ||
-                      context.isError
-                    }
-                    onClick={() => generate('assign-missing')}
-                  >
-                    Assign Missing
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    disabled={
-                      !context.currentData?.canRenumber || context.isFetching || context.isError
-                    }
-                    onClick={() => generate('renumber')}
-                  >
-                    Renumber Division
-                  </Button>
-                </Stack>
-                {context.currentData?.blockedReason && (
-                  <Typography variant="body2" color="text.secondary">
-                    {context.currentData.blockedReason}
-                  </Typography>
-                )}
-                {(context.currentData?.batches ?? []).map((item) => (
-                  <Stack
-                    key={item.id}
-                    direction="row"
-                    spacing={1}
-                    useFlexGap
-                    flexWrap="wrap"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Typography variant="body2">
-                      {item.operation === 'renumber' ? 'Renumber Division' : 'Assign Missing'} ·{' '}
-                      {item.totalCount} students
-                      {item.creationTime && (
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: 'block' }}
-                        >
-                          {fDateTime(item.creationTime)}
-                        </Typography>
-                      )}
-                    </Typography>
-                    <Label
-                      color={
-                        item.status === 'Applied'
-                          ? 'success'
-                          : item.status === 'Rejected'
-                            ? 'error'
-                            : 'warning'
-                      }
-                    >
-                      {item.status === 'PendingApproval' ? 'Awaiting Approval' : item.status}
-                    </Label>
-                    <Button
-                      size="small"
-                      disabled={busy}
-                      aria-label={`Review ${item.operation === 'renumber' ? 'renumber division' : 'assign missing'}${item.creationTime ? ` from ${fDateTime(item.creationTime)}` : ''}`}
-                      onClick={() => read(item.id, 0, 25)}
-                    >
-                      Review
-                    </Button>
-                  </Stack>
-                ))}
-              </>
-            )}
+        wide
+        onClose={close}
+        busy={busy}
+        actions={
+          <DialogActions
+            sx={{ p: 2, gap: 1, flexWrap: 'wrap', '& > :not(style) ~ :not(style)': { ml: 0 } }}
+          >
             {batch && (
-              <>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  <Label
-                    color={
-                      batch.status === 'Applied' ? 'success' : batch.blockedCount ? 'error' : 'info'
-                    }
-                  >
-                    {batch.status === 'PendingApproval' ? 'Awaiting Approval' : batch.status}
-                  </Label>
-                  <Typography variant="body2">{batch.totalCount} students</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {rollGroupingOptions.find((x) => x.value === batch.grouping)?.label} ·{' '}
-                    {rollSortOptions.find((x) => x.value === batch.sortBy)?.label}
-                    {batch.sortBy === 'studentName'
-                      ? ` · ${batch.nameFormat === 'surname-first' ? 'Surname First' : 'First Name First'}`
-                      : ''}{' '}
-                    · {batch.sortDirection === 'ascending' ? 'Ascending' : 'Descending'}
-                  </Typography>
-                </Stack>
-                {batch.blockedCount > 0 && (
-                  <Alert severity="warning">
-                    {batch.blockedCount} student(s) need attention. Correct the flagged records,
-                    then generate a new preview. No numbers have changed.
-                  </Alert>
-                )}
-                {batch.status === 'PendingApproval' && (
-                  <Alert severity="info">
-                    School approval is required. The whole batch will be applied together after
-                    approval.
-                  </Alert>
-                )}
-                <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
-                  <CustomizableTable
-                    tableId="student-roll-number-batch-preview"
-                    tableTitle="Roll Number Preview"
-                    columns={columns}
-                    data={batch.items.map((item) => ({
-                      ...item,
-                      id: item.studentId,
-                      batchStatus: batch.status,
-                    }))}
-                    isSearch={false}
-                    isFilter={false}
-                    isLoading={loadState.isFetching}
-                    serverSidePagination
-                    page={page}
-                    rowsPerPage={pageSize}
-                    totalCount={batch.totalCount}
-                    rowsPerPageOptions={[10, 25, 50, 100]}
-                    onServerPagination={(nextPage, size) => {
-                      if (!busy) read(batch.id, size === pageSize ? nextPage - 1 : 0, size);
-                    }}
-                    wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
-                    tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
-                    noDataText="No eligible students in this division."
-                  />
-                </Box>
-                {(batch.status === 'Preview' || batch.canDecide || batch.reason) && (
-                  <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      label={batch.canDecide ? 'Review note' : 'Reason'}
-                      name="reason"
-                      value={form.values.reason}
-                      required={
-                        batch.status === 'Preview' &&
-                        (batch.operation === 'renumber' || batch.reasonRequired)
-                      }
-                      disabled={busy || (!batch.canDecide && batch.status !== 'Preview')}
-                      onChange={form.handleChange}
-                      onBlur={form.handleBlur}
-                      error={Boolean(form.touched.reason && form.errors.reason)}
-                      helperText={form.touched.reason ? form.errors.reason : undefined}
-                    />
-                  </ShakingTextField>
-                )}
-              </>
+              <Button size="small" disabled={busy} onClick={() => read(batch.id)}>
+                Refresh
+              </Button>
             )}
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions
-          sx={{ p: 2, gap: 1, flexWrap: 'wrap', '& > :not(style) ~ :not(style)': { ml: 0 } }}
-        >
-          {batch && (
-            <Button size="small" disabled={busy} onClick={() => read(batch.id)}>
-              Refresh
-            </Button>
-          )}
-          {batch?.status === 'Preview' && (
-            <Button
-              size="small"
-              disabled={busy || context.isError}
-              onClick={() => generate(batch.operation)}
-            >
-              New Preview
-            </Button>
-          )}
-          <Button size="small" variant="outlined" color="inherit" disabled={busy} onClick={close}>
-            Close
-          </Button>
-          {batch?.canDecide && (
-            <>
+            {batch?.status === 'Preview' && (
               <Button
                 size="small"
-                variant="outlined"
-                disabled={busy || context.isError || Boolean(error)}
-                onClick={() => command('reject')}
+                disabled={busy || context.isError}
+                onClick={() => generate(batch.operation)}
               >
-                Reject
+                New Preview
               </Button>
+            )}
+            <Button size="small" variant="outlined" color="inherit" disabled={busy} onClick={close}>
+              Close
+            </Button>
+            {batch?.canDecide && (
+              <>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={busy || context.isError || Boolean(error)}
+                  onClick={() => command('reject')}
+                >
+                  Reject
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  disabled={busy || context.isError || Boolean(error)}
+                  onClick={() => command('approve')}
+                >
+                  Approve Batch
+                </Button>
+              </>
+            )}
+            {batch?.canApply && (
               <Button
                 size="small"
                 variant="contained"
                 color="inherit"
+                loading={applyState.isLoading}
                 disabled={busy || context.isError || Boolean(error)}
-                onClick={() => command('approve')}
+                onClick={() => command('apply')}
               >
-                Approve Batch
+                Apply Approved Batch
               </Button>
+            )}
+            {batch?.status === 'Preview' && (
+              <Button
+                size="small"
+                variant="contained"
+                color="inherit"
+                loading={submitState.isLoading}
+                disabled={busy || !batch.canSubmit || context.isError || Boolean(error)}
+                onClick={() => form.submitForm()}
+              >
+                {batch.operation === 'renumber' ? 'Review Renumber' : 'Submit Assignment'}
+              </Button>
+            )}
+          </DialogActions>
+        }
+      >
+        <Stack spacing={1} aria-busy={busy}>
+          {(busy || context.isFetching) && <LinearProgress aria-label="Loading roll numbering" />}
+          <Typography variant="subtitle2">
+            {batch?.scopeLabel || context.currentData?.scopeLabel}
+          </Typography>
+          {context.isError && (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={() => context.refetch()} disabled={busy}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not load roll numbering. Retry before continuing.
+            </Alert>
+          )}
+          {error && <Alert severity="error">{error}</Alert>}
+          {!batch && busy && (
+            <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
+              <CustomizableTable
+                tableId="student-roll-number-batch-loading"
+                tableTitle="Roll Number Preview"
+                columns={columns}
+                data={[]}
+                isLoading
+                isSearch={false}
+                isFilter={false}
+                isPagination={false}
+                wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
+                tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+              />
+            </Box>
+          )}
+          {!batch && !busy && (
+            <>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="inherit"
+                  disabled={
+                    !context.currentData?.canAssignMissing || context.isFetching || context.isError
+                  }
+                  onClick={() => generate('assign-missing')}
+                >
+                  Assign Missing
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  disabled={
+                    !context.currentData?.canRenumber || context.isFetching || context.isError
+                  }
+                  onClick={() => generate('renumber')}
+                >
+                  Renumber Division
+                </Button>
+              </Stack>
+              {context.currentData?.blockedReason && (
+                <Typography variant="body2" color="text.secondary">
+                  {context.currentData.blockedReason}
+                </Typography>
+              )}
+              {(context.currentData?.batches ?? []).map((item) => (
+                <Stack
+                  key={item.id}
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  flexWrap="wrap"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Typography variant="body2">
+                    {item.operation === 'renumber' ? 'Renumber Division' : 'Assign Missing'} ·{' '}
+                    {item.totalCount} students
+                    {item.creationTime && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block' }}
+                      >
+                        {fDateTime(item.creationTime)}
+                      </Typography>
+                    )}
+                  </Typography>
+                  <Label
+                    color={
+                      item.status === 'Applied'
+                        ? 'success'
+                        : item.status === 'Rejected'
+                          ? 'error'
+                          : 'warning'
+                    }
+                  >
+                    {item.status === 'PendingApproval' ? 'Awaiting Approval' : item.status}
+                  </Label>
+                  <Button
+                    size="small"
+                    disabled={busy}
+                    aria-label={`Review ${item.operation === 'renumber' ? 'renumber division' : 'assign missing'}${item.creationTime ? ` from ${fDateTime(item.creationTime)}` : ''}`}
+                    onClick={() => read(item.id, 0, 25)}
+                  >
+                    Review
+                  </Button>
+                </Stack>
+              ))}
             </>
           )}
-          {batch?.canApply && (
-            <Button
-              size="small"
-              variant="contained"
-              color="inherit"
-              loading={applyState.isLoading}
-              disabled={busy || context.isError || Boolean(error)}
-              onClick={() => command('apply')}
-            >
-              Apply Approved Batch
-            </Button>
+          {batch && (
+            <>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+                <Label
+                  color={
+                    batch.status === 'Applied' ? 'success' : batch.blockedCount ? 'error' : 'info'
+                  }
+                >
+                  {batch.status === 'PendingApproval' ? 'Awaiting Approval' : batch.status}
+                </Label>
+                <Typography variant="body2">{batch.totalCount} students</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {rollGroupingOptions.find((x) => x.value === batch.grouping)?.label} ·{' '}
+                  {rollSortOptions.find((x) => x.value === batch.sortBy)?.label}
+                  {batch.sortBy === 'studentName'
+                    ? ` · ${batch.nameFormat === 'surname-first' ? 'Surname First' : 'First Name First'}`
+                    : ''}{' '}
+                  · {batch.sortDirection === 'ascending' ? 'Ascending' : 'Descending'}
+                </Typography>
+              </Stack>
+              {batch.blockedCount > 0 && (
+                <Alert severity="warning">
+                  {batch.blockedCount} student(s) need attention. Correct the flagged records, then
+                  generate a new preview. No numbers have changed.
+                </Alert>
+              )}
+              {batch.status === 'PendingApproval' && (
+                <Alert severity="info">
+                  School approval is required. The whole batch will be applied together after
+                  approval.
+                </Alert>
+              )}
+              <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
+                <CustomizableTable
+                  tableId="student-roll-number-batch-preview"
+                  tableTitle="Roll Number Preview"
+                  columns={columns}
+                  data={batch.items.map((item) => ({
+                    ...item,
+                    id: item.studentId,
+                    batchStatus: batch.status,
+                  }))}
+                  isSearch={false}
+                  isFilter={false}
+                  isLoading={loadState.isFetching}
+                  serverSidePagination
+                  page={page}
+                  rowsPerPage={pageSize}
+                  totalCount={batch.totalCount}
+                  rowsPerPageOptions={[10, 25, 50, 100]}
+                  onServerPagination={(nextPage, size) => {
+                    if (!busy) read(batch.id, size === pageSize ? nextPage - 1 : 0, size);
+                  }}
+                  wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
+                  tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+                  noDataText="No eligible students in this division."
+                />
+              </Box>
+              {(batch.status === 'Preview' || batch.canDecide || batch.reason) && (
+                <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label={batch.canDecide ? 'Review note' : 'Reason'}
+                    name="reason"
+                    value={form.values.reason}
+                    required={
+                      batch.status === 'Preview' &&
+                      (batch.operation === 'renumber' || batch.reasonRequired)
+                    }
+                    disabled={busy || (!batch.canDecide && batch.status !== 'Preview')}
+                    onChange={form.handleChange}
+                    onBlur={form.handleBlur}
+                    error={Boolean(form.touched.reason && form.errors.reason)}
+                    helperText={form.touched.reason ? form.errors.reason : undefined}
+                  />
+                </ShakingTextField>
+              )}
+            </>
           )}
-          {batch?.status === 'Preview' && (
-            <Button
-              size="small"
-              variant="contained"
-              color="inherit"
-              loading={submitState.isLoading}
-              disabled={busy || !batch.canSubmit || context.isError || Boolean(error)}
-              onClick={() => form.submitForm()}
-            >
-              {batch.operation === 'renumber' ? 'Review Renumber' : 'Submit Assignment'}
-            </Button>
-          )}
-        </DialogActions>
-      </CustomDialog>
+        </Stack>
+      </StudentAssignmentDrawer>
       <ConfirmDialog
         open={confirmationOpen}
         title="Renumber This Division?"

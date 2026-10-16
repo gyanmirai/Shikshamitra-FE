@@ -139,7 +139,7 @@ export function StudentSetupFilters({
                 onChange={(_event, checked) => onTodayChange(checked)}
               />
             }
-            label="Entered onboarding today"
+            label="Added today"
           />
         )}
       </Stack>

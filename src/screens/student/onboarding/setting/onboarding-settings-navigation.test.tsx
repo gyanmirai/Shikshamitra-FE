@@ -76,8 +76,8 @@ describe('unified onboarding settings navigation', () => {
       state.params = new URLSearchParams(`academicYearId=year-1&tab=${tab}`);
       render(<OnboardingSettingsPage />);
       expect(screen.getByText(content)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: action })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: 'Portal Access' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: action })).toBeDisabled();
+      expect(screen.getByRole('tab', { name: 'App Login' })).toHaveAttribute(
         'href',
         `${studentPaths.onboarding.settings}?academicYearId=year-1&tab=portal-access`
       );
@@ -114,7 +114,7 @@ describe('unified onboarding settings navigation', () => {
     ).rejects.toThrow(`redirect:${studentPaths.onboarding.settingsSections.grNumber}`);
   });
 
-  it('keeps the settings Add permission gate for every tab and legacy route', () => {
+  it('keeps the settings View permission gate for every tab and legacy route', () => {
     const { rerender } = render(
       <SettingsLayout>
         <div>Settings content</div>
@@ -122,7 +122,7 @@ describe('unified onboarding settings navigation', () => {
     );
     expect(screen.getByText('Access denied')).toBeInTheDocument();
     expect(screen.queryByText('Settings content')).not.toBeInTheDocument();
-    state.auth.permissions = [{ name: studentPermissions.onboarding.setup, isGranted: true }];
+    state.auth.permissions = [{ name: studentPermissions.onboarding.configure, isGranted: true }];
     rerender(
       <SettingsLayout>
         <div>Settings content</div>

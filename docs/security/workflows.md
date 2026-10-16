@@ -68,7 +68,10 @@ Role defaults, their contributing role names, the selected rule, and effective a
 Provider-ineligible controls remain unavailable.
 Opening either dialog does not copy inherited role grants into user grants or make the form dirty.
 
-Student controls preserve grouped operations and View dependencies.
+Student controls expose only View, Add/Update and supported Delete operations, with complete server catalogue coverage.
+Add/Update includes View; Delete includes Add/Update and View; revoking View clears dependent actions.
+Overrides and Guardian Access do not invent a Delete grant.
+The same mapping applies to role grants and explicit user overrides, including collapsed descendants in bulk changes.
 Accounts Settings preserve independent View, Add, Edit, Change Status, and Delete actions.
 Statutory Schemes Edit groups edits, activation, enrollment management, override approval, and calculation configuration when those five backend permission IDs are present.
 View and Edit remain independent; Delete is disabled when the server has no matching permission.

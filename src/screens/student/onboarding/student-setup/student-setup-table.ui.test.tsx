@@ -6,13 +6,14 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import StudentSetupTable from './student-setup-table';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 
 import type { StudentSetupView } from './student-setup-view';
+import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 const placements = vi.hoisted(() => ({
   query: vi.fn(),
@@ -92,9 +93,11 @@ vi.mock('src/components/customizabaleTable', () => ({
       <table aria-label={String(tableTitle)}>
         <thead>
           <tr>
-            {columns.map((column) => (
-              <th key={column.id}>{column.renderColumn?.(column) ?? column.label}</th>
-            ))}
+            {columns
+              .filter((column) => !column.defaultHidden)
+              .map((column) => (
+                <th key={column.id}>{column.renderColumn?.(column) ?? column.label}</th>
+              ))}
           </tr>
         </thead>
         <tbody>
@@ -105,11 +108,13 @@ vi.mock('src/components/customizabaleTable', () => ({
           ) : data.length ? (
             data.map((row, index) => (
               <tr key={String(row.id)} {...rowProps?.(row, index)}>
-                {columns.map((column) => (
-                  <td key={column.id}>
-                    {column.render?.(row[column.id], row) ?? String(row[column.id] ?? '')}
-                  </td>
-                ))}
+                {columns
+                  .filter((column) => !column.defaultHidden)
+                  .map((column) => (
+                    <td key={column.id}>
+                      {column.render?.(row[column.id], row) ?? String(row[column.id] ?? '')}
+                    </td>
+                  ))}
               </tr>
             ))
           ) : (
@@ -176,6 +181,15 @@ const tableElement = (input: ComponentProps<typeof StudentSetupTable>) => (
   </ThemeProvider>
 );
 
+const pendingCheck = (key: string, label = key): OnboardingChecklistItem => ({
+  key,
+  label,
+  detail: '',
+  status: 'pending',
+  blocking: true,
+  owner: 'Student onboarding',
+});
+
 describe('Student Setup table task interactions', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -203,9 +217,272 @@ describe('Student Setup table task interactions', () => {
   it.each(views)('does not show selection by default in %s', (view) => {
     render(tableElement(props(view)));
     expect(screen.queryByRole('checkbox', { name: /^Select/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: `Review ${student.studentName}` })).toHaveLength(
-      1
+    expect(
+      screen.getAllByRole('button', {
+        name:
+          view === 'readiness'
+            ? `Review documents for ${student.studentName}`
+            : `Review ${student.studentName}`,
+      })
+    ).toHaveLength(1);
+  });
+
+  it('shows five readable columns by default while retaining optional information and filters', () => {
+    render(tableElement(props()));
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Student',
+      'Class & Division',
+      'Pending work',
+      'Status',
+      'Action',
+    ]);
+    expect(screen.getByText(student.applicationNumber)).toBeInTheDocument();
+    expect(screen.getByText('Documents need checking')).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+
+    const tableProps = vi.mocked(CustomizableTable).mock.lastCall?.[0];
+    expect(
+      tableProps?.columns.filter((column) => column.defaultHidden).map((column) => column.id)
+    ).toEqual(['admissionRoute', 'identifiers', 'accounts', 'ownerName']);
+    expect(tableProps?.columns.find((column) => column.id === 'ownerName')).toMatchObject({
+      isFilter: true,
+      isSort: true,
+    });
+    expect(tableProps?.columns.find((column) => column.id === 'pendingWork')).toMatchObject({
+      isFilter: false,
+      isSort: false,
+    });
+    expect(tableProps?.columns.find((column) => column.id === 'actions')).toMatchObject({
+      sticky: true,
+      stickyPosition: 'right',
+      isFilter: false,
+      isSort: false,
+      excludeFromExport: true,
+    });
+    expect(tableProps?.columns.find((column) => column.id === 'statusLabel')).toMatchObject({
+      sticky: true,
+      stickyPosition: 'right',
+      filterType: 'enum',
+    });
+  });
+
+  it.each([
+    ['documents', 'Review documents', 'readiness'],
+    ['roll_number', 'Assign roll no.', 'roll-number'],
+    ['gr_number', 'Assign GR no.', 'gr-number'],
+    ['placement', 'Assign division', 'division'],
+    ['accounts', 'Open App Login', 'credentials'],
+    ['fee_structure', 'Open Fees', 'fees'],
+    ['finance_accounts_services', 'Open Fees', 'fees'],
+  ] as const)('opens the existing %s task from its labeled action', (key, action, view) => {
+    const input = {
+      ...props(),
+      rows: [{ ...student, divisionId: null, readinessItems: [pendingCheck(key)] }],
+    };
+    render(tableElement(input));
+    fireEvent.click(screen.getByRole('button', { name: `${action} for ${student.studentName}` }));
+    expect(input.onOpenTask).toHaveBeenCalledExactlyOnceWith(student.id, view);
+    expect(input.onOpen).not.toHaveBeenCalled();
+  });
+
+  it('opens the existing review for ready students without activating from the table', () => {
+    const input = {
+      ...props(),
+      rows: [{ ...student, status: 'ready-to-activate' as const, readinessItems: [] }],
+    };
+    render(tableElement(input));
+    expect(screen.getByText('Ready for activation review')).toBeVisible();
+    expect(screen.getByText('Ready to activate')).toBeVisible();
+    fireEvent.click(
+      screen.getByRole('button', { name: `Review & activate for ${student.studentName}` })
     );
+    expect(input.onOpen).toHaveBeenCalledExactlyOnceWith(student.id);
+    expect(input.onOpenTask).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /^Activate Student$/ })).not.toBeInTheDocument();
+  });
+
+  it('does not suggest activation for already enrolled students with a stale ready status', () => {
+    const input = {
+      ...props(),
+      rows: [
+        {
+          ...student,
+          status: 'ready-to-activate' as const,
+          studentEnrollmentId: 'enrollment-1',
+          readinessItems: [],
+        },
+      ],
+    };
+    render(tableElement(input));
+    expect(screen.queryByRole('button', { name: /Review & activate/ })).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: `Check completion for ${student.studentName}` })
+    );
+    expect(input.onOpen).toHaveBeenCalledExactlyOnceWith(student.id);
+  });
+
+  it.each([
+    ['provisioning', 'Finishing setup', 'Completion check pending', 'Check completion'],
+    ['completed', 'Setup complete', 'No pending work', 'View details'],
+    ['cancelled', 'Cancelled', 'Setup cancelled', 'View details'],
+  ] as const)(
+    'keeps %s separate from other lifecycle states',
+    (status, label, pendingText, action) => {
+      const input = { ...props(), rows: [{ ...student, status, readinessItems: [] }] };
+      render(tableElement(input));
+      expect(screen.getByText(label)).toBeVisible();
+      expect(screen.getByText(pendingText)).toBeVisible();
+      fireEvent.click(screen.getByRole('button', { name: `${action} for ${student.studentName}` }));
+      expect(input.onOpen).toHaveBeenCalledExactlyOnceWith(student.id);
+      expect(input.onOpenTask).not.toHaveBeenCalled();
+    }
+  );
+
+  it('keeps optional app login pending independently from the completed backend lifecycle', () => {
+    const input = {
+      ...props(),
+      rows: [
+        {
+          ...student,
+          status: 'completed' as const,
+          studentEnrollmentId: 'enrollment-1',
+          credentialsPending: true,
+          readinessItems: [],
+        },
+      ],
+    };
+    render(tableElement(input));
+    expect(screen.getByText('Setup complete')).toBeVisible();
+    expect(screen.getByText('App login needs setup')).toBeVisible();
+    fireEvent.click(
+      screen.getByRole('button', { name: `Open App Login for ${student.studentName}` })
+    );
+    expect(input.onOpenTask).toHaveBeenCalledExactlyOnceWith(student.id, 'credentials');
+    expect(input.onOpen).not.toHaveBeenCalled();
+  });
+
+  it('keeps cancelled cases in the review action and preserves access to historical checks', () => {
+    const input = { ...props(), rows: [{ ...student, status: 'cancelled' as const }] };
+    render(tableElement(input));
+    const actionCell = screen.getAllByRole('row')[1].lastElementChild as HTMLElement;
+    expect(within(actionCell).getAllByRole('button')).toHaveLength(1);
+    fireEvent.click(
+      within(actionCell).getByRole('button', { name: `View details for ${student.studentName}` })
+    );
+    expect(input.onOpen).toHaveBeenCalledExactlyOnceWith(student.id);
+    expect(input.onOpenTask).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole('button', { name: `Documents need checking for ${student.studentName}` })
+    );
+    expect(input.onOpenTask).toHaveBeenCalledExactlyOnceWith(student.id, 'readiness');
+  });
+
+  it('shows additional pending work without hover and keeps each task reachable', () => {
+    const input = {
+      ...props(),
+      rows: [
+        {
+          ...student,
+          readinessItems: [
+            pendingCheck('documents'),
+            pendingCheck('roll_number'),
+            pendingCheck('accounts'),
+          ],
+        },
+      ],
+    };
+    render(tableElement(input));
+    expect(
+      screen.getByRole('button', { name: `Documents need checking for ${student.studentName}` })
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: `Roll no. not assigned for ${student.studentName}` })
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: `Show all pending work for ${student.studentName}` })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: `Roll no. not assigned for ${student.studentName}` })
+    );
+    expect(input.onOpenTask).toHaveBeenCalledExactlyOnceWith(student.id, 'roll-number');
+    expect(
+      screen.getByRole('button', { name: `App login needs setup for ${student.studentName}` })
+    ).toBeVisible();
+  });
+
+  it('locks next-action and pending-task navigation during a blocking operation', () => {
+    const input = { ...props(), assignmentBusy: true };
+    render(tableElement(input));
+    const action = screen.getByRole('button', {
+      name: `Review documents for ${student.studentName}`,
+    });
+    const task = screen.getByRole('button', {
+      name: `Documents need checking for ${student.studentName}`,
+    });
+    expect(action).toBeDisabled();
+    expect(task).toBeDisabled();
+    fireEvent.click(action);
+    fireEvent.click(task);
+    expect(input.onOpen).not.toHaveBeenCalled();
+    expect(input.onOpenTask).not.toHaveBeenCalled();
+  });
+
+  it('keeps readable status filters consistent with their rows and server callbacks', () => {
+    const statuses: StudentOnboardingItem['status'][] = [
+      'to-prepare',
+      'awaiting-approval',
+      'ready-to-activate',
+      'action-required',
+      'completed',
+      'cancelled',
+      'provisioning',
+    ];
+    const labels = [
+      'Setup pending',
+      'In progress',
+      'Ready to activate',
+      'Needs attention',
+      'Setup complete',
+      'Cancelled',
+      'Finishing setup',
+    ];
+    const input = {
+      ...props(),
+      rows: statuses.map((status, index) => ({
+        ...student,
+        id: `case-${index}`,
+        status,
+        readinessItems: [],
+      })),
+      totalCount: 107,
+      page: 3,
+      searchTerm: 'Aanya',
+      isLoading: true,
+    };
+    render(tableElement(input));
+    const tableProps = vi.mocked(CustomizableTable).mock.lastCall?.[0];
+    expect(tableProps?.columns.find((column) => column.id === 'statusLabel')?.enumOptions).toEqual(
+      labels.map((label) => ({ label, value: label }))
+    );
+    expect(tableProps?.data.map((row) => row.statusLabel)).toEqual(labels);
+    expect(tableProps).toMatchObject({
+      isLoading: true,
+      serverSide: true,
+      serverSidePagination: true,
+      serverSideSearch: true,
+      serverSideFilter: true,
+      serverSideSort: true,
+      totalCount: 107,
+      page: 2,
+      rowsPerPage: 10,
+      searchTerm: 'Aanya',
+      onServerPagination: input.onPaginationChange,
+      onServerSearch: input.onSearchChange,
+      onServerFilter: input.onColumnFilterChange,
+    });
+    const nextSorts = [{ column: 'statusLabel', direction: 'asc' as const }];
+    tableProps?.onServerSort?.('statusLabel', nextSorts);
+    expect(input.onSortChange).toHaveBeenCalledExactlyOnceWith(nextSorts);
   });
 
   it('opts Division into selection and disables ineligible or busy rows', () => {
@@ -414,5 +691,58 @@ describe('Student Setup table task interactions', () => {
     expect(screen.queryByText(input.noDataText)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(input.onRetry).toHaveBeenCalledOnce();
+  });
+
+  it.each(['division', 'gr-number', 'roll-number'] as const)(
+    'keeps %s compact with optional owner and lifecycle columns still available',
+    (view) => {
+      render(tableElement(props(view)));
+      const columns = vi.mocked(CustomizableTable).mock.lastCall?.[0].columns ?? [];
+      expect(columns.find((column) => column.id === 'ownerName')).toMatchObject({
+        defaultHidden: true,
+      });
+      expect(columns.find((column) => column.id === 'statusLabel')).toMatchObject({
+        defaultHidden: true,
+        label: 'Setup status',
+      });
+      expect(columns.find((column) => column.id === 'assignmentStatus')).toMatchObject({
+        defaultHidden: false,
+        sticky: true,
+        stickyPosition: 'right',
+        isFilter: false,
+        isSort: false,
+      });
+      expect(screen.getAllByRole('columnheader', { name: 'Status' })).toHaveLength(1);
+      expect(screen.queryByRole('columnheader', { name: 'Owner' })).not.toBeInTheDocument();
+    }
+  );
+
+  it.each(['gr-number', 'roll-number'] as const)(
+    'shows unsaved %s changes only once in the status column',
+    (view) => {
+      render(
+        tableElement({
+          ...props(view),
+          manualEditing: true,
+          editableIds: [student.id],
+          manualValues: { [student.id]: view === 'gr-number' ? 'GR-NEW' : '27' },
+        })
+      );
+      expect(screen.getAllByText('Not saved')).toHaveLength(1);
+      const row = vi.mocked(CustomizableTable).mock.lastCall?.[0].data[0];
+      expect(row?.assignmentStatus).toBe('Not saved');
+    }
+  );
+
+  it('keeps Division selection fixed while a Manual draft is open', () => {
+    render(tableElement({ ...props('division'), showSelection: true, manualEditing: true }));
+    screen.getAllByRole('checkbox').forEach((checkbox) => expect(checkbox).toBeDisabled());
+  });
+
+  it('offers View all students after the remaining assignment list is empty', () => {
+    const onViewAllStudents = vi.fn();
+    render(tableElement({ ...props('gr-number'), rows: [], totalCount: 0, onViewAllStudents }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all students' }));
+    expect(onViewAllStudents).toHaveBeenCalledOnce();
   });
 });

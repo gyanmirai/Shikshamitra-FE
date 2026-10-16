@@ -33,7 +33,7 @@ type Props = {
 export default function RenewalPortalAccounts({ renewal, onDirtyChange, onBusyChange }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canCreate = [
-    'Students.Records.Transitions.Create',
+    'Students.Records.Transitions.Add',
     'Students.Onboarding.Add',
     'AbpIdentity.Users.Create',
   ].every((permission) => hasGrantedPermission(permissions, permission));

@@ -32,8 +32,9 @@ export default function LegacyRecordEntry({
   onClose: () => void;
 }) {
   const { permissions, user } = useSelector((state: RootState) => state.auth);
-  const canRequest = hasGrantedPermission(permissions, 'Students.Records.Overrides.Request');
-  const canApprove = hasGrantedPermission(permissions, 'Students.Records.Overrides.Approve');
+  const canView = hasGrantedPermission(permissions, 'Students.Records.Overrides.View');
+  const canRequest = canView && hasGrantedPermission(permissions, 'Students.Records.Overrides.Add');
+  const canApprove = canView && hasGrantedPermission(permissions, 'Students.Records.Overrides.Add');
   const [view, setView] = useState<'candidates' | 'requests'>(
     canRequest ? 'candidates' : 'requests'
   );
@@ -47,11 +48,11 @@ export default function LegacyRecordEntry({
   const [failure, setFailure] = useState<string | null>(null);
   const candidates = useGetStudentRecordsLegacyCandidatesQuery(
     { skipCount: page * 10, maxResultCount: 10, search },
-    { skip: !open || view !== 'candidates' || !canRequest }
+    { skip: !open || view !== 'candidates' || !canView }
   );
   const requests = useGetStudentRecordsLegacyOverridesQuery(
     { skipCount: page * 10, maxResultCount: 10 },
-    { skip: !open || view !== 'requests' || !(canRequest || canApprove) }
+    { skip: !open || view !== 'requests' || !canView }
   );
   const [request, requestState] = useRequestStudentRecordsLegacyOverrideMutation();
   const [approve, approveState] = useApproveStudentRecordsLegacyOverrideMutation();

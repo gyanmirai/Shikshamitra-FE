@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import PermissionGrantSwitch from './permission-grant-switch';
 import { groupGrantState } from './effective-permission-grants';
 import { useUserPermissionOverrides } from './user-permission-context';
-import { getAffectedNodePermissionNames, getNodeActionPermissionNamesForAction } from './account-settings-permissions';
+import { getPermissionActionLabel, getAffectedNodePermissionNames, getNodeActionPermissionNamesForAction } from './account-settings-permissions';
 
 import type { PermissionNodeProps } from './permission-node-types';
 
@@ -60,8 +60,8 @@ export default function PermissionNodeActions({
                 names={names}
                 onOverrideChange={(overrideState) => overrides?.setStates(overrideState === 'inherit' ? names
                   : [...getAffectedNodePermissionNames(node, action, overrideState === 'allow', permissions)], overrideState)}
-                ariaLabel={action}
-                label={action === 'ChangeStatus' ? 'Change Status' : action}
+                ariaLabel={action === 'Add' ? getPermissionActionLabel(node.permissionName ?? [], action) : action}
+                label={getPermissionActionLabel(node.permissionName ?? [], action)}
                 {...state}
                 help={explanation}
                 disabled={disabled || !names.length || names.some((name) => manageableNames && !manageableNames.has(name))}

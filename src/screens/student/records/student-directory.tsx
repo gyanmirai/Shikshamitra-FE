@@ -36,10 +36,7 @@ export default function StudentDirectory({ rowActions }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const legacyOpen = useBoolean();
   const rollOpen = useBoolean();
-  const canUseLegacy = hasGrantedPermission(permissions, [
-    'Students.Records.Overrides.Request',
-    'Students.Records.Overrides.Approve',
-  ]);
+  const canUseLegacy = hasGrantedPermission(permissions, 'Students.Records.Overrides.View');
   const population = params.get('population') === 'Former' ? 'Former' : 'Active';
   const year =
     params.get('dashboard') === 'directory'

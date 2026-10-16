@@ -19,13 +19,13 @@ vi.mock('src/hooks/use-unsaved-navigation', () => ({
     confirmation: null,
   }),
 }));
-vi.mock('src/components/customDialog', () => ({
-  default: ({ children, title }: any) => (
+vi.mock('./student-assignment-drawer', () => ({
+  default: ({ children, title, actions }: any) => (
     <div role="dialog" aria-label={title}>
       {children}
+      {actions}
     </div>
   ),
-  DialogScrollContent: ({ children }: any) => <div>{children}</div>,
 }));
 vi.mock('src/components/confirm-dialog', () => ({
   ConfirmDialog: ({ open, action, title }: any) =>

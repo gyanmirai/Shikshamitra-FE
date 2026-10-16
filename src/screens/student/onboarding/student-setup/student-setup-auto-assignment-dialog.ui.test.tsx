@@ -15,22 +15,10 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingPlacementOptionsQuery: mocks.query,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
-vi.mock('src/components/customDialog', () => ({
-  default: ({
-    open,
-    title,
-    children,
-  }: {
-    open: boolean;
-    title: string;
-    children: React.ReactNode;
-  }) =>
-    open ? (
-      <section role="dialog" aria-label={title}>
-        {children}
-      </section>
-    ) : null,
-  DialogScrollContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({ confirmPopup: { isChanges: false } }),
 }));
 const student = {
   ...studentOnboardingTestData[0],
@@ -68,16 +56,13 @@ it('requires an explicit target and uses available empty divisions, not worklist
   const props = defaults();
   const user = userEvent.setup();
   renderDialog(props);
-  await user.click(screen.getByRole('button', { name: 'Assign 1 student(s)' }));
+  await user.click(screen.getByRole('button', { name: 'Assign Division' }));
   expect(await screen.findByText('Choose the target division.')).toBeInTheDocument();
   expect(props.onAssign).not.toHaveBeenCalled();
   await user.click(screen.getByRole('combobox', { name: 'Target division' }));
-  expect(screen.getByRole('option', { name: /Grade 6 \/ C.*Full/ })).toHaveAttribute(
-    'aria-disabled',
-    'true'
-  );
-  await user.click(screen.getByRole('option', { name: /Grade 6 \/ B.*30 seats available/ }));
-  await user.click(screen.getByRole('button', { name: 'Assign 1 student(s)' }));
+  expect(screen.getByRole('option', { name: /C.*Full/ })).toHaveAttribute('aria-disabled', 'true');
+  await user.click(screen.getByRole('option', { name: /B.*30 seats available/ }));
+  await user.click(screen.getByRole('button', { name: 'Assign Division' }));
   await waitFor(() => expect(props.onAssign).toHaveBeenCalledWith('empty-division'));
   expect(mocks.query).toHaveBeenCalledWith(
     'case-1',
@@ -92,7 +77,7 @@ it.each(['gr-number', 'roll-number'] as const)(
     renderDialog(props);
     expect(screen.queryByRole('combobox', { name: 'Target division' })).not.toBeInTheDocument();
     expect(mocks.query).toHaveBeenCalledWith('case-1', expect.objectContaining({ skip: true }));
-    await user.click(screen.getByRole('button', { name: 'Assign 1 student(s)' }));
+    await user.click(screen.getByRole('button', { name: /^Assign (GR Numbers|Roll Numbers)$/ }));
     await waitFor(() => expect(props.onAssign).toHaveBeenCalledWith(undefined));
   }
 );
@@ -101,7 +86,7 @@ it('retains the selected target when cancellation is declined', async () => {
   const user = userEvent.setup();
   renderDialog(props);
   await user.click(screen.getByRole('combobox', { name: 'Target division' }));
-  await user.click(screen.getByRole('option', { name: /Grade 6 \/ B/ }));
+  await user.click(screen.getByRole('option', { name: /B.*30 seats available/ }));
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(props.onClose).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Keep editing' }));
@@ -116,7 +101,8 @@ it('disables target, submit and close while assignments are saving', () => {
     'aria-disabled',
     'true'
   );
-  expect(screen.getByRole('button', { name: /Assign 1 student/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Assign Division' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Close Assign Division' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
 });
 it('shows query errors with retry and does not allow submission', async () => {
@@ -129,7 +115,7 @@ it('shows query errors with retry and does not allow submission', async () => {
   const user = userEvent.setup();
   renderDialog();
   expect(screen.getByText('Could not load division capacity.')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Assign 1 student/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Assign Division' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.retry).toHaveBeenCalledOnce();
 });
@@ -141,6 +127,6 @@ it('shows per-student failures without offering an implicit retry or discarding 
   renderDialog(props);
   expect(screen.getByText(`${student.studentName}: Division is full.`)).toBeInTheDocument();
   expect(screen.getByText(/0 saved; 0 already assigned or skipped; 1 failed/)).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Assign 1 student/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Assign Division' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
 });

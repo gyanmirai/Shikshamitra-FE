@@ -1,6 +1,9 @@
+import type { RootState } from 'src/redux/store';
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { Card, Chip, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionOfferStageQuery } from 'src/redux/student/admissions/admission-offer-api';
 
@@ -40,7 +43,9 @@ export function ApplicationOfferStage({
   onComplete,
   onFeeSelectionStateChange,
 }: Props) {
-  const query = useGetAdmissionOfferStageQuery({ applicationId, stageId: stage.id });
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canView = hasGrantedPermission(permissions, 'Students.Admissions.Offers.View');
+  const query = useGetAdmissionOfferStageQuery({ applicationId, stageId: stage.id }, { skip: !canView });
   const feeEditor = useFeeSelectionEditorState(onFeeSelectionStateChange);
   const state = query.data;
   const actions = useApplicationOffer(
@@ -50,6 +55,8 @@ export function ApplicationOfferStage({
     canAdvance && !advancing && !feeEditor.blocked,
     onComplete
   );
+  const canWrite = hasGrantedPermission(permissions, 'Students.Admissions.Offers.Add');
+  if (!canView) return <Alert severity="info">You do not have access to admission offers.</Alert>;
   if (query.isLoading)
     return (
       <Card variant="outlined" sx={{ p: 2 }}>
@@ -62,42 +69,42 @@ export function ApplicationOfferStage({
     );
   const buttons = [
     {
-      show: state.canIssue,
+      show: canWrite && state.canIssue,
       action: 'issue' as const,
       label: 'Issue offer',
       icon: 'mdi:email-fast-outline',
       variant: 'contained' as const,
     },
     {
-      show: state.canAccept,
+      show: canWrite && state.canAccept,
       action: 'accept' as const,
       label: 'Record acceptance',
       icon: 'mdi:check-circle-outline',
       variant: 'contained' as const,
     },
     {
-      show: state.canDecline,
+      show: canWrite && state.canDecline,
       action: 'decline' as const,
       label: 'Record decline',
       icon: 'mdi:close-circle-outline',
       variant: 'outlined' as const,
     },
     {
-      show: state.canExtend,
+      show: canWrite && state.canExtend,
       action: 'extend' as const,
       label: 'Extend expiry',
       icon: 'mdi:calendar-plus',
       variant: 'outlined' as const,
     },
     {
-      show: state.canWithdraw,
+      show: canWrite && state.canWithdraw,
       action: 'withdraw' as const,
       label: 'Withdraw',
       icon: 'mdi:email-remove-outline',
       variant: 'outlined' as const,
     },
     {
-      show: state.canReissue,
+      show: canWrite && state.canReissue,
       action: 'reissue' as const,
       label: 'Reissue offer',
       icon: 'mdi:email-sync-outline',

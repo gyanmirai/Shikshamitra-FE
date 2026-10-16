@@ -1,5 +1,9 @@
+import type { RootState } from 'src/redux/store';
+
 import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useExtendAdmissionOfferMutation,
@@ -18,6 +22,8 @@ export function useApplicationOffer(
   canAdvance: boolean,
   onComplete: (concurrencyStamp?: string) => void
 ) {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, 'Students.Admissions.Offers.Add');
   const [action, setAction] = useState<OfferAction>(null);
   const idempotencyKey = useRef('');
   const [issue, issueState] = useIssueAdmissionStageOfferMutation();
@@ -39,6 +45,7 @@ export function useApplicationOffer(
     }
   };
   const submit = async (value: OfferActionValue) => {
+    if (!action || !canWrite) return;
     try {
       const base = {
         applicationId,

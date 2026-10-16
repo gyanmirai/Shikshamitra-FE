@@ -6,11 +6,11 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, Button, Typography, DialogActions, LinearProgress } from '@mui/material';
 import { useGetStudentOnboardingPlacementOptionsQuery } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
+import StudentAssignmentDrawer from './student-assignment-drawer';
 import type {
   StudentSetupAssignmentType,
   StudentSetupAssignmentResult,
@@ -60,131 +60,116 @@ export default function StudentSetupAutoAssignmentDialog({
   });
   const finished = results.length === students.length && !busy;
   const failed = results.filter((result) => result.status === 'failed').length;
+  const saving = busy || form.isSubmitting;
   const { requestNavigation, confirmation } = useUnsavedNavigation(form.dirty && !finished, {
-    blockNavigation: busy,
+    blockNavigation: saving,
   });
-  const close = () => requestNavigation(onClose);
+  const close = () => {
+    if (!saving) requestNavigation(onClose);
+  };
   return (
     <>
-      <CustomDialog
-        open
-        title={`Auto Assign ${titles[type]}`}
-        maxWidth="sm"
-        handleClose={close}
-        guardUnsavedChanges={false}
-        hasUnsavedChanges={form.dirty && !finished}
-        disableClose={busy}
-      >
-        <DialogScrollContent>
-          <Stack spacing={2}>
-            <Typography variant="body2">
-              Assign {titles[type]} to {students.length} eligible student(s) from this page.
-              Existing assignments are not overwritten.
-            </Typography>
-            <Alert severity="info">
-              {type === 'division'
-                ? 'Choose one target division. Each student is checked against the latest seat capacity before saving.'
-                : 'Published numbering rules determine the next available number. Each student is refreshed and saved separately.'}
-            </Alert>
-            {type === 'division' && (
-              <>
-                {divisions.isFetching && <LinearProgress aria-label="Loading target divisions" />}
-                {divisions.isError && (
-                  <Alert
-                    severity="error"
-                    action={
-                      <Button size="small" onClick={() => divisions.refetch()}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    Could not load division capacity.
-                  </Alert>
-                )}
-                <ShakingTextField
-                  error={Boolean(form.touched.divisionId && form.errors.divisionId)}
-                >
-                  <CustomSelect
-                    label="Target division"
-                    multiple={false}
-                    size="small"
-                    fullWidth
-                    labelKey="label"
-                    valueKey="id"
-                    options={(divisions.currentData ?? []).map((option) => ({
-                      ...option,
-                      label: `${students[0]?.standardName} / ${option.name}${option.isFull ? ' — Full' : ` — ${option.availableSeats} seats available`}`,
-                    }))}
-                    disabledValues={(divisions.currentData ?? [])
-                      .filter((option) => option.isFull)
-                      .map((option) => option.id)}
-                    disabledLabel="Full"
-                    value={form.values.divisionId}
-                    onChange={(value) => form.setFieldValue('divisionId', value)}
-                    onBlur={() => form.setFieldTouched('divisionId')}
-                    disabled={busy || divisions.isFetching || divisions.isError || finished}
-                    error={Boolean(form.touched.divisionId && form.errors.divisionId)}
-                    helperText={form.touched.divisionId ? form.errors.divisionId : undefined}
-                  />
-                </ShakingTextField>
-              </>
-            )}
-            {busy && <LinearProgress aria-label="Saving student assignments" />}
-            {results.length > 0 && (
-              <Stack spacing={1} aria-live="polite">
-                {results.map((result) => (
-                  <Alert
-                    key={result.student.id}
-                    severity={
-                      result.status === 'failed'
-                        ? 'error'
-                        : result.status === 'saved'
-                          ? 'success'
-                          : 'info'
-                    }
-                  >
-                    {result.student.studentName}: {result.message}
-                  </Alert>
-                ))}
-              </Stack>
-            )}
-            {finished && (
-              <Typography variant="body2">
-                {results.filter((result) => result.status === 'saved').length} saved;{' '}
-                {results.filter((result) => result.status === 'skipped').length} already assigned or
-                skipped; {failed} failed.{' '}
-                {failed ? 'Close and review the failed rows before retrying.' : ''}
-              </Typography>
-            )}
-          </Stack>
-        </DialogScrollContent>
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={close}
-            disabled={busy}
-            startIcon={<Iconify icon="mdi:close" />}
-          >
-            {finished ? 'Close' : 'Cancel'}
-          </Button>
-          {!finished && (
-            <Button
-              size="small"
-              variant="contained"
-              loading={busy}
-              disabled={
-                !students.length ||
-                (type === 'division' && (divisions.isFetching || divisions.isError))
-              }
-              onClick={() => form.submitForm()}
-              startIcon={<Iconify icon="mdi:check" />}
-            >
-              Assign {students.length} student(s)
+      <StudentAssignmentDrawer
+        title={`Assign ${titles[type]}`}
+        onClose={close}
+        busy={saving}
+        actions={
+          <DialogActions sx={{ p: 2, gap: 1, flexWrap: 'wrap' }}>
+            <Button size="small" variant="outlined" onClick={close} disabled={saving}>
+              {finished ? 'Close' : 'Cancel'}
             </Button>
+            {!finished && (
+              <Button
+                size="small"
+                variant="contained"
+                loading={saving}
+                disabled={
+                  !students.length ||
+                  (type === 'division' && (divisions.isFetching || divisions.isError))
+                }
+                onClick={() => form.submitForm()}
+                startIcon={<Iconify icon="mdi:check" />}
+              >
+                Assign {titles[type]}
+              </Button>
+            )}
+          </DialogActions>
+        }
+      >
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            {students.length} {students.length === 1 ? 'student' : 'students'} on this page
+            {type === 'division' && ` · ${students[0]?.standardName ?? ''}`}
+          </Typography>
+          {type === 'division' && (
+            <>
+              {divisions.isFetching && <LinearProgress aria-label="Loading target divisions" />}
+              {divisions.isError && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button size="small" onClick={() => divisions.refetch()}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Could not load division capacity.
+                </Alert>
+              )}
+              <ShakingTextField error={Boolean(form.touched.divisionId && form.errors.divisionId)}>
+                <CustomSelect
+                  label="Target division"
+                  multiple={false}
+                  size="small"
+                  fullWidth
+                  labelKey="label"
+                  valueKey="id"
+                  options={(divisions.currentData ?? []).map((option) => ({
+                    ...option,
+                    label: `${option.name}${option.isFull ? ' — Full' : ` — ${option.availableSeats} seats available`}`,
+                  }))}
+                  disabledValues={(divisions.currentData ?? [])
+                    .filter((option) => option.isFull)
+                    .map((option) => option.id)}
+                  disabledLabel="Full"
+                  value={form.values.divisionId}
+                  onChange={(value) => form.setFieldValue('divisionId', value)}
+                  onBlur={() => form.setFieldTouched('divisionId')}
+                  disabled={saving || divisions.isFetching || divisions.isError || finished}
+                  error={Boolean(form.touched.divisionId && form.errors.divisionId)}
+                  helperText={form.touched.divisionId ? form.errors.divisionId : undefined}
+                />
+              </ShakingTextField>
+            </>
           )}
-        </DialogActions>
-      </CustomDialog>
+          {busy && <LinearProgress aria-label="Saving student assignments" />}
+          {results.length > 0 && (
+            <Stack spacing={1} aria-live="polite">
+              {results.map((result) => (
+                <Alert
+                  key={result.student.id}
+                  severity={
+                    result.status === 'failed'
+                      ? 'error'
+                      : result.status === 'saved'
+                        ? 'success'
+                        : 'info'
+                  }
+                >
+                  {result.student.studentName}: {result.message}
+                </Alert>
+              ))}
+            </Stack>
+          )}
+          {finished && (
+            <Typography variant="body2">
+              {results.filter((result) => result.status === 'saved').length} saved;{' '}
+              {results.filter((result) => result.status === 'skipped').length} already assigned or
+              skipped; {failed} failed.{' '}
+            </Typography>
+          )}
+        </Stack>
+      </StudentAssignmentDrawer>
       {confirmation}
     </>
   );

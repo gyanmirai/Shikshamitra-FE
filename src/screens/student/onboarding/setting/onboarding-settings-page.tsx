@@ -1,19 +1,25 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import Link from 'next/link';
 import { useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'src/routes/hooks';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Tab, Paper, Stack, Button } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 
 import PortalAccessSettingsScreen from './portal-access-settings';
 import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
 import { onboardingSettingsTabs, getOnboardingSettingsTab } from './onboarding-settings-navigation';
 
 export default function OnboardingSettingsPage() {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canConfigure = hasGrantedPermission(permissions, studentPermissions.onboarding.configure);
   const searchParams = useSearchParams();
   const activeTab = getOnboardingSettingsTab(searchParams.get('tab'));
   const createActionRef = useRef<(() => void) | null>(null);
@@ -69,8 +75,9 @@ export default function OnboardingSettingsPage() {
               <Button
                 variant="contained"
                 size="small"
+                disabled={!canConfigure}
                 startIcon={<Iconify icon="mdi:plus" width={18} />}
-                onClick={() => createActionRef.current?.()}
+                onClick={() => canConfigure && createActionRef.current?.()}
                 sx={{ whiteSpace: 'nowrap' }}
               >
                 {activeTab === 'gr-number' ? 'Add Series' : 'Add Roll Number Rule'}

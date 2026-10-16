@@ -6,9 +6,9 @@ export const ADMISSION_WORKFLOW_PERMISSIONS = {
   view: 'Students.Admissions.Workflows.View',
   manage: 'Students.Admissions.Workflows.Add',
   delete: 'Students.Admissions.Workflows.Delete',
-  approve: 'Students.Admissions.Workflows.Approve',
-  manageGovernance: 'Students.Admissions.Workflows.ManageGovernance',
-  rollback: 'Students.Admissions.Workflows.Rollback',
+  approve: 'Students.Admissions.Workflows.Add',
+  manageGovernance: 'Students.Admissions.Workflows.Add',
+  rollback: 'Students.Admissions.Workflows.Add',
 } as const;
 
 export function getAdmissionWorkflowAccess(permissions: GrantedPermission[] | undefined) {
