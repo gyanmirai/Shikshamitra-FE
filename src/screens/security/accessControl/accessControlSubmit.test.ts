@@ -1,7 +1,7 @@
 import { it, vi, expect, describe } from 'vitest';
 import { emptyAccessSelection } from 'src/utils/academicHierarchyUtils';
 
-import { submitAccessControlForm } from './index';
+import { submitAccessControlForm } from './services/submit-access-control';
 
 describe('access control submit', () => {
   const allBoards = [
