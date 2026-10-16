@@ -648,6 +648,7 @@ Verify the compact employee/ESIC header, readable history months, annual equival
 
 Run statutory-profile-editor.test.tsx for dirty refreshes, concurrency, retry keys, boundary choice and atomic salary-save responses.
 Run salary-documents-workspace.test.tsx for cancellation, stale responses, retained filters, mandatory columns, duplicate exports and expired downloads.
+The same suite verifies neutral report notes, PDF/Excel progress, ready downloads, status refresh and download-error recovery without replacing preview results.
 Run SalaryStructureBuilder.test.tsx, esi-configuration-form.test.ts, payslip-settings-form.test.tsx and runPayroll.test.tsx for integration regressions.
 Run focused ESLint, TypeScript, HR docs validation and security regressions.
 Use an authenticated local backend for the final Codex-browser smoke at 390, 768 and 1440 pixel widths.

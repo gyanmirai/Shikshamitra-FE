@@ -10,6 +10,7 @@ import type {
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -28,6 +29,7 @@ import {
   MenuItem,
   TextField,
   Typography,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -134,48 +136,59 @@ export default function SalaryDocumentsWorkspace({
     };
   }, [signature, ready, active, refresh, loadPreview]);
   const [createExport, exporting] = useCreateHrReportExportMutation();
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState<HrReportFormat>('pdf');
   const [jobId, setJobId] = useState<string | null>(null);
   const [terminalJobId, setTerminalJobId] = useState<string | null>(null);
   const job = useGetHrReportExportQuery(active ? (jobId ?? skipToken) : skipToken, {
     pollingInterval: jobId === terminalJobId ? 0 : 3000,
     skipPollingIfUnfocused: true,
   });
+  const currentJob = job.data?.id === jobId ? job.data : undefined;
   useEffect(() => {
-    if (job.data?.status === 'Completed' || job.data?.status === 'Failed') setTerminalJobId(jobId);
-  }, [job.data?.status, jobId]);
+    if (currentJob?.status === 'Completed' || currentJob?.status === 'Failed')
+      setTerminalJobId(jobId);
+  }, [currentJob?.status, jobId]);
   const [download, downloading] = useDownloadHrReportExportMutation();
   const exportInFlight = useRef(false);
   const queueExport = async (format: HrReportFormat) => {
     if (exportInFlight.current || !ready || !permissions.canExport) return;
     exportInFlight.current = true;
-    setError(null);
+    setExportError(null);
+    setExportFormat(format);
+    setJobId(null);
     try {
       const result = await createExport({ ...request, page: 1, format }).unwrap();
       setJobId(result.jobId);
     } catch (failure) {
-      setError(payslipActionError(failure, 'The export could not be queued.'));
+      setExportError(payslipActionError(failure, 'The export could not be queued.'));
     } finally {
       exportInFlight.current = false;
     }
   };
   const downloadExport = async () => {
-    if (!jobId || !job.data || job.data.isExpired || job.data.status !== 'Completed') return;
+    if (!jobId || !currentJob || currentJob.isExpired || currentJob.status !== 'Completed') return;
+    setExportError(null);
     try {
       const bytes = await download(jobId).unwrap();
       const url = URL.createObjectURL(bytes);
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download =
-        job.data.fileName ?? `salary-document.${job.data.format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        currentJob.fileName ?? `salary-document.${currentJob.format === 'pdf' ? 'pdf' : 'xlsx'}`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (failure) {
-      setError(payslipActionError(failure, 'The export could not be downloaded.'));
+      setExportError(payslipActionError(failure, 'The export could not be downloaded.'));
     }
   };
   const preset = statement
     ? settings.data?.presentation?.statementColumns
     : settings.data?.presentation?.registerColumns;
+  const exportFailed = job.isError || currentJob?.status === 'Failed' || !!exportError;
+  const exportExpired = currentJob?.isExpired;
+  const exportReady = currentJob?.status === 'Completed' && !job.isError && !exportExpired;
+  const formatLabel = (currentJob?.format ?? exportFormat) === 'pdf' ? 'PDF' : 'Excel';
   if (!permissions.canView)
     return (
       <Alert severity="info">
@@ -312,7 +325,12 @@ export default function SalaryDocumentsWorkspace({
               </MenuItem>
             ))}
           </TextField>
-          <Stack direction="row" spacing={1} justifyContent="space-between" flexWrap="wrap">
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+          >
             <Button
               size="small"
               onClick={() =>
@@ -326,32 +344,136 @@ export default function SalaryDocumentsWorkspace({
             >
               Use school column preset
             </Button>
-            <Stack direction="row" spacing={1}>
-              <Button
-                size="small"
-                disabled={!ready || loading}
-                onClick={() => setRefresh((value) => value + 1)}
+            <Stack
+              spacing={0.75}
+              alignItems="flex-end"
+              sx={{ alignSelf: { xs: 'flex-end', md: 'auto' } }}
+            >
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                justifyContent="flex-end"
               >
-                Refresh preview
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                onClick={() => queueExport('excel')}
-              >
-                Export Excel
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                onClick={() => queueExport('pdf')}
-              >
-                Export PDF
-              </Button>
+                <Button
+                  size="small"
+                  disabled={!ready || loading}
+                  onClick={() => setRefresh((value) => value + 1)}
+                >
+                  Refresh preview
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
+                  onClick={() => queueExport('excel')}
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
+                  onClick={() => queueExport('pdf')}
+                >
+                  Export PDF
+                </Button>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                PDF: up to 500 rows. Excel: up to 20,000.
+              </Typography>
             </Stack>
           </Stack>
+          {jobId || exportError ? (
+            <Stack
+              role={exportFailed ? 'alert' : 'status'}
+              aria-live={exportFailed ? 'assertive' : 'polite'}
+              aria-atomic="true"
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              spacing={1.5}
+              sx={{ pt: 1.5, borderTop: 1, borderColor: 'divider' }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, minWidth: 0 }}>
+                {exportReady || exportFailed || exportExpired ? (
+                  <Iconify
+                    icon={
+                      exportReady && !exportFailed
+                        ? 'mdi:check-circle-outline'
+                        : 'mdi:alert-circle-outline'
+                    }
+                    width={20}
+                    sx={{
+                      color: exportFailed
+                        ? 'error.main'
+                        : exportReady
+                          ? 'success.main'
+                          : 'text.secondary',
+                    }}
+                  />
+                ) : (
+                  <CircularProgress size={18} color="inherit" aria-label="Preparing export" />
+                )}
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color={exportFailed ? 'error.main' : 'text.primary'}
+                  >
+                    {exportError
+                      ? 'Export needs attention'
+                      : job.isError
+                        ? 'Export status unavailable'
+                        : exportExpired
+                          ? 'Export expired'
+                          : currentJob?.status === 'Failed'
+                            ? 'Export failed'
+                            : exportReady
+                              ? `${formatLabel} ready to download`
+                              : `Preparing ${formatLabel} export`}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
+                    {exportError ??
+                      (job.isError
+                        ? 'The status could not be refreshed. Try again.'
+                        : exportExpired
+                          ? 'This export has expired. Create a new export to download the document.'
+                          : currentJob?.status === 'Failed'
+                            ? (currentJob.errorMessage ?? 'Create a new export to try again.')
+                            : exportReady
+                              ? currentJob?.rowCount == null
+                                ? 'Your document is ready.'
+                                : `${currentJob.rowCount.toLocaleString('en-IN')} rows included.`
+                              : 'You can continue reviewing payroll while the file is prepared.')}
+                  </Typography>
+                </Box>
+              </Stack>
+              {exportReady ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:download" width={18} />}
+                  disabled={downloading.isLoading}
+                  onClick={downloadExport}
+                  sx={{ alignSelf: { xs: 'flex-end', sm: 'auto' } }}
+                >
+                  {downloading.isLoading
+                    ? 'Downloading'
+                    : exportError
+                      ? 'Retry Download'
+                      : 'Download'}
+                </Button>
+              ) : job.isError && !exportError ? (
+                <Button size="small" variant="outlined" onClick={() => job.refetch()}>
+                  Refresh Status
+                </Button>
+              ) : null}
+            </Stack>
+          ) : null}
         </Stack>
       </Paper>
       {error && (
@@ -370,36 +492,20 @@ export default function SalaryDocumentsWorkspace({
           {error}
         </Alert>
       )}
-      {jobId && (
-        <Alert
-          severity={job.data?.status === 'Failed' ? 'error' : 'info'}
-          action={
-            job.data?.status === 'Completed' && !job.isError && !job.data.isExpired ? (
-              <Button size="small" disabled={downloading.isLoading} onClick={downloadExport}>
-                Download
-              </Button>
-            ) : undefined
-          }
+      {preview?.queryWarnings?.length ? (
+        <Stack
+          component="aside"
+          aria-label="Report notes"
+          spacing={0.5}
+          sx={{ pl: 1.5, borderLeft: 2, borderColor: 'divider' }}
         >
-          {job.isError
-            ? 'Export status could not be refreshed.'
-            : job.data?.isExpired
-              ? 'This export has expired. Create a new export to download the document.'
-              : job.data?.status === 'Failed'
-                ? (job.data.errorMessage ?? 'Export failed.')
-                : `Export ${job.data?.status?.toLowerCase() ?? 'queued'}. PDF exports include up to 500 rows; Excel includes up to 20,000.`}
-        </Alert>
-      )}
-      {preview?.queryWarnings?.map((warning) => (
-        <Alert
-          severity="info"
-          variant="outlined"
-          key={warning}
-          sx={{ py: 0, bgcolor: 'transparent' }}
-        >
-          {warning}
-        </Alert>
-      ))}
+          {preview.queryWarnings.map((warning) => (
+            <Typography key={warning} variant="body2" color="text.secondary">
+              {warning}
+            </Typography>
+          ))}
+        </Stack>
+      ) : null}
       <HrReportPreviewTable
         preview={preview}
         reportName={title}

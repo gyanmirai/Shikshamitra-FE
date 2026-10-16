@@ -6,6 +6,7 @@ import SalaryDocumentsWorkspace from './salary-documents-workspace';
 const state = vi.hoisted(() => ({
   preview: vi.fn(),
   export: vi.fn(),
+  download: vi.fn(),
   job: { data: undefined } as any,
 }));
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
@@ -34,7 +35,7 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
   usePreviewHrReportMutation: () => [state.preview],
   useCreateHrReportExportMutation: () => [state.export, { isLoading: false }],
   useGetHrReportExportQuery: () => state.job,
-  useDownloadHrReportExportMutation: () => [vi.fn(), { isLoading: false }],
+  useDownloadHrReportExportMutation: () => [state.download, { isLoading: false }],
 }));
 const settleDebounce = () =>
   act(async () => {
@@ -46,6 +47,7 @@ describe('salary document previews', () => {
     vi.useFakeTimers();
     state.preview.mockReset();
     state.export.mockReset();
+    state.download.mockReset();
     state.job = {};
   });
   afterEach(() => {
@@ -128,9 +130,142 @@ describe('salary document previews', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Export PDF' }));
     expect(state.export).toHaveBeenCalledTimes(1);
     await act(async () => resolveExport({ jobId: 'job-1' }));
-    state.job = { data: { status: 'Completed', isExpired: true } };
+    state.job = { data: { id: 'job-1', status: 'Completed', isExpired: true } };
     view.rerender(<SalaryDocumentsWorkspace kind="register" />);
     expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
     expect(screen.getByText(/This export has expired/)).toBeVisible();
+  });
+
+  it('keeps coverage and truncation notes visible in one quiet region without alert banners', async () => {
+    const warnings = [
+      'Issued payroll only. Unavailable months are not counted as zero pay.',
+      '34 matching staff have no saved payroll for this month and are unavailable. They are excluded from totals.',
+      'Results are truncated at the export limit.',
+    ];
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll', queryWarnings: warnings }),
+    });
+    render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    const notes = screen.getByRole('complementary', { name: 'Report notes' });
+    warnings.forEach((warning) => expect(notes).toHaveTextContent(warning));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByText('PDF: up to 500 rows. Excel: up to 20,000.')).toBeVisible();
+  });
+
+  it.each(['pdf', 'excel'] as const)(
+    'shows compact %s progress and the completed download in place',
+    async (format) => {
+      state.preview.mockReturnValue({
+        abort: vi.fn(),
+        unwrap: async () => ({ reportType: 'Saved payroll' }),
+      });
+      state.export.mockReturnValue({ unwrap: async () => ({ jobId: 'job-1' }) });
+      const view = render(<SalaryDocumentsWorkspace kind="register" />);
+      await settleDebounce();
+      await act(async () =>
+        fireEvent.click(
+          screen.getByRole('button', { name: format === 'pdf' ? 'Export PDF' : 'Export Excel' })
+        )
+      );
+      const label = format === 'pdf' ? 'PDF' : 'Excel';
+      expect(screen.getByRole('status')).toHaveTextContent(`Preparing ${label} export`);
+      state.job = {
+        data: { id: 'job-1', status: 'Completed', format, rowCount: 18, isExpired: false },
+      };
+      view.rerender(<SalaryDocumentsWorkspace kind="register" />);
+      expect(screen.getByRole('status')).toHaveTextContent(`${label} ready to download`);
+      expect(screen.getByRole('status')).toHaveTextContent('18 rows included.');
+      expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    }
+  );
+
+  it('keeps export failures local and allows a failed download to be retried', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll' }),
+    });
+    state.export.mockReturnValue({ unwrap: async () => ({ jobId: 'job-1' }) });
+    const view = render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Export PDF' })));
+    state.job = {
+      data: { id: 'job-1', status: 'Completed', format: 'pdf', rowCount: 18, isExpired: false },
+    };
+    view.rerender(<SalaryDocumentsWorkspace kind="register" />);
+    state.download.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('Download unavailable');
+      },
+    });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Download' })));
+    expect(screen.getByRole('alert')).toHaveTextContent('Export needs attention');
+    expect(screen.getByRole('button', { name: 'Retry Download' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    expect(screen.getByText('Saved payroll')).toBeVisible();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Retry Download' })));
+    expect(state.download).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers status refresh without exposing a download when polling fails', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll' }),
+    });
+    state.export.mockReturnValue({ unwrap: async () => ({ jobId: 'job-1' }) });
+    const view = render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Export PDF' })));
+    const refetch = vi.fn();
+    state.job = {
+      isError: true,
+      refetch,
+      data: { id: 'job-1', status: 'Completed', isExpired: false },
+    };
+    view.rerender(<SalaryDocumentsWorkspace kind="register" />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Export status unavailable');
+    expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh Status' }));
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it('does not show an earlier export as ready while a new job is being prepared', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll' }),
+    });
+    state.export.mockReturnValueOnce({ unwrap: async () => ({ jobId: 'job-1' }) });
+    const view = render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Export PDF' })));
+    state.job = { data: { id: 'job-1', status: 'Completed', format: 'pdf', isExpired: false } };
+    view.rerender(<SalaryDocumentsWorkspace kind="register" />);
+    expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+    state.export.mockReturnValueOnce({ unwrap: async () => ({ jobId: 'job-2' }) });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Export Excel' })));
+    expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing Excel export');
+  });
+
+  it('shows a queue failure beside the export controls and keeps the preview available', async () => {
+    state.preview.mockReturnValue({
+      abort: vi.fn(),
+      unwrap: async () => ({ reportType: 'Saved payroll' }),
+    });
+    state.export.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('Queue unavailable');
+      },
+    });
+    render(<SalaryDocumentsWorkspace kind="register" />);
+    await settleDebounce();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Export PDF' })));
+    expect(screen.getByRole('alert')).toHaveTextContent('Export needs attention');
+    expect(screen.queryByRole('button', { name: 'Retry preview' })).not.toBeInTheDocument();
+    expect(screen.getByText('Saved payroll')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Export PDF' })).toBeEnabled();
   });
 });
