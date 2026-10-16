@@ -29,7 +29,7 @@ export function matrixAction(
       states[entry.name] === 'allow' ||
       (states[entry.name] !== 'deny' && inheritedSources(entry, provider).length > 0)
   ).length;
-  const result = !names.length
+  const result = !names.length || entries.length !== names.length
     ? 'Unavailable'
     : allowed === names.length
       ? visibility

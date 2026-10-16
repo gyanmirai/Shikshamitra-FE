@@ -30,6 +30,23 @@ function AssignmentParameterHarness() {
 }
 
 describe('ClassTeacherAssignmentParameterSelect', () => {
+  it('prevents changes when the caller cannot manage assignments', () => {
+    render(
+      <ClassTeacherAssignmentParameterSelect
+        ariaLabel="Assignment Type"
+        options={assignmentTypes}
+        value="Permanent"
+        onChange={() => {}}
+        disabled
+      />
+    );
+
+    const assignmentType = screen.getByRole('combobox', { name: 'Assignment Type' });
+    expect(assignmentType).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.mouseDown(assignmentType);
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+  });
+
   it('updates the assignment type after selecting another option', () => {
     render(<AssignmentParameterHarness />);
 

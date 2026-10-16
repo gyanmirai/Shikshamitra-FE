@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { varAlpha } from 'src/theme/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Stack, Button, Collapse, Typography } from '@mui/material';
@@ -12,6 +14,7 @@ export default function PermissionWorkspaceNavigation({
   onSubmodule,
   visibility = false,
   disabled,
+  bulkActions,
 }: {
   modules: NavigationPermission[];
   selectedModule?: string;
@@ -20,6 +23,7 @@ export default function PermissionWorkspaceNavigation({
   onSubmodule: (node: NavigationPermission) => void;
   visibility?: boolean;
   disabled: boolean;
+  bulkActions?: ReactNode;
 }) {
   return (
     <Box
@@ -134,6 +138,14 @@ export default function PermissionWorkspaceNavigation({
           })}
         </Stack>
       </Scrollbar>
+      {bulkActions && (
+        <Box sx={{ p: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="caption" sx={{ display: 'block', mb: 0.75 }}>
+            All modules
+          </Typography>
+          {bulkActions}
+        </Box>
+      )}
     </Box>
   );
 }

@@ -10,6 +10,28 @@ audience: humans-and-agents
 
 # Validate Security frontend changes
 
+## Academic navigation
+
+`src/utils/academic-navigation-access.test.ts` covers every active Academic menu leaf, independent View and visibility grants, empty groups, first accessible landing, direct URLs, nested seating routes, legacy aliases, and unaffected non-Academic navigation.
+Class Teacher Assignment, elective actions, syllabus question actions, Grade Entry, and Result Creation have focused allowed/denied action tests in their screen folders.
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/utils/academic-navigation-access.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism
+node node_modules/@playwright/test/cli.js test --config e2e/academic/academic-permission-navigation.config.ts
+```
+
+The browser fixture uses production navigation and the Academic route layout with synthetic permissions.
+It verifies denied direct access, immediate revocation, loading, nested seating access, both themes, and contained layouts at 390/768/1440 widths.
+Finish with the Codex in-app browser.
+Synthetic grants validate frontend behavior, not deployed role configuration or backend endpoint dependencies.
+
+## Shared permission feedback
+
+Run `permission-denied.test.ts`, `api-problem-details.permission.test.ts`, `service.permission-feedback.test.ts`, `normalize-permission-response.test.ts`, `service.auth-session.test.ts`, and `customQueryAndMutation.test.ts` with Vitest. Keep the broader `api-problem-details.test.ts` results explicit, including unrelated domain-message failures.
+Cover JSON/ABP/RFC/legacy errors, empty and HTML 403 bodies, report blobs, specific scope/business messages, missing endpoint metadata, unchanged status/code data, current/stale authentication ownership, and no request-derived labels.
+Run `node node_modules/@playwright/test/cli.js test --config e2e/security/shared-permission-feedback.config.ts` for real shared API/parser/toast/Snackbar behavior with synthetic responses. The fixture exercises actual HR, Transport, Library, and Academic hooks through automatic, manual, and legacy handlers; it also verifies duplicate notices, explicit suppression, close behavior, and nonpermission errors.
+Finish with Codex in-app browser checks at desktop and narrow widths. These checks prove shared feedback behavior, not deployed access grants or acceptance of every application workflow.
+
 TL;DR: validate permission mappings, override persistence, review/discard, and the responsive matrix using current evidence.
 
 ## Login and session redirect regression (2026-10-16)
@@ -44,6 +66,24 @@ Do not delete deployed school roles to test this flow.
 
 ## Permission editor checks
 
+`permission-bulk-state.test.ts` verifies complete module/submodule traversal, duplicate mappings, role/user provider eligibility, missing catalogues, exact Statutory Schemes revocation boundaries, and preservation of unrelated and visibility grants.
+Run its focused suite with the existing grouping tests:
+
+```sh
+node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vitest/vitest.mjs run src/screens/security/role/permission-bulk-state.test.ts src/screens/security/role/account-settings-permissions.test.ts --pool=threads --maxWorkers=1 --no-file-parallelism
+```
+
+`e2e/security/permission-bulk.spec.ts` renders the production permission form and API client with a loopback-only synthetic catalogue.
+It checks Grant all, Revoke all and user Follow role at all-module, module, submodule, nested-group and feature scopes, including filtered/collapsed descendants, exact eligible payloads and save/reopen persistence.
+It also checks keyboard activation, accessible permission descriptions and hover tooltips without visible status lines, WCAG AA accessibility in both themes, control sizes and contained scrolling at 390/768/1440 widths.
+The fixture disables hot reload so unrelated workspace edits cannot interrupt a permission workflow.
+
+```sh
+npx playwright test --config e2e/security/permission-bulk.config.ts
+```
+
+Finish with the Codex in-app browser when available; synthetic API saves do not establish deployed account access.
+
 `institute-setup-permissions.test.ts` covers Shift Management and Academic Setup action discovery for both Role and User providers, independent visibility flags, bulk action names, and missing catalogues.
 `e2e/security/institute-setup-permissions.spec.ts` uses the production permission form/client with a synthetic network catalogue. It checks all four existing actions, exact changed-only Edit saves, reload persistence, keyboard selection, accessibility, both themes and 390/768/1440 widths. Backend `PermissionConsistencyApi_Tests` separately verifies the real ABP catalogue and role/user override round trips. Finish with a read-only local Admin DDVS check in the Codex in-app browser; synthetic writes do not prove deployed acceptance.
 
@@ -63,8 +103,8 @@ git diff --check
 
 Run ESLint on touched TypeScript files.
 Run these checks locally before merging feature work.
-The deployment workflow does not invoke Security Regression or run tests on merge.
-The optional Security Regression workflow remains reusable-only, with a `main` guard and no automatic caller.
+The deployment workflow invokes Security Regression before build and deployment on `main`.
+The Security Regression workflow remains reusable-only, and both the caller and called job guard `refs/heads/main`.
 The September 17 staging reference uses compact grouped controls, not individual backend action tiles.
 Tests preserve the staging Student bundles and Accounts Settings exceptions while verifying the unchanged server permission IDs.
 
@@ -73,10 +113,11 @@ Tests preserve the staging Student bundles and Accounts Settings exceptions whil
 | Surface | Evidence required |
 | --- | --- |
 | Catalogue | Preserve the full response and provider eligibility; submit only changes from mapped controls |
-| Matrix | Existing grouped mappings; repeat navigation stays selected; search/collapse never edits grants; inline focus returns to the opener |
-| Visibility | Separate dialog, independent flags, nested settings, unmapped flags, no action mutations |
-| Direct and inherited grants | Role/user grant and revoke round trips; removing direct grants leaves inherited access effective |
-| Statutory Schemes | View/Edit/Delete controls, five-action Edit group including ConfigureCalculation when present in the catalogue, unavailable Delete disabled, provider restrictions and unrelated or undisplayed grants preserved |
+| Matrix | Existing grouped mappings; sibling alignment and consistent indentation for nested groups and features; cards below 1200px, including 900px, and table at 1200px; Feature stays pinned left during table horizontal scrolling; opaque sticky row backgrounds and headers above scrolling content; repeat navigation stays selected; search/collapse never edits grants; inline focus returns to the opener |
+| Bulk actions | Separate table Bulk actions column pinned right with direct controls visible during horizontal scrolling; card controls beneath the feature name; 44px selectors and bulk buttons below 1200px and 32px at or above it; compact segmented styling with regular-weight labels and the same 0.12 primary/error/info tints as inline Allow, Revoke/Deny and user Role choices; disabled bulk actions remain neutral; all scopes include hidden/collapsed descendants; deduplicate and exclude ineligible names; preserve neighboring/unmapped grants and separate visibility |
+| Visibility | Separate dialog, constants-only modules and nested flags, no API-only rows, missing catalogue entries disabled, no action mutations |
+| Direct and inherited grants | Role revoke removes direct grants; user Revoke all persists Deny over role grants; Follow role removes user overrides; role and user saves round-trip through verification |
+| Statutory Schemes | View/Edit/Delete controls, five-action Edit group including ConfigureCalculation when present, unavailable Delete disabled, provider restrictions, hidden exact-namespace actions revoked or reset with Follow role, neighboring grants preserved |
 | Save | Changed entries only, unchanged grants preserved, pre-save drift check, post-save verification |
 | Drafts | Review every changed entry, discard without writes, refetch errors, provider changes, duplicate submission, close during save |
 | Browser | Keyboard operation, focus return, dirty Cancel/Escape/history, failed reads/writes, bounded scrolling and 44px actions |
@@ -124,7 +165,7 @@ It does not use school credentials or change school data.
 npx playwright test --config e2e/security/permission-inheritance.config.ts
 ```
 
-The browser suite covers default states, direct single-click changes, repeat-choice no-ops, repeat navigation, Allow/Deny persistence through role edits, Follow role, verified save/reopen, keyboard operation, compact 32px desktop controls and 44px touch controls, WCAG AA checks, and independent visibility at desktop, tablet, and mobile sizes.
+The browser suite covers default states, direct single-click changes, repeat-choice no-ops, repeat navigation, Allow/Deny persistence through role edits, Follow role, verified save/reopen, keyboard operation, compact 32px controls at widths of 1200px and above and 44px controls below 1200px, WCAG AA checks, and independent visibility at desktop, tablet, and mobile sizes.
 It also checks wheel scrolling in navigation and permission lists for Role/User Module Permission and Set Module Visibility, with the footer remaining reachable and no permission writes.
 The draft tests distinguish Deny from Follow role during save verification, preserve dirty drafts, reject override/provider drift, and submit only changed entries.
 Use the same fixture in the Codex in-app browser for final visible checks when school credentials are unavailable.

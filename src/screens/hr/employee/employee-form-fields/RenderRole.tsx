@@ -1,8 +1,7 @@
-import { useMemo, useEffect } from 'react';
-import { TextField, Autocomplete } from '@mui/material';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import { useEffect } from 'react';
+import { Button, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeAssignableRolesQuery } from 'src/redux/hr/employeeApi';
 
 import {
   getEmployeeAssignableRoles,
@@ -15,22 +14,25 @@ interface RenderRoleProps {
 }
 
 export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
-  });
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetEmployeeAssignableRolesQuery(undefined, { refetchOnMountOrArgChange: true });
 
   const { employeeGroup, role: selectedRoleId } = formik.values;
   const { setFieldValue, touched, errors } = formik;
-  const roleOptions = useMemo(
-    () => getEmployeeAssignableRoles(data?.items ?? [], employeeGroup),
-    [data?.items, employeeGroup]
-  );
-  const roleValue = roleOptions.find((item: any) => item.id === selectedRoleId) ?? null;
+  const roleOptions = isError ? [] : getEmployeeAssignableRoles(data?.items ?? [], employeeGroup);
+  const roleValue = data?.items.find((item) => item.id === selectedRoleId) ?? null;
+  const accessDenied = error && 'status' in error && error.status === 403;
+  const queryError = isError
+    ? accessDenied
+      ? 'Staff role access is unavailable. Ask your administrator to review your Staff Directory permissions.'
+      : 'Staff roles could not be loaded. Try again.'
+    : undefined;
+  const fieldError = Boolean(queryError || (touched.role && errors.role));
 
   useEffect(() => {
     if (
-      isLoading ||
+      isFetching ||
+      isError ||
       !data?.items ||
       !shouldClearEmployeeRoleSelection(data.items, selectedRoleId, employeeGroup)
     ) {
@@ -38,15 +40,16 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
     }
 
     setFieldValue('role', null);
-  }, [data?.items, employeeGroup, isLoading, selectedRoleId, setFieldValue]);
+  }, [data?.items, employeeGroup, isFetching, isError, selectedRoleId, setFieldValue]);
 
   return (
-    <ShakingTextField error={touched.role && Boolean(errors.role)}>
+    <ShakingTextField error={fieldError}>
       <Autocomplete
-        disabled={isLoading || !!disabled}
+        disabled={isLoading || isError || !!disabled}
+        loading={isFetching}
         options={roleOptions}
         value={roleValue}
-        getOptionLabel={(option: any) => option?.name ?? ''}
+        getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         renderInput={(params) => (
           <TextField
@@ -55,14 +58,19 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
             size="small"
             fullWidth
             sx={{ width: '100%', minWidth: '200px' }}
-            error={touched.role && Boolean(errors.role)}
-            helperText={touched.role && errors.role}
+            error={fieldError}
+            helperText={queryError || (touched.role && errors.role)}
           />
         )}
         onChange={(e, value) => {
           setFieldValue('role', value?.id || null);
         }}
       />
+      {isError && (
+        <Button size="small" onClick={() => refetch()} disabled={isFetching || !!disabled}>
+          Retry staff roles
+        </Button>
+      )}
     </ShakingTextField>
   );
 };

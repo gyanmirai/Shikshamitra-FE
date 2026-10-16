@@ -1,5 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { GradeEntryWorkflowStatus } from 'src/enums/grade-entry-status';
 
 import { GradeEntryToolbarActions } from './GradeEntryToolbarActions';
@@ -8,10 +8,16 @@ vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} aria-hidden="true" />,
 }));
 
-function renderActions(allMarksAssigned: boolean) {
+function renderActions(
+  allMarksAssigned: boolean,
+  canManageMarks = true,
+  workflowStatus = GradeEntryWorkflowStatus.Draft,
+  onSaveDraft = vi.fn()
+) {
   return render(
     <GradeEntryToolbarActions
-      workflowStatus={GradeEntryWorkflowStatus.Draft}
+      canManageMarks={canManageMarks}
+      workflowStatus={workflowStatus}
       allMarksAssigned={allMarksAssigned}
       isSaveDraftLoading={false}
       isBulkSaveLoading={false}
@@ -20,7 +26,7 @@ function renderActions(allMarksAssigned: boolean) {
       isVerifyLoading={false}
       isPublishLoading={false}
       isUnlockLoading={false}
-      onSaveDraft={vi.fn()}
+      onSaveDraft={onSaveDraft}
       onReview={vi.fn()}
       onRequestChanges={vi.fn()}
       onVerify={vi.fn()}
@@ -38,6 +44,7 @@ describe('GradeEntryToolbarActions', () => {
 
     rerender(
       <GradeEntryToolbarActions
+        canManageMarks
         workflowStatus={GradeEntryWorkflowStatus.Draft}
         allMarksAssigned
         isSaveDraftLoading={false}
@@ -56,5 +63,23 @@ describe('GradeEntryToolbarActions', () => {
       />
     );
     expect(screen.getByRole('button', { name: 'Review & Submit' })).toBeEnabled();
+  });
+
+  it.each([
+    GradeEntryWorkflowStatus.Draft,
+    GradeEntryWorkflowStatus.ChangesRequested,
+    GradeEntryWorkflowStatus.Submitted,
+    GradeEntryWorkflowStatus.Verified,
+    GradeEntryWorkflowStatus.Published,
+  ])('hides all write actions in workflow %s without the manage grant', (workflowStatus) => {
+    renderActions(true, false, workflowStatus);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('allows an authorized editor to save a draft', () => {
+    const onSaveDraft = vi.fn();
+    renderActions(true, true, GradeEntryWorkflowStatus.Draft, onSaveDraft);
+    fireEvent.click(screen.getByRole('button', { name: 'Save Draft' }));
+    expect(onSaveDraft).toHaveBeenCalledOnce();
   });
 });

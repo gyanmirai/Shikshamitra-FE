@@ -4,6 +4,7 @@ import { Iconify } from 'src/components/iconify';
 import { GradeEntryWorkflowStatus } from 'src/enums/grade-entry-status';
 
 type Props = {
+  canManageMarks: boolean;
   workflowStatus: GradeEntryWorkflowStatus;
   allMarksAssigned: boolean;
   isSaveDraftLoading: boolean;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function GradeEntryToolbarActions({
+  canManageMarks,
   workflowStatus,
   allMarksAssigned,
   isSaveDraftLoading,
@@ -38,6 +40,8 @@ export function GradeEntryToolbarActions({
   onPublish,
   onUnlock,
 }: Props) {
+  if (!canManageMarks) return null;
+
   return (
     <>
       {workflowStatus === GradeEntryWorkflowStatus.Draft && (

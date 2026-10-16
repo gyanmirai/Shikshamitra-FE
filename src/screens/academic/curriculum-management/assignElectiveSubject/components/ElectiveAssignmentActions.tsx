@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { Box, Button, Tooltip } from '@mui/material';
 
 interface ElectiveAssignmentActionsProps {
+  canManage: boolean;
   isLocked: boolean;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
@@ -18,6 +19,7 @@ interface ElectiveAssignmentActionsProps {
 }
 
 export default function ElectiveAssignmentActions({
+  canManage,
   isLocked,
   hasUnsavedChanges,
   isSaving,
@@ -51,7 +53,7 @@ export default function ElectiveAssignmentActions({
         View full insights
       </Button>
 
-      {!isLocked && (
+      {canManage && !isLocked && (
         <>
           <Button
             variant="outlined"
@@ -77,21 +79,23 @@ export default function ElectiveAssignmentActions({
         </>
       )}
 
-      <Tooltip title={lockTooltip} arrow>
-        <span>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={
-              <Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />
-            }
-            disabled={!canLock}
-            onClick={onReviewLock}
-          >
-            {isLocked ? 'Locked' : 'Review & Lock'}
-          </Button>
-        </span>
-      </Tooltip>
+      {canManage && (
+        <Tooltip title={lockTooltip} arrow>
+          <span>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={
+                <Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />
+              }
+              disabled={!canLock}
+              onClick={onReviewLock}
+            >
+              {isLocked ? 'Locked' : 'Review & Lock'}
+            </Button>
+          </span>
+        </Tooltip>
+      )}
     </Box>
   );
 }

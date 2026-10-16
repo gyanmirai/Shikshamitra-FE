@@ -1327,6 +1327,7 @@ const LessonPlanScreen = () => {
 
   const handleApprove = useCallback(
     async (target: ReviewTarget, comment: string, updateProgress = true) => {
+      if (!canAdd || !canReviewSubmissions) return false;
       try {
         if (target.type === 'diary') {
           shikshaMitraToast.info({
@@ -1345,11 +1346,12 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [approveLessonPlan, refetchVisitedTabQueries]
+    [approveLessonPlan, canAdd, canReviewSubmissions, refetchVisitedTabQueries]
   );
 
   const handleReject = useCallback(
     async (target: ReviewTarget, comment: string) => {
+      if (!canAdd || !canReviewSubmissions) return false;
       try {
         if (target.type === 'diary') {
           shikshaMitraToast.info({ message: 'Diary rejection is not wired yet.' });
@@ -1368,11 +1370,12 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [rejectLessonPlan, refetchVisitedTabQueries]
+    [rejectLessonPlan, canAdd, canReviewSubmissions, refetchVisitedTabQueries]
   );
 
   const handleRequestChanges = useCallback(
     async (target: ReviewTarget, comment: string) => {
+      if (!canAdd || !canReviewSubmissions) return false;
       try {
         if (target.type === 'diary') {
           shikshaMitraToast.info({ message: 'Diary change request is not wired yet.' });
@@ -1393,7 +1396,7 @@ const LessonPlanScreen = () => {
         return false;
       }
     },
-    [requestChanges, refetchVisitedTabQueries]
+    [requestChanges, canAdd, canReviewSubmissions, refetchVisitedTabQueries]
   );
 
   // ─── Status Descriptions & Rich Tooltips ───────────────────────────────────
@@ -2014,7 +2017,7 @@ const LessonPlanScreen = () => {
             <ReviewQueueTab
               lessonPlans={reviewQueuePlans}
               allLessonPlans={lessonPlans}
-              canReviewSubmissions={canReviewSubmissions}
+              canReviewSubmissions={canAdd && canReviewSubmissions}
               currentTeacherId={currentTeacherOption?.value}
               statusFilter={reviewQueueQuery.statusFilter}
               onStatusFilterChange={reviewQueueQuery.setStatusFilter}

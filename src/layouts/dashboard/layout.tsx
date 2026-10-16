@@ -16,6 +16,7 @@ import { bulletColor } from 'src/components/nav-section';
 import { iconButtonClasses } from '@mui/material/IconButton';
 import { useSettingsContext } from 'src/components/settings';
 import { hostTenantPath } from 'src/constants/host-tenant-menu';
+import { filterAcademicMainNavigation } from 'src/utils/academic-navigation-access';
 
 import { Main } from './main';
 import { NavMobile } from './nav-mobile';
@@ -39,7 +40,8 @@ export type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
-  const { mainModuleVisibility, sessionContext } = useSelector((state: RootState) => state.auth);
+  const { mainModuleVisibility, sessionContext, permissions, loading, permissionsInitialized } =
+    useSelector((state: RootState) => state.auth);
   const isHost = sessionContext?.accountMode === 'host';
   const theme = useTheme();
 
@@ -65,7 +67,10 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
           ],
         },
       ]
-    : (data?.nav ?? dashboardNavData(mainModuleVisibility));
+    : filterAcademicMainNavigation(
+        data?.nav ?? dashboardNavData(mainModuleVisibility),
+        !loading && permissionsInitialized ? permissions : []
+      );
 
   const isNavMini = !isHost && settings.navLayout === 'mini';
 

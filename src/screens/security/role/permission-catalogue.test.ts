@@ -57,7 +57,7 @@ describe('server-driven permissions in the existing panels', () => {
     expect(permissionLabel(permission, 'HR.Future.Payroll')).toBe('Lock');
     expect(permissionLabel({ ...permission, displayName: 'Lock payroll' }, 'HR')).toBe('Lock payroll');
   });
-  it('keeps nested and unmapped visibility flags separate from actions and reachable exactly once', () => {
+  it('uses only navigation visibility flags and retains their nested labels and order', () => {
     const flags = [
       'ShikshaMitra.Module.HR',
       'ShikshaMitra.Module.HR.Payroll',
@@ -73,27 +73,69 @@ describe('server-driven permissions in the existing panels', () => {
           {
             title: 'Payroll',
             permissionName: flags[1],
-            children: [{ title: 'Settings', permissionName: flags[2] }],
+            children: [
+              { title: 'Settings', permissionName: flags[2] },
+              { title: 'Duplicate settings', permissionName: flags[2] },
+              { title: 'Module shortcut', permissionName: flags[0] },
+              { title: 'View payroll', permissionName: 'HR.Payroll.View' },
+            ],
           },
         ],
       },
     ];
     const visibilityEntries = [...flags.map((name) => entry(name)), entry('HR.ESI.Activate')];
-    const model = buildVisibilityPanels(visibilityEntries, nav);
+    const model = buildVisibilityPanels(nav);
     const names = model
       .flatMap((panel) => [
         panel.permissionName,
         ...panel.submodule.map((sub) => sub.permissionName),
       ])
       .filter(Boolean);
-    expect(names.sort()).toEqual([...flags].sort());
+    expect(names).toEqual(flags.slice(0, 3));
     expect(new Set(names).size).toBe(names.length);
-    expect(model[0].submodule.map((sub) => sub.title)).toContain('Payroll / Settings');
+    expect(model.map((panel) => panel.title)).toEqual(['HR']);
+    expect(model[0].submodule.map((sub) => sub.title)).toEqual(['Payroll', 'Payroll / Settings']);
     const actions = buildPermissionPanels(
       { groups: [{ name: 'HR', displayName: 'HR', permissions: visibilityEntries }] },
       nav
     ).flatMap((panel) => panel.submodule.flatMap((sub) => branchPermissions(sub.roots)));
     expect(actions.map((action) => action.name)).toEqual(['HR.ESI.Activate']);
+  });
+  it('uses explicit visibility mappings without requiring a server catalogue', () => {
+    const model = buildVisibilityPanels([
+      {
+        title: 'Academics',
+        permissionName: 'Academics.View',
+        visibilityPermissionName: 'ShikshaMitra.Module.Academics',
+        submodule: [
+          {
+            title: 'Class Teacher Assignment',
+            permissionName: ['Academics.ClassTeacher.View', 'Academics.ClassTeacher.Edit'],
+            visibilityPermissionName: 'ShikshaMitra.Module.Academics.ClassTeacherAssignment',
+          },
+          {
+            title: 'Curriculum',
+            permissionChildren: [
+              {
+                title: 'Settings',
+                permissionName: 'ShikshaMitra.Module.Academics.Curriculum.Settings',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(model[0].permissionName).toBe('ShikshaMitra.Module.Academics');
+    expect(model[0].submodule).toEqual([
+      {
+        title: 'Class Teacher Assignment',
+        permissionName: 'ShikshaMitra.Module.Academics.ClassTeacherAssignment',
+      },
+      {
+        title: 'Curriculum / Settings',
+        permissionName: 'ShikshaMitra.Module.Academics.Curriculum.Settings',
+      },
+    ]);
   });
   it('keeps flat HR catalogue actions in their own navigation feature, including future actions', () => {
     const data: PermissionCatalogue = {

@@ -18,13 +18,15 @@ import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import { usePreviewAcademicReportMutation } from 'src/redux/academicAPI/AcademicReportApi';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -1367,6 +1369,11 @@ function AnalyticsCards({
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const ResultCreation = (_props: TabComponentType) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const resultPermission = academicPermissions.examination.resultCreation;
+  const canGenerate = hasGrantedPermission(permissions, `${resultPermission}.Generate`);
+  const canPublish = hasGrantedPermission(permissions, `${resultPermission}.Publish`);
+  const canFreeze = hasGrantedPermission(permissions, `${resultPermission}.Freeze`);
   const insightsDrawer = useBoolean();
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
@@ -1524,7 +1531,7 @@ const ResultCreation = (_props: TabComponentType) => {
   }, [allFiltersSet, previewReport, classes, division, examId]);
 
   const handleGenerate = useCallback(async () => {
-    if (!allFiltersSet) return;
+    if (!canGenerate || !allFiltersSet) return;
     try {
       const result: any = await generateResult({
         examId,
@@ -1538,27 +1545,27 @@ const ResultCreation = (_props: TabComponentType) => {
     } catch {
       // error handled by useQueryAndMutation popupConfig
     }
-  }, [allFiltersSet, generateResult, examId, division, handleLoadResults]);
+  }, [canGenerate, allFiltersSet, generateResult, examId, division, handleLoadResults]);
 
   const handlePublish = useCallback(async () => {
-    if (!resultHeaderData?.id) return;
+    if (!canPublish || !resultHeaderData?.id) return;
     try {
       await publishResult({ resultHeaderId: resultHeaderData.id }).unwrap();
       shikshaMitraToast.success({ message: 'Result published successfully!' });
     } catch {
       // error handled by useQueryAndMutation popupConfig
     }
-  }, [resultHeaderData, publishResult]);
+  }, [canPublish, resultHeaderData, publishResult]);
 
   const handleFreeze = useCallback(async () => {
-    if (!resultHeaderData?.id) return;
+    if (!canFreeze || !resultHeaderData?.id) return;
     try {
       await freezeResult({ resultHeaderId: resultHeaderData.id }).unwrap();
       shikshaMitraToast.success({ message: 'Result frozen successfully.' });
     } catch {
       // error handled by useQueryAndMutation popupConfig
     }
-  }, [resultHeaderData, freezeResult]);
+  }, [canFreeze, resultHeaderData, freezeResult]);
 
   // ─── Student dialog ────────────────────────────────────────────────────
   const [dialogStudent, setDialogStudent] = useState<PreviewRow | null>(null);
@@ -1853,7 +1860,7 @@ const ResultCreation = (_props: TabComponentType) => {
               </Label>
             )}
 
-            {allFiltersSet && !resultHeaderData && (
+            {canGenerate && allFiltersSet && !resultHeaderData && (
               <LoadingButton
                 variant="contained"
                 size="small"
@@ -1867,7 +1874,7 @@ const ResultCreation = (_props: TabComponentType) => {
               </LoadingButton>
             )}
 
-            {(!allFiltersSet || !resultHeaderData || resultHeaderData?.statusCode === 0) && (
+            {canPublish && (!allFiltersSet || !resultHeaderData || resultHeaderData?.statusCode === 0) && (
               <Tooltip
                 title={
                   !allFiltersSet
@@ -1893,7 +1900,7 @@ const ResultCreation = (_props: TabComponentType) => {
               </Tooltip>
             )}
 
-            {resultHeaderData?.statusCode === 1 && (
+            {canFreeze && resultHeaderData?.statusCode === 1 && (
               <LoadingButton
                 variant="contained"
                 color="error"

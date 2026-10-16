@@ -1,6 +1,20 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-PERM-001
+    module: Academic
+    submodule: Navigation
+    title: Academic navigation and direct routes follow effective View and visibility permissions
+    risk: critical
+    priority: P0
+    type: [functional, e2e, regression]
+    roles: [staff]
+    tenants: [school]
+    routes: [/academic/calendarManagement, /academic/calendarAuditLogs, /academic/seatallocation]
+    automated: true
+    automationFile: e2e/academic/academic-permission-navigation.spec.ts
+    status: automated
+    tags: ['@module-academic', '@regression', '@permissions']
   - id: INS-ACADEMIC-003
     module: InstituteSetup
     submodule: AcademicSetup
@@ -545,10 +559,24 @@ scenarios:
     automationFile: e2e/academic/academic-seating-guided.spec.ts
     status: automated
     tags: ['@module-academic', '@submodule-examination', '@critical', '@positive']
+  - id: ACM-EXM-SEAT-PREVIEW-001
+    module: Academic
+    submodule: Examination
+    title: Slow automatic previews keep rooms and rules interactive, load layouts concurrently, and only accept the latest selection
+    risk: high
+    priority: P1
+    type: [functional, workflow, negative, e2e]
+    roles: [academic-admin]
+    tenants: [school]
+    routes: ['/academic/seatallocation/[examId]/setup']
+    automated: true
+    automationFile: e2e/academic/academic-seating-guided.spec.ts
+    status: automated
+    tags: ['@module-academic', '@submodule-examination', '@high', '@negative']
   - id: ACM-EXM-SEAT-MANUAL-001
     module: Academic
     submodule: Examination
-    title: Manual classroom seating places, undoes, redoes, auto-completes, reviews, bulk-saves, and validates a real seat map
+    title: Manual classroom seating loads on demand, places, undoes, redoes, auto-completes, reviews, bulk-saves, and validates a real seat map
     risk: critical
     priority: P0
     type: [functional, workflow, accessibility, e2e]

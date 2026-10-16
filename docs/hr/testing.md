@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -48,6 +48,12 @@ npm run docs:hr:check
 ```
 
 ## Focused test commands
+
+For Staff Directory policy access, run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/hr/employee/employee-policy-access.test.ts src/screens/hr/employee/use-employee-policy-access.test.tsx src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx --pool=threads --maxWorkers=1`.
+The tests cover exact effective permissions, failed reads, policy-specific submission denial, stale-session refresh protection, and the employee-specific role lookup.
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for the production Personal Information form with synthetic authentication and API responses.
+The isolated fixture stubs only unvisited later wizard steps and uses no school data.
+It covers access guidance, safe retries, default configuration failures, editing, and desktop/mobile/tablet layouts; deployed acceptance still requires a real delegated account.
 
 The ESIC browser regression uses an authenticated, disposable local FullDemo environment.
 Set `ESI_LOCAL_E2E=1` and `E2E_BASE_URL=http://localhost:3100`, then run `npx playwright test e2e/hr/esi-configuration.guest.spec.ts --project=chromium-guest --workers=1`.

@@ -199,23 +199,19 @@ export function buildPermissionPanels(
   return panels;
 }
 
-/** Keep every navigation flag in the separate visibility dialog, including nested and unmapped flags. */
 export function buildVisibilityPanels(
-  permissions: { name: string }[],
   navigation: NavigationPermission[]
 ): VisibilityPanel[] {
-  const available = new Set(
-    permissions.filter((entry) => isVisibilityPermission(entry.name)).map((entry) => entry.name)
-  );
   const assigned = new Set<string>();
-  const panels = navigation.map((module): VisibilityPanel => {
+  return navigation.map((module): VisibilityPanel => {
     const root = visibilityName(module) ?? '';
-    if (available.has(root)) assigned.add(root);
+    const permissionName = isVisibilityPermission(root) && !assigned.has(root) ? root : '';
+    if (permissionName) assigned.add(permissionName);
     const submodule: VisibilityPanel['submodule'] = [];
     const visit = (item: NavigationPermission, prefix: string) => {
       const title = prefix ? `${prefix} / ${item.title}` : item.title;
       const name = visibilityName(item);
-      if (name && available.has(name) && !assigned.has(name)) {
+      if (name && isVisibilityPermission(name) && !assigned.has(name)) {
         assigned.add(name);
         submodule.push({ title, permissionName: name });
       }
@@ -224,33 +220,11 @@ export function buildVisibilityPanels(
     navigationChildren(module).forEach((child) => visit(child, ''));
     return {
       title: module.title,
-      permissionName: available.has(root) ? root : '',
+      permissionName,
       icon: module.icon,
       submodule,
     };
   });
-  const additional: VisibilityPanel = {
-    title: 'Additional visibility',
-    permissionName: '',
-    submodule: [],
-  };
-  available.forEach((name) => {
-    if (assigned.has(name)) return;
-    const owner =
-      panels
-        .filter((panel) => panel.permissionName && name.startsWith(`${panel.permissionName  }.`))
-        .sort((left, right) => right.permissionName.length - left.permissionName.length)[0] ??
-      additional;
-    const prefix = owner.permissionName || 'ShikshaMitra.Module';
-    const title = name
-      .slice(prefix.length + 1)
-      .split('.')
-      .map((part) => part.replace(/([a-z])([A-Z])/g, '$1 $2'))
-      .join(' / ');
-    owner.submodule.push({ title, permissionName: name });
-    assigned.add(name);
-  });
-  return additional.submodule.length ? [...panels, additional] : panels;
 }
 
 export function filterPermissionBranches(

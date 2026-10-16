@@ -88,9 +88,9 @@ export function useGuidedSeatingAllocation(examId: string, clearReadiness: () =>
     previewKey: previewState.previewKey,
     validation,
     version,
-    isBusy:
-      [saveState, applyState, manualSaveState, validateState].some((state) => state.isLoading) ||
-      previewState.isLoading,
+    isBusy: [saveState, applyState, manualSaveState, validateState].some(
+      (state) => state.isLoading
+    ),
     saveRooms,
     generatePreview,
     applyPreview,

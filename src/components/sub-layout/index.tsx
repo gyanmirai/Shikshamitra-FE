@@ -1,6 +1,9 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@mui/material/styles';
@@ -8,6 +11,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Drawer, Tooltip, IconButton, Typography } from '@mui/material';
+import { filterAcademicNavigation } from 'src/utils/academic-navigation-access';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
@@ -24,10 +28,22 @@ const SubLayout = ({ children }: any) => {
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
-  const navigationLabel = currentModule === 'hr' ? 'HR navigation' : 'Student navigation';
-  const currentData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
+  const { permissions, loading, permissionsInitialized } = useSelector((state: RootState) => state.auth);
+  const navigationLabel = currentModule === 'academic'
+    ? 'Academic navigation'
+    : currentModule === 'hr' ? 'HR navigation' : 'Student navigation';
+  const moduleData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
     `/${currentModule}` as keyof typeof navSubData
   ];
+  const currentData = currentModule === 'academic'
+    ? moduleData?.map((group) => ({
+        ...group,
+        items: filterAcademicNavigation(
+          group.items,
+          !loading && permissionsInitialized ? permissions : []
+        ),
+      })).filter((group) => group.items.length > 0)
+    : moduleData;
 
   const [isPinned, setIsPinned] = useState(true);
   const [isHovered, setIsHovered] = useState(false);

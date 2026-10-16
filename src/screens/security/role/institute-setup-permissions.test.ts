@@ -41,7 +41,7 @@ describe.each([
 
   it('preserves the separate navigation visibility flag', () => {
     expect(node.permissionName).toBe(`ShikshaMitra.Module.InstituteSetup.${feature}`);
-    const panels = buildVisibilityPanels(catalogue.groups[0].permissions, [{
+    const panels = buildVisibilityPanels([{
       title: 'Institute Setup', submodule: [node],
     }]);
     expect(panels[0].submodule).toEqual([{

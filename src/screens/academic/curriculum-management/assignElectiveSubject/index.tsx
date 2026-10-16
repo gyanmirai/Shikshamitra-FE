@@ -10,7 +10,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Alert, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -60,6 +62,15 @@ const AssignElectiveSubject = () => {
   const pendingContextChange = useRef<(() => void) | null>(null);
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canView = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.electiveAssignment}.View`
+  );
+  const canAdd = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.curriculum.electiveAssignment}.Add`
+  );
 
   // --------------------------------------------
   // FETCH ELECTIVE GROUPS (subject-assignments filtered to elective/subjectType=1)
@@ -72,7 +83,7 @@ const AssignElectiveSubject = () => {
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: { standardId: classes },
-    options: { skip: !classes },
+    options: { skip: !canView || !classes },
   });
 
   const electiveGroups = useMemo(() => {
@@ -147,7 +158,7 @@ const AssignElectiveSubject = () => {
       electiveGroupId,
     },
     options: {
-      skip: !medium?.id || !classes || !division || !electiveGroupId,
+      skip: !canView || !medium?.id || !classes || !division || !electiveGroupId,
     },
   });
 
@@ -184,7 +195,7 @@ const AssignElectiveSubject = () => {
   } = useElectiveAssignmentState({
     students,
     serverRecords: assignmentData?.records,
-    isLocked,
+    isLocked: isLocked || !canAdd,
   });
 
   const { confirmation: navigationConfirmation } = useUnsavedNavigation(hasUnsavedChanges, {
@@ -222,6 +233,7 @@ const AssignElectiveSubject = () => {
   });
 
   const handleSave = async () => {
+    if (!canAdd) return;
     const payload = {
       academicMediumId: medium?.id,
       electiveGroupId,
@@ -256,6 +268,7 @@ const AssignElectiveSubject = () => {
   });
 
   const handleLock = async () => {
+    if (!canAdd) return;
     const payload = {
       academicMediumId: medium?.id,
       classId: classes,
@@ -274,7 +287,7 @@ const AssignElectiveSubject = () => {
     }
   };
 
-  const canLock = allStudentsAssigned && !hasUnsavedChanges && !isLocked;
+  const canLock = canAdd && allStudentsAssigned && !hasUnsavedChanges && !isLocked;
 
   const getLockTooltip = () => {
     if (isLocked) return 'These elective assignments are locked and cannot be modified.';
@@ -323,6 +336,7 @@ const AssignElectiveSubject = () => {
         actions={
           electiveGroupId ? (
             <ElectiveAssignmentActions
+              canManage={canAdd}
               isLocked={isLocked}
               hasUnsavedChanges={hasUnsavedChanges}
               isSaving={isSaving}
@@ -340,7 +354,7 @@ const AssignElectiveSubject = () => {
       {electiveGroupId && (
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* BULK ASSIGNMENT BAR */}
-          {!isLocked && (
+          {canAdd && !isLocked && (
             <BulkAssignmentBar
               selectedCount={selectedRowIds.size}
               subjects={availableSubjects}
@@ -360,7 +374,7 @@ const AssignElectiveSubject = () => {
           <ElectiveAssignmentTable
             students={filteredStudents}
             isLoading={isElectiveLoading || isElectiveFetching}
-            isLocked={isLocked}
+            isLocked={isLocked || !canAdd}
             searchTerm={searchTerm}
             selectedRowIds={selectedRowIds}
             studentSelections={studentSelections}
@@ -395,7 +409,7 @@ const AssignElectiveSubject = () => {
 
       {/* SAVE DIALOG */}
       <ConfirmDialog
-        open={saveDialog.value}
+        open={canAdd && saveDialog.value}
         onClose={saveDialog.onFalse}
         disableBackdropClick
         title="Save Draft"
@@ -409,7 +423,7 @@ const AssignElectiveSubject = () => {
 
       {/* LOCK CONFIRM DIALOG (final confirmation, triggered from review drawer) */}
       <ConfirmDialog
-        open={lockDialog.value}
+        open={canAdd && lockDialog.value}
         onClose={lockDialog.onFalse}
         disableBackdropClick
         title="Lock Elective Assignments"
@@ -445,7 +459,7 @@ const AssignElectiveSubject = () => {
 
       {/* REVIEW AND LOCK DIALOG */}
       <ReviewAndLockDialog
-        open={reviewDrawer.value}
+        open={canAdd && reviewDrawer.value}
         onClose={reviewDrawer.onFalse}
         total={summary.total}
         assigned={summary.assigned}

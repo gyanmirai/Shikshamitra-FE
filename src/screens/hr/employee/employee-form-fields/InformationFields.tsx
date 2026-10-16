@@ -988,7 +988,7 @@ const InformationAllFields = ({
         </Grid>
       </SectionCard>
 
-      {!editData?.id ? (
+      {!editData?.id && !formik.values.employeeId ? (
         <SectionCard title={EMPLOYEE_CREATION_POLICY_SECTION_TITLE}>
           <Grid size={{ xs: 12 }}>
             {defaultPolicyAssignment?.missingMessage ? (

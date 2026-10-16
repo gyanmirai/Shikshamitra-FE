@@ -8,7 +8,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
+import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
+import { reviewCardSx, reviewChipSx } from './exam-review-styles';
 import { buildReviewSubjectRoomEntries } from './room-allocation-review-utils';
 
 import type { IExamFormValues } from '../type';
@@ -80,22 +82,39 @@ const RoomAllocationReview = ({
 
           return (
             <Grid key={subjectId} size={{ xs: 12, lg: activeReviewSubjects.length === 1 ? 12 : 6 }}>
-              <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                  <Typography variant="body2" fontWeight={700}>
+              <Paper variant="outlined" sx={reviewCardSx}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    minHeight: 32,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    sx={{ overflowWrap: 'anywhere' }}
+                  >
                     {subjectName}
                   </Typography>
                   {electiveGroupName && (
-                    <Chip label={electiveGroupName} size="small" variant="outlined" />
+                    <Chip
+                      label={electiveGroupName}
+                      size="small"
+                      variant="outlined"
+                      sx={reviewChipSx}
+                    />
                   )}
                 </Box>
-                <Divider sx={{ my: 1.5 }} />
+                <Divider sx={{ my: 2 }} />
                 <Box
                   sx={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
                     columnGap: 2,
-                    rowGap: 1,
+                    rowGap: 2,
                   }}
                 >
                   {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
@@ -106,22 +125,10 @@ const RoomAllocationReview = ({
                       divisionName;
 
                     return (
-                      <Box sx={{ minWidth: 0 }} key={`${subjectId}-${divisionName}`}>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            gap: 0.75,
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ flexShrink: 0 }}
-                          >
-                            Division {divisionLabel} :
-                          </Typography>
+                      <ExamReviewInfoItem
+                        key={`${subjectId}-${divisionName}`}
+                        label={`Division ${divisionLabel}`}
+                        value={
                           <Box display="flex" flexWrap="wrap" gap={0.75} sx={{ minWidth: 0 }}>
                             {divisionData.roomIds.map((roomId: string) => (
                               <Chip
@@ -129,17 +136,12 @@ const RoomAllocationReview = ({
                                 label={String(roomLabelById.get(roomId) ?? roomId)}
                                 size="small"
                                 variant="outlined"
-                                sx={{
-                                  maxWidth: '100%',
-                                  height: 'auto',
-                                  minHeight: 24,
-                                  '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
-                                }}
+                                sx={reviewChipSx}
                               />
                             ))}
                           </Box>
-                        </Box>
-                      </Box>
+                        }
+                      />
                     );
                   })}
                 </Box>

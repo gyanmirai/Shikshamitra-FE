@@ -1,3 +1,4 @@
+import { isGenericPermissionMessage, normalizePermissionDeniedError } from './permission-denied';
 import {
   duplicateDivisionCode,
   duplicateDivisionMessage,
@@ -133,7 +134,8 @@ const GENERIC_MESSAGES = new Set([
 
 const normalizeMessage = (value: string) => value.trim().toLowerCase().replace(/[.]+$/, '');
 
-const isGenericMessage = (value: string) => GENERIC_MESSAGES.has(normalizeMessage(value));
+const isGenericMessage = (value: string) =>
+  GENERIC_MESSAGES.has(normalizeMessage(value)) || isGenericPermissionMessage(value);
 
 const addCandidate = (candidates: string[], value: unknown) => {
   if (typeof value === 'string' && value.trim()) {
@@ -176,9 +178,15 @@ const addValidationErrorCandidates = (candidates: string[], validationErrors: un
 };
 
 export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
-  const data = error?.data || {};
+  error = normalizePermissionDeniedError(error);
+  const isProblemBody =
+    error && typeof error === 'object' &&
+    ('detail' in error || 'title' in error || 'errorCode' in error || 'code' in error ||
+      (error.error && typeof error.error === 'object'));
+  const data = error?.response?.data ?? (isProblemBody ? error : error?.data ?? error) ?? {};
   const candidates: string[] = [];
 
+  if (typeof error === 'string') addCandidate(candidates, error);
   addCandidate(candidates, data?.data?.Reason);
   addCandidate(candidates, data?.error?.data?.Reason);
   addCandidate(candidates, data?.data?.Message);
@@ -193,6 +201,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   addValidationErrorCandidates(candidates, data?.validationErrors);
   addErrorDictionaryCandidates(candidates, data?.errors);
   addCandidate(candidates, data?.detail);
+  addCandidate(candidates, data?.message);
   addCandidate(candidates, data?.error?.message);
   addCandidate(candidates, data?.title);
   addCandidate(candidates, error?.error);

@@ -1,7 +1,12 @@
 import type { AlertProps } from '@mui/material';
 
 import { toast } from 'sonner';
-import { Alert } from '@mui/material';
+import { Alert, AlertTitle } from '@mui/material';
+import {
+  formatPermissionDenied,
+  isPermissionDeniedMessage,
+  isGenericPermissionMessage,
+} from 'src/utils/permission-denied';
 
 export const shikshaMitraToast = {
   dismiss: (id?: string | number) => toast.dismiss(id),
@@ -11,15 +16,21 @@ export const shikshaMitraToast = {
   }: {
     message: React.ReactNode;
     alertProps?: AlertProps | ((t: string | number) => AlertProps);
-  }) =>
-    toast.custom((t) => {
+  }) => {
+    const resolvedMessage =
+      typeof message === 'string' && isGenericPermissionMessage(message)
+        ? formatPermissionDenied()
+        : message;
+    const permissionDenied =
+      typeof resolvedMessage === 'string' && isPermissionDeniedMessage(resolvedMessage);
+    return toast.custom((t) => {
       if (typeof alertProps === 'function') {
         alertProps = alertProps(t);
       }
       return (
         <Alert
-          severity="error"
-          variant="filled"
+          severity={permissionDenied ? 'warning' : 'error'}
+          variant={permissionDenied ? 'standard' : 'filled'}
           onClose={() => {
             toast.dismiss(t);
           }}
@@ -27,16 +38,23 @@ export const shikshaMitraToast = {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            width: '100%',
+            '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' },
             '& .MuiAlert-action': {
               alignItems: 'center',
+              ...(permissionDenied && {
+                '& button': { minWidth: 44, minHeight: 44 },
+              }),
             },
           }}
           {...alertProps}
         >
-          {message}
+          {permissionDenied && <AlertTitle>Access required</AlertTitle>}
+          {resolvedMessage}
         </Alert>
       );
-    }),
+    }, permissionDenied ? { id: `permission:${String(resolvedMessage)}`, duration: 10000 } : undefined);
+  },
   success: ({
     message,
     alertProps,

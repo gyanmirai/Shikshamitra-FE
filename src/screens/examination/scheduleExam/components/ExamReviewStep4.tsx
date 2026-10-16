@@ -17,7 +17,7 @@ const ExamReviewStep4 = (
   const formik = props;
   const { onEditStep } = props;
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <ExamBasicReview formik={formik} onEdit={onEditStep ? () => onEditStep(0) : undefined} />
       <ExamScheduleReview formik={formik} onEdit={onEditStep ? () => onEditStep(1) : undefined} />
       <RoomAllocationReview formik={formik} onEdit={onEditStep ? () => onEditStep(2) : undefined} />

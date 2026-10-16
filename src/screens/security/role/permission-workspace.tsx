@@ -4,6 +4,8 @@ import { Box, Stack, Typography } from '@mui/material';
 
 import PermissionMatrix from './permission-matrix';
 import PermissionEmptyState from './permission-empty-state';
+import PermissionBulkActions from './permission-bulk-actions';
+import PermissionBulkProvider from './permission-bulk-context';
 import { usePermissionWorkspace } from './use-permission-workspace';
 import PermissionWorkspaceHeading from './permission-workspace-heading';
 import PermissionWorkspaceNavigation from './permission-workspace-navigation';
@@ -35,6 +37,7 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
     subjectName,
   } = props;
   const {
+    modules,
     moduleTitle,
     submoduleTitle,
     dependencyNote,
@@ -49,78 +52,94 @@ export default function PermissionWorkspace(props: PermissionWorkspaceProps) {
     setDependencyNote,
   } = usePermissionWorkspace({ provider, disabled, visibility, catalogue, states, setStates });
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
-        flex: 1,
-        height: '100%',
-        minHeight: 0,
-        bgcolor: 'background.paper',
+    <PermissionBulkProvider
+      {...props}
+      setStates={(names, state) => {
+        setDependencyNote('');
+        setStates(names, state);
       }}
     >
-      <PermissionWorkspaceNavigation
-        modules={navigation}
-        selectedModule={moduleTitle}
-        selectedSubmodule={submoduleTitle}
-        visibility={visibility}
-        onModule={onModule}
-        onSubmodule={(node) => {
-          if (node.title !== submoduleTitle) {
-            setSubmoduleTitle(node.title);
-            setDependencyNote('');
-          }
-        }}
-        disabled={disabled}
-      />
       <Box
         sx={{
-          flex: 1,
-          minWidth: 0,
-          minHeight: 0,
           display: 'flex',
-          flexDirection: 'column',
-          p: { xs: 1.5, sm: 2.5 },
+          flexDirection: { xs: 'column', md: 'row' },
+          flex: 1,
+          height: '100%',
+          minHeight: 0,
+          bgcolor: 'background.paper',
         }}
       >
-        {(visibility ? moduleTitle : selected) ? (
-          <>
-            <PermissionWorkspaceHeading
-              moduleTitle={moduleTitle}
-              title={visibility ? moduleTitle : (selected?.title ?? '')}
-              subjectName={subjectName ?? (user ? undefined : provider.providerKey)}
-              sources={sources}
-              user={user}
-              visibility={visibility}
-              rows={rows}
-            />
-            {dependencyNote && (
-              <Typography role="status" variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
-                {dependencyNote}
-              </Typography>
-            )}
-            <PermissionMatrix
-              key={`${visibility}:${moduleTitle}:${submoduleTitle}`}
-              rows={rows}
-              user={user}
-              disabled={disabled}
-              visibility={visibility}
-              onChange={change}
-            />
-          </>
-        ) : visibility ? (
-          <Box sx={{ display: 'grid', placeItems: 'center', flex: 1 }}>
-            <Stack spacing={1} alignItems="center">
-              <Typography variant="h6">Select a module</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Choose a module to manage its navigation visibility.
-              </Typography>
-            </Stack>
-          </Box>
-        ) : (
-          <PermissionEmptyState />
-        )}
+        <PermissionWorkspaceNavigation
+          modules={navigation}
+          selectedModule={moduleTitle}
+          selectedSubmodule={submoduleTitle}
+          visibility={visibility}
+          onModule={onModule}
+          onSubmodule={(node) => {
+            if (node.title !== submoduleTitle) {
+              setSubmoduleTitle(node.title);
+              setDependencyNote('');
+            }
+          }}
+          disabled={disabled}
+          bulkActions={!visibility && <PermissionBulkActions scope="All modules" nodes={modules} />}
+        />
+        <Box
+          role="region"
+          aria-label="Permission details"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            display: { xs: 'block', md: 'flex' },
+            flexDirection: 'column',
+            overflowY: { xs: 'auto', md: 'hidden' },
+            p: { xs: 1.5, sm: 2.5 },
+          }}
+        >
+          {(visibility ? moduleTitle : selected) ? (
+            <>
+              <PermissionWorkspaceHeading
+                moduleTitle={moduleTitle}
+                title={visibility ? moduleTitle : (selected?.title ?? '')}
+                subjectName={subjectName ?? (user ? undefined : provider.providerKey)}
+                sources={sources}
+                user={user}
+                visibility={visibility}
+                rows={rows}
+              />
+              {dependencyNote && (
+                <Typography role="status" variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
+                  {dependencyNote}
+                </Typography>
+              )}
+              <PermissionMatrix
+                key={`${visibility}:${moduleTitle}:${submoduleTitle}`}
+                rows={rows}
+                user={user}
+                disabled={disabled}
+                visibility={visibility}
+                onChange={change}
+                bulkActions={
+                  !visibility &&
+                  selected && <PermissionBulkActions scope={selected.title} nodes={[selected]} />
+                }
+              />
+            </>
+          ) : visibility ? (
+            <Box sx={{ display: 'grid', placeItems: 'center', flex: 1 }}>
+              <Stack spacing={1} alignItems="center">
+                <Typography variant="h6">Select a module</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Choose a module to manage its navigation visibility.
+                </Typography>
+              </Stack>
+            </Box>
+          ) : (
+            <PermissionEmptyState />
+          )}
+        </Box>
       </Box>
-    </Box>
+    </PermissionBulkProvider>
   );
 }

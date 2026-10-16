@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Reference
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -30,3 +30,19 @@ The editor explains that navigation is hidden without implicitly granting it.
 
 Legacy navigation metadata may name a parent instead of its View child.
 Only the navigation helper supports that convention; mutation action checks are exact.
+
+## Academic access
+
+`src/utils/academic-navigation-access.ts` filters the Academic menu for the main navigation, search, and desktop/mobile sub-navigation.
+Each active page requires its exact View action, the Academic module visibility grant, and its configured ancestor visibility grants.
+Explicit page visibility remains independent of View.
+Empty groups are hidden, and the main Academics link opens the first accessible page when Dashboard is unavailable.
+The permission editor continues to use the complete, unfiltered navigation catalogue.
+
+`src/app/(auth-route)/academic/layout.tsx` applies the same requirements before mounting active pages, including nested seating routes and the existing Class Teacher Assignment and Evaluation & Feedback aliases.
+Loading or uninitialized permissions do not expose page content or Academic navigation.
+Unlisted legacy pages retain their existing route and screen guards.
+Elective Assignment and Result Creation navigation use the namespaces enforced by their current API endpoints, rather than the older catalogue namespaces.
+Backend authorization remains authoritative; see the [permission consistency standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md).
+
+See [Academic navigation validation](testing.md#academic-navigation) for permission and browser regression checks.

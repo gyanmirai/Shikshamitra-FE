@@ -26,7 +26,13 @@ export function useGuidedSeatingPreview(examId: string) {
   const generatePreview = useCallback(
     (planId: string, values: GuidedSeatingValues) => {
       const key = getAutomaticPreviewKey(planId, values);
-      if (cache.current?.key === key) return Promise.resolve(cache.current.result);
+      if (cache.current?.key === key) {
+        generation.current += 1;
+        pending.current = undefined;
+        setPreview(cache.current.result);
+        setPreviewKey(key);
+        return Promise.resolve(cache.current.result);
+      }
       if (pending.current?.key === key) return pending.current.promise;
       generation.current += 1;
       const currentGeneration = generation.current;

@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -41,6 +41,15 @@ Use this map to find the first screen and client:
 | HR reports                 | `/hr/reports`                                                               | `hrReportsApi.ts`                            |
 
 ## Employee onboarding behavior
+
+Staff Directory's Add Staff form checks policy prerequisites before loading the three default-policy lists.
+Missing effective permissions or a policy lookup 403 opens Policy Access Required with the unavailable capabilities and administrator guidance.
+Check access again refreshes the signed-in user's effective permissions and retries lookups without clearing entered details; it does not grant permissions.
+Temporary lookup failures offer Retry and remain distinct from missing or duplicate defaults.
+The Role field uses the employee-specific assignable-role lookup, so Staff Add/Edit does not require access to security role administration.
+Existing staff edits skip creation-policy prerequisites.
+The prerequisite dialog does not send an access request because the product has no access-request service.
+Backend authorization and error contracts remain owned by the [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 An invitation remains at Invitation sent until the candidate submits the public application, and only that unsubmitted state offers link regeneration.
 Workflow statuses move forward, while Finalized, Rejected, and Withdrawn applications are terminal and their status selector is disabled.

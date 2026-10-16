@@ -24,7 +24,7 @@ beforeEach(() => {
   }));
 });
 const base = 'Students.Admissions.Forms';
-vi.mock('src/layouts/config-nav-dashboard', () => ({
+vi.mock('src/constants/navigation', () => ({
   fullSecurityNavData: () => [
     {
       items: [
@@ -108,21 +108,32 @@ function renderPermissions(granted = true, disabled = false, providerName = 'R')
 const editor = (action: string, feature = 'All Applications') =>
   within(screen.getByRole('group', { name: `${feature} ${action} editor` }));
 it.each(['R', 'U'])(
-  'keeps %s navigation selected and preserves expansion on repeat clicks',
+  'shows the %s module overview and preserves navigation state without changing grants',
   (providerName) => {
     const { setGrants } = renderPermissions(true, false, providerName);
-    expect(screen.getByText('Select a Sub-module')).toBeInTheDocument();
+    const student = screen.getByRole('button', { name: 'Student' });
+    expect(screen.getByRole('heading', { name: 'Student' })).toBeInTheDocument();
+    expect(screen.getByTestId('permission-All Applications')).toBeInTheDocument();
+    expect(screen.getByTestId('permission-Profiles')).toBeInTheDocument();
     const admissions = screen.getByRole('button', { name: 'Admissions' });
     fireEvent.click(admissions);
     const row = screen.getByTestId('permission-All Applications');
+    expect(screen.queryByTestId('permission-Profiles')).not.toBeInTheDocument();
     fireEvent.click(admissions);
-    fireEvent.click(screen.getByRole('button', { name: 'Student' }));
     expect(admissions).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('permission-All Applications')).toBe(row);
     fireEvent.click(screen.getByRole('button', { name: 'Collapse Applications' }));
     expect(screen.queryByTestId('permission-All Applications')).not.toBeInTheDocument();
     fireEvent.click(admissions);
     expect(screen.getByRole('button', { name: 'Expand Applications' })).toBeInTheDocument();
+
+    fireEvent.click(student);
+    expect(screen.getByRole('heading', { name: 'Student' })).toBeInTheDocument();
+    expect(admissions).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('permission-Profiles')).toBeInTheDocument();
+    const overviewRow = screen.getByTestId('permission-All Applications');
+    fireEvent.click(student);
+    expect(screen.getByTestId('permission-All Applications')).toBe(overviewRow);
     expect(setGrants).not.toHaveBeenCalled();
   }
 );
@@ -133,7 +144,12 @@ it('switches submodules and clears stale selection on a different module', () =>
   expect(screen.getByTestId('permission-Profiles')).toBeInTheDocument();
   expect(screen.queryByTestId('permission-All Applications')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'HR/Staff' }));
-  expect(screen.getByText('Select a Sub-module')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'HR/Staff' })).toBeInTheDocument();
+  expect(screen.getByTestId('permission-Statutory Schemes')).toBeInTheDocument();
+  expect(screen.getByTestId('permission-Salary Templates')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Payroll Management' }))
+    .toHaveAttribute('aria-pressed', 'false');
+  expect(screen.queryByTestId('permission-Profiles')).not.toBeInTheDocument();
   expect(setGrants).not.toHaveBeenCalled();
 });
 it('maps grouped Student actions and their dependencies without individual backend tiles', () => {

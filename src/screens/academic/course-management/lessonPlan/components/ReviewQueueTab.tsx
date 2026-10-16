@@ -465,8 +465,7 @@ export const ReviewQueueTab = ({
       {/* Permission Notice */}
       {!canReviewSubmissions && allReviewRows.length > 0 && (
         <Alert severity="info">
-          Review actions (Approve, Reject, Request Changes) are restricted to Principal, Admin, or
-          Coordinator roles.
+          You do not have permission to approve, reject, or request changes to these lesson plans.
         </Alert>
       )}
 

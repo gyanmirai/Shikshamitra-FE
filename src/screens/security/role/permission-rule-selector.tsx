@@ -47,7 +47,7 @@ export default function PermissionRuleSelector({
         p: 0.25,
         gap: 0.25,
         width: '100%',
-        maxWidth: { xs: '100%', md: user ? 190 : 140 },
+        maxWidth: { xs: '100%', lg: user ? 190 : 140 },
       }}
     >
       {options.map((option) => (
@@ -58,7 +58,10 @@ export default function PermissionRuleSelector({
           disabled={disabled}
           control={
             <Radio
-              inputProps={{ 'aria-label': option.accessibleLabel }}
+              inputProps={{
+                'aria-label': option.accessibleLabel,
+                'aria-describedby': `${id}-result`,
+              }}
               sx={{
                 position: 'absolute',
                 inset: 0,
@@ -70,44 +73,52 @@ export default function PermissionRuleSelector({
               }}
             />
           }
-          sx={(theme) => ({
-            position: 'relative',
-            m: 0,
-            flex: 1,
-            minWidth: 0,
-            minHeight: { xs: 44, md: 32 },
-            justifyContent: 'center',
-            px: 0.75,
-            borderRadius: 0.5,
-            bgcolor:
-              rule === option.value
-                ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
-                : undefined,
-            '&:hover': {
+          sx={(theme) => {
+            const color =
+              option.value === 'inherit' && user
+                ? 'info'
+                : option.value === 'deny' || (!user && option.value === 'inherit')
+                  ? 'error'
+                  : 'primary';
+            return {
+              position: 'relative',
+              m: 0,
+              flex: 1,
+              minWidth: 0,
+              minHeight: { xs: 44, lg: 32 },
+              justifyContent: 'center',
+              px: 0.75,
+              borderRadius: 0.5,
               bgcolor:
                 rule === option.value
-                  ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
-                  : 'action.hover',
-            },
-            '& .MuiFormControlLabel-label': {
-              fontSize: 12,
-              whiteSpace: 'nowrap',
-              fontWeight: rule === option.value ? 600 : 400,
-              color: rule === option.value ? 'primary.dark' : 'text.primary',
-            },
-            '&:has(.Mui-focusVisible)': {
-              outline: '2px solid',
-              outlineColor: 'primary.dark',
-              outlineOffset: -1,
-            },
-            ...theme.applyStyles('dark', {
-              '& .MuiFormControlLabel-label': {
-                color: rule === option.value ? 'primary.light' : 'text.primary',
+                  ? varAlpha(theme.vars.palette[color].mainChannel, 0.12)
+                  : undefined,
+              '&:hover': {
+                bgcolor:
+                  rule === option.value
+                    ? varAlpha(theme.vars.palette[color].mainChannel, 0.12)
+                    : 'action.hover',
               },
-              '&:has(.Mui-focusVisible)': { outlineColor: 'primary.light' },
-            }),
-            '& .Mui-disabled': { color: 'text.disabled' },
-          })}
+              '& .MuiFormControlLabel-label': {
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+                fontWeight: rule === option.value ? 600 : 400,
+                color: rule === option.value ? `${color}.dark` : 'text.primary',
+              },
+              '&:has(.Mui-focusVisible)': {
+                outline: '2px solid',
+                outlineColor: `${color}.dark`,
+                outlineOffset: -1,
+              },
+              ...theme.applyStyles('dark', {
+                '& .MuiFormControlLabel-label': {
+                  color: rule === option.value ? `${color}.light` : 'text.primary',
+                },
+                '&:has(.Mui-focusVisible)': { outlineColor: `${color}.light` },
+              }),
+              '& .Mui-disabled': { color: 'text.disabled' },
+            };
+          }}
         />
       ))}
     </RadioGroup>

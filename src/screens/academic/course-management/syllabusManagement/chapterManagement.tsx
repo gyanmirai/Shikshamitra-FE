@@ -63,6 +63,14 @@ const Subjects = () => {
     permissions,
     `${academicPermissions.curriculum.chaptersManagement}.Delete`
   );
+  const canCreateQuestion = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.questionBank}.Add`
+  );
+  const canViewQuestions = hasGrantedPermission(
+    permissions,
+    `${academicPermissions.examination.questionBank}.View`
+  );
 
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
@@ -407,8 +415,8 @@ const Subjects = () => {
               setSelectedChapter(chapter as IChapter);
               viewDocumentDialog.onTrue();
             }}
-            onCreateQuestion={(chapter) => setCreateQuestionChapter(chapter)}
-            onViewQuestions={(chapter) => setViewQuestionsChapter(chapter)}
+            onCreateQuestion={canCreateQuestion ? setCreateQuestionChapter : undefined}
+            onViewQuestions={canViewQuestions ? setViewQuestionsChapter : undefined}
             subjectId={subjectId}
             standardId={classId}
           />
@@ -491,7 +499,7 @@ const Subjects = () => {
 
       {/* Create Question Dialog */}
       <CreateQuestionDialog
-        open={Boolean(createQuestionChapter)}
+        open={canCreateQuestion && Boolean(createQuestionChapter)}
         onClose={() => setCreateQuestionChapter(null)}
         initialStandardId={createQuestionChapter?.standardId || ''}
         initialSubjectId={createQuestionChapter?.subjectId || ''}
@@ -501,7 +509,7 @@ const Subjects = () => {
 
       {/* View Chapter Questions Dialog */}
       <ChapterQuestionsDialog
-        open={Boolean(viewQuestionsChapter)}
+        open={canViewQuestions && Boolean(viewQuestionsChapter)}
         onClose={() => setViewQuestionsChapter(null)}
         chapterId={viewQuestionsChapter?.id || ''}
         subjectId={viewQuestionsChapter?.subjectId}

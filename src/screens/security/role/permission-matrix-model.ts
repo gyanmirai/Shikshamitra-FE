@@ -53,7 +53,7 @@ export function actionMatrixRows(selected: NavigationPermission, model: MatrixMo
     isGranted: model.states[entry.name] === 'allow',
   }));
   const visit = (node: NavigationPermission, id: string, ancestors: string[]): MatrixRow[] => {
-    const children: NavigationPermission[] = getPermissionChildren(node);
+    const children: NavigationPermission[] = node.submodule ?? getPermissionChildren(node);
     const row: MatrixRow = {
       id,
       title: node.title,
@@ -76,7 +76,7 @@ export function actionMatrixRows(selected: NavigationPermission, model: MatrixMo
       ...children.flatMap((child, index) => visit(child, `${id}-${index}`, [...ancestors, id])),
     ];
   };
-  const children: NavigationPermission[] = getPermissionChildren(selected);
+  const children: NavigationPermission[] = selected.submodule ?? getPermissionChildren(selected);
   const rows = (children.length ? children : [selected]).flatMap((node, index) =>
     visit(node, `feature-${index}`, [])
   );

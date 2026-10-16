@@ -15,8 +15,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  security:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/security-regression.yml
+
   build:
     if: github.ref == 'refs/heads/main'
+    needs: security
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

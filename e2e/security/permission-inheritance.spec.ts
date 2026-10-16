@@ -49,8 +49,7 @@ async function accessible(page: Page) {
     true
   );
 }
-async function wheelScroll(page: Page, region: Locator) {
-  const viewport = region.locator('.simplebar-content-wrapper').first();
+async function wheelScroll(page: Page, viewport: Locator) {
   const bounds = await viewport.boundingBox();
   expect(bounds).not.toBeNull();
   const before = await viewport.evaluate((element) => element.scrollTop);
@@ -67,23 +66,6 @@ test('navigation and permission lists scroll independently in both dialogs', asy
   if (page.viewportSize()!.width >= 900) {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: 560 });
   }
-  await page.route(
-    /\/api\/(?:permission-management\/permissions|shikshamitra-permissions\/users\/[^/]+\/permissions)/,
-    async (route) => {
-      const response = await route.fetch();
-      const catalogue = await response.json();
-      catalogue.groups[0].permissions.push(
-        ...Array.from({ length: 20 }, (_, index) => ({
-          name: `ShikshaMitra.Module.Academics.ScrollFixture${index}`,
-          displayName: `Scroll fixture ${index}`,
-          allowedProviders: [],
-          isGranted: true,
-          grantedProviders: [{ providerName: 'R', providerKey: 'HOD' }],
-        }))
-      );
-      await route.fulfill({ response, json: catalogue });
-    }
-  );
   await ['User', 'Role HOD']
     .flatMap((target) =>
       ['Module Permission', 'Set Module Visibility'].map((mode) => ({ target, mode }))
@@ -93,29 +75,46 @@ test('navigation and permission lists scroll independently in both dialogs', asy
       await page.getByRole('button', { name: `${target} ${mode}`, exact: true }).click();
       const dialog = page.getByRole('dialog');
       const navigation = dialog.getByRole('navigation', { name: 'Permission modules' });
-      await dialog.getByRole('button', { name: 'Academics', exact: true }).click();
+      await dialog
+        .getByRole('button', {
+          name: mode === 'Module Permission' ? 'Academics' : 'HR/Staff',
+          exact: true,
+        })
+        .click();
       if (mode === 'Module Permission') {
         await dialog.getByRole('button', { name: 'Curriculum', exact: true }).click();
       }
       await expect(dialog.getByRole('radiogroup').first()).toBeVisible();
       await expect(navigation).toHaveCSS('border-right-width', '0px');
       await expect(dialog.getByText('Role permissions', { exact: true })).toHaveCount(0);
-      await wheelScroll(page, navigation);
+      await wheelScroll(page, navigation.locator('.simplebar-content-wrapper').first());
       const navigationOffset = await navigation
         .locator('.simplebar-content-wrapper')
         .evaluate((element) => element.scrollTop);
-      const matrix =
+      const permissionViewport =
         page.viewportSize()!.width >= 900
-          ? dialog.getByTestId(
-              `permission-matrix-${target === 'User' ? 'user' : 'role'}-${mode === 'Module Permission' ? 'actions' : 'visibility'}`
-            )
-          : dialog.getByTestId('permission-matrix-mobile');
-      await wheelScroll(page, matrix);
+          ? dialog
+              .getByTestId(
+                `permission-matrix-${target === 'User' ? 'user' : 'role'}-${mode === 'Module Permission' ? 'actions' : 'visibility'}`
+              )
+              .locator('.simplebar-content-wrapper')
+              .first()
+          : dialog.getByRole('region', { name: 'Permission details', exact: true });
+      const firstPermission = dialog.getByRole('radiogroup').first();
+      const firstPermissionTop = (await firstPermission.boundingBox())!.y;
+      await wheelScroll(page, permissionViewport);
+      await expect
+        .poll(async () => (await firstPermission.boundingBox())!.y)
+        .toBeLessThan(firstPermissionTop);
       expect(
         await navigation
           .locator('.simplebar-content-wrapper')
           .evaluate((element) => element.scrollTop)
       ).toBe(navigationOffset);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
+      ).toBe(true);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
       await expect(
         dialog.getByRole('button', { name: 'Review changes', exact: true })
       ).toBeInViewport();
@@ -123,6 +122,61 @@ test('navigation and permission lists scroll independently in both dialogs', asy
     }, Promise.resolve());
   expect(await (await request.get('/fixture/writes')).json()).toEqual([]);
 });
+test('visibility lists only frontend constants regardless of the API catalogue', async ({
+  page,
+  request,
+}) => {
+  const module = 'ShikshaMitra.Module.Academics';
+  await page.route(
+    /\/api\/(?:permission-management\/permissions|shikshamitra-permissions\/users\/[^/]+\/permissions)/,
+    async (route) => {
+      const response = await route.fetch();
+      const catalogue = await response.json();
+      catalogue.groups[0].permissions = catalogue.groups[0].permissions
+        .filter((entry: { name: string }) => entry.name !== `${module}.Curriculum.Settings`)
+        .map((entry: { name: string; displayName: string }) => ({
+          ...entry,
+          displayName:
+            entry.name === `${module}.Curriculum` ? 'API curriculum label' : entry.displayName,
+        }));
+      catalogue.groups[0].permissions.push(
+        ...[`${module}.ServerOnly`, 'ShikshaMitra.Module.ServerOnly'].map((name) => ({
+          name,
+          displayName: 'API-only visibility',
+          allowedProviders: [],
+          isGranted: true,
+          grantedProviders: [{ providerName: 'R', providerKey: 'HOD' }],
+        }))
+      );
+      await route.fulfill({ response, json: catalogue });
+    }
+  );
+  await ['User', 'Role HOD'].reduce(async (previous, target) => {
+    await previous;
+    await page.getByRole('button', { name: `${target} Set Module Visibility`, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Academics', exact: true }).click();
+    await expect(
+      dialog.getByRole('button', { name: 'Additional visibility', exact: true })
+    ).toHaveCount(0);
+    await expect(dialog.getByText('API-only visibility', { exact: true })).toHaveCount(0);
+    await expect(dialog.getByText('API curriculum label', { exact: true })).toHaveCount(0);
+    const curriculum = dialog.getByTestId('permission-Curriculum');
+    await expect(curriculum).toBeVisible();
+    await expect(curriculum.getByRole('radio', { name: 'Allow', exact: true })).toBeEnabled();
+    const settings = dialog.getByTestId('permission-Curriculum / Settings');
+    await expect(settings).toBeVisible();
+    await expect(settings.getByRole('radio', { name: 'Allow', exact: true })).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Review changes', exact: true })).toBeDisabled();
+    await dialog.getByRole('button', { name: 'HR/Staff', exact: true }).click();
+    const staff = dialog.getByTestId('permission-Staff');
+    await expect(staff).toBeVisible();
+    await expect(staff.getByRole('radio', { name: 'Allow', exact: true })).toBeDisabled();
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  }, Promise.resolve());
+  expect(await (await request.get('/fixture/writes')).json()).toEqual([]);
+});
+
 test('editable defaults, persistent selection and accessible light/dark layouts', async ({
   page,
   request,

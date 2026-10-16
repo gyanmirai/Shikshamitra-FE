@@ -47,8 +47,12 @@ export default function PermissionMatrixTable({
         'data-testid': `permission-${(data as MatrixRow).title}`,
         sx: {
           bgcolor: (data as MatrixRow).group ? 'background.neutral' : undefined,
-          '& > td': { borderColor: 'divider' },
-          ...((data as MatrixRow).group ? { '& > td': { py: 0.25, borderColor: 'divider' } } : {}),
+          '& > td': {
+            borderColor: 'divider',
+            bgcolor: (data as MatrixRow).group ? 'background.neutral' : 'background.paper',
+            ...((data as MatrixRow).group ? { py: 0.25 } : {}),
+          },
+          '&:hover > td': { bgcolor: 'background.neutral' },
         },
       })}
       noDataText={empty}

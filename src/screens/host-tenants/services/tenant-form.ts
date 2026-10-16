@@ -3,6 +3,7 @@ import type { HostTenant, TenantDetails, CreateTenantInput } from 'src/redux/hos
 
 import * as Yup from 'yup';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { normalizePermissionDeniedError } from 'src/utils/permission-denied';
 
 import { tenantPasswordSchema } from './tenant-password';
 
@@ -74,7 +75,11 @@ export function tenantError(error: unknown): string {
   };
   if (failure.status === 409)
     return 'The tenant changed since you opened it. Reload the latest details and try again.';
-  if (failure.status === 403) return 'You do not have permission to perform this action.';
-  const { detail } = parseApiProblemDetail(error);
+  const { detail } = parseApiProblemDetail(
+    normalizePermissionDeniedError(error, {
+      operation: 'manage schools',
+      administrator: 'platform administrator',
+    })
+  );
   return detail === 'Something went wrong' ? 'Unable to save the tenant. Please retry.' : detail;
 }

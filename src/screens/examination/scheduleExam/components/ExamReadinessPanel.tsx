@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Paper, Button, Divider, Typography } from '@mui/material';
+import { Box, Chip, Stack, Button, Divider, Typography } from '@mui/material';
 
 import { ExamReviewAccordion } from './ExamReviewAccordion';
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
@@ -28,56 +28,74 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
           label={readiness.isReady ? 'Ready' : `${readiness.blocking.length} blocking`}
           color={readiness.isReady ? 'success' : 'warning'}
           variant="soft"
+          sx={(theme) => ({
+            color: readiness.isReady ? 'success.darker' : 'warning.darker',
+            ...theme.applyStyles('dark', {
+              color: readiness.isReady ? 'success.light' : 'warning.light',
+            }),
+          })}
         />
       }
     >
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        {issues.length > 0 ? (
-          <Stack spacing={1.5} divider={<Divider flexItem />}>
-            {issues.map((issue) => (
-              <Box
-                key={issue.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 1.5,
-                }}
-              >
-                <Chip
-                  size="small"
-                  label={issue.severity === 'blocking' ? 'Blocker' : 'Warning'}
-                  color={issue.severity === 'blocking' ? 'error' : 'warning'}
-                  variant="soft"
-                />
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography variant="body2" fontWeight={700}>
-                    {issue.title}
-                  </Typography>
-                  {issue.description && (
-                    <Typography variant="caption" color="text.secondary">
-                      {issue.description}
-                    </Typography>
-                  )}
-                </Box>
-                {onEditStep && (
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={() => onEditStep(issue.step)}
-                    sx={{ ml: 'auto', flexShrink: 0 }}
+      {issues.length > 0 ? (
+        <Stack spacing={2} divider={<Divider flexItem />}>
+          {issues.map((issue) => (
+            <Box
+              key={issue.id}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: 'minmax(0, 1fr) auto', sm: 'auto minmax(0, 1fr) auto' },
+                alignItems: 'start',
+                columnGap: 1.5,
+                rowGap: 1,
+              }}
+            >
+              <Chip
+                size="small"
+                label={issue.severity === 'blocking' ? 'Blocker' : 'Warning'}
+                color={issue.severity === 'blocking' ? 'error' : 'warning'}
+                variant="soft"
+                sx={(theme) => ({
+                  justifySelf: 'start',
+                  color: issue.severity === 'blocking' ? 'error.darker' : 'warning.darker',
+                  ...theme.applyStyles('dark', {
+                    color: issue.severity === 'blocking' ? 'error.light' : 'warning.light',
+                  }),
+                })}
+              />
+              <Box sx={{ minWidth: 0, gridColumn: { xs: 1, sm: 2 }, overflowWrap: 'anywhere' }}>
+                <Typography variant="body2" fontWeight={700}>
+                  {issue.title}
+                </Typography>
+                {issue.description && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mt: 0.5 }}
                   >
-                    Fix
-                  </Button>
+                    {issue.description}
+                  </Typography>
                 )}
               </Box>
-            ))}
-          </Stack>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            All required details are complete.
-          </Typography>
-        )}
-      </Paper>
+              {onEditStep && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => onEditStep(issue.step)}
+                  aria-label={`Fix: ${issue.title}`}
+                  sx={{ gridColumn: { xs: 2, sm: 3 }, gridRow: 1 }}
+                >
+                  Fix
+                </Button>
+              )}
+            </Box>
+          ))}
+        </Stack>
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          All required details are complete.
+        </Typography>
+      )}
     </ExamReviewAccordion>
   );
 };

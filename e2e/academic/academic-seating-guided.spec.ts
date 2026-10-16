@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, no-restricted-syntax */
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, type Page, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Route, type Locator } from '@playwright/test';
 
 const examId = '10000000-0000-0000-0000-000000000001';
 const planId = '20000000-0000-0000-0000-000000000001';
@@ -652,6 +652,118 @@ test.describe('Guided examination seating', { tag: ['@module-academic', '@critic
     await page.getByTestId('breadcrumb-back').click();
     await expect(page).toHaveURL(/\/academic\/seatallocation$/);
     await expect(page.getByRole('heading', { name: 'Seating plan' })).toBeVisible();
+  });
+
+  test('keeps automatic preview updates local and accepts only the latest rooms and rules', async ({
+    page,
+  }, testInfo) => {
+    await mockGuidedSeating(page);
+    const secondRoomId = '70000000-0000-0000-0000-000000000002';
+    const configuredWorkspace = workspace(true, false);
+    configuredWorkspace.plans[0].selectedRoomIds = [];
+    configuredWorkspace.plans[0].availableRooms.push({
+      ...configuredWorkspace.plans[0].availableRooms[0],
+      roomId: secondRoomId,
+      roomName: 'Room 102',
+    });
+    await page.route(
+      `**/api/academics/exams/${examId}/seating-plan/v2/workspace**`,
+      async (route) => {
+        await route.fulfill({ json: configuredWorkspace });
+      }
+    );
+    const previews: Array<{ route: Route; body: { roomIds: string[]; mixDivisions: boolean } }> =
+      [];
+    await page.route(
+      `**/api/academics/exams/${examId}/seating-plan/auto-allocate`,
+      async (route) => {
+        previews.push({ route, body: route.request().postDataJSON() });
+      }
+    );
+    const layoutRequests: string[] = [];
+    page.on('request', (request) => {
+      const url = new URL(request.url());
+      if (url.pathname.endsWith('/seat-layout')) {
+        layoutRequests.push(url.searchParams.get('RoomId') ?? '');
+      }
+    });
+    const fulfillPreview = async (index: number, label: string) => {
+      const requestedRoomId = previews[index].body.roomIds[0];
+      await previews[index].route.fulfill({
+        json: {
+          assignments: Array.from({ length: 24 }, (_, studentIndex) => ({
+            studentId: `80000000-0000-0000-0000-${String(studentIndex + 1).padStart(12, '0')}`,
+            studentName: `${label} ${studentIndex + 1}`,
+            rollNo: studentIndex + 1,
+            divisionName: 'A',
+            roomId: requestedRoomId,
+            roomName: requestedRoomId === roomId ? 'Room 101' : 'Room 102',
+            seatNumber: studentIndex + 1,
+          })),
+          unallocatedStudentIds: [],
+          totalStudents: 24,
+          roomsUsed: 1,
+          emptySeats: 6,
+          utilizationPercent: 80,
+        },
+      });
+    };
+
+    await page.goto(`/academic/seatallocation/${examId}/setup?step=1&planId=${planId}`);
+    const firstRoom = page.getByRole('checkbox', { name: /Room 101/ });
+    const secondRoom = page.getByRole('checkbox', { name: /Room 102/ });
+    const next = page.getByRole('button', { name: 'Generate seating preview' });
+    await firstRoom.check();
+    await expect.poll(() => previews.length).toBe(1);
+    await expect(page.getByLabel('Generating automatic seating preview')).toBeVisible();
+    await expect(page.getByText('Saving...', { exact: true })).toHaveCount(0);
+    await expect(next).toBeDisabled();
+    await expect.poll(() => layoutRequests).toContain(roomId);
+
+    await firstRoom.uncheck();
+    await secondRoom.check();
+    await expect.poll(() => previews.length).toBe(2);
+    await expect.poll(() => layoutRequests).toContain(secondRoomId);
+    await page.getByRole('switch', { name: 'Mix divisions', exact: true }).uncheck();
+    await expect.poll(() => previews.length).toBe(3);
+    expect(previews[2].body).toMatchObject({ roomIds: [secondRoomId], mixDivisions: false });
+    await expect(secondRoom).toBeChecked();
+    await expect(firstRoom).not.toBeChecked();
+    await expect(page.getByRole('combobox', { name: 'Student order' })).toBeEnabled();
+    await expect(next).toBeDisabled();
+    const loadingScreenshot = testInfo.outputPath('automatic-preview-section-loading.png');
+    await page.screenshot({ path: loadingScreenshot, fullPage: true });
+    await testInfo.attach('Automatic preview loading with usable controls', {
+      path: loadingScreenshot,
+      contentType: 'image/png',
+    });
+
+    await fulfillPreview(1, 'Outdated rules');
+    await expect(page.getByLabel('Generating automatic seating preview')).toBeVisible();
+    await expect(next).toBeDisabled();
+    await fulfillPreview(2, 'Latest selection');
+    const latestSeat = page.getByRole('img', { name: 'Seat 1, occupied by Latest selection 1' });
+    await expect(latestSeat).toBeVisible();
+    await expect(next).toBeEnabled();
+
+    await fulfillPreview(0, 'Outdated room');
+    await expect(latestSeat).toBeVisible();
+    await expect(page.getByRole('img', { name: /occupied by Outdated/ })).toHaveCount(0);
+    await expect(next).toBeEnabled();
+    expect(previews).toHaveLength(3);
+  });
+
+  test('loads the manual classroom editor when switching arrangement mode', async ({ page }) => {
+    await mockTwoDivisionManualSeating(page);
+    await page.goto(`/academic/seatallocation/${examId}/setup?step=1&planId=${planId}`);
+    await page.getByRole('button', { name: 'Manual', exact: true }).click();
+
+    await expect(page.getByText('2 of 6 students assigned')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Seat 1, occupied by Asha North', exact: true })
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Seat 4, empty', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Review manual seating' })).toBeDisabled();
   });
 
   test('reopens a published examination directly in the final room view', async ({ page }) => {
