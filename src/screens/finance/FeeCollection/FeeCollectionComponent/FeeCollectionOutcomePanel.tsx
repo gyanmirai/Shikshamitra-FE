@@ -1,18 +1,25 @@
 import type { CollectFeeOutput } from 'src/redux/feeCollection/feeCollection';
 
 import NextLink from 'next/link';
-import { Box, Button } from '@mui/material';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Box, Button, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
 
-type FeeCollectionOutcomePanelProps = { collectResponse: CollectFeeOutput; onClose?: () => void };
+type FeeCollectionOutcomePanelProps = {
+  collectResponse: CollectFeeOutput;
+  onClose?: () => void;
+  showAuditTrail?: boolean;
+  receiptAccessUnavailable?: boolean;
+};
 
 export default function FeeCollectionOutcomePanel({
   collectResponse,
   onClose,
+  showAuditTrail = true,
+  receiptAccessUnavailable = false,
 }: FeeCollectionOutcomePanelProps) {
   const summary = collectResponse.auditSummary;
   const lines = summary?.allocationLines ?? [];
@@ -40,6 +47,11 @@ export default function FeeCollectionOutcomePanel({
           <DetailField label="Receipt number" value={collectResponse.receiptNumber} />
         )}
       </DetailGrid>
+      {receiptAccessUnavailable && (
+        <Typography variant="body2" color="text.secondary">
+          Payment recorded. Receipt access is unavailable for your account.
+        </Typography>
+      )}
       {lines.length > 0 && (
         <CustomizableTable
           tableId="collection-outcome-allocations"
@@ -71,15 +83,17 @@ export default function FeeCollectionOutcomePanel({
         />
       )}
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        <Button
-          component={NextLink}
-          href={auditTrailHref}
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:history" width={18} />}
-        >
-          View in audit trail
-        </Button>
+        {showAuditTrail && collectResponse.studentId && (
+          <Button
+            component={NextLink}
+            href={auditTrailHref}
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:history" width={18} />}
+          >
+            View in audit trail
+          </Button>
+        )}
         {onClose && (
           <Button
             startIcon={<Iconify icon="mdi:close" />}

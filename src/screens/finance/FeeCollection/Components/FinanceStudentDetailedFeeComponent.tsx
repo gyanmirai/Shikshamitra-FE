@@ -1,6 +1,7 @@
 'use client';
 
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { PaymentHistoryItem } from 'src/redux/feeCollection/feeCollection';
 
 import React, { useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
@@ -38,8 +39,8 @@ const TABS = [
     value: 'payment-history',
     label: 'Payment History',
     icon: <Iconify icon="mdi:bank-outline" />,
-    component: ({ student }: { student: IStudentFee | null }) => (
-      <PaymentHistory student={student} />
+    component: ({ payments }: { payments?: PaymentHistoryItem[] }) => (
+      <PaymentHistory payments={payments} />
     ),
   },
   {
@@ -55,6 +56,7 @@ const TABS = [
 interface FinanceStudentDetailedFeeComponentProps {
   studentId: string;
   student: IStudentFee | null;
+  payments?: PaymentHistoryItem[];
   collectFeesDialog: UseBooleanReturn;
   viewDialog: UseBooleanReturn;
 }
@@ -62,6 +64,7 @@ interface FinanceStudentDetailedFeeComponentProps {
 const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComponentProps> = ({
   studentId,
   student,
+  payments,
   collectFeesDialog,
   viewDialog,
 }) => {
@@ -136,7 +139,7 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
       />
 
       <Box px={1} pt={2}>
-        {CurrentComponent?.({ student })}
+        {CurrentComponent?.({ student, payments })}
       </Box>
       <Box
         sx={{

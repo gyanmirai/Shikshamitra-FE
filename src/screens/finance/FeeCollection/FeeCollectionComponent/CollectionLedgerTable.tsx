@@ -2,7 +2,7 @@
 
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
@@ -29,6 +29,7 @@ import {
 
 import { toPeriod } from './FeeLedgerShared';
 import FeeWaiverToggle from './FeeWaiverToggle';
+import { FeeCollectionWaiverContext } from './feeCollectionContext';
 import { selectionItemKey, isLedgerItemCollectible } from './feeLedgerSelection';
 import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
@@ -58,6 +59,7 @@ export default function CollectionLedgerTable({
   layout,
   onPeriodFocus,
 }: FeeLedgerListProps & { layout: CollectionLayout; onPeriodFocus?: (period: string) => void }) {
+  const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [groupsExpanded, setGroupsExpanded] = useState(false);
   const rows: LedgerRow[] = data.monthWise.flatMap((group) =>
@@ -450,24 +452,25 @@ export default function CollectionLedgerTable({
                   />
                 )}
               </DetailGrid>
-              {detail.charge ? (
-                <FeeWaiverToggle
-                  sourceType={detail.charge.sourceType}
-                  sourceId={detail.charge.chargeId}
-                  remainingAmount={detail.due}
-                  onApplied={waiverApplied}
-                />
-              ) : (
-                detail.dueFeeId &&
-                (detail.lateFeeAmount ?? 0) > 0 && (
+              {allowWaivers &&
+                (detail.charge ? (
                   <FeeWaiverToggle
-                    sourceType="LateFee"
-                    sourceId={detail.dueFeeId}
-                    remainingAmount={detail.lateFeeAmount!}
+                    sourceType={detail.charge.sourceType}
+                    sourceId={detail.charge.chargeId}
+                    remainingAmount={detail.due}
                     onApplied={waiverApplied}
                   />
-                )
-              )}
+                ) : (
+                  detail.dueFeeId &&
+                  (detail.lateFeeAmount ?? 0) > 0 && (
+                    <FeeWaiverToggle
+                      sourceType="LateFee"
+                      sourceId={detail.dueFeeId}
+                      remainingAmount={detail.lateFeeAmount!}
+                      onApplied={waiverApplied}
+                    />
+                  )
+                ))}
             </Stack>
           </DialogScrollContent>
         )}

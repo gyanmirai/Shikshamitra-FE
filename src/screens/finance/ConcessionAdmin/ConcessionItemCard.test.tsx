@@ -30,26 +30,39 @@ vi.mock('src/redux/finance/ConcessionManagement/concessionManagementApi', () => 
 }));
 
 const actions = financePermissions.fees.concessionActions;
-const item = {
+const item: IConcessionRequestItem = {
   studentConcessionTypeRequestId: 'request',
+  concessionTypeId: 'sibling-tuition',
   concessionTypeName: 'Sibling tuition concession',
   status: ConcessionStatusType.Draft,
   requesterId: 'maker',
   submittedById: 'maker',
   totalRequestedAmount: 275,
   totalAmount: 275,
+  totalApprovedAmount: 0,
+  totalReversedAmount: 0,
+  netApprovedAmount: 0,
+  feeHeads: [],
   createdAt: '2026-10-15T11:13:33Z',
+  updatedAt: '2026-10-15T11:13:33Z',
+  message: '',
+  approvedAt: '',
+  concurrencyStamp: 'request-stamp',
   requiredDocuments: [1, 2].map((n) => ({
     documentId: `doc-${n}`,
     documentName: `Certificate ${n}`,
     isRequired: true,
     isUploaded: true,
+    maxFileSizeBytes: 5 * 1024 * 1024,
+    acceptedFormats: [],
     url: `/files/certificate-${n}.pdf`,
   })),
   submittedDocuments: [],
   availableActions: ['edit', 'delete', 'upload-document'],
-  timeline: [{ action: 'created', occurredAt: '2026-10-15T11:13:33Z' }],
-} as IConcessionRequestItem;
+  timeline: [
+    { action: 'created', status: ConcessionStatusType.Draft, occurredAt: '2026-10-15T11:13:33Z' },
+  ],
+};
 
 const handlers = {
   onEdit: vi.fn(),
@@ -157,7 +170,12 @@ describe('individual concession request card', () => {
     const legacy = show({
       ...item,
       requiredDocuments: [],
-      submittedDocuments: item.requiredDocuments as any,
+      submittedDocuments: [1, 2].map((n) => ({
+        documentId: `doc-${n}`,
+        documentName: `Certificate ${n}`,
+        url: `/files/certificate-${n}.pdf`,
+        uploadedAt: '2026-10-15T11:13:33Z',
+      })),
     });
     expect(screen.getByRole('button', { name: 'View Certificate 2' })).toBeInTheDocument();
     legacy.unmount();
