@@ -17,8 +17,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PermissionForm } from '../role';
-import { AccessControlForm } from '../accessControl';
 import PermissionAccessForm from '../role/permission-access-form';
+import AcademicPermissionDialog from './academic-permission-dialog';
 
 const UserManagementScreen = () => {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -27,8 +27,6 @@ const UserManagementScreen = () => {
     'AbpIdentity.Users.ManagePermissions'
   );
   const canManageScope = hasGrantedPermission(permissions, 'ShikshaMitra.UserScope.Manage');
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const yearSuffix = currentYear?.name ? ` - ${currentYear.name}` : '';
 
   // Dialog control hook for permissions dialog
   const dialog = useBoolean();
@@ -166,14 +164,12 @@ const UserManagementScreen = () => {
           onBusyChange={setPermissionBusy}
         />
       </CustomDialog>
-      <CustomDialog
-        fullScreen
-        title={`Academic Permission${yearSuffix}`}
+      <AcademicPermissionDialog
+        key={`${academicDialog.value}:${user?.id}`}
         open={academicDialog.value}
-        handleClose={academicDialog.onFalse}
-      >
-        <AccessControlForm user={user} handleClose={academicDialog.onFalse} />
-      </CustomDialog>
+        user={user}
+        onClose={academicDialog.onFalse}
+      />
       <CustomDialog
         fullScreen
         title="Set Visibility"

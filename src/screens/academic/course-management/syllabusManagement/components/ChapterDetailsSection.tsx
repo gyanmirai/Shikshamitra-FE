@@ -9,6 +9,7 @@ import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
 import { ChapterNumberField } from './ChapterNumberField';
+import { ChapterPublicationSection } from './ChapterPublicationSection';
 import { AdditionalFieldsActionButton } from './AdditionalFieldsActionButton';
 
 import type { IChapterFormValues } from '../type';
@@ -113,6 +114,8 @@ export function ChapterDetailsSection({
           </Grid>
         </Grid>
       </FormSectionCard>
+
+      <ChapterPublicationSection formik={formik} />
 
       <FormSectionCard
         icon="mdi:text-box-plus-outline"
