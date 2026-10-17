@@ -41,6 +41,7 @@ export type AdmissionFeeSelection = {
   canEdit: boolean;
   canConfirmOnboarding: boolean;
   onboardingConfirmed: boolean;
+  automaticallyConfirmedFromAdmissions?: boolean;
   onboardingBlocker: string | null;
   selection: AdmissionSavedFeeSelection | null;
 };

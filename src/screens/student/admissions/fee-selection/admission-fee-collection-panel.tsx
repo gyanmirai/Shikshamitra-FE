@@ -111,6 +111,7 @@ export default function AdmissionFeeCollectionPanel({
       preparing.isLoading ||
       disabled ||
       !access.canCollect ||
+      state?.isSettled ||
       !state?.canCollect ||
       summary.isFetching ||
       summary.isError
@@ -174,7 +175,7 @@ export default function AdmissionFeeCollectionPanel({
       if (!access.canCollect)
         return Promise.reject(collectionGuardError(403, 'Fee collection access is unavailable.'));
       if (
-        disabled &&
+        (disabled || state?.isSettled) &&
         (!input.idempotencyKey || !attemptedPayments.current.has(input.idempotencyKey))
       )
         return Promise.reject(
@@ -239,7 +240,9 @@ export default function AdmissionFeeCollectionPanel({
     );
   const amount = (value: number) => fCurrency(value, { currency: state.currency });
   const requiresVariableAmounts = Boolean(state.variableFeeHeads?.length);
-  const collectAction = (
+  const collectAction = state.isSettled ? (
+    <Label color="success">Settled</Label>
+  ) : (
     <Button
       type="button"
       size="small"
@@ -338,7 +341,7 @@ export default function AdmissionFeeCollectionPanel({
             </Box>
           ))}
         </Box>
-        {!stretch && (
+        {!stretch && !state.isSettled && (
           <Typography variant="caption" color="text.secondary">
             Charges and late fees are shown separately in the collection form.
           </Typography>
@@ -364,7 +367,7 @@ export default function AdmissionFeeCollectionPanel({
           ) : (
             <Alert severity="info">{state.blocker}</Alert>
           ))}
-        {!access.canCollect && (
+        {!access.canCollect && !state.isSettled && (
           <Typography variant="caption" color="text.secondary">
             An authorized fee collection user can record payments here.
           </Typography>

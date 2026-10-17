@@ -105,25 +105,28 @@ it('permits selecting type and Offering/stage identity for a new unbooked sessio
   expect(screen.queryByRole('combobox', { name: /Select assessment/ })).not.toBeInTheDocument();
 });
 
-it('refreshes rooms after resources load, searches building names and fills room capacity', async () => {
-  const room = {
-    id: 'r1',
-    roomName: 'A002',
-    buildingName: 'Main Academic Block',
-    buildingId: 'b',
-    floorName: 'Ground Floor',
-    floorId: 'f',
-    capacity: 40,
-  };
-  const { rerender } = render(<Fields identityLocked={false} />);
-  await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
-  rerender(<Fields identityLocked={false} roomOptions={[room]} />);
-  const input = screen.getByRole('combobox', { name: 'Institute room' });
-  fireEvent.change(input, { target: { value: 'Main Academic' } });
-  fireEvent.focus(input);
-  const option = await screen.findByRole('option', { name: 'A002 Ground Floor 40 seats' });
-  fireEvent.click(option);
-  await waitFor(() => expect(input).toHaveValue('A002'));
-  expect(screen.getByLabelText('Session capacity')).toHaveValue('40');
-  expect(screen.getByText('Main Academic Block / Ground Floor')).toBeInTheDocument();
-});
+it.each([false, true])(
+  'refreshes loaded rooms, searches buildings and fills capacity (Pipeline: %s)',
+  async (pipeline) => {
+    const room = {
+      id: 'r1',
+      roomName: 'A002',
+      buildingName: 'Main Academic Block',
+      buildingId: 'b',
+      floorName: 'Ground Floor',
+      floorId: 'f',
+      capacity: 40,
+    };
+    const { rerender } = render(<Fields identityLocked={false} pipeline={pipeline} />);
+    await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+    rerender(<Fields identityLocked={false} roomOptions={[room]} pipeline={pipeline} />);
+    const input = screen.getByRole('combobox', { name: 'Institute room' });
+    fireEvent.change(input, { target: { value: 'Main Academic' } });
+    fireEvent.focus(input);
+    const option = await screen.findByRole('option', { name: 'A002 Ground Floor 40 seats' });
+    fireEvent.click(option);
+    await waitFor(() => expect(input).toHaveValue('A002'));
+    expect(screen.getByLabelText(pipeline ? 'Capacity' : 'Session capacity')).toHaveValue('40');
+    expect(screen.getByText('Main Academic Block / Ground Floor')).toBeInTheDocument();
+  }
+);

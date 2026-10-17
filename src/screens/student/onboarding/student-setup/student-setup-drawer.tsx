@@ -233,7 +233,10 @@ export default function StudentSetupDrawer({
         ? { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' }
         : primaryActions[activeStudent.status];
   const activationPreview = activationPreviewQuery.data;
-  const activationPreviewReady = activationPreview?.status === 2;
+  const activationPreviewReady =
+    activationPreview?.status === 2 &&
+    !activationPreview.lastError?.trim() &&
+    !activationPreview.studentEnrollmentId;
   const canRunPrimaryAction =
     activeStudent.source === 'onboarding-case' &&
     activeStudent.backendStatus !== 4 &&
@@ -997,6 +1000,8 @@ export default function StudentSetupDrawer({
         handleClose={() => setConfirmActivation(false)}
         title="Activate Student"
         maxWidth="sm"
+        disableClose={primaryActionLoading}
+        hasForm={false}
       >
         <DialogScrollContent dividers>
           <Stack spacing={1.5}>
@@ -1013,9 +1018,13 @@ export default function StudentSetupDrawer({
                 case, and retry.
               </Alert>
             ) : null}
-            {activationPreview && !activationPreviewReady ? (
+            {activationPreview &&
+            !activationPreviewQuery.isFetching &&
+            !activationPreviewQuery.isError &&
+            !activationPreviewReady ? (
               <Alert severity="error" variant="outlined">
-                {activationPreview.primaryBlocker ||
+                {activationPreview.lastError?.trim() ||
+                  activationPreview.primaryBlocker?.trim() ||
                   'This case is no longer ready to activate. Refresh the case before continuing.'}
               </Alert>
             ) : null}
@@ -1027,6 +1036,7 @@ export default function StudentSetupDrawer({
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" width={16} />}
             onClick={() => setConfirmActivation(false)}
+            disabled={primaryActionLoading}
           >
             Cancel
           </Button>

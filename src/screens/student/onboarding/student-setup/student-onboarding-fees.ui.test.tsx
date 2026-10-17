@@ -40,6 +40,7 @@ const mocks = vi.hoisted(() => ({
   enrolled: false,
   selected: false,
   locked: false,
+  automaticallyConfirmed: false,
   deferral: null as null | {
     stageId: string;
     reason: string;
@@ -103,7 +104,8 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
     currentData: mocks.currentDataAvailable
       ? {
           selection: mocks.selected ? mocks.candidates[0] : null,
-          onboardingConfirmed: false,
+          onboardingConfirmed: mocks.automaticallyConfirmed,
+          automaticallyConfirmedFromAdmissions: mocks.automaticallyConfirmed,
           isLocked: mocks.locked,
           feeCollectionDeferral: mocks.deferral,
         }
@@ -132,6 +134,7 @@ beforeEach(() => {
   mocks.enrolled = false;
   mocks.selected = false;
   mocks.locked = false;
+  mocks.automaticallyConfirmed = false;
   mocks.deferral = null;
   mocks.currentCandidatesAvailable = true;
 });
@@ -148,6 +151,45 @@ it('confirms an existing fee structure through Onboarding without payment contro
       optionalHeadIds: [],
     })
   );
+});
+
+it('shows the fully paid Admission choice as complete and read-only without another confirmation', () => {
+  mocks.selected = true;
+  mocks.locked = true;
+  mocks.automaticallyConfirmed = true;
+  mocks.currentCandidatesAvailable = false;
+  render(<StudentOnboardingFees caseId="case-1" canManage />);
+  expect(screen.getByText('Completed in Admissions')).toBeInTheDocument();
+  expect(screen.getByText('CBSE English Class 1 · Revision 1')).toBeInTheDocument();
+  expect(screen.getByText('Tuition')).toBeInTheDocument();
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Embedded fee collection')).toHaveAttribute('data-disabled', 'true');
+  expect(mocks.candidatesQuery).toHaveBeenLastCalledWith('case-1', { skip: true });
+  fireEvent.click(screen.getByRole('button', { name: 'Show saved receipt' }));
+  expect(screen.getByText('Saved receipt preview')).toBeInTheDocument();
+  fireEvent.submit(screen.getByLabelText('Embedded fee collection').closest('form')!);
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('keeps a completed Admission snapshot read-only and its receipt mounted during a failed refresh', () => {
+  mocks.selected = true;
+  mocks.locked = true;
+  mocks.automaticallyConfirmed = true;
+  const view = render(<StudentOnboardingFees caseId="case-1" canManage />);
+  const collection = screen.getByLabelText('Embedded fee collection');
+  fireEvent.click(screen.getByRole('button', { name: 'Show saved receipt' }));
+  mocks.error = true;
+  view.rerender(<StudentOnboardingFees caseId="case-1" canManage />);
+  expect(screen.getByText('Completed in Admissions')).toBeInTheDocument();
+  expect(screen.getByText('Saved receipt preview')).toBeInTheDocument();
+  expect(screen.getByLabelText('Embedded fee collection')).toBe(collection);
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Confirm fee structure' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(mocks.refetch).toHaveBeenCalledTimes(2);
+  expect(mocks.candidatesRefetch).not.toHaveBeenCalled();
+  expect(mocks.confirm).not.toHaveBeenCalled();
 });
 it('keeps fee confirmation unavailable to viewers', () => {
   render(<StudentOnboardingFees caseId="case-1" canManage={false} />);

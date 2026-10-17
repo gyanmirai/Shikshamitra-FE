@@ -13,7 +13,11 @@ const mocks = vi.hoisted(() => ({
     primaryBlocker: 'Final readiness and activation',
     progressPercent: 100,
     concurrencyStamp: 'latest-case-stamp',
+    lastError: null as string | null,
+    studentEnrollmentId: null as string | null,
   },
+  activationPreviewFetching: false,
+  activationPreviewError: false,
   capturedFields: [
     { key: 'Medical.BloodGroup', label: 'Blood group', value: 'O+' },
     { key: 'PreviousSchool.Name', label: 'Previous school name', value: 'Sample School' },
@@ -52,8 +56,8 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   }),
   usePreviewStudentOnboardingActivationQuery: () => ({
     data: mocks.activationPreview,
-    isFetching: false,
-    isError: false,
+    isFetching: mocks.activationPreviewFetching,
+    isError: mocks.activationPreviewError,
   }),
   useUpdateStudentOnboardingStepMutation: () => [vi.fn(), { isLoading: false }],
   useReviewStudentOnboardingRequirementsMutation: () => [vi.fn(), { isLoading: false }],
@@ -79,6 +83,16 @@ const student = studentOnboardingTestData[0];
 describe('Student Setup drawer readiness UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.activationPreview = {
+      status: 2,
+      primaryBlocker: 'Final readiness and activation',
+      progressPercent: 100,
+      concurrencyStamp: 'latest-case-stamp',
+      lastError: null,
+      studentEnrollmentId: null,
+    };
+    mocks.activationPreviewFetching = false;
+    mocks.activationPreviewError = false;
     mocks.capturedFieldsAvailable = true;
     mocks.capturedFieldsLoading = false;
     mocks.capturedFieldsError = false;
@@ -360,6 +374,115 @@ describe('Student Setup drawer readiness UI', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
     expect(screen.getByRole('heading', { name: 'Activate Student' })).toBeInTheDocument();
+  });
+
+  it.each([1, 2])(
+    'shows the actual preview blocker and prevents activation for status %s',
+    (status) => {
+      mocks.activationPreview.status = status;
+      mocks.activationPreview.lastError = 'The seat reservation has expired.';
+      const onPrimaryAction = vi.fn();
+      render(
+        <StudentSetupDrawer
+          open
+          canManage
+          student={{ ...student, source: 'onboarding-case', backendStatus: 2 }}
+          onClose={vi.fn()}
+          onPrimaryAction={onPrimaryAction}
+        />
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+      const dialog = screen.getByRole('dialog', { name: 'Activate Student' });
+      expect(within(dialog).getByRole('alert')).toHaveTextContent(
+        'The seat reservation has expired.'
+      );
+      expect(within(dialog).queryByText('Final readiness and activation')).not.toBeInTheDocument();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Activate student' }));
+      expect(within(dialog).getByRole('button', { name: 'Activate student' })).toBeDisabled();
+      expect(onPrimaryAction).not.toHaveBeenCalled();
+    }
+  );
+
+  it('keeps the primary-blocker fallback for older preview responses', () => {
+    mocks.activationPreview.status = 1;
+    mocks.activationPreview.primaryBlocker = 'Documents and compliance';
+    render(
+      <StudentSetupDrawer
+        open
+        canManage
+        student={{ ...student, source: 'onboarding-case', backendStatus: 2 }}
+        onClose={vi.fn()}
+        onPrimaryAction={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Documents and compliance');
+    expect(screen.getByRole('button', { name: 'Activate student' })).toBeDisabled();
+  });
+
+  it.each(['loading', 'error'] as const)(
+    'keeps activation disabled during preview %s without showing stale blockers',
+    (state) => {
+      mocks.activationPreview.lastError = 'An outdated blocker';
+      mocks.activationPreviewFetching = state === 'loading';
+      mocks.activationPreviewError = state === 'error';
+      render(
+        <StudentSetupDrawer
+          open
+          canManage
+          student={{ ...student, source: 'onboarding-case', backendStatus: 2 }}
+          onClose={vi.fn()}
+          onPrimaryAction={vi.fn()}
+        />
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+      expect(screen.getByRole('button', { name: 'Activate student' })).toBeDisabled();
+      expect(screen.queryByText('An outdated blocker')).not.toBeInTheDocument();
+      if (state === 'loading')
+        expect(
+          screen.getByRole('progressbar', { name: 'Checking activation readiness' })
+        ).toBeInTheDocument();
+      else
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'The latest activation preview could not be loaded.'
+        );
+    }
+  );
+
+  it('keeps activation unavailable to a view-only user', () => {
+    render(
+      <StudentSetupDrawer
+        open
+        canManage={false}
+        student={{ ...student, source: 'onboarding-case', backendStatus: 2 }}
+        onClose={vi.fn()}
+        onPrimaryAction={vi.fn()}
+      />
+    );
+    const activate = screen.getByRole('button', { name: 'Activate Student' });
+    expect(activate).toBeDisabled();
+    fireEvent.click(activate);
+    expect(screen.queryByRole('dialog', { name: 'Activate Student' })).not.toBeInTheDocument();
+  });
+
+  it('locks the activation dialog against competing close actions while activation is pending', () => {
+    const liveStudent = { ...student, source: 'onboarding-case' as const, backendStatus: 2 as const };
+    const props = {
+      open: true,
+      canManage: true,
+      student: liveStudent,
+      onClose: vi.fn(),
+      onPrimaryAction: vi.fn(),
+    };
+    const { rerender } = render(<StudentSetupDrawer {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+    rerender(<StudentSetupDrawer {...props} primaryActionLoading />);
+    const dialog = screen.getByRole('dialog', { name: 'Activate Student' });
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'close' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Activating...' })).toBeDisabled();
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    expect(screen.getByRole('dialog', { name: 'Activate Student' })).toBeInTheDocument();
   });
 
   it('links a failed communication requirement to the existing student record', () => {

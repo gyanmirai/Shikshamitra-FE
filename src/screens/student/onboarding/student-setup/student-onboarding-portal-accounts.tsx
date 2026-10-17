@@ -380,7 +380,7 @@ export default function StudentOnboardingPortalAccounts({
                   disabled={busy}
                   options={guardianRecipients.map((recipient) => ({
                     value: recipient.relationship,
-                    label: `${relationshipLabels[recipient.relationship]}${recipient.name?.trim() ? ` — ${recipient.name}` : ''}`,
+                    label: `${relationshipLabels[recipient.relationship]}${recipient.name?.trim() ? ` — ${recipient.name}` : ''}${recipient.email?.trim() ? ` · ${recipient.email}` : ''}`,
                   }))}
                   error={Boolean(formik.touched.relationship && formik.errors.relationship)}
                   helperText={formik.touched.relationship ? formik.errors.relationship : undefined}

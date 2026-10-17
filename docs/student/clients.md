@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -173,6 +173,7 @@ The screen retains the confirmation idempotency key for an unchanged serialized 
 Preview proposals are independent of candidate-table pages and are bounded to 200 bookings per confirmation; remaining applicants can be booked later into the same session.
 Interview proposals retain server-suggested applicant-compatible times; a newly selected applicant without a proposal sends no explicit slot, allowing server allocation at confirmation.
 Session/workbench/resource reads provide the existing exam tag; coordinated writes invalidate exam, application and applicant reads.
+Session resources also provide the Institute Setup Rooms and Buildings tags, so room/building mutations refresh subscribed drawer choices and invalidate unused choices before the drawer reopens, including Pipeline Add Slot.
 Preview has no write invalidation, and endpoint responses are normalized through the shared assessment envelope adapter.
 Bulk attendance/results reuse the existing assessment reads and mutations; bulk Continue reuses fresh application/workflow/assessment reads and the guarded workflow-advance mutation.
 Pipeline's inline booking drawer reuses the existing session/slot reads and booking mutation. Create & Book uses the shared preview/confirmation endpoints with the current application number as a preview search, then matches both application and stage IDs and confirms exactly one student with fresh concurrency evidence. The original confirmation body and idempotency key are retained after uncertain failures; definitive business rejection requires a fresh preview. No new endpoint or migration belongs to this frontend change.
