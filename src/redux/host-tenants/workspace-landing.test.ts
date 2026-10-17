@@ -35,4 +35,38 @@ describe('verified initial setup routing', () => {
     expect(workspaceLanding(host)).toBe('/host/tenants');
     expect(isWrongWorkspace(host, '/initial-setup')).toBe(true);
   });
+
+  it('lands Student-only users on a permitted Student page without granting the main dashboard', () => {
+    const complete = { ...tenant, setupCompleted: true };
+    const permissions = [
+      'ShikshaMitra.Module.Students',
+      'ShikshaMitra.Module.Students.Dashboard',
+      'Students.Dashboard.View',
+    ].map((name) => ({ name, isGranted: true }));
+    expect(workspaceLanding(complete, permissions)).toBe('/student/dashboard');
+    expect(isWrongWorkspace(complete, '/dashboard/', permissions)).toBe(true);
+    expect(isWrongWorkspace(complete, '/student/admissions/settings/forms', permissions)).toBe(
+      false
+    );
+    expect(
+      workspaceLanding(complete, [
+        ...permissions,
+        { name: 'ShikshaMitra.Module.Dashboard', isGranted: true },
+      ])
+    ).toBe('/dashboard');
+    expect(workspaceLanding({ ...complete, setupCompleted: false }, permissions)).toBe(
+      '/initial-setup'
+    );
+  });
+
+  it('uses a visible permitted feature when the Student dashboard is unavailable', () => {
+    const permissions = [
+      'ShikshaMitra.Module.Students',
+      'ShikshaMitra.Module.Students.Enrollment',
+      'Students.Admissions.Forms.View',
+    ].map((name) => ({ name, isGranted: true }));
+    expect(workspaceLanding({ ...tenant, setupCompleted: true }, permissions)).toBe(
+      '/student/admissions/settings/forms'
+    );
+  });
 });

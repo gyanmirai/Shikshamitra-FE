@@ -35,7 +35,7 @@ export function getFormRowActionVisibility(
     delete: canDelete && isDraft,
     history: true,
     createVersion: canPublish && isPublished,
-    archive: canDelete && isPublished,
+    archive: canManage && isPublished,
   };
 }
 

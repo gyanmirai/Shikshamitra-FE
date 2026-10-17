@@ -8,7 +8,7 @@ const screenSource = fs.readFileSync(path.resolve(__dirname, '../index.tsx'), 'u
 describe('StudentRecordsAiReportButton', () => {
   it('mounts the shared workspace in Student Records mode', () => {
     expect(source).toContain('module="Student Records"');
-    expect(source).toContain('open={workspace.value}');
+    expect(source).toContain('open={workspace.value && canGenerate}');
     expect(source).toContain('onClick={workspace.onTrue}');
     expect(screenSource).toContain('<StudentRecordsAiReportButton />');
   });

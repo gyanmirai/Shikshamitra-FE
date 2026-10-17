@@ -13,6 +13,9 @@ describe('getAdmissionWorkflowAccess', () => {
     expect(access.canView).toBe(true);
     expect(access.canManage).toBe(true);
     expect(access.canDelete).toBe(false);
+    expect(access.canApprove).toBe(true);
+    expect(access.canManageGovernance).toBe(true);
+    expect(access.canRollback).toBe(true);
   });
 
   it('does not invent separate grants for legacy workflow action names', () => {
@@ -23,5 +26,22 @@ describe('getAdmissionWorkflowAccess', () => {
     ]);
 
     expect(access.canManage).toBe(false);
+    expect(access.canApprove).toBe(false);
+    expect(access.canManageGovernance).toBe(false);
+    expect(access.canRollback).toBe(false);
+  });
+
+  it('does not grant sensitive workflow actions through View or Delete', () => {
+    const access = getAdmissionWorkflowAccess([
+      { name: 'Students.Admissions.Workflows.View', isGranted: true },
+      { name: 'Students.Admissions.Workflows.Delete', isGranted: true },
+      { name: 'Students.Admissions.Workflows.Add', isGranted: false },
+    ]);
+    expect(access.canView).toBe(true);
+    expect(access.canDelete).toBe(true);
+    expect(access.canManage).toBe(false);
+    expect(access.canApprove).toBe(false);
+    expect(access.canManageGovernance).toBe(false);
+    expect(access.canRollback).toBe(false);
   });
 });

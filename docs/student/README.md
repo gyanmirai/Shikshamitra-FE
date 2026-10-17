@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,8 +19,8 @@ Finalization preserves workflow rules, permission checks and Finance/Onboarding 
 Finalization creates an Onboarding case; Onboarding owns enrollment activation.
 The finalized decision panel shows the saved admission summary, live Onboarding handover, fee/stage evidence and decision history; guidance is disclosed through its information icon.
 Student Onboarding uses a persisted Student Setup worklist with Readiness, Division, GR Number, Roll Number, Fees, and Credentials tabs.
-Onboarding Settings combines Portal Access, GR Number and Roll Number in three URL-backed tabs.
-Portal Access contains only student and parent/guardian login requirements; new schools default to Student No and Parent/Guardian Yes while existing saved choices remain intact.
+Onboarding Settings combines App Login, GR Number and Roll Number in three URL-backed tabs; the existing `portal-access` route key remains compatible.
+App Login offers Not needed, Optional and Required separately for students and parents/guardians. New schools default to Student Not needed, Parent/Guardian Required and staff sending manually; existing saved choices remain intact. Automatic sending exposes its stage selector, and optional accounts never hold onboarding open.
 Pending cases inherit admission requirements automatically; activated and completed cases preserve their saved snapshots.
 Fees selects and confirms an existing published fee structure through Onboarding. An explicit Collect Fees action opens the reused Finance collection form without navigating to Finance; fee settlement is not required for activation. Admissions Payment also allows Collect later in Onboarding with a mandatory reason and no structure or payment.
 Activation creates the operational enrollment and refreshes Student Records; pending account or email work remains visible in Credentials after activation.

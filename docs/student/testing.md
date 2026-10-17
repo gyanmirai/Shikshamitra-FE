@@ -10,6 +10,118 @@ audience: humans-and-agents
 
 # Validate Student Enrollment Admissions changes
 
+## Compact Student Setup assignments (2026-10-16)
+
+The eight focused controller, table, toolbar, assignment-drawer, Auto drawer, Roll workspace, Manual hook and assignment-model suites pass **192 tests**. Coverage retains single-Class Division selection, ineligible-row protection, page/scope resets, the full-division Roll cohort, capacity/numbering policies, locks, reasons, partial failures and approval/apply commands. New checks cover selection-count clearing, frozen Manual targets, task statuses, unavailable counts, drawer close locks and focus restoration. Focused TypeScript reports zero diagnostics across the 12 changed source/test files; repository-rule ESLint also passes those files. This does not certify the full repository.
+
+Read-only automated local Chromium checks confirm selection, Manual entry/cancellation, GR draft preservation/discard and empty-list recovery. At 1440, 768 and 390 px the action row remains single-line inside its own horizontal region and the document does not overflow. The Roll drawer becomes full-width on narrow screens with its footer inside the viewport; light/dark rendering and Escape/focus return were checked. Screenshots are retained under `.artifacts/student-setup-assignments/`. These checks reuse the existing UI components and theme; no student assignment, activation, credential email or Finance mutation was submitted.
+
+The mandatory Codex in-app smoke remains **unverified**: controller initialization failed with `failed to write kernel assets` before and after reset. Separate Chromium evidence does not satisfy that in-app gate. Existing saved cases already have numbers, so live Auto writes were not rerun; focused component/model tests cover those unchanged commands. Full-repository build/typecheck, staging and production remain outside this focused validation.
+
+### Inconsistencies
+
+No inconsistency remains in the verified assignment surfaces. The discovered disabled-opener focus-return issue was fixed and passed both regression and browser checks. The in-app controller failure is a verification blocker, not a product defect.
+
+## App Login settings (2026-10-16)
+
+The eight focused settings/provider/credential-client/workspace suites pass 70 tests with one worker and a 20-second per-test ceiling. They cover legacy/default preferences, three account states, manual/automatic payloads, conditional timing, save failures, permission denial, unsaved navigation, duplicate-submit protection and existing credential actions. Focused source/test TypeScript passes eight files with zero diagnostics; this excludes unrelated project diagnostics.
+
+After rebuilding/restarting the local backend, an authenticated Chromium check rendered App Login and passed interaction/width checks at 1440, 768 and 390 px with no page JavaScript errors. The first-time academic-year guided tour was dismissed through its existing Skip action before interacting with the form. It verified the three access options and automatic timing controls, switched back to manual, saved Optional student access, reloaded and verified the saved value/manual choice and clean Save state. The test confirmed unrelated configuration was preserved, then restored and re-read the exact original configuration. Screenshots and bounded scripts are in `.artifacts/app-login-rules/`.
+
+The required Codex in-app controller still fails to initialize (`failed to write kernel assets`), including after reset; the successful separate Chromium run does not certify that required in-app smoke. Real credential sending is also not certified: the current case lacks a saved recipient email, a live seat reservation and an eligible confirmed published fee structure. The server safely rejected sending to an unsaved address without creating an account/email intent. No student activation or Finance mutation was performed. See [backend verification](../../../Shikshamitra-BE/docs/modules/student/testing.md#app-login-settings-2026-10-16).
+
+## Simplified Student Setup (2026-10-16)
+
+The seven focused model, summary, table, pending-task, task-view, filter and controller suites pass 147 tests.
+They cover the five default columns, optional Owner/identifier/account columns, visible expandable pending work, existing task destinations, numeric status URL mapping, review-only activation entry, completed cases with optional login work, cancelled-case history, busy states, and unchanged Division/GR/Roll editing.
+Changed-source and test TypeScript passes all 13 files with zero diagnostics; strict ESLint, formatting and Student documentation validation pass.
+The full-repository TypeScript attempt was stopped after an extended run; the focused result does not certify a full build.
+All 839 tracked frontend and 772 tracked backend Finance-path files match the pre-change hashes; no shared table component or backend source was edited for this change.
+
+The required in-app smoke could not start because the browser tool failed to initialize its kernel assets, including after reset.
+A separate authenticated local Chromium check rendered the five-column table with a real student and opened Columns with Owner still available.
+The full browser smoke did not pass: search recovery was not established during initial context loading, and a retry remained on the application loading screen before reaching mobile checks.
+Responsive/mobile, complete live task navigation and staging acceptance therefore remain unverified; no student activation or other business-data mutation was submitted.
+Local diagnostic screenshots and the bounded browser/typecheck scripts are under `.artifacts/student-setup-simple/`.
+
+### Inconsistencies
+
+No additional inconsistency was found in the reviewed implementation or passing focused checks.
+The labeled next-step action is the explicitly approved local UI exception described in [Student workflows](workflows.md); live browser checks remain an open verification gate.
+
+## Student permission regression
+
+The current focused run covers 54 Student pages, including 11 newly guarded route entries, and passes 252 unique tests across 30 suites.
+The role/user editor passes a separate 69 tests across five suites; 79 touched Student TypeScript files and seven editor files pass targeted ESLint.
+Initial resource-pressure timeouts and a transform loaded before a menu edit were rerun against final source; the five-suite retry passed all 31 tests.
+Authenticated localhost inspection verified the role matrix, unsupported Delete controls, the 390-pixel mobile card layout and user Follow role/Allow/Deny controls without saving grants.
+The Records changes list loaded under the existing View grant; its empty result does not establish a live approval/rejection journey.
+Focused TypeScript validation passes all 86 changed Student/Security source and test files with zero diagnostics, using the project theme augmentations and test setup.
+The full-repository TypeScript run was stopped under workstation memory pressure and is not certified by this focused result.
+Backend/API results must be assessed separately from this frontend evidence.
+
+Verify every Student route has its exact View guard and every implemented action uses the owning View, Add/Update or Delete permission.
+Run the Student permission contract and affected screen suites with one worker, including View-only users, missing grants, permission revocation while a dialog is open, and disabled server capabilities.
+Security editor tests cover all 36 features and 106 canonical leaves, collapsed descendants, unsupported Delete actions and role/user override dependencies.
+Browser acceptance must inspect role/user editing and denied/read-only Student screens at desktop and mobile widths using the existing DESIGN.md layout.
+The legacy Student report preview/export client has no matching backend service; the modern Records reports flow is the implemented report surface.
+Notification lists currently contain static empty placeholders; their supported tabs are View-gated and do not claim live notification APIs.
+
+### Local role browser verification (2026-10-16)
+
+Authenticated in-app browser checks used four dedicated nonadministrator users with normal OAuth and a disposable clone of the local database: View only ran on `http://localhost:3001`, while Add/Update, Delete and no-View ran on `http://student-permissions.localhost:3016`.
+The QA runtime used a working-tree source copy taken at test setup; later parallel workspace changes are outside this evidence.
+The three action roles had View only, View plus Add/Update, or View plus Delete; the fourth had module visibility but no Student feature grants.
+These checks used real frontend/backend calls, and all saved changes stayed in the disposable database.
+
+| Role or boundary | Verified browser result |
+| --- | --- |
+| View only | Forms loaded with Add disabled and no Edit, Publish or Delete controls; history remained available. Onboarding Settings showed its read-only notice with Save and the student-access switch disabled. House Settings loaded an empty selected context with Add disabled. Attendance showed no active assignment and disabled Save/Submit. |
+| Add/Update | Created `QA Browser AddUpdate 16Oct2026`, renamed it to `QA Browser AddUpdate Updated 16Oct2026`, and verified the saved name after reload; Delete was absent. Published the isolated `QA Student Publish 5a305b9d5c` workflow and verified Published after reload. |
+| Attendance browser/write checks | The Add/Update user saved a draft, submitted and locked attendance for three students in assigned Class 3-A; the lock persisted after reload. A direct Class 3-B bookmark showed the scope warning with Save, Submit and Lock disabled. This verifies browser controls and the tested writes, not API read isolation. |
+| Delete | Add was disabled, Edit/Publish were absent and Delete was enabled. Deleted only `QA Student Browser Delete 5a305b9d5c` through confirmation; reload showed no matching row while the separately created form remained. |
+| No feature View | Direct navigation to the Forms URL showed No permission, no form table and no feature entries in the sidebar. |
+
+Account identity was checked for each persona, and the backend independently verified the exact role grants.
+The browser result ledger and seven screenshots are retained under `.artifacts/student-role-browser-evidence/`; the ledger is `.artifacts/student-role-browser-evidence/browser-results.json`.
+Independent HTTP permission matrices and isolated-runtime metadata are retained under the backend `.artifacts/student-role-browser/` directory; assess them separately from these browser checks and the earlier [backend automated results](../../../Shikshamitra-BE/docs/modules/student/testing.md#student-permission-regression).
+
+**Initial finding, addressed by the security follow-up below: Attendance roster reads did not enforce teacher assignment isolation.**
+The same nonadministrator Add/Update user, assigned only to Class 3-A but with tenant-wide UserScope, received HTTP 200 and three Class 3-B student rows from `GET /api/students/attendance/students`, including identifiers, names, GR/roll and attendance statistics.
+The browser context filtered out Class 3-B, mutation flags were false and tested unassigned writes returned 403, but those protections did not prevent the direct API read.
+The follow-up adds backend assignment enforcement and history filtering; its fresh normal-OAuth check returns 200 with three assigned Class 3-A rows and 403 for Class 3-B. The original redacted finding is `read-scope-finding.json`; subsequent checks are under backend `.artifacts/student-role-browser/followup/`.
+
+The View-only, View plus Add/Update, and View plus Delete role combinations passed the representative browser cases above. Saved override and open-dialog revocation checks are recorded below; wider workflow and deployed acceptance remain separate gates.
+These results do not certify every Student route/action, a full repository build, staging or production.
+
+The follow-up also fixes both UI limitations found here: Student-only sign-in selects the first visible permitted Student page when the generic dashboard is unavailable, and workflow-list Edit accepts Draft and Validated states with Add/Update. Host, incomplete-school and authorized generic-dashboard routing remain covered.
+
+### Student security follow-up (2026-10-16)
+
+The two focused landing/row-action suites pass all 20 tests. The eight workflow-state cases preserve published/archived restrictions and missing-Add denial. Four older Offering/Form assertions were aligned with the existing approved two-direct-action layout and current callbacks; production Offering/Form actions were not changed. Final focused TypeScript reports zero diagnostics across the six intentionally changed source/test files and typed repository ESLint passes all six files. The implementation follows DESIGN.md and preserves shared action controls, permission-aware navigation and existing theme tokens.
+
+Normal-OAuth tests on the disposable database verify persisted user Deny against role Add, direct Allow against a View-only role, persistence across role edits, Follow role removal and self-management denial. Browser account identity was checked for both users. A form opened before Deny could not save; its entered name remained and API readback confirmed zero saved rows. Reload removed Add/Edit; Follow role restored Add. A separate View-only user gained Add through Allow and lost it again after Follow role/reload.
+
+The browser landed the Student-only account at `/student/dashboard`, opened a Validated workflow with the now-enabled Edit control and published the isolated test workflow. Restricted Forms had no document overflow at 390 and 768 pixels. That earlier dark-theme interruption is cleared by the final browser checks below. Evidence is under `.artifacts/student-security-followup/`; backend results and remaining workflow failures belong to [Student backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md#student-security-follow-up-2026-10-16).
+
+The earlier five-suite editor/wiring snapshot reported **41 passed, one failed**. The pending-check repair now makes `.github/workflows/deploy.yml` call the executable security regression workflow and gates build on it, while retaining main-only execution. The complete configured frontend security selection passes **138/138 cases across 17 suites**; the existing deployment assertion is unchanged. This clears that local wiring failure. Actual GitHub execution and deployment remain separate gates.
+
+The historical broad backend snapshot completed with 679 passed, 173 failed and four skipped across 856 cases. Its later repair selections supersede individual failures, so 165 is a historical triage count rather than the current failure total. The pending-check repair passes all four previously skipped PostgreSQL cases and 46 HTTP permission/ESI cases. The backend report records current fixture reruns separately. Focused scope (3/3), locked-correction (3/3), canonical user override/stale-correction (4/4) and report-release (8/8) counts overlap prior selections and are not summed into a full-module pass claim.
+
+#### Pending-check repair and final browser acceptance
+
+The configured security run passes **138/138** tests across 17 suites. Lifecycle/report/Onboarding guards pass **100/100** across ten additional suites. Focused TypeScript checks 21 source/test files with zero diagnostics; typed repository ESLint passes 17 source/new-test files. Resource-failed attempts are excluded from these totals.
+
+Normal OAuth on the disposable clone verifies View-only, View plus Add/Update, View plus Delete, and no-feature-grant identities. View-only Forms has disabled Add and no Edit/Delete. Add/Update created and renamed a disposable draft, verified after reload; Delete-only deleted that draft and reload/search confirmed absence. No-View direct Forms access shows No permission with no table or feature sidebar entries. Each identity was checked, and the temporary draft was removed through normal confirmation.
+
+The final dark-theme read/control smoke covers 21 fully loaded screens/tabs with no pending loading or error alerts across Admissions, Onboarding App Login/GR/Roll settings, Directory, Changes, Transitions, Documents, Records reports and Attendance/Leave/Reports/Settings/Notification. This is read/control evidence; saved write journeys and backend workflow fixtures are recorded separately. At 390/768 pixels, checked pages have no horizontal document overflow. View-only Onboarding fee confirmation remains disabled. A transient QA database timeout recovered through the existing retry; this is not a production performance certification.
+
+The smoke found and repaired lifecycle actions incorrectly using Delete. Close/archive/deactivate, cancellation and document void now follow Add/Update throughout frontend/backend; actual removal retains Delete. Add/Update exposes Offering Deactivate without Delete, while Delete-only excludes lifecycle updates. Attendance Generate with AI is disabled without Reports.Add, and revoking Add closes its drawer. No AI generation or external transmission was submitted.
+
+Fresh normal-OAuth checks pass 34 user override checks with restoration, 15 lifecycle checks, three additional Onboarding cancellation checks and three assignment-read checks. A final case-drawer check confirms cancellation is enabled with Add/Update and hidden with Delete-only; no case was cancelled. The owner picker retains the existing Identity-directory read requirement: Student Add alone receives 403 for the staff list, with the saved owner preserved. No Identity grant was widened. See the [backend final report](../../../Shikshamitra-BE/docs/modules/student/testing.md#pending-check-repair-2026-10-16) for full-suite and PostgreSQL results. Evidence: `.artifacts/student-security-followup/pending-browser-checks.json`, `pending-route-browser-checks.json`, `lifecycle-add-browser.json`, `pending-no-view-browser.json`, `onboarding-cancel-browser.json` and `student-pending-*.png`.
+
+Temporary QA tabs/servers were closed; regular developer servers and production grants were preserved. Target-host refresh, staging/deployment, actual delivery, legacy report integration and Notification backend acceptance remain outside this local evidence.
+
 ## Roll-number flow validation (2026-10-16)
 
 The four focused roll settings, Student Setup wiring, immutable batch workspace and RTK Query suites pass 57 tests with one worker and a 20-second test timeout under workstation memory pressure.
@@ -163,7 +275,9 @@ Affected-source TypeScript checked **134 files with zero diagnostics** after the
 
 Backend focused gates passed 18 final inline-save/authorization cases, 27 existing custom-record regression cases from the earlier gate, and three fresh HTTP controller/DTO contract cases. Fresh Application, HttpApi and Host builds passed using serialized isolated outputs; analyzers were disabled and the unchanged EF build output was reused. No dependency or migration was added. These are focused build/test gates, not a full solution test run.
 
-Authenticated local browser checks covered 1440 × 900, 768 × 1024 and 390 × 844. Final desktop overview cards measured 347 px each; tablet/mobile cards stack naturally. Document width matched each viewport without horizontal page overflow. Class/Division, GR/Roll numbers and Medium appear in the header rather than repeating inside overview cards. The actual frozen `Admission application` Version 1 appears as form controls in Details, with configured sections and fields rather than fixed profile cards.
+Authenticated local browser checks covered 1440 × 900, 768 × 1024 and 390 × 844. The original four-card overview used equal desktop heights; the current compact overview replaces it with an academic context strip, matching student/contact cards and a shared activity panel. Document width matched each viewport without horizontal page overflow. Class/Division, GR/Roll numbers and Medium appear in the header rather than repeating inside overview cards. The actual frozen `Admission application` Version 1 appears as form controls in Details, with configured sections and fields rather than fixed profile cards.
+
+The overview regression in `src/screens/student/studentProfile/student-profile-overview.test.tsx` verifies saved guardian/address mapping, student-versus-guardian email separation, missing source behavior, section masks and summary access, contact loading and retry recovery, restricted history and retained Details/History links. Run it with the existing `student-record-profile-flow.test.tsx` and `student-profile-data-boundary.test.tsx` regressions. The local 2026-10-16 check passed 21 tests; the four affected overview source/test files passed focused TypeScript with zero diagnostics. At 1440 × 900, 768 × 1024 and 390 × 844 the two summary cards measured equal heights with no horizontal page overflow; light/dark divider tokens were checked against the actual local saved student. This is local verification, not deployment evidence.
 
 On synthetic student Aarav Rajesh Sharma, Back opened the unsaved-change confirmation and an empty reason showed validation before saving. A changed Academic notes answer saved directly with HTTP 200, stayed in Details, and survived reload. History showed Applied, Admin DDVS, timestamps, the reason and the correct before/after answer in its in-profile drawer. A second direct save restored the test note; current-profile reload and the original-answer SHA256 check passed. Both test audit entries remain immutable; the pre-existing pending family correction was not approved or changed.
 
@@ -317,7 +431,7 @@ A follow-up on 2026-10-03 searched the signed-in DDVS Student Directory with For
 
 Run focused task-drawer, operation, model and API tests with one worker, then TypeScript and changed-file lint.
 Browser acceptance for the current flow must verify the six Student Setup task tabs, the three URL-backed Onboarding Settings tabs, portal-choice save/reload, Today filtering, pending-task navigation, focused drawers, independent GR/Roll operations, group identifier locks, fee-structure confirmation and postactivation Credentials.
-Check desktop/tablet/mobile layouts, the active student's Student Records visibility after reload, and appropriate View/Edit/Repair behavior.
+Check desktop/tablet/mobile layouts, the active student's Student Records visibility after reload, and appropriate View, Add/Update and Delete behavior.
 Unit tests do not replace those browser checks.
 
 The 2026-10-09 current-flow focused run passed 134 Onboarding/API/GR-helper tests across 21 files. The seven Student menu checks also passed after correcting two stale expectations to the existing `Onboarding` label; menu permissions were unchanged. Coverage includes Offering-linked rules, Draft/Publish numbering, legacy history preservation, empty-school draft defaults, focused task drawers, pending-task navigation, fee-structure confirmation, required-document evidence and credential retry states.
@@ -495,14 +609,14 @@ These tests verify separate GR/Roll payloads and forms, reason validation, lock/
 Model coverage includes separate GR/Roll readiness, required email work after account linking and activated students with pending credentials.
 Focused source ESLint, formatting and scoped `git diff --check` passed in this implementation pass.
 The subsequent header/authorization audit passed **2 files / 11 tests** across `src/screens/student/onboarding/persisted-onboarding-settings-provider.ui.test.tsx` and `src/screens/student/onboarding/student-setup/student-identifier-lock-controls.ui.test.tsx`.
-Those checks verify retained route headings and breadcrumb links during loading/error, working Retry without mounting editable defaults, and available Lock with hidden Unlock when the server administrator capability is false.
+Those checks verify retained route headings and breadcrumb links during loading/error, working Retry without mounting editable defaults, and available Lock with hidden Unlock when the server unlock capability is false. The current capability derives from Onboarding Add/Update; the command also validates division scope.
 The Offering document-snapshot follow-up passed **3 files / 26 tests** across workflow-document UI, the case mapper and the setup drawer.
 It distinguishes a frozen Offering with no required documents from a legacy no-snapshot case, preventing the empty Offering checklist from introducing unrelated global requirements.
 The readiness-count audit passed **16 model tests**, covering the excluded final-readiness aggregate, explicit server admission confirmation and preserved legacy imported-case checks.
 The live-observation follow-up passed **2 files / 11 tests** across case operations and workflow-document UI, checking preserved owner selection during lookup loading and selected filename feedback before upload submission through shared Admission fields.
 Final repository-wide TypeScript and authenticated live/browser acceptance for the redesigned flow are pending this documentation update.
 The earlier local journeys and earlier TypeScript results elsewhere on this page are historical evidence, not verification of this redesign.
-Required live cases include an off-page focused case after filtering, a new student entering a locked division, denied/non-admin unlock, document replacement/review, fee confirmation/reload, activation/Records reload and failed credential send/retry.
+Required live cases include an off-page focused case after filtering, a new student entering a locked division, denied unlock without Add/Update or matching division scope, authorized scoped non-admin unlock, document replacement/review, fee confirmation/reload, activation/Records reload and failed credential send/retry.
 No current staging, production, actual inbox-delivery or deployment verification is claimed.
 
 ## Managed assessment checks

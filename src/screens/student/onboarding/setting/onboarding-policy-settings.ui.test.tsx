@@ -1,4 +1,4 @@
-import { it, vi, expect, describe } from 'vitest';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
@@ -7,6 +7,15 @@ import OnboardingSettingsPage from './onboarding-settings-page';
 import { defaultOnboardingSettings } from '../onboarding-settings-model';
 import { OnboardingSettingsProvider } from '../onboarding-settings-context';
 import { GrNumberSettingsScreen, RollNumberSettingsScreen } from './onboarding-number-settings';
+
+const auth = vi.hoisted(() => ({ canConfigure: true }));
+beforeEach(() => { auth.canConfigure = true; });
+vi.mock('react-redux', () => ({
+  useSelector: (select: any) => select({ auth: { permissions: [
+    { name: 'Students.Onboarding.View', isGranted: true },
+    { name: 'Students.Onboarding.Add', isGranted: auth.canConfigure },
+  ] } }),
+}));
 
 vi.mock('./portal-access-settings', () => ({ default: () => <div>Portal settings</div> }));
 
@@ -199,6 +208,14 @@ const renderSettings = (children: React.ReactNode, onPersist?: any, initialSetti
 );
 
 describe('Onboarding numbering settings', () => {
+  it('allows a View-only user to read numbering rules without edit or publish actions', () => {
+    auth.canConfigure = false;
+    renderSettings(<GrNumberSettingsScreen />);
+    expect(screen.getByTestId('customizable-table')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add series' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /Edit |Publish |Create draft version/ })).not.toBeInTheDocument();
+  });
+
   it('splits academic columns and exposes the draft/published lifecycle', () => {
     renderSettings(<GrNumberSettingsScreen />);
     const table = within(screen.getByTestId('customizable-table'));
@@ -288,7 +305,7 @@ describe('Onboarding numbering settings', () => {
   it('merges login and numbering settings without a division tab or duplicate page heading', () => {
     renderSettings(<OnboardingSettingsPage />);
     expect(screen.getAllByTestId('breadcrumb-heading')).toHaveLength(1);
-    expect(screen.getByRole('tab', { name: 'Portal Access' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'App Login' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'GR Number' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Roll Number' })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Division Changes' })).not.toBeInTheDocument();

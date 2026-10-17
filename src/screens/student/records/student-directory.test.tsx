@@ -427,7 +427,7 @@ describe('Student List workspace', () => {
   it('preserves the approved historical-entry permission and dialog path', () => {
     const { rerender } = render(<StudentDirectory />);
     expect(screen.queryByRole('button', { name: 'Historical entry' })).not.toBeInTheDocument();
-    mocks.permissions = [{ name: 'Students.Records.Overrides.Request', isGranted: true }];
+    mocks.permissions = [{ name: 'Students.Records.Overrides.View', isGranted: true }];
     rerender(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <StudentDirectory />

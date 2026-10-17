@@ -32,17 +32,6 @@ export const isStatutorySchemePermission = (name: string = '') =>
 type NodePermissionName = string | string[];
 
 const STUDENT_PERMISSION_PREFIXES = ['Students.', 'ShikshaMitra.Module.Students.'];
-const STUDENT_VIEW_ACTIONS = new Set(['View', 'ViewUsage', 'Download']);
-const STUDENT_DELETE_ACTIONS = new Set([
-  'Delete',
-  'Archive',
-  'Cancel',
-  'Close',
-  'Deactivate',
-  'Release',
-  'Reverse',
-  'Withdraw',
-]);
 
 const getPermissionNames = (name: NodePermissionName = '') =>
   (Array.isArray(name) ? name : [name]).filter(Boolean);
@@ -60,6 +49,7 @@ const getCommonPermissionBase = (names: string[]) => {
 
 export const getActionPermissionBase = (name: NodePermissionName = '') => {
   if (Array.isArray(name)) return getCommonPermissionBase(getPermissionNames(name));
+  if (name.startsWith('Students.')) return name.replace(/\.(View|Add|Delete)$/, '');
   return name.replace(/\.View$/, '');
 };
 
@@ -67,6 +57,11 @@ const isStudentPermission = (name: NodePermissionName) =>
   getPermissionNames(name).some((permissionName) =>
     STUDENT_PERMISSION_PREFIXES.some((prefix) => permissionName.startsWith(prefix))
   );
+
+export const getPermissionActionLabel = (name: NodePermissionName, action: PermissionType) => {
+  if (isStudentPermission(name) && action === 'Add') return 'Add/Update';
+  return action === 'ChangeStatus' ? 'Change Status' : action;
+};
 
 const getConfiguredPermissionNames = (name: NodePermissionName, permissions: PermissionGrant[]) => {
   const names = getPermissionNames(name);
@@ -115,16 +110,13 @@ export const getNodeActionPermissionNamesForAction = (
   }
 
   if (isStudentPermission(name)) {
-    return configuredNames.filter((permissionName) => {
-      if (permissionName.startsWith('ShikshaMitra.Module.Students.')) return action === 'View';
-
-      const configuredAction = getPermissionAction(permissionName);
-      if (action === 'View') return STUDENT_VIEW_ACTIONS.has(configuredAction);
-      if (action === 'Delete') return STUDENT_DELETE_ACTIONS.has(configuredAction);
-      return (
-        !STUDENT_VIEW_ACTIONS.has(configuredAction) && !STUDENT_DELETE_ACTIONS.has(configuredAction)
-      );
-    });
+    // Student operations share the server's three canonical capabilities. Do not
+    // infer grants for retired or newly introduced actions from their suffix.
+    if (!PERMISSIONS.includes(action)) return [];
+    return configuredNames.filter(
+      (permissionName) =>
+        permissionName.startsWith('Students.') && getPermissionAction(permissionName) === action
+    );
   }
 
   if (permissionBase === 'Finance.Fees.StructureAssign' && action === 'Add') {
@@ -146,6 +138,7 @@ export const getAffectedNodePermissionNames = (
   const affectedNames = new Set(
     getNodeActionPermissionNamesForAction(node.permissionName, action, permissions)
   );
+  if (isStudentPermission(node.permissionName) && affectedNames.size === 0) return affectedNames;
   const permissionBase = getActionPermissionBase(node.permissionName);
   if (isAccountSettingPermission(permissionBase) || isStatutorySchemePermission(permissionBase))
     return affectedNames;
@@ -199,7 +192,9 @@ export const getNodeActionPermissionNames = (
 ): string[] => {
   const children = node?.permissionChildren ?? node?.children ?? [];
   if (children.length) {
-    return children.flatMap((child: any) => getNodeActionPermissionNames(child, permissions));
+    return Array.from(
+      new Set<string>(children.flatMap((child: any) => getNodeActionPermissionNames(child, permissions)))
+    );
   }
   return Array.from(
     new Set(

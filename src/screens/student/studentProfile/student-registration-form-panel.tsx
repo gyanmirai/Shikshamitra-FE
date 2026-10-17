@@ -45,7 +45,7 @@ export function StudentRegistrationFormPanel({
   const canEdit =
     details.recordsAccess === 'Full' &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.Create') &&
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add') &&
     sources.some((source) => (source.formEditableFieldCodes?.length ?? 0) > 0);
   const guard = useUnsavedNavigation(editing && dirty, {
     push: router.push,

@@ -92,7 +92,6 @@ describe('student navigation', () => {
     expect(onboarding?.path).toBe('/student/onboarding');
     expect(onboarding?.permissionName).toEqual([
       'Students.Onboarding.View',
-      'Students.Onboarding.Add',
     ]);
     expect(onboarding?.visibilityPermissionName).toBe('ShikshaMitra.Module.Students.Onboarding');
     expect(onboarding?.children?.map((item) => item.title)).toEqual([
@@ -105,7 +104,7 @@ describe('student navigation', () => {
     });
     expect(onboarding?.children?.find((item) => item.title === 'Onboarding Settings')).toMatchObject({
       path: '/student/onboarding/settings',
-      permissionName: 'Students.Onboarding.Add',
+      permissionName: 'Students.Onboarding.View',
     });
     expect(
       onboarding?.children

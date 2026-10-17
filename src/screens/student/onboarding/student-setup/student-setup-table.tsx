@@ -2,12 +2,12 @@
 
 import type { IData, IParams, IColumn } from 'src/components/customizabaleTable/types';
 
+import { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Stack,
@@ -19,11 +19,11 @@ import {
   TextField,
   IconButton,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import StudentPendingTasks from './student-pending-tasks';
 import StudentSetupDivisionEditor from './student-setup-division-editor';
+import { getStudentPendingTasks, getStudentSetupSummary } from './student-setup-summary';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
 import {
   hasAssignedDivision,
@@ -32,7 +32,6 @@ import {
 } from './student-setup-view';
 import {
   accountStatusMeta,
-  getReadinessSummary,
   onboardingStageMeta,
   type StudentOnboardingItem,
 } from './student-onboarding-model';
@@ -49,6 +48,7 @@ export default function StudentSetupTable({
   noDataText,
   noDataDescription,
   onClearWorklistFilters,
+  onViewAllStudents,
   onOpen,
   onOpenTask,
   selectedStudentIds,
@@ -90,6 +90,7 @@ export default function StudentSetupTable({
   noDataText: string;
   noDataDescription?: string;
   onClearWorklistFilters?: () => void;
+  onViewAllStudents?: () => void;
   onOpen: (studentId: string) => void;
   onOpenTask: (studentId: string, view: StudentSetupView) => void;
   selectedStudentIds: string[];
@@ -120,41 +121,69 @@ export default function StudentSetupTable({
   placementOptions: Array<{ label: string; value: string }>;
   isServerBacked: boolean;
 }) {
-  const [hoveredStudentId, setHoveredStudentId] = useState<string | null>(null);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const keepPendingOpen = useCallback((id: string) => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    setHoveredStudentId(id);
-  }, []);
-  const closePending = useCallback(() => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => setHoveredStudentId(null), 200);
-  }, []);
-  useEffect(
-    () => () => {
-      if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    },
-    []
-  );
+  const assignmentView = view === 'division' || view === 'gr-number' || view === 'roll-number';
   const tableData = useMemo(
     () =>
       rows.map((student) => {
-        const readiness = getReadinessSummary(student);
+        const setup = getStudentSetupSummary(student);
+        const pendingTasks = getStudentPendingTasks(student);
+        const assigned =
+          view === 'division'
+            ? hasAssignedDivision(student)
+            : view === 'gr-number'
+              ? student.grNo != null
+              : student.rollNo != null;
+        const baseline =
+          view === 'division'
+            ? student.divisionId
+            : view === 'gr-number'
+              ? student.grNo
+              : student.rollNo;
+        const changed =
+          manualEditing &&
+          editableIds.includes(student.id) &&
+          String(manualValues[student.id] ?? '').trim() !== String(baseline ?? '');
+        const locked =
+          view === 'gr-number'
+            ? student.grNumberLocked
+            : view === 'roll-number' && student.rollNumberLocked;
+        const hasError = Boolean(
+          manualErrors[student.id] || assignmentMessages[student.id]?.status === 'failed'
+        );
         return {
           ...student,
+          assignmentStatus: hasError
+            ? 'Needs attention'
+            : changed
+              ? 'Not saved'
+              : assigned
+                ? locked
+                  ? 'Locked'
+                  : 'Assigned'
+                : view === 'gr-number' && student.grPreview
+                  ? 'Preview only'
+                  : 'Pending',
+          assignmentStatusColor: hasError
+            ? 'error'
+            : changed
+              ? 'warning'
+              : assigned
+                ? 'success'
+                : 'warning',
+          setup,
+          pendingTasks,
           placement: `${student.standardName} / ${student.divisionName}`,
           identifiers: `GR ${student.grNo ?? student.grPreview ?? 'Pending'} · Roll ${student.rollNo ?? 'Pending'}`,
           grNumberTask: student.grNo ?? student.grPreview ?? 'Not assigned',
           rollNumberTask: student.rollNo ?? 'Not assigned',
           divisionTask: `${student.standardName} / ${student.divisionName}`,
-          readinessProgress: readiness.progress,
-          readinessText: `${readiness.passedCount}/${readiness.requiredCount} checks`,
-          blockerCount: readiness.blockingCount,
+          pendingWork: pendingTasks.map((task) => task.label).join('; ') || setup.pendingText,
           accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
-          statusLabel: onboardingStageMeta[student.status].label,
+          statusLabel:
+            view === 'readiness' ? setup.status.label : onboardingStageMeta[student.status].label,
         };
       }),
-    [rows]
+    [rows, view, manualEditing, editableIds, manualValues, manualErrors, assignmentMessages]
   );
 
   const columns = useMemo<IColumn[]>(() => {
@@ -174,6 +203,7 @@ export default function StudentSetupTable({
             indeterminate={someStudentsSelected}
             disabled={
               assignmentBusy ||
+              manualEditing ||
               !rows.some(
                 (row) =>
                   row.source === 'onboarding-case' &&
@@ -191,6 +221,7 @@ export default function StudentSetupTable({
             checked={selectedStudentIds.includes(String(row.id))}
             disabled={
               assignmentBusy ||
+              manualEditing ||
               row.source !== 'onboarding-case' ||
               Boolean(row.studentEnrollmentId) ||
               [4, 5, 6].includes(row.backendStatus ?? -1) ||
@@ -208,7 +239,7 @@ export default function StudentSetupTable({
         minWidth: 230,
         sticky: true,
         stickyPosition: 'left',
-        stickyOnMobile: !['division', 'gr-number', 'roll-number'].includes(view),
+        stickyOnMobile: !['readiness', 'division', 'gr-number', 'roll-number'].includes(view),
         render: (value, row) => (
           <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
             <Avatar
@@ -230,7 +261,7 @@ export default function StudentSetupTable({
                 .toUpperCase()}
             </Avatar>
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              {['division', 'gr-number', 'roll-number'].includes(view) ? (
+              {['readiness', 'division', 'gr-number', 'roll-number'].includes(view) ? (
                 <Button
                   variant="text"
                   color="inherit"
@@ -267,41 +298,25 @@ export default function StudentSetupTable({
       },
       {
         id: 'placement',
-        label: 'Placement',
+        label: view === 'readiness' || assignmentView ? 'Class & Division' : 'Placement',
         minWidth: 160,
         filterType: 'enum',
         enumOptions: placementOptions,
         cellSx: { whiteSpace: 'normal' },
       },
       {
-        id: 'readinessProgress',
-        label: 'Readiness',
-        minWidth: 170,
-        render: (value, row) => (
-          <Stack spacing={0.5}>
-            <Stack direction="row" justifyContent="space-between" spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                {row.readinessText}
-              </Typography>
-              <Typography variant="caption" fontWeight={700}>
-                {value}%
-              </Typography>
-            </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={Number(value)}
-              color={row.blockerCount ? 'warning' : 'success'}
-              aria-label={`${String(row.studentName)} readiness ${String(value)} percent`}
-              sx={{ height: 5, borderRadius: 1 }}
-            />
-            <StudentPendingTasks
-              student={rows.find((student) => student.id === row.id)!}
-              hovered={hoveredStudentId === row.id}
-              onKeepOpen={() => keepPendingOpen(String(row.id))}
-              onLeave={closePending}
-              onOpenTask={(nextView) => onOpenTask(String(row.id), nextView)}
-            />
-          </Stack>
+        id: 'pendingWork',
+        label: 'Pending work',
+        minWidth: 240,
+        cellSx: { whiteSpace: 'normal' },
+        render: (_value, row) => (
+          <StudentPendingTasks
+            studentName={row.studentName}
+            tasks={row.pendingTasks}
+            emptyText={row.setup.pendingText}
+            disabled={assignmentBusy}
+            onOpenTask={(nextView) => onOpenTask(String(row.id), nextView)}
+          />
         ),
       },
       {
@@ -396,18 +411,20 @@ export default function StudentSetupTable({
                   {value ?? 'Not assigned'}
                 </Typography>
               )}
-              <Label
-                variant="soft"
-                color={hasCommittedValue ? 'success' : row.grPreview ? 'info' : 'warning'}
-              >
-                {hasCommittedValue
-                  ? row.grNumberLocked
-                    ? 'Locked'
-                    : 'Assigned'
-                  : row.grPreview
-                    ? 'Preview only'
-                    : 'Pending'}
-              </Label>
+              {view !== 'gr-number' && (
+                <Label
+                  variant="soft"
+                  color={hasCommittedValue ? 'success' : row.grPreview ? 'info' : 'warning'}
+                >
+                  {hasCommittedValue
+                    ? row.grNumberLocked
+                      ? 'Locked'
+                      : 'Assigned'
+                    : row.grPreview
+                      ? 'Preview only'
+                      : 'Pending'}
+                </Label>
+              )}
               {view === 'gr-number' && manualEditing && manualBlockers[String(row.id)] && (
                 <Typography variant="caption" color="text.secondary">
                   {manualBlockers[String(row.id)]}
@@ -471,9 +488,11 @@ export default function StudentSetupTable({
                   {hasCommittedValue ? row.rollNo : 'Not assigned'}
                 </Typography>
               )}
-              <Label variant="soft" color={hasCommittedValue ? 'success' : 'warning'}>
-                {hasCommittedValue ? (row.rollNumberLocked ? 'Locked' : 'Assigned') : 'Pending'}
-              </Label>
+              {view !== 'roll-number' && (
+                <Label variant="soft" color={hasCommittedValue ? 'success' : 'warning'}>
+                  {hasCommittedValue ? (row.rollNumberLocked ? 'Locked' : 'Assigned') : 'Pending'}
+                </Label>
+              )}
               {view === 'roll-number' && manualEditing && manualBlockers[String(row.id)] && (
                 <Typography variant="caption" color="text.secondary">
                   {manualBlockers[String(row.id)]}
@@ -502,52 +521,45 @@ export default function StudentSetupTable({
         minWidth: 180,
         filterType: 'enum',
         enumOptions: placementOptions,
-        render: (_value, row) => {
-          const divisionAssigned = hasAssignedDivision(row as StudentOnboardingItem);
-
-          return (
-            <Stack spacing={0.5} alignItems="flex-start">
-              {view === 'division' && manualEditing && editableIds.includes(String(row.id)) ? (
-                <StudentSetupDivisionEditor
-                  caseId={String(row.id)}
-                  currentDivisionId={row.divisionId}
-                  studentName={String(row.studentName)}
-                  value={manualValues[String(row.id)] ?? ''}
-                  disabled={assignmentBusy}
-                  onChange={(value) => onManualChange?.(String(row.id), String(value))}
-                  onBlur={() => onManualBlur?.(String(row.id))}
-                  error={Boolean(manualErrors[String(row.id)])}
-                  helperText={manualErrors[String(row.id)]}
-                />
-              ) : (
-                <Typography variant="body2" fontWeight={600}>
-                  {row.standardName} / {row.divisionName || '—'}
-                </Typography>
-              )}
-              <Label variant="soft" color={divisionAssigned ? 'default' : 'warning'}>
-                {divisionAssigned ? 'Placed' : 'Unassigned'}
-              </Label>
-              {view === 'division' && manualEditing && manualBlockers[String(row.id)] && (
-                <Typography variant="caption" color="text.secondary">
-                  {manualBlockers[String(row.id)]}
-                </Typography>
-              )}
-              {view === 'division' && assignmentMessages[String(row.id)] && (
-                <Typography
-                  variant="caption"
-                  role={assignmentMessages[String(row.id)].status === 'failed' ? 'alert' : 'status'}
-                  color={
-                    assignmentMessages[String(row.id)].status === 'failed'
-                      ? 'error.main'
-                      : 'text.secondary'
-                  }
-                >
-                  {assignmentMessages[String(row.id)].message}
-                </Typography>
-              )}
-            </Stack>
-          );
-        },
+        render: (_value, row) => (
+          <Stack spacing={0.5} alignItems="flex-start">
+            {view === 'division' && manualEditing && editableIds.includes(String(row.id)) ? (
+              <StudentSetupDivisionEditor
+                caseId={String(row.id)}
+                currentDivisionId={row.divisionId}
+                studentName={String(row.studentName)}
+                value={manualValues[String(row.id)] ?? ''}
+                disabled={assignmentBusy}
+                onChange={(value) => onManualChange?.(String(row.id), String(value))}
+                onBlur={() => onManualBlur?.(String(row.id))}
+                error={Boolean(manualErrors[String(row.id)])}
+                helperText={manualErrors[String(row.id)]}
+              />
+            ) : (
+              <Typography variant="body2" fontWeight={600}>
+                {row.standardName} / {row.divisionName || '—'}
+              </Typography>
+            )}
+            {view === 'division' && manualEditing && manualBlockers[String(row.id)] && (
+              <Typography variant="caption" color="text.secondary">
+                {manualBlockers[String(row.id)]}
+              </Typography>
+            )}
+            {view === 'division' && assignmentMessages[String(row.id)] && (
+              <Typography
+                variant="caption"
+                role={assignmentMessages[String(row.id)].status === 'failed' ? 'alert' : 'status'}
+                color={
+                  assignmentMessages[String(row.id)].status === 'failed'
+                    ? 'error.main'
+                    : 'text.secondary'
+                }
+              >
+                {assignmentMessages[String(row.id)].message}
+              </Typography>
+            )}
+          </Stack>
+        ),
       },
       {
         id: 'accounts',
@@ -613,49 +625,84 @@ export default function StudentSetupTable({
           ),
       },
       {
-        id: 'statusLabel',
+        id: 'assignmentStatus',
         label: 'Status',
+        width: 140,
+        minWidth: 140,
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        stickyPosition: 'right',
+        render: (value, row) => <Label color={row.assignmentStatusColor}>{value}</Label>,
+      },
+      {
+        id: 'statusLabel',
+        label: assignmentView ? 'Setup status' : 'Status',
         width: 156,
         minWidth: 156,
         filterType: 'enum',
-        enumOptions: studentSetupStatusOptions.map(({ label }) => ({ label, value: label })),
+        enumOptions: studentSetupStatusOptions.map(({ label, setupLabel }) => ({
+          label: view === 'readiness' ? setupLabel : label,
+          value: view === 'readiness' ? setupLabel : label,
+        })),
         sticky: true,
         stickyPosition: 'right',
         stickyOnMobile: false,
         render: (_value, row) => (
           <Label
             variant="soft"
-            color={onboardingStageMeta[row.status as StudentOnboardingItem['status']].color}
+            color={
+              view === 'readiness'
+                ? row.setup.status.color
+                : onboardingStageMeta[row.status as StudentOnboardingItem['status']].color
+            }
           >
-            {onboardingStageMeta[row.status as StudentOnboardingItem['status']].label}
+            {row.statusLabel}
           </Label>
         ),
       },
       {
         id: 'actions',
-        label: 'Actions',
-        width: 88,
-        minWidth: 88,
-        align: 'right',
+        align: 'left',
+        label: view === 'readiness' ? 'Action' : 'Actions',
+        width: view === 'readiness' ? 180 : 88,
+        minWidth: view === 'readiness' ? 180 : 88,
         isFilter: false,
         isSort: false,
         excludeFromExport: true,
         sticky: true,
         stickyPosition: 'right',
-        render: (_value, row: IData) => (
-          <Tooltip title={`Review ${String(row.studentName)}`}>
-            <IconButton
-              aria-label={`Review ${String(row.studentName)}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpen(String(row.id));
+        render: (_value, row: IData) =>
+          view === 'readiness' ? (
+            <Button
+              size="small"
+              color="inherit"
+              variant={row.setup.action.primary ? 'contained' : 'outlined'}
+              aria-label={`${row.setup.action.label} for ${row.studentName}`}
+              disabled={assignmentBusy}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (row.setup.action.view) onOpenTask(String(row.id), row.setup.action.view);
+                else onOpen(String(row.id));
               }}
-              sx={{ color: 'text.secondary' }}
+              sx={{ width: 1, whiteSpace: 'nowrap' }}
             >
-              <Iconify icon="mdi:eye-outline" width={20} />
-            </IconButton>
-          </Tooltip>
-        ),
+              {row.setup.action.label}
+            </Button>
+          ) : (
+            <Tooltip title={`Review ${String(row.studentName)}`}>
+              <IconButton
+                aria-label={`Review ${String(row.studentName)}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen(String(row.id));
+                }}
+                sx={{ color: 'text.secondary' }}
+              >
+                <Iconify icon="mdi:eye-outline" width={20} />
+              </IconButton>
+            </Tooltip>
+          ),
       },
     ];
 
@@ -665,7 +712,7 @@ export default function StudentSetupTable({
         'studentName',
         'admissionRoute',
         'placement',
-        'readinessProgress',
+        'pendingWork',
         'identifiers',
         'accounts',
         'ownerName',
@@ -678,6 +725,7 @@ export default function StudentSetupTable({
         'placement',
         'grNumberTask',
         'ownerName',
+        'assignmentStatus',
         'statusLabel',
       ],
       'roll-number': [
@@ -686,6 +734,7 @@ export default function StudentSetupTable({
         'placement',
         'rollNumberTask',
         'ownerName',
+        'assignmentStatus',
         'statusLabel',
       ],
       division: [
@@ -694,6 +743,7 @@ export default function StudentSetupTable({
         'divisionTask',
         'rollNumberTask',
         'ownerName',
+        'assignmentStatus',
         'statusLabel',
       ],
       fees: [
@@ -731,6 +781,11 @@ export default function StudentSetupTable({
       )
       .map((column) => ({
         ...column,
+        defaultHidden:
+          (view === 'readiness' &&
+            ['admissionRoute', 'identifiers', 'accounts', 'ownerName'].includes(column.id)) ||
+          (assignmentView && ['ownerName', 'statusLabel'].includes(column.id)) ||
+          (view === 'division' && column.id === 'rollNumberTask'),
         isSort:
           column.id in studentSetupSortFields &&
           (taskScope === 'all' || (column.id !== 'rollNumberTask' && column.id !== 'divisionTask')),
@@ -740,9 +795,6 @@ export default function StudentSetupTable({
     allStudentsSelected,
     onOpen,
     onOpenTask,
-    hoveredStudentId,
-    keepPendingOpen,
-    closePending,
     onToggleAll,
     onToggleSelection,
     placementOptions,
@@ -761,21 +813,15 @@ export default function StudentSetupTable({
     assignmentBusy,
     taskScope,
     view,
+    assignmentView,
   ]);
 
   return (
     <CustomizableTable
-      rowProps={
-        view === 'readiness'
-          ? (row) => ({
-              onMouseEnter: () => keepPendingOpen(String(row.id)),
-              onMouseLeave: closePending,
-            })
-          : undefined
-      }
+      key={view === 'readiness' ? 'setup-status' : 'assignment'}
       tableId={tableId}
       tableTitle={tableTitle}
-      exportLabel="Export current page"
+      exportLabel={assignmentView ? 'Export' : 'Export current page'}
       columns={columns}
       data={tableData}
       isLoading={isLoading}
@@ -816,6 +862,11 @@ export default function StudentSetupTable({
               Clear filters
             </Button>
           )}
+          {onViewAllStudents && (
+            <Button size="small" variant="outlined" onClick={onViewAllStudents}>
+              View all students
+            </Button>
+          )}
         </Stack>
       }
       errorContent={
@@ -832,7 +883,9 @@ export default function StudentSetupTable({
           </Alert>
         ) : undefined
       }
-      searchFieldProps={{ placeholder: 'Search...' }}
+      searchFieldProps={{
+        placeholder: view === 'readiness' ? 'Search name or application no.' : 'Search...',
+      }}
       wrapperProps={{ sx: { minWidth: 0, minHeight: { xs: 360, md: 0 }, flex: 1 } }}
       tableContainerProps={{ sx: { minWidth: 0, minHeight: 0, height: 1 } }}
     />

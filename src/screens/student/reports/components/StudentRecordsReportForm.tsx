@@ -12,6 +12,7 @@ import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -348,6 +349,8 @@ const StudentRecordsReportForm = ({
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canExport = hasGrantedPermission(permissions, 'Students.Records.Reports.Add');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [reportRequest, setReportRequest] = useState<any>(null);
   const [submitType, setSubmitType] = useState<'preview' | 'export'>('preview');
@@ -389,6 +392,7 @@ const StudentRecordsReportForm = ({
     enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: async (values, { setSubmitting }) => {
+      if (submitType === 'export' && !canExport) { setSubmitting(false); return; }
       const requestPayload = buildStudentRecordsReportPayload(report, values);
 
       if (submitType === 'preview') {
@@ -1036,6 +1040,7 @@ const StudentRecordsReportForm = ({
                   variant="contained"
                   size="small"
                   loading={isExportCreating}
+                  disabled={!canExport}
                   onClick={() => setSubmitType('export')}
                 >
                   Queue Export

@@ -47,7 +47,7 @@ export function useWorkflowListActions() {
     canDelete: workflowAccess.canDelete,
     canClone: workflowAccess.canManage,
     canCreateVersion: workflowAccess.canManage,
-    canArchive: workflowAccess.canDelete,
+    canArchive: workflowAccess.canManage,
     canReopen: workflowAccess.canManage,
     canViewUsage: workflowAccess.canView,
   };

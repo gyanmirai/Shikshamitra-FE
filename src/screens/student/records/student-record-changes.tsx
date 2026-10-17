@@ -22,6 +22,10 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { readDashboardAcademicScope } from 'src/utils/student-dashboard-drilldown';
 import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
 import {
+  useGetStudentRecordsDirectoryQuery,
+  useGetStudentRecordsDirectoryOptionsQuery,
+} from 'src/redux/student/records/student-records-api';
+import {
   Box,
   Tab,
   Stack,
@@ -33,10 +37,6 @@ import {
   DialogActions,
   LinearProgress,
 } from '@mui/material';
-import {
-  useGetStudentRecordsDirectoryQuery,
-  useGetStudentRecordsDirectoryOptionsQuery,
-} from 'src/redux/student/records/student-records-api';
 import {
   useGetStudentRecordChangeQuery,
   useGetStudentRecordChangesQuery,
@@ -71,7 +71,7 @@ export default function StudentRecordChanges() {
   const pathname = usePathname();
   const params = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+  const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const [decision, setDecision] = useState<'approve' | 'reject' | 'cancel' | null>(null);
   const [decisionReason, setDecisionReason] = useState('');
   const [failure, setFailure] = useState<string | null>(null);
@@ -586,7 +586,7 @@ export default function StudentRecordChanges() {
                     !customDiff.isLoading &&
                     !customDiff.isError
                   )) &&
-                hasGrantedPermission(permissions, 'Students.Records.Changes.Approve') && (
+                hasGrantedPermission(permissions, 'Students.Records.Changes.Add') && (
                   <>
                     <Button onClick={() => setDecision('reject')} color="error">
                       Reject
@@ -595,7 +595,7 @@ export default function StudentRecordChanges() {
                   </>
                 )}
               {current?.canCancel &&
-                hasGrantedPermission(permissions, 'Students.Records.Changes.Cancel') && (
+                hasGrantedPermission(permissions, 'Students.Records.Changes.Add') && (
                   <Button onClick={() => setDecision('cancel')}>Cancel request</Button>
                 )}
               {current?.status === 'Applied' && canCreate && (

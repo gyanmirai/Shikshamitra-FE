@@ -38,9 +38,13 @@ export type OnboardingRules = {
   blockActivation: boolean;
 };
 
+export type AppLoginAccess = 'not-needed' | 'optional' | 'required';
+
 export type AccountRules = {
   studentAccount: boolean;
   guardianAccount: boolean;
+  studentAccountAccess?: AppLoginAccess;
+  guardianAccountAccess?: AppLoginAccess;
   verifiedGuardianContact: boolean;
   deliveryTiming: 'after-activation' | 'manual-release';
   sendStudentCredentialEmail: boolean;

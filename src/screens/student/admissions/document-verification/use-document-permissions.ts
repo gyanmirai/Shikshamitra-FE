@@ -12,7 +12,7 @@ export function useDocumentPermissions() {
     upload: granted('Add'),
     original: granted('Add'),
     review: granted('Add'),
-    waive: granted('Delete'),
+    waive: granted('Add'),
     download: granted('View'),
   };
 }

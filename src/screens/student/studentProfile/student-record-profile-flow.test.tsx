@@ -198,7 +198,7 @@ it('uses a contextual missing-form state without fixed detail cards or correctio
       })
     )
   );
-  renderStudentProfile(profileStudentId, [...readGrants, 'Students.Records.Changes.Create']);
+  renderStudentProfile(profileStudentId, [...readGrants, 'Students.Records.Changes.Add']);
   await screen.findByText('Aanya Patel');
   await userEvent.click(screen.getByRole('tab', { name: 'Details' }));
   expect(await screen.findByText('No Registration form available')).toBeVisible();

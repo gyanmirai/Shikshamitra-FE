@@ -7,7 +7,6 @@ import {
 } from 'src/screens/security/role/permission-grants';
 import {
   getNodeActionPermissionNames,
-  getAffectedNodePermissionNames,
   getNodeRevocationPermissionNames,
   getNodeActionPermissionNamesForAction,
 } from 'src/screens/security/role/account-settings-permissions';
@@ -30,10 +29,10 @@ const catalogue = [
   ...actions('Certificates'),
   ...actions('Reports'),
   ...actions('Settings'),
-  ...actions('Overrides', ['Request', 'Approve']),
-  ...actions('GuardianAccess', ['View', 'Manage']),
-  ...actions('Changes', ['View', 'Create', 'Approve']),
-  ...actions('Transitions', ['View', 'Create', 'Approve']),
+  ...actions('Overrides', ['View', 'Add']),
+  ...actions('GuardianAccess', ['View', 'Add']),
+  ...actions('Changes'),
+  ...actions('Transitions'),
   'ShikshaMitra.Module.Students.Records',
 ].map((name) => ({ name, isGranted: false }));
 
@@ -81,19 +80,11 @@ describe('Student Records security navigation', () => {
     expect(getNodeActionPermissionNames(submodule(title), catalogue)).toEqual(actions(feature));
   });
 
-  it.each([
-    ['Historical entry requests', 'Request'],
-    ['Historical entry approvals', 'Approve'],
-  ])('keeps %s separate from the other approval action', (title, action) => {
-    const node = studentListPermission(title);
-    const names = [...getAffectedNodePermissionNames(node, 'Add', true, catalogue)];
-    const updated = setPermissionGrants(catalogue, names, true);
-    expect(getChangedPermissionGrants(updated, catalogue)).toEqual([
-      { name: `${prefix}Overrides.${action}`, isGranted: true },
-    ]);
-    expect(
-      getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)
-    ).toEqual([]);
+  it('groups historical entry requests and decisions under Add/Update', () => {
+    const node = studentListPermission('Historical entry');
+    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'View', catalogue)).toEqual(actions('Overrides', ['View']));
+    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Add', catalogue)).toEqual(actions('Overrides', ['Add']));
+    expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)).toEqual([]);
   });
 
   it('keeps guardian grants distinct from profile grants', () => {
@@ -102,7 +93,7 @@ describe('Student Records security navigation', () => {
       actions('GuardianAccess', ['View'])
     );
     expect(getNodeActionPermissionNamesForAction(node.permissionName!, 'Add', catalogue)).toEqual(
-      actions('GuardianAccess', ['Manage'])
+      actions('GuardianAccess', ['Add'])
     );
     expect(
       getNodeActionPermissionNamesForAction(node.permissionName!, 'Delete', catalogue)

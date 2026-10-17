@@ -12,6 +12,10 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## App Login settings
+
+The existing Onboarding settings client persists the school's `readinessAccess` JSON through the shared provider; no new endpoint or cache is introduced. `app-login-settings-model.ts` adapts the UI's three account states to additive `studentAccountAccess`/`guardianAccountAccess` fields and the retained required-account booleans. Legacy false/true reads as Not needed/Required. Manual is the default, and choosing it clears automatic-email flags without changing unrelated readiness or numbering configuration. Existing automatic settings retain their saved timing until staff changes them. The backend owns validation, historical snapshots, optional completion behavior and dispatch eligibility; see [the settings contract](../../../Shikshamitra-BE/docs/modules/student/api.md#app-login-settings).
+
 ## Payment collection and deferral
 
 `admission-fee-collection-api.ts` adapts the Finance-owned admission application summary, prepare, collect-form and collection endpoints. Reads do not prepare dues. Only Collect Fees submits preparation; the shared Finance form receives an application adapter and explicit academic year, without inventing a Student ID or navigating to Finance. Mutations invalidate application, fee-selection, Finance collection/receipt and Onboarding caches. Receipt access remains independently gated.
@@ -24,7 +28,7 @@ The finalized application summary reuses the application/workflow and decision-h
 
 ## Daily Attendance workspace reads
 
-The take-attendance client reads `/students/attendance/context` for scoped academic options, active teacher assignments, school date and admin lock capability. `/students/attendance/workspace` supplies paged active students for broad filters; `/students/attendance/students` supplies the full dated class roster and revisions once one class/division is selected. These Attendance-owned reads do not require a Student Records grant.
+The take-attendance client reads `/students/attendance/context` for scoped academic options, active teacher assignments, school date and Add-authorized lock capability. `/students/attendance/workspace` supplies paged active students for broad filters; `/students/attendance/students` supplies the full dated class roster and revisions once one class/division is selected. Lock/Unlock enforce the same assigned-class scope as marking, with the existing database-administrator scope exception. These Attendance-owned reads do not require a Student Records grant.
 
 Broad paging, search and sorting run on the server. Full-class display paging/search is local to its loaded register; Save/Submit always retain the complete eligible roster. Date and academic selection plus `search`, `sort`, `page` and `pageSize` are URL-backed. Existing mark requests use `submit: false/true`; locking is a separate request. Mutations invalidate the affected register, workspace and reporting caches. Loading/error context disables marking and preserves unsaved work.
 
@@ -125,7 +129,7 @@ Activation also invalidates the Student Records directory tag so the newly activ
 
 The provider keeps a route-specific shared breadcrumb/header visible during initial load, a year change, request failure or invalid saved configuration, while keeping editable child settings unmounted.
 Identifier Unlock visibility additionally requires the filter-options response's server-derived `canUnlockIdentifiers` capability; absent/false capability or a failed scope lookup hides Unlock.
-The backend computes this capability from the current administrator scope and Repair permission, and the frontend does not infer it from role names.
+The backend computes this capability from Onboarding Add/Update (the Repair alias); the command separately checks the selected division scope. The frontend does not infer action access from role names.
 
 The case client owns GET/POST portal-account links and credential-email status/request operations.
 `src/screens/student/onboarding/student-setup/student-onboarding-model.ts` projects backend locks, fee confirmation, credentials pending and requirement-review flags, and splits the legacy combined identifier check into independent GR/Roll tasks.

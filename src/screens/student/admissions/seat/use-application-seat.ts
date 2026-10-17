@@ -1,7 +1,10 @@
+import type { RootState } from 'src/redux/store';
 import type { AdmissionSeatStage } from 'src/redux/student/admissions/admission-seat-types';
 
 import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useRenewAdmissionSeatMutation, useConfirmAdmissionSeatMutation,
   useReleaseAdmissionSeatMutation, useReserveAdmissionSeatMutation,
@@ -11,6 +14,8 @@ import type { SeatAction, SeatActionValue } from './seat-action-dialog';
 
 export function useApplicationSeat(applicationId: string, stageId: string, state: AdmissionSeatStage,
   canAdvance: boolean, onComplete: (concurrencyStamp?: string) => void) {
+  const permissions = useSelector((store: RootState) => store.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, 'Students.Admissions.Seats.Add');
   const [action, setAction] = useState<SeatAction>(null);
   const idempotencyKey = useRef('');
   const [reserve, reserveState] = useReserveAdmissionSeatMutation();
@@ -24,6 +29,7 @@ export function useApplicationSeat(applicationId: string, stageId: string, state
   const open = (next: Exclude<SeatAction, null>) => { idempotencyKey.current = crypto.randomUUID(); setAction(next); };
   const close = () => { if (!busy) { setAction(null); idempotencyKey.current = ''; } };
   const submit = async (value: SeatActionValue) => {
+    if (!action || !canWrite) return;
     try {
       const base = { applicationId, stageId, concurrencyStamp: state.concurrencyStamp,
         reservationConcurrencyStamp: state.reservationConcurrencyStamp ?? undefined,

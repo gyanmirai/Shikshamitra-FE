@@ -1,113 +1,74 @@
 import { useState } from 'react';
-import { Box, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { Stack, Button, Typography } from '@mui/material';
 
 import type { StudentSetupView } from './student-setup-view';
-import type { StudentOnboardingItem } from './student-onboarding-model';
-
-export const pendingTaskView = (key: string): StudentSetupView => {
-  if (key.includes('document')) return 'readiness';
-  if (key.includes('fee') || key.includes('finance')) return 'fees';
-  if (key.includes('account') || key.includes('credential')) return 'credentials';
-  if (key.includes('roll')) return 'roll-number';
-  if (key.includes('gr')) return 'gr-number';
-  if (key.includes('placement') || key.includes('division')) return 'division';
-  return 'readiness';
-};
+import type { StudentPendingTask } from './student-setup-summary';
 
 export default function StudentPendingTasks({
-  student,
+  studentName,
+  tasks,
+  emptyText,
+  disabled = false,
   onOpenTask,
-  hovered = false,
-  onKeepOpen,
-  onLeave,
 }: {
-  student: StudentOnboardingItem;
+  studentName: string;
+  tasks: StudentPendingTask[];
+  emptyText: string;
+  disabled?: boolean;
   onOpenTask: (view: StudentSetupView) => void;
-  hovered?: boolean;
-  onKeepOpen?: () => void;
-  onLeave?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const pending = student.readinessItems.filter(
-    (item) =>
-      ['pending', 'failed', 'not-connected'].includes(item.status) && item.key !== 'final_readiness'
-  );
-  const identifierIndex = pending.findIndex((item) => item.key.includes('identifiers'));
-  if (identifierIndex >= 0 && (!student.grNo || !student.rollNo)) {
-    const combined = pending[identifierIndex];
-    pending.splice(
-      identifierIndex,
-      1,
-      ...(!student.grNo ? [{ ...combined, key: 'gr_number', label: 'GR number' }] : []),
-      ...(!student.rollNo ? [{ ...combined, key: 'roll_number', label: 'Roll number' }] : [])
-    );
-  }
-  if (
-    student.studentEnrollmentId &&
-    student.credentialsPending &&
-    !pending.some((item) => pendingTaskView(item.key) === 'credentials')
-  ) {
-    pending.push({
-      key: 'credentials',
-      label: 'App credentials',
-      detail: 'Complete required app access and login emails.',
-      status: 'pending',
-      blocking: false,
-      owner: 'Onboarding',
-    });
-  }
+  const [expanded, setExpanded] = useState(false);
+  if (!tasks.length) return <Typography variant="body2">{emptyText}</Typography>;
+
   return (
-    <Tooltip
-      open={hovered || open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      arrow
-      placement="right"
-      enterDelay={300}
-      title={
-        <Box
-          onMouseEnter={onKeepOpen}
-          onMouseLeave={onLeave}
-          sx={{ p: 0.5, minWidth: 190, maxWidth: 300 }}
+    <Stack alignItems="flex-start" spacing={0.25}>
+      {(expanded ? tasks : tasks.slice(0, 1)).map((task) => (
+        <Button
+          key={task.key}
+          size="small"
+          color="inherit"
+          disabled={disabled}
+          aria-label={`${task.label} for ${studentName}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenTask(task.view);
+          }}
+          sx={{
+            px: 0,
+            py: 0.25,
+            minWidth: 0,
+            height: 'auto',
+            typography: 'body2',
+            textAlign: 'left',
+            justifyContent: 'flex-start',
+            whiteSpace: 'normal',
+            overflowWrap: 'anywhere',
+          }}
         >
-          <Typography variant="subtitle2">{pending.length} pending items</Typography>
-          <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-            {pending.map((item) => (
-              <Button
-                key={item.key}
-                size="small"
-                color="inherit"
-                sx={{ justifyContent: 'flex-start' }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenTask(pendingTaskView(item.key));
-                }}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Stack>
-          {!pending.length && (
-            <Typography variant="caption">All readiness items are complete.</Typography>
-          )}
-        </Box>
-      }
-    >
-      <Button
-        size="small"
-        color="inherit"
-        aria-expanded={hovered || open}
-        aria-label={`View ${pending.length} pending items for ${student.studentName}`}
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen((value) => !value);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') setOpen(false);
-        }}
-      >
-        {pending.length} pending
-      </Button>
-    </Tooltip>
+          {task.label}
+        </Button>
+      ))}
+      {tasks.length > 1 && (
+        <Button
+          size="small"
+          color="inherit"
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Show less pending work' : 'Show all pending work'} for ${studentName}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            setExpanded((value) => !value);
+          }}
+          sx={{
+            px: 0,
+            minWidth: 0,
+            height: 'auto',
+            typography: 'caption',
+            color: 'text.secondary',
+          }}
+        >
+          {expanded ? 'Show less' : `+${tasks.length - 1} more`}
+        </Button>
+      )}
+    </Stack>
   );
 }

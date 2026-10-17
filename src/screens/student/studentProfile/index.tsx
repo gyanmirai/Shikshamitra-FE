@@ -115,7 +115,7 @@ export function StudentProfile() {
   const [feeStudent, setFeeStudent] = useState<StudentDirectoryItem | null>(null);
   const canChange =
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const canAssignFees =
     hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.View`) &&
     hasGrantedPermission(permissions, `${financePermissions.fees.structureAssign}.Add`);

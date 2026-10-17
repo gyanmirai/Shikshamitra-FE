@@ -3,6 +3,7 @@ import { catalogueEntries } from './permission-catalogue';
 import { matrixAction } from './permission-matrix-action';
 import {
   getNodePermissionActions,
+  getPermissionActionLabel,
   getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
 
@@ -63,13 +64,14 @@ export function actionMatrixRows(selected: NavigationPermission, model: MatrixMo
       group: children.length > 0,
       actions: children.length
         ? []
-        : getNodePermissionActions(node.permissionName ?? [], grants).map((action) =>
-            matrixAction(
+        : getNodePermissionActions(node.permissionName ?? [], grants).map((action) => ({
+            ...matrixAction(
               getNodeActionPermissionNamesForAction(node.permissionName ?? [], action, grants),
               action,
               cached
-            )
-          ),
+            ),
+            label: getPermissionActionLabel(node.permissionName ?? [], action),
+          })),
     };
     return [
       row,

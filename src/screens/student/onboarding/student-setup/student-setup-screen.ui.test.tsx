@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   casesAvailable: true,
   casesFetching: false,
   casesError: false,
+  permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }],
   cancel: vi.fn(),
   clearResults: vi.fn(),
   replace: vi.fn(),
@@ -44,15 +45,21 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mocks.params,
 }));
 vi.mock('src/redux/student/onboarding/student-roll-number-batches-api', () => ({
-  useGetRollNumberBatchContextQuery: () => ({ currentData: { unassignedCount: 83, canAssignMissing: true }, isFetching: false, isError: false }),
+  useGetRollNumberBatchContextQuery: () => ({
+    currentData: { unassignedCount: 83, canAssignMissing: true },
+    isFetching: false,
+    isError: false,
+  }),
 }));
-vi.mock('./student-roll-number-workspace', () => ({ default: () => <div role="dialog">Roll Number Workspace</div> }));
+vi.mock('./student-roll-number-workspace', () => ({
+  default: () => <div role="dialog">Roll Number Workspace</div>,
+}));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
   useSelector: (select: (state: unknown) => unknown) =>
     select({
       globalState: { currentYear: { id: 'year-1' } },
-      auth: { permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }] },
+      auth: { permissions: mocks.permissions },
       confirmPopup: { isChanges: false },
     }),
 }));
@@ -121,7 +128,11 @@ vi.mock('./use-student-setup-assignment', () => ({
     },
   })),
 }));
-vi.mock('./student-setup-drawer', () => ({ default: () => null }));
+vi.mock('./student-setup-drawer', () => ({
+  default: ({ canCancel }: { canCancel: boolean }) => (
+    <output data-testid="cancel-onboarding-permission">{String(canCancel)}</output>
+  ),
+}));
 vi.mock('./student-onboarding-operation-dialog', () => ({ default: () => null }));
 vi.mock('./student-identifier-lock-controls', () => ({ default: () => null }));
 vi.mock('./student-setup-auto-assignment-dialog', () => ({
@@ -143,6 +154,7 @@ vi.mock('./student-setup-table', () => ({
     onPaginationChange,
     page,
     onColumnFilterChange,
+    columnFilters,
     isLoading,
   }: ComponentProps<typeof StudentSetupTable>) => (
     <section
@@ -152,6 +164,17 @@ vi.mock('./student-setup-table', () => ({
       data-loading={String(isLoading)}
     >
       <output data-testid="selected-students">{selectedStudentIds.join(',')}</output>
+      <output data-testid="column-filters">{JSON.stringify(columnFilters)}</output>
+      <button
+        type="button"
+        onClick={() =>
+          onColumnFilterChange([
+            { column: 'statusLabel', type: 'equals', value: 'Setup pending', valueType: 'enum' },
+          ])
+        }
+      >
+        Filter setup pending
+      </button>
       {showSelection &&
         rows.map((row) => (
           <button key={row.id} type="button" onClick={() => onToggleSelection(row.id)}>
@@ -192,6 +215,7 @@ const setRoute = (view = 'division', classes = 'grade-6') => {
 describe('Student Setup workspace selection wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
     mocks.dirty = false;
     mocks.manualEditing = false;
     mocks.casesAvailable = true;
@@ -219,6 +243,38 @@ describe('Student Setup workspace selection wiring', () => {
       mocks.dirty = false;
       mocks.manualEditing = false;
     });
+  });
+
+  it('maps the simple status label to the existing numeric URL filter', () => {
+    setRoute('readiness');
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Filter setup pending' }));
+    expect(mocks.params.get('status')).toBe('0');
+    expect(mocks.params.get('board')).toBe('board-cbse');
+    expect(mocks.params.get('class')).toBe('grade-6');
+  });
+
+  it.each([
+    { action: 'Add', canCancel: true },
+    { action: 'Delete', canCancel: false },
+    { action: 'View', canCancel: false },
+  ])('requires Add/Update for Onboarding cancellation with $action access', ({ action, canCancel }) => {
+    mocks.permissions = [{ name: `Students.Onboarding.${action}`, isGranted: true }];
+    render(element);
+    expect(screen.getByTestId('cancel-onboarding-permission')).toHaveTextContent(String(canCancel));
+  });
+
+  it.each([
+    ['readiness', 'Setup pending'],
+    ['division', 'To Prepare'],
+    ['fees', 'To Prepare'],
+  ])('keeps status filter chips accurate in %s', (view, label) => {
+    setRoute(view);
+    mocks.params.set('status', '0');
+    render(element);
+    expect(JSON.parse(screen.getByTestId('column-filters').textContent!)).toContainEqual(
+      expect.objectContaining({ column: 'statusLabel', value: label, displayValue: label })
+    );
   });
 
   it.each([
@@ -319,8 +375,27 @@ describe('Student Setup workspace selection wiring', () => {
     expect(mocks.clearResults).toHaveBeenCalledOnce();
   });
 
+  it('shows the Division selection count and clears it without changing the worklist scope', () => {
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Select case-1' }));
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
+    expect(screen.getByTestId('selected-students')).toBeEmptyDOMElement();
+    expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
+    expect(mocks.replace).not.toHaveBeenCalled();
+  });
+
+  it('does not replace an unread pending count with zero during assignment loading', () => {
+    mocks.casesAvailable = false;
+    mocks.casesFetching = true;
+    render(element);
+    expect(screen.getByLabelText('Loading pending count')).toBeInTheDocument();
+    expect(screen.queryByText('0 pending')).not.toBeInTheDocument();
+  });
+
   it('opens the full server roll workspace instead of reusing current-page automatic targets', () => {
-    setRoute('roll-number', 'grade-6'); mocks.params.set('division', 'division-a');
+    setRoute('roll-number', 'grade-6');
+    mocks.params.set('division', 'division-a');
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
     expect(screen.getByRole('dialog')).toHaveTextContent('Roll Number Workspace');

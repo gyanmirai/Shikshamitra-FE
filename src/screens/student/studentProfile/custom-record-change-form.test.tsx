@@ -46,7 +46,7 @@ function renderForm(source: RecordRegistrationSource, overrides: Partial<FormPro
   stores.push(store);
   store.dispatch(
     setPermissions(
-      ['Students.Records.Changes.View', 'Students.Records.Changes.Create'].map((name) => ({
+      ['Students.Records.Changes.View', 'Students.Records.Changes.Add'].map((name) => ({
         name,
         isGranted: true,
       }))

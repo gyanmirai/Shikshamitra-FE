@@ -315,6 +315,8 @@ export function StudentProfileView({
                 changesLoading={changes.isLoading || (changes.isFetching && !changes.currentData)}
                 changesError={changes.isError}
                 canReadChanges={canViewChanges}
+                detailsLoading={loadingDetails}
+                detailsError={detailsQuery.isError}
               />
             )}
             {view === 'details' &&

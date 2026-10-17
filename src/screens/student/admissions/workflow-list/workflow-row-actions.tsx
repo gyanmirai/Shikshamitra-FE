@@ -54,7 +54,10 @@ export function WorkflowRowActions({
       id: 'edit',
       label: `Edit ${workflow.name}`,
       icon: 'mdi:pencil-outline',
-      disabled: workflow.status !== 0,
+      disabled: ![0, 3].includes(workflow.status),
+      tooltip: [0, 3].includes(workflow.status)
+        ? undefined
+        : 'Only draft and validated workflows can be edited.',
       onClick: onEdit,
     });
   if (canDelete)

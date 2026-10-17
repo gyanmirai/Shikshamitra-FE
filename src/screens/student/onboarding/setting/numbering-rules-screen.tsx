@@ -1,20 +1,23 @@
 'use client';
 
 import type { Board } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { uuidv4 } from 'src/utils/uuidv4';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
-import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import {
   Box,
   Stack,
@@ -144,6 +147,8 @@ function NumberingRulesScreen({
   createActionRef,
 }: ScreenProps & { kind: 'gr' | 'roll' }) {
   const isGr = kind === 'gr';
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canConfigure = hasGrantedPermission(permissions, studentPermissions.onboarding.configure);
   const router = useRouter();
   const filters = useOnboardingAcademicStructure({ includeCampuses: false });
   const { settings, scope, saveGrNumberConfiguration, saveRollNumberConfiguration } =
@@ -177,6 +182,7 @@ function NumberingRulesScreen({
     initialValues: initialValues(),
     validationSchema: isGr ? grSchema : rollSchema,
     onSubmit: async (values, helpers) => {
+      if (!canConfigure) return;
       const applicability = normalizeSingleAcademicApplicability(
         values,
         filters.allBoards,
@@ -250,6 +256,7 @@ function NumberingRulesScreen({
     blockNavigation: formik.isSubmitting || Boolean(publishingId),
   });
   const openNew = () => {
+    if (!canConfigure) return;
     setEditingId(null);
     focusedSubmit.current = 0;
     formik.resetForm({ values: initialValues() });
@@ -271,6 +278,7 @@ function NumberingRulesScreen({
       ?.focus();
   }, [formik.submitCount, formik.isValid]);
   const openExisting = (configuration: Configuration) => {
+    if (!canConfigure) return;
     setEditingId(configuration.id);
     focusedSubmit.current = 0;
     const normalized = normalizeSingleAcademicApplicability(
@@ -311,7 +319,7 @@ function NumberingRulesScreen({
     });
   };
   const publish = async (configuration: Configuration) => {
-    if (publishingId) return;
+    if (!canConfigure || publishingId) return;
     setPublishingId(configuration.id);
     setError('');
     try {
@@ -373,7 +381,7 @@ function NumberingRulesScreen({
       excludeFromExport: true,
       render: (_: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === row.id);
-        if (!configuration || getNumberingRuleStatus(configuration) === 'superseded') return null;
+        if (!canConfigure || !configuration || getNumberingRuleStatus(configuration) === 'superseded') return null;
         return (
           <ThreeDotsActions
             showEditIcon
@@ -424,7 +432,7 @@ function NumberingRulesScreen({
             { name: title },
           ]}
           action={
-            <Button variant="contained" onClick={openNew} startIcon={<Iconify icon="mdi:plus" />}>
+            <Button variant="contained" disabled={!canConfigure} onClick={openNew} startIcon={<Iconify icon="mdi:plus" />}>
               {isGr ? 'Add series' : 'Add roll number rule'}
             </Button>
           }
@@ -433,6 +441,7 @@ function NumberingRulesScreen({
       {embedded && showWorkspaceBar && (
         <Button
           variant="contained"
+          disabled={!canConfigure}
           sx={{ alignSelf: 'flex-end' }}
           onClick={openNew}
           startIcon={<Iconify icon="mdi:plus" />}
@@ -461,7 +470,7 @@ function NumberingRulesScreen({
         />
       </Box>
       <SettingsDrawer
-        open={editorOpen}
+        open={editorOpen && canConfigure}
         title={drawerTitle}
         description="Save a draft, then publish it from the table. Published changes create a new version and preserve assigned numbers."
         descriptionDisplay="tooltip"
@@ -470,6 +479,7 @@ function NumberingRulesScreen({
         onClose={close}
         onSubmit={() => formik.submitForm()}
         submitLabel="Save draft"
+        submitDisabled={!canConfigure}
         busy={formik.isSubmitting}
       >
         <Stack component="form" noValidate ref={formRef} onSubmit={formik.handleSubmit} spacing={2}>

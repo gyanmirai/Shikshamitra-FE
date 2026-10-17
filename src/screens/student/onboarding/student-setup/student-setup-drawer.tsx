@@ -993,7 +993,7 @@ export default function StudentSetupDrawer({
       </Stack>
 
       <CustomDialog
-        open={confirmActivation}
+        open={confirmActivation && canManage}
         handleClose={() => setConfirmActivation(false)}
         title="Activate Student"
         maxWidth="sm"
@@ -1041,6 +1041,7 @@ export default function StudentSetupDrawer({
               !activationPreviewReady
             }
             onClick={async () => {
+              if (!canManage) return;
               await onPrimaryAction?.(
                 activeStudent,
                 activationPreview?.concurrencyStamp,
@@ -1054,7 +1055,7 @@ export default function StudentSetupDrawer({
         </DialogActions>
       </CustomDialog>
 
-      {waiverCheck ? (
+      {waiverCheck && canManage ? (
         <StudentOnboardingStepWaiverDialog
           check={waiverCheck}
           student={activeStudent}

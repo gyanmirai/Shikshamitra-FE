@@ -344,7 +344,6 @@ beforeEach(() => {
   );
   mocks.permissions = [
     { name: 'Students.Attendance.MarkAttendance.Add', isGranted: true },
-    { name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true },
   ];
   mocks.context = {
     currentData: {
@@ -517,7 +516,7 @@ describe('Daily Attendance workspace', () => {
     expect(screen.getByRole('button', { name: 'Pending: Not scheduled' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Present: Not scheduled' })).toBeDisabled();
   });
-  it('does not expose lock controls to teachers', async () => {
+  it('does not expose lock controls when the server denies the assigned teacher scope', async () => {
     mocks.context.currentData = {
       ...(mocks.context.currentData as object),
       isAdmin: false,
@@ -529,10 +528,23 @@ describe('Daily Attendance workspace', () => {
     expect(screen.queryByRole('button', { name: 'Lock attendance' })).not.toBeInTheDocument();
   });
   it('does not expose Lock without both the server capability and frontend permission', async () => {
-    mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Add', isGranted: true }];
+    mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true }];
     render(<TakeAttendanceScreen />);
     await screen.findByRole('button', { name: 'Present: Aarav' });
     expect(screen.queryByRole('button', { name: 'Lock attendance' })).not.toBeInTheDocument();
+  });
+  it('allows an assigned teacher to lock with Add/Update and current server scope authority', async () => {
+    mocks.permissions = [{ name: 'Students.Attendance.MarkAttendance.Add', isGranted: true }];
+    mocks.context.currentData = {
+      ...(mocks.context.currentData as object),
+      isAdmin: false,
+      canManageLock: true,
+    };
+    const registered = day({ isSubmitted: true, attendanceDayId: 'day' });
+    registered.students.forEach((student) => { student.status = 1; });
+    mocks.query = { ...mocks.query, currentData: registered };
+    render(<TakeAttendanceScreen />);
+    expect(await screen.findByRole('button', { name: 'Lock attendance' })).toBeEnabled();
   });
   it('requires an audit reason for changing submitted attendance without a correction queue', async () => {
     const register = day({ isSubmitted: true, attendanceDayId: 'day' });
@@ -790,7 +802,6 @@ describe('Daily Attendance workspace', () => {
     ).not.toBeInTheDocument();
   });
   it('allows complete submitted attendance to be reviewed and resubmitted when the server flags a changed roster', async () => {
-    mocks.permissions.push({ name: 'Students.Attendance.MarkAttendance.Delete', isGranted: true });
     const registered = day({ isSubmitted: true, needsReview: true });
     registered.students.forEach((row) => {
       row.status = 1;

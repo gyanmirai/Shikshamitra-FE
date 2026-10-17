@@ -54,11 +54,11 @@ import type { StudentAssignmentType } from './student-onboarding-operation-dialo
 const studentSetupTooltip = (
   <Box sx={{ p: 1.5, maxWidth: 340 }}>
     <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-      Onboarding worklist
+      Student setup
     </Typography>
     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-      Review each admitted student&apos;s placement, identifiers, documents, accounts, and
-      activation readiness in one workspace.
+      Check what is pending for each student: class and division, GR and roll numbers, documents,
+      and app login.
     </Typography>
     <Typography variant="caption" fontWeight={700} color="text.primary">
       Recommended flow
@@ -71,7 +71,7 @@ const studentSetupTooltip = (
         Use academic filters to narrow the student group.
       </Typography>
       <Typography component="li" variant="caption" color="text.secondary">
-        Open a student to resolve blockers and review activation readiness.
+        Use the next-step button to finish pending work, or open the student to review their setup.
       </Typography>
     </Box>
   </Box>
@@ -105,24 +105,21 @@ const assignmentViewMeta: Record<
       'No students are waiting for fee structure confirmation. Switch to All students to review confirmed fee structures.',
   },
   credentials: {
-    title: 'App credentials',
+    title: 'App login',
     pendingEmptyText:
-      'No students have pending app access or credential emails. Switch to All students to review app access.',
+      'No students have pending app login setup or emails. Switch to All students to review app access.',
   },
   'gr-number': {
-    title: 'GR number assignment',
-    pendingEmptyText:
-      'No students are waiting for a GR number. Switch to All students to review existing GR numbers.',
+    title: 'GR Number',
+    pendingEmptyText: 'No remaining GR assignments.',
   },
   'roll-number': {
-    title: 'Roll number assignment',
-    pendingEmptyText:
-      'No students are waiting for a Roll number. Switch to All students to review existing Roll numbers.',
+    title: 'Roll Number',
+    pendingEmptyText: 'No remaining Roll assignments.',
   },
   division: {
-    title: 'Division assignment',
-    pendingEmptyText:
-      'No students are without a division. Switch to All students to review existing placements.',
+    title: 'Division',
+    pendingEmptyText: 'No remaining Division assignments.',
   },
 };
 
@@ -138,7 +135,7 @@ export default function StudentSetupScreen() {
     : currentYear?.id;
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canManageOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.Add');
-  const canCancelOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.Delete');
+  const canCancelOnboarding = hasGrantedPermission(permissions, 'Students.Onboarding.Add');
   const { settings } = useOnboardingSettings();
   const activeView = parseStudentSetupView(searchParams.get('view') || dashboardQueue || null);
   const activeTaskScope = parseStudentSetupTaskScope(
@@ -271,7 +268,8 @@ export default function StudentSetupScreen() {
       const latest = (column: string) =>
         filters.filter((filter) => filter.column === column).at(-1);
       const statusOption = studentSetupStatusOptions.find(
-        ({ label }) => label === latest('statusLabel')?.value
+        ({ label, setupLabel }) =>
+          (activeView === 'readiness' ? setupLabel : label) === latest('statusLabel')?.value
       );
       const placementFilter = latest(activeView === 'division' ? 'divisionTask' : 'placement');
       const studentFilter = latest('studentName');
@@ -474,7 +472,12 @@ export default function StudentSetupScreen() {
             type: 'equals',
             value: placementDivisionId,
             valueType: 'enum',
-            label: activeView === 'division' ? 'Current placement' : 'Placement',
+            label:
+              activeView === 'division'
+                ? 'Current placement'
+                : activeView === 'readiness'
+                  ? 'Class & Division'
+                  : 'Placement',
             displayValue:
               placementOptions.find((option) => option.value === placementDivisionId)?.label ??
               'Selected division',
@@ -511,10 +514,16 @@ export default function StudentSetupScreen() {
           {
             column: 'statusLabel',
             type: 'equals',
-            value: selectedStatusOption.label,
+            value:
+              activeView === 'readiness'
+                ? selectedStatusOption.setupLabel
+                : selectedStatusOption.label,
             valueType: 'enum',
             label: 'Status',
-            displayValue: selectedStatusOption.label,
+            displayValue:
+              activeView === 'readiness'
+                ? selectedStatusOption.setupLabel
+                : selectedStatusOption.label,
           },
         ]
       : []),
@@ -637,6 +646,31 @@ export default function StudentSetupScreen() {
     activeTaskScope === 'pending'
       ? (onboardingQuery.currentData?.totalCount ?? 0)
       : (pendingCountQuery.currentData?.totalCount ?? 0);
+  const assignmentScopeLoading = Boolean(
+    assignmentType &&
+    academicYearId &&
+    ((filterOptionsQuery.isFetching && !filterOptionsQuery.currentData) ||
+      (!dashboardQueue &&
+        ((!selectedBoardId && filterOptionsQuery.currentData?.boards.length) ||
+          (!selectedMediumId &&
+            filterOptionsQuery.currentData?.mediums.some(
+              (medium) => medium.parentId === selectedBoardId
+            )))))
+  );
+  const automaticDisabledReason = !assignmentType
+    ? undefined
+    : !canManageOnboarding
+      ? 'Read-only access.'
+      : activeView === 'division' && !showDivisionSelection
+        ? 'Select one class for Auto.'
+        : activeView === 'roll-number'
+          ? !rollScope
+            ? 'Select one class and division for Auto.'
+            : !rollContext.currentData?.canAssignMissing &&
+                Boolean(rollContext.currentData?.unassignedCount)
+              ? rollContext.currentData?.blockedReason || undefined
+              : undefined
+          : undefined;
   const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
   const focusedCaseQuery = useGetStudentOnboardingCaseQuery(focusedCaseId ?? '', {
     skip: !focusedCaseId || Boolean(sourceRows.find((student) => student.id === focusedCaseId)),
@@ -780,7 +814,7 @@ export default function StudentSetupScreen() {
           idempotencyKey: crypto.randomUUID(),
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${student.studentName} is active and available in Student Records. Complete Credentials if app access is pending.`,
+          message: `${student.studentName} is active and available in Student Records. Open App Login if app access is pending.`,
         });
         setSelectedStudentId(null);
         return;
@@ -918,7 +952,24 @@ export default function StudentSetupScreen() {
                 view={activeView}
                 title={assignmentViewMeta[activeView].title}
                 scope={activeTaskScope}
-                pendingCount={pendingCount}
+                pendingCount={
+                  assignmentType &&
+                  (activeTaskScope === 'pending'
+                    ? onboardingQuery.isError
+                    : pendingCountQuery.isError)
+                    ? undefined
+                    : pendingCount
+                }
+                pendingLoading={Boolean(
+                  assignmentType &&
+                  (assignmentScopeLoading ||
+                    (activeTaskScope === 'pending'
+                      ? onboardingQuery.isFetching && !onboardingQuery.currentData
+                      : pendingCountQuery.isFetching && !pendingCountQuery.currentData))
+                )}
+                selectedCount={showDivisionSelection ? selectedStudentIds.length : 0}
+                onClearSelection={() => setSelectedStudentIds([])}
+                automaticDisabledReason={automaticDisabledReason}
                 onScopeChange={(scope) =>
                   navigate(() => {
                     setTablePage(1);
@@ -1013,6 +1064,22 @@ export default function StudentSetupScreen() {
                 }
               />
             )}
+            {activeView === 'roll-number' && rollScope && rollContext.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    size="small"
+                    disabled={interactionBusy}
+                    onClick={() => rollContext.refetch()}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                Could not load roll numbering.
+              </Alert>
+            )}
             <StudentSetupTable
               rows={displayedRows}
               showSelection={showDivisionSelection && canManageOnboarding}
@@ -1026,6 +1093,7 @@ export default function StudentSetupScreen() {
               onManualChange={(id, value) => assignment.form.setFieldValue(`values.${id}`, value)}
               onManualBlur={(id) => assignment.form.setFieldTouched(`values.${id}`)}
               isLoading={
+                assignmentScopeLoading ||
                 onboardingQuery.isLoading ||
                 (onboardingQuery.isFetching &&
                   !onboardingQuery.currentData &&
@@ -1038,7 +1106,7 @@ export default function StudentSetupScreen() {
               tableId={`student-onboarding-${activeView}-worklist`}
               tableTitle={
                 activeView === 'readiness'
-                  ? 'Onboarding readiness'
+                  ? 'Student setup status'
                   : assignmentViewMeta[activeView].title
               }
               noDataText={
@@ -1057,6 +1125,16 @@ export default function StudentSetupScreen() {
               noDataDescription={
                 academicYearId && !hasWorklistFilters && activeView === 'readiness'
                   ? 'Students appear here after an admission is accepted.'
+                  : undefined
+              }
+              onViewAllStudents={
+                assignmentType && activeTaskScope === 'pending'
+                  ? () =>
+                      navigate(() => {
+                        setTablePage(1);
+                        setSelectedStudentIds([]);
+                        router.replace(getScopeHref('all'), { scroll: false });
+                      })
                   : undefined
               }
               onClearWorklistFilters={

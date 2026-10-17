@@ -9,8 +9,8 @@ export function useEligibilityPermissions() {
     hasGrantedPermission(permissions, `Students.Admissions.Eligibility.${action}`);
   return {
     view: granted('View'),
-    evaluate: granted('Evaluate'),
-    requestException: granted('RequestException'),
-    reviewException: granted('ReviewException'),
+    evaluate: granted('Add'),
+    requestException: granted('Add'),
+    reviewException: granted('Add'),
   };
 }

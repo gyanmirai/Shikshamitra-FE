@@ -313,7 +313,7 @@ export default function StudentOnboardingPortalAccounts({
     student.backendStatus !== 5 &&
     !!student.studentId &&
     hasGrantedPermission(permissions, 'Students.Records.Changes.View') &&
-    hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+    hasGrantedPermission(permissions, 'Students.Records.Changes.Add');
   const formError = credentials.isError
     ? 'Credentials could not be refreshed. Refresh again before sending.'
     : typeof formik.status === 'string'
