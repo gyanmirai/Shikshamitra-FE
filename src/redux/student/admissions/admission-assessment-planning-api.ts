@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType as tags } from 'src/redux/tagTypes';
+import { instituteSetupType, studentAdmissionsCrmType as tags } from 'src/redux/tagTypes';
 
 import { ASSESSMENTS_URL, unwrapAssessment } from './admission-assessment-types';
 
@@ -34,7 +34,7 @@ export const admissionAssessmentPlanningApi = api.injectEndpoints({
     getAssessmentSessionResources: builder.query<AssessmentSessionResources, void>({
       query: () => `${ASSESSMENTS_URL}/session-resources`,
       transformResponse: unwrapAssessment<AssessmentSessionResources>,
-      providesTags: [tags.exam],
+      providesTags: [tags.exam, instituteSetupType.rooms, instituteSetupType.buildings],
     }),
     getAssessmentSessionSlots: builder.query<AssessmentInterviewSlot[], string>({
       query: (id) => `${ASSESSMENTS_URL}/sessions/${id}/slots`,

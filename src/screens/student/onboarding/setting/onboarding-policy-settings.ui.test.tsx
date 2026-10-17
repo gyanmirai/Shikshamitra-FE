@@ -208,6 +208,50 @@ const renderSettings = (children: React.ReactNode, onPersist?: any, initialSetti
 );
 
 describe('Onboarding numbering settings', () => {
+  it.each(['gr', 'roll'] as const)('saves an inherited %s draft before publishing it', async (kind) => {
+    const persist = vi.fn().mockResolvedValue(undefined);
+    const section = kind === 'gr' ? 'grNumber' : 'rollNumber';
+    renderSettings(kind === 'gr' ? <GrNumberSettingsScreen /> : <RollNumberSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', {
+      name: kind === 'gr' ? 'Publish Default GR series' : 'Publish All classes',
+    }));
+    await waitFor(() => expect(persist).toHaveBeenCalledTimes(2));
+    expect(persist.mock.calls[0][1][section].configurations[0])
+      .toMatchObject({ status: 'draft', isActive: false });
+    expect(persist.mock.calls[1][1][section].configurations[0])
+      .toMatchObject({ status: 'published', isActive: true });
+  });
+
+  it('does not publish if saving the inherited draft fails and shows the backend reason', async () => {
+    const persist = vi.fn().mockRejectedValue({
+      data: { data: { Reason: 'Refresh the configuration before publishing.' } },
+    });
+    renderSettings(<GrNumberSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Default GR series' }));
+    expect(await screen.findByText('Refresh the configuration before publishing.')).toBeInTheDocument();
+    expect(persist).toHaveBeenCalledTimes(1);
+    expect(persist.mock.calls[0][1].grNumber.configurations[0])
+      .toMatchObject({ status: 'draft', isActive: false });
+    expect(screen.getByRole('button', { name: 'Publish Default GR series' })).toBeEnabled();
+  });
+
+  it('retains the saved draft after a publish failure and retries without another draft save', async () => {
+    const persist = vi.fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce({ data: { data: { Reason: 'Refresh and retry publication.' } } })
+      .mockResolvedValueOnce(undefined);
+    renderSettings(<GrNumberSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Default GR series' }));
+    expect(await screen.findByText('Refresh and retry publication.')).toBeInTheDocument();
+    expect(persist).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Publish Default GR series' }));
+    await waitFor(() => expect(persist).toHaveBeenCalledTimes(3));
+    expect(persist.mock.calls[2][1].grNumber.configurations[0])
+      .toMatchObject({ status: 'published', isActive: true });
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Publish Default GR series' }))
+      .not.toBeInTheDocument());
+  });
+
   it('allows a View-only user to read numbering rules without edit or publish actions', () => {
     auth.canConfigure = false;
     renderSettings(<GrNumberSettingsScreen />);

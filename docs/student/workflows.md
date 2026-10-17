@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -150,6 +150,7 @@ Configure the academic structure and Admission Offering before preparing student
    Cancel confirms discarding unsaved changes. Failed saves retain the draft; permission and loading states disable writes. The automatic-check explanation is collapsed by default.
 3. Admission and its published workflow supply the common readiness and document requirements automatically, without a named readiness rule or Offering linkage.
 4. In the **GR Number** or **Roll Number** settings tab, configure numbering separately; new series start as Draft and require Publish before use.
+   Publishing an inherited/default draft first saves it in the selected settings scope, then publishes it; a failed draft save stops publication, and a failed publish leaves the saved draft available for retry.
    GR applicability uses Board/Medium/Class and retains School Level for GSEB; Roll uses Board/Medium/Class.
    The removed scope/reset/format/effective-date controls and Division Changes menu are not prerequisites.
 5. Finalize the accepted application and open its case in **Setup Status**.
@@ -191,6 +192,9 @@ Each case is refreshed and saved sequentially; saved rows are not repeated after
 Concurrent changes are not overwritten: cancel editing and reopen Manual to review the latest values before entering a new correction.
 Drafts are protected when changing filters, page, scope or tabs, and an external academic-scope change blocks saving the old draft.
 Fees and App Login retain their per-student Review actions without selection checkboxes or Auto/Manual controls.
+Finance-settled fees show a read-only summary, **Settled** label and saved receipt downloads instead of **Collect fees**. A saved Admission fee choice with payment evidence, no collection deferral and matching, fully settled Finance obligations automatically satisfies the Onboarding Fees task. It is shown as **Completed in Admissions**, with the pinned structure and included heads as text and no repeated confirmation. Pending counts, progress and activation use the same backend decision; viewing the case does not create a manual confirmation or another payment. Partial balances, pending verification, charges, late fees and collect-later cases retain the existing confirmation and Finance collection flows. Other activation requirements remain mandatory.
+
+The activation dialog shows the latest preview's `lastError` before the checklist's `primaryBlocker` fallback. Current blockers, an existing enrollment, loading or a failed preview keep activation disabled. The command uses the preview's concurrency stamp; Cancel, Close and Escape are locked while activation is in progress. Existing action permissions and server readiness gates remain unchanged.
 
 The retained per-student GR and Roll dialogs contain only their own inputs; a GR action never opens the Roll form or requires a Roll preview.
 Roll numbering starts at 1 within each Class/Division/year, so Class 5-A and 5-B may each contain Roll 1.
@@ -521,8 +525,9 @@ An empty fee candidate list shows the shared empty state, a short class/year exp
 
 ## Correcting a guardian credential email
 
-Credentials uses the selected Father, Mother or Other guardian's saved profile email; the Recipient selector is shown only when a choice is needed.
+Credentials uses the selected Father, Mother or Other guardian's saved profile email; the Recipient selector is shown only when a choice is needed and includes the saved email beside each parent. A single saved parent email is selected automatically, including a contact-only profile whose structured name is not captured. Form-only custom answers do not establish a credential recipient; use the corresponding Student record field binding.
 When the email is missing, authorized Records editors can open Correct saved profile email through the normal audited Records change flow.
+If the backend reports `Students:Records:OnboardingIncomplete`, the correction dialog explains the activation prerequisite instead of presenting a generic load error and ineffective retry. It does not bypass Records eligibility.
 If review is required, follow Review correction in Changes & Approvals and wait for a different authorized reviewer.
 Refresh after the change is applied, review the correct recipient and use Send Credentials.
 The account owner verifies their own mailbox and chooses a password through the secure setup link; staff do not attest mailbox verification in this form.

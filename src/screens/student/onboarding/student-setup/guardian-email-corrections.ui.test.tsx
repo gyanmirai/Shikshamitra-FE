@@ -50,6 +50,27 @@ beforeEach(() => {
 });
 
 describe('Case-scoped guardian email corrections', () => {
+  it('explains the activation prerequisite instead of offering an ineffective retry', () => {
+    mocks.snapshot = {
+      isError: true,
+      error: { status: 400, data: { code: 'Students:Records:OnboardingIncomplete' } },
+      refetch: vi.fn(),
+    };
+    render(
+      <GuardianProfileEmailDialog
+        studentId="student-1"
+        relationship="father"
+        caseLabel="APP-1"
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Activate the student before correcting family details in Student Records.'
+    );
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
   it('changes only Father email through the audited Records command', async () => {
     const onSaved = vi.fn();
     render(

@@ -1,4 +1,4 @@
-import storage from 'redux-persist/lib/storage';
+import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
@@ -8,6 +8,15 @@ import authReducer from './auth/authSlice';
 import globalStateReducer from './globalState/globalSlice';
 import { openLibraryApi } from './library/LibraryDataSearch';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
+
+const storage =
+  typeof window !== 'undefined'
+    ? createWebStorage('local')
+    : {
+        getItem: (_key: string) => Promise.resolve(null),
+        setItem: (_key: string, value: string) => Promise.resolve(value),
+        removeItem: (_key: string) => Promise.resolve(),
+      };
 
 const persistConfig = {
   key: 'root',

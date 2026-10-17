@@ -138,6 +138,25 @@ const setRecipients = (recipients: StudentCredentialsRecipient[]) => {
   mocks.query.data = { caseId: 'case-1', concurrencyStamp: 'workspace-stamp', recipients };
   mocks.query.currentData = mocks.query.data;
 };
+
+it('shows saved email addresses in the parent choices and retains the activation block', async () => {
+  setRecipients([
+    studentRecipient,
+    { ...fatherRecipient, name: null, canSend: false, blockedReason: 'Activate the student first.' },
+    { ...motherRecipient, canSend: false, blockedReason: 'Activate the student first.' },
+  ]);
+  panel();
+  chooseGuardian();
+  selectRecipient('father');
+  await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
+  expect(screen.getByRole('option', { name: 'Father · raj@example.test' })).toBeVisible();
+  expect(screen.getByRole('option', { name: 'Mother — Rina Patel · rina@example.test' })).toBeVisible();
+  expect(sendButton()).toBeDisabled();
+  selectRecipient('mother');
+  await waitFor(() => expect(email()).toHaveValue('rina@example.test'));
+  expect(sendButton()).toBeDisabled();
+  expect(mocks.send).not.toHaveBeenCalled();
+});
 const workspaceWithDelivery = (status: 'Pending' | 'Sent' | 'Failed' | 'Blocked') => ({
   ...mocks.query.data!,
   concurrencyStamp: 'after-send-stamp',

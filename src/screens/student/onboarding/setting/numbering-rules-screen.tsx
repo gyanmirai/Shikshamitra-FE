@@ -13,6 +13,7 @@ import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -151,7 +152,7 @@ function NumberingRulesScreen({
   const canConfigure = hasGrantedPermission(permissions, studentPermissions.onboarding.configure);
   const router = useRouter();
   const filters = useOnboardingAcademicStructure({ includeCampuses: false });
-  const { settings, scope, saveGrNumberConfiguration, saveRollNumberConfiguration } =
+  const { settings, scope, isInherited, saveGrNumberConfiguration, saveRollNumberConfiguration } =
     useOnboardingSettings();
   const configurations = isGr
     ? settings.grNumber.configurations
@@ -323,10 +324,14 @@ function NumberingRulesScreen({
     setPublishingId(configuration.id);
     setError('');
     try {
+      // Defaults/inherited rules may not exist in this scope yet. The server requires
+      // a persisted draft before publication; keep its history checks authoritative.
+      if (isInherited) await save({ ...configuration, status: 'draft', isActive: false });
       await save({ ...configuration, status: 'published', isActive: true });
-    } catch {
+    } catch (publishError) {
       setError(
-        'The rule could not be published. Review its academic path and number range, then try again.'
+        parseApiProblemDetail(publishError).detail ||
+          'The rule could not be published. Review its academic path and number range, then try again.'
       );
     } finally {
       setPublishingId(null);

@@ -29,7 +29,8 @@ export default function StudentOnboardingFees({
   const selection = useGetStudentOnboardingFeeStructureQuery(caseId);
   const caseState = item.currentData;
   const feeState = selection.currentData;
-  const lockedSnapshot = feeState?.isLocked ? feeState.selection : undefined;
+  const automaticallyConfirmed = feeState?.automaticallyConfirmedFromAdmissions === true;
+  const lockedSnapshot = feeState?.isLocked || automaticallyConfirmed ? feeState?.selection : undefined;
   const candidates = useGetStudentOnboardingFeeCandidatesQuery(caseId, {
     skip: Boolean(lockedSnapshot),
   });
@@ -56,6 +57,7 @@ export default function StudentOnboardingFees({
     onSubmit: async (values) => {
       if (
         !canManage ||
+        automaticallyConfirmed ||
         !caseState ||
         readError ||
         item.isFetching ||
@@ -155,7 +157,12 @@ export default function StudentOnboardingFees({
           Fee structures could not be refreshed. Retry before making changes.
         </Alert>
       )}
-      {feeState.onboardingConfirmed && (
+      {automaticallyConfirmed && (
+        <Label color="success" sx={{ alignSelf: 'flex-start' }}>
+          Completed in Admissions
+        </Label>
+      )}
+      {feeState.onboardingConfirmed && !automaticallyConfirmed && (
         <Alert severity="success">
           Fee structure confirmed: {feeState.selection?.structureName}
         </Alert>
@@ -166,36 +173,47 @@ export default function StudentOnboardingFees({
           Finance to publish the matching structure.
         </Alert>
       )}
-      <CustomSelect
-        label="Fee structure"
-        size="small"
-        required
-        fullWidth
-        isSearch
-        value={form.values.structureId}
-        options={structures.map((candidate) => ({
-          value: candidate.structureId,
-          label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
-        }))}
-        disabled={disabled || feeState.isLocked || !structures.length}
-        onChange={(value) => {
-          setFieldValue('structureId', String(value));
-          setFieldValue('optionalHeadIds', []);
-        }}
-        error={Boolean(form.touched.structureId && form.errors.structureId)}
-        helperText={form.touched.structureId ? form.errors.structureId : undefined}
-      />
+      {automaticallyConfirmed ? (
+        <Stack spacing={0.5}>
+          <Typography variant="caption" color="text.secondary">
+            Fee structure
+          </Typography>
+          <Typography variant="body2">
+            {feeState.selection?.structureName} · Revision {feeState.selection?.revisionNumber}
+          </Typography>
+        </Stack>
+      ) : (
+        <CustomSelect
+          label="Fee structure"
+          size="small"
+          required
+          fullWidth
+          isSearch
+          value={form.values.structureId}
+          options={structures.map((candidate) => ({
+            value: candidate.structureId,
+            label: `${candidate.structureName} · Revision ${candidate.revisionNumber}`,
+          }))}
+          disabled={disabled || feeState.isLocked || !structures.length}
+          onChange={(value) => {
+            setFieldValue('structureId', String(value));
+            setFieldValue('optionalHeadIds', []);
+          }}
+          error={Boolean(form.touched.structureId && form.errors.structureId)}
+          helperText={form.touched.structureId ? form.errors.structureId : undefined}
+        />
+      )}
       {chosen && (
         <>
           <Typography variant="subtitle2">Included fee heads</Typography>
           {chosen.heads
-            .filter((head) => !head.isOptional)
+            .filter((head) => automaticallyConfirmed || !head.isOptional)
             .map((head) => (
               <Typography variant="body2" key={head.feeHeadId}>
                 {head.feeHeadName}
               </Typography>
             ))}
-          {chosen.heads.some((head) => head.isOptional) && (
+          {!automaticallyConfirmed && chosen.heads.some((head) => head.isOptional) && (
             <CustomSelect
               label="Optional fee heads"
               size="small"
@@ -212,22 +230,25 @@ export default function StudentOnboardingFees({
         </>
       )}
       {form.status && <Alert severity="error">{form.status}</Alert>}
-      <Button
-        type="submit"
-        size="small"
-        variant="contained"
-        loading={saving.isLoading}
-        disabled={disabled || !chosen || (feeState.isLocked && form.dirty)}
-        sx={{ alignSelf: 'flex-end' }}
-      >
-        Confirm fee structure
-      </Button>
+      {!automaticallyConfirmed && (
+        <Button
+          type="submit"
+          size="small"
+          variant="contained"
+          loading={saving.isLoading}
+          disabled={disabled || !chosen || (feeState.isLocked && form.dirty)}
+          sx={{ alignSelf: 'flex-end' }}
+        >
+          Confirm fee structure
+        </Button>
+      )}
       {feeState.selection && caseState.applicationId && (
         <AdmissionFeeCollectionPanel
           key={caseState.applicationId}
           applicationId={caseState.applicationId}
           disabled={
             readError ||
+            automaticallyConfirmed ||
             form.dirty ||
             saving.isLoading ||
             item.isFetching ||

@@ -34,6 +34,7 @@ export type AdmissionFeeCollectionSummary = {
   pendingVerificationAmount: number;
   outstandingAmount: number | null;
   canCollect: boolean;
+  isSettled?: boolean;
   blocker: string | null;
   hasPaymentEvidence: boolean;
   feeHeads: {

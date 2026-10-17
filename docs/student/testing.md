@@ -3,12 +3,18 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-18
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Activation dialog readiness (2026-10-18)
+
+The Student Setup drawer and readiness-model suites pass 37 tests. They cover the actual preview blocker, a stale Ready status with a current error, older-response fallback, loading/error safety, latest concurrency stamp, view-only restrictions and busy close locks. Full repository TypeScript and changed-file ESLint pass. Student docs and whitespace checks pass.
+
+Authenticated Codex in-app verification reproduced the former blocker, then verified the updated API enables activation from current Finance evidence. Submitting activation locked competing actions and succeeded; the local case retained its paid fee summary and moved to required guardian App Login setup. Backend enrollment/readiness evidence is recorded in [the backend gate](../../../Shikshamitra-BE/docs/modules/student/testing.md#activation-readiness-synchronization-2026-10-18). No credentials were sent and no permission or fee rules changed. This focused check does not certify staging, deployment or a full responsive/theme matrix.
 
 ## Compact Student Setup assignments (2026-10-16)
 

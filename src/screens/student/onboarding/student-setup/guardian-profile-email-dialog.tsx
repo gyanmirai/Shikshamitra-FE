@@ -36,6 +36,9 @@ export default function GuardianProfileEmailDialog(props: Props) {
     { studentId, section: 'family' },
     { refetchOnMountOrArgChange: true }
   );
+  const activationRequired =
+    snapshot.isError &&
+    parseApiProblemDetail(snapshot.error).errorCode === 'Students:Records:OnboardingIncomplete';
   if (snapshot.currentData && !snapshot.isError && !snapshot.isFetching) {
     return <EmailForm {...props} snapshot={snapshot.currentData} />;
   }
@@ -52,12 +55,16 @@ export default function GuardianProfileEmailDialog(props: Props) {
           <Alert
             severity="error"
             action={
-              <Button size="small" onClick={() => snapshot.refetch()}>
-                Retry
-              </Button>
+              !activationRequired && (
+                <Button size="small" onClick={() => snapshot.refetch()}>
+                  Retry
+                </Button>
+              )
             }
           >
-            The current family profile could not be loaded.
+            {activationRequired
+              ? 'Activate the student before correcting family details in Student Records.'
+              : 'The current family profile could not be loaded.'}
           </Alert>
         ) : (
           <StudentSetupLoadingRows label="Loading saved family profile" count={2} />
