@@ -10,32 +10,38 @@ import type {
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { hrPermissions } from 'src/constants/hr-menus';
+import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { useGetPayslipSettingsQuery } from 'src/redux/hr/payslip-api';
+import { useId, useRef, useState, useEffect, useCallback } from 'react';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  Box,
-  Chip,
-  Alert,
-  Paper,
-  Stack,
-  Button,
-  Switch,
-  MenuItem,
-  TextField,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useGetHrReportExportQuery,
   usePreviewHrReportMutation,
   useCreateHrReportExportMutation,
   useDownloadHrReportExportMutation,
 } from 'src/redux/hr/hrReportsApi';
+import {
+  Box,
+  Chip,
+  Card,
+  Alert,
+  Stack,
+  Button,
+  Switch,
+  Tooltip,
+  MenuItem,
+  TextField,
+  IconButton,
+  Typography,
+  CircularProgress,
+  FormControlLabel,
+} from '@mui/material';
 
 import { payslipActionError } from './payslip-action-error';
 import { buildPayslipEmployeeSearch } from './payslip-selection';
@@ -68,6 +74,13 @@ export default function SalaryDocumentsWorkspace({
   const [columns, setColumns] = useState<string[]>(standardSalaryDocumentColumns);
   const [page, setPage] = useState({ number: 1, size: 25 });
   const [sorts, setSorts] = useState<HrReportSort[]>([]);
+  const notesId = useId();
+  const {
+    open: notesOpen,
+    anchorEl: notesAnchor,
+    onOpen: openNotes,
+    onClose: closeNotes,
+  } = usePopover();
   const [search] = useLazyGetEmployeeOptionsQuery();
   const fetchEmployees = useCallback(
     async (query: string, nextPage: number) => {
@@ -107,6 +120,7 @@ export default function SalaryDocumentsWorkspace({
   useEffect(() => {
     sequence.current += 1;
     const { current } = sequence;
+    closeNotes();
     setPreview(undefined);
     setError(null);
     setLoading(active && ready);
@@ -132,50 +146,78 @@ export default function SalaryDocumentsWorkspace({
       clearTimeout(timer);
       pendingRequest?.abort();
     };
-  }, [signature, ready, active, refresh, loadPreview]);
+  }, [signature, ready, active, refresh, loadPreview, closeNotes]);
   const [createExport, exporting] = useCreateHrReportExportMutation();
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState<HrReportFormat>('pdf');
   const [jobId, setJobId] = useState<string | null>(null);
   const [terminalJobId, setTerminalJobId] = useState<string | null>(null);
   const job = useGetHrReportExportQuery(active ? (jobId ?? skipToken) : skipToken, {
     pollingInterval: jobId === terminalJobId ? 0 : 3000,
     skipPollingIfUnfocused: true,
   });
+  const currentJob = job.data?.id === jobId ? job.data : undefined;
   useEffect(() => {
-    if (job.data?.status === 'Completed' || job.data?.status === 'Failed') setTerminalJobId(jobId);
-  }, [job.data?.status, jobId]);
+    if (currentJob?.status === 'Completed' || currentJob?.status === 'Failed')
+      setTerminalJobId(jobId);
+  }, [currentJob?.status, jobId]);
   const [download, downloading] = useDownloadHrReportExportMutation();
   const exportInFlight = useRef(false);
   const queueExport = async (format: HrReportFormat) => {
     if (exportInFlight.current || !ready || !permissions.canExport) return;
     exportInFlight.current = true;
-    setError(null);
+    setExportError(null);
+    setExportFormat(format);
+    setJobId(null);
     try {
       const result = await createExport({ ...request, page: 1, format }).unwrap();
       setJobId(result.jobId);
     } catch (failure) {
-      setError(payslipActionError(failure, 'The export could not be queued.'));
+      setExportError(payslipActionError(failure, 'The export could not be queued.'));
     } finally {
       exportInFlight.current = false;
     }
   };
   const downloadExport = async () => {
-    if (!jobId || !job.data || job.data.isExpired || job.data.status !== 'Completed') return;
+    if (!jobId || !currentJob || currentJob.isExpired || currentJob.status !== 'Completed') return;
+    setExportError(null);
     try {
       const bytes = await download(jobId).unwrap();
       const url = URL.createObjectURL(bytes);
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download =
-        job.data.fileName ?? `salary-document.${job.data.format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        currentJob.fileName ?? `salary-document.${currentJob.format === 'pdf' ? 'pdf' : 'xlsx'}`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (failure) {
-      setError(payslipActionError(failure, 'The export could not be downloaded.'));
+      setExportError(payslipActionError(failure, 'The export could not be downloaded.'));
     }
   };
   const preset = statement
     ? settings.data?.presentation?.statementColumns
     : settings.data?.presentation?.registerColumns;
+  const exportFailed = job.isError || currentJob?.status === 'Failed' || !!exportError;
+  const exportExpired = currentJob?.isExpired;
+  const exportReady = currentJob?.status === 'Completed' && !job.isError && !exportExpired;
+  const formatLabel = (currentJob?.format ?? exportFormat) === 'pdf' ? 'PDF' : 'Excel';
+  const exportLimitLabel =
+    (preview?.totalCount ?? 0) > 20000
+      ? 'Export limits apply'
+      : (preview?.totalCount ?? 0) > 500
+        ? 'PDF limit: 500 rows'
+        : undefined;
+  const notifiedJobs = useRef(new Set<string>());
+  useEffect(() => {
+    if (!active || !exportReady || !currentJob || notifiedJobs.current.has(currentJob.id)) return;
+    notifiedJobs.current.add(currentJob.id);
+    shikshaMitraToast.success({ message: `${formatLabel} report ready to download.` });
+  }, [active, exportReady, currentJob, formatLabel]);
+  const exportMessage =
+    exportError ??
+    (job.isError
+      ? 'The export status could not be refreshed. Try again.'
+      : (currentJob?.errorMessage ?? 'The export could not be generated. Try again.'));
   if (!permissions.canView)
     return (
       <Alert severity="info">
@@ -184,28 +226,32 @@ export default function SalaryDocumentsWorkspace({
     );
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
         <Typography variant="h6">{title}</Typography>
+        <Tooltip title="Saved payroll records for the selected period. Missing months and historical fields appear as unavailable.">
+          <IconButton size="small" aria-label="About salary documents">
+            <Iconify icon="mdi:information-outline" width={16} sx={{ color: 'info.main' }} />
+          </IconButton>
+        </Tooltip>
         <Chip
           size="small"
-          variant="outlined"
+          variant="soft"
           label={includeDrafts ? 'Preview' : 'Issued payroll'}
           color={includeDrafts ? 'warning' : 'default'}
         />
       </Stack>
-      <Typography variant="body2" color="text.secondary">
-        Saved payroll records for the selected period. Missing months and historical fields appear
-        as unavailable.
-      </Typography>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-        <Stack spacing={2}>
+      <Card sx={{ p: 1.5 }}>
+        <Stack spacing={1.5}>
           <Box
             sx={{
               display: 'grid',
               gap: 1.5,
               gridTemplateColumns: {
                 xs: '1fr',
-                md: statement ? 'minmax(220px, 2fr) 1fr 1fr' : '1fr 2fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                lg: statement
+                  ? 'minmax(200px, 2fr) repeat(3, minmax(140px, 1fr))'
+                  : '240px minmax(0, 1fr)',
               },
             }}
           >
@@ -251,13 +297,41 @@ export default function SalaryDocumentsWorkspace({
               }}
               slotProps={{ inputLabel: { shrink: true } }}
             />
+            <TextField
+              select
+              label="Document columns"
+              size="small"
+              value={columns}
+              SelectProps={{
+                multiple: true,
+                renderValue: (selected) => `${(selected as string[]).length} columns selected`,
+              }}
+              onChange={(event) =>
+                setColumns(
+                  typeof event.target.value === 'string'
+                    ? event.target.value.split(',')
+                    : event.target.value
+                )
+              }
+              helperText="Identity, totals, and all nonzero deductions always appear."
+            >
+              {salaryDocumentFields.map(([id, label]) => (
+                <MenuItem
+                  key={id}
+                  value={id}
+                  disabled={mandatorySalaryDocumentColumns.includes(id)}
+                >
+                  {label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Box>
           {statement && from > to && (
             <Alert severity="warning">The end month must be on or after the start month.</Alert>
           )}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-            {statement &&
-              [6, 7, 12].map((months) => (
+          {statement && (
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {[6, 7, 12].map((months) => (
                 <Button
                   key={months}
                   size="small"
@@ -273,87 +347,155 @@ export default function SalaryDocumentsWorkspace({
                   Last {months} months
                 </Button>
               ))}
-            <FormControlLabel
-              sx={{ ml: { sm: 'auto' } }}
-              label="Include draft payroll"
-              control={
-                <Switch
-                  size="small"
-                  checked={includeDrafts}
-                  onChange={(_, checked) => {
-                    setIncludeDrafts(checked);
-                    setPage({ ...page, number: 1 });
-                  }}
-                />
-              }
-            />
-          </Stack>
-          <TextField
-            select
-            label="Document columns"
-            size="small"
-            value={columns}
-            SelectProps={{
-              multiple: true,
-              renderValue: (selected) => `${(selected as string[]).length} columns selected`,
-            }}
-            onChange={(event) =>
-              setColumns(
-                typeof event.target.value === 'string'
-                  ? event.target.value.split(',')
-                  : event.target.value
-              )
-            }
-            helperText="Identity, totals, and all nonzero deductions always appear."
+            </Stack>
+          )}
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={1}
+            justifyContent="space-between"
+            alignItems={{ xs: 'stretch', lg: 'center' }}
           >
-            {salaryDocumentFields.map(([id, label]) => (
-              <MenuItem key={id} value={id} disabled={mandatorySalaryDocumentColumns.includes(id)}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Stack direction="row" spacing={1} justifyContent="space-between" flexWrap="wrap">
-            <Button
-              size="small"
-              onClick={() =>
-                setColumns([
-                  ...new Set([
-                    ...mandatorySalaryDocumentColumns,
-                    ...(preset?.length ? preset : standardSalaryDocumentColumns),
-                  ]),
-                ])
-              }
-            >
-              Use school column preset
-            </Button>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+              <FormControlLabel
+                sx={{ ml: 0, mr: 0 }}
+                label="Include draft payroll"
+                control={
+                  <Switch
+                    size="small"
+                    checked={includeDrafts}
+                    onChange={(_, checked) => {
+                      setIncludeDrafts(checked);
+                      setPage({ ...page, number: 1 });
+                    }}
+                  />
+                }
+              />
               <Button
                 size="small"
-                disabled={!ready || loading}
-                onClick={() => setRefresh((value) => value + 1)}
+                onClick={() =>
+                  setColumns([
+                    ...new Set([
+                      ...mandatorySalaryDocumentColumns,
+                      ...(preset?.length ? preset : standardSalaryDocumentColumns),
+                    ]),
+                  ])
+                }
               >
-                Refresh preview
+                Use school column preset
               </Button>
+              {jobId && !exportFailed ? (
+                <Box role="status" aria-live="polite" aria-atomic="true">
+                  <Tooltip
+                    title={
+                      exportExpired
+                        ? 'This export has expired. Generate it again to download.'
+                        : exportReady
+                          ? 'Your report is ready to download.'
+                          : 'The report is being prepared in the background.'
+                    }
+                  >
+                    <Chip
+                      size="small"
+                      variant="soft"
+                      color={exportReady ? 'success' : 'default'}
+                      icon={
+                        !exportReady && !exportExpired ? (
+                          <CircularProgress
+                            size={14}
+                            color="inherit"
+                            aria-label="Preparing export"
+                          />
+                        ) : undefined
+                      }
+                      label={
+                        exportExpired
+                          ? 'Export expired'
+                          : exportReady
+                            ? `${formatLabel} ready`
+                            : `Preparing ${formatLabel}`
+                      }
+                    />
+                  </Tooltip>
+                </Box>
+              ) : null}
+            </Stack>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+              {exportLimitLabel ? (
+                <Tooltip title="PDF includes up to 500 rows; Excel includes up to 20,000. Extra rows are excluded from the downloaded file.">
+                  <Chip size="small" variant="soft" color="warning" label={exportLimitLabel} />
+                </Tooltip>
+              ) : null}
               <Button
                 size="small"
                 variant="outlined"
-                disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                onClick={() => queueExport('excel')}
+                startIcon={<Iconify icon="mdi:refresh" width={18} />}
+                disabled={!ready || loading}
+                onClick={() => setRefresh((value) => value + 1)}
               >
-                Export Excel
+                Refresh Preview
               </Button>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                onClick={() => queueExport('pdf')}
-              >
-                Export PDF
-              </Button>
+              <Tooltip title="Excel exports include up to 20,000 rows.">
+                <span>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
+                    onClick={() => queueExport('excel')}
+                  >
+                    Export Excel
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip title="PDF exports include up to 500 rows.">
+                <span>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
+                    onClick={() => queueExport('pdf')}
+                  >
+                    Export PDF
+                  </Button>
+                </span>
+              </Tooltip>
+              {exportReady ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:download" width={18} />}
+                  loading={downloading.isLoading}
+                  onClick={downloadExport}
+                >
+                  {exportError ? 'Retry Download' : 'Download'}
+                </Button>
+              ) : exportExpired ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
+                  onClick={() => queueExport(exportFormat)}
+                >
+                  Generate Again
+                </Button>
+              ) : null}
             </Stack>
           </Stack>
+          {exportFailed ? (
+            <Alert
+              severity="error"
+              action={
+                job.isError && !exportError ? (
+                  <Button size="small" onClick={() => job.refetch()}>
+                    Refresh Status
+                  </Button>
+                ) : undefined
+              }
+            >
+              {exportMessage}
+            </Alert>
+          ) : null}
         </Stack>
-      </Paper>
+      </Card>
       {error && (
         <Alert
           severity="error"
@@ -370,38 +512,53 @@ export default function SalaryDocumentsWorkspace({
           {error}
         </Alert>
       )}
-      {jobId && (
-        <Alert
-          severity={job.data?.status === 'Failed' ? 'error' : 'info'}
-          action={
-            job.data?.status === 'Completed' && !job.isError && !job.data.isExpired ? (
-              <Button size="small" disabled={downloading.isLoading} onClick={downloadExport}>
-                Download
-              </Button>
-            ) : undefined
-          }
-        >
-          {job.isError
-            ? 'Export status could not be refreshed.'
-            : job.data?.isExpired
-              ? 'This export has expired. Create a new export to download the document.'
-              : job.data?.status === 'Failed'
-                ? (job.data.errorMessage ?? 'Export failed.')
-                : `Export ${job.data?.status?.toLowerCase() ?? 'queued'}. PDF exports include up to 500 rows; Excel includes up to 20,000.`}
-        </Alert>
-      )}
-      {preview?.queryWarnings?.map((warning) => (
-        <Alert
-          severity="info"
-          variant="outlined"
-          key={warning}
-          sx={{ py: 0, bgcolor: 'transparent' }}
-        >
-          {warning}
-        </Alert>
-      ))}
       <HrReportPreviewTable
         preview={preview}
+        headerAction={
+          preview?.queryWarnings?.length ? (
+            <>
+              <Button
+                size="small"
+                color="inherit"
+                startIcon={<Iconify icon="mdi:information-outline" width={16} />}
+                aria-expanded={notesOpen}
+                aria-haspopup="dialog"
+                aria-controls={notesOpen ? notesId : undefined}
+                onClick={openNotes}
+              >
+                Report notes ({preview.queryWarnings.length})
+              </Button>
+              <CustomPopover
+                open={notesOpen}
+                anchorEl={notesAnchor}
+                onClose={closeNotes}
+                slotProps={{
+                  arrow: { placement: 'top-left' },
+                  paper: {
+                    id: notesId,
+                    role: 'dialog',
+                    'aria-label': 'Report notes',
+                    sx: { width: 360, maxWidth: 'calc(100vw - 32px)' },
+                  },
+                }}
+              >
+                <Stack spacing={1} sx={{ p: 2 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="subtitle2">Report notes</Typography>
+                    <IconButton size="small" aria-label="Close report notes" onClick={closeNotes}>
+                      <Iconify icon="mdi:close" width={18} />
+                    </IconButton>
+                  </Stack>
+                  {preview.queryWarnings.map((warning) => (
+                    <Typography key={warning} variant="body2" color="text.secondary">
+                      {warning}
+                    </Typography>
+                  ))}
+                </Stack>
+              </CustomPopover>
+            </>
+          ) : undefined
+        }
         reportName={title}
         sourceLabel={title}
         emptyMessage={
@@ -425,7 +582,7 @@ export default function SalaryDocumentsWorkspace({
         onPageChange={(number, size) => setPage({ number, size })}
       />
       {!!preview?.totals && (
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
+        <Card sx={{ p: 1.5 }}>
           <Typography variant="caption" color="text.secondary">
             {preview.totalsLabel}
           </Typography>
@@ -444,7 +601,7 @@ export default function SalaryDocumentsWorkspace({
               </Box>
             ))}
           </Stack>
-        </Paper>
+        </Card>
       )}
     </Stack>
   );

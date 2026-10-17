@@ -477,6 +477,8 @@ Statements choose one staff member and an inclusive range; registers choose one 
 Filters survive tab changes; inactive panels stop previews and export polling.
 Previews debounce, cancel obsolete requests and reject stale responses.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
+Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
+The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
 School settings provide Compact/Detailed layouts, logo upload, optional fields and saved column presets.
 Identity, totals and all nonzero deductions remain mandatory.
 
