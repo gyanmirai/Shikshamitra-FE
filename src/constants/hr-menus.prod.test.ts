@@ -1,5 +1,7 @@
 import { it, expect, describe } from 'vitest';
 
+import { hrLeavePolicyPermissions, hrPolicyActionPermissions } from './hr-policy-permissions';
+
 const flattenTitles = (items: any[]): string[] =>
   items.flatMap((item) => [item.title, ...flattenTitles(item.children || [])]);
 
@@ -10,6 +12,9 @@ describe('HR production menu', () => {
   it('exposes HR MVP routes with production permissions', async () => {
     process.env.BUILD_STATIC_EXPORT = process.env.BUILD_STATIC_EXPORT ?? 'false';
     const { default: hrModule, hrPaths, hrPermissions } = await import('./hr-menus');
+    expect(hrPermissions.policyActions).toBe(hrPolicyActionPermissions);
+    expect(hrPaths.policyActions).toBe(hrPolicyActionPermissions);
+    expect(hrPermissions.policies.leavePolicies).toBe(hrLeavePolicyPermissions.root);
     const navItems = Object.values(hrModule(true)).flatMap((sections) =>
       sections.flatMap((section) => section.items)
     );

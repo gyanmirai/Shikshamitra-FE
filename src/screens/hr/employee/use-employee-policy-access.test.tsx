@@ -2,8 +2,11 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 
-import { STAFF_POLICY_REQUIREMENTS } from './employee-policy-access';
 import { useEmployeePolicyAccess } from './use-employee-policy-access';
+import {
+  STAFF_POLICY_REQUIREMENTS,
+  STAFF_POLICY_REQUIREMENTS_BY_ACTION,
+} from './employee-policy-access';
 
 const mocks = vi.hoisted(() => ({
   state: {
@@ -51,6 +54,22 @@ it('blocks a delegated creator before sending unauthorized policy lookups', () =
   });
 });
 
+it('loads default policies for the backend catalogue grants without a false leave-policy blocker', () => {
+  mocks.state.auth.permissions = [
+    'HR.Policies.View',
+    'HR.LeaveManagement.Setting.LeavePolicy.View',
+    'HR.Policies.Assign',
+    'HR.Policies.PreviewImpact',
+  ].map((name) => ({ name, isGranted: true }));
+  const { result } = renderHook(() => useEmployeePolicyAccess('year', true));
+
+  expect(result.current.blocked).toBe(false);
+  expect(result.current.requirements).toEqual([]);
+  [mocks.payroll, mocks.attendance, mocks.leave].forEach((query) => {
+    expect(query).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ skip: false }));
+  });
+});
+
 it('does not impose creation policy prerequisites on staff editing', () => {
   const { result } = renderHook(() => useEmployeePolicyAccess('year', false));
   expect(result.current.blocked).toBe(false);
@@ -69,7 +88,9 @@ it('classifies a revoked server read grant as access denied even with a stale lo
   mocks.leave.mockReturnValue({ error: { status: 403 } });
   const { result } = renderHook(() => useEmployeePolicyAccess('year', true));
   expect(result.current.blocked).toBe(true);
-  expect(result.current.requirements).toEqual([STAFF_POLICY_REQUIREMENTS[1]]);
+  expect(result.current.requirements).toEqual([
+    STAFF_POLICY_REQUIREMENTS_BY_ACTION.viewLeavePolicies,
+  ]);
 });
 
 it('preserves the permission blocker when its refresh fails', async () => {
@@ -112,7 +133,7 @@ it('handles only the policy-specific submission denial and keeps unrelated error
     ).toBe(true);
   });
   expect(result.current.blocked).toBe(true);
-  expect(result.current.requirements).toEqual([STAFF_POLICY_REQUIREMENTS[2]]);
+  expect(result.current.requirements).toEqual([STAFF_POLICY_REQUIREMENTS_BY_ACTION.assignPolicies]);
 });
 
 it.each(['account change', 'session invalidation', 'unmount'] as const)(

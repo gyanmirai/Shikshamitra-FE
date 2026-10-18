@@ -62,7 +62,7 @@ export default defineConfig({
               'HR.Employee.EmployeeList.View',
               'HR.Employee.EmployeeList.Add',
               'HR.Policies.View',
-              'HR.AttendanceAndLeave.Setting.LeavePolicy.View',
+              'HR.LeaveManagement.Setting.LeavePolicy.View',
               'HR.Policies.Assign',
               'HR.Policies.PreviewImpact',
             ];

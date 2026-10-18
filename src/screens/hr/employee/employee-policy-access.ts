@@ -2,12 +2,29 @@ import type { GrantedPermission } from 'src/utils/permissions';
 
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import {
+  hrLeavePolicyPermissions,
+  hrPolicyActionPermissions,
+} from 'src/constants/hr-policy-permissions';
+
+export const STAFF_POLICY_REQUIREMENTS_BY_ACTION = {
+  viewPolicies: {
+    name: hrPolicyActionPermissions.view,
+    label: 'View payroll and attendance policies',
+  },
+  viewLeavePolicies: { name: hrLeavePolicyPermissions.view, label: 'View leave policies' },
+  assignPolicies: { name: hrPolicyActionPermissions.assign, label: 'Assign staff policies' },
+  previewPolicyImpact: {
+    name: hrPolicyActionPermissions.previewImpact,
+    label: 'Preview policy assignment impact',
+  },
+} as const;
 
 export const STAFF_POLICY_REQUIREMENTS = [
-  { name: 'HR.Policies.View', label: 'View payroll and attendance policies' },
-  { name: 'HR.AttendanceAndLeave.Setting.LeavePolicy.View', label: 'View leave policies' },
-  { name: 'HR.Policies.Assign', label: 'Assign staff policies' },
-  { name: 'HR.Policies.PreviewImpact', label: 'Preview policy assignment impact' },
+  STAFF_POLICY_REQUIREMENTS_BY_ACTION.viewPolicies,
+  STAFF_POLICY_REQUIREMENTS_BY_ACTION.viewLeavePolicies,
+  STAFF_POLICY_REQUIREMENTS_BY_ACTION.assignPolicies,
+  STAFF_POLICY_REQUIREMENTS_BY_ACTION.previewPolicyImpact,
 ] as const;
 
 export type StaffPolicyRequirement = (typeof STAFF_POLICY_REQUIREMENTS)[number];
@@ -34,9 +51,11 @@ export function getDeniedStaffPolicyReads({
 }): StaffPolicyRequirement[] {
   const denied: StaffPolicyRequirement[] = [];
   if (asRecord(payrollError).status === 403 || asRecord(attendanceError).status === 403) {
-    denied.push(STAFF_POLICY_REQUIREMENTS[0]);
+    denied.push(STAFF_POLICY_REQUIREMENTS_BY_ACTION.viewPolicies);
   }
-  if (asRecord(leaveError).status === 403) denied.push(STAFF_POLICY_REQUIREMENTS[1]);
+  if (asRecord(leaveError).status === 403) {
+    denied.push(STAFF_POLICY_REQUIREMENTS_BY_ACTION.viewLeavePolicies);
+  }
   return denied;
 }
 

@@ -25,11 +25,12 @@ const staffPermissions = [
   `${hrPermissions.employee.list}.View`,
   `${hrPermissions.employee.list}.${scenario === 'edit' ? 'Edit' : 'Add'}`,
 ];
+// Keep synthetic server grants independent of the production permission constants.
 const policyPermissions = [
-  hrPermissions.policyActions.view,
-  'HR.AttendanceAndLeave.Setting.LeavePolicy.View',
-  hrPermissions.policyActions.assign,
-  hrPermissions.policyActions.previewImpact,
+  'HR.Policies.View',
+  'HR.LeaveManagement.Setting.LeavePolicy.View',
+  'HR.Policies.Assign',
+  'HR.Policies.PreviewImpact',
 ];
 const permissions = (
   scenario === 'missing-permission' || scenario === 'edit'

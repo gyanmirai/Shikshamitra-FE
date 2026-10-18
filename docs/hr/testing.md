@@ -39,6 +39,16 @@ The existing deployment security-workflow assertion also fails on the baseline a
 
 TL;DR: run the docs check for HR docs changes, then choose focused unit, contract, or browser checks based on the screen or client you changed.
 
+## Staff policy permission contract
+
+`src/constants/hr-policy-permissions.ts` owns the exact policy action IDs shared by HR navigation and staff creation.
+`src/constants/hr-policy-permissions.contract.test.ts` locks independent expectations from the backend `ShikshaMitraSubmodulePermissions.HR.Policies` and `LeaveManagement_SettingLeavePolicy` catalogue definitions.
+Check those backend definitions when changing this contract; the unit test does not fetch a deployed catalogue.
+Keep browser fixture grants and contract expectations independent of the implementation constants.
+Run the contract, HR menu, employee policy-access and policy-access-hook suites together.
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for allowed access, denied reads, refresh recovery and draft preservation at desktop, mobile and dark-tablet sizes.
+Finish with the Codex in-app browser against the local fixture; synthetic responses do not prove deployed account access.
+
 ## Required docs check
 
 Run this from `Shikshamitra-FE`:
