@@ -360,6 +360,8 @@ The Inquiry table's Class cell shows only the selected class name returned as `s
 
 ## Managed Form stages
 
+Configured Email fields, including guardian, father, mother and student emails with `format: "email"`, use the standard email input. Required validation, controlled values and read-only history remain intact; email metadata must not route these fields to an unsupported specialized control.
+
 Form uses Submission with rules by default. Select the published Registration form and configure late submissions, corrections and optional section verification in the Form completion card. Completed by and Due after are hidden; saved responsibility and deadlines remain intact. Allow late submission is editable without a deadline and saves its actual boolean preference. Runtime enforcement still applies only when a deadline exists; no deadline leaves submissions open. Applicant Save Draft and backend submission/correction safeguards remain. Loading form sections offers Retry without losing edits.
 
 Submission advances after authoritative validation when no staff verification is required. With verification, the stage remains open until authorized staff verify every configured section; Continue then uses the existing backend gate. Correction returns the form to draft and makes earlier verification stale. Frozen forms and submission history remain authoritative.
@@ -370,6 +372,7 @@ The compact Payment workspace uses two equally stretched cards on desktop: Fee s
 Both fill the available stage height through the existing workspace flex layout, with actions at the bottom; smaller screens stack them and use the common workspace scrollbar.
 Selection remains explicit. The empty candidate state keeps Cancel and Check again, without an Open Finance shortcut or repeated setup guidance.
 Collection keeps the server's balances, blockers, pending-verification warnings and receipts; unknown balances display an em dash rather than zero.
+Collect fees shows its loading spinner and the labelled progress bar while either the saved selection or collection summary refreshes. Existing balances stay visible; the action becomes available only after the reads finish and the existing Finance permission/state checks pass.
 The student header shows the application reference and actual Class, Board and Medium context, with the existing counsellor and More actions.
 
 Payment offers **Select fee structure**, **Collect Fees**, and **Collect later in Onboarding**. Structure selection reuses published Finance structures for the Offering academic year, Board, Medium and Class, with mandatory and optional heads and the application concurrency stamp. A structure is required only for collection. After a recorded collection, including a partial payment, ordinary Continue admission is available. No structure or no payment does not block reason-based deferral.

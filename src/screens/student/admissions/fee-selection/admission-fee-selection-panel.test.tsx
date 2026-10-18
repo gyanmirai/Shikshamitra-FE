@@ -3,9 +3,11 @@ import type {
   AdmissionFeeStructureCandidate,
 } from 'src/redux/student/admissions/admission-fee-selection-types';
 
+import { api } from 'src/redux/service';
 import { useState, useCallback } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
+import { financeModuleType } from 'src/redux/tagTypes';
 import { defaultSettings } from 'src/components/settings';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { FormBusyRegion } from 'src/components/form-busy-region';
@@ -193,6 +195,23 @@ describe('AdmissionFeeSelectionPanel', () => {
     expect(screen.getByLabelText('Selected fee heads')).toBeVisible();
     expect(screen.getByLabelText('Selection summary')).toBeVisible();
     expect(onContinue).not.toHaveBeenCalled();
+  });
+  it('refreshes both the selected structure and the application collection summary', () => {
+    setRead(selected);
+    renderPanel({ compact: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh', exact: true }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(mocks.dispatch).toHaveBeenCalledWith(
+      api.util.invalidateTags([{ type: financeModuleType.feeCollection, id: 'application-1' }])
+    );
+  });
+  it('does not refresh collection data when collection access is unavailable', () => {
+    permissions = [{ name: 'Students.Admissions.Applications.View', isGranted: true }];
+    setRead(selected);
+    renderPanel({ compact: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh', exact: true }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+    expect(mocks.dispatch).not.toHaveBeenCalled();
   });
 
   it('opens selection explicitly and summarizes optional heads without calculating dues', async () => {

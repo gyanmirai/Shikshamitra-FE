@@ -46,6 +46,7 @@ import { getAdmissionFeeCollectionAccess } from './admission-fee-collection-perm
 type Props = {
   applicationId: string;
   disabled?: boolean;
+  refreshing?: boolean;
   onOpenChange?: (open: boolean) => void;
   stretch?: boolean;
   footerAction?: ReactNode;
@@ -57,6 +58,7 @@ const collectionGuardError = (status: number, detail: string) =>
 export default function AdmissionFeeCollectionPanel({
   applicationId,
   disabled = false,
+  refreshing = false,
   onOpenChange,
   stretch = false,
   footerAction,
@@ -100,6 +102,7 @@ export default function AdmissionFeeCollectionPanel({
   }, [access.canCollect, dialog, variableAmounts, onOpenChange]);
   useEffect(() => () => openChange.current?.(false), []);
   const state = summary.currentData;
+  const refreshingCollection = refreshing || summary.isFetching;
   const prepareAndOpen = async (variableFeeHeads: AdmissionVariableFeeHead[]) => {
     await prepare({ applicationId, variableFeeHeads }).unwrap();
     variableAmounts.onFalse();
@@ -110,10 +113,10 @@ export default function AdmissionFeeCollectionPanel({
       opening.current ||
       preparing.isLoading ||
       disabled ||
+      refreshingCollection ||
       !access.canCollect ||
       state?.isSettled ||
       !state?.canCollect ||
-      summary.isFetching ||
       summary.isError
     )
       return;
@@ -248,12 +251,12 @@ export default function AdmissionFeeCollectionPanel({
       size="small"
       variant="contained"
       startIcon={<Iconify icon="mdi:cash-plus" width={16} />}
-      loading={preparing.isLoading}
+      loading={preparing.isLoading || refreshingCollection}
       disabled={
         disabled ||
+        refreshingCollection ||
         !access.canCollect ||
         !state.canCollect ||
-        summary.isFetching ||
         summary.isError ||
         dialog.value ||
         variableAmounts.value
@@ -265,7 +268,14 @@ export default function AdmissionFeeCollectionPanel({
     </Button>
   );
   return (
-    <Stack component="section" aria-label="Fee collection" spacing={1.5} useFlexGap sx={panelSx}>
+    <Stack
+      component="section"
+      aria-label="Fee collection"
+      aria-busy={refreshingCollection}
+      spacing={1.5}
+      useFlexGap
+      sx={panelSx}
+    >
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
@@ -292,7 +302,7 @@ export default function AdmissionFeeCollectionPanel({
         {!stretch && collectAction}
       </Stack>
       <Stack spacing={1.5} useFlexGap sx={{ flex: stretch ? 1 : undefined, minWidth: 0 }}>
-        {summary.isFetching && <LinearProgress aria-label="Refreshing fee collection" />}
+        {refreshingCollection && <LinearProgress aria-label="Refreshing fee collection" />}
         {summary.isError && (
           <Alert
             severity="error"

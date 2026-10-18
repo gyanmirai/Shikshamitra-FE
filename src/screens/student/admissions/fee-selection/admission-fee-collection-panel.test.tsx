@@ -159,6 +159,33 @@ it('skips financial reads and renders no collection controls without exact Finan
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
+it.each(['summary', 'selection'])(
+  'shows a collection-button spinner during %s refresh and restores the action afterwards',
+  (source) => {
+    const refreshed = {
+      currentData: summary,
+      isLoading: false,
+      isFetching: source === 'summary',
+      isError: false,
+      refetch: mocks.refetch,
+    };
+    mocks.summary.mockReturnValue(refreshed);
+    const view = renderPanel({ refreshing: source === 'selection' });
+    expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+    expect(screen.getByRole('progressbar', { name: 'Collect fees' })).toBeVisible();
+    expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('6,000');
+    expect(mocks.prepare).not.toHaveBeenCalled();
+    mocks.summary.mockReturnValue({ ...refreshed, isFetching: false });
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionFeeCollectionPanel applicationId="application-1" />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled();
+    expect(screen.queryByRole('progressbar', { name: 'Collect fees' })).not.toBeInTheDocument();
+  }
+);
+
 it('uses server balances and separates unverified money instead of deriving total minus paid', () => {
   renderPanel();
   expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('6,000');
@@ -172,33 +199,42 @@ it('uses server balances and separates unverified money instead of deriving tota
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
-it.each([false, true])('shows settled fees and receipts without a collection action (workspace=%s)', (stretch) => {
-  mocks.summary.mockReturnValue({
-    currentData: {
-      ...summary,
-      isSettled: true,
-      canCollect: false,
-      outstandingAmount: 0,
-      confirmedPaidAmount: 12000,
-      pendingVerificationAmount: 0,
-    },
-    isFetching: false,
-  });
-  renderPanel({ stretch });
-  expect(screen.getByText('Settled')).toBeVisible();
-  expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('₹0');
-  expect(screen.getByLabelText('Fee receipts')).toHaveTextContent('FEE-0001');
-  expect(screen.queryByRole('button', { name: 'Collect fees' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
-  expect(screen.queryByText('Charges and late fees are shown separately in the collection form.'))
-    .not.toBeInTheDocument();
-  expect(mocks.prepare).not.toHaveBeenCalled();
-  expect(mocks.collect).not.toHaveBeenCalled();
-});
+it.each([false, true])(
+  'shows settled fees and receipts without a collection action (workspace=%s)',
+  (stretch) => {
+    mocks.summary.mockReturnValue({
+      currentData: {
+        ...summary,
+        isSettled: true,
+        canCollect: false,
+        outstandingAmount: 0,
+        confirmedPaidAmount: 12000,
+        pendingVerificationAmount: 0,
+      },
+      isFetching: false,
+    });
+    renderPanel({ stretch });
+    expect(screen.getByText('Settled')).toBeVisible();
+    expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('₹0');
+    expect(screen.getByLabelText('Fee receipts')).toHaveTextContent('FEE-0001');
+    expect(screen.queryByRole('button', { name: 'Collect fees' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Charges and late fees are shown separately in the collection form.')
+    ).not.toBeInTheDocument();
+    expect(mocks.prepare).not.toHaveBeenCalled();
+    expect(mocks.collect).not.toHaveBeenCalled();
+  }
+);
 
 it('keeps collection available when Finance reports unsettled charges despite zero fee principal', () => {
   mocks.summary.mockReturnValue({
-    currentData: { ...summary, isSettled: false, outstandingAmount: 0, pendingVerificationAmount: 0 },
+    currentData: {
+      ...summary,
+      isSettled: false,
+      outstandingAmount: 0,
+      pendingVerificationAmount: 0,
+    },
     isFetching: false,
   });
   renderPanel();
@@ -300,36 +336,44 @@ it('keeps the parent interaction lock when the open callback changes identity', 
   expect(latest).toHaveBeenLastCalledWith(false);
 });
 
-it.each(['parent', 'settled'])('allows only the previously submitted key to retry while %s blocks new payments', async (blocker) => {
-  const view = renderPanel();
-  fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
-  await screen.findByText('Collection form');
-  const input = {
-    academicYearId: 'application-year',
-    idempotencyKey: 'existing-payment',
-    dueFeePayments: [],
-    chargePayments: [],
-    payments: [],
-  };
-  await mocks.formProps.mock.lastCall![0].collectionAdapter.collect(input);
-  if (blocker === 'settled') {
-    mocks.summary.mockReturnValue({
-      currentData: { ...summary, isSettled: true, canCollect: false, outstandingAmount: 0 },
-      isFetching: false,
+it.each(['parent', 'settled'])(
+  'allows only the previously submitted key to retry while %s blocks new payments',
+  async (blocker) => {
+    const view = renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Collect fees' }));
+    await screen.findByText('Collection form');
+    const input = {
+      academicYearId: 'application-year',
+      idempotencyKey: 'existing-payment',
+      dueFeePayments: [],
+      chargePayments: [],
+      payments: [],
+    };
+    await mocks.formProps.mock.lastCall![0].collectionAdapter.collect(input);
+    if (blocker === 'settled') {
+      mocks.summary.mockReturnValue({
+        currentData: { ...summary, isSettled: true, canCollect: false, outstandingAmount: 0 },
+        isFetching: false,
+      });
+    }
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionFeeCollectionPanel
+          applicationId="application-1"
+          disabled={blocker === 'parent'}
+        />
+      </ThemeProvider>
+    );
+    const adapter = mocks.formProps.mock.lastCall![0].collectionAdapter;
+    await expect(adapter.collect(input)).resolves.toEqual({ id: 'transaction-1' });
+    await expect(
+      adapter.collect({ ...input, idempotencyKey: 'new-payment' })
+    ).rejects.toMatchObject({
+      status: 409,
     });
+    expect(mocks.collect).toHaveBeenCalledTimes(2);
   }
-  view.rerender(
-    <ThemeProvider theme={createTheme(defaultSettings)}>
-      <AdmissionFeeCollectionPanel applicationId="application-1" disabled={blocker === 'parent'} />
-    </ThemeProvider>
-  );
-  const adapter = mocks.formProps.mock.lastCall![0].collectionAdapter;
-  await expect(adapter.collect(input)).resolves.toEqual({ id: 'transaction-1' });
-  await expect(adapter.collect({ ...input, idempotencyKey: 'new-payment' })).rejects.toMatchObject({
-    status: 409,
-  });
-  expect(mocks.collect).toHaveBeenCalledTimes(2);
-});
+);
 
 it('gives view-only staff a clear disabled action and omits protected receipt references', () => {
   permissions = [{ name: ADMISSION_FEE_COLLECTION_PERMISSIONS.view, isGranted: true }];

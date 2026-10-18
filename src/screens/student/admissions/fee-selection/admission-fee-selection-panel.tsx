@@ -2,10 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useSelector } from 'react-redux';
+import { api } from 'src/redux/service';
 import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
+import { useDispatch, useSelector } from 'react-redux';
+import { financeModuleType } from 'src/redux/tagTypes';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
@@ -93,6 +95,7 @@ export default function AdmissionFeeSelectionPanel({
   readOnly = false,
   onReadinessChange,
 }: Props) {
+  const dispatch = useDispatch();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const workspaceLayout = compact && mode === 'admissions';
   const canRead = hasGrantedPermission(permissions, readPermissions);
@@ -269,7 +272,16 @@ export default function AdmissionFeeSelectionPanel({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:refresh" width={16} />}
                 disabled={query.isFetching || continuing || editing || collectionOpen}
-                onClick={() => query.refetch()}
+                onClick={() => {
+                  query.refetch();
+                  if (showCollection) {
+                    dispatch(
+                      api.util.invalidateTags([
+                        { type: financeModuleType.feeCollection, id: applicationId },
+                      ])
+                    );
+                  }
+                }}
               >
                 Refresh
               </Button>
@@ -437,6 +449,7 @@ export default function AdmissionFeeSelectionPanel({
             <AdmissionFeeCollectionPanel
               key={applicationId}
               applicationId={applicationId}
+              refreshing={query.isFetching}
               disabled={
                 query.isError || query.isFetching || editorBlocked || continuing || showEditor
               }

@@ -1,7 +1,7 @@
 import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admission-forms-api';
 
 export type AdmissionFieldFormat =
-  'phone' | 'aadhaar' | 'pan' | 'pincode' | 'country' | 'state' | 'city' | 'photo';
+  'email' | 'phone' | 'aadhaar' | 'pan' | 'pincode' | 'country' | 'state' | 'city' | 'photo';
 
 export type AdmissionFieldConfiguration = {
   format?: AdmissionFieldFormat;

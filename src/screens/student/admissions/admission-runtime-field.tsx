@@ -65,10 +65,10 @@ const GENDER_OPTIONS: ChoiceOption[] = [
 
 export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
   const { field, formValues } = props;
+  const { format } = parseFieldConfiguration(field.validationJson);
   if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
-  if (parseFieldConfiguration(field.validationJson).format === 'photo')
-    return <AdmissionProfilePhotoField {...props} />;
-  if (parseFieldConfiguration(field.validationJson).format || field.fieldType === 4) {
+  if (format === 'photo') return <AdmissionProfilePhotoField {...props} />;
+  if ((format && format !== 'email') || field.fieldType === 4) {
     return <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />;
   }
   const renderer = fieldRendererRegistry[field.fieldType] ?? renderInput;
