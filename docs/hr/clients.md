@@ -44,7 +44,7 @@ Use this table before searching `src/redux`:
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
 | `hr-policy-api.ts`                 | Work calendars, policies, assignments, impact, versions, audit                                | HR policies                     |
 | `professional-management-api.ts`   | Dashboard, templates, cycles, reviews, evidence, feedback, outcomes, reports, audit           | HR professional management      |
-| `hrReportsApi.ts`                  | Report sources, options, templates, preview, export, history                                  | HR reports                      |
+| `hrReportsApi.ts`                  | Narrow existing payroll salary-document preview/export adapter                                  | HR reports                      |
 | Calendar clients                   | Event and holiday type APIs, event and holiday APIs, employee selection                       | HR calendar and Calendar module |
 
 ## Cache and invalidation rules
@@ -161,3 +161,11 @@ Profile writes invalidate only the affected employee salary/profile tags and Run
 `src/redux/hr/payslip-api.ts` includes presentation settings and tenant logo upload.
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
+
+## Reporting workspace client
+
+`src/redux/hr/hrReportingWorkspaceApi.ts` owns catalogue/options, template revisions, designer preview, private runs, captured rows, cancellation/retry, and downloads.
+Generation submits a template ID, revision, and declared parameters only.
+The server resolves fixed rules and source permissions.
+Client sorting/filtering is disabled on captured result pages to avoid applying conditions to only one page.
+Staff choices use scoped server search and preserve selected labels.

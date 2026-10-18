@@ -127,7 +127,7 @@ Use this table to choose validation:
 | Leave center, requests, approvals, or policies     | Leave utility tests, leave API contract tests, leave policy archive and restore screen tests, and HR calendar E2E                                                                                                                                                                                                              |
 | HR policies                                        | `hr-audit-format.test.ts`, `PolicyAuditDrawer.audit.test.tsx`, server-paged policy workspace tests, and HR calendar E2E                                                                                                                                                                                                        |
 | Professional management                            | Professional management client and screen tests                                                                                                                                                                                                                                                                                |
-| Reports                                            | `HrReportCenterEnhancements.test.tsx`, `index.test.tsx`, `useHrReportsCenterActions.test.ts`, `TableBody.empty-state.test.tsx`, `hrReportsApi.ts` tests, and report screen checks                                                                                                                                              |
+| Reports                                            | `reporting-workspace.test.tsx`, captured result tables, API helpers, and authenticated template/generation checks                                                                                                                                              |
 
 ## E2E environment
 
@@ -675,3 +675,25 @@ Verify light/dark themes, reduced motion, desktop card edge alignment, mobile st
 Assert standard inline breadcrumbs and the absence of card workflow buttons, Mark Attendance, Open Payroll, and the bottom quick-action row.
 Keep view-control coverage for refresh and the date input.
 Finish automated checks with a Codex in-app browser visual review of the loading and loaded components.
+
+## Reporting workspace replacement
+
+Run `reporting-workspace.test.tsx`, the report-table and API helper suites, typecheck, focused lint, production build, and HR documentation validation.
+Run the authenticated reporting Playwright workflow and finish with the Codex in-app browser.
+Verify template reuse across months, school revisions, fixed results/downloads, narrow layouts, keyboard ordering, unsaved navigation, and source permission revocation.
+The backend owns canonical attendance/leave/payroll reconciliation and PostgreSQL materialization tests.
+
+Validated locally on 19 October 2026 against frontend main `bae2e85f8`.
+Focused reporting tests pass all 14 cases across three files.
+TypeScript, zero-warning focused ESLint, and the production webpack build pass.
+The authenticated `e2e/hr/hr-reporting-workspace.guest.spec.ts` workflow passes all four cases with normal synthetic school sign-in.
+It covers a saved template reused across September and October without revision changes, keyboard column ordering, the unsaved-navigation guard, all 20 starter previews, a 390-pixel library, and daily/monthly Excel and PDF downloads.
+The daily report captures 900 September staff-day rows and 930 October rows, including staff without attendance records.
+The monthly register captures 30 staff rows and 44 output columns.
+Export inspection verifies typed Excel dates, filters, frozen identifiers, PDF repeating headers/page numbers, and readable wide-register sections.
+
+The broader reporting/security frontend run passes 163 of 164 cases.
+The remaining deployment-workflow assertion targets a file identical to main and is an existing baseline failure.
+Deployment files remain unchanged.
+The final signed-in Codex browser smoke verifies the library, dedicated generator, and completed 900-row result.
+All-module docs validation additionally encounters unrelated testing-document taxonomy and sibling-checkout link failures; the HR-only validators pass.

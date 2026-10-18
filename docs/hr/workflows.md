@@ -38,7 +38,7 @@ Use this map to find the first screen and client:
 | Leave request and approval | `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-center`                | `leaveApi.ts`                                |
 | Policy management          | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments` | `hr-policy-api.ts`                           |
 | Professional management    | `/hr/professional-management/**`                                            | `professional-management-api.ts`             |
-| HR reports                 | `/hr/reports`                                                               | `hrReportsApi.ts`                            |
+| HR reports                 | `/hr/reports`                                                               | `hrReportingWorkspaceApi.ts`                 |
 
 ## Employee onboarding behavior
 
@@ -130,11 +130,16 @@ Policy tables query current and archived records independently with server-side 
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.
 Audit events show the first eight semantic changes and provide a Show N more control without discarding the remaining differences.
-The reports center filters export history by requested-date presets or a custom range and offers removal only for an owned failed export when the user has delete permission.
-An inverted custom export-history range pauses the query instead of loading unfiltered history.
-Changing export-history filters clears open details and delete confirmation state, hides prior-query rows, and disables row actions until the current response arrives.
-Queue, retry, regenerate, and schedule-run actions clear the history date filter before highlighting the new export.
-Custom report empty states render directly, so the reports center shows one icon and one message.
+The reporting workspace opens Templates with the category rail, one template search, and built-in/private/school filters.
+Generate opens a separate parameter page and never opens the designer or changes a definition.
+Create/customize opens the full-width guided designer with columns, fixed conditions, advanced options, and preview.
+Unsaved changes are guarded when navigating or switching datasets.
+School edits retain the published revision until a manager publishes the replacement.
+Generated reports show private captured history, status, period, staff selection, warnings, and fixed result rows.
+Excel and PDF download from that captured result and expire after seven days.
+The server owns row meanings, calculation rules, capabilities, publication, authorization, and cutover behavior.
+See the [backend reporting contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/reporting-workspace.md).
+Scheduling, delivery, AI planning, and result sharing are excluded.
 
 ## HR leadership dashboard behavior
 

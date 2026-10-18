@@ -1,274 +1,175 @@
 'use client';
 
-import dayjs from 'dayjs';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'src/routes/hooks';
+import { hrPaths } from 'src/constants/hr-menus';
+import { useSearchParams } from 'next/navigation';
+import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Tab, Tabs, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import {
-  useGetHrReportExportsQuery,
-  useGetHrReportSourcesQuery,
-  useGetHrReportSchedulesQuery,
-  useGetHrReportTemplatesQuery,
-} from 'src/redux/hr/hrReportsApi';
+  useGetReportingLibraryQuery,
+  useGetReportingCatalogueQuery,
+} from 'src/redux/hr/hrReportingWorkspaceApi';
 
-import { hrReportToast } from './hr-report-notifications';
-import { HrReportCatalog } from './components/HrReportCatalog';
-import { HrAiReportDrawer } from './components/HrAiReportDrawer';
-import { HrReportsLandingTable } from './components/HrReportsLandingTable';
-import { useHrReportsCenterActions } from './hooks/useHrReportsCenterActions';
-import { getHrReportFormatLabel, isHrReportExportActive } from './hr-report-utils';
-import { useHrReportExportPollingGuard } from './hooks/useHrReportExportPollingGuard';
-import { HrReportRunTemplateDialog } from './components/center/HrReportRunTemplateDialog';
-import { HrReportShareExportDialog } from './components/center/HrReportShareExportDialog';
-import { useHrReportPermissions, useHrReportCurrentUserId } from './hooks/useHrReportPermissions';
+import { ReportLibrary } from './workspace/ReportLibrary';
+import { reportError } from './reporting-workspace-utils';
+import { ReportGenerate } from './workspace/ReportGenerate';
+import { useHrReportPermissions } from './hooks/useHrReportPermissions';
 
-import type {
-  HrReportsCenterTab,
-  HrReportCatalogSelection,
-  HrReportExportDateFilter,
-} from './hr-report-types';
+const ReportDesigner = dynamic(() =>
+  import('./workspace/ReportDesigner').then((m) => m.ReportDesigner)
+);
+const ReportHistory = dynamic(() =>
+  import('./workspace/ReportHistory').then((m) => m.ReportHistory)
+);
+const ReportRunResult = dynamic(() =>
+  import('./workspace/ReportRunResult').then((m) => m.ReportRunResult)
+);
 
-const ALL_EXPORT_DATES: HrReportExportDateFilter = {
-  preset: 'all',
-  fromDate: '',
-  toDate: '',
-};
-
-const buildExportDateParams = (filter: HrReportExportDateFilter) => {
-  const tomorrow = dayjs().add(1, 'day').startOf('day');
-  if (filter.preset === 'today') {
-    return {
-      requestedFrom: dayjs().startOf('day').toISOString(),
-      requestedTo: tomorrow.toISOString(),
-    };
-  }
-  if (filter.preset === 'last7Days' || filter.preset === 'last30Days') {
-    const days = filter.preset === 'last7Days' ? 7 : 30;
-    return {
-      requestedFrom: dayjs()
-        .subtract(days - 1, 'day')
-        .startOf('day')
-        .toISOString(),
-      requestedTo: tomorrow.toISOString(),
-    };
-  }
-  if (filter.preset === 'custom') {
-    if (filter.fromDate && filter.toDate && filter.toDate < filter.fromDate) {
-      return {};
-    }
-    return {
-      requestedFrom: filter.fromDate
-        ? dayjs(filter.fromDate).startOf('day').toISOString()
-        : undefined,
-      requestedTo: filter.toDate
-        ? dayjs(filter.toDate).add(1, 'day').startOf('day').toISOString()
-        : undefined,
-    };
-  }
-  return {};
-};
-
-const ReportsScreen = () => {
-  const openGenerateReport = useBoolean();
-  const openAiReport = useBoolean();
-  const [directSelection, setDirectSelection] = useState<HrReportCatalogSelection | null>(null);
-  const [activeCenterTab, setActiveCenterTab] = useState<HrReportsCenterTab>('exports');
-  const [exportDateFilter, setExportDateFilter] =
-    useState<HrReportExportDateFilter>(ALL_EXPORT_DATES);
-  const [notifiedExportIds, setNotifiedExportIds] = useState<string[]>([]);
-  const { shouldPollExports, highlightedExportId, highlightExportJob, observeExports } =
-    useHrReportExportPollingGuard();
-  const reportPermissions = useHrReportPermissions();
-  const currentUserId = useHrReportCurrentUserId();
-  const { data: sourcesData, isLoading: isLoadingSources } = useGetHrReportSourcesQuery();
-  const { data: templatesData, isFetching: isFetchingTemplates } = useGetHrReportTemplatesQuery();
-  const { data: schedulesData, isFetching: isFetchingSchedules } = useGetHrReportSchedulesQuery();
-
-  const exportDateParams = useMemo(
-    () => buildExportDateParams(exportDateFilter),
-    [exportDateFilter]
-  );
-  const isExportDateRangeInvalid =
-    exportDateFilter.preset === 'custom' &&
-    Boolean(
-      exportDateFilter.fromDate &&
-      exportDateFilter.toDate &&
-      exportDateFilter.toDate < exportDateFilter.fromDate
-    );
+function ReportingWorkspace() {
+  const query = useSearchParams();
+  const router = useRouter();
+  const permissions = useHrReportPermissions();
+  const mode = query.get('mode');
+  const tab = query.get('tab') === 'generated' ? 'generated' : 'templates';
   const {
-    currentData: currentExportJobs,
-    refetch: refetchExports,
-    isFetching: isFetchingExports,
-    fulfilledTimeStamp: exportsFulfilledTimeStamp,
-  } = useGetHrReportExportsQuery(exportDateParams, {
-    pollingInterval: shouldPollExports ? 5000 : 0,
-    skip: isExportDateRangeInvalid,
-  });
-  const exportJobs = useMemo(
-    () => (isExportDateRangeInvalid ? [] : (currentExportJobs ?? [])),
-    [currentExportJobs, isExportDateRangeInvalid]
-  );
-  const exportActionsDisabled =
-    isExportDateRangeInvalid || isFetchingExports || currentExportJobs === undefined;
-
-  const sources = useMemo(() => sourcesData?.sources ?? [], [sourcesData?.sources]);
-  const templates = useMemo(() => templatesData?.items ?? [], [templatesData?.items]);
-  const schedules = useMemo(() => schedulesData?.items ?? [], [schedulesData?.items]);
-  const hasActiveExports = useMemo(() => exportJobs.some(isHrReportExportActive), [exportJobs]);
-  const revealQueuedExport = useCallback(
-    (jobId: string) => {
-      setExportDateFilter(ALL_EXPORT_DATES);
-      highlightExportJob(jobId);
-    },
-    [highlightExportJob]
-  );
-  const actions = useHrReportsCenterActions({
-    sources,
-    exportJobs,
-    setActiveCenterTab,
-    setDirectSelection,
-    highlightExportJob: revealQueuedExport,
-    refetchExports,
-    openGenerateReport: openGenerateReport.onTrue,
-    closeGenerateReport: openGenerateReport.onFalse,
-  });
-
-  useEffect(() => {
-    observeExports({ exportJobs, fulfilledTimeStamp: exportsFulfilledTimeStamp });
-  }, [exportJobs, exportsFulfilledTimeStamp, observeExports]);
-
-  useEffect(() => {
-    const highlightedJob = exportJobs.find((job) => job.id === highlightedExportId);
-    if (!highlightedJob || notifiedExportIds.includes(highlightedJob.id)) {
-      return;
-    }
-
-    if (highlightedJob.status === 'Completed' && !highlightedJob.isExpired) {
-      hrReportToast.success(
-        `${getHrReportFormatLabel(highlightedJob.format)} export is ready to download.`
-      );
-      setNotifiedExportIds((current) => [...current, highlightedJob.id]);
-    } else if (highlightedJob.status === 'Failed') {
-      hrReportToast.error(
-        highlightedJob.errorMessage || 'Export failed. You can retry it from Exports.'
-      );
-      setNotifiedExportIds((current) => [...current, highlightedJob.id]);
-    } else if (highlightedJob.status === 'Cancelled') {
-      hrReportToast.warning('Export was cancelled.');
-      setNotifiedExportIds((current) => [...current, highlightedJob.id]);
-    }
-  }, [exportJobs, highlightedExportId, notifiedExportIds]);
-
+    data: datasets,
+    error: catalogueError,
+    isLoading: loadingCatalogue,
+  } = useGetReportingCatalogueQuery(undefined, { skip: !permissions.canView });
+  const {
+    data: templates,
+    error: libraryError,
+    isLoading: loadingLibrary,
+  } = useGetReportingLibraryQuery({ edit: mode === 'design' }, { skip: !permissions.canView });
+  const template = templates?.find((t) => t.id === query.get('template'));
+  const error = catalogueError || libraryError;
+  const loading = loadingCatalogue || loadingLibrary;
+  if (
+    mode === 'design' &&
+    datasets?.length &&
+    (!query.get('template') || template) &&
+    !loading &&
+    !error &&
+    (permissions.canBuild || permissions.canManageTemplates)
+  ) {
+    if (template && !query.get('copy') && !template.canEdit)
+      return <Alert severity="warning">Choose Customize a copy to edit this template.</Alert>;
+    return (
+      <ReportDesigner
+        key={`${template?.id || 'new'}-${query.get('copy') || 'edit'}`}
+        datasets={datasets}
+        template={template}
+        copy={query.get('copy') === '1'}
+      />
+    );
+  }
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading={openGenerateReport.value ? 'Generate Report' : 'Reports Center'}
-        description={
-          openGenerateReport.value
-            ? 'Configure, preview, save, publish, and export HR reports.'
-            : 'Generate and view HR reports across staff, payroll, attendance, leave, policy, and performance data.'
+        heading={
+          mode === 'generate'
+            ? 'Generate report'
+            : mode === 'result'
+              ? 'Generated report'
+              : 'HR reports'
         }
-        links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports Center' }]}
-        isBack={openGenerateReport.value}
-        onBack={actions.handleBack}
+        description={
+          mode === 'generate'
+            ? 'Choose the period and staff to capture this report.'
+            : 'Create a template once. Generate it whenever your school needs it.'
+        }
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'HR reports', ...(mode ? { href: hrReportPaths.library } : {}) },
+          ...(mode ? [{ name: mode === 'generate' ? 'Generate' : 'Report result' }] : []),
+        ]}
+        isBack={!!mode}
+        onBack={() => router.push(hrReportPaths.library)}
+        sx={{ px: 2 }}
         action={
-          !openGenerateReport.value ? (
-            <Stack direction="row" spacing={1}>
-              {reportPermissions.canBuild && (
-                <Button
-                  data-testid="hr-reports-ai-button"
-                  variant="outlined"
-                  size="small"
-                  onClick={openAiReport.onTrue}
-                  startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
-                >
-                  Ask AI
-                </Button>
-              )}
-              <Button
-                data-testid="hr-reports-generate-button"
-                variant="contained"
-                size="small"
-                onClick={actions.handleGenerateReport}
-                startIcon={<Iconify icon={GlobalIcons.report} />}
-              >
-                {reportPermissions.canBuild ? 'Generate Report' : 'View Reports'}
-              </Button>
-            </Stack>
+          !mode && (permissions.canBuild || permissions.canManageTemplates) ? (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => router.push(hrReportPaths.design())}
+            >
+              Create template
+            </Button>
           ) : null
         }
-        sx={{ px: 2 }}
       />
-
-      <Box sx={{ p: 2, flex: 1, minHeight: 0 }}>
-        {openGenerateReport.value ? (
-          <HrReportCatalog
-            sources={sources}
-            templates={templates}
-            isLoadingSources={isLoadingSources}
-            isFetchingExports={isFetchingExports && hasActiveExports}
-            refetchExports={refetchExports}
-            permissions={reportPermissions}
-            directSelection={directSelection}
-            onExportQueued={actions.handleExportQueued}
-          />
+      <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0 }}>
+        {!permissions.canView ? (
+          <Alert severity="info">Report access is required to open this workspace.</Alert>
+        ) : loading ? (
+          <LinearProgress aria-label="Loading report templates" />
+        ) : error ? (
+          <Alert severity="error">{reportError(error)}</Alert>
+        ) : mode === 'generate' ? (
+          template ? (
+            <ReportGenerate
+              key={template.id}
+              template={template}
+              dataset={datasets?.find((dataset) => dataset.id === template.definition.dataSource)}
+            />
+          ) : (
+            <Alert severity="warning">This template is unavailable or outside your access.</Alert>
+          )
+        ) : mode === 'result' && query.get('run') ? (
+          <ReportRunResult key={query.get('run')} id={query.get('run')!} />
+        ) : mode === 'design' ? (
+          <Alert severity="warning">
+            Template design requires personal design or school template management access and an
+            available dataset.
+          </Alert>
         ) : (
-          <HrReportsLandingTable
-            templates={templates}
-            schedules={schedules}
-            exportJobs={exportJobs}
-            activeTab={activeCenterTab}
-            highlightedExportId={highlightedExportId}
-            isLoading={isFetchingExports || isFetchingTemplates || isFetchingSchedules}
-            isDownloading={actions.isDownloading}
-            exportActionsDisabled={exportActionsDisabled}
-            currentUserId={currentUserId}
-            onRefreshExports={refetchExports}
-            onTabChange={setActiveCenterTab}
-            onOpenTemplate={actions.handleOpenTemplate}
-            onRunTemplate={actions.handleRunTemplate}
-            onDownload={actions.handleDownload}
-            onExportAction={actions.handleExportAction}
-            onTemplateAction={actions.handleTemplateAction}
-            onScheduleAction={actions.handleScheduleAction}
-            permissions={reportPermissions}
-            exportDateFilter={exportDateFilter}
-            onExportDateFilterChange={setExportDateFilter}
-          />
+          <>
+            <Tabs
+              value={tab}
+              onChange={(_, value) =>
+                router.push(value === 'generated' ? hrReportPaths.history : hrReportPaths.library)
+              }
+              aria-label="HR reports"
+            >
+              <Tab
+                value="templates"
+                label="Templates"
+                id="hr-report-templates-tab"
+                aria-controls="hr-report-templates-panel"
+              />
+              <Tab
+                value="generated"
+                label="Generated reports"
+                id="hr-report-generated-tab"
+                aria-controls="hr-report-generated-panel"
+              />
+            </Tabs>
+            <Box
+              role="tabpanel"
+              id={`hr-report-${tab}-panel`}
+              aria-labelledby={`hr-report-${tab}-tab`}
+              sx={{ flex: 1, minHeight: 0 }}
+            >
+              {tab === 'templates' ? (
+                <ReportLibrary templates={templates || []} />
+              ) : (
+                <ReportHistory />
+              )}
+            </Box>
+          </>
         )}
-      </Box>
-
-      <HrReportRunTemplateDialog
-        open={Boolean(actions.templateToRun)}
-        template={actions.templateToRun}
-        isSubmitting={actions.isRunningTemplateExport}
-        onClose={() => actions.setTemplateToRun(null)}
-        onSubmit={actions.handleQueueTemplateExport}
-      />
-      <HrReportShareExportDialog
-        open={Boolean(actions.shareExportJob)}
-        job={actions.shareExportJob}
-        isSubmitting={actions.isSharingExport}
-        onClose={() => actions.setShareExportJobId(null)}
-        onSubmit={actions.handleShareExport}
-      />
-      {openAiReport.value && (
-        <HrAiReportDrawer
-          open
-          canBuild={reportPermissions.canBuild}
-          canExport={reportPermissions.canExport}
-          onClose={openAiReport.onFalse}
-          onExportQueued={(jobId) => {
-            revealQueuedExport(jobId);
-            refetchExports();
-          }}
-        />
-      )}
+      </Stack>
     </Box>
   );
-};
+}
 
-export default ReportsScreen;
+export default function ReportsScreen() {
+  return (
+    <Suspense fallback={<LinearProgress aria-label="Loading HR reports" />}>
+      <ReportingWorkspace />
+    </Suspense>
+  );
+}
