@@ -2,6 +2,7 @@ import { hrPath } from 'src/routes/paths';
 
 import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
+import { hrLeavePolicyPermissions, hrPolicyActionPermissions } from './hr-policy-permissions';
 
 const defaultHrPermissionName = 'HR.';
 
@@ -16,17 +17,7 @@ export const hrPaths = {
     assignments: '/hr/assignments',
     holiday: '/hr/holiday',
   },
-  policyActions: {
-    view: `${defaultHrPermissionName}Policies.View`,
-    create: `${defaultHrPermissionName}Policies.Add`,
-    edit: `${defaultHrPermissionName}Policies.Edit`,
-    archive: `${defaultHrPermissionName}Policies.Archive`,
-    setDefault: `${defaultHrPermissionName}Policies.SetDefault`,
-    assign: `${defaultHrPermissionName}Policies.Assign`,
-    clone: `${defaultHrPermissionName}Policies.Clone`,
-    previewImpact: `${defaultHrPermissionName}Policies.PreviewImpact`,
-    viewAudit: `${defaultHrPermissionName}Policies.ViewAudit`,
-  },
+  policyActions: hrPolicyActionPermissions,
   employee: {
     root: '',
     list: '/hr/employee',
@@ -101,24 +92,14 @@ export const hrPermissions = {
   policies: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Policies`,
     calendars: `${defaultHrPermissionName}Policies.Calendars`,
-    leavePolicies: `${defaultHrPermissionName}LeaveManagement.Setting.LeavePolicy`,
+    leavePolicies: hrLeavePolicyPermissions.root,
     payroll: `${defaultHrPermissionName}Policies.Payroll`,
     attendance: `${defaultHrPermissionName}Policies.Attendance`,
     assignments: `${defaultHrPermissionName}Policies.PolicyAssignment`,
     holiday: `${defaultHrPermissionName}Policies.Holiday`,
     effectivePreview: `${defaultHrPermissionName}Policies.PolicyImpact`,
   },
-  policyActions: {
-    view: `${defaultHrPermissionName}Policies.View`,
-    create: `${defaultHrPermissionName}Policies.Add`,
-    edit: `${defaultHrPermissionName}Policies.Edit`,
-    archive: `${defaultHrPermissionName}Policies.Archive`,
-    setDefault: `${defaultHrPermissionName}Policies.SetDefault`,
-    assign: `${defaultHrPermissionName}Policies.Assign`,
-    clone: `${defaultHrPermissionName}Policies.Clone`,
-    previewImpact: `${defaultHrPermissionName}Policies.PreviewImpact`,
-    viewAudit: `${defaultHrPermissionName}Policies.ViewAudit`,
-  },
+  policyActions: hrPolicyActionPermissions,
   employee: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee`,
     list: `${defaultHrPermissionName}Employee.EmployeeList`,
