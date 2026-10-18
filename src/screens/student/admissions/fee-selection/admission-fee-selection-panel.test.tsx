@@ -199,7 +199,7 @@ describe('AdmissionFeeSelectionPanel', () => {
   it('refreshes both the selected structure and the application collection summary', () => {
     setRead(selected);
     renderPanel({ compact: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: /^Refresh$/ }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(mocks.dispatch).toHaveBeenCalledWith(
       api.util.invalidateTags([{ type: financeModuleType.feeCollection, id: 'application-1' }])
@@ -209,7 +209,7 @@ describe('AdmissionFeeSelectionPanel', () => {
     permissions = [{ name: 'Students.Admissions.Applications.View', isGranted: true }];
     setRead(selected);
     renderPanel({ compact: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: /^Refresh$/ }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
     expect(mocks.dispatch).not.toHaveBeenCalled();
   });
