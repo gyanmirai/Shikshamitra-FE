@@ -51,7 +51,11 @@ export const admissionFeeSelectionApi = api.injectEndpoints({
         body,
       }),
       transformResponse: unwrapAdmissionFeeSelection<AdmissionFeeSelection>,
-      invalidatesTags: applicationTags,
+      invalidatesTags: (_, error, { applicationId }) => [
+        ...applicationTags,
+        // Collection eligibility and dues are derived from this saved selection.
+        ...(!error ? [{ type: financeModuleType.feeCollection, id: applicationId }] : []),
+      ],
     }),
     confirmAdmissionFeeSelectionOnboarding: builder.mutation<
       AdmissionFeeSelection,

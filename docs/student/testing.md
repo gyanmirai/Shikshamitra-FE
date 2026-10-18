@@ -10,6 +10,20 @@ audience: humans-and-agents
 
 # Validate Student Enrollment Admissions changes
 
+## Fee-selection and collection cache synchronization (2026-10-18)
+
+The confirmed-selection/disabled-collection regression was reproduced before the fix: saving a fee structure invalidated Admissions tags while the collection summary and collect-form provided Finance tags, leaving the earlier no-selection blocker cached. The Payment Refresh action also refreshed only the selection. Successful saves now invalidate the application's Finance collection tag, and Refresh reloads both visible reads. Finance remains the authority for eligibility and balances.
+
+API regressions cover first selection, changed selection, rejected saves and unrelated-application isolation. Component regressions cover explicit Refresh and unavailable collection access. Authenticated local in-app verification observed the collection progress bar/button spinner during Refresh, followed by the enabled collection action with the existing server balance. No payment was prepared or collected. Live/stage deployment and acceptance remain outstanding.
+
+The combined nine-file regression passed 104 tests, including the earlier email/runtime coverage. Focused TypeScript, scoped ESLint, formatting, Student documentation validation and whitespace checks passed. Full repository TypeScript/build and production acceptance are not certified by these focused checks.
+
+## Email runtime and collection refresh feedback (2026-10-18)
+
+The email regression reproduces required Guardian/Father/Mother/Student fields disappearing when `format: "email"` is routed to an unsupported specialized renderer. Coverage verifies email inputs, edits and read-only values after the repair. Collection regressions cover both fee-selection and summary refreshes: retain server balances, show the collection-button spinner, prevent preparation while refreshing and restore the eligible action when loading ends. Existing permission, settlement, retry and payment evidence safeguards remain covered. Live `APP-2026-000017` inspection was read-only; the fee-selection confirmation and enabled collection action were observed without recording a payment. Source fixes still require frontend deployment before live acceptance.
+
+The seven-file focused regression passed 88 tests. Scoped ESLint, formatting, Student docs and whitespace checks passed. A focused TypeScript project including the changed files and existing theme/global augmentations passed; the full repository TypeScript run was stopped under memory pressure and is not certified. Authenticated local browser verification showed the restored email input in the saved form and a usable collection action after Refresh. The local read completed too quickly to capture its transient spinner; delayed-loading coverage is provided by the controlled component tests. Screenshots and diagnostic logs remain ignored under `.artifacts/admission-live-blockers/`.
+
 ## Activation dialog readiness (2026-10-18)
 
 The Student Setup drawer and readiness-model suites pass 37 tests. They cover the actual preview blocker, a stale Ready status with a current error, older-response fallback, loading/error safety, latest concurrency stamp, view-only restrictions and busy close locks. Full repository TypeScript and changed-file ESLint pass. Student docs and whitespace checks pass.

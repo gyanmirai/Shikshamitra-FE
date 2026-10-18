@@ -8,6 +8,7 @@ import { studentOnboardingType, studentAdmissionsCrmType } from 'src/redux/tagTy
 
 import { createDocumentTestStore } from './document-test-fixture';
 import { admissionFeeSelectionApi } from './admission-fee-selection-api';
+import { admissionFeeCollectionApi } from './admission-fee-collection-api';
 import { studentOnboardingApi } from '../onboarding/student-onboarding-api';
 
 vi.hoisted(() => {
@@ -131,3 +132,86 @@ it('preserves business errors rather than treating rejected saves as success', a
   );
   await expect(command.unwrap()).rejects.toMatchObject({ status: 409 });
 });
+
+it.each(['first selection', 'changed selection', 'rejected selection'])(
+  'keeps Finance collection eligibility in sync after a %s without refreshing another application',
+  async (scenario) => {
+    const rejected = scenario === 'rejected selection';
+    let saved = false;
+    const reads = { summary: 0, form: 0, other: 0 };
+    const initialStructure = scenario === 'changed selection' ? 'old-structure' : null;
+    const structure = () => (saved ? 'new-structure' : initialStructure);
+    const collectionPath = '*/api/fee-collections/admission-applications';
+    const selectionPath =
+      '*/api/student/enrollment/admissions/fee-selections/applications/application-1';
+    mswServer.use(
+      http.get(selectionPath, () =>
+        HttpResponse.json({ data: { applicationId: 'application-1', selection: structure() } })
+      ),
+      http.get(`${collectionPath}/application-1/summary`, () => {
+        reads.summary += 1;
+        return HttpResponse.json({
+          data: {
+            canCollect: Boolean(structure()),
+            structureName: structure(),
+            blocker: structure()
+              ? null
+              : 'Confirm a published fee structure before collecting fees.',
+          },
+        });
+      }),
+      http.get(`${collectionPath}/application-1/collect-form`, () => {
+        reads.form += 1;
+        return HttpResponse.json({ data: { structureName: structure() } });
+      }),
+      http.get(`${collectionPath}/application-2/summary`, () => {
+        reads.other += 1;
+        return HttpResponse.json({ data: { canCollect: false } });
+      }),
+      http.put(selectionPath, () => {
+        if (rejected) return HttpResponse.json({ detail: 'Selection changed.' }, { status: 409 });
+        saved = true;
+        return HttpResponse.json({ data: { applicationId: 'application-1' } });
+      })
+    );
+    const { endpoints } = admissionFeeCollectionApi;
+    const selection = store.dispatch(
+      admissionFeeSelectionApi.endpoints.getAdmissionFeeSelection.initiate('application-1')
+    );
+    const summary = store.dispatch(
+      endpoints.getAdmissionFeeCollectionSummary.initiate('application-1')
+    );
+    const form = store.dispatch(endpoints.getAdmissionFeeCollectForm.initiate('application-1'));
+    const other = store.dispatch(
+      endpoints.getAdmissionFeeCollectionSummary.initiate('application-2')
+    );
+    await Promise.all([selection.unwrap(), summary.unwrap(), form.unwrap(), other.unwrap()]);
+    const save = store.dispatch(
+      admissionFeeSelectionApi.endpoints.saveAdmissionFeeSelection.initiate({
+        applicationId: 'application-1',
+        concurrencyStamp: 'stamp-1',
+        structureId: 'new-structure',
+        optionalHeadIds: [],
+      })
+    );
+    if (rejected) {
+      await expect(save.unwrap()).rejects.toMatchObject({ status: 409 });
+      expect(reads).toEqual({ summary: 1, form: 1, other: 1 });
+      expect(
+        endpoints.getAdmissionFeeCollectionSummary.select('application-1')(store.getState()).data
+      ).toMatchObject({ canCollect: false, structureName: null });
+    } else {
+      await save.unwrap();
+      await waitFor(() => {
+        expect(
+          endpoints.getAdmissionFeeCollectionSummary.select('application-1')(store.getState()).data
+        ).toMatchObject({ canCollect: true, structureName: 'new-structure', blocker: null });
+        expect(reads).toEqual({ summary: 2, form: 2, other: 1 });
+      });
+    }
+    selection.unsubscribe();
+    summary.unsubscribe();
+    form.unsubscribe();
+    other.unsubscribe();
+  }
+);

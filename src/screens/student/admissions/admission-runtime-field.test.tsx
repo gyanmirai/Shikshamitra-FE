@@ -1,10 +1,44 @@
 import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import AdmissionRuntimeField from './admission-runtime-field';
+
+it.each(['Guardian.Email', 'Father.Email', 'Mother.Email', 'Applicant.Email'])(
+  'renders and updates the required %s with email format metadata',
+  (bindingKey) => {
+    const onChange = vi.fn();
+    const field = {
+      code: bindingKey.toUpperCase().replace('.', '_'),
+      bindingKey,
+      label: bindingKey,
+      fieldType: 3,
+      required: true,
+      readOnly: false,
+      validationJson: '{"format":"email"}',
+    };
+    const view = render(
+      <AdmissionRuntimeField field={field} value="" disabled={false} onChange={onChange} />
+    );
+    const input = screen.getByRole('textbox', { name: bindingKey });
+    expect(input).toHaveAttribute('type', 'email');
+    expect(input).toBeRequired();
+    fireEvent.change(input, { target: { value: 'parent@example.test' } });
+    expect(onChange).toHaveBeenCalledWith('parent@example.test');
+    view.rerender(
+      <AdmissionRuntimeField
+        field={field}
+        value="parent@example.test"
+        disabled
+        onChange={onChange}
+      />
+    );
+    expect(screen.getByRole('textbox', { name: bindingKey })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: bindingKey })).toHaveValue('parent@example.test');
+  }
+);
 
 it.each([6, 7, 8])('shows the required indicator for choice field type %i', (fieldType) => {
   renderChoice(fieldType, true);
