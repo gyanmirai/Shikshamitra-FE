@@ -16,7 +16,40 @@ describe('staff policy access prerequisites', () => {
       'HR.LeaveManagement.Setting.LeavePolicy.View',
     ].map((name) => ({ name, isGranted: true }));
 
-    expect(getMissingStaffPolicyPermissions(permissions)).toEqual(STAFF_POLICY_REQUIREMENTS);
+    expect(getMissingStaffPolicyPermissions(permissions)).toEqual([
+      STAFF_POLICY_REQUIREMENTS[0],
+      STAFF_POLICY_REQUIREMENTS[2],
+      STAFF_POLICY_REQUIREMENTS[3],
+    ]);
+  });
+
+  it('accepts the exact policy permissions defined by the backend catalogue', () => {
+    const permissions = [
+      'HR.Policies.View',
+      'HR.LeaveManagement.Setting.LeavePolicy.View',
+      'HR.Policies.Assign',
+      'HR.Policies.PreviewImpact',
+    ].map((name) => ({ name, isGranted: true }));
+
+    expect(getMissingStaffPolicyPermissions(permissions)).toEqual([]);
+  });
+
+  it.each([
+    undefined,
+    { name: 'HR.LeaveManagement.Setting.LeavePolicy.View', isGranted: false },
+    { name: 'HR.AttendanceAndLeave.Setting.LeavePolicy.View', isGranted: true },
+    { name: 'HR.LeaveManagement.Setting.LeavePolicy', isGranted: true },
+  ])('requires the exact granted leave-policy action: %j', (leavePermission) => {
+    const permissions = [
+      'HR.Policies.View',
+      'HR.Policies.Assign',
+      'HR.Policies.PreviewImpact',
+    ].map((name) => ({ name, isGranted: true }));
+    if (leavePermission) permissions.push(leavePermission);
+
+    expect(getMissingStaffPolicyPermissions(permissions)).toEqual([
+      { name: 'HR.LeaveManagement.Setting.LeavePolicy.View', label: 'View leave policies' },
+    ]);
   });
 
   it('allows the workflow only after every exact prerequisite is granted', () => {

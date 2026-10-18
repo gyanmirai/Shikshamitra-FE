@@ -51,6 +51,22 @@ it('blocks a delegated creator before sending unauthorized policy lookups', () =
   });
 });
 
+it('loads default policies for the backend catalogue grants without a false leave-policy blocker', () => {
+  mocks.state.auth.permissions = [
+    'HR.Policies.View',
+    'HR.LeaveManagement.Setting.LeavePolicy.View',
+    'HR.Policies.Assign',
+    'HR.Policies.PreviewImpact',
+  ].map((name) => ({ name, isGranted: true }));
+  const { result } = renderHook(() => useEmployeePolicyAccess('year', true));
+
+  expect(result.current.blocked).toBe(false);
+  expect(result.current.requirements).toEqual([]);
+  [mocks.payroll, mocks.attendance, mocks.leave].forEach((query) => {
+    expect(query).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ skip: false }));
+  });
+});
+
 it('does not impose creation policy prerequisites on staff editing', () => {
   const { result } = renderHook(() => useEmployeePolicyAccess('year', false));
   expect(result.current.blocked).toBe(false);

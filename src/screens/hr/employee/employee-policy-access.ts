@@ -5,7 +5,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 export const STAFF_POLICY_REQUIREMENTS = [
   { name: 'HR.Policies.View', label: 'View payroll and attendance policies' },
-  { name: 'HR.AttendanceAndLeave.Setting.LeavePolicy.View', label: 'View leave policies' },
+  { name: 'HR.LeaveManagement.Setting.LeavePolicy.View', label: 'View leave policies' },
   { name: 'HR.Policies.Assign', label: 'Assign staff policies' },
   { name: 'HR.Policies.PreviewImpact', label: 'Preview policy assignment impact' },
 ] as const;

@@ -27,7 +27,7 @@ const staffPermissions = [
 ];
 const policyPermissions = [
   hrPermissions.policyActions.view,
-  'HR.AttendanceAndLeave.Setting.LeavePolicy.View',
+  'HR.LeaveManagement.Setting.LeavePolicy.View',
   hrPermissions.policyActions.assign,
   hrPermissions.policyActions.previewImpact,
 ];
