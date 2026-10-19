@@ -354,36 +354,36 @@ const FeeCollectComponentForm = ({
   const feeReceiptData =
     lastCollectResponse && receiptPreviewState.feeReceipt
       ? {
-          id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
-          receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
-          studentId: lastCollectResponse.studentId ?? '',
-          studentName: resolvedStudentName,
-          academicYearId: lastCollectResponse.academicYearId,
-          totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
-          collectedAt: lastCollectResponse.collectedAt,
-          collectedBy: lastCollectResponse.collectedBy,
-          paidFeeHeads: lastCollectResponse.paidFeeHeads,
-          auditSummary: lastCollectResponse.auditSummary,
-        }
+        id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
+        receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
+        studentId: lastCollectResponse.studentId ?? '',
+        studentName: resolvedStudentName,
+        academicYearId: lastCollectResponse.academicYearId,
+        totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
+        collectedAt: lastCollectResponse.collectedAt,
+        collectedBy: lastCollectResponse.collectedBy,
+        paidFeeHeads: lastCollectResponse.paidFeeHeads,
+        auditSummary: lastCollectResponse.auditSummary,
+      }
       : undefined;
 
   const chargeReceiptData =
     lastCollectResponse && receiptPreviewState.chargeReceipt
       ? {
-          id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
-          receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
-          studentId: lastCollectResponse.studentId ?? '',
-          studentName: resolvedStudentName,
-          academicYearId: lastCollectResponse.academicYearId,
-          totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
-            (sum, c) => sum + c.amountPaid,
-            0
-          ),
-          collectedAt: lastCollectResponse.collectedAt,
-          collectedBy: lastCollectResponse.collectedBy,
-          paidCharges: lastCollectResponse.paidCharges ?? [],
-          auditSummary: lastCollectResponse.auditSummary,
-        }
+        id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
+        receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
+        studentId: lastCollectResponse.studentId ?? '',
+        studentName: resolvedStudentName,
+        academicYearId: lastCollectResponse.academicYearId,
+        totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
+          (sum, c) => sum + c.amountPaid,
+          0
+        ),
+        collectedAt: lastCollectResponse.collectedAt,
+        collectedBy: lastCollectResponse.collectedBy,
+        paidCharges: lastCollectResponse.paidCharges ?? [],
+        auditSummary: lastCollectResponse.auditSummary,
+      }
       : undefined;
 
   const academicMonthsFromContext = useMemo(
@@ -1312,7 +1312,7 @@ const FeeCollectComponentForm = ({
         >
           {collectFormError
             ? parseApiProblemDetail(collectFormError).detail ||
-              'Unable to load fees. Please try again.'
+            'Unable to load fees. Please try again.'
             : !currentYear?.id
               ? 'Academic year is required to collect fees.'
               : 'Fee collection details are unavailable. Please try again.'}
@@ -1343,15 +1343,15 @@ const FeeCollectComponentForm = ({
     setReceiptPreviewState({
       feeReceipt: hasFeeReceipt
         ? {
-            id: collectResponse.feeReceiptId!,
-            receiptNumber: collectResponse.feeReceiptNumber,
-          }
+          id: collectResponse.feeReceiptId!,
+          receiptNumber: collectResponse.feeReceiptNumber,
+        }
         : null,
       chargeReceipt: hasChargeReceipt
         ? {
-            id: collectResponse.chargeReceiptId!,
-            receiptNumber: collectResponse.chargeReceiptNumber,
-          }
+          id: collectResponse.chargeReceiptId!,
+          receiptNumber: collectResponse.chargeReceiptNumber,
+        }
         : null,
     });
 
@@ -1465,9 +1465,9 @@ const FeeCollectComponentForm = ({
               student={
                 formData?.student
                   ? ({
-                      studentId: formData.student.studentId,
-                      standardId: formData.student.standardId,
-                    } as any)
+                    studentId: formData.student.studentId,
+                    standardId: formData.student.standardId,
+                  } as any)
                   : null
               }
               handleClose={handleFeeStructureDialogClose}
@@ -1936,11 +1936,11 @@ const FeeCollectComponentForm = ({
                           error={
                             cashReceived !== null &&
                             toPaise(Number(cashReceived)) <
-                              toPaise(Number(formik.values.payment.amount))
+                            toPaise(Number(formik.values.payment.amount))
                           }
                           helperText={
                             cashReceived !== null &&
-                            toPaise(Number(cashReceived)) <
+                              toPaise(Number(cashReceived)) <
                               toPaise(Number(formik.values.payment.amount))
                               ? 'Cash received must cover the amount to collect.'
                               : ''
@@ -1991,7 +1991,7 @@ const FeeCollectComponentForm = ({
                         {/* Extra payment details (cheque, upi, etc.) */}
                         {(
                           paymentMethodsConfig[
-                            formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+                          formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
                           ] ?? []
                         )
                           .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
@@ -2036,7 +2036,7 @@ const FeeCollectComponentForm = ({
                                           ),
                                           helperText:
                                             (touched || formik.submitCount > 0) &&
-                                            typeof error === 'string'
+                                              typeof error === 'string'
                                               ? error
                                               : '',
                                         },
@@ -2057,7 +2057,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
+                                          typeof error === 'string'
                                           ? error
                                           : isBankAccountField && isBankAccountsBusy
                                             ? 'Loading bank accounts...'
@@ -2112,7 +2112,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
+                                          typeof error === 'string'
                                           ? error
                                           : ''
                                       }
@@ -2122,10 +2122,10 @@ const FeeCollectComponentForm = ({
                                       fullWidth
                                       type={
                                         field.type === 'text' ||
-                                        field.type === 'numbers' ||
-                                        field.type === 'last4digits' ||
-                                        field.type === 'uppercase' ||
-                                        field.type === 'anytext'
+                                          field.type === 'numbers' ||
+                                          field.type === 'last4digits' ||
+                                          field.type === 'uppercase' ||
+                                          field.type === 'anytext'
                                           ? 'text'
                                           : field.type
                                       }
@@ -2183,7 +2183,7 @@ const FeeCollectComponentForm = ({
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
                                         (touched || formik.submitCount > 0) &&
-                                        typeof error === 'string'
+                                          typeof error === 'string'
                                           ? error
                                           : ''
                                       }
@@ -2223,7 +2223,7 @@ const FeeCollectComponentForm = ({
                               0,
                               (toPaise(Number(cashReceived ?? formik.values.payment.amount)) -
                                 toPaise(Number(formik.values.payment.amount))) /
-                                100
+                              100
                             ),
                             'INR'
                           )}
@@ -2235,7 +2235,6 @@ const FeeCollectComponentForm = ({
                 <DialogActions
                   sx={{
                     px: 0,
-                    py: 0.9,
                     mt: 0,
                     borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
                     flexShrink: 0,
@@ -2286,7 +2285,7 @@ const FeeCollectComponentForm = ({
                         (formik.values.payment.paymentMethod === 'Cash' &&
                           cashReceived !== null &&
                           toPaise(Number(cashReceived)) <
-                            toPaise(Number(formik.values.payment.amount))) ||
+                          toPaise(Number(formik.values.payment.amount))) ||
                         adaptedOutcomeUnresolved ||
                         collectionReadBlocked ||
                         (!formik.values.selectedItems.length && !formik.values.charges.length)
