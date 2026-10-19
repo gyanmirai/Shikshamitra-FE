@@ -13,8 +13,6 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
@@ -24,6 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { isRegisterMissingPunch } from 'src/screens/hr/attendance-tracking/status-mapper';
@@ -364,7 +363,14 @@ const AttendanceTrackingScreen = () => {
     [academicYearId, filters, page, pageSize]
   );
 
-  const { data, isLoading, isFetching } = useQueryAndMutation({
+  const exportTable = useHrTableExport('hr-attendance-register', queryParams);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error: tableError,
+    refetch: retryTable,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
@@ -633,6 +639,7 @@ const AttendanceTrackingScreen = () => {
       width: 130,
       minWidth: 130,
       sticky: true,
+      stickyPosition: 'right' as const,
       align: 'left',
       isSort: true,
       isFilter: true,
@@ -805,6 +812,10 @@ const AttendanceTrackingScreen = () => {
       }}
     >
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
         columns={dayColumns}
         data={group.days || []}
@@ -1430,45 +1441,6 @@ const AttendanceTrackingScreen = () => {
                 gap: 1.5,
               }}
             >
-              <TextField
-                variant="outlined"
-                size="small"
-                value={filters.search}
-                onChange={(event) => setFilter('search', event.target.value)}
-                placeholder="Search..."
-                InputProps={{
-                  startAdornment: (
-                    <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
-                  ),
-                  endAdornment: filters.search && (
-                    <IconButton
-                      size="small"
-                      aria-label="Clear staff search"
-                      onClick={() => setFilter('search', '')}
-                      edge="end"
-                    >
-                      <ClearIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  ),
-                  sx: {
-                    borderRadius: 1.5,
-                    bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
-                    fontSize: '14px',
-                    '& fieldset': {
-                      border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-                    },
-                    '&:hover fieldset': {
-                      borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
-                    },
-                  },
-                }}
-                sx={{
-                  width: '100%',
-                  '& .MuiInputBase-root': {
-                    pr: 1,
-                  },
-                }}
-              />
               <CustomDateRangePicker
                 label="Start Date - End Date"
                 value={[filters.startDate, filters.endDate]}
@@ -1644,14 +1616,26 @@ const AttendanceTrackingScreen = () => {
       <Divider />
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-attendance-register"
+        tableTitle="Attendance register"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
         columns={columns}
         data={rows}
         isLoading={isLoading || isFetching}
         serverSide
         serverSidePagination
         totalCount={data?.totalCount || 0}
-        isSearch={false}
+        serverSideSearch
+        defaultSearchTerm={filters.search}
+        onServerSearch={(search) => setFilter('search', search)}
+        page={page - 1}
+        rowsPerPage={pageSize}
         isFilter={false}
         onServerPagination={(nextPage, nextPageSize) => {
           setPage(nextPage);

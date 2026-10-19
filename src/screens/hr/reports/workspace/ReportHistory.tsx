@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { Box, Chip, Alert, Stack, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetReportingRunsQuery } from 'src/redux/hr/hrReportingWorkspaceApi';
 
 import { reportError, displayReportValue } from '../reporting-workspace-utils';
@@ -10,13 +11,15 @@ import { reportError, displayReportValue } from '../reporting-workspace-utils';
 export function ReportHistory() {
   const router = useRouter();
   const [skip, setSkip] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const exportTable = useHrTableExport('hr-generated-report-history', {});
   const [active, setActive] = useState(true);
   const {
     data: history,
     error,
     isFetching,
   } = useGetReportingRunsQuery(
-    { skip, take: 50 },
+    { skip, take: pageSize },
     { pollingInterval: active ? 5000 : 0, skipPollingIfUnfocused: true }
   );
   const data = useMemo(() => history?.items || [], [history?.items]);
@@ -64,7 +67,13 @@ export function ReportHistory() {
     <Stack spacing={1} sx={{ height: 1, minHeight: 0 }}>
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
+          showColumns
+          showExport
+          showFullScreen
+          exportScope="all"
           tableId="hr-generated-report-history"
+          tableTitle="Generated reports"
+          onExport={exportTable}
           columns={columns.map((column) => ({ ...column, isSort: false, isFilter: false }))}
           data={data.map((run) => ({
             ...run,
@@ -73,10 +82,18 @@ export function ReportHistory() {
               : 'Current records',
           }))}
           isLoading={isFetching && !data.length}
-          isPagination={false}
+          serverSidePagination
+          paginationMode="unknown"
+          hasNextPage={history?.hasMore ?? false}
+          page={Math.floor(skip / pageSize)}
+          rowsPerPage={pageSize}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          onServerPagination={(page, size) => {
+            setPageSize(size);
+            setSkip((page - 1) * size);
+          }}
           isSearch={false}
           isFilter={false}
-          showToolbar={false}
           noDataText={
             history?.hasMore || skip > 0
               ? 'No reports available on this page with your current access.'
@@ -86,14 +103,6 @@ export function ReportHistory() {
           tableContainerProps={{ sx: { height: 1 } }}
         />
       </Box>
-      <Stack direction="row" justifyContent="flex-end" spacing={1}>
-        <Button size="small" disabled={skip === 0} onClick={() => setSkip(Math.max(0, skip - 50))}>
-          Previous
-        </Button>
-        <Button size="small" disabled={!history?.hasMore} onClick={() => setSkip(skip + 50)}>
-          Next
-        </Button>
-      </Stack>
     </Stack>
   );
 }

@@ -3,257 +3,34 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
-import {
-  toHrAuditLabel,
-  formatHrAuditText,
-  formatHrAuditActor,
-  parseHrAuditContext,
-  formatHrAuditDateTime,
-} from 'src/utils/hr-audit-format';
 import {
   Box,
   Chip,
   Alert,
   Paper,
   Stack,
-  Table,
-  Drawer,
   Button,
+  Drawer,
   Divider,
   Collapse,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
   Typography,
   LinearProgress,
 } from '@mui/material';
+import {
+  toHrAuditLabel,
+  formatHrAuditText,
+  formatHrAuditValue,
+  formatHrAuditActor,
+  parseHrAuditContext,
+  formatHrAuditDateTime,
+} from 'src/utils/hr-audit-format';
 
 import { DrawerHeader } from './HRPolicySharedUI';
 import { toLabel } from '../hr-policy-workspace-utils';
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
-
-// --- Helpers for compact layout -----------------------------------------------
-
-const getHolidayCount = (value: unknown): number => {
-  if (!value) return 0;
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (Array.isArray(parsed)) return parsed.length;
-      } catch {
-        try {
-          const matches = trimmed.match(/"holidayName"\s*:/g);
-          return matches ? matches.length : 0;
-        } catch {
-          return 0;
-        }
-      }
-    }
-  }
-  return 0;
-};
-
-const formatHolidaySummaryCompact = (value: unknown): string => {
-  if (!value) return '-';
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (parsed && typeof parsed === 'object') {
-          const parts: string[] = [];
-          if (parsed.totalCount !== undefined) parts.push(`Tot: ${parsed.totalCount}`);
-          if (parsed.includedCount !== undefined) parts.push(`Inc: ${parsed.includedCount}`);
-          if (parsed.removedCount !== undefined) parts.push(`Rem: ${parsed.removedCount}`);
-          if (parsed.centralCount !== undefined) parts.push(`Cen: ${parsed.centralCount}`);
-          if (parsed.manualCount !== undefined && parsed.manualCount > 0)
-            parts.push(`Man: ${parsed.manualCount}`);
-          if (parts.length > 0) return parts.join(' · ');
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-  return String(value);
-};
-
-// --- AuditFieldRow component --------------------------------------------------
-
-function AuditFieldRow({ field }: { field: { field: string; oldValue: any; newValue: any } }) {
-  const [expandedOld, setExpandedOld] = React.useState(false);
-  const [expandedNew, setExpandedNew] = React.useState(false);
-
-  const fieldName = field.field;
-
-  const isHolidays = fieldName === 'holidays';
-  const isHolidaySummary = fieldName === 'holidaySummary';
-
-  const renderValueCell = (
-    val: any,
-    expanded: boolean,
-    setExpanded: (v: boolean) => void,
-    bgType: 'old' | 'new'
-  ) => {
-    const hasVal = val !== undefined && val !== null && val !== '';
-
-    if (!hasVal) {
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-          -
-        </Typography>
-      );
-    }
-
-    if (isHolidaySummary) {
-      const compactText = formatHolidaySummaryCompact(val);
-      return (
-        <Typography
-          variant="body2"
-          sx={{
-            fontSize: '0.825rem',
-            color: 'text.primary',
-            wordBreak: 'break-word',
-          }}
-        >
-          {compactText}
-        </Typography>
-      );
-    }
-
-    if (isHolidays) {
-      const count = getHolidayCount(val);
-      if (count === 0) {
-        return (
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-            -
-          </Typography>
-        );
-      }
-
-      return (
-        <Stack spacing={0.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
-          {!expanded ? (
-            <Button
-              size="small"
-              variant="text"
-              color={bgType === 'old' ? 'inherit' : 'primary'}
-              onClick={() => setExpanded(true)}
-              startIcon={<Iconify icon="fluent:chevron-right-12-filled" width={10} height={10} />}
-              sx={{
-                textTransform: 'none',
-                py: 0.1,
-                px: 0.5,
-                fontSize: '0.68rem',
-                fontWeight: 600,
-                borderRadius: 0.5,
-                height: 18,
-                minWidth: 'auto',
-                bgcolor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                '&:hover': {
-                  bgcolor: (theme) =>
-                    theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                },
-              }}
-            >
-              Show {count} holiday{count > 1 ? 's' : ''}
-            </Button>
-          ) : (
-            <Stack spacing={0.5} sx={{ width: 1, minWidth: 0 }}>
-              <Button
-                size="small"
-                variant="text"
-                color="inherit"
-                onClick={() => setExpanded(false)}
-                startIcon={<Iconify icon="fluent:chevron-down-12-filled" width={10} height={10} />}
-                sx={{
-                  textTransform: 'none',
-                  py: 0.1,
-                  px: 0.5,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  borderRadius: 0.5,
-                  height: 18,
-                  minWidth: 'auto',
-                  alignSelf: 'flex-start',
-                }}
-              >
-                Hide
-              </Button>
-              <Collapse in={expanded} sx={{ width: 1 }}>
-                <HrAuditValueView value={val} sourceKey={fieldName} dense maxDepth={3} />
-              </Collapse>
-            </Stack>
-          )}
-        </Stack>
-      );
-    }
-
-    // Default formatting
-    return (
-      <Box sx={{ fontSize: '0.825rem', color: 'text.primary' }}>
-        <HrAuditValueView value={val} sourceKey={fieldName} dense maxDepth={3} />
-      </Box>
-    );
-  };
-
-  return (
-    <TableRow
-      sx={{
-        '&:last-child td': { border: 0 },
-        transition: 'background-color 0.2s',
-        '&:hover': {
-          bgcolor: 'action.hover',
-        },
-      }}
-    >
-      <TableCell
-        sx={{
-          width: '25%',
-          fontWeight: 600,
-          color: 'text.secondary',
-          wordBreak: 'break-word',
-          verticalAlign: 'top',
-          pt: 1.25,
-          pb: 1.25,
-          fontSize: '0.825rem',
-        }}
-      >
-        {toHrAuditLabel(fieldName)}
-      </TableCell>
-      <TableCell
-        sx={{
-          width: '37.5%',
-          color: 'text.primary',
-          wordBreak: 'break-word',
-          verticalAlign: 'top',
-          pt: 1.25,
-          pb: 1.25,
-        }}
-      >
-        {renderValueCell(field.oldValue, expandedOld, setExpandedOld, 'old')}
-      </TableCell>
-      <TableCell
-        sx={{
-          width: '37.5%',
-          color: 'text.primary',
-          wordBreak: 'break-word',
-          verticalAlign: 'top',
-          pt: 1.25,
-          pb: 1.25,
-        }}
-      >
-        {renderValueCell(field.newValue, expandedNew, setExpandedNew, 'new')}
-      </TableCell>
-    </TableRow>
-  );
-}
 
 // --- AuditTrailEventCard component --------------------------------------------
 
@@ -273,12 +50,9 @@ function AuditTrailEventCard({
   actionTextColor: any;
 }) {
   const [expanded, setExpanded] = React.useState(false);
-  const [showAllChanges, setShowAllChanges] = React.useState(false);
   const changedFields = (event.changedFields || []).filter(
     (field: any) => String(field.oldValue ?? '').trim() !== String(field.newValue ?? '').trim()
   );
-  const visibleChangedFields = showAllChanges ? changedFields : changedFields.slice(0, 8);
-  const hiddenChangeCount = Math.max(0, changedFields.length - 8);
   const hasTable = changedFields.length > 0;
   const context = parseHrAuditContext(event.contextJson);
 
@@ -379,58 +153,40 @@ function AuditTrailEventCard({
                     bgcolor: 'background.paper',
                   }}
                 >
-                  <Table size="small" sx={{ width: 1, tableLayout: 'fixed' }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          sx={{
-                            bgcolor: 'background.neutral',
-                            fontSize: '0.75rem',
-                            py: 1,
-                            width: '25%',
-                          }}
-                        >
-                          Field
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            bgcolor: 'background.neutral',
-                            fontSize: '0.75rem',
-                            py: 1,
-                            width: '37.5%',
-                          }}
-                        >
-                          Before
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            bgcolor: 'background.neutral',
-                            fontSize: '0.75rem',
-                            py: 1,
-                            width: '37.5%',
-                          }}
-                        >
-                          After
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {visibleChangedFields.map((field: any) => (
-                        <AuditFieldRow key={field.field} field={field} />
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <CustomizableTable
+                    tableId={`hr-audit-changes-${event.id || index}`}
+                    tableTitle="Audit changes"
+                    variant="embedded"
+                    showColumns
+                    showExport
+                    showFullScreen
+                    exportScope="all"
+                    isSearch={false}
+                    isFilter={false}
+                    isPagination={changedFields.length > 8}
+                    defaultRowsPerPage={8}
+                    rowsPerPageOptions={[8, 25, 50]}
+                    data={changedFields.map((field: any) => ({ ...field, id: field.field }))}
+                    columns={[
+                      {
+                        id: 'field',
+                        label: 'Field',
+                        minWidth: 130,
+                        render: (value) => toHrAuditLabel(value),
+                      },
+                      ...['oldValue', 'newValue'].map((id) => ({
+                        id,
+                        label: id === 'oldValue' ? 'Before' : 'After',
+                        minWidth: 180,
+                        exportValue: (value: unknown, row: any) =>
+                          formatHrAuditValue(value, Number.MAX_SAFE_INTEGER, row.field),
+                        render: (value: unknown, row: any) => (
+                          <AuditTableValue value={value} field={row.field} />
+                        ),
+                      })),
+                    ]}
+                  />
                 </Box>
-                {hiddenChangeCount > 0 ? (
-                  <Button
-                    size="small"
-                    variant="text"
-                    onClick={() => setShowAllChanges((current) => !current)}
-                    sx={{ mt: 0.5 }}
-                  >
-                    {showAllChanges ? 'Show less' : `Show ${hiddenChangeCount} more`}
-                  </Button>
-                ) : null}
 
                 {/* Context metadata (if exists) inside the accordion details */}
                 {context ? (
@@ -688,5 +444,27 @@ export function PolicyAuditDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         </Stack>
       </Scrollbar>
     </Drawer>
+  );
+}
+
+function AuditTableValue({ value, field }: { value: unknown; field: string }) {
+  const [open, setOpen] = React.useState(false);
+  let count = 0;
+  if (field === 'holidays') {
+    try {
+      const holidays = typeof value === 'string' ? JSON.parse(value) : value;
+      count = Array.isArray(holidays) ? holidays.length : 0;
+    } catch {
+      count = 0;
+    }
+  }
+  if (!count) return <HrAuditValueView value={value} sourceKey={field} dense maxDepth={3} />;
+  return (
+    <Stack alignItems="flex-start">
+      <Button size="small" onClick={() => setOpen((current) => !current)}>
+        {open ? 'Hide holidays' : `Show ${count}${count === 1 ? ' holiday' : ' holidays'}`}
+      </Button>
+      {open && <HrAuditValueView value={value} sourceKey={field} dense maxDepth={3} />}
+    </Stack>
   );
 }

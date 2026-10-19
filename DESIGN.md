@@ -19,7 +19,7 @@ Apply these priorities in order.
 
 | Concern                                      | Current reference                                                                   |
 | -------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                       |
+| Full-height HR table workspace               | `src/screens/hr/attendance-tracking/index.tsx`                                     |
 | Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
 | Compact icon tab workspace                   | `src/screens/academic/course-management/lessonPlan/LessonPlanScreen.tsx`            |
 | Shared table                                 | `src/components/customizabaleTable/index.tsx`                                       |
@@ -142,13 +142,31 @@ const payload = {
 };
 ```
 
-### Use Minimal UI as the fallback component reference
+### Use Minimals as the design foundation
 
-When the repository does not contain a suitable shared component or MUI composition, consult the Minimal UI component catalog:
+The purchased Minimals template is the visual foundation of this application.
+Express its patterns through the installed theme and shared components, using the attendance register as the canonical HR table workspace.
+Consult the Minimals component catalog when extending those patterns:
 [https://minimals.cc/components](https://minimals.cc/components).
 
 - Search the catalog for the closest established component pattern before designing a new one.
 - Reuse the project’s existing MUI/theme implementation and adapt the Minimal UI pattern to this repository; do not paste an entire template or introduce unrelated Minimal UI dependencies.
+
+### HR tables and complete exports
+
+- Use `CustomizableTable` for primary and embedded read-only data tables across HR.
+- Primary tables fill the remaining workspace; embedded tables retain the same headers, formatting and utilities in a compact section.
+- Keep domain filters above the table and one global search inside its toolbar.
+- Keep independent utilities ordered as Columns, Export, Full screen, with density and pagination in the shared footer.
+- Disabling column filters must not hide columns, export or full-screen utilities.
+- Export offers Excel and PDF of every authorized row matching the active query, across all pages, using the visible ordered data columns.
+- Never label a loaded-page export as a complete table export.
+- Paginated sources require a server export callback; small complete collections may export directly.
+- A user who can view a table can export it without an additional export grant.
+- The server still enforces current tenant, actor, source access, record scope and masking at execution and download.
+- Captured report downloads use captured rows and preserve their owner and current-access checks.
+- Editable configuration grids, calendars, charts and official document previews retain their purpose-built behavior.
+- Empty, loading, error and unsupported-resource states remain explicit; never silently truncate an export.
 - Preserve the project’s routing, permissions, Formik/Yup, Redux, spacing, theme color, accessibility, and responsive rules when adapting the reference.
 - Check whether the needed component should become a shared component under `src/components/` before implementing it locally in a screen.
 - Record the selected Minimal UI reference in the implementation PR or task notes when the design materially follows it.

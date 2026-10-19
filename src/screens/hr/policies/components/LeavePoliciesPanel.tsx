@@ -14,6 +14,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Card, Chip, Stack, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   useGetLeavePoliciesQuery,
@@ -61,6 +62,11 @@ export function LeavePoliciesPanel() {
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 10, search: '' });
 
+  const exportTable = useHrTableExport('hr-policy-leave', {
+    academicYearId: currentYear?.id,
+    search: tableQuery.search,
+    archivedOnly: archiveView === 'archived',
+  });
   const {
     data: leavePolicyData,
     isFetching: isLoading,
@@ -494,7 +500,12 @@ export function LeavePoliciesPanel() {
       <LeaveYearEndSettlementsPanel />
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-leave-policies-workspace"
+        onExport={exportTable}
         columns={columns}
         data={rows}
         isLoading={isLoading}

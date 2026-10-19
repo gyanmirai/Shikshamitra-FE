@@ -28,6 +28,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
 import { useGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
@@ -188,6 +189,7 @@ const HrEmployee = () => {
 
   const {
     data: employee,
+    error: tableError,
     isLoading,
     refetch,
     isFetching,
@@ -196,6 +198,7 @@ const HrEmployee = () => {
     currentQueryAndMutation: useGetEmployeeQuery,
     params: processedEmployeeParams,
   });
+  const exportTable = useHrTableExport('employee-table', processedEmployeeParams);
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
       if (staffFormBusy) return;
@@ -257,28 +260,12 @@ const HrEmployee = () => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'roleValue',
-        label: 'Role',
-        align: 'left',
-        sticky: true,
-        width: 170,
-        minWidth: 140,
-        maxWidth: 180,
-        render(value, row) {
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <RoleColorIndicator color={getRoleColor(value)} />
-              <Label variant="soft">{value}</Label>
-            </Box>
-          );
-        },
-      },
-      {
         id: 'fullName',
         label: 'Name',
         width: 260,
         minWidth: 240,
         sticky: true,
+        stickyOnMobile: false,
         align: 'left',
         render(value, row) {
           return (
@@ -324,6 +311,23 @@ const HrEmployee = () => {
                 }
               />{' '}
               {value} ({row.employeeIdentifier})
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'roleValue',
+        label: 'Role',
+        align: 'left',
+        sticky: false,
+        width: 170,
+        minWidth: 140,
+        maxWidth: 180,
+        render(value, row) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <RoleColorIndicator color={getRoleColor(value)} />
+              <Label variant="soft">{value}</Label>
             </Box>
           );
         },
@@ -415,6 +419,7 @@ const HrEmployee = () => {
         label: 'Actions',
         isSort: false,
         sticky: true,
+        stickyPosition: 'right' as const,
         isFilter: false,
         width: 112,
         minWidth: 104,
@@ -593,6 +598,10 @@ const HrEmployee = () => {
             </FormControl>
           </Card>
           <CustomizableTable
+            showColumns
+            showExport
+            showFullScreen
+            exportScope="all"
             noDataText={
               <>
                 No staff match the selected filters.
@@ -610,6 +619,10 @@ const HrEmployee = () => {
             onSendNotification={handlerSendNotification}
             isLoading={isLoading || isFetching}
             tableId="employee-table"
+            tableTitle="Staff directory"
+            onExport={exportTable}
+            error={tableError}
+            onRetry={refetch}
             wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: 1 } }}
             serverSidePagination

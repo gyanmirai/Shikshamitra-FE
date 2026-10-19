@@ -7,6 +7,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import CustomizableTable from '.';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 const columns = [{ id: 'fullName', label: 'Name' }];
 const employee = { id: 'employee-1', fullName: 'Abhay Bamrotiya' };
 

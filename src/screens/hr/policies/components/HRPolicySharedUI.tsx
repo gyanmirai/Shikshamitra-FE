@@ -5,13 +5,14 @@ import type { SelectChangeEvent } from '@mui/material/Select';
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { extractTextFromReactNode } from 'src/components/customizabaleTable/utils';
 import {
   Box,
   Chip,
   Alert,
   Paper,
   Stack,
-  Table,
   Button,
   Portal,
   Select,
@@ -20,14 +21,11 @@ import {
   Divider,
   Backdrop,
   TableRow,
-  TableBody,
   TableCell,
-  TableHead,
   Typography,
   IconButton,
   FormControl,
   DialogTitle,
-  TableContainer,
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
@@ -520,33 +518,76 @@ export function DrawerSwitchField({
 
 // --- SectionTable -------------------------------------------------------------
 
+/** Existing read-only section composition, rendered by the shared table. */
 export function SectionTable({
   children,
   columns,
+  tableId,
+  tableTitle = 'Policy details',
+  columnIds,
+  ...tableProps
 }: {
   children: React.ReactNode;
   columns: string[];
-}) {
+  tableId?: string;
+  tableTitle?: string;
+  columnIds?: string[];
+} & Partial<Omit<React.ComponentProps<typeof CustomizableTable>, 'columns' | 'data' | 'tableId'>>) {
+  const instance = React.useId();
+  const rows = React.Children.toArray(children).flatMap((child, index) => {
+    if (!React.isValidElement<{ children?: React.ReactNode; selected?: boolean }>(child)) return [];
+    const cells = React.Children.toArray(child.props.children).filter(
+      (cell): cell is React.ReactElement<{ children?: React.ReactNode; colSpan?: number }> =>
+        React.isValidElement(cell)
+    );
+    if (
+      cells.length !== columns.length ||
+      cells.some((cell) => Number(cell.props.colSpan || 1) > 1)
+    )
+      return [];
+    return [
+      {
+        id: String(child.key || index),
+        selected: child.props.selected,
+        ...Object.fromEntries(
+          cells.map((cell, cellIndex) => [
+            columnIds?.[cellIndex] || `column${cellIndex}`,
+            cell.props.children,
+          ])
+        ),
+      },
+    ];
+  });
   return (
-    <TableContainer
-      sx={{
-        border: (theme) => `1px solid ${(theme.vars || theme).palette.divider}`,
-        borderRadius: 1,
-      }}
-    >
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            {columns.map((column) => (
-              <TableCell key={column} align={column === 'Actions' ? 'right' : 'left'}>
-                {column}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>{children}</TableBody>
-      </Table>
-    </TableContainer>
+    <CustomizableTable
+      tableId={tableId || `hr-policy-section-${instance}`}
+      tableTitle={tableTitle}
+      variant="embedded"
+      showColumns
+      showExport
+      showFullScreen
+      exportScope="all"
+      isSearch={false}
+      isFilter={false}
+      isPagination={rows.length > 10}
+      data={rows}
+      {...tableProps}
+      rowProps={(row) => ({ selected: row.selected })}
+      columns={columns.map((label, index) => ({
+        id: columnIds?.[index] || `column${index}`,
+        label,
+        minWidth: 130,
+        isSort: false,
+        isFilter: false,
+        excludeFromExport: label === 'Actions',
+        sticky: label === 'Actions',
+        stickyPosition: label === 'Actions' ? ('right' as const) : undefined,
+        render: (value: React.ReactNode) => value,
+        exportValue: (value: unknown) =>
+          typeof value === 'number' ? value : extractTextFromReactNode(value),
+      }))}
+      noDataText="No records available."
+    />
   );
 }
 

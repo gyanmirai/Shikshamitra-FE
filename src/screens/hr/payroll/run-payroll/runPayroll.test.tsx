@@ -665,3 +665,5 @@ describe('Run Payroll preview feedback', () => {
     expect(mocks.error).toHaveBeenCalledTimes(2);
   });
 });
+
+vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));

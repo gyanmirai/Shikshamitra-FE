@@ -20,6 +20,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Grid, Stack, Button, TextField, DialogActions } from '@mui/material';
 import {
@@ -53,14 +54,23 @@ const formatShiftTime = (value?: string | null) => {
 };
 
 const ShiftManagement = () => {
+  const [tablePage, setTablePage] = useState({ number: 1, size: 20 });
+  const exportTable = useHrTableExport('hr-shifts', {});
   const confirm = useBoolean();
   const shiftDialog = useBoolean();
   const [editData, setEditData] = useState<ShiftRow | null>(null);
   const [deleteInformation, setDeleteInformation] = useState<ShiftRow | null>(null);
 
-  const { data, isLoading } = useQueryAndMutation({
+  const {
+    data,
+    isLoading,
+    error: tableError,
+    isFetching: tableFetching,
+    refetch: retryTable,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetShiftsQuery,
+    params: { skipCount: (tablePage.number - 1) * tablePage.size, maxResultCount: tablePage.size },
   });
 
   const [deleteShift, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -113,10 +123,24 @@ const ShiftManagement = () => {
       />
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-attendance-shift-management"
+        tableTitle="Staff shifts"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
+        serverSidePagination
+        isSearch={false}
+        page={tablePage.number - 1}
+        rowsPerPage={tablePage.size}
+        totalCount={data?.totalCount || 0}
+        onServerPagination={(number, size) => setTablePage({ number, size })}
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
-        isLoading={isLoading}
+        isLoading={isLoading || tableFetching}
         noDataText={
           <>
             No shifts configured.
@@ -148,6 +172,7 @@ const ShiftManagement = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            stickyPosition: 'right' as const,
             align: 'left',
             label: 'Actions',
             minWidth: '70px',

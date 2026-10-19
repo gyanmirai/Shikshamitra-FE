@@ -186,6 +186,11 @@ export const RenderComponents = ({
       {/* Table */}
       <Box px={1.5} pb={1.5} pt={1} sx={{ flex: 1 }}>
         <CustomizableTable
+          variant="embedded"
+          showColumns
+          showExport={false}
+          showFullScreen
+          exportScope="all"
           tableId={`${name}-components-table`}
           isFilter={false}
           isPagination={false}
@@ -357,6 +362,7 @@ export const RenderComponents = ({
               isSort: false,
               isFilter: false,
               sticky: true,
+              stickyPosition: 'right' as const,
               minWidth: '56px',
               render(_value: any, row: any) {
                 return (

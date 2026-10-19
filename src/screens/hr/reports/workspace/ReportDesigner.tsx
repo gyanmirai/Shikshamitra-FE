@@ -1,24 +1,22 @@
-import type { ReportDataset, ReportTemplate } from 'src/redux/hr/hrReportingWorkspaceApi';
+import type { SetStateAction } from 'react';
+import type {
+  ReportDesign,
+  ReportDataset,
+  ReportTemplate,
+} from 'src/redux/hr/hrReportingWorkspaceApi';
 
+import * as Yup from 'yup';
 import { useState } from 'react';
+import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
 import { hrPaths } from 'src/constants/hr-menus';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Stack,
-  Alert,
-  Button,
-  MenuItem,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Tab, Stack, Alert, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   useSaveReportingTemplateMutation,
   usePreviewReportingDesignMutation,
@@ -30,6 +28,7 @@ import { ReportFilterEditor } from './ReportFilterEditor';
 import { ReportColumnsEditor } from './ReportColumnsEditor';
 import { ReportAdvancedEditor } from './ReportAdvancedEditor';
 import { useHrReportPermissions } from '../hooks/useHrReportPermissions';
+import { useReportPreviewExport } from '../hooks/use-report-preview-export';
 import {
   reportError,
   isMonthlyRegister,
@@ -48,16 +47,45 @@ export function ReportDesigner({
 }) {
   const router = useRouter();
   const permissions = useHrReportPermissions();
-  const [definition, setDefinition] = useState(() =>
-    template
-      ? structuredClone(template.definition)
-      : emptyReportDesign(datasets.find((dataset) => dataset.id === 'employee') || datasets[0])
-  );
-  const [name, setName] = useState(template ? `${template.name}${copy ? ' copy' : ''}` : '');
-  const [description, setDescription] = useState(template?.description || '');
-  const [visibility, setVisibility] = useState(
-    copy || !template ? (permissions.canBuild ? 'private' : 'organization') : template.visibility
-  );
+  const form = useFormik({
+    initialValues: {
+      definition: template
+        ? structuredClone(template.definition)
+        : emptyReportDesign(datasets.find((dataset) => dataset.id === 'employee') || datasets[0]),
+      name: template ? template.name + (copy ? ' copy' : '') : '',
+      description: template?.description || '',
+      visibility:
+        copy || !template
+          ? permissions.canBuild
+            ? 'private'
+            : 'organization'
+          : template.visibility,
+    },
+    validationSchema: Yup.object({
+      name: Yup.string().trim().required('Enter a template name.').max(128),
+      description: Yup.string().max(512),
+      definition: Yup.object({ columns: Yup.array().min(1, 'Choose at least one report column.') }),
+    }),
+    onSubmit: async () => {
+      await saveTemplate(false);
+    },
+  });
+  const { definition, name, description, visibility } = form.values;
+  const setDefinition = (value: SetStateAction<ReportDesign>) => {
+    form.setFieldValue(
+      'definition',
+      typeof value === 'function' ? value(form.values.definition) : value
+    );
+  };
+  const setName = (value: string) => {
+    form.setFieldValue('name', value);
+  };
+  const setDescription = (value: string) => {
+    form.setFieldValue('description', value);
+  };
+  const setVisibility = (value: string) => {
+    form.setFieldValue('visibility', value);
+  };
   const [savedId, setSavedId] = useState(!copy && !template?.isBuiltIn ? template?.id : undefined);
   const [stamp, setStamp] = useState(template?.concurrencyStamp);
   const [publishedRevision, setPublishedRevision] = useState(
@@ -75,6 +103,7 @@ export function ReportDesigner({
   const [save, saving] = useSaveReportingTemplateMutation();
   const [preview, previewState] = usePreviewReportingDesignMutation();
   const [previewSignature, setPreviewSignature] = useState('');
+  const exportPreview = useReportPreviewExport(definition, parameters);
   const signature = JSON.stringify({ definition, name, description, visibility });
   const { confirmation, requestNavigation } = useUnsavedNavigation(signature !== baseline, {
     push: router.push,
@@ -83,8 +112,10 @@ export function ReportDesigner({
   const dataset = datasets.find((d) => d.id === definition.dataSource)!;
   const saveTemplate = async (publish = false) => {
     setError('');
-    if (!name.trim()) {
-      setError('Enter a template name.');
+    const errors = await form.validateForm();
+    if (Object.keys(errors).length) {
+      await form.setTouched({ name: true, description: true });
+      setError(errors.name || 'Complete the required template settings.');
       return;
     }
     try {
@@ -157,9 +188,14 @@ export function ReportDesigner({
             )}
           </Stack>
         }
-        sx={{ px: 2 }}
+        sx={{ px: 1 }}
       />
-      <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <Stack
+        component="fieldset"
+        disabled={saving.isLoading}
+        spacing={1}
+        sx={{ p: 1, m: 0, border: 0, flex: 1, minHeight: 0, overflow: 'auto' }}
+      >
         {error && (
           <Alert severity="error" role="alert">
             {error}
@@ -172,6 +208,10 @@ export function ReportDesigner({
             size="small"
             required
             label="Template name"
+            name="name"
+            onBlur={form.handleBlur}
+            error={Boolean(form.touched.name && form.errors.name)}
+            helperText={form.touched.name ? form.errors.name : undefined}
             value={name}
             inputProps={{ maxLength: 128 }}
             onChange={(e) => setName(e.target.value)}
@@ -247,7 +287,8 @@ export function ReportDesigner({
             {dataset.rowMeaning}
           </Typography>
         </Stack>
-        <Tabs
+        <CustomTabs
+          guardUnsavedChanges={false}
           value={tab}
           onChange={(_, value) => setTab(value)}
           variant="scrollable"
@@ -269,7 +310,7 @@ export function ReportDesigner({
               aria-controls={`report-panel-${t}`}
             />
           ))}
-        </Tabs>
+        </CustomTabs>
         <Box role="tabpanel" id={`report-panel-${tab}`} aria-labelledby={`report-tab-${tab}`}>
           {tab === 'columns' && definition.layout === 'summary' && (
             <ReportAdvancedEditor
@@ -334,6 +375,10 @@ export function ReportDesigner({
                   ))}
                   <Box sx={{ height: 400, minWidth: 0 }}>
                     <ReportResultTable
+                      onExport={exportPreview}
+                      exportDisabled={
+                        previewSignature !== JSON.stringify({ definition, parameters })
+                      }
                       columns={previewState.data.columns}
                       rows={previewState.data.rows}
                       count={previewState.data.totalCount}

@@ -7,6 +7,14 @@ scope: table-region-only
 
 # Table UI Rulebook
 
+Minimals is the application design foundation, implemented through the existing theme and shared table.
+Use the attendance register as the HR workspace reference.
+Every primary and embedded read-only HR data table provides Export with Excel and PDF for the complete matching population.
+Keep column visibility, export and full screen independent of filters, in that order.
+Server-paged tables require a server export callback and must never export only the loaded page.
+Table visibility permits export without a separate grant; server authorization, tenant boundaries, record scope and masking still apply.
+Editable configuration grids, calendars, charts and official document previews are exceptions.
+
 This document defines only the table region used to display, search, compare,
 filter, and act on records. It does not define the page title, breadcrumbs,
 summary metrics, domain filters, status tabs, or page-level actions above the

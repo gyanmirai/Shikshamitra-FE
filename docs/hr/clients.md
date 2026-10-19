@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -177,3 +177,11 @@ The response supplies full-month totals, recurring lines and server-authored PF/
 Salary setup, employee payroll registration and statutory settings invalidate this read model through the existing RTK Query tag families.
 Salary-template calculations return the same statutory-summary contract for preview presentation.
 The frontend does not calculate financial totals or infer eligibility from registration-number presence.
+
+## Shared HR table exports
+
+`src/redux/hr/hrTableExportApi.ts` owns create, status, cancel and authenticated download calls under `/api/hr/table-exports`.
+`use-hr-table-export.ts` captures the current query and ordered data columns, polls a background capture and downloads only a completed file.
+Paginated sources never collect pages in the browser for export.
+`use-report-preview-export.ts` captures an unsaved definition through the Build-protected pipeline before exporting the complete captured result.
+Backend API and access ownership are documented in `../../../Shikshamitra-BE/docs/modules/hr/references/hr-table-exports.md`.

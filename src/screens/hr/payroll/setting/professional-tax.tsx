@@ -16,6 +16,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import {
   Box,
   Stack,
@@ -50,13 +51,22 @@ interface IProfessionalTaxRange {
   deductInCessationMonth: boolean;
 }
 const ProfessionalTax = () => {
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-professional-tax', tableQuery);
   const dialog = useBoolean();
   const confirm = useBoolean();
 
   const [editData, setEditData] = useState<null | IProfessionalTaxRange>(null);
-  const { data: PFData, isLoading } = useQueryAndMutation({
+  const {
+    data: PFData,
+    isLoading,
+    error: tableError,
+    isFetching: tableFetching,
+    refetch: retryTable,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetProfessionalTaxQuery,
+    params: tableQuery,
   });
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -111,6 +121,10 @@ const ProfessionalTax = () => {
         }
       />
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText={
           <>
             No Tax Range Found{' '}
@@ -120,9 +134,22 @@ const ProfessionalTax = () => {
           </>
         }
         tableId="professional-table"
+        tableTitle="Professional tax ranges"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
+        serverSidePagination
+        isSearch={false}
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={PFData?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+
         wrapperProps={{ sx: { flex: 1, minHeight: 0, overflow: 'hidden' } }}
         tableContainerProps={{ sx: { height: 1 } }}
-        isLoading={isLoading}
+        isLoading={isLoading || tableFetching}
         columns={[
           { id: 'jurisdictionCode', label: 'Jurisdiction' },
           { id: 'effectiveFrom', label: 'Effective from' },
@@ -166,6 +193,7 @@ const ProfessionalTax = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            stickyPosition: 'right' as const,
 
             minWidth: '140px',
             render(value, row) {

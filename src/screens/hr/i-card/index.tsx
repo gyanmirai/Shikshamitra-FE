@@ -22,6 +22,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
   EmployeeICardStatusType,
@@ -37,8 +38,8 @@ import {
   Stack,
   Button,
   Checkbox,
-  TextField,
   MenuItem,
+  TextField,
   ButtonBase,
   IconButton,
   Typography,
@@ -57,6 +58,7 @@ import {
   useUpdateEmployeeICardTemplateMutation,
 } from 'src/redux/hr/employee-icard-template-api';
 
+import { SharedSchoolLogo } from './components/shared-school-logo';
 import {
   isPdfBlob,
   snapToGrid,
@@ -84,7 +86,6 @@ import {
   getDefaultICardDesignerElementId,
   hasPersistedEmployeeICardTemplate,
 } from './i-card-builder-utils';
-import { SharedSchoolLogo } from './components/shared-school-logo';
 
 type ICardFieldKey =
   | 'name'
@@ -454,8 +455,21 @@ const EmployeeIcardScreen = () => {
   const { options: organizationOptions, byId: organizationById } =
     useAcademicOrganizationOptions(academicYearId);
 
-  const { data, isLoading } = useGetEmployeeICardTemplatesQuery(
-    { academicYearId, page: 1, pageSize: 50 },
+  const [templatePage, setTemplatePage] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTemplates = useHrTableExport('hr-icard-templates', {
+    academicYearId,
+    ...templatePage,
+  });
+  useEffect(() => {
+    setTemplatePage((current) => ({ ...current, page: 1 }));
+  }, [academicYearId]);
+  const {
+    currentData: data,
+    isFetching: isLoading,
+    error: tableError,
+    refetch: retryTable,
+  } = useGetEmployeeICardTemplatesQuery(
+    { academicYearId, ...templatePage },
     { skip: !academicYearId }
   );
   const [deleteTemplate] = useDeleteEmployeeICardTemplateMutation();
@@ -551,7 +565,26 @@ const EmployeeIcardScreen = () => {
             }
           />
           <CustomizableTable
+            showColumns
+            showExport
+            showFullScreen
+            exportScope="all"
             tableId="employee-icard-table"
+            tableTitle="Staff I-card templates"
+            onExport={exportTemplates}
+            error={tableError}
+            onRetry={retryTable}
+            serverSidePagination
+            serverSideSearch
+            page={templatePage.page - 1}
+            rowsPerPage={templatePage.pageSize}
+            totalCount={data?.totalCount || 0}
+            onServerPagination={(page, pageSize) =>
+              setTemplatePage((current) => ({ ...current, page, pageSize }))
+            }
+            onServerSearch={(search) =>
+              setTemplatePage((current) => ({ ...current, page: 1, search }))
+            }
             isLoading={isLoading}
             columns={[
               {
@@ -585,6 +618,7 @@ const EmployeeIcardScreen = () => {
                 enumOptions: EmployeeICardStatusTypeOptions,
                 align: 'left',
                 sticky: true,
+                stickyPosition: 'right' as const,
                 width: 108,
                 minWidth: 100,
                 render(value) {
@@ -600,6 +634,7 @@ const EmployeeIcardScreen = () => {
                 label: 'Action',
                 id: 'action',
                 sticky: true,
+                stickyPosition: 'right' as const,
                 isSort: false,
                 isFilter: false,
                 width: 108,
@@ -1396,9 +1431,18 @@ const EmployeeICardBuilder = ({
 
                 {currentStep === 1 && (
                   <Stack spacing={2}>
-                    <TextField select label="School logo setting" value={state.logoMode} size="small"
-                      onChange={(event) => patchState({ logoMode: Number(event.target.value) as 0 | 1 | 2 })}>
-                      <MenuItem value={0}>Use School Identity</MenuItem><MenuItem value={1}>Use custom asset</MenuItem><MenuItem value={2}>Do not display</MenuItem>
+                    <TextField
+                      select
+                      label="School logo setting"
+                      value={state.logoMode}
+                      size="small"
+                      onChange={(event) =>
+                        patchState({ logoMode: Number(event.target.value) as 0 | 1 | 2 })
+                      }
+                    >
+                      <MenuItem value={0}>Use School Identity</MenuItem>
+                      <MenuItem value={1}>Use custom asset</MenuItem>
+                      <MenuItem value={2}>Do not display</MenuItem>
                     </TextField>
                     <Button
                       size="small"
@@ -1658,7 +1702,12 @@ const EmployeeICardBuilder = ({
                       </Typography>
                     )}
                     <CustomizableTable
+                      showColumns
+                      showExport={false}
+                      showFullScreen
+                      exportScope="all"
                       tableId="employee-icard-selection-table"
+                      tableTitle="Staff selection"
                       columns={employeeColumns}
                       data={filteredEmployees}
                       isLoading={isFetchingEmployees}
@@ -2390,7 +2439,12 @@ const LayoutElementPreview = ({
   }
   if (element.type === 'logo') {
     if (state.logoMode === 2) return null;
-    if (state.logoMode === 0) return <SharedSchoolLogo mediumStageId={state.organization === 'all' ? undefined : state.organization} />;
+    if (state.logoMode === 0)
+      return (
+        <SharedSchoolLogo
+          mediumStageId={state.organization === 'all' ? undefined : state.organization}
+        />
+      );
     return (
       <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
         <PreviewLogo

@@ -25,6 +25,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -69,6 +70,8 @@ interface IPF {
 }
 const PF = () => {
   const [showConfirm, ChangesConfirmDialog] = useConfirmDialog();
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-pf-rules', tableQuery);
   const dialog = useBoolean();
   const confirm = useBoolean();
   const [editData, setEditData] = useState<null | IPF>(null);
@@ -81,10 +84,12 @@ const PF = () => {
     data: PFData,
     isLoading,
     refetch,
+    error: tableError,
+    isFetching: tableFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPFQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, ...tableQuery },
   });
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -188,6 +193,10 @@ const PF = () => {
       />
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText={
           <>
             No PF Found{' '}
@@ -210,7 +219,22 @@ const PF = () => {
           </>
         }
         tableId="pf-table"
-        isLoading={isLoading}
+        tableTitle="Provident fund rules"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={refetch}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={PFData?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(value) =>
+          setTableQuery((current) => ({ ...current, page: 1, search: value }))
+        }
+        isLoading={isLoading || tableFetching}
         columns={[
           { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
@@ -253,6 +277,7 @@ const PF = () => {
             isSort: false,
             isFilter: false,
             sticky: true,
+            stickyPosition: 'right' as const,
             minWidth: '80px',
             render(value, row) {
               return (

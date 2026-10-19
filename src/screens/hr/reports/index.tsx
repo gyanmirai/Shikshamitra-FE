@@ -5,9 +5,10 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'src/routes/hooks';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Tabs, Alert, Stack, Button, LinearProgress } from '@mui/material';
+import { Box, Tab, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import {
   useGetReportingLibraryQuery,
   useGetReportingCatalogueQuery,
@@ -88,7 +89,7 @@ function ReportingWorkspace() {
         ]}
         isBack={!!mode}
         onBack={() => router.push(hrReportPaths.library)}
-        sx={{ px: 2 }}
+        sx={{ px: 1 }}
         action={
           !mode && (permissions.canBuild || permissions.canManageTemplates) ? (
             <Button
@@ -101,7 +102,7 @@ function ReportingWorkspace() {
           ) : null
         }
       />
-      <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0 }}>
+      <Stack spacing={1} sx={{ p: 1, flex: 1, minHeight: 0 }}>
         {!permissions.canView ? (
           <Alert severity="info">Report access is required to open this workspace.</Alert>
         ) : loading ? (
@@ -127,7 +128,7 @@ function ReportingWorkspace() {
           </Alert>
         ) : (
           <>
-            <Tabs
+            <CustomTabs
               value={tab}
               onChange={(_, value) =>
                 router.push(value === 'generated' ? hrReportPaths.history : hrReportPaths.library)
@@ -146,7 +147,7 @@ function ReportingWorkspace() {
                 id="hr-report-generated-tab"
                 aria-controls="hr-report-generated-panel"
               />
-            </Tabs>
+            </CustomTabs>
             <Box
               role="tabpanel"
               id={`hr-report-${tab}-panel`}

@@ -1,9 +1,12 @@
 import type { ReportDataset, ReportTemplate } from 'src/redux/hr/hrReportingWorkspaceApi';
 
+import * as Yup from 'yup';
 import { useState } from 'react';
+import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
-import { Box, Chip, Alert, Stack, Button, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Chip, Alert, Stack, Button, Typography } from '@mui/material';
 import { useCreateReportingRunMutation } from 'src/redux/hr/hrReportingWorkspaceApi';
 
 import { ReportParameters } from './ReportParameters';
@@ -21,26 +24,28 @@ export function ReportGenerate({
   dataset?: ReportDataset;
 }) {
   const router = useRouter();
-  const [parameters, setParameters] = useState(() =>
-    defaultReportParameters(template.definition.defaultPeriod)
-  );
   const [error, setError] = useState('');
   const [generate, { isLoading }] = useCreateReportingRunMutation();
-  const submit = async () => {
-    setError('');
-    try {
-      const run = await generate({
-        templateId: template.id,
-        revision: template.revision,
-        parameters,
-      }).unwrap();
-      router.push(hrReportPaths.result(run.id));
-    } catch (e) {
-      setError(reportError(e));
-    }
-  };
+  const form = useFormik({
+    initialValues: defaultReportParameters(template.definition.defaultPeriod),
+    validationSchema: Yup.object({ period: Yup.string().required('Choose a reporting period.') }),
+    onSubmit: async (parameters) => {
+      setError('');
+      try {
+        const run = await generate({
+          templateId: template.id,
+          revision: template.revision,
+          parameters,
+        }).unwrap();
+        router.push(hrReportPaths.result(run.id));
+      } catch (failure) {
+        setError(reportError(failure));
+      }
+    },
+  });
+  const busy = isLoading || form.isSubmitting;
   return (
-    <Stack spacing={3} sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
+    <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
       <Stack spacing={1}>
         <Typography variant="h6">{template.name}</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -57,19 +62,25 @@ export function ReportGenerate({
         </Stack>
       </Stack>
       {error && <Alert severity="error">{error}</Alert>}
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2 }}>
+      <FormSectionCard
+        icon="solar:settings-bold"
+        title="Report options"
+        descriptionTooltip="Choose the reporting period and staff for this generation. The template stays unchanged."
+      >
         <ReportParameters
           design={template.definition}
           fields={dataset?.fields}
-          value={parameters}
-          onChange={setParameters}
-          disabled={isLoading}
+          value={form.values}
+          onChange={(value) => {
+            form.setValues(value);
+          }}
+          disabled={busy}
         />
-      </Box>
+      </FormSectionCard>
       {(template.definition.filters.conditions.length > 0 ||
         template.definition.filters.groups.length > 0) && (
         <Alert severity="info">
-          Template rules: {describeReportRules(template.definition.filters, parameters, dataset)}.
+          Template rules: {describeReportRules(template.definition.filters, form.values, dataset)}.
         </Alert>
       )}
       <Typography variant="body2" color="text.secondary">
@@ -80,8 +91,10 @@ export function ReportGenerate({
         <Button
           variant="contained"
           size="small"
-          disabled={isLoading || template.publishedRevision === 0}
-          onClick={submit}
+          disabled={busy || template.publishedRevision === 0}
+          onClick={() => {
+            form.submitForm();
+          }}
         >
           {isLoading ? 'Generating…' : 'Generate report'}
         </Button>
@@ -89,7 +102,7 @@ export function ReportGenerate({
           variant="outlined"
           color="inherit"
           size="small"
-          disabled={isLoading}
+          disabled={busy}
           onClick={() => router.push(hrReportPaths.library)}
         >
           Cancel

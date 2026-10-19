@@ -12,6 +12,7 @@ import { useHRAccessKey } from 'src/hooks/use-hr-access-key';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import {
   Box,
   Chip,
@@ -154,6 +155,10 @@ function PerformanceDataTable({
   return (
     <PerformanceTablePanel>
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         {...other}
         wrapperProps={{
           ...tablePanelProps.wrapperProps,
@@ -1224,14 +1229,21 @@ function OverviewWorkspace() {
 }
 
 function TemplatesTab() {
-  const { data, isLoading } = useGetPerformanceTemplatesQuery({ pageSize: 100 });
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-performance-templates', tableQuery);
+  const {
+    currentData: data,
+    isFetching: isLoading,
+    error: tableError,
+    refetch: retryTable,
+  } = useGetPerformanceTemplatesQuery(tableQuery);
   const { data: defaults } = useGetDefaultPerformanceTemplatesQuery();
   const [createTemplate, createState] = useCreatePerformanceTemplateMutation();
   const [publishTemplate] = usePublishPerformanceTemplateMutation();
   const [cloneTemplate] = useClonePerformanceTemplateMutation();
   const [archiveTemplate] = useArchivePerformanceTemplateMutation();
   const [builderOpen, setBuilderOpen] = useState(false);
-  const templates: PerformanceTemplate[] = getUniquePerformanceTemplates(data?.items || []);
+  const templates: PerformanceTemplate[] = data?.items || [];
 
   const seedDefaults = async () => {
     const items = defaults?.items || [];
@@ -1287,6 +1299,19 @@ function TemplatesTab() {
 
       <PerformanceDataTable
         tableId="performance-templates"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
+        isLoading={isLoading}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={data?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
         columns={[
           { id: 'name', label: 'Template', minWidth: '220px' },
           {
@@ -1362,6 +1387,7 @@ function TemplatesTab() {
             isSort: false,
             isFilter: false,
             sticky: true,
+            stickyPosition: 'right' as const,
             minWidth: '80px',
             render: (_value, row) => (
               <ThreeDotsActions
@@ -1788,7 +1814,14 @@ function TemplateBuilderDialog({
 }
 
 function CyclesTab() {
-  const { data: cycleData, isLoading } = useGetProfessionalReviewCyclesQuery({});
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-performance-cycles', tableQuery);
+  const {
+    currentData: cycleData,
+    isFetching: isLoading,
+    error: tableError,
+    refetch: retryTable,
+  } = useGetProfessionalReviewCyclesQuery(tableQuery);
   const { data: templateData } = useGetPerformanceTemplatesQuery({});
   const [createCycle] = useCreateProfessionalReviewCycleMutation();
   const [publishCycle] = usePublishProfessionalReviewCycleMutation();
@@ -1817,14 +1850,27 @@ function CyclesTab() {
       />
       <PerformanceDataTable
         tableId="performance-cycles"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
+        isLoading={isLoading}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={cycleData?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
         columns={[
           { id: 'name', label: 'Cycle', minWidth: '220px' },
           {
             id: 'periodStart',
-            label: 'Period',
-            minWidth: '220px',
-            render: (_value, row) =>
-              `${dayjs(row.periodStart).format('DD MMM YYYY')} - ${dayjs(row.periodEnd).format('DD MMM YYYY')}`,
+            label: 'Starts',
+            valueType: 'date',
+            filterType: 'date',
+            render: (value) => dayjs(value).format('DD MMM YYYY'),
           },
           {
             id: 'status',
@@ -1834,6 +1880,13 @@ function CyclesTab() {
               <Chip size="small" label={cycleStatusLabels[Number(value)] || 'Draft'} />
             ),
           },
+          {
+            id: 'periodEnd',
+            label: 'Ends',
+            valueType: 'date',
+            filterType: 'date',
+            render: (value) => dayjs(value).format('DD MMM YYYY'),
+          },
           { id: 'assignedCount', label: 'Assigned', minWidth: '110px' },
           { id: 'finalizedCount', label: 'Finalized', minWidth: '110px' },
           {
@@ -1842,6 +1895,7 @@ function CyclesTab() {
             isSort: false,
             isFilter: false,
             sticky: true,
+            stickyPosition: 'right' as const,
             minWidth: '80px',
             render: (_value, row) => (
               <ThreeDotsActions
@@ -2237,8 +2291,10 @@ function ReportsTab() {
   const { data: distribution } = useGetPerformanceRatingDistributionQuery({});
   const { data: training } = useGetPerformanceTrainingNeedsQuery({});
   const { data: increments } = useGetPerformanceIncrementRecommendationsQuery({});
-  const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
-  const { data: sqaaEvidence } = useGetPerformanceSqaaEvidenceQuery({});
+  const pendingQuery = useGetPerformancePendingActionsQuery({});
+  const sqaaQuery = useGetPerformanceSqaaEvidenceQuery({});
+  const pendingActions = pendingQuery.currentData;
+  const sqaaEvidence = sqaaQuery.currentData;
 
   return (
     <PerformanceScrollableContent>
@@ -2279,6 +2335,9 @@ function ReportsTab() {
         <SectionPanel title="SQAAF Evidence Coverage">
           <PerformanceDataTable
             tableId="performance-report-sqaaf-evidence"
+            error={sqaaQuery.error}
+            onRetry={sqaaQuery.refetch}
+            isLoading={sqaaQuery.isFetching}
             columns={[
               {
                 id: 'domain',
@@ -2311,9 +2370,12 @@ function ReportsTab() {
         <SectionPanel title="Pending Reviews">
           <PerformanceDataTable
             tableId="performance-report-pending-actions"
+            error={pendingQuery.error}
+            onRetry={pendingQuery.refetch}
+            isLoading={pendingQuery.isFetching}
             columns={[
               { id: 'employeeName', label: 'Staff', minWidth: '220px' },
-              { id: 'action', label: 'Action', minWidth: '220px' },
+              { id: 'action', label: 'Action', excludeFromExport: false, minWidth: '220px' },
               {
                 id: 'dueDate',
                 label: 'Due Date',
@@ -2323,6 +2385,7 @@ function ReportsTab() {
               {
                 id: 'reviewId',
                 label: 'PDF',
+                excludeFromExport: true,
                 isSort: false,
                 isFilter: false,
                 minWidth: '90px',
@@ -2638,6 +2701,7 @@ function ReviewTable({
           isSort: false,
           isFilter: false,
           sticky: true,
+          stickyPosition: 'right' as const,
           minWidth: '90px',
           render: (_value, row) => (
             <Button

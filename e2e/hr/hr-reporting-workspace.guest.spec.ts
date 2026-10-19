@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax */
 import path from 'node:path';
-// Browser steps and file preparation must execute sequentially in this acceptance workflow.
-import { mkdir, writeFile } from 'node:fs/promises';
 import { test, expect, type Page } from '@playwright/test';
+// Browser steps and file preparation must execute sequentially in this acceptance workflow.
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const base = process.env.E2E_BASE_URL || 'http://localhost:3049';
 const api = process.env.E2E_API_URL || process.env.NEXT_PUBLIC_API_URL || '';
@@ -13,6 +13,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test.setTimeout(240_000);
 
 async function signIn(page: Page) {
+  await page.addInitScript(() => localStorage.setItem('onboarding_completed', 'true'));
   expect(['localhost', '127.0.0.1']).toContain(new URL(base).hostname);
   expect(['localhost', '127.0.0.1']).toContain(new URL(api).hostname);
   await page.goto(`${base}/login`);
@@ -26,7 +27,9 @@ async function signIn(page: Page) {
   await page.goto(`${base}/hr/reports`);
   const skip = page.getByRole('button', { name: 'Skip', exact: true });
   if (await skip.isVisible()) await skip.click();
-  await expect(page.getByRole('textbox', { name: 'Search report templates' })).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByRole('textbox', { name: 'Search report templates' })).toBeVisible({
+    timeout: 90_000,
+  });
   if (await skip.isVisible()) await skip.click();
 }
 
@@ -43,7 +46,7 @@ async function chooseMonthAndGenerate(page: Page, month: string) {
   await page.getByRole('button', { name: 'Generate report', exact: true }).click();
   await expect(page.getByText('Completed', { exact: true })).toBeVisible({ timeout: 120_000 });
   await expect(page.getByText(new RegExp(`Period: ${month}-01`))).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Download Excel' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export', exact: true })).toBeVisible();
   return new URL(page.url()).searchParams.get('run');
 }
 
@@ -86,7 +89,8 @@ test('reuse a saved in/out template across months and download fixed Excel/PDF @
     ['PDF', 'pdf'],
   ]) {
     const completed = page.waitForEvent('download', { timeout: 90_000 });
-    await page.getByRole('button', { name: `Download ${label}`, exact: true }).click();
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    await page.getByRole('menuitem', { name: label, exact: true }).click();
     const download = await completed;
     await download.saveAs(path.join(output, `staff-in-out-september.${extension}`));
   }
@@ -191,7 +195,89 @@ test('monthly register produces readable captured Excel and PDF sections @critic
     ['PDF', 'pdf'],
   ]) {
     const completed = page.waitForEvent('download', { timeout: 90_000 });
-    await page.getByRole('button', { name: `Download ${label}`, exact: true }).click();
+    await page.getByRole('button', { name: 'Export', exact: true }).click();
+    await page.getByRole('menuitem', { name: label, exact: true }).click();
     await (await completed).saveAs(path.join(output, `monthly-attendance-september.${extension}`));
   }
+});
+
+test('shared HR tables keep utilities and contained scrolling in both themes and three widths @accessibility', async ({
+  page,
+}) => {
+  test.setTimeout(480_000);
+  await signIn(page);
+  const routes = [
+    ['/hr/reports', 'hr-report-template-library'],
+    ['/hr/employee', 'employee-table'],
+    ['/hr/attendance-tracking', 'hr-attendance-register'],
+    ['/hr/leave-approvals', 'leave-approvals-table'],
+    ['/hr/payroll/setting/salary-templates', 'salary-template-table'],
+    ['/hr/professional-management/cycles', 'performance-cycles'],
+    ['/hr/calendars', 'hr-work-calendars'],
+  ];
+  for (const width of [390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((mode) => {
+        localStorage.setItem('theme-mode', mode);
+        const settings = JSON.parse(localStorage.getItem('app-settings') || '{}');
+        localStorage.setItem('app-settings', JSON.stringify({ ...settings, colorScheme: mode }));
+      }, theme);
+      for (const [route, id] of routes) {
+        await page.goto(base + route);
+        const table = page.getByTestId(id);
+        await expect(table, route).toBeVisible({ timeout: 60_000 });
+        await expect(table.getByRole('button', { name: 'Columns', exact: true })).toBeVisible();
+        await expect(table.getByRole('button', { name: 'Export', exact: true })).toBeEnabled({
+          timeout: 60_000,
+        });
+        await expect(table.getByRole('button', { name: 'Full screen', exact: true })).toBeVisible();
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+          `${route} at ${width}`
+        ).toBeTruthy();
+        await page.screenshot({
+          path: path.join(output, `${id}-${width}-${theme}.png`),
+          fullPage: true,
+        });
+      }
+    }
+  }
+});
+
+test('staff directory exports every matching page and excludes action controls @critical', async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto(`${base  }/hr/employee`);
+  const table = page.getByTestId('employee-table');
+  await expect(table).toBeVisible();
+  const auth = await headers(page);
+  const expected = await (
+    await page.request.get(`${api  }/api/employees?page=1&pageSize=1`, { headers: auth })
+  ).json();
+  expect(expected.totalCount).toBeGreaterThan(10);
+  const downloading = page.waitForEvent('download', { timeout: 120_000 });
+  await table.getByRole('button', { name: 'Export', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Excel', exact: true }).click();
+  const file = path.join(output, 'staff-directory-complete.xlsx');
+  await (await downloading).saveAs(file);
+  const XLSX = await import('xlsx');
+  const workbook = XLSX.read(await readFile(file), { cellDates: true });
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets.Report, {
+    header: 1,
+    range: 4,
+  }) as unknown[][];
+  expect(rows.length - 1).toBe(expected.totalCount);
+  expect(rows[0]).not.toContain('Actions');
+  expect(rows[0]).not.toContain('Bank Account Number');
+  await table.getByRole('textbox', { name: 'Search table' }).fill('Patel');
+  const filtered = await (
+    await page.request.get(`${api  }/api/employees?page=1&pageSize=1&search=Patel`, { headers: auth })
+  ).json();
+  await expect(table.getByText(new RegExp(`of ${  filtered.totalCount  }$`))).toBeVisible();
+  const filteredDownload = page.waitForEvent('download', { timeout: 120_000 });
+  await table.getByRole('button', { name: 'Export', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'PDF', exact: true }).click();
+  await (await filteredDownload).saveAs(path.join(output, 'staff-directory-filtered.pdf'));
 });

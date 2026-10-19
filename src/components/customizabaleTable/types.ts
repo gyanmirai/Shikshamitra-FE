@@ -39,6 +39,8 @@ export interface IColumn {
   enumOptions?: { label: string; value: any }[];
   defaultHidden?: boolean;
   excludeFromExport?: boolean;
+  exportValue?: (value: unknown, row: IData) => string | number | boolean | Date | null;
+  valueType?: 'text' | 'number' | 'money' | 'date' | 'datetime' | 'boolean';
   originalId?: string;
 }
 
@@ -60,6 +62,18 @@ export interface ICustomizableTableProps {
   data: IData[];
   tableTitle?: ReactNode;
   exportLabel?: string;
+  exportContext?: string[];
+  exportScope?: 'all' | 'loaded';
+  onExport?: (request: TableExportRequest) => Promise<void>;
+  exportFormats?: TableExportFormat[];
+  exportBusy?: boolean;
+  exportDisabled?: boolean;
+  showColumns?: boolean;
+  showExport?: boolean;
+  showFullScreen?: boolean;
+  variant?: 'workspace' | 'embedded';
+  paginationMode?: 'known' | 'unknown';
+  hasNextPage?: boolean;
   serverSide?: boolean;
   serverSidePagination?: boolean;
   serverSideSearch?: boolean;
@@ -92,6 +106,7 @@ export interface ICustomizableTableProps {
   defaultRowsPerPage?: number;
   page?: number;
   rowsPerPage?: number;
+  paginationDisabled?: boolean;
   searchTerm?: string;
   filters?: IParams['filters'];
   sorts?: IParams['sorts'];
@@ -102,8 +117,20 @@ export interface ICustomizableTableProps {
   searchableFields?: string[];
   noDataText?: React.ReactNode;
   errorContent?: ReactNode;
+  error?: unknown;
+  onRetry?: () => void;
   wrapperProps?: BoxProps;
 }
+
+export type TableExportFormat = 'excel' | 'pdf';
+export type TableExportRequest = {
+  signal?: AbortSignal;
+  format: TableExportFormat;
+  columns: IColumn[];
+  searchTerm: string;
+  filters: IParams['filters'];
+  sorts: IParams['sorts'];
+};
 
 export type IParams = {
   page: number;

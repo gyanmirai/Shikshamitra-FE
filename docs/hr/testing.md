@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -709,3 +709,32 @@ It checks preview/save parity, return context, registration follow-up, responsiv
 It also opens salary history and verifies month-change confirmation, draft retention on cancel, and the selected month's profile and concurrency version on the next preview.
 Verify that the monthly-payroll handoff preserves the working salary month and that identifier warnings permit reviewed rows to lock while missing attendance still blocks them.
 The visual reference is the [Minimal UI invoice editor](https://minimals.cc/dashboard/invoice/e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2/edit), adapted through the project's existing card theme, compact controls and inline HR breadcrumbs.
+
+## HR table redesign validation
+
+Run shared table tests, `use-hr-table-export.test.tsx`, reporting workspace tests and salary documents tests.
+Run TypeScript, focused ESLint, production build, `docs:hr:check` and executable security regressions.
+Run `e2e/hr/hr-reporting-workspace.guest.spec.ts` and the HR table consistency browser cases.
+Verify complete multi-page exports, source query snapshots, cancellation, retries, unknown totals and inaccessible result downloads.
+The backend PostgreSQL suite checks more than 25,000 records, immutable downloads, typed dates and retention.
+Finish with signed-in Codex in-app browser review and inspection of fresh Excel/PDF outputs.
+
+## HR table redesign execution, 19 October 2026
+
+The feature branches include frontend main b4b689d9b and backend main 6f6a98d0.
+The focused frontend run passes 156 tests across 23 files, covering shared table controls, complete export callbacks, captured reporting, payroll, policy drawers and the integrated salary summary.
+Two test files that render shared icon controls now isolate decorative icon requests; their focused rerun passes all three cases without network teardown errors.
+TypeScript, zero-warning focused ESLint, the production webpack build and HR documentation validation pass.
+The signed-in Playwright workflow passes all six cases.
+Its visual matrix covers seven active HR pages at 390, 768 and 1440 pixels in both themes, after loading finishes and onboarding is dismissed.
+It also verifies template reuse, all accessible starters, keyboard ordering, navigation protection, daily/monthly captured downloads, and complete staff directory Excel plus filtered PDF exports.
+The directory export contains all 33 authorized fixture staff across pages and excludes action controls.
+Fresh files were reopened to inspect date types, filters, frozen columns, readable PDF sections, date presentation, repeating headers and page numbering.
+Final signed-in Codex in-app browser review verifies the shared menu, full-screen table, Escape close and restored keyboard focus.
+
+Frontend security checks pass 16 of 17 cases.
+The remaining deployment-workflow assertion targets a workflow unchanged from main.
+The unchanged PDF text artifact test is not counted as passing because this local environment lacks the optional native canvas support required by PDF.js and reports DOMMatrix unavailable.
+Backend validation and confirmed main-branch baseline failures are recorded in backend HR testing and PR 709.
+Generated browser state, screenshots, downloaded files and logs remain ignored.
+Neither pull request has been merged or deployed.

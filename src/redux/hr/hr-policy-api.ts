@@ -137,6 +137,9 @@ export type LeavePolicySummary = {
 };
 
 export type HrPolicyAssignment = {
+  payrollPolicyName?: string | null;
+  attendancePolicyName?: string | null;
+  leavePolicyName?: string | null;
   id: string;
   academicYearId: string;
   targetType: 'employee' | 'group';
@@ -485,6 +488,13 @@ export type HrPolicyVersionCompare = {
 };
 
 export type PolicyListArgs = {
+  isActive?: boolean;
+  payrollPolicyId?: string;
+  attendancePolicyId?: string;
+  leavePolicyId?: string;
+  activeOnDate?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
   academicYearId?: string;
   maxResultCount?: number;
   skipCount?: number;
@@ -861,10 +871,17 @@ export const hrPolicyApi = api.injectEndpoints({
       invalidatesTags: policyTags,
     }),
     getHrPolicyAssignments: builder.query<PagedResult<HrPolicyAssignment>, PolicyListArgs>({
-      query: ({ academicYearId, maxResultCount = 50, skipCount = 0, search, targetType }) => ({
+      query: ({
+        academicYearId,
+        maxResultCount = 50,
+        skipCount = 0,
+        search,
+        targetType,
+        ...filters
+      }) => ({
         url: '/hr/policy-assignments',
         method: 'GET',
-        params: { academicYearId, maxResultCount, skipCount, search, targetType },
+        params: { academicYearId, maxResultCount, skipCount, search, targetType, ...filters },
       }),
       providesTags: policyTags,
     }),
@@ -1005,12 +1022,19 @@ export const hrPolicyApi = api.injectEndpoints({
     }),
     getPolicyVersions: builder.query<
       PagedResult<HrPolicyVersion>,
-      { policyType: HrPolicyType; policyId: string; maxResultCount?: number; skipCount?: number }
+      {
+        policyType: HrPolicyType;
+        policyId: string;
+        maxResultCount?: number;
+        skipCount?: number;
+        search?: string;
+        action?: string;
+      }
     >({
-      query: ({ policyType, policyId, maxResultCount = 20, skipCount = 0 }) => ({
+      query: ({ policyType, policyId, maxResultCount = 20, skipCount = 0, search, action }) => ({
         url: policyVersionPath(policyType, policyId),
         method: 'GET',
-        params: { maxResultCount, skipCount },
+        params: { maxResultCount, skipCount, search, action },
       }),
       providesTags: policyTags,
     }),

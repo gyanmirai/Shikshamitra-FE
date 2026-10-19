@@ -2,18 +2,16 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Box, Chip, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
   useGetReportingRunQuery,
   useGetReportingRowsQuery,
   useRetryReportingRunMutation,
   useCancelReportingRunMutation,
-  useExportReportingRunMutation,
-  useDownloadReportingRunMutation,
 } from 'src/redux/hr/hrReportingWorkspaceApi';
 
 import { ReportResultTable } from './ReportResultTable';
-import { useHrReportPermissions } from '../hooks/useHrReportPermissions';
 import { reportError, displayReportValue } from '../reporting-workspace-utils';
 
 const Chart = dynamic(
@@ -22,16 +20,14 @@ const Chart = dynamic(
 );
 export function ReportRunResult({ id }: { id: string }) {
   const router = useRouter();
-  const permissions = useHrReportPermissions();
+  const exportTable = useHrTableExport('hr-generated-report', { runId: id });
   const [poll, setPoll] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pageSize: 50 });
   const [error, setError] = useState('');
-  const [pendingDownload, setPendingDownload] = useState<'excel' | 'pdf' | null>(null);
   const {
     data: run,
     error: loadError,
     isLoading,
-    refetch,
   } = useGetReportingRunQuery(id, { pollingInterval: poll ? 2000 : 0 });
   const {
     data: page,
@@ -44,25 +40,6 @@ export function ReportRunResult({ id }: { id: string }) {
   );
   const [cancel] = useCancelReportingRunMutation();
   const [retry, retryState] = useRetryReportingRunMutation();
-  const [prepare, preparing] = useExportReportingRunMutation();
-  const [download, downloading] = useDownloadReportingRunMutation();
-  useEffect(() => {
-    if (!pendingDownload || !(pendingDownload === 'excel' ? run?.excelReady : run?.pdfReady))
-      return;
-    const format = pendingDownload;
-    setPendingDownload(null);
-    download({ id, format })
-      .unwrap()
-      .then((blob) => {
-        const href = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = href;
-        anchor.download = `HR-report-${id.slice(0, 8)}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-        anchor.click();
-        setTimeout(() => URL.revokeObjectURL(href), 0);
-      })
-      .catch((e) => setError(reportError(e)));
-  }, [pendingDownload, run?.excelReady, run?.pdfReady, download, id]);
   useEffect(() => {
     if (run)
       setPoll(
@@ -71,28 +48,6 @@ export function ReportRunResult({ id }: { id: string }) {
           run.pdfStatus === 'Queued'
       );
   }, [run]);
-  const exportFile = async (format: 'excel' | 'pdf') => {
-    setError('');
-    try {
-      if (!(format === 'excel' ? run?.excelReady : run?.pdfReady)) {
-        setPendingDownload(format);
-        await prepare({ id, format }).unwrap();
-        setPoll(true);
-        await refetch();
-        return;
-      }
-      const blob = await download({ id, format }).unwrap();
-      const href = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = href;
-      anchor.download = `HR-report-${id.slice(0, 8)}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
-      anchor.click();
-      URL.revokeObjectURL(href);
-    } catch (e) {
-      setPendingDownload(null);
-      setError(reportError(e));
-    }
-  };
   if (loadError) return <Alert severity="error">{reportError(loadError)}</Alert>;
   if (isLoading || !run) return <LinearProgress aria-label="Loading generated report" />;
   return (
@@ -145,24 +100,6 @@ export function ReportRunResult({ id }: { id: string }) {
         </>
       )}
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-        {run.status === 'Completed' &&
-          !run.isExpired &&
-          permissions.canExport &&
-          (['excel', 'pdf'] as const).map((format) => {
-            const status = format === 'excel' ? run.excelStatus : run.pdfStatus;
-            return (
-              <Button
-                key={format}
-                size="small"
-                variant="outlined"
-                disabled={status === 'Queued' || preparing.isLoading || downloading.isLoading}
-                onClick={() => exportFile(format)}
-              >
-                {status === 'Queued' ? 'Preparing' : status === 'Failed' ? 'Retry' : 'Download'}{' '}
-                {format === 'excel' ? 'Excel' : 'PDF'}
-              </Button>
-            );
-          })}
         {['Failed', 'Cancelled'].includes(run.status) && (
           <Button
             size="small"
@@ -231,6 +168,7 @@ export function ReportRunResult({ id }: { id: string }) {
             </Alert>
           ) : (
             <ReportResultTable
+              onExport={exportTable}
               columns={run.columns}
               rows={page?.rows || []}
               count={run.rowCount}

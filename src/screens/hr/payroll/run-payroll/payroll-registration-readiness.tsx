@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { RouterLink } from 'src/routes/components';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetPayrollRegistrationReadinessQuery } from 'src/redux/hr/statutory-profile-api';
 import {
   Chip,
@@ -25,6 +26,7 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
     { month: month ?? '', page: page.number, pageSize: page.size },
     { skip: !open || !month }
   );
+  const exportTable = useHrTableExport('hr-payroll-registration-readiness', { month });
   const status = (apply: boolean, registered: boolean) => (
     <Chip
       size="small"
@@ -64,7 +66,12 @@ export function PayrollRegistrationReadiness({ month }: { month: string | null }
             </Alert>
           )}
           <CustomizableTable
+            showColumns
+            showExport
+            showFullScreen
+            exportScope="all"
             tableId="payroll-registration-review"
+            onExport={exportTable}
             tableTitle="Staff registrations"
             data={query.currentData?.items.map((row) => ({ ...row, id: row.employeeId })) ?? []}
             columns={[

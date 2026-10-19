@@ -2,10 +2,8 @@
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import {
-  cleanVersionDisplayValue,
-  versionMatchesHistorySearch,
-} from 'src/screens/hr/policies/hr-policy-ui-utils';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
+import { cleanVersionDisplayValue } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import {
   Box,
   Chip,
@@ -47,6 +45,8 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
     versionCompare,
     compareVersionIds,
     versionFilters,
+    versionPage,
+    setVersionPage,
     versionHistoryLoading,
     versionCompareLoading,
     isPolicyOperationActive,
@@ -59,11 +59,12 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
   } = ctx;
 
   const versions = versionHistory?.items || [];
-  const filteredVersions = versions.filter((version) => {
-    const matchesAction =
-      versionFilters.action === 'all' || version.changeAction === versionFilters.action;
-    const matchesSearch = versionMatchesHistorySearch(version, versionFilters.search);
-    return matchesAction && matchesSearch;
+  const filteredVersions = versions;
+  const exportVersions = useHrTableExport('hr-policy-versions', {
+    policyType: versionTarget?.policyType,
+    policyId: versionTarget?.policyId,
+    search: versionFilters.search,
+    action: versionFilters.action,
   });
 
   const actions = Array.from(new Set(versions.map((v) => v.changeAction))).filter(Boolean);
@@ -102,15 +103,6 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
             <InfoTooltipIcon title="Version history includes all published versions. Draft versions are not included." />
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              size="small"
-              label="Search history"
-              value={versionFilters.search}
-              onChange={(event) =>
-                setVersionFilters((current) => ({ ...current, search: event.target.value }))
-              }
-              fullWidth
-            />
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel>Action</InputLabel>
               <Select
@@ -129,7 +121,24 @@ export function PolicyVersionDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
               </Select>
             </FormControl>
           </Stack>
-          <SectionTable columns={['Version', 'Action', 'Created', 'Reason', 'Actions']}>
+          <SectionTable
+            columns={['Version', 'Action', 'Created', 'Reason', 'Actions']}
+            columnIds={['versionNumber', 'changeAction', 'creationTime', 'changeReason', 'actions']}
+            tableId="hr-policy-versions"
+            tableTitle={`${versionTarget?.policyName || 'Policy'} versions`}
+            isPagination
+            serverSidePagination
+            isSearch
+            serverSideSearch
+            page={versionPage.number - 1}
+            rowsPerPage={versionPage.size}
+            totalCount={versionHistory?.totalCount || 0}
+            onExport={exportVersions}
+            onServerPagination={(number, size) => setVersionPage({ number, size })}
+            searchTerm={versionFilters.search}
+            searchFieldProps={{ placeholder: 'Search policy history' }}
+            onServerSearch={(search) => setVersionFilters((current) => ({ ...current, search }))}
+          >
             {filteredVersions.length ? (
               filteredVersions.map((version) => (
                 <TableRow

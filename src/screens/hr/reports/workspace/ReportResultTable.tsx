@@ -1,4 +1,5 @@
 import type { HrReportField } from 'src/redux/hr/hrReportsApi';
+import type { TableExportRequest } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -14,6 +15,8 @@ export function ReportResultTable({
   page = 1,
   pageSize = 50,
   onPage,
+  onExport,
+  exportDisabled,
   empty = 'No records match this report.',
 }: {
   columns: HrReportField[];
@@ -24,6 +27,8 @@ export function ReportResultTable({
   page?: number;
   pageSize?: number;
   onPage?: (page: number, pageSize: number) => void;
+  onExport?: (request: TableExportRequest) => Promise<void>;
+  exportDisabled?: boolean;
   empty?: string;
 }) {
   const tableColumns = useMemo(
@@ -46,14 +51,20 @@ export function ReportResultTable({
   );
   return (
     <CustomizableTable
+      showColumns
+      showExport
+      showFullScreen
+      exportScope="all"
       tableId="hr-generated-report"
+      tableTitle="Report result"
+      onExport={onExport}
+      exportDisabled={exportDisabled}
       columns={tableColumns}
       data={data}
       isLoading={loading}
       totalCount={count}
       isSearch={false}
       isFilter={false}
-      showToolbar={false}
       serverSidePagination={!!onPage}
       isPagination={!!onPage}
       page={page - 1}

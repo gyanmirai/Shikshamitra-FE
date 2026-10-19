@@ -23,16 +23,9 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  useGetEarningComponentsQuery,
-  useAddEarningComponentMutation,
-  useDeleteEarningComponentMutation,
-  useUpdateEarningComponentMutation,
-  usePreviewEarningComponentDeleteImpactQuery,
-  usePreviewEarningComponentUpdateImpactMutation,
-} from 'src/redux/hr/employee-payroll-api';
 import {
   Box,
   Grid,
@@ -53,6 +46,14 @@ import {
   DialogContentText,
   ToggleButtonGroup,
 } from '@mui/material';
+import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+  usePreviewEarningComponentDeleteImpactQuery,
+  usePreviewEarningComponentUpdateImpactMutation,
+} from 'src/redux/hr/employee-payroll-api';
 
 import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
@@ -78,6 +79,8 @@ interface PayElement {
 }
 
 const EarningComponent = () => {
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-earning-components', tableQuery);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const confirm = useBoolean();
@@ -105,11 +108,14 @@ const EarningComponent = () => {
     data: getEarningComponentsData,
     isLoading: getEarningComponentsLoading,
     refetch,
+    error: tableError,
+    isFetching: tableFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEarningComponentsQuery,
     params: {
       academicYearId: currentYear?.id,
+      ...tableQuery,
     },
   });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -254,8 +260,25 @@ const EarningComponent = () => {
         </DialogActions>
       </Dialog>
       <CustomizableTable
-        tableId="earning-component"
-        isLoading={getEarningComponentsLoading}
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
+        tableId="hr-earning-components"
+        tableTitle="Earning components"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={refetch}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={getEarningComponentsData?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+        isLoading={getEarningComponentsLoading || tableFetching}
         columns={[
           {
             id: 'earningComponentName',
@@ -343,6 +366,7 @@ const EarningComponent = () => {
             minWidth: '4vw',
             align: 'left',
             sticky: true,
+            stickyPosition: 'right' as const,
             isSort: false,
             isFilter: false,
             render(value, row) {

@@ -20,6 +20,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
@@ -78,9 +79,11 @@ const ManualAttendanceScreen = () => {
   const dashboardParams = useSearchParams();
   const [date, setDate] = useState<Dayjs | null>(() => {
     const requestedDate = dashboardParams.get('date');
-    return requestedDate && dayjs(requestedDate).isValid() &&
+    return requestedDate &&
+      dayjs(requestedDate).isValid() &&
       dayjs(requestedDate).format('YYYY-MM-DD') === requestedDate
-      ? dayjs(requestedDate) : dayjs();
+      ? dayjs(requestedDate)
+      : dayjs();
   });
   const [employeeData, setEmployeeData] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
@@ -116,6 +119,11 @@ const ManualAttendanceScreen = () => {
     skipCount: 0,
     maxResultCount: 50,
     search: '',
+  });
+
+  const exportTable = useHrTableExport('hr-manual-attendance', {
+    attendanceDate: toAttendanceDateParam(date),
+    search: query.search,
   });
 
   const {
@@ -751,6 +759,7 @@ const ManualAttendanceScreen = () => {
             {
               id: 'status',
               sticky: true,
+              stickyPosition: 'right' as const,
               label: (
                 <Stack spacing={0.75} alignItems="center">
                   {/* ── Count badges ── */}
@@ -1495,13 +1504,28 @@ const ManualAttendanceScreen = () => {
 
       {/* ── Table ── */}
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableTitle="Staff Directory"
         tableId="hr-manual-attendance"
+        onExport={exportTable}
+        exportDisabled={isDirty}
+        paginationDisabled={isDirty}
+        isSearch={!isDirty}
+        isFilter={false}
+        serverSideSearch
+        searchTerm={query.search}
+        onServerSearch={(search) => {
+          if (!isDirty) setQuery((prev) => ({ ...prev, search, skipCount: 0 }));
+        }}
+        page={Math.floor(query.skipCount / query.maxResultCount)}
+        rowsPerPage={query.maxResultCount}
+        serverSidePagination
         isLoading={isLoading || isFetching || substitution.opening}
         columns={columns}
-        noDataText={
-          isError ? 'Failed to load staff data' : 'No staff found for the selected date'
-        }
+        noDataText={isError ? 'Failed to load staff data' : 'No staff found for the selected date'}
         data={isError ? [] : employeeData}
         rowProps={rowProps}
         serverSide
@@ -1509,7 +1533,7 @@ const ManualAttendanceScreen = () => {
         onServerPagination={(page, rowsPerPage) => {
           setQuery((prev) => ({
             ...prev,
-            skipCount: page * rowsPerPage,
+            skipCount: (page - 1) * rowsPerPage,
             maxResultCount: rowsPerPage,
           }));
         }}

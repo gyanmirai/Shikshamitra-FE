@@ -133,6 +133,12 @@ const libraryTags = [{ type: employeeType.hrReports, id: 'library' }];
 const runTags = [{ type: employeeType.hrReports, id: 'runs' }];
 export const reportingWorkspaceApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    captureReportingPreview: builder.mutation<
+      ReportRun,
+      { definition: ReportDesign; parameters: ReportParameters }
+    >({
+      query: (body) => ({ url: `${root}/designer-export`, method: 'POST', body }),
+    }),
     getReportingCatalogue: builder.query<ReportDataset[], void>({
       query: () => `${root}/catalogue`,
       providesTags: libraryTags,
@@ -209,6 +215,8 @@ export const reportingWorkspaceApi = api.injectEndpoints({
 });
 
 export const {
+  useCaptureReportingPreviewMutation,
+  useLazyGetReportingRunQuery,
   useGetReportingCatalogueQuery,
   useGetReportingLibraryQuery,
   useGetReportingOptionsQuery,

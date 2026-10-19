@@ -43,6 +43,8 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionCompare: null,
             compareVersionIds: { from: null, to: null },
             versionFilters: { action: 'all', search: '' },
+            versionPage: { number: 1, size: 20 },
+            setVersionPage: vi.fn(),
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
@@ -86,6 +88,8 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionCompare: null,
             compareVersionIds: { from: null, to: null },
             versionFilters: { action: 'all', search: '' },
+            versionPage: { number: 1, size: 20 },
+            setVersionPage: vi.fn(),
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
@@ -154,6 +158,8 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionCompare: null,
             compareVersionIds: { from: null, to: null },
             versionFilters: { action: 'all', search: '' },
+            versionPage: { number: 1, size: 20 },
+            setVersionPage: vi.fn(),
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
@@ -215,6 +221,8 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
             versionCompare: null,
             compareVersionIds: { from: null, to: null },
             versionFilters: { action: 'all', search: '' },
+            versionPage: { number: 1, size: 20 },
+            setVersionPage: vi.fn(),
             versionHistoryLoading: false,
             versionCompareLoading: false,
             isPolicyOperationActive: false,
@@ -261,3 +269,5 @@ describe('PolicyVersionDrawer restore preview summary rendering', () => {
     expect(screen.getByRole('button', { name: /create draft/i })).toBeDisabled();
   });
 });
+
+vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));

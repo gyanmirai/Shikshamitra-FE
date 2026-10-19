@@ -1,4 +1,4 @@
-import { it, expect } from 'vitest';
+import { it, vi, expect } from 'vitest';
 import { screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
@@ -6,6 +6,8 @@ import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { HrReportPreviewTable } from './HrReportPreviewTable';
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 
 it('shows missing historical amounts as unavailable through the actual shared table', () => {
   renderWithProviders(

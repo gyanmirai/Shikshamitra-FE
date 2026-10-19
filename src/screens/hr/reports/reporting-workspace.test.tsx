@@ -12,6 +12,7 @@ import { ReportGenerate } from './workspace/ReportGenerate';
 import { displayReportValue, defaultReportParameters } from './reporting-workspace-utils';
 
 const mocks = vi.hoisted(() => ({ push: vi.fn(), generate: vi.fn(), archive: vi.fn() }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock('./hooks/useHrReportPermissions', () => ({
   useHrReportPermissions: () => ({ canBuild: true, canDelete: true, canView: true }),

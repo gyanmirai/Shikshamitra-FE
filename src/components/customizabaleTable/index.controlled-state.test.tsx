@@ -9,6 +9,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import CustomizableTable from '.';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 // Keep table behavior real without loading the entire icon asset library.
 vi.mock('@mui/icons-material', () => {
   const Icon = () => null;
@@ -36,6 +38,116 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('shows a selected 50-row limit and disables Next on the final counted page', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="hr-counted-final-page"
+        columns={columns}
+        data={[{ name: 'Staff' }]}
+        serverSidePagination
+        totalCount={30}
+        page={0}
+        rowsPerPage={50}
+      />
+    );
+    expect(screen.getByRole('combobox', { name: /Rows per page/ })).toHaveTextContent('50');
+    expect(screen.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+  });
+  it('mounts one table in full screen and restores focus after closing it', () => {
+    vi.useRealTimers();
+    renderTable(
+      <CustomizableTable
+        tableId="hr-single-fullscreen"
+        columns={columns}
+        data={[]}
+        showFullScreen
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Full screen' }));
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Full screen' })).toHaveFocus();
+  });
+  it('keeps table utilities available when search and column filters are disabled', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="hr-independent-utilities"
+        columns={columns}
+        data={[]}
+        isSearch={false}
+        isFilter={false}
+        showColumns
+        showExport
+        showFullScreen
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Columns' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeVisible();
+    expect(screen.getByRole('button', { name: /^Full screen$/ })).toBeVisible();
+  });
+  it('requires a complete server source instead of silently exporting one loaded page', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="hr-complete-export-required"
+        columns={columns}
+        data={[{ name: 'One loaded row' }]}
+        serverSidePagination
+        totalCount={25001}
+        exportScope="all"
+        showExport
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Export' })).toBeDisabled();
+  });
+  it('uses unknown-total pagination without inventing a count and retains the footer without density', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="hr-unknown-count"
+        columns={columns}
+        data={[]}
+        serverSidePagination
+        paginationMode="unknown"
+        hasNextPage={false}
+        page={2}
+        rowsPerPage={50}
+        isShowedDense={false}
+      />
+    );
+    expect(screen.getByText('Page 3')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Go to previous page' })).toBeEnabled();
+  });
+  it('delegates the entire query and visible data columns to the server export', async () => {
+    const exportAll = vi.fn().mockResolvedValue(undefined);
+    renderTable(
+      <CustomizableTable
+        tableId="hr-server-export"
+        columns={[
+          ...columns,
+          { id: 'actions', label: 'Actions' },
+          { id: 'select', label: '' },
+          { id: 'hidden', label: 'Hidden', defaultHidden: true },
+        ]}
+        data={[{ name: 'Loaded row' }]}
+        serverSidePagination
+        totalCount={25001}
+        exportScope="all"
+        onExport={exportAll}
+        showExport
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Excel' }));
+    });
+    expect(exportAll).toHaveBeenCalledTimes(1);
+    expect(exportAll.mock.calls[0][0].columns.map((column: { id: string }) => column.id)).toEqual([
+      'name',
+    ]);
+    expect(exportAll.mock.calls[0][0].format).toBe('excel');
+    expect(exportAll.mock.calls[0][0]).not.toHaveProperty('rows');
+  });
   it('shows all rows without pagination and preserves opt-in expanded content', () => {
     const data = Array.from({ length: 35 }, (_, index) => ({
       id: String(index),

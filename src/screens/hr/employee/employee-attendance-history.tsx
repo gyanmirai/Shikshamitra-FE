@@ -153,7 +153,16 @@ const EmployeeAttendanceHistory = ({ employeeId }: EmployeeAttendanceHistoryProp
       </Box>
 
       <CustomizableTable
+        variant="embedded"
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="employee-attendance-history"
+        tableTitle="Staff attendance history"
+        exportContext={[
+          `Period: ${startDate?.format('DD MMM YYYY')} to ${endDate?.format('DD MMM YYYY')}`,
+        ]}
         noDataText={<>No attendance history found.</>}
         isLoading={isLoading || isFetching}
         columns={columns}

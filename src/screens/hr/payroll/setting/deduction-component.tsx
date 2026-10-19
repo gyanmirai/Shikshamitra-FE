@@ -22,6 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -74,6 +75,8 @@ interface PayElement {
 }
 
 const DeductionComponent = () => {
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const exportTable = useHrTableExport('hr-deduction-components', tableQuery);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const confirm = useBoolean();
@@ -100,11 +103,14 @@ const DeductionComponent = () => {
     data: getDeductionComponentsData,
     isLoading: getDeductionComponentsLoading,
     refetch,
+    error: tableError,
+    isFetching: tableFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeductionComponentsQuery,
     params: {
       academicYearId: currentYear?.id,
+      ...tableQuery,
     },
   });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -250,8 +256,25 @@ const DeductionComponent = () => {
         </DialogActions>
       </Dialog>
       <CustomizableTable
-        tableId="earning-component"
-        isLoading={getDeductionComponentsLoading}
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
+        tableId="hr-deduction-components"
+        tableTitle="Deduction components"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={refetch}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={getDeductionComponentsData?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
+        isLoading={getDeductionComponentsLoading || tableFetching}
         columns={[
           {
             id: 'deductionComponentName',
@@ -339,6 +362,7 @@ const DeductionComponent = () => {
             minWidth: '4vw',
             align: 'left',
             sticky: true,
+            stickyPosition: 'right' as const,
             isSort: false,
             isFilter: false,
             render(value, row) {

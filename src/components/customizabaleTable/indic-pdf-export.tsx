@@ -37,55 +37,81 @@ export function splitPdfScriptRuns(value: string) {
 }
 
 export async function createIndicTablePdfBlob(
-  { title, head, body }: PdfTableData,
+  { title, head, body, context = [] }: PdfTableData,
   fontBasePath = '/fonts'
 ): Promise<Blob> {
   registerFonts(fontBasePath);
-  const width = `${100 / Math.max(1, head.length)}%` as const;
+  const sections =
+    head.length <= 8
+      ? [head.map((_, index) => index)]
+      : Array.from({ length: Math.ceil((head.length - 2) / 6) }, (_, index) => [
+          0,
+          1,
+          ...head.slice(2 + index * 6, 8 + index * 6).map((cell, offset) => 2 + index * 6 + offset),
+        ]);
+  const renderText = (value: string) =>
+    splitPdfScriptRuns(value).map((run, index) => (
+      <Text key={index} style={{ fontFamily: run.fontFamily }}>
+        {run.text}
+      </Text>
+    ));
   const renderCells = (cells: string[]) =>
     cells.map((value, index) => (
-      <View key={index} style={{ width, padding: 6 }}>
-        <Text>
-          {splitPdfScriptRuns(value).map((run, runIndex) => (
-            <Text key={runIndex} style={{ fontFamily: run.fontFamily }}>
-              {run.text}
-            </Text>
-          ))}
-        </Text>
+      <View key={index} style={{ width: `${100 / cells.length}%`, padding: 6 }}>
+        <Text>{renderText(value)}</Text>
       </View>
     ));
 
   return pdf(
     <Document title={title} language="en-IN">
-      <Page
-        size="A4"
-        orientation="landscape"
-        style={{ padding: 28, fontFamily: BASE_FAMILY, fontSize: 8 }}
-      >
-        <View
-          fixed
-          style={{
-            flexDirection: 'row',
-            backgroundColor: '#1677ff',
-            color: '#ffffff',
-            fontWeight: 700,
-          }}
+      {sections.map((section, sectionIndex) => (
+        <Page
+          key={sectionIndex}
+          size="A4"
+          orientation="landscape"
+          style={{ padding: 28, paddingBottom: 40, fontFamily: BASE_FAMILY, fontSize: 8 }}
         >
-          {renderCells(head)}
-        </View>
-        {body.map((row, index) => (
+          <View fixed style={{ marginBottom: 10 }}>
+            <Text style={{ fontWeight: 700, fontSize: 11 }}>{renderText(title)}</Text>
+            {context.map((line, index) => (
+              <Text key={index}>{renderText(line)}</Text>
+            ))}
+            {sections.length > 1 && (
+              <Text>
+                Section {sectionIndex + 1} of {sections.length}
+              </Text>
+            )}
+          </View>
           <View
-            key={index}
-            wrap={false}
+            fixed
             style={{
               flexDirection: 'row',
-              backgroundColor: index % 2 === 0 ? '#f4f5f6' : '#ffffff',
+              backgroundColor: '#f4f6f8',
+              color: '#212b36',
+              fontWeight: 700,
             }}
           >
-            {renderCells(row)}
+            {renderCells(section.map((index) => head[index]))}
           </View>
-        ))}
-      </Page>
+          {body.map((row, index) => (
+            <View
+              key={index}
+              wrap={false}
+              style={{
+                flexDirection: 'row',
+                backgroundColor: index % 2 === 0 ? '#f4f5f6' : '#ffffff',
+              }}
+            >
+              {renderCells(section.map((columnIndex) => row[columnIndex]))}
+            </View>
+          ))}
+          <Text
+            fixed
+            style={{ position: 'absolute', bottom: 20, right: 28 }}
+            render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+          />
+        </Page>
+      ))}
     </Document>
   ).toBlob();
 }

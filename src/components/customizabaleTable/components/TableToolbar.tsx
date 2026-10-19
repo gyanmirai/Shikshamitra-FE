@@ -1,32 +1,37 @@
-import React, { useState } from 'react';
-import { varAlpha } from 'src/theme/styles';
-import { useTheme } from '@mui/material/styles';
-import {
-  Clear as ClearIcon,
-  Search as SearchIcon,
-  RemoveRedEye as RemoveRedEyeIcon,
-} from '@mui/icons-material';
+import type { TextFieldProps } from '@mui/material';
+
+import { memo, useState } from 'react';
 import {
   Box,
   Menu,
+  Stack,
   Button,
   Popover,
+  Tooltip,
   Checkbox,
   MenuItem,
   TextField,
   IconButton,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
 import { Iconify } from '../../iconify';
-import CustomTooltip from '../../custom-tooltip';
+import { extractTextFromReactNode } from '../utils';
 
-import type { IColumn } from '../types';
+import type { IColumn, TableExportFormat } from '../types';
 
 interface TableToolbarProps {
   exportLabel: string;
   isSearch: boolean;
-  isFilter: boolean;
+  showColumns: boolean;
+  showExport: boolean;
+  showFullScreen: boolean;
+  exportBusy: boolean;
+  onCancelExport?: () => void;
+  exportDisabled: boolean;
+  exportDisabledReason?: string;
+  exportFormats: TableExportFormat[];
   searchValue: string;
   onSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onClearSearch: () => void;
@@ -34,22 +39,24 @@ interface TableToolbarProps {
   columnVisibility: Record<string, boolean>;
   onColumnVisibilityChange: (columnId: string, isVisible: boolean) => void;
   onResetColumns: () => void;
-  onExport: (format: string) => void;
-  searchFieldProps?: any;
+  onExport: (format: TableExportFormat) => void;
+  searchFieldProps?: TextFieldProps;
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
 }
 
-/**
- * Memoization Justification:
- * Toolbar contains inputs and complex interactions.
- * Memoizing usage in parent prevents re-renders when only table data updates.
- */
-export const TableToolbar = React.memo(
+export const TableToolbar = memo(
   ({
     exportLabel,
     isSearch,
-    isFilter,
+    showColumns,
+    showExport,
+    showFullScreen,
+    exportBusy,
+    onCancelExport,
+    exportDisabled,
+    exportDisabledReason,
+    exportFormats,
     searchValue,
     onSearch,
     onClearSearch,
@@ -62,274 +69,186 @@ export const TableToolbar = React.memo(
     isFullScreen,
     onToggleFullScreen,
   }: TableToolbarProps) => {
-    const theme = useTheme();
-    const {
-      sx: searchSx,
-      inputProps: searchInputProps,
-      InputProps: searchAdornmentProps,
-      ...otherSearchFieldProps
-    } = searchFieldProps;
-    // Fullscreen state is now managed by parent
-    const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
-    const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
-    const [columnSearchTerm, setColumnSearchTerm] = useState('');
-
+    const [columnAnchor, setColumnAnchor] = useState<HTMLElement | null>(null);
+    const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
+    const [columnSearch, setColumnSearch] = useState('');
+    if (!isSearch && !showColumns && !showExport && !showFullScreen) return null;
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          p: isSearch || isFilter || isFullScreen ? 2 : 0,
-          gap: 2,
-          flexShrink: 0,
-          borderBottom: `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-          flexWrap: 'wrap',
-        }}
+      <Stack
+        direction="row"
+        spacing={1}
+        useFlexGap
+        alignItems="center"
+        flexWrap="wrap"
+        sx={{ p: 1, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
       >
         {isSearch && (
           <TextField
-            variant="outlined"
             size="small"
+            placeholder="Search..."
             value={searchValue}
             onChange={onSearch}
-            placeholder="Search..."
-            {...otherSearchFieldProps}
-            inputProps={{ 'aria-label': 'Search table', ...searchInputProps }}
+            {...searchFieldProps}
+            inputProps={{ 'aria-label': 'Search table', ...searchFieldProps.inputProps }}
             InputProps={{
-              startAdornment: <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />,
-              endAdornment: searchValue && (
-                <IconButton
-                  size="small"
-                  onClick={onClearSearch}
-                  edge="end"
-                  aria-label="Clear search"
-                >
-                  <ClearIcon sx={{ fontSize: 18 }} />
-                </IconButton>
+              startAdornment: (
+                <Iconify
+                  icon="solar:magnifer-linear"
+                  width={18}
+                  sx={{ mr: 1, color: 'text.secondary' }}
+                />
               ),
-              ...searchAdornmentProps,
-              sx: {
-                borderRadius: 1.5,
-                bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
-                fontSize: '14px',
-                '& fieldset': {
-                  border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-                },
-                '&:hover fieldset': {
-                  borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
-                },
-                ...searchAdornmentProps?.sx,
-              },
+              endAdornment: searchValue ? (
+                <IconButton size="small" aria-label="Clear search" onClick={onClearSearch}>
+                  <Iconify icon="mingcute:close-line" width={18} />
+                </IconButton>
+              ) : undefined,
+              ...searchFieldProps.InputProps,
             }}
-            sx={{
-              maxWidth: '300px',
-              width: '100%',
-              '& .MuiInputBase-root': {
-                pr: 1,
-              },
-              ...searchSx,
-            }}
+            sx={{ width: { xs: '100%', sm: 300 }, ...searchFieldProps.sx }}
           />
         )}
-
-        {isFilter && (
-          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
-            <Box sx={{ ml: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto !important' }}>
+          {exportBusy && onCancelExport && (
+            <Button size="small" color="inherit" onClick={onCancelExport}>
+              Cancel export
+            </Button>
+          )}
+          {showColumns && (
+            <>
               <Button
-                variant="soft"
-                color="inherit"
                 size="small"
-                startIcon={<RemoveRedEyeIcon sx={{ width: 18, height: 18 }} />}
-                onClick={(event) => setColumnAnchorEl(event.currentTarget)}
-                sx={{
-                  borderRadius: 1,
-                  color: 'text.secondary',
-                  fontWeight: 600,
-                }}
+                color="inherit"
+                variant="soft"
+                startIcon={<Iconify icon="solar:eye-bold" width={18} />}
+                aria-haspopup="dialog"
+                aria-expanded={Boolean(columnAnchor)}
+                onClick={(event) => setColumnAnchor(event.currentTarget)}
               >
                 Columns
               </Button>
               <Popover
-                open={Boolean(anchorColumnEl)}
-                anchorEl={anchorColumnEl}
-                onClose={() => setColumnAnchorEl(null)}
+                open={Boolean(columnAnchor)}
+                anchorEl={columnAnchor}
+                onClose={() => setColumnAnchor(null)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      width: 280,
-                      p: 2,
-                      borderRadius: 1.5,
-                      boxShadow: theme.customShadows?.dropdown || '0px 5px 20px rgba(0,0,0,0.1)',
-                    },
-                  },
-                }}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '400px',
-                  }}
-                >
+                <Stack spacing={1} sx={{ p: 2, width: 280, maxWidth: '90vw' }}>
                   <TextField
-                    fullWidth
                     size="small"
-                    placeholder="Search columns..."
-                    inputProps={{ 'aria-label': 'Search columns' }}
-                    value={columnSearchTerm}
-                    onChange={(e) => setColumnSearchTerm(e.target.value)}
-                    sx={{
-                      mb: 2,
-                      flexShrink: '0',
-                      '& .MuiInputBase-root': { borderRadius: 1.5 },
-                    }}
+                    label="Search columns"
+                    value={columnSearch}
+                    onChange={(event) => setColumnSearch(event.target.value)}
                   />
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      flex: 1,
-                      overflowY: 'auto',
-                      gap: 1,
-                    }}
-                  >
+                  <Box sx={{ maxHeight: 280, overflowY: 'auto' }}>
                     {columns
-                      .filter((column) => {
-                        if (typeof column?.label !== 'string') return false;
-                        const lbl = column.label as string;
-                        return (
-                          lbl.trim() && lbl.toLowerCase().includes(columnSearchTerm.toLowerCase())
-                        );
-                      })
+                      .filter((column) =>
+                        extractTextFromReactNode(column.label)
+                          .toLowerCase()
+                          .includes(columnSearch.toLowerCase())
+                      )
                       .map((column) => (
                         <FormControlLabel
                           key={column.id}
-                          sx={{
-                            ml: 0,
-                            mr: 0,
-                            justifyContent: 'space-between',
-                            flexDirection: 'row-reverse',
-                            '& .MuiTypography-root': { fontSize: '14px', fontWeight: 500 },
-                          }}
+                          sx={{ display: 'flex', mx: 0 }}
+                          label={column.label}
                           control={
                             <Checkbox
-                              checked={!!columnVisibility[column.id]}
                               size="small"
-                              disableRipple
-                              onChange={(e) =>
-                                onColumnVisibilityChange(column.id, e.target.checked)
+                              checked={Boolean(columnVisibility[column.id])}
+                              onChange={(event) =>
+                                onColumnVisibilityChange(column.id, event.target.checked)
                               }
                             />
                           }
-                          label={column.label}
                         />
                       ))}
                   </Box>
-                  <Box
-                    sx={{
-                      mt: 2,
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      pt: 2,
-                      borderTop: `1px dashed ${theme.vars.palette.divider}`,
+                  <Button
+                    size="small"
+                    color="inherit"
+                    sx={{ alignSelf: 'flex-end' }}
+                    onClick={() => {
+                      setColumnSearch('');
+                      onResetColumns();
                     }}
                   >
-                    <Button
-                      size="small"
-                      color="inherit"
-                      onClick={() => {
-                        setColumnSearchTerm('');
-                        onResetColumns();
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  </Box>
-                </Box>
+                    Reset
+                  </Button>
+                </Stack>
               </Popover>
-            </Box>
-
-            <Box>
-              <Button
-                startIcon={<Iconify icon="solar:export-bold" width={18} />}
-                size="small"
-                variant="soft"
-                color="inherit"
-                onClick={(event) => setExportAnchorEl(event.currentTarget)}
-                sx={{
-                  borderRadius: 1,
-                  color: 'text.secondary',
-                  fontWeight: 600,
-                }}
-              >
-                {exportLabel}
-              </Button>
-              <Menu
-                anchorEl={exportAnchorEl}
-                open={Boolean(exportAnchorEl)}
-                onClose={() => setExportAnchorEl(null)}
-                slotProps={{
-                  paper: { sx: { width: 160, borderRadius: 1.5, mt: 1 } },
-                }}
-              >
-                <MenuItem
-                  onClick={() => {
-                    onExport('excel');
-                    setExportAnchorEl(null);
-                  }}
-                >
-                  <Iconify icon="file-icons:microsoft-excel" />
-                  &nbsp; Export as Excel
-                </MenuItem>
-
-                <MenuItem
-                  onClick={() => {
-                    onExport('pdf');
-                    setExportAnchorEl(null);
-                  }}
-                >
-                  <Iconify icon="solar:document-bold" />
-                  &nbsp; Export as PDF
-                </MenuItem>
-              </Menu>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', p: 0, gap: 1 }}>
-              <CustomTooltip
-                arrow
-                placement="top"
-                title={isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}
-              >
-                <IconButton
-                  onClick={() => {
-                    onToggleFullScreen();
-                  }}
-                  sx={{
-                    color: 'text.secondary',
-                    bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-                    borderRadius: 1,
-                    p: 0.75,
-                    '&:hover': {
-                      bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
-                    },
-                  }}
-                >
-                  <Iconify
-                    width={20}
-                    icon={
-                      isFullScreen
-                        ? 'solar:minimize-square-3-outline'
-                        : 'solar:maximize-square-3-outline'
+            </>
+          )}
+          {showExport && (
+            <>
+              <Tooltip title={exportDisabledReason || ''}>
+                <span>
+                  <Button
+                    size="small"
+                    color="inherit"
+                    variant="soft"
+                    disabled={exportDisabled || exportBusy}
+                    startIcon={
+                      exportBusy ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <Iconify icon="solar:export-bold" width={18} />
+                      )
                     }
-                  />
-                </IconButton>
-              </CustomTooltip>
-            </Box>
-          </Box>
-        )}
-      </Box>
+                    aria-haspopup="menu"
+                    aria-expanded={Boolean(exportAnchor)}
+                    onClick={(event) => setExportAnchor(event.currentTarget)}
+                  >
+                    {exportBusy ? 'Preparing export' : exportLabel}
+                  </Button>
+                </span>
+              </Tooltip>
+              <Menu
+                anchorEl={exportAnchor}
+                open={Boolean(exportAnchor)}
+                onClose={() => setExportAnchor(null)}
+              >
+                {exportFormats.map((format) => (
+                  <MenuItem
+                    key={format}
+                    onClick={() => {
+                      setExportAnchor(null);
+                      onExport(format);
+                    }}
+                  >
+                    <Iconify
+                      icon={
+                        format === 'excel' ? 'file-icons:microsoft-excel' : 'solar:document-bold'
+                      }
+                      sx={{ mr: 1 }}
+                    />
+                    {format === 'excel' ? 'Excel' : 'PDF'}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </>
+          )}
+          {showFullScreen && (
+            <Tooltip title={isFullScreen ? 'Exit full screen' : 'Full screen'}>
+              <IconButton
+                size="small"
+                aria-label={isFullScreen ? 'Exit full screen' : 'Full screen'}
+                onClick={onToggleFullScreen}
+              >
+                <Iconify
+                  width={20}
+                  icon={
+                    isFullScreen
+                      ? 'solar:minimize-square-3-outline'
+                      : 'solar:maximize-square-3-outline'
+                  }
+                />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Stack>
+      </Stack>
     );
   }
 );

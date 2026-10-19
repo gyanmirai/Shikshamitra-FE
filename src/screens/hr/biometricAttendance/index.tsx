@@ -17,11 +17,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
@@ -205,6 +206,7 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
     label: 'Status',
     minWidth: '6vw',
     sticky: true,
+    stickyPosition: 'right' as const,
     align: 'left',
     render: (value: string) => {
       const colorMap: Record<string, 'primary' | 'error' | 'warning' | 'info' | 'default'> = {
@@ -304,6 +306,14 @@ const AttendanceImportHistoryScreen = () => {
   const [downloadingRows, setDownloadingRows] = useState<Record<string, 'file' | 'error'>>({});
   // Build payrollMonth param: "YYYY-MM" from the dayjs picker value
   const payrollMonthParam = toAttendanceImportPayrollMonth(selectedMonth);
+  const [importPage, setImportPage] = useState({ number: 1, size: 20, search: '' });
+  useEffect(() => {
+    setImportPage((current) => ({ ...current, number: 1 }));
+  }, [payrollMonthParam]);
+  const exportImports = useHrTableExport('hr-attendance-imports', {
+    payrollMonth: payrollMonthParam,
+    search: importPage.search,
+  });
 
   // ── API call 1: fetch list ─────────────────────────────────────────────────
   const {
@@ -311,12 +321,15 @@ const AttendanceImportHistoryScreen = () => {
     isLoading: listLoading,
     isFetching: listFetching,
     refetch: refetchAttendanceImports,
+    error: tableError,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportsQuery,
     params: {
       payrollMonth: payrollMonthParam,
-      maxResultCount: 50,
+      maxResultCount: importPage.size,
+      skipCount: (importPage.number - 1) * importPage.size,
+      search: importPage.search,
     },
   });
 
@@ -694,6 +707,7 @@ const AttendanceImportHistoryScreen = () => {
         isFilter: true,
         filterType: 'enum',
         sticky: true,
+        stickyPosition: 'right' as const,
         enumOptions: AttendanceImportBatchStatusOptions,
         render: (value: number) => (
           <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
@@ -703,6 +717,7 @@ const AttendanceImportHistoryScreen = () => {
       },
       {
         id: 'isBatchLocked',
+        excludeFromExport: true,
         label: 'Lock',
         minWidth: '60px',
         isFilter: false,
@@ -742,6 +757,7 @@ const AttendanceImportHistoryScreen = () => {
         minWidth: '80px',
         align: 'center',
         sticky: true,
+        stickyPosition: 'right' as const,
         render: (_value: string, row: any) => (
           <ThreeDotsActions actions={(props) => actions({ ...props, row })} placement="right-top" />
         ),
@@ -883,11 +899,30 @@ const AttendanceImportHistoryScreen = () => {
           </Box>
 
           <CustomizableTable
+            showColumns
+            showExport
+            showFullScreen
+            exportScope="all"
             tableId="biometric-attendance-history-table"
+            tableTitle="Attendance imports"
+            onExport={exportImports}
+            error={tableError}
+            onRetry={refetchAttendanceImports}
+            serverSidePagination
+            serverSideSearch
+            page={importPage.number - 1}
+            rowsPerPage={importPage.size}
+            totalCount={listData?.totalCount || 0}
+            onServerPagination={(number, size) =>
+              setImportPage((current) => ({ ...current, number, size }))
+            }
+            onServerSearch={(search) =>
+              setImportPage((current) => ({ ...current, number: 1, search }))
+            }
             showCheckbox={selectedRows.length > 0}
             columns={columns}
             data={listData?.items || []}
-            isLoading={listLoading || listFetching || isUploadBusy}
+            isLoading={listLoading || listFetching || isUploadBusy || listFetching}
             noDataText="No biometric attendance found."
           />
         </>
@@ -1042,6 +1077,9 @@ const ImportDetailDialog = ({
   const [rowsData2, setRowsData2] = useState<any[]>([]);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
   const isPayrollLocked = !!importData?.isBatchLocked;
+  const [rowsPage, setRowsPage] = useState(1);
+  const [rowsPageSize, setRowsPageSize] = useState(20);
+  const exportRows = useHrTableExport('hr-attendance-import-rows', { importId: importData?.id });
   const summaryOpen = useBoolean(false);
   const isSaving = useBoolean();
 
@@ -1062,13 +1100,16 @@ const ImportDetailDialog = ({
   const {
     data: rowsData,
     isLoading: rowsLoading,
+    isFetching: rowsFetching,
+    error: rowsError,
     refetch: refetchImportRows,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportRowsQuery,
     params: {
       id: importData?.id,
-      maxResultCount: 50,
+      skipCount: (rowsPage - 1) * rowsPageSize,
+      maxResultCount: rowsPageSize,
     },
     options: { skip: !importData?.id },
   });
@@ -1580,10 +1621,29 @@ const ImportDetailDialog = ({
             )}
           </Box>
           <CustomizableTable
+            showColumns
+            showExport={isPayrollLocked}
+            showFullScreen
+            exportScope="all"
+            onExport={exportRows}
+            variant="embedded"
+            isSearch={false}
+            isFilter={false}
+            serverSidePagination
+            page={rowsPage - 1}
+            rowsPerPage={rowsPageSize}
+            totalCount={rowsData?.totalCount || 0}
+            onServerPagination={(page, pageSize) => {
+              setRowsPage(page);
+              setRowsPageSize(pageSize);
+            }}
+            error={rowsError}
+            onRetry={refetchImportRows}
             tableId="import-detail-preview-table"
+            tableTitle="Attendance import review"
             columns={previewColumns}
             data={rowsData2}
-            isLoading={rowsLoading}
+            isLoading={rowsLoading || rowsFetching}
             noDataText={
               <Stack alignItems="center" spacing={1} py={3}>
                 <Typography color="text.secondary" variant="body2">

@@ -55,8 +55,7 @@ export function ReportLibrary({ templates }: { templates: ReportTemplate[] }) {
           ? t.isBuiltIn
           : library === 'private'
             ? t.visibility === 'private'
-            : t.visibility === 'organization')) &&
-      `${t.name} ${t.description}`.toLowerCase().includes(search.trim().toLowerCase())
+            : t.visibility === 'organization'))
   );
   const columns = useMemo(
     () => [
@@ -79,11 +78,18 @@ export function ReportLibrary({ templates }: { templates: ReportTemplate[] }) {
             >
               {row.description}
             </Box>
-            <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
-              {row.category} · {row.layout}
-            </Box>
           </Stack>
         ),
+      },
+      {
+        id: 'category',
+        label: 'Category',
+        minWidth: 130,
+      },
+      {
+        id: 'layout',
+        label: 'Layout',
+        minWidth: 160,
       },
       {
         id: 'ownership',
@@ -208,13 +214,6 @@ export function ReportLibrary({ templates }: { templates: ReportTemplate[] }) {
         {error && <Alert severity="error">{error}</Alert>}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <TextField
-            size="small"
-            label="Search report templates"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ flex: 1 }}
-          />
-          <TextField
             select
             size="small"
             label="Category"
@@ -244,12 +243,22 @@ export function ReportLibrary({ templates }: { templates: ReportTemplate[] }) {
         </Stack>
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <CustomizableTable
+            showColumns
+            showExport
+            showFullScreen
+            exportScope="all"
             tableId="hr-report-template-library"
+            tableTitle="Report templates"
             columns={columns}
             data={data}
-            isSearch={false}
+            searchTerm={search}
+            onSearchInputChange={setSearch}
+            searchableFields={['name', 'description', 'category', 'layout', 'ownership']}
+            searchFieldProps={{
+              placeholder: 'Search report templates',
+              inputProps: { 'aria-label': 'Search report templates' },
+            }}
             isFilter={false}
-            showToolbar={false}
             noDataText="No matching templates. Try another category or search."
             wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: 1 } }}

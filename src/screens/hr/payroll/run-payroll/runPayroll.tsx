@@ -25,6 +25,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PAYROLL_ISSUE_LABELS as ISSUE_LABELS } from 'src/constants/payroll-issues';
@@ -247,6 +248,10 @@ const RunPayroll = () => {
   const academicYearStart = currentYear?.startDate ? dayjs(currentYear.startDate) : null;
   const academicYearEnd = currentYear?.endDate ? dayjs(currentYear.endDate) : null;
   const preview = usePayrollPreviewRun(selectedMonthKey, academicYearId);
+  const exportTable = useHrTableExport('payroll-monthly-workbench-table', {
+    runId: preview.runId,
+    search: preview.searchInput,
+  });
   const previewItems = preview.data?.items || EMPTY_PREVIEW_ITEMS;
   const previewReadiness =
     preview.data?.readiness?.month === selectedMonthKey ? preview.data.readiness : undefined;
@@ -890,6 +895,7 @@ const RunPayroll = () => {
         align: 'left',
         filterType: 'enum',
         sticky: true,
+        stickyPosition: 'right' as const,
         enumOptions: [
           { label: 'Pending', value: 'PENDING' },
           { label: 'Reviewed', value: 'REVIEWED' },
@@ -1311,6 +1317,10 @@ const RunPayroll = () => {
               ) : null}
             </Box>
             <CustomizableTable
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               noDataText={
                 !isDataForSelectedMonth && selectedMonthKey ? (
                   <>
@@ -1325,6 +1335,7 @@ const RunPayroll = () => {
                 )
               }
               tableId="payroll-monthly-workbench-table"
+              onExport={exportTable}
               isLoading={(previewBusy || preview.fetching) && !preview.data}
               serverSidePagination
               serverSideSearch

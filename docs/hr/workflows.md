@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -521,3 +521,12 @@ Links from the overview and editor carry the selected salary month into Run Payr
 Salary details and statutory settings use the shared form-section cards and the configured Minimal UI card theme.
 The editor has one scrollable form body and a separate persistent footer, with an outlined preview action and a contained save action.
 Employee and school contribution amounts stay together when statutory rows stack on narrow screens.
+
+## Consistent table workflow
+
+Use the shared breadcrumb/header, domain filters, optional shared tabs and the main table workspace.
+Place one global search inside the table toolbar.
+Keep Columns, Export and Full screen independent of column filtering.
+Read-only tables offer Excel and PDF using all matching rows and visible ordered data columns.
+Compact embedded tables retain the same utilities without full-page sizing.
+Editable configuration controls are explicit exceptions in [the coverage checklist](./references/hr-table-coverage.md).

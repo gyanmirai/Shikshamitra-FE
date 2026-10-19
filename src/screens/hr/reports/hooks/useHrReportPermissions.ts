@@ -16,7 +16,7 @@ export function useHrReportPermissions(): HrReportPermissions {
     return {
       canView: hasGrantedPermission(permissions, hrPermissions.reportActions.view),
       canBuild: hasGrantedPermission(permissions, hrPermissions.reportActions.build),
-      canExport: hasGrantedPermission(permissions, hrPermissions.reportActions.export),
+      canExport: hasGrantedPermission(permissions, hrPermissions.reportActions.view),
       canSchedule: hasGrantedPermission(permissions, hrPermissions.reportActions.schedule),
       canManageTemplates: hasGrantedPermission(
         permissions,
