@@ -119,7 +119,7 @@ describe('collection ledger waiver capabilities', () => {
     await user.tab();
     expect(screen.getByRole('button', { name: 'Amount Breakdown information' })).toHaveFocus();
     expect(await screen.findByText(/All amounts are in INR\./)).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Close', exact: true }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(view).toHaveFocus();
   }, 20_000);
