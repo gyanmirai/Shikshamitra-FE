@@ -129,3 +129,5 @@ describe('ESI staff panel', () => {
     });
   });
 });
+
+vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));

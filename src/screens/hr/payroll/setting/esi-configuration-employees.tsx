@@ -24,7 +24,7 @@ export function EsiConfigurationEmployees({
   const state = usePreviewEsiImpactQuery({ ...query, monthYear: toApiMonth(month) });
   return (
     <EsiStatutoryEmployees
-      query={query}
+      query={{ ...query, month }}
       preview={state.data}
       isLoading={state.isLoading}
       isError={state.isError}

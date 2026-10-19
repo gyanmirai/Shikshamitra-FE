@@ -158,8 +158,14 @@ export const getExportableColumns = (
     const isActionColumn =
       normalizedId === 'action' ||
       normalizedId === 'actions' ||
+      normalizedId === 'select' ||
+      normalizedId === 'checkbox' ||
       normalizedLabel === 'action' ||
       normalizedLabel === 'actions';
 
-    return Boolean(columnVisibility[column.id]) && !isActionColumn && !column.excludeFromExport;
+    return (
+      Boolean(columnVisibility[column.id]) &&
+      (column.excludeFromExport === false || !isActionColumn) &&
+      !column.excludeFromExport
+    );
   });

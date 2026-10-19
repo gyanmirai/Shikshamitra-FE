@@ -37,6 +37,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { emptyStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 import CityComponent from 'src/components/stardard-address/city-component';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
@@ -2722,7 +2723,13 @@ export default function EmployeeOnboardingScreen() {
     [employeeParams]
   );
 
-  const { data, isFetching } = useGetEmployeeApplicationsQuery(queryArgs);
+  const exportTable = useHrTableExport('employee-onboarding-table', queryArgs);
+  const {
+    data,
+    isFetching,
+    error: tableError,
+    refetch: retryTable,
+  } = useGetEmployeeApplicationsQuery(queryArgs);
   const { currentData: detailData } = useGetEmployeeApplicationQuery(applicationId || '', {
     skip: !applicationId,
   });
@@ -2990,6 +2997,7 @@ export default function EmployeeOnboardingScreen() {
         width: 70,
         minWidth: 60,
         sticky: true,
+        stickyPosition: 'right' as const,
         isSort: false,
         isFilter: false,
         render: (_value, row) => {
@@ -3182,8 +3190,16 @@ export default function EmployeeOnboardingScreen() {
         </Card>
 
         <CustomizableTable
+          showColumns
+          showExport
+          showFullScreen
+          exportScope="all"
           key={employeeParams.status}
           tableId="employee-onboarding-table"
+          tableTitle="Staff onboarding"
+          onExport={exportTable}
+          error={tableError}
+          onRetry={retryTable}
           columns={columns}
           data={applications}
           isLoading={isFetching}

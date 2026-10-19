@@ -96,6 +96,9 @@ describe('AssignmentsTab actions', () => {
                 reason: 'Seeded assignment',
               },
             ],
+            assignmentPage: { number: 1, size: 20 },
+            setAssignmentPage: vi.fn(),
+            assignmentTotal: 1,
             assignmentFilters: {
               search: '',
               targetType: 'all',
@@ -143,3 +146,5 @@ describe('AssignmentsTab actions', () => {
     expect(previewAssignment).not.toHaveBeenCalled();
   });
 });
+
+vi.mock('src/screens/hr/hooks/use-hr-table-export', () => ({ useHrTableExport: () => vi.fn() }));

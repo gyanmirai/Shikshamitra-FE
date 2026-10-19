@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { HrReportSort, HrReportPreview } from 'src/redux/hr/hrReportsApi';
+import type { TableExportRequest } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
@@ -16,6 +17,7 @@ type HrReportPreviewTableProps = {
   onSortChange?: (sorts: HrReportSort[]) => void;
   emptyMessage?: string;
   headerAction?: ReactNode;
+  onExport?: (request: TableExportRequest) => Promise<void>;
 };
 
 export function HrReportPreviewTable({
@@ -29,6 +31,7 @@ export function HrReportPreviewTable({
   onSortChange,
   emptyMessage,
   headerAction,
+  onExport,
 }: HrReportPreviewTableProps) {
   const previewColumns = useMemo(
     () =>
@@ -84,7 +87,12 @@ export function HrReportPreviewTable({
         ) : null}
       </Stack>
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-report-preview"
+        onExport={onExport}
         tableTitle={`${reportName} Preview`}
         columns={previewColumns}
         data={previewRows}

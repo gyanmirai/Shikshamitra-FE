@@ -10,31 +10,26 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import {
-  useGetLeaveYearEndSettlementsQuery,
-  useGetLeaveYearEndSettlementByIdQuery,
-  usePreviewLeaveYearEndSettlementMutation,
-  useFinalizeLeaveYearEndSettlementMutation,
-} from 'src/redux/hr/leaveApi';
 import {
   Box,
   Card,
   Chip,
   Alert,
   Stack,
-  Table,
   Divider,
-  TableRow,
   Collapse,
-  TableBody,
-  TableCell,
-  TableHead,
   Typography,
   IconButton,
-  TableContainer,
   CircularProgress,
 } from '@mui/material';
+import {
+  useGetLeaveYearEndSettlementsQuery,
+  useGetLeaveYearEndSettlementByIdQuery,
+  usePreviewLeaveYearEndSettlementMutation,
+  useFinalizeLeaveYearEndSettlementMutation,
+} from 'src/redux/hr/leaveApi';
 
 const ISSUE_LABELS: Record<string, string> = {
   pending_leave: 'Pending leave',
@@ -258,80 +253,58 @@ export function LeaveYearEndSettlementsPanel() {
                 <Divider />
 
                 {items.length ? (
-                  <TableContainer sx={{ maxHeight: 360 }}>
-                    <Table size="small" stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Staff</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell align="right">Accrued</TableCell>
-                          <TableCell align="right">Carry In</TableCell>
-                          <TableCell align="right">Used</TableCell>
-                          <TableCell align="right">Pending</TableCell>
-                          <TableCell align="right">Unused</TableCell>
-                          <TableCell align="right">Carried</TableCell>
-                          <TableCell align="right">Encashed</TableCell>
-                          <TableCell align="right">Amount</TableCell>
-                          <TableCell>Issues</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {items.map((item) => {
-                          const issueLabels = getIssueLabels(item);
-                          return (
-                            <TableRow key={item.id} hover>
-                              <TableCell sx={{ minWidth: 180 }}>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="body2" fontWeight={600} noWrap>
-                                    {item.employeeName || '-'}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary" noWrap>
-                                    {item.employeeCode || item.employeeId}
-                                  </Typography>
-                                </Stack>
-                              </TableCell>
-                              <TableCell>
-                                <Label color={statusColor(item.status) as any}>{item.status}</Label>
-                              </TableCell>
-                              <TableCell align="right">{formatDays(item.accruedDays)}</TableCell>
-                              <TableCell align="right">{formatDays(item.carryInDays)}</TableCell>
-                              <TableCell align="right">
-                                {formatDays(item.approvedUsedDays)}
-                              </TableCell>
-                              <TableCell align="right">{formatDays(item.pendingDays)}</TableCell>
-                              <TableCell align="right">{formatDays(item.unusedDays)}</TableCell>
-                              <TableCell align="right">{formatDays(item.carriedDays)}</TableCell>
-                              <TableCell align="right">{formatDays(item.encashedDays)}</TableCell>
-                              <TableCell align="right">
-                                {formatCurrency(item.amount || 0)}
-                              </TableCell>
-                              <TableCell sx={{ minWidth: 170 }}>
-                                {issueLabels.length ? (
-                                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                                    {issueLabels.map((label) => (
-                                      <Chip
-                                        key={label}
-                                        size="small"
-                                        label={label}
-                                        color="warning"
-                                      />
-                                    ))}
-                                  </Stack>
-                                ) : (
-                                  <Chip
-                                    size="small"
-                                    label="Clear"
-                                    color="success"
-                                    variant="outlined"
-                                  />
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                  <CustomizableTable
+                    tableId="hr-leave-year-end-items"
+                    tableTitle="Leave year-end settlement"
+                    variant="embedded"
+                    showColumns
+                    showExport
+                    showFullScreen
+                    exportScope="all"
+                    isSearch={false}
+                    isFilter={false}
+                    data={items}
+                    isLoading={detailFetching}
+                    columns={[
+                      { id: 'employeeName', label: 'Staff', minWidth: 180, sticky: true },
+                      {
+                        id: 'status',
+                        label: 'Status',
+                        sticky: true,
+                        stickyPosition: 'right',
+                        render: (value) => <Label color={statusColor(value) as any}>{value}</Label>,
+                      },
+                      ...[
+                        ['accruedDays', 'Accrued'],
+                        ['carryInDays', 'Carry In'],
+                        ['approvedUsedDays', 'Used'],
+                        ['pendingDays', 'Pending'],
+                        ['unusedDays', 'Unused'],
+                        ['carriedDays', 'Carried'],
+                        ['encashedDays', 'Encashed'],
+                      ].map(([id, label]) => ({
+                        id,
+                        label,
+                        valueType: 'number' as const,
+                        align: 'right' as const,
+                        render: formatDays,
+                      })),
+                      {
+                        id: 'amount',
+                        label: 'Amount',
+                        valueType: 'money',
+                        align: 'right',
+                        render: (value) => formatCurrency(value),
+                      },
+                      {
+                        id: 'issues',
+                        label: 'Issues',
+                        minWidth: 170,
+                        render: (_value, row) =>
+                          getIssueLabels(row as LeaveYearEndSettlementItem).join(', ') || 'Clear',
+                      },
+                    ]}
+                  />
                 ) : (
                   <Alert severity="info">No eligible paid leave settlement items.</Alert>
                 )}

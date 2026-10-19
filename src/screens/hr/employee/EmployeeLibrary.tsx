@@ -76,7 +76,13 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         return (
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
+              variant="embedded"
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               tableId="employee-borrowed-books-table"
+              tableTitle="Borrowed books"
               noDataText="No Borrowed Books Data Found"
               isLoading={borrowedLoading}
               columns={[
@@ -94,7 +100,13 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         return (
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
+              variant="embedded"
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               tableId="employee-reserved-books-table"
+              tableTitle="Reserved books"
               noDataText="No Reserved Books Data Found"
               isLoading={reservedLoading}
               columns={[
@@ -111,7 +123,13 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         return (
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
+              variant="embedded"
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               tableId="employee-fines-charges-table"
+              tableTitle="Library charges"
               noDataText="No Fines or Charges Data Found"
               isLoading={finesChargesLoading}
               columns={[
@@ -133,7 +151,9 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                     return new Intl.NumberFormat('en-IN', {
                       style: 'currency',
                       currency: 'INR',
-                      minimumFractionDigits: 0, maximumFractionDigits: 0}).format(Math.ceil(value));
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }).format(Math.ceil(value));
                   },
                 },
                 { id: 'dateIssued', label: 'Date', align: 'left' },
@@ -144,6 +164,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                   label: 'Status',
                   align: 'left',
                   sticky: true,
+                  stickyPosition: 'right' as const,
                   filterType: 'enum',
                   enumOptions: FinesChargesStatusTypeOptions,
                   render(value) {
@@ -163,7 +184,13 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         return (
           <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
+              variant="embedded"
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               tableId="employee-issued-books-table"
+              tableTitle="Borrowing history"
               noDataText="No Borrowed History Data Found"
               isLoading={borrowHistoryLoading}
               columns={[

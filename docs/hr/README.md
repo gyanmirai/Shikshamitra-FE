@@ -3,7 +3,7 @@ module: hr
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-08-04
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -71,3 +71,8 @@ git diff --check
 
 Use the files listed above and current source paths for HR frontend behavior.
 Do not restore old PRDs, technical specs, or acceptance docs under `docs/`.
+
+## Consistent HR tables
+
+Use [the route-to-table checklist](./references/hr-table-coverage.md) when changing primary or embedded HR surfaces.
+Minimals is the design foundation and attendance register is the table reference.

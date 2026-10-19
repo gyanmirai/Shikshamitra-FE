@@ -370,6 +370,10 @@ export default function SalaryTemplateSettings() {
         </Alert>
       ) : (
         <CustomizableTable
+          showColumns
+          showExport
+          showFullScreen
+          exportScope="all"
           tableId="salary-template-table"
           tableTitle="Salary templates"
           columns={columns}
@@ -396,8 +400,8 @@ export default function SalaryTemplateSettings() {
       >
         <DialogScrollContent>
           <Typography mb={2}>
-            Existing staff salary revisions will remain unchanged. This template will no longer
-            be available for new salary setups.
+            Existing staff salary revisions will remain unchanged. This template will no longer be
+            available for new salary setups.
           </Typography>
           {archiveTarget?.isDefault ? (
             replacementOptions.length ? (

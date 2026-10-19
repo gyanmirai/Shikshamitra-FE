@@ -1,4 +1,7 @@
 import { it, vi, expect, describe } from 'vitest';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { PolicyAuditDrawer } from './PolicyAuditDrawer';
@@ -20,7 +23,7 @@ vi.mock('src/components/iconify', () => ({
 
 describe('PolicyAuditDrawer audit rendering', () => {
   it('renders changed fields and context without raw JSON or GUIDs', async () => {
-    render(
+    renderThemed(
       <PolicyAuditDrawer
         ctx={
           {
@@ -91,7 +94,7 @@ describe('PolicyAuditDrawer audit rendering', () => {
   });
 
   it('sanitizes fallback audit summaries from summary endpoint events', () => {
-    render(
+    renderThemed(
       <PolicyAuditDrawer
         ctx={
           {
@@ -132,7 +135,7 @@ describe('PolicyAuditDrawer audit rendering', () => {
   });
 
   it('does not render a fabricated last-editor line for a newly created policy', () => {
-    render(
+    renderThemed(
       <PolicyAuditDrawer
         ctx={
           {
@@ -163,7 +166,7 @@ describe('PolicyAuditDrawer audit rendering', () => {
   });
 
   it('shows only the requested target title while its audit data is loading', () => {
-    render(
+    renderThemed(
       <PolicyAuditDrawer
         ctx={
           {
@@ -188,7 +191,7 @@ describe('PolicyAuditDrawer audit rendering', () => {
   });
 
   it('reveals every semantic change when an event contains more than eight fields', async () => {
-    render(
+    renderThemed(
       <PolicyAuditDrawer
         ctx={
           {
@@ -232,12 +235,20 @@ describe('PolicyAuditDrawer audit rendering', () => {
     expect(screen.queryByText('after-9')).not.toBeInTheDocument();
     expect(screen.queryByText('after-10')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show 2 more' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
     expect(await screen.findByText('after-9')).toBeInTheDocument();
     expect(screen.getByText('after-10')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Go to previous page' }));
     expect(screen.queryByText('after-9')).not.toBeInTheDocument();
     expect(screen.queryByText('after-10')).not.toBeInTheDocument();
   });
 });
+
+function renderThemed(ui: React.ReactElement) {
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <ThemeProvider theme={createTheme(defaultSettings)}>{children}</ThemeProvider>
+    ),
+  });
+}

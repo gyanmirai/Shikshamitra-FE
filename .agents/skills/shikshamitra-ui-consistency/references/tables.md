@@ -1,5 +1,14 @@
 # Table workspaces
 
+Minimals is the visual foundation, expressed through the installed theme and `CustomizableTable`.
+The canonical HR reference is `src/screens/hr/attendance-tracking/index.tsx`.
+Primary and embedded read-only tables use the same utilities and formatting.
+Keep Columns, Export and Full screen independent of column filtering, in that order.
+Export means Excel or PDF of the complete matching population, including every page.
+Paginated sources must supply a server export callback; never export only loaded rows as the full table.
+Viewing a table permits export, while server tenant, actor, source, scope and masking checks remain mandatory.
+Editable configuration grids, calendars, charts and official document previews are explicit exceptions.
+
 Adapted from [table rules](../../shikshamitra-fe-patterns/references/tables.md) and the full-height
 table workspace sections of [DESIGN.md](../../../../DESIGN.md).
 

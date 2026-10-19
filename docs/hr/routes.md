@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -67,3 +67,15 @@ Technical routes, API fields, and permission keys keep their employee identifier
 Policies & Rules contains Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments in that order.
 The standalone `/hr/effective-preview` page is removed and returns the standard not-found response without a redirect.
 Holiday Impact is not a visible workspace tab; holiday services and backend permissions remain available.
+
+## Reporting views
+
+`/hr/reports` opens the template library.
+The `tab=generated`, `mode=generate&template=`, `mode=design&template=`, and `mode=result&run=` queries provide separate workspaces within that route.
+A built-in definition opens the designer only through Customize a copy.
+Personal design requires Build; school management requires ManageTemplates; preview additionally requires Build.
+
+## HR table coverage
+
+Audit primary pages and reachable employee drawers against [the table checklist](./references/hr-table-coverage.md).
+Keep reporting library, designer, generation and fixed result routes separate.

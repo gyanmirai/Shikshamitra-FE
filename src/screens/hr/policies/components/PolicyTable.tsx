@@ -9,6 +9,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { Card, Chip, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 import {
   useGetPayrollPoliciesQuery,
@@ -93,6 +94,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
     search: tableQuery.search || undefined,
     isArchived: !isCurrent,
   };
+  const exportTable = useHrTableExport(`hr-policy-${type}`, listArgs);
   const payrollPage = useGetPayrollPoliciesQuery(listArgs, {
     skip: !academicYearId || type !== 'payroll',
   });
@@ -161,6 +163,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyPosition: 'right' as const,
       enumOptions: [
         { label: 'Active', value: 'active' },
         { label: 'Draft', value: 'draft' },
@@ -362,7 +365,12 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         ) : null}
       </Card>
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId={`hr-${type}-policies`}
+        onExport={exportTable}
         columns={columns}
         data={rows}
         isLoading={isLoading}

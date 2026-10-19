@@ -340,6 +340,13 @@ export const employeeApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.employeeDocument],
     }),
+    getEmployeeDocumentChecklist: builder.query({
+      query: ({ employeeId, page = 1, pageSize = 20, search }) => ({
+        url: `/employees/${employeeId}/documents/checklist`,
+        params: { page, pageSize, search },
+      }),
+      providesTags: [employeeType.employeeDocument, employeeType.employeeDocumentConfig],
+    }),
     getEmployeeDocuments: builder.query({
       query: ({ id, page = 1, pageSize = 20, search }) => ({
         url: `/employees/${id}/documents`,
@@ -488,6 +495,7 @@ export const {
   useGetBasicInformationQuery,
   useUploadDocumentsMutation,
   useGetEmployeeDocumentsQuery,
+  useGetEmployeeDocumentChecklistQuery,
   useGetEmployeeDocumentByIdQuery,
   useLazyGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,

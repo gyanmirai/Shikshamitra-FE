@@ -21,6 +21,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
@@ -58,26 +59,10 @@ import {
   formatLeaveCalendarDateForDisplay,
 } from './leave-request.utils';
 
-const LEAVE_REQUESTS_PAGE_SIZE = 100;
 const MY_LEAVE_PATH = '/dashboard/my-leave';
 const LEAVE_REQUESTS_LOAD_ERROR_MESSAGE = 'Unable to load leave requests. Please try again.';
 const LEAVE_REQUESTS_NETWORK_ERROR_MESSAGE =
   'Unable to connect to the leave service. Please check that the backend is running and try again.';
-
-const dedupeLeaveRequestsById = (items: any[]) => {
-  const byId = new Map<string, any>();
-  const withoutId: any[] = [];
-
-  items.forEach((item) => {
-    if (item?.id == null) {
-      withoutId.push(item);
-      return;
-    }
-    byId.set(String(item.id), item);
-  });
-
-  return [...Array.from(byId.values()), ...withoutId];
-};
 
 type ApplyLeaveProps = {
   mode?: 'hr' | 'self';
@@ -92,6 +77,13 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  const [totalCount, setTotalCount] = useState(0);
+  const [tableError, setTableError] = useState<unknown>();
+  const exportTable = useHrTableExport(isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests', {
+    academicYearId: currentYear?.id,
+    search: tableQuery.search,
+  });
   const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
   const [triggerMyLeaveRequests] = useLazyGetMyLeaveRequestsQuery();
 
@@ -110,42 +102,17 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
       setSelfLeaveAccessError(null);
 
       try {
-        const allItems: any[] = [];
-        const loadPageRecursively = async (page: number, knownTotal: number): Promise<void> => {
-          const response = await (isSelfMode ? triggerMyLeaveRequests : triggerLeaveRequests)(
-            {
-              academicYearId: currentYear.id,
-              page,
-              pageSize: LEAVE_REQUESTS_PAGE_SIZE,
-            },
-            false
-          ).unwrap();
-
-          if (!isActive) return;
-
-          const pageItems = Array.isArray(response?.items) ? response.items : [];
-          const parsedTotal = Number(response?.totalCount);
-          const totalCount = page === 1 && Number.isFinite(parsedTotal) ? parsedTotal : knownTotal;
-
-          allItems.push(...pageItems);
-
-          const reachedTotal = Number.isFinite(totalCount) && allItems.length >= totalCount;
-          const noMorePages = pageItems.length < LEAVE_REQUESTS_PAGE_SIZE || pageItems.length === 0;
-
-          if (reachedTotal || noMorePages) {
-            return;
-          }
-
-          await loadPageRecursively(page + 1, totalCount);
-        };
-
-        await loadPageRecursively(1, Number.POSITIVE_INFINITY);
-
+        const response = await (isSelfMode ? triggerMyLeaveRequests : triggerLeaveRequests)(
+          { academicYearId: currentYear.id, ...tableQuery },
+          false
+        ).unwrap();
         if (!isActive) return;
-
-        setLeaveRequests(dedupeLeaveRequestsById(allItems));
+        setLeaveRequests(response?.items || []);
+        setTotalCount(response?.totalCount || 0);
+        setTableError(undefined);
       } catch (e) {
         if (!isActive) return;
+        setTableError(e);
         const parsedError = parseApiProblemDetail(e);
         if (isSelfMode && parsedError.errorCode === LEAVE_EMPLOYEE_NOT_FOUND) {
           setSelfLeaveAccessError(
@@ -176,7 +143,14 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
     return () => {
       isActive = false;
     };
-  }, [currentYear?.id, isSelfMode, reloadKey, triggerLeaveRequests, triggerMyLeaveRequests]);
+  }, [
+    currentYear?.id,
+    isSelfMode,
+    reloadKey,
+    tableQuery,
+    triggerLeaveRequests,
+    triggerMyLeaveRequests,
+  ]);
 
   const [deleteLeaveForHr, { isLoading: isDeleteLoadingForHr }] = useQueryAndMutation({
     type: 'mutation',
@@ -310,16 +284,16 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
       },
       ...(!isSelfMode
         ? [
-          {
-            label: 'Submitted By',
-            id: 'submittedBy',
-            align: 'left' as const,
-            minWidth: '12vw',
-            render(value: any) {
-              return value || '-';
+            {
+              label: 'Submitted By',
+              id: 'submittedBy',
+              align: 'left' as const,
+              minWidth: '12vw',
+              render(value: any) {
+                return value || '-';
+              },
             },
-          },
-        ]
+          ]
         : []),
       {
         label: 'Start Date',
@@ -372,6 +346,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         align: 'left',
         enumOptions: EmployeeLeaveStatusOptions,
         sticky: true,
+        stickyPosition: 'right' as const,
         minWidth: '100px',
         render(value) {
           return <Label color={getLeaveStatusColor(value)}>{getLeaveStatusLabel(value)}</Label>;
@@ -383,6 +358,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         isFilter: false,
         isSort: false,
         sticky: true,
+        stickyPosition: 'right' as const,
         render(_value, row) {
           return <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />;
         },
@@ -428,10 +404,10 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
                 isSelfMode
                   ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
                   : [
-                    { name: 'HR/Staff', href: '/hr/dashboard/' },
-                    { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
-                    { name: 'Apply Leave' },
-                  ]
+                      { name: 'HR/Staff', href: '/hr/dashboard/' },
+                      { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+                      { name: 'Apply Leave' },
+                    ]
               }
               description={
                 isSelfMode
@@ -523,6 +499,24 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               </Card>
 
               <CustomizableTable
+                showColumns
+                showExport
+                showFullScreen
+                exportScope="all"
+                onExport={exportTable}
+                error={tableError}
+                onRetry={() => setReloadKey((key) => key + 1)}
+                serverSidePagination
+                serverSideSearch
+                page={tableQuery.page - 1}
+                rowsPerPage={tableQuery.pageSize}
+                totalCount={totalCount}
+                onServerPagination={(page, pageSize) =>
+                  setTableQuery((query) => ({ ...query, page, pageSize }))
+                }
+                onServerSearch={(search) =>
+                  setTableQuery((query) => ({ ...query, page: 1, search }))
+                }
                 noDataText={
                   <>
                     No Leave Request Found{' '}

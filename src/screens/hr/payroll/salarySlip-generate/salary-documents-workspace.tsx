@@ -1,31 +1,20 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type {
-  HrReportSort,
-  HrReportFormat,
-  HrReportPreview,
-  HrReportRequest,
-} from 'src/redux/hr/hrReportsApi';
+import type { HrReportSort, HrReportPreview, HrReportRequest } from 'src/redux/hr/hrReportsApi';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { skipToken } from '@reduxjs/toolkit/query';
 import { hrPermissions } from 'src/constants/hr-menus';
-import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetPayslipSettingsQuery } from 'src/redux/hr/payslip-api';
+import { usePreviewHrReportMutation } from 'src/redux/hr/hrReportsApi';
 import { useId, useRef, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  useGetHrReportExportQuery,
-  usePreviewHrReportMutation,
-  useCreateHrReportExportMutation,
-  useDownloadHrReportExportMutation,
-} from 'src/redux/hr/hrReportsApi';
 import {
   Box,
   Chip,
@@ -39,7 +28,6 @@ import {
   TextField,
   IconButton,
   Typography,
-  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -110,6 +98,7 @@ export default function SalaryDocumentsWorkspace({
       toDate: statement ? `${to}-01` : undefined,
     },
   };
+  const exportTable = useHrTableExport('hr-salary-documents', request);
   const signature = JSON.stringify(request);
   const [loadPreview] = usePreviewHrReportMutation();
   const [preview, setPreview] = useState<HrReportPreview>();
@@ -147,77 +136,9 @@ export default function SalaryDocumentsWorkspace({
       pendingRequest?.abort();
     };
   }, [signature, ready, active, refresh, loadPreview, closeNotes]);
-  const [createExport, exporting] = useCreateHrReportExportMutation();
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [exportFormat, setExportFormat] = useState<HrReportFormat>('pdf');
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [terminalJobId, setTerminalJobId] = useState<string | null>(null);
-  const job = useGetHrReportExportQuery(active ? (jobId ?? skipToken) : skipToken, {
-    pollingInterval: jobId === terminalJobId ? 0 : 3000,
-    skipPollingIfUnfocused: true,
-  });
-  const currentJob = job.data?.id === jobId ? job.data : undefined;
-  useEffect(() => {
-    if (currentJob?.status === 'Completed' || currentJob?.status === 'Failed')
-      setTerminalJobId(jobId);
-  }, [currentJob?.status, jobId]);
-  const [download, downloading] = useDownloadHrReportExportMutation();
-  const exportInFlight = useRef(false);
-  const queueExport = async (format: HrReportFormat) => {
-    if (exportInFlight.current || !ready || !permissions.canExport) return;
-    exportInFlight.current = true;
-    setExportError(null);
-    setExportFormat(format);
-    setJobId(null);
-    try {
-      const result = await createExport({ ...request, page: 1, format }).unwrap();
-      setJobId(result.jobId);
-    } catch (failure) {
-      setExportError(payslipActionError(failure, 'The export could not be queued.'));
-    } finally {
-      exportInFlight.current = false;
-    }
-  };
-  const downloadExport = async () => {
-    if (!jobId || !currentJob || currentJob.isExpired || currentJob.status !== 'Completed') return;
-    setExportError(null);
-    try {
-      const bytes = await download(jobId).unwrap();
-      const url = URL.createObjectURL(bytes);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download =
-        currentJob.fileName ?? `salary-document.${currentJob.format === 'pdf' ? 'pdf' : 'xlsx'}`;
-      anchor.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (failure) {
-      setExportError(payslipActionError(failure, 'The export could not be downloaded.'));
-    }
-  };
   const preset = statement
     ? settings.data?.presentation?.statementColumns
     : settings.data?.presentation?.registerColumns;
-  const exportFailed = job.isError || currentJob?.status === 'Failed' || !!exportError;
-  const exportExpired = currentJob?.isExpired;
-  const exportReady = currentJob?.status === 'Completed' && !job.isError && !exportExpired;
-  const formatLabel = (currentJob?.format ?? exportFormat) === 'pdf' ? 'PDF' : 'Excel';
-  const exportLimitLabel =
-    (preview?.totalCount ?? 0) > 20000
-      ? 'Export limits apply'
-      : (preview?.totalCount ?? 0) > 500
-        ? 'PDF limit: 500 rows'
-        : undefined;
-  const notifiedJobs = useRef(new Set<string>());
-  useEffect(() => {
-    if (!active || !exportReady || !currentJob || notifiedJobs.current.has(currentJob.id)) return;
-    notifiedJobs.current.add(currentJob.id);
-    shikshaMitraToast.success({ message: `${formatLabel} report ready to download.` });
-  }, [active, exportReady, currentJob, formatLabel]);
-  const exportMessage =
-    exportError ??
-    (job.isError
-      ? 'The export status could not be refreshed. Try again.'
-      : (currentJob?.errorMessage ?? 'The export could not be generated. Try again.'));
   if (!permissions.canView)
     return (
       <Alert severity="info">
@@ -383,48 +304,8 @@ export default function SalaryDocumentsWorkspace({
               >
                 Use school column preset
               </Button>
-              {jobId && !exportFailed ? (
-                <Box role="status" aria-live="polite" aria-atomic="true">
-                  <Tooltip
-                    title={
-                      exportExpired
-                        ? 'This export has expired. Generate it again to download.'
-                        : exportReady
-                          ? 'Your report is ready to download.'
-                          : 'The report is being prepared in the background.'
-                    }
-                  >
-                    <Chip
-                      size="small"
-                      variant="soft"
-                      color={exportReady ? 'success' : 'default'}
-                      icon={
-                        !exportReady && !exportExpired ? (
-                          <CircularProgress
-                            size={14}
-                            color="inherit"
-                            aria-label="Preparing export"
-                          />
-                        ) : undefined
-                      }
-                      label={
-                        exportExpired
-                          ? 'Export expired'
-                          : exportReady
-                            ? `${formatLabel} ready`
-                            : `Preparing ${formatLabel}`
-                      }
-                    />
-                  </Tooltip>
-                </Box>
-              ) : null}
             </Stack>
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-              {exportLimitLabel ? (
-                <Tooltip title="PDF includes up to 500 rows; Excel includes up to 20,000. Extra rows are excluded from the downloaded file.">
-                  <Chip size="small" variant="soft" color="warning" label={exportLimitLabel} />
-                </Tooltip>
-              ) : null}
               <Button
                 size="small"
                 variant="outlined"
@@ -434,66 +315,8 @@ export default function SalaryDocumentsWorkspace({
               >
                 Refresh Preview
               </Button>
-              <Tooltip title="Excel exports include up to 20,000 rows.">
-                <span>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                    onClick={() => queueExport('excel')}
-                  >
-                    Export Excel
-                  </Button>
-                </span>
-              </Tooltip>
-              <Tooltip title="PDF exports include up to 500 rows.">
-                <span>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                    onClick={() => queueExport('pdf')}
-                  >
-                    Export PDF
-                  </Button>
-                </span>
-              </Tooltip>
-              {exportReady ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon="mdi:download" width={18} />}
-                  loading={downloading.isLoading}
-                  onClick={downloadExport}
-                >
-                  {exportError ? 'Retry Download' : 'Download'}
-                </Button>
-              ) : exportExpired ? (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={!ready || !preview || !permissions.canExport || exporting.isLoading}
-                  onClick={() => queueExport(exportFormat)}
-                >
-                  Generate Again
-                </Button>
-              ) : null}
             </Stack>
           </Stack>
-          {exportFailed ? (
-            <Alert
-              severity="error"
-              action={
-                job.isError && !exportError ? (
-                  <Button size="small" onClick={() => job.refetch()}>
-                    Refresh Status
-                  </Button>
-                ) : undefined
-              }
-            >
-              {exportMessage}
-            </Alert>
-          ) : null}
         </Stack>
       </Card>
       {error && (
@@ -513,6 +336,7 @@ export default function SalaryDocumentsWorkspace({
         </Alert>
       )}
       <HrReportPreviewTable
+        onExport={exportTable}
         preview={preview}
         headerAction={
           preview?.queryWarnings?.length ? (

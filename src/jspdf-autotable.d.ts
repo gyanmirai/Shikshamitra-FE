@@ -14,6 +14,9 @@ declare module 'jspdf-autotable' {
     styles?: Record<string, unknown>;
     headStyles?: Record<string, unknown>;
     margin?: { left?: number; right?: number; top?: number; bottom?: number };
+    horizontalPageBreak?: boolean;
+    horizontalPageBreakRepeat?: string[] | number[] | string | number;
+    didDrawPage?: () => void;
     // Add other options if necessary
   }
 

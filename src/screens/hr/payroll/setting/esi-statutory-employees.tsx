@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { Visibility } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import {
   Box,
   Chip,
@@ -59,6 +60,10 @@ export function EsiStatutoryEmployees({
   onQueryChange,
   onOpenEmployee,
 }: EsiEmployeesPanelProps) {
+  const exportTable = useHrTableExport('esi-employee-impact', {
+    ...query,
+    monthYear: `${query.month.slice(5)}-${query.month.slice(0, 4)}`,
+  });
   const columns = useMemo<IColumn[]>(
     () => [
       {
@@ -286,7 +291,12 @@ export function EsiStatutoryEmployees({
       ) : null}
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="esi-employee-impact"
+        onExport={exportTable}
         tableTitle="ESI staff impact"
         columns={columns}
         data={(preview?.items || []).map((item) => ({ ...item, id: item.employeeId }))}

@@ -14,6 +14,7 @@ export type PdfTableData = {
   title: string;
   head: string[];
   body: string[][];
+  context?: string[];
 };
 
 let fontDataPromise: Promise<PdfFontData> | null = null;
@@ -56,7 +57,12 @@ function registerUnicodeFonts(doc: jsPDF, fonts: PdfFontData): void {
   doc.setFont(FONT_FAMILY, 'normal');
 }
 
-export async function createUnicodeTablePdf({ head, body }: PdfTableData): Promise<jsPDF> {
+export async function createUnicodeTablePdf({
+  title,
+  head,
+  body,
+  context = [],
+}: PdfTableData): Promise<jsPDF> {
   const [{ default: JsPDF }, { default: autoTable }, fonts] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
@@ -64,6 +70,8 @@ export async function createUnicodeTablePdf({ head, body }: PdfTableData): Promi
   ]);
   const doc = new JsPDF({ orientation: 'landscape' });
   registerUnicodeFonts(doc, fonts);
+  const heading = doc.splitTextToSize([title, ...context].join('\n'), 275) as string[];
+  const headerHeight = 12 + heading.length * 4;
 
   autoTable(doc, {
     columns: head.map((header, index) => ({ header, dataKey: String(index) })),
@@ -74,24 +82,38 @@ export async function createUnicodeTablePdf({ head, body }: PdfTableData): Promi
       fontStyle: 'normal',
       fontSize: 8,
       cellPadding: 2,
+      minCellWidth: head.length > 8 ? 28 : 0,
       overflow: 'linebreak',
     },
     headStyles: {
       font: FONT_FAMILY,
-      fillColor: [22, 119, 255],
-      textColor: 255,
+      fillColor: [244, 246, 248],
+      textColor: 32,
       fontStyle: 'bold',
       halign: 'left',
     },
-    margin: { top: 10, left: 10, right: 10 },
+    horizontalPageBreak: head.length > 8,
+    horizontalPageBreakRepeat: head.length > 8 ? [0, 1] : undefined,
+    margin: { top: headerHeight, left: 10, right: 10, bottom: 15 },
+    didDrawPage: () => {
+      doc.setFont(FONT_FAMILY, 'normal');
+      doc.setFontSize(9);
+      doc.text(heading, 10, 10);
+    },
   });
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    doc.setFontSize(8);
+    doc.text(`Page ${page} of ${totalPages}`, 287, 202, { align: 'right' });
+  }
 
   return doc;
 }
 
 export async function saveUnicodeTablePdf(data: PdfTableData): Promise<void> {
   if (
-    [...data.head, ...data.body.flat()].some((value) =>
+    [data.title, ...(data.context || []), ...data.head, ...data.body.flat()].some((value) =>
       /[\u0900-\u097f\u0a80-\u0aff\ua8e0-\ua8ff]/u.test(value)
     )
   ) {

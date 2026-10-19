@@ -9,6 +9,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetWorkCalendarPoliciesQuery } from 'src/redux/hr/hr-policy-api';
 import { Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 
@@ -80,6 +81,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     search: tableQuery.search || undefined,
     isArchived: !isCurrent,
   };
+  const exportTable = useHrTableExport('hr-policy-calendar', listArgs);
   const {
     data: policyPage,
     isFetching: calendarsLoading,
@@ -139,6 +141,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyPosition: 'right' as const,
       enumOptions: [
         { label: 'Active', value: 'active' },
         { label: 'Draft', value: 'draft' },
@@ -285,7 +288,12 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         ) : null}
       </Card>
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-work-calendars"
+        onExport={exportTable}
         columns={calendarColumns}
         data={calendarRows}
         isLoading={calendarsLoading}

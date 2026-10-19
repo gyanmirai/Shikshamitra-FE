@@ -1,30 +1,19 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
-import {
-  Box,
-  Chip,
-  Alert,
-  Stack,
-  Table,
-  Tooltip,
-  Skeleton,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  TableContainer,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Chip, Alert, Stack, Tooltip, Typography } from '@mui/material';
+import { useGetLeaveRequestsQuery, useGetMyLeaveRequestsQuery } from 'src/redux/hr/leaveApi';
 
 import { useLeaveOverview } from '../leave-request/use-leave-overview';
 import { getLeaveStatusColor, getLeaveStatusLabel } from '../leave-request/leave-status.utils';
@@ -81,341 +70,78 @@ const LeaveBalanceLedger = ({
 }: {
   rows: LeaveBucketBreakdown[];
   isLoading: boolean;
-}) => {
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          p: 1.25,
-        }}
-      >
-        <Stack spacing={1}>
-          {[1, 2, 3, 4].map((item) => (
-            <Skeleton key={item} variant="rounded" height={42} sx={{ borderRadius: 1 }} />
-          ))}
-        </Stack>
-      </Box>
-    );
-  }
-
-  return (
-    <>
-      <Box
-        sx={{
-          display: { xs: 'block', sm: 'none' },
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-        }}
-      >
-        {rows.length === 0 ? (
-          <Stack spacing={0.75} alignItems="center" sx={{ px: 1.25, py: 4, textAlign: 'center' }}>
-            <Iconify
-              icon="solar:calendar-minimalistic-bold-duotone"
-              sx={{ width: 34, height: 34, color: 'text.disabled' }}
-            />
-            <Typography color="text.secondary">No leave allocation found for this year.</Typography>
-          </Stack>
-        ) : (
-          rows.map((row, index) => {
-            const usagePct = getUsagePct(row);
-            const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
-            const rowKey = row.bucketId || row.bucketName;
-
-            return (
-              <Box
-                key={rowKey}
-                sx={{
-                  p: 1.25,
-                  borderTop: index === 0 ? 0 : '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                  <Box
-                    sx={{
-                      width: 30,
-                      height: 30,
-                      flexShrink: 0,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: row.isUnlimited
-                        ? 'info.main'
-                        : isLowBalance
-                          ? 'error.main'
-                          : 'primary.main',
-                      bgcolor: row.isUnlimited
-                        ? 'info.lighter'
-                        : isLowBalance
-                          ? 'error.lighter'
-                          : 'primary.lighter',
-                    }}
-                  >
-                    <Iconify icon="solar:calendar-mark-bold-duotone" width={18} />
-                  </Box>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>
-                      {row.bucketName}
-                    </Typography>
-                    {row.isUnlimited && (
-                      <Typography variant="caption" color="text.secondary">
-                        negative balance allowed
-                      </Typography>
-                    )}
-                  </Box>
-                  {row.isUnlimited ? (
-                    <Chip size="small" color="info" variant="soft" label="Unlimited" />
-                  ) : (
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                      {formatLeaveDays(row.remaining)}
-                    </Typography>
-                  )}
-                </Stack>
-
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    gap: 1,
-                    mt: 1,
-                  }}
-                >
-                  <LeaveMetric
-                    label="Accrued"
-                    value={row.isUnlimited ? '-' : formatLeaveDays(row.total)}
-                  />
-                  <LeaveMetric label="Used" value={formatLeaveDays(row.used)} />
-                  <LeaveMetric label="Pending" value={formatLeaveDays(row.pendingDays)} />
-                </Box>
-
-                <Box sx={{ mt: 1 }}>
-                  {row.isUnlimited ? (
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                      No limit
-                    </Typography>
-                  ) : (
-                    <Stack spacing={0.5}>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontWeight: 700 }}
-                        >
-                          Utilization
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color={isLowBalance ? 'error.main' : 'text.secondary'}
-                          sx={{ fontWeight: 800 }}
-                        >
-                          {isLowBalance ? `Low - ${usagePct}%` : `${usagePct}%`}
-                        </Typography>
-                      </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={usagePct}
-                        color={usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'}
-                        sx={{ height: 6, borderRadius: 999, bgcolor: 'background.neutral' }}
-                      />
-                    </Stack>
-                  )}
-                </Box>
-              </Box>
-            );
-          })
-        )}
-      </Box>
-
-      <TableContainer
-        sx={{
-          display: { xs: 'none', sm: 'block' },
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          bgcolor: 'background.paper',
-          overflowX: 'auto',
-        }}
-      >
-        <Table size="small" sx={{ minWidth: 760 }}>
-          <TableHead>
-            <TableRow
-              sx={{
-                bgcolor: 'background.neutral',
-                '& th': {
-                  py: 1,
-                  color: 'text.secondary',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                },
-              }}
-            >
-              <TableCell>Paid type</TableCell>
-              <TableCell align="right">Available</TableCell>
-              <TableCell align="right">Accrued</TableCell>
-              <TableCell align="right">Used</TableCell>
-              <TableCell align="right">Pending</TableCell>
-              <TableCell sx={{ width: 180 }}>Utilization</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} sx={{ py: 4, borderBottom: 0 }}>
-                  <Stack spacing={0.75} alignItems="center" sx={{ textAlign: 'center' }}>
-                    <Iconify
-                      icon="solar:calendar-minimalistic-bold-duotone"
-                      sx={{ width: 34, height: 34, color: 'text.disabled' }}
-                    />
-                    <Typography color="text.secondary">
-                      No leave allocation found for this year.
-                    </Typography>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const usagePct = getUsagePct(row);
-                const isLowBalance = !row.isUnlimited && row.remaining <= 2 && row.total > 0;
-                const rowKey = row.bucketId || row.bucketName;
-
-                return (
-                  <TableRow
-                    key={rowKey}
-                    hover
-                    sx={{
-                      '& td': {
-                        py: 1,
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
-                      },
-                      '&:last-of-type td': { borderBottom: 0 },
-                    }}
-                  >
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                        <Box
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            flexShrink: 0,
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: row.isUnlimited
-                              ? 'info.main'
-                              : isLowBalance
-                                ? 'error.main'
-                                : 'primary.main',
-                            bgcolor: row.isUnlimited
-                              ? 'info.lighter'
-                              : isLowBalance
-                                ? 'error.lighter'
-                                : 'primary.lighter',
-                          }}
-                        >
-                          <Iconify icon="solar:calendar-mark-bold-duotone" width={17} />
-                        </Box>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography
-                            variant="body2"
-                            title={row.bucketName}
-                            sx={{
-                              fontWeight: 800,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {row.bucketName}
-                          </Typography>
-                          {row.isUnlimited && (
-                            <Typography variant="caption" color="text.secondary">
-                              negative balance allowed
-                            </Typography>
-                          )}
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell align="right">
-                      {row.isUnlimited ? (
-                        <Chip size="small" color="info" variant="soft" label="Unlimited" />
-                      ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 800 }}>
-                          {formatLeaveDays(row.remaining)}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align="right">
-                      {row.isUnlimited ? '-' : formatLeaveDays(row.total)}
-                    </TableCell>
-                    <TableCell align="right">{formatLeaveDays(row.used)}</TableCell>
-                    <TableCell align="right">{formatLeaveDays(row.pendingDays)}</TableCell>
-                    <TableCell>
-                      {row.isUnlimited ? (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontWeight: 700 }}
-                        >
-                          No limit
-                        </Typography>
-                      ) : (
-                        <Stack spacing={0.5}>
-                          <Stack direction="row" justifyContent="space-between">
-                            <Typography variant="caption" color="text.secondary">
-                              {usagePct}%
-                            </Typography>
-                            {isLowBalance && (
-                              <Typography
-                                variant="caption"
-                                color="error.main"
-                                sx={{ fontWeight: 800 }}
-                              >
-                                Low
-                              </Typography>
-                            )}
-                          </Stack>
-                          <LinearProgress
-                            variant="determinate"
-                            value={usagePct}
-                            color={
-                              usagePct >= 80 ? 'error' : usagePct >= 50 ? 'warning' : 'success'
-                            }
-                            sx={{ height: 6, borderRadius: 999, bgcolor: 'background.neutral' }}
-                          />
-                        </Stack>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </>
-  );
-};
+}) => (
+  <CustomizableTable
+    tableId="hr-leave-bucket-ledger"
+    tableTitle="Leave balances"
+    variant="embedded"
+    showColumns
+    showExport
+    showFullScreen
+    exportScope="all"
+    isSearch={false}
+    isFilter={false}
+    isPagination={false}
+    isLoading={isLoading}
+    data={rows.map((row) => ({
+      ...row,
+      id: row.bucketId || row.bucketName,
+      usage: getUsagePct(row),
+    }))}
+    columns={[
+      { id: 'bucketName', label: 'Paid type', minWidth: 160, sticky: true },
+      {
+        id: 'remaining',
+        label: 'Available',
+        valueType: 'number',
+        align: 'right',
+        exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : Number(value)),
+        render: (value, row) =>
+          row.isUnlimited ? (
+            <Chip size="small" variant="soft" label="Unlimited" />
+          ) : (
+            formatLeaveDays(value)
+          ),
+      },
+      {
+        id: 'total',
+        label: 'Accrued',
+        valueType: 'number',
+        align: 'right',
+        render: (value) => formatLeaveDays(value),
+      },
+      {
+        id: 'used',
+        label: 'Used',
+        valueType: 'number',
+        align: 'right',
+        render: (value) => formatLeaveDays(value),
+      },
+      {
+        id: 'pending',
+        label: 'Pending',
+        valueType: 'number',
+        align: 'right',
+        render: (value) => formatLeaveDays(value),
+      },
+      {
+        id: 'usage',
+        label: 'Utilization',
+        align: 'right',
+        exportValue: (value, row) => (row.isUnlimited ? 'Unlimited' : `${String(value)}%`),
+        render: (value, row) => (row.isUnlimited ? '-' : `${String(value)}%`),
+      },
+    ]}
+    noDataText="No leave allocation found for this year."
+  />
+);
 
 type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
   showSelfAccessError?: boolean;
-  /** Allows compact embeds to hide the detailed paid/unpaid bucket ledger when needed. */
   showBalanceLedger?: boolean;
   overviewState?: ReturnType<typeof useLeaveOverview>;
-  /** When provided, displays leave data for this specific employee instead of the logged-in user. */
   employeeId?: string;
 };
 
@@ -435,8 +161,32 @@ const LeaveBalance = ({
     enabled: !overviewState,
   });
   const leaveOverviewState = overviewState ?? internalOverviewState;
-  const { historyData, overview, isLoadingBalance, isLoadingHistory, selfAccessError } =
-    leaveOverviewState;
+  const { overview, isLoadingBalance, selfAccessError } = leaveOverviewState;
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const actor = useSelector((state: RootState) => state.auth.employee);
+  const scopedEmployeeId = employeeId || actor?.id;
+  const [historyPage, setHistoryPage] = useState({ page: 1, pageSize: 20, search: '' });
+  useEffect(() => {
+    setHistoryPage((current) => ({ ...current, page: 1 }));
+  }, [currentYear?.id, scopedEmployeeId, mode]);
+  const historyQuery = {
+    academicYearId: currentYear?.id,
+    employeeId: scopedEmployeeId,
+    ...historyPage,
+  };
+  const hrHistory = useGetLeaveRequestsQuery(historyQuery, {
+    skip: isSelfMode || !currentYear?.id || !scopedEmployeeId,
+  });
+  const selfHistory = useGetMyLeaveRequestsQuery(historyQuery, {
+    skip: !isSelfMode || !currentYear?.id,
+  });
+  const historyResult = isSelfMode ? selfHistory : hrHistory;
+  const historyData = historyResult.currentData;
+  const isLoadingHistory = historyResult.isFetching;
+  const exportHistory = useHrTableExport(
+    isSelfMode ? 'hr-self-leave-history' : 'hr-leave-requests',
+    historyQuery
+  );
 
   const breakdownRows = useMemo(() => overview.bucketBreakdown, [overview.bucketBreakdown]);
 
@@ -511,6 +261,7 @@ const LeaveBalance = ({
         filterType: 'enum',
         enumOptions: EmployeeLeaveStatusOptions,
         sticky: true,
+        stickyPosition: 'right' as const,
         minWidth: '110px',
         render(value) {
           return <Label color={getLeaveStatusColor(value)}>{getLeaveStatusLabel(value)}</Label>;
@@ -544,10 +295,10 @@ const LeaveBalance = ({
             isSelfMode
               ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave Balance' }]
               : [
-                { name: 'HR/Staff', href: '/hr/dashboard/' },
-                { name: 'Leave Management', href: '/hr/leave-center/' },
-                { name: 'Leave Balance' },
-              ]
+                  { name: 'HR/Staff', href: '/hr/dashboard/' },
+                  { name: 'Leave Management', href: '/hr/leave-center/' },
+                  { name: 'Leave Balance' },
+                ]
           }
           description="Leave quota, breakdown by paid type, and request history."
         />
@@ -606,7 +357,26 @@ const LeaveBalance = ({
             />
 
             <CustomizableTable
+              showColumns
+              showExport
+              showFullScreen
+              exportScope="all"
               tableId="leave-balance-history"
+              variant="embedded"
+              onExport={exportHistory}
+              error={historyResult.error}
+              onRetry={historyResult.refetch}
+              serverSidePagination
+              serverSideSearch
+              page={historyPage.page - 1}
+              rowsPerPage={historyPage.pageSize}
+              totalCount={historyData?.totalCount || 0}
+              onServerPagination={(page, pageSize) =>
+                setHistoryPage((current) => ({ ...current, page, pageSize }))
+              }
+              onServerSearch={(search) =>
+                setHistoryPage((current) => ({ ...current, page: 1, search }))
+              }
               columns={historyColumns}
               data={historyRows}
               isLoading={isLoadingHistory}
@@ -623,18 +393,6 @@ const LeaveBalance = ({
                 </Box>
               }
             />
-            {historyData &&
-              typeof historyData.totalCount === 'number' &&
-              historyData.totalCount > (historyData.items?.length ?? 0) && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: 'block', px: 0.5 }}
-                >
-                  Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave
-                  requests for this academic year (max {100} per page).
-                </Typography>
-              )}
           </Stack>
         </>
       )}

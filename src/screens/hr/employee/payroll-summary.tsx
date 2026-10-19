@@ -276,6 +276,11 @@ const PayrollLineTable = ({
         sx={{ p: 2 }}
       />
       <CustomizableTable
+        variant="embedded"
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText={noDataText}
         tableId={tableId}
         isFilter={false}

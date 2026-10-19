@@ -5,12 +5,15 @@ import type { ReactNode } from 'react';
 import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import React, { useRef, useMemo, useState, useEffect, useContext, useCallback } from 'react';
 import {
   Box,
   Card,
+  Alert,
   Paper,
   Table,
+  Button,
   Switch,
   TableContainer,
   TablePagination,
@@ -21,9 +24,11 @@ import { Scrollbar } from '../scrollbar';
 import CustomDialog from '../customDialog';
 import { exportTable } from './table-export';
 import { shikshaMitraToast } from '../toast';
+import { getExportableColumns } from './utils';
 import { TableBody } from './components/TableBody';
 import { ComponentBlock } from '../component-block';
 import { useTableData } from './hooks/useTableData';
+import { TableExportContext } from './export-context';
 import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
 import { TableToolbar } from './components/TableToolbar';
@@ -43,6 +48,18 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   data,
   tableTitle = 'Table View',
   exportLabel = 'Export',
+  exportContext: tableExportContext = [],
+  exportScope = 'loaded',
+  onExport,
+  exportFormats = ['excel', 'pdf'],
+  exportBusy = false,
+  exportDisabled = false,
+  showColumns,
+  showExport,
+  showFullScreen,
+  variant = 'workspace',
+  paginationMode = 'known',
+  hasNextPage = false,
   serverSide = false,
   serverSidePagination = false,
   serverSideSearch = false,
@@ -71,6 +88,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   defaultRowsPerPage = 10,
   page: controlledPage,
   rowsPerPage: controlledRowsPerPage,
+  paginationDisabled = false,
   searchTerm: controlledSearchTerm,
   filters: controlledFilters,
   sorts: controlledSorts,
@@ -80,12 +98,40 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   searchFieldProps = {},
   searchableFields,
   noDataText = <>No data available</>,
-  errorContent,
+  errorContent: customErrorContent,
+  error: queryError,
+  onRetry,
   wrapperProps = {},
 }) => {
   const { sx, ...other } = tableContainerProps;
   const { sx: boxSx, ...boxOther } = wrapperProps;
   const tableUniqId = `customizable-table-card-${tableId}`; // Unique ID for this table instance, used for localStorage keys
+  const [preparingExport, setPreparingExport] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const exportLock = useRef(false);
+  const exportController = useRef<AbortController | null>(null);
+  useEffect(() => () => exportController.current?.abort(), []);
+  const exportContext = useContext(TableExportContext);
+  const errorContent = useMemo(
+    () =>
+      customErrorContent ||
+      (queryError ? (
+        <Alert
+          severity="error"
+          action={
+            onRetry ? (
+              <Button size="small" color="inherit" onClick={onRetry}>
+                Retry
+              </Button>
+            ) : undefined
+          }
+        >
+          {parseApiProblemDetail(queryError).detail || 'The table could not be loaded.'}
+        </Alert>
+      ) : undefined),
+    [customErrorContent, queryError, onRetry]
+  );
+  const incompleteExport = exportScope === 'all' && serverSidePagination && !onExport;
   const canUseColumnFilters = !serverSidePagination || Boolean(onServerFilter);
   const shouldUseServerFilter = serverSideFilter || Boolean(onServerFilter);
 
@@ -94,9 +140,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () =>
       columns.map((col) => ({
         ...col,
+        isSort: serverSidePagination && !onServerSort ? false : col.isSort,
         isFilter: canUseColumnFilters ? (col.isFilter ?? true) : false,
       })),
-    [canUseColumnFilters, columns]
+    [canUseColumnFilters, columns, serverSidePagination, onServerSort]
   );
 
   const { tableConfig, setTableConfig, handleChangeParams } = useTableConfig({
@@ -128,26 +175,32 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       return configuredRowsPerPageOptions;
     }
 
-    const baseOptions = [10, 25, 100];
+    const maximum = serverSidePagination ? maxServerRowsPerPage : undefined;
+    const baseOptions = [...new Set([10, 25, 50, 100, rowsPerPage])]
+      .filter((value) => value > 0 && (!maximum || value <= maximum))
+      .sort((a, b) => a - b);
+    if (!baseOptions.length && maximum) baseOptions.push(maximum);
     const rowCount = serverSidePagination ? totalCount || 0 : filteredData.length;
 
-    if (rowCount <= 0) {
+    if (rowCount <= 0 || paginationMode === 'unknown') {
       return baseOptions;
     }
 
     if (serverSidePagination && maxServerRowsPerPage && rowCount > maxServerRowsPerPage) {
-      return baseOptions.includes(maxServerRowsPerPage)
-        ? baseOptions
-        : [...baseOptions, maxServerRowsPerPage];
+      return baseOptions;
     }
 
-    return [...baseOptions, { value: rowCount, label: 'All' }];
+    return baseOptions.includes(rowCount)
+      ? baseOptions
+      : [...baseOptions, { value: rowCount, label: 'All' }];
   }, [
     configuredRowsPerPageOptions,
     filteredData.length,
     maxServerRowsPerPage,
     serverSidePagination,
     totalCount,
+    rowsPerPage,
+    paginationMode,
   ]);
 
   useEffect(() => {
@@ -199,6 +252,15 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   // For empty content width
   const fullScreenDialog = useBoolean();
+  const wasFullScreen = useRef(false);
+  useEffect(() => {
+    if (wasFullScreen.current && !fullScreenDialog.value)
+      document
+        .getElementById(tableUniqId)
+        ?.querySelector<HTMLButtonElement>('[aria-label="Full screen"]')
+        ?.focus();
+    wasFullScreen.current = fullScreenDialog.value;
+  }, [fullScreenDialog.value, tableUniqId]);
 
   const { getStickyStyle } = useStickyColumns({
     columns: memoizedColumns,
@@ -388,36 +450,90 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             border: `1px solid ${theme.palette.divider}`,
           }}
         >
-          {showToolbar && <TableToolbar
-            exportLabel={exportLabel}
-            isSearch={isSearch}
-            isFilter={isFilter}
-            searchValue={searchTerm}
-            onSearch={handleSearch}
-            onClearSearch={handleClearSearch}
-            columns={memoizedColumns}
-            columnVisibility={columnVisibility}
-            onColumnVisibilityChange={handleColumnVisibilityChange}
-            onResetColumns={handleResetColumns}
-            onExport={async (format) => {
-              try {
-                await exportTable({
-                  format,
-                  columns: memoizedColumns,
-                  columnVisibility,
-                  rows: sortedData,
-                  tableTitle,
-                });
-              } catch {
-                shikshaMitraToast.error({
-                  message: 'The table could not be exported. Please try again.',
-                });
+          {showToolbar && (
+            <TableToolbar
+              exportLabel={exportLabel}
+              isSearch={isSearch}
+              showColumns={showColumns ?? isFilter}
+              showExport={showExport ?? isFilter}
+              showFullScreen={showFullScreen ?? isFilter}
+              exportFormats={exportFormats}
+              exportBusy={exportBusy || preparingExport}
+              onCancelExport={
+                preparingExport && onExport ? () => exportController.current?.abort() : undefined
               }
-            }}
-            searchFieldProps={searchFieldProps}
-            isFullScreen={fullScreenDialog.value}
-            onToggleFullScreen={fullScreenDialog.onToggle}
-          />}
+              exportDisabled={
+                exportDisabled || incompleteExport || isLoading || Boolean(errorContent)
+              }
+              exportDisabledReason={
+                incompleteExport ? 'Complete export requires a server export source.' : undefined
+              }
+              searchValue={searchTerm}
+              onSearch={handleSearch}
+              onClearSearch={handleClearSearch}
+              columns={memoizedColumns}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={handleColumnVisibilityChange}
+              onResetColumns={handleResetColumns}
+              onExport={async (format) => {
+                if (exportLock.current || exportBusy || incompleteExport || exportDisabled) return;
+                exportLock.current = true;
+                const controller = new AbortController();
+                exportController.current = controller;
+                setPreparingExport(true);
+                setExportError('');
+                try {
+                  if (onExport)
+                    await onExport({
+                      signal: controller.signal,
+                      format,
+                      columns: getExportableColumns(memoizedColumns, columnVisibility),
+                      searchTerm,
+                      filters,
+                      sorts,
+                    });
+                  else
+                    await exportTable({
+                      format,
+                      columns: memoizedColumns,
+                      columnVisibility,
+                      rows: sortedData,
+                      tableTitle,
+                      context: [
+                        ...tableExportContext,
+                        ...exportContext,
+                        searchTerm ? `Search: ${searchTerm}` : '',
+                        ...filters.map(
+                          (filter) => `${filter.column}: ${filter.type} ${filter.value ?? ''}`
+                        ),
+                        ...sorts.map((sort) => `${sort.column}: ${sort.direction}`),
+                      ].filter(Boolean),
+                    });
+                } catch (error) {
+                  if (controller.signal.aborted) return;
+                  setExportError(
+                    parseApiProblemDetail(error).detail ||
+                      'The table could not be exported. Please try again.'
+                  );
+                  shikshaMitraToast.error({
+                    message: 'The table could not be exported. Please try again.',
+                  });
+                } finally {
+                  exportController.current = null;
+                  exportLock.current = false;
+                  setPreparingExport(false);
+                }
+              }}
+              searchFieldProps={searchFieldProps}
+              isFullScreen={fullScreenDialog.value}
+              onToggleFullScreen={fullScreenDialog.onToggle}
+            />
+          )}
+          {exportError && (
+            <Alert severity="error" onClose={() => setExportError('')}>
+              {exportError}
+            </Alert>
+          )}
 
           <FilterChips
             filters={filters}
@@ -516,37 +632,59 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 />
               </Table>
             </TableContainer>
-            {isShowedDense && (
+            {(isShowedDense || isPagination) && (
               <Paper
                 elevation={0}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: 2,
+                  p: variant === 'embedded' ? 0.5 : 1,
+                  flexWrap: 'wrap',
                   width: '100%',
                   borderTop: `1px dashed ${theme.vars.palette.divider}`,
                 }}
               >
-                <FormControlLabel
-                  control={
-                    <Switch
-                      size="small"
-                      checked={dense}
-                      onChange={(e) => handleChangeParams({ dense: e.target.checked })}
-                    />
-                  }
-                  label="Dense"
-                  sx={{
-                    ml: 1,
-                    '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
-                  }}
-                />
+                {isShowedDense && (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={dense}
+                        onChange={(e) => handleChangeParams({ dense: e.target.checked })}
+                      />
+                    }
+                    label="Dense"
+                    sx={{
+                      ml: 1,
+                      '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
+                    }}
+                  />
+                )}
                 {isPagination && (
                   <TablePagination
+                    disabled={paginationDisabled}
                     rowsPerPageOptions={rowsPerPageOptions}
                     component="div"
-                    count={serverSidePagination ? totalCount || 0 : filteredData.length}
+                    count={
+                      paginationMode === 'unknown'
+                        ? -1
+                        : serverSidePagination
+                          ? totalCount || 0
+                          : filteredData.length
+                    }
+                    labelDisplayedRows={
+                      paginationMode === 'unknown' ? () => `Page ${page + 1}` : undefined
+                    }
+                    slotProps={
+                      paginationMode === 'unknown'
+                        ? {
+                            actions: {
+                              nextButton: { disabled: paginationDisabled || !hasNextPage },
+                            },
+                          }
+                        : undefined
+                    }
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handlePageChange}
@@ -623,6 +761,22 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       tableId,
       sortedData,
       data.length,
+      exportContext,
+      tableExportContext,
+      onExport,
+      exportFormats,
+      exportBusy,
+      exportDisabled,
+      preparingExport,
+      incompleteExport,
+      exportError,
+      showColumns,
+      showExport,
+      showFullScreen,
+      variant,
+      paginationMode,
+      hasNextPage,
+      paginationDisabled,
     ]
   );
 
@@ -630,19 +784,19 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     fullScreenDialog.onFalse();
   }, [fullScreenDialog]);
 
-  return (
-    <>
+  return fullScreenDialog.value ? (
+    <CustomDialog
+      open
+      fullScreen
+      hasForm={false}
+      guardUnsavedChanges={false}
+      title={tableTitle}
+      handleClose={handleCloseFullScreen}
+    >
       {tableContent}
-
-      <CustomDialog
-        open={fullScreenDialog.value}
-        fullScreen
-        title={tableTitle}
-        handleClose={handleCloseFullScreen}
-      >
-        {tableContent}
-      </CustomDialog>
-    </>
+    </CustomDialog>
+  ) : (
+    tableContent
   );
 };
 

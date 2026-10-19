@@ -10,16 +10,16 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetDocumentsQuery } from 'src/redux/document/documentApi';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { DocumentType, DocumentFileType, convertFileAcceptType } from 'src/enums/documnet-type';
 import { DocumentStatusOptions, DocumentStatusTypeColors } from 'src/enums/document-statusType';
 import { Box, Tooltip, Skeleton, IconButton, Typography, CircularProgress } from '@mui/material';
 import {
   useUploadDocumentsMutation,
-  useGetEmployeeDocumentsQuery,
   useGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,
   useLazyGetEmployeeDocumentByIdQuery,
+  useGetEmployeeDocumentChecklistQuery,
 } from 'src/redux/hr/employeeApi';
 
 interface ViewDocumentsProps {
@@ -119,31 +119,19 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
     popupConfig: { error: false },
   });
 
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDocumentsQuery,
-  });
-
-  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeDocumentsQuery,
-    params: { id: employeeId, page: 1, pageSize: 100 },
-  });
-
-  // Match by documentNameId === item.id (correct API mapping)
-  const tableData =
-    documents?.items?.map((item: any) => {
-      const uploadedDoc = employeeDocuments?.items?.find(
-        (doc: any) => doc.documentNameId === item.id
-      );
-      return {
-        ...item,
-        statusVal: uploadedDoc ? 'Uploaded' : 'Not Uploaded',
-        docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
-        statusColor: uploadedDoc ? 'success' : 'warning',
-        uploadedDoc,
-      };
-    }) || [];
+  const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
+  useEffect(() => {
+    setTableQuery((current) => ({ ...current, page: 1 }));
+  }, [employeeId]);
+  const {
+    currentData: checklist,
+    error: tableError,
+    refetch: retryTable,
+    isLoading,
+    isFetching: isEmployeeDocLoading,
+  } = useGetEmployeeDocumentChecklistQuery({ employeeId, ...tableQuery }, { skip: !employeeId });
+  const tableData = checklist?.items || [];
+  const exportDocuments = useHrTableExport('hr-employee-documents', { employeeId, ...tableQuery });
 
   const handleUpload = async (file: File, row: any) => {
     const acceptableFileFormats: string[] = [];
@@ -190,9 +178,27 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
   return (
     <>
       <CustomizableTable
+        variant="embedded"
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText={<>No Document Found </>}
         isLoading={isLoading || isEmployeeDocLoading}
-        tableId="documents"
+        tableId="hr-employee-documents"
+        tableTitle="Staff documents"
+        onExport={exportDocuments}
+        error={tableError}
+        onRetry={retryTable}
+        serverSidePagination
+        serverSideSearch
+        page={tableQuery.page - 1}
+        rowsPerPage={tableQuery.pageSize}
+        totalCount={checklist?.totalCount || 0}
+        onServerPagination={(page, pageSize) =>
+          setTableQuery((current) => ({ ...current, page, pageSize }))
+        }
+        onServerSearch={(search) => setTableQuery((current) => ({ ...current, page: 1, search }))}
         columns={[
           { id: 'title', label: 'Document Name' },
           {

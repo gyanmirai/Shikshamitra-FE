@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -127,7 +127,7 @@ Use this table to choose validation:
 | Leave center, requests, approvals, or policies     | Leave utility tests, leave API contract tests, leave policy archive and restore screen tests, and HR calendar E2E                                                                                                                                                                                                              |
 | HR policies                                        | `hr-audit-format.test.ts`, `PolicyAuditDrawer.audit.test.tsx`, server-paged policy workspace tests, and HR calendar E2E                                                                                                                                                                                                        |
 | Professional management                            | Professional management client and screen tests                                                                                                                                                                                                                                                                                |
-| Reports                                            | `HrReportCenterEnhancements.test.tsx`, `index.test.tsx`, `useHrReportsCenterActions.test.ts`, `TableBody.empty-state.test.tsx`, `hrReportsApi.ts` tests, and report screen checks                                                                                                                                              |
+| Reports                                            | `reporting-workspace.test.tsx`, captured result tables, API helpers, and authenticated template/generation checks                                                                                                                                              |
 
 ## E2E environment
 
@@ -676,6 +676,28 @@ Assert standard inline breadcrumbs and the absence of card workflow buttons, Mar
 Keep view-control coverage for refresh and the date input.
 Finish automated checks with a Codex in-app browser visual review of the loading and loaded components.
 
+## Reporting workspace replacement
+
+Run `reporting-workspace.test.tsx`, the report-table and API helper suites, typecheck, focused lint, production build, and HR documentation validation.
+Run the authenticated reporting Playwright workflow and finish with the Codex in-app browser.
+Verify template reuse across months, school revisions, fixed results/downloads, narrow layouts, keyboard ordering, unsaved navigation, and source permission revocation.
+The backend owns canonical attendance/leave/payroll reconciliation and PostgreSQL materialization tests.
+
+Validated locally on 19 October 2026 against frontend main `bae2e85f8`.
+Focused reporting tests pass all 14 cases across three files.
+TypeScript, zero-warning focused ESLint, and the production webpack build pass.
+The authenticated `e2e/hr/hr-reporting-workspace.guest.spec.ts` workflow passes all four cases with normal synthetic school sign-in.
+It covers a saved template reused across September and October without revision changes, keyboard column ordering, the unsaved-navigation guard, all 20 starter previews, a 390-pixel library, and daily/monthly Excel and PDF downloads.
+The daily report captures 900 September staff-day rows and 930 October rows, including staff without attendance records.
+The monthly register captures 30 staff rows and 44 output columns.
+Export inspection verifies typed Excel dates, filters, frozen identifiers, PDF repeating headers/page numbers, and readable wide-register sections.
+
+The broader reporting/security frontend run passes 163 of 164 cases.
+The remaining deployment-workflow assertion targets a file identical to main and is an existing baseline failure.
+Deployment files remain unchanged.
+The final signed-in Codex browser smoke verifies the library, dedicated generator, and completed 900-row result.
+All-module docs validation additionally encounters unrelated testing-document taxonomy and sibling-checkout link failures; the HR-only validators pass.
+
 ## Salary structure preview regression
 
 The focused structure suite covers month and staff URL context, pending registration, unavailable totals, retry, salary permissions, preview freshness, draft protection and explicit template upgrades.
@@ -687,3 +709,32 @@ It checks preview/save parity, return context, registration follow-up, responsiv
 It also opens salary history and verifies month-change confirmation, draft retention on cancel, and the selected month's profile and concurrency version on the next preview.
 Verify that the monthly-payroll handoff preserves the working salary month and that identifier warnings permit reviewed rows to lock while missing attendance still blocks them.
 The visual reference is the [Minimal UI invoice editor](https://minimals.cc/dashboard/invoice/e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2/edit), adapted through the project's existing card theme, compact controls and inline HR breadcrumbs.
+
+## HR table redesign validation
+
+Run shared table tests, `use-hr-table-export.test.tsx`, reporting workspace tests and salary documents tests.
+Run TypeScript, focused ESLint, production build, `docs:hr:check` and executable security regressions.
+Run `e2e/hr/hr-reporting-workspace.guest.spec.ts` and the HR table consistency browser cases.
+Verify complete multi-page exports, source query snapshots, cancellation, retries, unknown totals and inaccessible result downloads.
+The backend PostgreSQL suite checks more than 25,000 records, immutable downloads, typed dates and retention.
+Finish with signed-in Codex in-app browser review and inspection of fresh Excel/PDF outputs.
+
+## HR table redesign execution, 19 October 2026
+
+The feature branches include frontend main b4b689d9b and backend main 6f6a98d0.
+The focused frontend run passes 156 tests across 23 files, covering shared table controls, complete export callbacks, captured reporting, payroll, policy drawers and the integrated salary summary.
+Two test files that render shared icon controls now isolate decorative icon requests; their focused rerun passes all three cases without network teardown errors.
+TypeScript, zero-warning focused ESLint, the production webpack build and HR documentation validation pass.
+The signed-in Playwright workflow passes all six cases.
+Its visual matrix covers seven active HR pages at 390, 768 and 1440 pixels in both themes, after loading finishes and onboarding is dismissed.
+It also verifies template reuse, all accessible starters, keyboard ordering, navigation protection, daily/monthly captured downloads, and complete staff directory Excel plus filtered PDF exports.
+The directory export contains all 33 authorized fixture staff across pages and excludes action controls.
+Fresh files were reopened to inspect date types, filters, frozen columns, readable PDF sections, date presentation, repeating headers and page numbering.
+Final signed-in Codex in-app browser review verifies the shared menu, full-screen table, Escape close and restored keyboard focus.
+
+Frontend security checks pass 16 of 17 cases.
+The remaining deployment-workflow assertion targets a workflow unchanged from main.
+The unchanged PDF text artifact test is not counted as passing because this local environment lacks the optional native canvas support required by PDF.js and reports DOMMatrix unavailable.
+Backend validation and confirmed main-branch baseline failures are recorded in backend HR testing and PR 709.
+Generated browser state, screenshots, downloaded files and logs remain ignored.
+Neither pull request has been merged or deployed.

@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -44,7 +44,7 @@ Use this table before searching `src/redux`:
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
 | `hr-policy-api.ts`                 | Work calendars, policies, assignments, impact, versions, audit                                | HR policies                     |
 | `professional-management-api.ts`   | Dashboard, templates, cycles, reviews, evidence, feedback, outcomes, reports, audit           | HR professional management      |
-| `hrReportsApi.ts`                  | Report sources, options, templates, preview, export, history                                  | HR reports                      |
+| `hrReportsApi.ts`                  | Narrow existing payroll salary-document preview/export adapter                                  | HR reports                      |
 | Calendar clients                   | Event and holiday type APIs, event and holiday APIs, employee selection                       | HR calendar and Calendar module |
 
 ## Cache and invalidation rules
@@ -162,6 +162,14 @@ Profile writes invalidate only the affected employee salary/profile tags and Run
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
 
+## Reporting workspace client
+
+`src/redux/hr/hrReportingWorkspaceApi.ts` owns catalogue/options, template revisions, designer preview, private runs, captured rows, cancellation/retry, and downloads.
+Generation submits a template ID, revision, and declared parameters only.
+The server resolves fixed rules and source permissions.
+Client sorting/filtering is disabled on captured result pages to avoid applying conditions to only one page.
+Staff choices use scoped server search and preserve selected labels.
+
 ## Employee salary summary client
 
 compensation-revision-api.ts exposes getSalarySummary for GET /payroll/employees/{employeeId}/salary-summary with month=YYYY-MM.
@@ -169,3 +177,11 @@ The response supplies full-month totals, recurring lines and server-authored PF/
 Salary setup, employee payroll registration and statutory settings invalidate this read model through the existing RTK Query tag families.
 Salary-template calculations return the same statutory-summary contract for preview presentation.
 The frontend does not calculate financial totals or infer eligibility from registration-number presence.
+
+## Shared HR table exports
+
+`src/redux/hr/hrTableExportApi.ts` owns create, status, cancel and authenticated download calls under `/api/hr/table-exports`.
+`use-hr-table-export.ts` captures the current query and ordered data columns, polls a background capture and downloads only a completed file.
+Paginated sources never collect pages in the browser for export.
+`use-report-preview-export.ts` captures an unsaved definition through the Build-protected pipeline before exporting the complete captured result.
+Backend API and access ownership are documented in `../../../Shikshamitra-BE/docs/modules/hr/references/hr-table-exports.md`.

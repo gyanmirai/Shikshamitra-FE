@@ -22,11 +22,11 @@ import { toDateOnly } from 'src/utils/date-only';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
+import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
+import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
 import {
   getHolidayToDate,
   getHolidayFromDate,
@@ -107,8 +107,6 @@ import {
   holidayRowKey,
   getErrorMessage,
   mergeHolidayRows,
-  isDateWithinRange,
-  overlapsDateRange,
   getHolidayDayCount,
   toApiWeeklyPattern,
   normalizeWeeklyRule,
@@ -117,13 +115,12 @@ import {
   buildManualMonthDaysMap,
   getLookupOrganizationNames,
   getAcademicYearMonthRanges,
+  getDefaultPolicySetupState,
   buildManualMonthDaysPayload,
   payrollManualMonthDaysToMap,
   formatHolidayOverlapMessage,
   selectSingleActiveDefaultPolicy,
-  getDefaultPolicySetupState,
   getAssignmentFormValidationError,
-  assignmentMatchesLeavePolicyFilter,
   normalizePayrollDayCalculationType,
   getEffectiveAssignmentLeavePolicyId,
   getHolidayAcademicYearValidationError,
@@ -294,6 +291,10 @@ export function useHRPolicyWorkspace({
   const [versionTarget, setVersionTarget] = useState<VersionTarget>(null);
   const [compareVersionIds, setCompareVersionIds] = useState({ from: '', to: '' });
   const [versionFilters, setVersionFilters] = useState({ search: '', action: 'all' });
+  const [versionPage, setVersionPage] = useState({ number: 1, size: 10 });
+  useEffect(() => {
+    setVersionPage((current) => ({ ...current, number: 1 }));
+  }, [versionTarget?.policyId, versionFilters.search, versionFilters.action]);
   const [restoreVersion, setRestoreVersion] = useState<RestoreVersionState>(null);
   const [employeeLookupSearch, setEmployeeLookupSearch] = useState('');
 
@@ -311,7 +312,25 @@ export function useHRPolicyWorkspace({
   });
   // --- API Queries ----------------------------------------------------------
   const listArgs = { academicYearId, maxResultCount: 200, isArchived: false };
-  const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
+  const [assignmentPage, setAssignmentPage] = useState({ number: 1, size: 20 });
+  useEffect(() => {
+    setAssignmentPage((current) => ({ ...current, number: 1 }));
+  }, [academicYearId, assignmentFilters]);
+  const assignmentListArgs = {
+    academicYearId,
+    maxResultCount: assignmentPage.size,
+    skipCount: (assignmentPage.number - 1) * assignmentPage.size,
+    search: assignmentFilters.search,
+    targetType: assignmentFilters.targetType === 'all' ? undefined : assignmentFilters.targetType,
+    isActive:
+      assignmentFilters.status === 'all' ? undefined : assignmentFilters.status === 'active',
+    payrollPolicyId: assignmentFilters.payrollPolicyId || undefined,
+    attendancePolicyId: assignmentFilters.attendancePolicyId || undefined,
+    leavePolicyId: assignmentFilters.leavePolicyId || undefined,
+    activeOnDate: assignmentFilters.activeOnDate || undefined,
+    effectiveFrom: assignmentFilters.effectiveFrom || undefined,
+    effectiveTo: assignmentFilters.effectiveTo || undefined,
+  };
 
   const { currentData: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
     { page: 1, pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE },
@@ -380,7 +399,10 @@ export function useHRPolicyWorkspace({
         ? {
             policyType: versionTarget.policyType,
             policyId: versionTarget.policyId,
-            maxResultCount: 30,
+            maxResultCount: versionPage.size,
+            skipCount: (versionPage.number - 1) * versionPage.size,
+            search: versionFilters.search,
+            action: versionFilters.action,
           }
         : { policyType: 'work_calendar', policyId: '' },
       { skip: !versionTarget }
@@ -624,111 +646,48 @@ export function useHRPolicyWorkspace({
     const employeeById = new Map(employeeOptions.map((item) => [item.id, item]));
     const search = assignmentFilters.search.trim().toLowerCase();
 
-    return (assignments?.items || [])
-      .filter((item) => {
-        const employeeOption =
-          item.targetType === 'employee' ? employeeById.get(item.targetKey) : undefined;
-        const target =
-          item.targetType === 'employee'
-            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown staff'
-            : item.targetDisplayName || item.targetKey;
-        const organization =
-          item.targetType === 'employee'
-            ? item.targetOrganizationNames?.filter(Boolean).join(', ') ||
-              getLookupOrganizationNames(employeeOption).join(', ')
-            : '';
-        if (
-          assignmentFilters.targetType !== 'all' &&
-          item.targetType !== assignmentFilters.targetType
-        )
-          return false;
-        if (assignmentFilters.status !== 'all') {
-          const isActive = assignmentFilters.status === 'active';
-          if (item.isActive !== isActive) return false;
-        }
-        if (
-          assignmentFilters.payrollPolicyId &&
-          item.payrollPolicyId !== assignmentFilters.payrollPolicyId
-        )
-          return false;
-        if (
-          assignmentFilters.attendancePolicyId &&
-          item.attendancePolicyId !== assignmentFilters.attendancePolicyId
-        )
-          return false;
-        if (
-          !assignmentMatchesLeavePolicyFilter(
-            item,
-            assignmentFilters.leavePolicyId,
-            defaultLeavePolicy?.id
-          )
-        )
-          return false;
-        if (
-          assignmentFilters.activeOnDate &&
-          !isDateWithinRange(assignmentFilters.activeOnDate, item.effectiveFrom, item.effectiveTo)
-        )
-          return false;
-        if (
-          (assignmentFilters.effectiveFrom || assignmentFilters.effectiveTo) &&
-          !overlapsDateRange(item, assignmentFilters.effectiveFrom, assignmentFilters.effectiveTo)
-        )
-          return false;
-        if (!search) return true;
+    return (assignments?.items || []).map((item) => {
+      const employeeOption =
+        item.targetType === 'employee' ? employeeById.get(item.targetKey) : undefined;
+      const target =
+        item.targetType === 'employee'
+          ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown staff'
+          : item.targetDisplayName || item.targetKey;
+      const organization =
+        item.targetType === 'employee'
+          ? item.targetOrganizationNames?.filter(Boolean).join(', ') ||
+            getLookupOrganizationNames(employeeOption).join(', ') ||
+            '-'
+          : '-';
 
-        const searchable = [
-          target,
-          item.targetType === 'employee' ? undefined : item.targetKey,
-          organization,
-          item.targetType,
-          item.isActive ? 'active' : 'inactive',
-          item.assignmentReason,
-          payrollNameById.get(item.payrollPolicyId),
-          attendanceNameById.get(item.attendancePolicyId),
-          getEffectiveAssignmentLeavePolicyId(item, defaultLeavePolicy?.id)
-            ? leaveNameById.get(getEffectiveAssignmentLeavePolicyId(item, defaultLeavePolicy?.id))
-            : undefined,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        return searchable.includes(search);
-      })
-      .map((item) => {
-        const employeeOption =
-          item.targetType === 'employee' ? employeeById.get(item.targetKey) : undefined;
-        const target =
-          item.targetType === 'employee'
-            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown staff'
-            : item.targetDisplayName || item.targetKey;
-        const organization =
-          item.targetType === 'employee'
-            ? item.targetOrganizationNames?.filter(Boolean).join(', ') ||
-              getLookupOrganizationNames(employeeOption).join(', ') ||
-              '-'
-            : '-';
-
-        return {
-          id: item.id,
-          assignment: item,
-          target,
-          targetKey: item.targetKey,
-          organization,
-          sourceType: item.targetType === 'employee' ? 'Staff' : 'Group',
-          payrollPolicyName: payrollNameById.get(item.payrollPolicyId) || item.payrollPolicyId,
-          attendancePolicyName:
-            attendanceNameById.get(item.attendancePolicyId) || item.attendancePolicyId,
-          leavePolicyName: item.leavePolicyId
+      return {
+        id: item.id,
+        assignment: item,
+        target,
+        targetKey: item.targetKey,
+        organization,
+        sourceType: item.targetType === 'employee' ? 'Staff' : 'Group',
+        payrollPolicyName:
+          item.payrollPolicyName ||
+          payrollNameById.get(item.payrollPolicyId) ||
+          item.payrollPolicyId,
+        attendancePolicyName:
+          item.attendancePolicyName ||
+          attendanceNameById.get(item.attendancePolicyId) ||
+          item.attendancePolicyId,
+        leavePolicyName:
+          item.leavePolicyName ||
+          (item.leavePolicyId
             ? leaveNameById.get(item.leavePolicyId) || item.leavePolicyId
             : defaultLeavePolicy
               ? `${getLeavePolicyName(defaultLeavePolicy)} (default)`
-              : 'Default leave policy unavailable',
-          effective: formatRange(item.effectiveFrom, item.effectiveTo),
-          priority: item.priority,
-          status: item.isActive ? 'Active' : 'Inactive',
-          reason: item.assignmentReason || '-',
-        };
-      });
+              : 'Default leave policy unavailable'),
+        effective: formatRange(item.effectiveFrom, item.effectiveTo),
+        priority: item.priority,
+        status: item.isActive ? 'Active' : 'Inactive',
+        reason: item.assignmentReason || '-',
+      };
+    });
   }, [
     assignments?.items,
     assignmentFilters,
@@ -2242,6 +2201,10 @@ export function useHRPolicyWorkspace({
     activeLeavePolicies,
     assignments,
     assignmentRows,
+    assignmentListArgs,
+    assignmentPage,
+    setAssignmentPage,
+    assignmentTotal: assignments?.totalCount || 0,
     employeeOptions,
     employeeLookupSearch,
     setEmployeeLookupSearch,
@@ -2388,6 +2351,8 @@ export function useHRPolicyWorkspace({
     versionTarget,
     setVersionTarget,
     versionHistory,
+    versionPage,
+    setVersionPage,
     versionCompare,
     compareVersionIds,
     setCompareVersionIds,

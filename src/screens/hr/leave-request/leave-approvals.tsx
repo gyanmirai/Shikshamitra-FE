@@ -16,11 +16,12 @@ import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
 import {
@@ -86,12 +87,27 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     EmployeeLeaveStatusType.Pending
   );
 
+  const [page, setPage] = useState({ number: 1, size: 20, search: '' });
+  const monthAnchor = date?.format('YYYY-MM-01');
+  useEffect(() => {
+    setPage((current) => ({ ...current, number: 1 }));
+  }, [currentYear?.id, monthAnchor, statusFilter]);
+  const exportTable = useHrTableExport('hr-leave-requests', {
+    academicYearId: currentYear?.id,
+    monthYearAnchor: date?.format('YYYY-MM-01'),
+    status: statusFilter === '' ? undefined : statusFilter,
+    search: page.search,
+  });
+
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
       'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
+      page: page.number,
+      pageSize: page.size,
+      search: page.search,
       status: statusFilter === '' ? undefined : statusFilter,
     },
   });
@@ -247,6 +263,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         align: 'left',
         enumOptions: EmployeeLeaveStatusOptions,
         sticky: true,
+        stickyPosition: 'right' as const,
         minWidth: '100px',
         render(value) {
           return <Label color={getLeaveStatusColor(value)}>{getLeaveStatusLabel(value)}</Label>;
@@ -258,6 +275,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
         isFilter: false,
         isSort: false,
         sticky: true,
+        stickyPosition: 'right' as const,
         render(_value, row) {
           return <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />;
         },
@@ -326,6 +344,19 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
       </Card>
 
       <CustomizableTable
+        onExport={exportTable}
+        serverSidePagination
+        serverSideSearch
+        page={page.number - 1}
+        rowsPerPage={page.size}
+        totalCount={data?.totalCount || 0}
+        searchTerm={page.search}
+        onServerPagination={(number, size) => setPage((current) => ({ ...current, number, size }))}
+        onServerSearch={(search) => setPage((current) => ({ ...current, number: 1, search }))}
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText="No Leave Requests Found"
         isLoading={isLoading}
         tableId="leave-approvals-table"

@@ -10,6 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import {
   Box,
   Card,
@@ -45,6 +46,10 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   const {
     academicYearId,
     assignmentRows,
+    assignmentListArgs,
+    assignmentPage,
+    setAssignmentPage,
+    assignmentTotal,
     assignmentFilters,
     setAssignmentFilters,
     assignmentFilterAnchorEl,
@@ -65,6 +70,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     openEntityAudit,
     deleteAssignment,
   } = ctx;
+  const exportAssignments = useHrTableExport('hr-policy-assignments', assignmentListArgs);
 
   const activeFilterCount = [
     assignmentFilters.targetType !== 'all',
@@ -197,6 +203,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyPosition: 'right' as const,
       enumOptions: [
         { label: 'Active', value: 'Active' },
         { label: 'Inactive', value: 'Inactive' },
@@ -211,6 +218,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       id: 'actions',
       label: 'Actions',
       sticky: true,
+      stickyPosition: 'right' as const,
       isFilter: false,
       render: (_, row) => {
         const item = (row as AssignmentTableRow).assignment;
@@ -334,8 +342,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       </Card>
 
       {activePayroll.length === 0 ||
-        activeAttendance.length === 0 ||
-        activeLeavePolicies.length === 0 ? (
+      activeAttendance.length === 0 ||
+      activeLeavePolicies.length === 0 ? (
         <Alert severity="warning">
           Active payroll, attendance, and leave policies are required.
         </Alert>
@@ -556,7 +564,21 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       </Popover>
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         tableId="hr-policy-assignments"
+        onExport={exportAssignments}
+        serverSidePagination
+        serverSideSearch
+        page={assignmentPage.number - 1}
+        rowsPerPage={assignmentPage.size}
+        totalCount={assignmentTotal}
+        onServerPagination={(number, size) => setAssignmentPage({ number, size })}
+        searchTerm={assignmentFilters.search}
+        onServerSearch={(search) => setAssignmentFilters((current) => ({ ...current, search }))}
+        searchFieldProps={{ placeholder: 'Search targets and reasons' }}
         columns={assignmentColumns}
         data={assignmentRows}
         isLoading={assignmentsLoading}

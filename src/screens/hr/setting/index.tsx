@@ -23,6 +23,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
+import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
@@ -69,6 +70,8 @@ const HrSetting = () => {
     data: documents,
     isLoading,
     isFetching,
+    error: tableError,
+    refetch: retryTable,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDocumentConfigurationsQuery,
@@ -92,6 +95,7 @@ const HrSetting = () => {
     [documents?.items]
   );
 
+  const exportTable = useHrTableExport('hr-document-settings', queryParams);
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'title', label: 'Document Name' },
@@ -113,6 +117,7 @@ const HrSetting = () => {
         isSort: false,
         isFilter: false,
         sticky: true,
+        stickyPosition: 'right' as const,
         minWidth: 50,
         render: (value, data) => (
           <ThreeDotsActions
@@ -216,6 +221,10 @@ const HrSetting = () => {
       />
 
       <CustomizableTable
+        showColumns
+        showExport
+        showFullScreen
+        exportScope="all"
         noDataText={
           <>
             No document types configured.
@@ -230,10 +239,26 @@ const HrSetting = () => {
             </Button>
           </>
         }
-        tableId="documents"
+        tableId="hr-document-settings"
+        tableTitle="Staff document types"
+        onExport={exportTable}
+        error={tableError}
+        onRetry={retryTable}
+        serverSidePagination
+        isSearch={false}
+        page={query.skipCount / query.maxResultCount}
+        rowsPerPage={query.maxResultCount}
+        totalCount={documents?.totalCount || 0}
+        onServerPagination={(page, size) =>
+          setQuery((current) => ({
+            ...current,
+            skipCount: (page - 1) * size,
+            maxResultCount: size,
+          }))
+        }
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || isFetching || isFetching}
         columns={columns}
         data={tableData || []}
       />

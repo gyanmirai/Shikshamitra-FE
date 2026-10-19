@@ -7,6 +7,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { TableHeader } from './TableHeader';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+
 describe('TableHeader', () => {
   it('does not clip custom header controls inside narrow columns', () => {
     const theme = createTheme(defaultSettings);
