@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   refetch: vi.fn(),
   fetching: false,
   error: false,
+  canAdd: true,
 }));
 vi.mock('src/redux/finance/accountsActivityApi', () => ({
   useCreateAccountsManualEntryMutation: () => [mocks.create, { isLoading: false }],
@@ -118,13 +119,20 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.fetching = false;
   mocks.error = false;
+    mocks.canAdd = true;
   mocks.unwrap.mockReset().mockResolvedValue({});
   mocks.create.mockImplementation(() => ({ unwrap: mocks.unwrap }));
 });
 
 function setup(direction: 'income' | 'expense' = 'income') {
   const onClose = vi.fn();
-  const store = configureStore({ reducer: { confirmPopup } });
+  const store = configureStore({ reducer: { confirmPopup, auth: () => ({
+    loading: false,
+    permissionsInitialized: true,
+    permissions: ['IncomeTracking', 'ExpenseTracking'].map((feature) => ({
+      name: `Finance.Accounts.${feature}.Add`, isGranted: mocks.canAdd,
+    })),
+  }) } });
   const view = render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -155,6 +163,14 @@ async function fill(direction: 'income' | 'expense' = 'income') {
   fireEvent.change(screen.getByLabelText('Payment date'), { target: { value: '2026-10-14' } });
   await waitFor(() => expect(screen.getByLabelText('Amount')).toHaveValue('12.34'));
 }
+
+it('blocks manual entry submission without its exact Add permission', () => {
+  mocks.canAdd = false;
+  setup('income');
+  expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  expect(mocks.create).not.toHaveBeenCalled();
+});
 
 it.each(['income', 'expense'] as const)(
   'submits exact decimal %s money and returns to the register',

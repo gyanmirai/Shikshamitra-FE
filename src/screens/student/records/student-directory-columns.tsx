@@ -1,21 +1,18 @@
-import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { ThreeDotsActionContext } from 'src/components/three-dots-actions/types';
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { RouterLink } from 'src/routes/components';
 import { Link, Stack, Avatar } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 export const directoryStudentName = (student: StudentDirectoryItem) =>
   [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') ||
   'Restricted identity';
 
-export type DirectoryRowActions = (
-  row: StudentDirectoryItem,
-  context: ThreeDotsActionContext
-) => ReactNode;
+export type DirectoryRowActions = (row: StudentDirectoryItem) => AdaptiveThreeDotsAction[];
 
 type Options = {
   profileHref: (studentId: string) => string;
@@ -31,12 +28,13 @@ export const buildDirectoryColumns = ({
   {
     id: 'name',
     label: 'Student',
+    align: 'left',
     minWidth: compact ? 136 : 200,
     width: compact ? 136 : undefined,
     cellSx: compact ? { px: 1 } : undefined,
     headerSx: compact ? { px: 1 } : undefined,
     isSort: true,
-    isFilter: false,
+    isFilter: true,
     filterType: 'string',
     render: (_value, row) => (
       <Stack direction="row" spacing={1} alignItems="center">
@@ -71,38 +69,42 @@ export const buildDirectoryColumns = ({
   {
     id: 'grNumber',
     label: 'GR number',
+    align: 'left',
     minWidth: 120,
     isSort: true,
-    isFilter: false,
+    isFilter: true,
     filterType: 'string',
     render: (value, row) => value || (row.grNo ?? '—'),
   },
   {
     id: 'classDivision',
     label: 'Class / Division',
+    align: 'left',
     minWidth: 150,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
     filterType: 'string',
   },
   {
     id: 'rollNo',
     label: 'Roll number',
+    align: 'left',
     minWidth: 100,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
     filterType: 'number',
     render: (value) => value ?? '—',
   },
   {
     id: 'status',
     label: 'Status',
-    minWidth: compact ? 72 : 120,
-    width: compact ? 72 : undefined,
+    align: 'left',
+    minWidth: compact ? 96 : 112,
+    width: compact ? 96 : 112,
     cellSx: compact ? { px: 1 } : undefined,
     headerSx: compact ? { px: 1 } : undefined,
     isSort: false,
-    isFilter: false,
+    isFilter: true,
     filterType: 'enum',
     enumOptions: [
       { value: 6, label: 'Active' },
@@ -126,23 +128,28 @@ export const buildDirectoryColumns = ({
     label: 'Actions',
     isSort: false,
     isFilter: false,
-    align: 'right',
-    minWidth: compact ? 80 : rowActions ? 90 : 60,
-    width: compact ? 80 : rowActions ? 90 : 60,
+    align: 'left',
+    minWidth: rowActions ? (compact ? 122 : 138) : 80,
+    width: rowActions ? (compact ? 122 : 138) : 80,
     cellSx: compact ? { px: 1 } : undefined,
     headerSx: compact ? { px: 1 } : undefined,
     sticky: true,
     stickyPosition: 'right',
     excludeFromExport: true,
     render: (_value, row) => (
-      <ThreeDotsActions
-        showViewIcon
-        viewIcon="mdi:eye-outline"
-        viewHref={profileHref(row.studentId)}
-        viewLabel={`View profile for ${directoryStudentName(row as StudentDirectoryItem)}`}
+      <AdaptiveThreeDotsActions
+        actions={[
+          {
+            id: 'view',
+            icon: GlobalIcons.eye,
+            label: `View profile for ${directoryStudentName(row as StudentDirectoryItem)}`,
+            href: profileHref(row.studentId),
+          },
+          ...(rowActions?.(row as StudentDirectoryItem) ?? []),
+        ]}
         moreLabel={`More actions for ${directoryStudentName(row as StudentDirectoryItem)}`}
-        showThreeDots={Boolean(rowActions)}
-        actions={(context) => rowActions?.(row as StudentDirectoryItem, context)}
+        directActionLimit={2}
+        collapseOnOverflow={false}
         sx={{ justifyContent: 'flex-end' }}
       />
     ),

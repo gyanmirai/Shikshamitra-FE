@@ -11,7 +11,8 @@ export interface AdaptiveThreeDotsAction {
   disabled?: boolean;
   loading?: boolean;
   tooltip?: ReactNode;
-  onClick: () => void;
+  href?: string;
+  onClick?: () => void;
 }
 
 export interface AdaptiveThreeDotsActionsProps {

@@ -429,11 +429,15 @@ Save draft permits partial marking. Submit attendance requires the complete elig
 2. Continue preparation in Onboarding until enrollment activation; a finalized-only case stays in Onboarding rather than Student List.
 3. Open Student Records → Student List in the global header year; Active is the default population, with Former available inside Filters.
 4. Narrow by Board, Medium, Class and Division; server search, sorting and pagination preserve that academic/population context.
+   Applied academic filters appear as removable chips. Removing a parent clears its dependent choices; Reset academic filters preserves the student population, search and sort.
+   Student, GR number and Class / Division have text column filters; Roll number supports comparisons and inclusive ranges; Status offers Active, Inactive and Left. Column criteria combine with academic/population scope and search on the server before counting and paging. Column chips clear only their own criteria, and the filtered-empty recovery clears search and column filters together while retaining academic scope. Actions has neither filtering nor sorting.
 5. Open the Student name or View link; Overview shows permanent identity, selected-year placement and linked admission/onboarding milestones.
 6. Use Details, Documents or History without losing list context; related school/service views remain reachable through Related.
 
 Activated students remain discoverable while credential preparation or email work is pending in Onboarding.
 Former students retain their permanent identity and selected-year history.
+
+Row actions show up to two permitted actions directly and place the remainder in the shared overflow menu. Profile and status-change destinations retain native links; fee assignment opens the existing drawer.
 Approved historical records retain their existing eligibility path; missing admission or onboarding evidence is displayed as unavailable rather than synthesized.
 Student List keeps Student, GR number, Class / Division, Roll number, Status and Actions as its compact core columns; school-specific fields appear only in the profile.
 

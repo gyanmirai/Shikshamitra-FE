@@ -19,6 +19,33 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin
 Rebuild after source edits when using static preview. Built output stays in the local `.artifacts`
 directory and is not part of this fixture's source changes.
 
+## Collection UI browser regression suite
+
+After building the fixture above, run:
+
+```powershell
+node node_modules/@playwright/test/cli.js test --config e2e/finance/fee-collection-ui.config.ts
+```
+
+The configuration starts the static preview on port 5177 and uses installed Microsoft Edge
+with one worker. It covers all twelve months, both fee heads, all six statuses, combined and
+empty filters, both grouping modes, all selection presets, overlapping selections, refreshed
+balances, Clear All, keyboard controls, pointer/keyboard selected-item dragging, trailing row
+removal, dropdown method switching, all seven payment methods,
+required details, cash tender validation, both review stages, canonical outgoing allocations,
+receipts, and the UPI reconciliation decision. Sticky summary/actions and independent payment
+scrolling are checked at 390×844, 768×1024 and 1440×900 in both themes.
+
+The HTML report, JSON results, and failure traces/screenshots are saved under
+`.artifacts/fee-collection-ui/e2e-20261018`. These are local QA outputs, not source assets.
+Finish with a smoke test in the Codex in-app browser. This suite verifies frontend behavior
+and outgoing requests; the mock settlement response does not validate backend reconciliation,
+bank settlement, production permissions or PDF generation.
+
+Cheque, DD, and explicitly unconfirmed electronic payments return a pending response with
+no receipt. That branch leaves fixture balances unchanged; it exercises frontend pending
+handling without simulating bank clearing or reserved-balance accounting.
+
 This isolated fixture renders the actual `FeeCollectionTable` and `FeeCollectComponentForm`,
 including their actual RTK Query endpoint definitions and cache invalidation. Only the shared
 base service is replaced. Its synthetic state supplies already-assessed obligations and never

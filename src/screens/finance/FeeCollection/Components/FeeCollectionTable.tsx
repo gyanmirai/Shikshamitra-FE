@@ -8,6 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Alert, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
+import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -22,6 +23,8 @@ import {
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
+
 import type { IFeeData, IFeeTableProps } from './type';
 
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
@@ -31,6 +34,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onGiveAdjustment,
   academicFilters,
 }) => {
+  const access = useFinancePermissions(financePermissions.fees.collections);
+  const adjustmentAccess = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
     boards,
@@ -120,7 +125,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       SortOrder: feeCollectionParams.sorts[0]?.direction,
     },
     options: {
-      skip: !currentYear?.id || !isReady,
+      skip: !currentYear?.id || !isReady || !access.canView,
     },
   });
 
@@ -366,18 +371,18 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                         id: 'collect',
                         label: `Collect fee for ${row.name}`,
                         icon: 'mdi:cash-plus',
-                        disabled: !row.studentId,
+                        disabled: !access.canAdd || !row.studentId,
                         tooltip: !row.studentId
                           ? 'Collect applicant fees from Applicant 360 or Onboarding.'
                           : undefined,
                         onClick: () =>
-                          row.studentId && onCollectFee({ ...row, id: row.studentId } as IFeeData),
+                          access.canAdd && row.studentId && onCollectFee({ ...row, id: row.studentId } as IFeeData),
                       },
                       {
                         id: 'view',
                         label: `View details for ${row.name}`,
                         icon: GlobalIcons.eye,
-                        disabled: !row.studentId,
+                        disabled: !access.canView || !row.studentId,
                         tooltip: !row.studentId
                           ? 'Student details become available after admission finalization. Payment receipts are available in Receipts.'
                           : undefined,
@@ -387,12 +392,12 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                         id: 'adjust',
                         label: `Give fee adjustment for ${row.name}`,
                         icon: 'tdesign:adjustment',
-                        disabled: !row.studentId,
+                        disabled: !adjustmentAccess.canAdd || !row.studentId,
                         tooltip: !row.studentId
                           ? 'Fee adjustments require a Student fee assignment.'
                           : undefined,
                         onClick: () =>
-                          row.studentId &&
+                          adjustmentAccess.canAdd && row.studentId &&
                           onGiveAdjustment({ ...row, id: row.studentId } as IFeeData),
                       },
                     ]}

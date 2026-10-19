@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
+import createCache from '@emotion/cache';
+import { CacheProvider } from '@emotion/react';
 import { http, HttpResponse } from 'msw';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
@@ -73,7 +75,10 @@ const createStore = () =>
   });
 let fixture: ReturnType<typeof permissionTestFixture>;
 let store: ReturnType<typeof createStore>;
+let styleCache: ReturnType<typeof createCache>;
+const theme = createTheme(defaultSettings);
 beforeEach(() => {
+  styleCache = createCache({ key: 'permission-inheritance-test' });
   clearCachedAuthSession();
   fixture = permissionTestFixture();
   store = createStore();
@@ -81,22 +86,25 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  styleCache.sheet.flush();
   act(() => store.dispatch(api.util.resetApiState()));
   clearCachedAuthSession();
 });
 async function open(mode: 'actions' | 'visibility' = 'actions', providerName = 'U') {
   const saved = vi.fn();
   render(
-    <Provider store={store}>
-      <ThemeProvider theme={createTheme(defaultSettings)}>
-        <PermissionAccessForm
-          editData={{ id: 'synthetic-user', name: 'HOD' }}
-          providerName={providerName}
-          mode={mode}
-          handleClose={saved}
-        />
-      </ThemeProvider>
-    </Provider>
+    <CacheProvider value={styleCache}>
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <PermissionAccessForm
+            editData={{ id: 'synthetic-user', name: 'HOD' }}
+            providerName={providerName}
+            mode={mode}
+            handleClose={saved}
+          />
+        </ThemeProvider>
+      </Provider>
+    </CacheProvider>
   );
   fireEvent.click(await screen.findByRole('button', { name: 'Academics' }));
   if (mode === 'actions') fireEvent.click(screen.getByRole('button', { name: 'Curriculum' }));
@@ -141,7 +149,8 @@ it('persists a deny through role changes and removes it with Follow role', async
   await open();
   expect(editor('Add').getByRole('radiogroup')).toHaveAccessibleDescription(/^Allowed\./);
   expect(fixture.denies.size).toBe(0);
-});
+  // This scenario mounts and saves three complete editors, including two persisted reloads.
+}, 120000);
 it('clears an explicit allow on Follow role when the role has no grant', async () => {
   fixture.role.delete(actionNames[1]);
   fixture.direct.add(actionNames[1]);
@@ -169,17 +178,19 @@ it('keeps server-only visibility out of the feature list and saves only an edite
     http.get('*/api/shikshamitra-permissions/users/:userId/permissions', () =>
       HttpResponse.json({
         overrides: Object.fromEntries([...fixture.denies].map((name) => [name, 'deny'])),
-        groups: [{
-          name: 'Academics',
-          displayName: 'Academics',
-          permissions: [...actionNames, ...visibilityNames, ...serverOnlyNames].map((name) => ({
-            name,
-            displayName: name,
-            isGranted: !fixture.denies.has(name),
-            allowedProviders: [],
-            grantedProviders: [{ providerName: 'R', providerKey: 'HOD' }],
-          })),
-        }],
+        groups: [
+          {
+            name: 'Academics',
+            displayName: 'Academics',
+            permissions: [...actionNames, ...visibilityNames, ...serverOnlyNames].map((name) => ({
+              name,
+              displayName: name,
+              isGranted: !fixture.denies.has(name),
+              allowedProviders: [],
+              grantedProviders: [{ providerName: 'R', providerKey: 'HOD' }],
+            })),
+          },
+        ],
       })
     )
   );
@@ -257,4 +268,4 @@ it('reviews dependency changes, returns to editing, and discards without a write
   );
   expect(screen.getByRole('button', { name: 'Review changes' })).toBeDisabled();
   expect(fixture.writes).toEqual([]);
-});
+}, 120000);

@@ -1,12 +1,12 @@
 'use client';
 
 import { financePermissions } from 'src/constants/finance-menu';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
+import ExactPermissionGuard from 'src/components/exact-permission-guard';
 
 const ExpenseTrackingLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={`${financePermissions.accounts.expense}.View`}>
+  <ExactPermissionGuard permissionKey={`${financePermissions.accounts.expense}.View`}>
     {children}
-  </StudentPermissionGuard>
+  </ExactPermissionGuard>
 );
 
 export default ExpenseTrackingLayout;

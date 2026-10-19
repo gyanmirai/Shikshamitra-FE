@@ -4,6 +4,7 @@ import { Box, Alert, Typography, CircularProgress } from '@mui/material';
 import AuditTimeline from 'src/screens/finance/AuditTrail/components/AuditTimeline';
 import { useGetFinanceEntityAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
 import { mapFinanceAuditEventsToLogs } from 'src/screens/finance/AuditTrail/utils/financeAudit.mapper';
+import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 
 import type { AdjustmentAuditTrail } from '../types/adjustment.types';
 
@@ -27,6 +28,7 @@ export default function AdjustmentAuditSection({
   adjustmentId,
   localAuditTrail,
 }: AdjustmentAuditSectionProps) {
+  const access = useFinancePermissions('Finance.Auditing');
   const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     adjustmentId
   );
@@ -37,8 +39,10 @@ export default function AdjustmentAuditSection({
       entityId: adjustmentId,
       maxResultCount: 20,
     },
-    { skip: !isGuid }
+    { skip: !isGuid || !access.canView }
   );
+
+  if (!access.canView) return null;
 
   if (isGuid) {
     if (isLoading) {

@@ -12,9 +12,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import PaymentInfoPreview from './PaymentInfoPreview';
-import { allocatePayment } from './paymentAllocationUtils';
 import StudentInfoPreviewCard from './StudentInfoPreviewCard';
 import AllocationPreviewTable from './AllocationPreviewTable';
+import { allocatePayment, selectedChargesInOrder } from './paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, FeeCollectionFormValues } from '../../Components/type';
 
@@ -192,7 +192,7 @@ const FeeCollectionPreviewDialog = ({
   );
 
   const selectedCharges = useMemo(
-    () => chargesData.filter((c) => formValues.charges.includes(c.chargeId)),
+    () => selectedChargesInOrder(chargesData, formValues.charges),
     [chargesData, formValues.charges]
   );
 

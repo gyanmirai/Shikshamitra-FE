@@ -74,7 +74,16 @@ export type SaveRecordsDraft = {
   policy: StudentRecordsPolicy;
 };
 export type RecordsPolicyPreview = { policy: StudentRecordsPolicy; summary: string[] };
+export type StudentDirectoryColumnFilter = {
+  column: 'name' | 'grNumber' | 'classDivision' | 'rollNo' | 'status';
+  operator:
+    'contains' | 'equals' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between';
+  value?: string;
+  min?: number;
+  max?: number;
+};
 export type StudentDirectoryInput = {
+  columnFilters?: StudentDirectoryColumnFilter[];
   skipCount?: number;
   maxResultCount?: number;
   search?: string;
@@ -94,7 +103,12 @@ export type StudentDirectoryInput = {
   standardIds?: string[];
   divisionIds?: string[];
 };
-export type StudentDirectoryOption = { id: string; name: string; parentId?: string | null; stageId?: string | null };
+export type StudentDirectoryOption = {
+  id: string;
+  name: string;
+  parentId?: string | null;
+  stageId?: string | null;
+};
 export type StudentDirectoryOptions = {
   academicYears: StudentDirectoryOption[];
   boards: StudentDirectoryOption[];
@@ -121,7 +135,11 @@ export type StudentDirectoryItem = {
   academicMediumId?: string | null;
   academicMediumName?: string | null;
   entrySource:
-    'ActivatedOnboarding' | 'CompletedOnboarding' | 'LegacyOverride' | 'LegacyNeedsApproval' | 'ActiveStudentList';
+    | 'ActivatedOnboarding'
+    | 'CompletedOnboarding'
+    | 'LegacyOverride'
+    | 'LegacyNeedsApproval'
+    | 'ActiveStudentList';
   hasPhoto: boolean;
   maskedFields: string[];
 };

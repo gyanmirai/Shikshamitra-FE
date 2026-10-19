@@ -1,4 +1,5 @@
 import { PERMISSIONS, type PermissionType } from './utils';
+import { isFinancePermissionGroup, financePermissionActions, financeActionPermissionNames } from './finance-permission-groups';
 
 import type { PermissionGrant } from './permission-grants';
 
@@ -95,6 +96,10 @@ export const getNodeActionPermissionNamesForAction = (
   const configuredNames = getConfiguredPermissionNames(name, permissions);
   const permissionBase = getActionPermissionBase(name);
 
+  if (isFinancePermissionGroup(permissionBase)) {
+    return financeActionPermissionNames(permissionBase, action, permissions);
+  }
+
   if (permissionBase === 'InstituteSetup.SchoolIdentity') {
     const actions = action === 'View' ? ['View']
       : action === 'Add' ? ['ManageDefaults', 'ManageOverrides', 'AccessSignature'] : [];
@@ -119,12 +124,6 @@ export const getNodeActionPermissionNamesForAction = (
     );
   }
 
-  if (permissionBase === 'Finance.Fees.StructureAssign' && action === 'Add') {
-    return configuredNames.filter((permissionName) =>
-      ['Add', 'OverridePolicies'].some((suffix) => permissionName === `${permissionBase}.${suffix}`)
-    );
-  }
-
   const permissionName = `${permissionBase}.${action}`;
   return configuredNames.includes(permissionName) ? [permissionName] : [];
 };
@@ -140,6 +139,17 @@ export const getAffectedNodePermissionNames = (
   );
   if (isStudentPermission(node.permissionName) && affectedNames.size === 0) return affectedNames;
   const permissionBase = getActionPermissionBase(node.permissionName);
+  if (isFinancePermissionGroup(permissionBase)) {
+    // Add/Delete need read access, but Delete must never imply approval authority.
+    if (isGranted && (action === 'Add' || action === 'Delete')) {
+      financeActionPermissionNames(permissionBase, 'View', permissions).forEach((name) => affectedNames.add(name));
+    }
+    if (!isGranted && action === 'View') {
+      ['Add', 'Delete'].forEach((related) => financeActionPermissionNames(permissionBase, related, permissions)
+        .forEach((name) => affectedNames.add(name)));
+    }
+    return affectedNames;
+  }
   if (isAccountSettingPermission(permissionBase) || isStatutorySchemePermission(permissionBase))
     return affectedNames;
 
@@ -168,6 +178,8 @@ export const getNodePermissionActions = (
   name: NodePermissionName,
   permissions: PermissionGrant[]
 ): PermissionType[] => {
+  const base = getActionPermissionBase(name);
+  if (isFinancePermissionGroup(base)) return financePermissionActions(base, permissions);
   if (getActionPermissionBase(name) === 'InstituteSetup.SchoolIdentity') return PERMISSIONS;
   if (isStatutorySchemePermission(getActionPermissionBase(name))) return ['View', 'Edit', 'Delete'];
   if (isStudentPermission(name)) return PERMISSIONS;
@@ -219,10 +231,11 @@ export const getNodeRevocationPermissionNames = (
       )
     );
   }
-  if (isStatutorySchemePermission(getActionPermissionBase(node.permissionName))) {
+  const base = getActionPermissionBase(node.permissionName);
+  if (isStatutorySchemePermission(base) || isFinancePermissionGroup(base)) {
     return permissions
       .filter(
-        ({ name }) => name === STATUTORY_SCHEME_ROOT || name.startsWith(`${STATUTORY_SCHEME_ROOT}.`)
+        ({ name }) => name === base || name.startsWith(`${base}.`)
       )
       .map(({ name }) => name);
   }

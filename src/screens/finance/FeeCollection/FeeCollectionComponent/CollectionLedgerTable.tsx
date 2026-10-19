@@ -5,20 +5,23 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { useState, useContext } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomAccordion from 'src/components/custom-accordian';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailGrid, DetailField } from 'src/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   Box,
   Stack,
-  Button,
   Checkbox,
+  Accordion,
   Typography,
   DialogActions,
-  FormControlLabel,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   FeeMonth,
@@ -37,6 +40,15 @@ import type { FeeLedgerListProps } from './FeeLedgerList';
 import type { IFeeCharge, SelectedItem, MonthWiseFeeItem } from '../Components/type';
 
 export type CollectionLayout = 'ledger' | 'period' | 'wide';
+
+// This contextual view uses sentence-case, secondary labels from the detail-view rulebook.
+const detailFieldProps = {
+  labelTypographyProps: {
+    color: 'text.secondary',
+    sx: { fontWeight: 'fontWeightRegular', letterSpacing: 'normal', textTransform: 'none' },
+  },
+} as const;
+
 type LedgerRow = MonthWiseFeeItem & {
   id: string;
   period: string;
@@ -57,11 +69,10 @@ export default function CollectionLedgerTable({
   year = new Date().getFullYear(),
   hasActiveFilters,
   layout,
-  onPeriodFocus,
 }: FeeLedgerListProps & { layout: CollectionLayout; onPeriodFocus?: (period: string) => void }) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [groupsExpanded, setGroupsExpanded] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const rows: LedgerRow[] = data.monthWise.flatMap((group) =>
     group.items.map((item) => {
       const period = toPeriod(group.month, group.year ?? year);
@@ -150,70 +161,22 @@ export default function CollectionLedgerTable({
     );
   };
   const feeRows = rows.filter((row) => !row.charge);
-  const groups =
-    layout === 'period' || activeTab === 'by-month'
-      ? [...new Set(feeRows.map((row) => row.period))].map((period) => ({
-          id: period,
-          title: feeRows.find((row) => row.period === period)!.periodLabel,
-          items: feeRows.filter((row) => row.period === period),
-        }))
-      : data.feeHeadWise.map((group) => ({
-          id: group.feeHeadId,
-          title: group.feeHeadName,
-          items: feeRows.filter((row) => row.feeHeadId === group.feeHeadId),
-        }));
-  const groupControls = (
-    <Stack
-      direction="row"
-      flexWrap={layout === 'period' ? 'nowrap' : 'wrap'}
-      useFlexGap
-      spacing={1}
-      sx={{ overflowX: layout === 'period' ? 'auto' : 'visible', flexShrink: 0 }}
-    >
-      {groups.map((group) => (
-        <Box
-          key={group.id}
-          sx={{
-            minWidth: 0,
-            ...(layout === 'period' && {
-              p: 1,
-              flex: '0 0 180px',
-              bgcolor: 'background.neutral',
-              borderRadius: 1,
-            }),
-          }}
-        >
-          <FormControlLabel
-            sx={{ m: 0 }}
-            control={groupCheckbox(group.items, `Select ${group.title}`)}
-            label={<Typography variant="body2">{group.title}</Typography>}
-          />
-          {layout === 'period' && (
-            <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-              <Typography variant="subtitle2" sx={{ pl: 1 }}>
-                {formatNumber(
-                  group.items.filter(collectible).reduce((sum, row) => sum + row.outstanding, 0),
-                  'INR'
-                )}
-              </Typography>
-              <Button size="small" onClick={() => onPeriodFocus?.(group.id)}>
-                Show fees
-              </Button>
-            </Stack>
-          )}
-        </Box>
-      ))}
-      {chargesData.length > 0 && (
-        <FormControlLabel
-          sx={{ m: 0 }}
-          control={groupCheckbox(
-            rows.filter((row) => row.charge),
-            'Select additional charges'
-          )}
-          label="Additional Charges"
-        />
-      )}
-    </Stack>
+  const groups = Object.values(
+    rows.reduce<Record<string, { id: string; title: string; items: LedgerRow[] }>>(
+      (result, row) => {
+        const byPeriod = layout === 'period' || activeTab === 'by-month';
+        const id = row.charge ? 'additional-charges' : byPeriod ? row.period : row.feeHeadId;
+        const title = row.charge
+          ? 'Additional Charges'
+          : byPeriod
+            ? row.periodLabel
+            : row.feeHeadName;
+        result[id] ??= { id, title, items: [] };
+        result[id].items.push(row);
+        return result;
+      },
+      {}
+    )
   );
   const columns: IColumn[] = [
     {
@@ -270,8 +233,9 @@ export default function CollectionLedgerTable({
     },
     {
       id: 'outstanding',
-      label: 'Outstanding Amount',
-      align: 'right',
+      label: 'Amount',
+      align: 'left',
+      cellSx: { textAlign: 'right' },
       minWidth: 135,
       isFilter: false,
       render: (value) => (
@@ -309,14 +273,18 @@ export default function CollectionLedgerTable({
       isFilter: false,
       excludeFromExport: true,
       render: (_value, row) => (
-        <ThreeDotsActions
-          showViewIcon
-          showEditIcon={false}
-          showDeleteIcon={false}
-          showThreeDots={false}
-          viewIcon={GlobalIcons.eye}
-          viewLabel={`View ${row.feeHeadName}, ${row.periodLabel}`}
-          handleViewClick={() => setDetailId(row.id)}
+        <AdaptiveThreeDotsActions
+          directActionLimit={2}
+          collapseOnOverflow={false}
+          sx={{ justifyContent: 'flex-end' }}
+          actions={[
+            {
+              id: 'view',
+              label: `View ${row.feeHeadName}, ${row.periodLabel}`,
+              icon: GlobalIcons.eye,
+              onClick: () => setDetailId(row.id),
+            },
+          ]}
         />
       ),
     },
@@ -329,129 +297,314 @@ export default function CollectionLedgerTable({
   };
 
   return (
-    <Stack spacing={1} sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-      {layout === 'period' ? (
-        groupControls
-      ) : (
-        <CustomAccordion
-          title={activeTab === 'by-month' ? 'Select by period' : 'Select by fee head'}
-          expanded={groupsExpanded}
-          onChange={() => setGroupsExpanded((value) => !value)}
-          content={groupControls}
-        />
-      )}
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <CustomizableTable
-          tableId="collect-fees-student-ledger"
-          tableTitle="Fee ledger"
-          columns={columns.map((column) => ({ ...column, cellSx: { py: 1 }, headerSx: { py: 1 } }))}
-          data={rows}
-          showToolbar={false}
-          isPagination={false}
-          isSearch={false}
-          isFilter={false}
-          isShowedDense={false}
-          rowProps={(row) => ({ selected: isSelected(row as LedgerRow) })}
-          handleRowClick={(row) => {
-            if (collectible(row as LedgerRow)) toggleRows([row as LedgerRow]);
-          }}
-          wrapperProps={{ sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
-          tableContainerProps={{ sx: { height: 1 } }}
-          noDataText={
-            <Stack alignItems="center" spacing={1} py={3}>
-              <Typography variant="body2">
-                {hasActiveFilters
-                  ? 'No entries found for selected filters'
-                  : 'No fee records found'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {hasActiveFilters
-                  ? 'Change the month, fee head or status to see other entries'
-                  : 'Records will appear here once available'}
-              </Typography>
-            </Stack>
-          }
-        />
-      </Box>
+    <Stack
+      role="region"
+      aria-label="Fee ledger"
+      spacing={1}
+      sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+    >
+      <Stack spacing={1.5} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 1 }}>
+        {groups.map((group, index) => {
+          const selected = group.items.filter(isSelected);
+          const selectedTotal = selected.reduce((sum, row) => sum + row.outstanding, 0);
+          const outstanding = group.items
+            .filter(collectible)
+            .reduce((sum, row) => sum + row.outstanding, 0);
+          const expanded = !(collapsedGroups[group.id] ?? (index !== 0 && !selected.length));
+          const groupColumns = columns
+            .filter(
+              (column) =>
+                column.id !== 'feeHeadName' ||
+                group.id === 'additional-charges' ||
+                activeTab === 'by-month'
+            )
+            .map((column) => ({
+              ...column,
+              ...(column.id === 'selection' && {
+                label: groupCheckbox(group.items, `Select all ${group.title}`),
+              }),
+              cellSx: { ...column.cellSx, py: 1.5 },
+              headerSx: { py: 1 },
+            }));
+          return (
+            <Accordion
+              key={group.id}
+              expanded={expanded}
+              onChange={() =>
+                setCollapsedGroups((current) => ({ ...current, [group.id]: expanded }))
+              }
+              disableGutters
+              slots={{ heading: 'div' }}
+              sx={{
+                flexShrink: 0,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+                boxShadow: 'none',
+                '&:before': { display: 'none' },
+                '&:first-of-type, &:last-of-type': { borderRadius: 2 },
+              }}
+            >
+              <Stack direction="row" alignItems="center" sx={{ px: 1.5 }}>
+                {groupCheckbox(group.items, `Select ${group.title}`)}
+                <AccordionSummary
+                  id={`fee-group-${group.id}`}
+                  aria-controls={`fee-group-content-${group.id}`}
+                  expandIcon={<Iconify icon="eva:chevron-down-fill" width={22} />}
+                  sx={{
+                    minWidth: 0,
+                    flex: 1,
+                    px: 1,
+                    py: 0.5,
+                    '& .MuiAccordionSummary-content': { minWidth: 0 },
+                  }}
+                >
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    alignItems={{ sm: 'center' }}
+                    spacing={1}
+                    sx={{ width: 1, minWidth: 0, pr: 1 }}
+                  >
+                    <Typography
+                      component="h3"
+                      variant="subtitle1"
+                      sx={{ overflowWrap: 'anywhere' }}
+                    >
+                      {group.title}
+                    </Typography>
+                    {selected.length ? (
+                      <Label
+                        color="success"
+                        sx={{
+                          height: 'auto',
+                          py: 0.5,
+                          alignSelf: { xs: 'flex-start', sm: 'center' },
+                        }}
+                      >
+                        {formatNumber(selectedTotal, 'INR')} ({selected.length} selected)
+                      </Label>
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ ml: { sm: 'auto !important' } }}
+                      >
+                        {group.items.length} {group.items.length === 1 ? 'fee' : 'fees'} ·{' '}
+                        {formatNumber(outstanding, 'INR')}
+                      </Typography>
+                    )}
+                  </Stack>
+                </AccordionSummary>
+              </Stack>
+              <AccordionDetails
+                id={`fee-group-content-${group.id}`}
+                sx={{ px: { xs: 1, sm: 2 }, pt: 0, pb: 2 }}
+              >
+                <CustomizableTable
+                  tableId={`collect-fees-group-${group.id}`}
+                  tableTitle={group.title}
+                  columns={groupColumns}
+                  data={group.items}
+                  showToolbar={false}
+                  isPagination={false}
+                  isSearch={false}
+                  isFilter={false}
+                  isShowedDense={false}
+                  rowProps={(row) => ({ selected: isSelected(row as LedgerRow) })}
+                  handleRowClick={(row) => {
+                    if (collectible(row as LedgerRow)) toggleRows([row as LedgerRow]);
+                  }}
+                  wrapperProps={{
+                    sx: {
+                      minWidth: 0,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1.5,
+                      overflow: 'hidden',
+                    },
+                  }}
+                  tableContainerProps={{ sx: { height: 'auto' } }}
+                />
+              </AccordionDetails>
+            </Accordion>
+          );
+        })}
+        {!rows.length && (
+          <Stack
+            alignItems="center"
+            spacing={1}
+            sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2 }}
+          >
+            <Typography variant="body2">
+              {hasActiveFilters ? 'No entries found for selected filters' : 'No fee records found'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {hasActiveFilters
+                ? 'Change the month, fee head or status to see other entries'
+                : 'Records will appear here once available'}
+            </Typography>
+          </Stack>
+        )}
+        <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
+          Showing {rows.length} {rows.length === 1 ? 'fee' : 'fees'} in {groups.length}{' '}
+          {groups.length === 1 ? 'group' : 'groups'}
+        </Typography>
+      </Stack>
       <CustomDialog
         open={Boolean(detail)}
         handleClose={closeDetail}
         hasForm={false}
         guardUnsavedChanges={false}
-        maxWidth="md"
-        title={detail ? `${detail.feeHeadName} – ${detail.periodLabel}` : 'Fee details'}
+        maxWidth="sm"
+        paperProps={{ sx: { backgroundImage: 'none' } }}
+        title={detail?.feeHeadName ?? 'Fee Details'}
+        titleInfo="Review the selected fee or charge, its due period, status, and recorded amounts."
       >
         {detail && (
           <DialogScrollContent>
             <Stack spacing={2}>
-              <DetailGrid>
-                <DetailField label="Fee head" value={detail.feeHeadName} />
-                <DetailField label="Due period" value={detail.periodLabel} />
-                <DetailField label="Installment" value={detail.installmentLabel} />
-                <DetailField label="Total" value={formatNumber(detail.total, 'INR')} />
-                <DetailField label="Paid" value={formatNumber(detail.paid, 'INR')} />
-                <DetailField
-                  label="Outstanding principal"
-                  value={formatNumber(detail.due, 'INR')}
-                />
-                <DetailField
-                  label="Reconciliation amount"
-                  value={formatNumber(detail.reconciliationAmount ?? 0, 'INR')}
-                />
-                <DetailField
-                  label="Concession"
-                  value={formatNumber(detail.concessionAmount ?? 0, 'INR')}
-                />
-                <DetailField
-                  label="Late fee"
-                  value={formatNumber(detail.lateFeeAmount ?? 0, 'INR')}
-                  secondary={detail.lateFeeExplanation}
-                />
-                {detail.lateFeeWaivedAmount != null && (
+              <FormSectionCard
+                title={detail.charge ? 'Charge Details' : 'Fee Details'}
+                icon={GlobalIcons.calendar}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="The due period, installment, and current payment status of this entry."
+                sx={{ containerType: 'inline-size', boxShadow: 'none' }}
+              >
+                <DetailGrid>
                   <DetailField
-                    label="Late fee waived"
-                    value={formatNumber(detail.lateFeeWaivedAmount, 'INR')}
+                    {...detailFieldProps}
+                    label="Due period"
+                    value={detail.periodLabel}
                   />
-                )}
-                {detail.refundAmount != null && (
                   <DetailField
-                    label="Refund"
-                    value={formatNumber(detail.refundAmount, 'INR')}
-                    secondary={detail.refundDescription}
+                    {...detailFieldProps}
+                    label="Installment"
+                    value={detail.installmentLabel}
                   />
-                )}
-                {detail.scheduledTotal != null && (
                   <DetailField
-                    label="Scheduled total"
-                    value={formatNumber(detail.scheduledTotal, 'INR')}
-                  />
-                )}
-                {detail.prorationExplanation && (
-                  <DetailField
-                    label="Proration"
-                    value={detail.prorationExplanation}
-                    secondary={
-                      detail.prorationPolicyName
-                        ? `${detail.prorationPolicyName}${detail.prorationPolicyVersionNumber != null ? `, v${detail.prorationPolicyVersionNumber}` : ''}`
-                        : undefined
+                    {...detailFieldProps}
+                    label="Status"
+                    value={
+                      <Label color={FeeCollectionStatusTypeColors[detail.status] ?? 'default'}>
+                        {detail.charge
+                          ? chargeCollectionStatusLabel(detail.status)
+                          : feeInstallmentStatusLabel(detail.status)}
+                      </Label>
                     }
-                    fullWidth
                   />
-                )}
-                {detail.charge?.explanation && (
+                </DetailGrid>
+              </FormSectionCard>
+              <FormSectionCard
+                title="Amount Breakdown"
+                icon={GlobalIcons.receiptIcon}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Recorded fee or charge amounts, payments, outstanding balance, and applicable concessions, waivers, refunds, or proration. All amounts are in INR."
+                sx={{
+                  containerType: 'inline-size',
+                  boxShadow: 'none',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  spacing={2}
+                  sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}
+                >
+                  <Typography variant="body2">Outstanding amount</Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{ overflowWrap: 'anywhere', minWidth: 0, textAlign: 'right' }}
+                  >
+                    {formatNumber(detail.outstanding, 'INR')}
+                  </Typography>
+                </Stack>
+                <DetailGrid>
                   <DetailField
-                    label="Charge explanation"
-                    value={detail.charge.explanation}
-                    fullWidth
+                    {...detailFieldProps}
+                    label="Total"
+                    value={formatNumber(detail.total, 'INR')}
                   />
-                )}
-                {detail.charge?.waivedAmount != null && (
                   <DetailField
-                    label="Charge waived"
-                    value={formatNumber(detail.charge.waivedAmount, 'INR')}
+                    {...detailFieldProps}
+                    label="Paid"
+                    value={formatNumber(detail.paid, 'INR')}
                   />
-                )}
-              </DetailGrid>
+                  <DetailField
+                    {...detailFieldProps}
+                    label="Outstanding principal"
+                    value={formatNumber(detail.due, 'INR')}
+                  />
+                  <DetailField
+                    {...detailFieldProps}
+                    label="Reconciliation amount"
+                    value={formatNumber(detail.reconciliationAmount ?? 0, 'INR')}
+                  />
+                  <DetailField
+                    {...detailFieldProps}
+                    label="Concession"
+                    value={formatNumber(detail.concessionAmount ?? 0, 'INR')}
+                  />
+                  <DetailField
+                    {...detailFieldProps}
+                    label="Late fee"
+                    value={formatNumber(detail.lateFeeAmount ?? 0, 'INR')}
+                    secondary={detail.lateFeeExplanation}
+                  />
+                  {detail.lateFeeWaivedAmount != null && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Late fee waived"
+                      value={formatNumber(detail.lateFeeWaivedAmount, 'INR')}
+                    />
+                  )}
+                  {detail.refundAmount != null && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Refund"
+                      value={formatNumber(detail.refundAmount, 'INR')}
+                      secondary={detail.refundDescription}
+                    />
+                  )}
+                  {detail.scheduledTotal != null && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Scheduled total"
+                      value={formatNumber(detail.scheduledTotal, 'INR')}
+                    />
+                  )}
+                  {detail.prorationExplanation && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Proration"
+                      value={detail.prorationExplanation}
+                      secondary={
+                        detail.prorationPolicyName
+                          ? `${detail.prorationPolicyName}${detail.prorationPolicyVersionNumber != null ? `, v${detail.prorationPolicyVersionNumber}` : ''}`
+                          : undefined
+                      }
+                      fullWidth
+                    />
+                  )}
+                  {detail.charge?.explanation && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Charge explanation"
+                      value={detail.charge.explanation}
+                      fullWidth
+                    />
+                  )}
+                  {detail.charge?.waivedAmount != null && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Charge waived"
+                      value={formatNumber(detail.charge.waivedAmount, 'INR')}
+                    />
+                  )}
+                </DetailGrid>
+              </FormSectionCard>
               {allowWaivers &&
                 (detail.charge ? (
                   <FeeWaiverToggle
@@ -475,7 +628,11 @@ export default function CollectionLedgerTable({
           </DialogScrollContent>
         )}
         <DialogActions>
-          <Button onClick={closeDetail}>Close</Button>
+          <CancelButton
+            buttonText="Close"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+            onClick={closeDetail}
+          />
         </DialogActions>
       </CustomDialog>
     </Stack>

@@ -200,7 +200,7 @@ describe('Student List workspace', () => {
       divisionId: 'division-1',
     });
     expect(mocks.optionsInput).toEqual({ academicYearId: 'year-2' });
-    mocks.table.onServerPagination(1, 25);
+    mocks.table.onServerPagination(2, 25);
     expect(pushedParams()).toMatchObject({
       dashboard: 'directory',
       year: 'year-2',
@@ -304,6 +304,21 @@ describe('Student List workspace', () => {
       population: 'Former',
       board: 'board-2',
       search: 'Shah',
+      page: '0',
+    });
+  });
+  it('resets academic filters without losing the population, search, or sort', () => {
+    mocks.params = new URLSearchParams(
+      'population=Former&board=board-1&medium=medium-1&class=class-1&division=division-1&search=Shah&sort=name%20desc&page=2'
+    );
+    render(<StudentDirectory />);
+    expect(screen.getByText('Board: CBSE')).toBeVisible();
+    expect(screen.getByText('Medium: English')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset academic filters' }));
+    expect(pushedParams()).toEqual({
+      population: 'Former',
+      search: 'Shah',
+      sort: 'name desc',
       page: '0',
     });
   });
@@ -414,6 +429,67 @@ describe('Student List workspace', () => {
       mocks.table.columns.filter((column: any) => column.sticky).map((column: any) => column.id)
     ).toEqual(['status', 'actions']);
     expect(mocks.table.data[0].classDivision).toBe('Class 1 / A');
+    expect(mocks.table.columns.every((column: any) => column.align === 'left')).toBe(true);
+    expect(
+      mocks.table.columns.filter((column: any) => column.isFilter).map((column: any) => column.id)
+    ).toEqual(['name', 'grNumber', 'classDivision', 'rollNo', 'status']);
+    expect(mocks.table.columns.at(-1)).toMatchObject({
+      id: 'actions',
+      isFilter: false,
+      isSort: false,
+      excludeFromExport: true,
+    });
+    expect(mocks.table.serverSideFilter).toBe(true);
+  });
+
+  it('restores column criteria and sends filter changes to the server without losing scope or search', () => {
+    const filters = [{ column: 'rollNo', operator: 'between', min: 2, max: 7 }];
+    mocks.params = new URLSearchParams({
+      population: 'Former',
+      board: 'board-1',
+      search: 'Shah',
+      sort: 'name desc',
+      page: '2',
+      columnFilters: JSON.stringify(filters),
+    });
+    render(<StudentDirectory />);
+    expect(mocks.input.columnFilters).toEqual(filters);
+    expect(mocks.table.filters[0]).toMatchObject({
+      column: 'rollNo',
+      type: 'between',
+      value: { min: 2, max: 7 },
+      valueType: 'number',
+    });
+    mocks.table.onServerFilter([
+      ...mocks.table.filters,
+      { column: 'status', type: 'equals', value: 8, valueType: 'enum' },
+    ]);
+    expect(pushedParams()).toMatchObject({
+      population: 'Former',
+      board: 'board-1',
+      search: 'Shah',
+      sort: 'name desc',
+      page: '0',
+    });
+    expect(JSON.parse(pushedParams().columnFilters)).toEqual([
+      ...filters,
+      { column: 'status', operator: 'equals', value: '8' },
+    ]);
+    mocks.table.onServerFilter([]);
+    expect(pushedParams()).toEqual({
+      population: 'Former',
+      board: 'board-1',
+      search: 'Shah',
+      sort: 'name desc',
+      page: '0',
+    });
+    mocks.table.onClearCriteria();
+    expect(pushedParams()).toEqual({
+      population: 'Former',
+      board: 'board-1',
+      sort: 'name desc',
+      page: '0',
+    });
   });
 
   it('offers Active recovery from an empty Former view without clearing table sort', () => {

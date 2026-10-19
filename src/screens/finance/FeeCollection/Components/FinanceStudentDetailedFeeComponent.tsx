@@ -10,6 +10,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import FinanceFeeAuditDrawer from 'src/screens/finance/AuditTrail/components/FinanceFeeAuditDrawer';
+import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 
 import FeeConcession from './ViewDetailsComponent/FeeConcession';
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
@@ -68,6 +69,8 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
   collectFeesDialog,
   viewDialog,
 }) => {
+  const collectionAccess = useFinancePermissions('Finance.Fees.FeeCollections');
+  const auditAccess = useFinancePermissions('Finance.Auditing');
   // Initialize tab state, defaulting to 'overview'
   const tabs = useTabs('overview');
   const [auditDrawerOpen, setAuditDrawerOpen] = useState(false);
@@ -108,26 +111,31 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
         </CustomTabs>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon="mdi:history" />}
-            onClick={() => setAuditDrawerOpen(true)}
-          >
-            Audit Trail
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<CreditCardIcon />}
-            color="primary"
-            size="small"
-            onClick={() => {
-              collectFeesDialog.onTrue();
-              viewDialog.onFalse();
-            }}
-          >
-            Collect Fees
-          </Button>
+          {auditAccess.canView && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Iconify icon="mdi:history" />}
+              onClick={() => setAuditDrawerOpen(true)}
+            >
+              Audit Trail
+            </Button>
+          )}
+          {collectionAccess.canAdd && (
+            <Button
+              variant="contained"
+              startIcon={<CreditCardIcon />}
+              color="primary"
+              size="small"
+              onClick={() => {
+                if (!collectionAccess.canAdd) return;
+                collectFeesDialog.onTrue();
+                viewDialog.onFalse();
+              }}
+            >
+              Collect Fees
+            </Button>
+          )}
         </Box>
       </Box>
 

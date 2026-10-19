@@ -89,6 +89,8 @@ export interface ICustomizableTableProps {
   onSearchInputChange?: (searchTerm: string) => void;
   onServerSearch?: (searchTerm: string) => void;
   onServerFilter?: (filters: IParams['filters']) => void;
+  /** Atomically clear search and column filters when the owning server query controls both. */
+  onClearCriteria?: () => void;
   totalCount?: number;
   maxServerRowsPerPage?: number;
   handleRowClick?: (row: IData, index: number) => void;

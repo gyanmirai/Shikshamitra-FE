@@ -262,7 +262,7 @@ export const financePermissions = {
   },
   reports: `${defaultModulePermissionName}${defaultFinancePermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultFinancePermissionName}Notification`,
-  auditTrail: `${defaultModulePermissionName}${defaultFinancePermissionName}Auditing`,
+  auditTrail: `${defaultFinancePermissionName}Auditing.View`,
   adjustments: `${defaultFinancePermissionName}Fees.Adjustment`,
   // Legacy permissions (kept for backward compatibility)
   invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}InvoiceReceipt`,
@@ -319,7 +319,7 @@ const financeModule = {
               _action: 'fee-collection',
               shortcutKey: 'Alt+F+2+1',
               shortcutKeyName: 'Alt+F+2+1',
-              permissionName: financePermissions.fees.collections,
+              permissionName: `${financePermissions.fees.collections}.View`,
               icon: menuIconView('mdi:hand-coin-outline'),
             },
             {
@@ -328,7 +328,7 @@ const financeModule = {
               _action: 'fee-charges',
               shortcutKey: 'Alt+F+2+2',
               shortcutKeyName: 'Alt+F+2+2',
-              permissionName: financePermissions.fees.charges,
+              permissionName: `${financePermissions.fees.charges}.View`,
               icon: menuIconView('mdi:cash-plus'),
             },
             {
@@ -346,7 +346,7 @@ const financeModule = {
               _action: 'invoices-and-receipts',
               shortcutKey: 'Alt+F+2+3',
               shortcutKeyName: 'Alt+F+2+3',
-              permissionName: financePermissions.fees.invoicesAndReceipts,
+              permissionName: `${financePermissions.fees.invoicesAndReceipts}.View`,
               icon: menuIconView('mdi:receipt-text-outline'),
             },
             {
@@ -355,7 +355,7 @@ const financeModule = {
               _action: 'fee-concession',
               shortcutKey: 'Alt+F+2+4',
               shortcutKeyName: 'Alt+F+2+4',
-              permissionName: financePermissions.fees.concessions,
+              permissionName: `${financePermissions.fees.concessions}.View`,
               icon: menuIconView('mdi:ticket-percent-outline'),
             },
             {
@@ -364,7 +364,7 @@ const financeModule = {
               _action: 'fee-adjustments',
               shortcutKey: 'Alt+F+2+J',
               shortcutKeyName: 'Alt+F+2+J',
-              permissionName: financePermissions.fees.adjustment,
+              permissionName: `${financePermissions.fees.adjustment}.View`,
               icon: menuIconView('mdi:tune-variant'),
             },
             {
@@ -391,7 +391,7 @@ const financeModule = {
                   _action: 'fee-category',
                   shortcutKey: 'Alt+F+2+S+1',
                   shortcutKeyName: 'Alt+F+2+S+1',
-                  permissionName: financePermissions.fees.settings.feeCategory,
+                  permissionName: `${financePermissions.fees.settings.feeCategory}.View`,
                   icon: menuIconView('mdi:shape-outline'),
                 },
                 // {
@@ -400,7 +400,7 @@ const financeModule = {
                 //   _action: 'fee-head',
                 //   shortcutKey: 'Alt+F+2+S+2',
                 //   shortcutKeyName: 'Alt+F+2+S+2',
-                //   permissionName: financePermissions.fees.settings.feeHead,
+                //   permissionName: `${financePermissions.fees.settings.feeHead}.View`,
                 //   icon: menuIconView('mdi:format-header-pound'),
                 // },
                 // {
@@ -409,7 +409,7 @@ const financeModule = {
                 //   _action: 'receipt-book',
                 //   shortcutKey: 'Alt+F+2+S+3',
                 //   shortcutKeyName: 'Alt+F+2+S+3',
-                //   permissionName: financePermissions.fees.settings.receiptBook,
+                //   permissionName: `${financePermissions.fees.settings.receiptBook}.View`,
                 //   icon: menuIconView('mdi:book-open-outline'),
                 // },
                 {
@@ -418,7 +418,7 @@ const financeModule = {
                   _action: 'payment-terms',
                   shortcutKey: 'Alt+F+2+S+4',
                   shortcutKeyName: 'Alt+F+2+S+4',
-                  permissionName: financePermissions.fees.settings.paymentTerms,
+                  permissionName: `${financePermissions.fees.settings.paymentTerms}.View`,
                   icon: menuIconView('mdi:calendar-check-outline'),
                 },
                 {
@@ -436,7 +436,7 @@ const financeModule = {
                   _action: 'concession-type-setting',
                   shortcutKey: 'Alt+F+2+S+5',
                   shortcutKeyName: 'Alt+F+2+S+5',
-                  permissionName: financePermissions.fees.settings.concessionType,
+                  permissionName: `${financePermissions.fees.settings.concessionType}.View`,
                   icon: menuIconView('mdi:ticket-outline'),
                 },
                 {
@@ -445,7 +445,7 @@ const financeModule = {
                   _action: 'charge-category',
                   shortcutKey: 'Alt+F+2+S+6',
                   shortcutKeyName: 'Alt+F+2+S+6',
-                  permissionName: financePermissions.fees.settings.chargeCategory,
+                  permissionName: `${financePermissions.fees.settings.chargeCategory}.View`,
                   icon: menuIconView('mdi:tag-plus-outline'),
                 },
               ],
@@ -481,7 +481,7 @@ const financeModule = {
               _action: 'reconciliation',
               shortcutKey: 'Alt+F+3+1',
               shortcutKeyName: 'Alt+F+3+1',
-              permissionName: financePermissions.accounts.reconciliation,
+              permissionName: `${financePermissions.accounts.reconciliation}.View`,
               icon: menuIconView('mdi:scale-balance'),
             },
             {

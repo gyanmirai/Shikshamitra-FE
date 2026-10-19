@@ -9,6 +9,18 @@ export default function PermissionActionNotes({ action }: { action: MatrixAction
       variant="caption"
       sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}
     >
+      {action.names.some((name) => name.startsWith('Finance.')) && action.action === 'Add' && (
+        <Typography variant="caption" color="inherit" sx={{ display: 'block' }}>
+          Includes creation, editing, status changes and the approval actions supported by this
+          feature. Maker/checker restrictions still apply.
+        </Typography>
+      )}
+      {action.names.some((name) => name.startsWith('Finance.')) && action.action === 'Delete' && (
+        <Typography variant="caption" color="inherit" sx={{ display: 'block' }}>
+          Includes supported deletion, cancellation, void and reversal actions. Posted records
+          remain subject to the financial workflow rules.
+        </Typography>
+      )}
       {action.rule === 'mixed' && (
         <Typography variant="caption" color="inherit" sx={{ display: 'block', mt: 0.5 }}>
           This action contains mixed rules. A choice applies to the mapped permissions in this

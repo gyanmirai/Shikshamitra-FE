@@ -15,7 +15,8 @@ export interface ThreeDotsDirectAction {
   disabled?: boolean;
   loading?: boolean;
   tooltip?: ReactNode;
-  onClick: MouseEventHandler<HTMLButtonElement>;
+  href?: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }
 
 export interface ThreeDotsActionsOptions {

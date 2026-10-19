@@ -1,11 +1,40 @@
 import { it, expect, describe } from 'vitest';
 
 import {
-  toPaise,
   roundUpToRupee,
   allocatePayment,
+  selectedChargesInOrder,
   safeRoundingDifference,
 } from './paymentAllocationUtils';
+
+import type { IFeeCharge } from '../../Components/type';
+
+describe('selectedChargesInOrder', () => {
+  it('uses the cashier order for partial allocations and omits stale charge IDs', () => {
+    const charges: IFeeCharge[] = [
+      {
+        chargeId: 'first',
+        chargeName: 'First',
+        sourceType: 'Charge',
+        sourceId: 'first',
+        amount: 100,
+      },
+      {
+        chargeId: 'second',
+        chargeName: 'Second',
+        sourceType: 'Charge',
+        sourceId: 'second',
+        amount: 200,
+      },
+    ];
+    const ordered = selectedChargesInOrder(charges, ['second', 'missing', 'first']);
+    expect(ordered.map((charge) => charge.chargeId)).toEqual(['second', 'first']);
+    const result = allocatePayment([], ordered, {}, 50);
+    expect(result.allocatedRows.map((row) => row.paidAmount)).toEqual([50, 0]);
+    expect(result.allocatedRows[0].key).toBe('second');
+    expect(charges.map((charge) => charge.chargeId)).toEqual(['first', 'second']);
+  });
+});
 
 describe('roundUpToRupee (Whole Rupee Round-Up Ceiling Rule)', () => {
   it('correctly rounds up amounts with fractions to next whole rupee', () => {

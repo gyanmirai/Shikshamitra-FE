@@ -11,6 +11,7 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
@@ -19,6 +20,7 @@ import { useAdjustment } from './hooks/useAdjustment';
 import AdjustmentForm from './components/AdjustmentForm';
 import AdjustmentView from './components/AdjustmentView';
 import AdjustmentTable from './components/AdjustmentTable';
+import { useFinancePermissions } from '../hooks/useFinancePermissions';
 import ApplyAdjustmentScreen from './components/ApplyAdjustmentScreen';
 import { AdjustmentTabEnum, AdjustmentStatusEnum } from './enums/adjustment.enum';
 import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectForm';
@@ -27,6 +29,7 @@ import type { AdjustmentRequest } from './types/adjustment.types';
 import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
 
 const Adjustments = () => {
+  const access = useFinancePermissions(financePermissions.fees.adjustment);
   const academicFilters = useFinanceAcademicFilters();
   const [activeTab, setActiveTab] = useState(AdjustmentTabEnum.Pending);
   const [selectedAdjustment, setSelectedAdjustment] = useState<AdjustmentRequest | null>(null);
@@ -62,7 +65,7 @@ const Adjustments = () => {
   };
 
   const handleConfirmClose = async (_e: any, isSubmit?: boolean, notes?: string) => {
-    if (isSubmit && selectedAdjustment) {
+    if (isSubmit && selectedAdjustment && access.canAdd) {
       try {
         await rejectAdjustment(selectedAdjustment.id, currentUserName, notes ?? '');
         shikshaMitraToast.success({ message: 'Adjustment request rejected.' });
@@ -81,6 +84,7 @@ const Adjustments = () => {
   };
 
   const handleFormSubmit = async (values: IAdjustmentFullFormValues) => {
+    if (!access.canAdd) return;
     try {
       await createAdjustment(values);
       shikshaMitraToast.success({ message: 'Adjustment request submitted successfully.' });
@@ -111,6 +115,7 @@ const Adjustments = () => {
   };
 
   const canApprove =
+    access.canAdd &&
     (selectedAdjustment?.status === AdjustmentStatusEnum.Pending ||
       selectedAdjustment?.status === AdjustmentStatusEnum.PartiallyApplied) &&
     selectedAdjustment.requestedByUserId !== currentUserId;
@@ -205,6 +210,7 @@ const Adjustments = () => {
           <Button
             size="small"
             variant="contained"
+            disabled={!access.canAdd}
             startIcon={<Add />}
             sx={{ px: '32px' }}
             onClick={() => {
@@ -227,14 +233,16 @@ const Adjustments = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}
-          onCreateAdjustment={() => addDialog.onTrue()}
+          onCreateAdjustment={() => { if (access.canAdd) addDialog.onTrue(); }}
           onView={handleView}
           onApprove={(row) => {
+            if (!access.canAdd) return;
             setSelectedAdjustment(row);
             setApplyFromView(false);
             applyScreen.onTrue();
           }}
           onReject={(row) => {
+            if (!access.canAdd) return;
             setSelectedAdjustment(row);
             confirmDialog.onTrue();
           }}
@@ -242,7 +250,7 @@ const Adjustments = () => {
         />
       )}
 
-      {addDialog.value && (
+      {addDialog.value && access.canAdd && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AdjustmentForm
             onCancel={handleClose}
@@ -286,13 +294,13 @@ const Adjustments = () => {
               confirmDialog.onTrue();
             }}
             showApprove={canApprove}
-            showReject={selectedAdjustment.status === AdjustmentStatusEnum.Pending}
+            showReject={access.canAdd && selectedAdjustment.status === AdjustmentStatusEnum.Pending}
           />
         </Card>
       )}
 
       {/* ── Approval Screen (replaces ApplyAdjustmentDialog) ── */}
-      {applyScreen.value && selectedAdjustment && (
+      {applyScreen.value && selectedAdjustment && access.canAdd && (
         <ApplyAdjustmentScreen
           approvedBy={currentUserName}
           adjustment={selectedAdjustment}

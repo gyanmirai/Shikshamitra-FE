@@ -1,5 +1,8 @@
-import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 import type { useGetStudentRecordsDirectoryQuery } from 'src/redux/student/records/student-records-api';
+import type {
+  StudentDirectoryItem,
+  StudentDirectoryColumnFilter,
+} from 'src/redux/student/records/student-records-types';
 
 import { useMemo } from 'react';
 import { useResponsive } from 'src/hooks/use-responsive';
@@ -7,6 +10,10 @@ import { Stack, Alert, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { directoryStudentName, buildDirectoryColumns } from './student-directory-columns';
+import {
+  directoryTableFilters,
+  serializeDirectoryFilters,
+} from './student-directory-column-filters';
 
 import type { DirectoryRowActions } from './student-directory-columns';
 import type { StudentPopulation } from './student-directory-filter-panel';
@@ -18,6 +25,7 @@ type Props = {
   pageSize: number;
   search: string;
   sorting: string;
+  columnFilters: StudentDirectoryColumnFilter[];
   update: (values: Record<string, string | number | undefined>) => void;
   population: StudentPopulation;
   academicYearReady: boolean;
@@ -32,6 +40,7 @@ export default function StudentDirectoryTable({
   pageSize,
   search,
   sorting,
+  columnFilters,
   update,
   population,
   academicYearReady,
@@ -94,6 +103,12 @@ export default function StudentDirectoryTable({
       serverSidePagination
       serverSideSearch
       serverSideSort
+      serverSideFilter
+      filters={directoryTableFilters(columnFilters)}
+      onServerFilter={(filters) =>
+        update({ columnFilters: serializeDirectoryFilters(filters), page: 0 })
+      }
+      onClearCriteria={() => update({ columnFilters: undefined, search: undefined, page: 0 })}
       serverSideSortMode="single"
       page={page}
       rowsPerPage={pageSize}
@@ -110,7 +125,10 @@ export default function StudentDirectoryTable({
           : []
       }
       onServerPagination={(nextPage, rowsPerPage) =>
-        update({ page: rowsPerPage === pageSize ? nextPage : 0, pageSize: rowsPerPage })
+        update({
+          page: rowsPerPage === pageSize ? Math.max(0, nextPage - 1) : 0,
+          pageSize: rowsPerPage,
+        })
       }
       onServerSearch={(value) => {
         if (value !== search) update({ search: value || undefined, page: 0 });

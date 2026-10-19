@@ -36,6 +36,8 @@ interface ColumnFilterMenuProps {
 }
 
 export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFilterMenuProps) => {
+  const filterTypeLabelId = React.useId();
+  const filterValueLabelId = React.useId();
   const formik = useFormik<{
     min: number | null;
     max: number | null;
@@ -177,8 +179,9 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
             sx={{ mb: 2 }}
             error={formik.touched.filterType && !!formik.errors.filterType}
           >
-            <InputLabel>Filter Type *</InputLabel>
+            <InputLabel id={filterTypeLabelId}>Filter Type *</InputLabel>
             <Select
+              labelId={filterTypeLabelId}
               value={formik.values.filterType}
               onChange={(e) => formik.setFieldValue('filterType', e.target.value)}
               label="Filter Type *"
@@ -201,8 +204,9 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
             size="small"
             error={formik.touched.filterValue && !!formik.errors.filterValue}
           >
-            <InputLabel>{anchorEl.column.label} *</InputLabel>
+            <InputLabel id={filterValueLabelId}>{anchorEl.column.label} *</InputLabel>
             <Select
+              labelId={filterValueLabelId}
               value={formik.values.filterValue ?? ''}
               onChange={(e) => formik.setFieldValue('filterValue', e.target.value)}
               label={`${anchorEl.column.label} *`}

@@ -49,7 +49,17 @@ vi.mock('src/screens/student/records/student-directory', () => ({
   default: ({ rowActions }: any) => (
     <>
       <h1>Student List</h1>
-      {rowActions?.(state.student, { popover: { onClose: state.close } })}
+      {rowActions?.(state.student).map((action: any) =>
+        action.href ? (
+          <a key={action.id} href={action.href}>
+            {action.label}
+          </a>
+        ) : (
+          <button key={action.id} type="button" onClick={action.onClick}>
+            {action.label}
+          </button>
+        )
+      )}
     </>
   ),
 }));
@@ -115,12 +125,10 @@ it('routes authorised status edits through the existing audited change request',
     (name) => ({ name, isGranted: true })
   );
   render(<StudentProfile />);
-  expect(screen.getByRole('menuitem', { name: 'Change status' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: 'Change status for Riya Shah' })).toHaveAttribute(
     'href',
     `${studentPaths.records.changes}?mode=new&student=student-1&section=status`
   );
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Change status' }));
-  expect(state.close).toHaveBeenCalledOnce();
 });
 
 it('reuses the Finance assignment drawer with the selected identity and current year', () => {
@@ -129,13 +137,12 @@ it('reuses the Finance assignment drawer with the selected identity and current 
     isGranted: true,
   }));
   render(<StudentProfile />);
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Assign fee structure' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Assign fee structure for Riya Shah' }));
   expect(screen.getByRole('dialog')).toBeVisible();
   expect(state.feeProps.students).toEqual([
     { id: 'student-1', studentId: 'student-1', studentName: 'Riya Shah' },
   ]);
   expect(state.feeProps.academicYearId).toBe('year-1');
-  expect(state.close).toHaveBeenCalledOnce();
 });
 
 it('opens a selected profile and returns to the preserved list filters and page', () => {

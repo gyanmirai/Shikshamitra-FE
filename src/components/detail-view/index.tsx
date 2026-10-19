@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { TypographyProps } from '@mui/material';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { Box, Typography } from '@mui/material';
@@ -66,11 +67,13 @@ export function DetailField({
   value,
   secondary,
   fullWidth = false,
+  labelTypographyProps,
 }: {
   label: string;
   value?: ReactNode;
   secondary?: string;
   fullWidth?: boolean;
+  labelTypographyProps?: Partial<TypographyProps>;
 }) {
   return (
     <Box sx={{ minWidth: 0, ...(fullWidth && { gridColumn: '1 / -1' }) }}>
@@ -78,13 +81,19 @@ export function DetailField({
         variant="caption"
         component="div"
         color="text.primary"
-        sx={{
-          mb: 0.5,
-          fontWeight: 800,
-          letterSpacing: '0.75px',
-          lineHeight: 1.4,
-          textTransform: 'uppercase',
-        }}
+        {...labelTypographyProps}
+        sx={[
+          {
+            mb: 0.5,
+            fontWeight: 800,
+            letterSpacing: '0.75px',
+            lineHeight: 1.4,
+            textTransform: 'uppercase',
+          },
+          ...(Array.isArray(labelTypographyProps?.sx)
+            ? labelTypographyProps.sx
+            : [labelTypographyProps?.sx]),
+        ]}
       >
         {label}
       </Typography>

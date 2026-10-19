@@ -7,14 +7,15 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-
 import React, { useMemo, useCallback } from 'react';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { financePermissions } from 'src/constants/finance-menu';
+import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetAdjustmentApplicationsQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 import { mapAdjustmentApplicationItem } from '../utils/mapAdjustmentApplication';
 import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from '../../components/FinanceClassDivisionFilter';
@@ -37,6 +38,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   onReject,
   academicFilters,
 }) => {
+  const access = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const localFilters = useFinanceAcademicFilters();
@@ -94,7 +96,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetAdjustmentApplicationsQuery,
     params: listParams,
-    options: { skip: !listParams },
+    options: { skip: !listParams || !access.canView },
   });
 
   const data = useMemo(
@@ -111,7 +113,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
           placement="right-top"
           actions={[
             { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => onView(row) },
-            ...(isPending && onApprove
+            ...(access.canAdd && isPending && onApprove
               ? [
                   {
                     id: 'approve',
@@ -122,7 +124,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
                   },
                 ]
               : []),
-            ...(isPending && onReject
+            ...(access.canAdd && isPending && onReject
               ? [
                   {
                     id: 'reject',
@@ -137,7 +139,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         />
       );
     },
-    [onView, onApprove, onReject]
+    [access.canAdd, onView, onApprove, onReject]
   );
 
   return (

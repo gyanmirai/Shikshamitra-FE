@@ -2,14 +2,24 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
+import React, { useId, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
-import { Paper, Stack, Checkbox, Typography, FormControlLabel } from '@mui/material';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import {
+  Box,
+  Paper,
+  Stack,
+  Button,
+  Collapse,
+  Checkbox,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,6 +117,11 @@ const FeeLedgerFilterBar = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const resolvedYearId = academicYearId ?? currentYear?.id;
   const tabs = useTabs(filters.activeTab);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterPanelId = useId();
+  const activeFilterCount = [filters.month, filters.feeHead, filters.status].filter(
+    (value) => value !== 'All'
+  ).length;
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(_, newValue);
@@ -152,85 +167,121 @@ const FeeLedgerFilterBar = ({
   ];
 
   return (
-    <Paper variant="outlined" sx={{ p: 1, flexShrink: 0 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <CustomSelect
-          fullWidth
-          label="Month"
-          options={monthOptions}
-          value={filters.month}
-          size="small"
-          isLoading={isMonthsLoading}
-          onChange={(value) => onFilterChange({ ...filters, month: String(value) })}
-        />
-        <CustomSelect
-          fullWidth
-          label="Fee Head"
-          options={feeHeadOptions}
-          labelKey="name"
-          valueKey="id"
-          value={filters.feeHead}
-          size="small"
-          isLoading={isFeeHeadLoading || isFeeHeadFetching}
-          onChange={(value) => onFilterChange({ ...filters, feeHead: String(value) })}
-        />
-        <CustomSelect
-          fullWidth
-          label="Status"
-          options={STATUS_OPTIONS}
-          value={filters.status}
-          size="small"
-          onChange={(value) => onFilterChange({ ...filters, status: String(value) })}
-        />
-        <CustomSelect
-          fullWidth
-          label="Group by"
-          options={TABS}
-          value={tabs.value as string}
-          size="small"
-          onChange={(value) => handleTabChange({} as React.SyntheticEvent, String(value))}
-        />
-      </Stack>
-      <Stack
-        direction="row"
-        spacing={1}
-        useFlexGap
-        flexWrap="wrap"
-        alignItems="center"
-        sx={{ pt: 0.5 }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          {entryCount ?? 0} entries · Select fees
+    <Paper variant="outlined" sx={{ p: 1.5, flexShrink: 0, borderRadius: 2 }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+        <Typography variant="subtitle1" component="h2">
+          Fees for this student
         </Typography>
-        {SELECTION_FILTER_OPTIONS.map((option) => (
-          <FormControlLabel
-            key={option.key}
-            sx={{ m: 0 }}
-            label={<Typography variant="body2">{option.label}</Typography>}
-            control={
-              <Checkbox
-                size="small"
-                checked={
-                  selectionStates?.[option.key]?.checked ?? filters.selectionFilters[option.key]
-                }
-                indeterminate={selectionStates?.[option.key]?.indeterminate ?? false}
-                slotProps={{
-                  input: {
-                    'aria-checked': selectionStates?.[option.key]?.indeterminate
-                      ? 'mixed'
-                      : undefined,
-                  },
-                }}
-                disabled={
-                  (option.key === 'firstSixMonths' || option.key === 'lastSixMonths') &&
-                  (isMonthsLoading || !academicYearMonths?.length)
-                }
-                onChange={(_, checked) => handleSelectionFilterToggle(option.key, checked)}
-              />
-            }
-          />
-        ))}
+        <Button
+          size="small"
+          variant="outlined"
+          color={activeFilterCount ? 'primary' : 'inherit'}
+          startIcon={<Iconify icon="solar:filter-linear" width={18} />}
+          aria-expanded={filtersOpen}
+          aria-controls={filterPanelId}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
+        </Button>
       </Stack>
+      <Collapse in={filtersOpen}>
+        <Box id={filterPanelId} role="region" aria-label="Fee filters" sx={{ pt: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <CustomSelect
+              fullWidth
+              label="Month"
+              options={monthOptions}
+              value={filters.month}
+              size="small"
+              isLoading={isMonthsLoading}
+              onChange={(value) => onFilterChange({ ...filters, month: String(value) })}
+            />
+            <CustomSelect
+              fullWidth
+              label="Fee Head"
+              options={feeHeadOptions}
+              labelKey="name"
+              valueKey="id"
+              value={filters.feeHead}
+              size="small"
+              isLoading={isFeeHeadLoading || isFeeHeadFetching}
+              onChange={(value) => onFilterChange({ ...filters, feeHead: String(value) })}
+            />
+            <CustomSelect
+              fullWidth
+              label="Status"
+              options={STATUS_OPTIONS}
+              value={filters.status}
+              size="small"
+              onChange={(value) => onFilterChange({ ...filters, status: String(value) })}
+            />
+            <CustomSelect
+              fullWidth
+              label="Group by"
+              options={TABS}
+              value={tabs.value as string}
+              size="small"
+              onChange={(value) => handleTabChange({} as React.SyntheticEvent, String(value))}
+            />
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+            sx={{ pt: 0.5 }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              {entryCount ?? 0} entries · Select fees
+            </Typography>
+            {SELECTION_FILTER_OPTIONS.map((option) => (
+              <FormControlLabel
+                key={option.key}
+                sx={{ m: 0 }}
+                label={<Typography variant="body2">{option.label}</Typography>}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={
+                      selectionStates?.[option.key]?.checked ?? filters.selectionFilters[option.key]
+                    }
+                    indeterminate={selectionStates?.[option.key]?.indeterminate ?? false}
+                    slotProps={{
+                      input: {
+                        'aria-checked': selectionStates?.[option.key]?.indeterminate
+                          ? 'mixed'
+                          : undefined,
+                      },
+                    }}
+                    disabled={
+                      (option.key === 'firstSixMonths' || option.key === 'lastSixMonths') &&
+                      (isMonthsLoading || !academicYearMonths?.length)
+                    }
+                    onChange={(_, checked) => handleSelectionFilterToggle(option.key, checked)}
+                  />
+                }
+              />
+            ))}
+          </Stack>
+        </Box>
+      </Collapse>
+      {activeFilterCount > 0 && !filtersOpen && (
+        <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1} sx={{ pt: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            {activeFilterCount} active {activeFilterCount === 1 ? 'filter' : 'filters'}
+          </Typography>
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() =>
+              onFilterChange({ ...filters, month: 'All', feeHead: 'All', status: 'All' })
+            }
+          >
+            Clear filters
+          </Button>
+        </Stack>
+      )}
     </Paper>
   );
 };

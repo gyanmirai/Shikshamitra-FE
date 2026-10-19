@@ -459,7 +459,7 @@ function RegisterContent({
           onClose={() => setSelected(null)}
         />
       )}
-      {add.value && (
+      {add.value && canAdd && (
         <ManualEntryForm direction={direction} period={period} month={month} onClose={closeAdd} />
       )}
     </>
