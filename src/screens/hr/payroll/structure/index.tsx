@@ -23,6 +23,7 @@ import {
 } from 'src/screens/hr/employee/payroll-profile-utils';
 import {
   Box,
+  Card,
   Link,
   Stack,
   Alert,
@@ -129,7 +130,7 @@ function SalaryStructureWorkspace() {
   }, [legacySetup, employeeId, from, returnHref, router, month, hasRequestedMonth]);
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.5} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
         heading="Payroll Structure"
         headingComponent="h1"
@@ -172,7 +173,7 @@ function SalaryStructureWorkspace() {
         <Alert severity="error">You do not have permission to view salary details.</Alert>
       ) : (
         <>
-          <Paper variant="outlined" sx={{ p: 1, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          <Card sx={{ p: 1, display: 'flex', gap: 1.5, flexWrap: 'wrap', overflow: 'visible' }}>
             <PaginatedSearchSelect
               label="Staff"
               fetchOptions={fetchEmployees}
@@ -201,7 +202,7 @@ function SalaryStructureWorkspace() {
               }}
               sx={{ width: { xs: '100%', sm: 190 } }}
             />
-          </Paper>
+          </Card>
           {!employeeId ? (
             <Paper variant="outlined" sx={{ p: 3 }}>
               <Typography variant="body2" color="text.secondary">

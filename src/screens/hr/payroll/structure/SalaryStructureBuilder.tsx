@@ -18,6 +18,7 @@ import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -643,17 +644,13 @@ export function SalaryStructureBuilder({
       </Typography>
       <Button
         size="small"
-        variant="contained"
-        color="primary"
+        variant="outlined"
+        color="inherit"
         startIcon={<Iconify icon="solar:eye-bold" />}
         onClick={calculateSalary}
         loading={operation === 'calculate'}
         loadingPosition="start"
         sx={{
-          '&:not(.Mui-disabled)': {
-            bgcolor: 'primary.dark',
-            '&:hover': { bgcolor: 'primary.darker' },
-          },
           ...(actionContainer
             ? { gridColumn: { xs: 1, sm: 3 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
             : {}),
@@ -698,11 +695,11 @@ export function SalaryStructureBuilder({
     </>
   );
   return (
-    <Box display="grid" gap={2}>
+    <Box display="grid" gap={2.5} sx={{ minWidth: 0 }}>
       <Box
         component="fieldset"
         disabled={busy}
-        sx={{ border: 0, p: 0, m: 0, minWidth: 0, display: 'grid', gap: 2 }}
+        sx={{ border: 0, p: 0, m: 0, minWidth: 0, display: 'grid', gap: 2.5 }}
       >
         <Box
           display="flex"
@@ -731,226 +728,230 @@ export function SalaryStructureBuilder({
             }}
           />
         </Box>
-        <Typography variant="subtitle1">Salary details</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Preview a full month before saving. Attendance and monthly adjustments are applied in Run
-          Payroll.
-        </Typography>
-        {templateChangeRequired && (
-          <Alert
-            severity="warning"
-            action={
-              <Button size="small" onClick={() => setTemplateChangeAccepted(true)}>
-                Use current template
-              </Button>
-            }
-          >
-            This salary was saved with an earlier template version. Using the current template may
-            change its earnings breakdown.
-          </Alert>
-        )}
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth size="small" disabled={!canManage || busy}>
-              <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
-              <Select
-                labelId={salaryTemplateLabelId}
-                label="Salary template"
-                value={selectedTemplate?.id || ''}
-                onChange={(event) => chooseTemplate(event.target.value)}
-              >
-                {templates.map((template) => (
-                  <MenuItem key={template.id} value={template.id}>
-                    {template.name}
-                    {template.isDefault ? ' (School default)' : ''}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Effective month"
-              name="effectiveMonth"
-              autoComplete="off"
-              type="month"
-              value={effectiveMonth}
-              disabled={!canManage || busy}
-              onChange={(event) => {
-                setEffectiveMonth(event.target.value);
-                setCalculation(null);
-              }}
-              slotProps={{ inputLabel: { shrink: true } }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <NumericFormatCustom
-              fullWidth
-              size="small"
-              roundToWholeRupees={false}
-              name="monthlyAmount"
-              autoComplete="off"
-              label={
-                salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
+        <FormSectionCard
+          icon="solar:wallet-money-bold"
+          title="Salary details"
+          descriptionTooltip="Preview a full month before saving. Attendance and monthly adjustments are applied in Run Payroll."
+          sx={{ border: 0 }}
+          contentSpacing={3}
+        >
+          {templateChangeRequired && (
+            <Alert
+              severity="warning"
+              action={
+                <Button size="small" onClick={() => setTemplateChangeAccepted(true)}>
+                  Use current template
+                </Button>
               }
-              value={monthlyAmount || ''}
-              allowNegative
-              isAllowed={() => true}
-              disabled={!canManage || busy}
-              onValueChange={({ floatValue }, { source }) => {
-                if (source !== 'event') return;
-                setMonthlyAmount(floatValue ?? 0);
-                setCalculation(null);
-              }}
-              onBlur={() => setAmountTouched(true)}
-              error={amountTouched && amountInvalid}
-              helperText={
-                amountTouched && amountInvalid ? 'Enter an amount greater than zero.' : ''
-              }
-              slotProps={{ htmlInput: { inputMode: 'decimal' } }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth size="small" disabled={!canManage || busy}>
-              <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
-              <Select
-                labelId={salaryBasisLabelId}
-                label="Amount basis"
-                value={salaryBasis}
+            >
+              This salary was saved with an earlier template version. Using the current template may
+              change its earnings breakdown.
+            </Alert>
+          )}
+          <Grid container columnSpacing={2} rowSpacing={3}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small" disabled={!canManage || busy}>
+                <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
+                <Select
+                  labelId={salaryTemplateLabelId}
+                  label="Salary template"
+                  value={selectedTemplate?.id || ''}
+                  onChange={(event) => chooseTemplate(event.target.value)}
+                >
+                  {templates.map((template) => (
+                    <MenuItem key={template.id} value={template.id}>
+                      {template.name}
+                      {template.isDefault ? ' (School default)' : ''}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Effective month"
+                name="effectiveMonth"
+                autoComplete="off"
+                type="month"
+                value={effectiveMonth}
+                disabled={!canManage || busy}
                 onChange={(event) => {
-                  setSalaryBasis(event.target.value as SalaryBasis);
+                  setEffectiveMonth(event.target.value);
                   setCalculation(null);
                 }}
-              >
-                <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
-                <MenuItem value="GROSS">Monthly salary</MenuItem>
-              </Select>
-            </FormControl>
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <NumericFormatCustom
+                fullWidth
+                size="small"
+                roundToWholeRupees={false}
+                name="monthlyAmount"
+                autoComplete="off"
+                label={
+                  salaryBasis === 'EMPLOYER_COST'
+                    ? 'Monthly cost to school (CTC)'
+                    : 'Monthly salary'
+                }
+                value={monthlyAmount || ''}
+                allowNegative
+                isAllowed={() => true}
+                disabled={!canManage || busy}
+                onValueChange={({ floatValue }, { source }) => {
+                  if (source !== 'event') return;
+                  setMonthlyAmount(floatValue ?? 0);
+                  setCalculation(null);
+                }}
+                onBlur={() => setAmountTouched(true)}
+                error={amountTouched && amountInvalid}
+                helperText={
+                  amountTouched && amountInvalid ? 'Enter an amount greater than zero.' : ''
+                }
+                slotProps={{ htmlInput: { inputMode: 'decimal' } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth size="small" disabled={!canManage || busy}>
+                <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
+                <Select
+                  labelId={salaryBasisLabelId}
+                  label="Amount basis"
+                  value={salaryBasis}
+                  onChange={(event) => {
+                    setSalaryBasis(event.target.value as SalaryBasis);
+                    setCalculation(null);
+                  }}
+                >
+                  <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
+                  <MenuItem value="GROSS">Monthly salary</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="subtitle1" mb={1}>
-              Statutory deductions
-            </Typography>
-            <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
-              <Box sx={{ gridColumn: '1 / -1' }}>
-                <StatutoryProfileEditor
-                  employeeId={employeeId}
-                  month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
-                  savedProfile={savedStatutoryProfile}
-                  draftMode
-                  pfSettings={
-                    <Stack spacing={1.5}>
-                      <FormControl
-                        fullWidth
-                        size="small"
-                        disabled={
-                          !canManage ||
-                          busy ||
-                          !pfApplicable ||
-                          pfRulesError ||
-                          (statutoryDraft?.pfChoice === null && !continuingPfMember)
-                        }
-                      >
-                        <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-                        <Select
-                          labelId={pfRuleLabelId}
-                          label="PF rule"
-                          value={pfRuleId}
-                          onChange={(event) => {
-                            setPfRuleId(event.target.value);
-                            setCalculation(null);
-                          }}
-                        >
-                          {pfRules.map((rule: any) => (
-                            <MenuItem key={rule.id} value={rule.id}>
-                              {rule.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <TextField
-                        select
-                        size="small"
-                        fullWidth
-                        label="Previous PF membership"
-                        value={pfEnrollment.membership}
-                        disabled={!canManage || busy}
+        </FormSectionCard>
+        <FormSectionCard
+          icon="solar:shield-check-bold"
+          title="Statutory deductions"
+          sx={{ border: 0 }}
+        >
+          <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <StatutoryProfileEditor
+                employeeId={employeeId}
+                month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
+                savedProfile={savedStatutoryProfile}
+                draftMode
+                pfSettings={
+                  <Stack spacing={1.5}>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      disabled={
+                        !canManage ||
+                        busy ||
+                        !pfApplicable ||
+                        pfRulesError ||
+                        (statutoryDraft?.pfChoice === null && !continuingPfMember)
+                      }
+                    >
+                      <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+                      <Select
+                        labelId={pfRuleLabelId}
+                        label="PF rule"
+                        value={pfRuleId}
                         onChange={(event) => {
-                          setPfEnrollment((value) => ({
-                            ...value,
-                            membership: event.target.value as PfEnrollment['membership'],
-                          }));
+                          setPfRuleId(event.target.value);
                           setCalculation(null);
                         }}
                       >
-                        <MenuItem value="UNKNOWN">Needs review</MenuItem>
-                        <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
-                        <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
-                      </TextField>
-                      {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
-                        <TextField
-                          size="small"
-                          fullWidth
-                          label="Employee consent reference"
-                          value={pfEnrollment.consentReference ?? ''}
-                          disabled={!canManage || busy}
-                          helperText="Required for voluntary enrollment above the coverage ceiling."
-                          onChange={(event) => {
-                            setPfEnrollment((value) => ({
-                              ...value,
-                              consentReference: event.target.value,
-                            }));
-                            setCalculation(null);
-                          }}
-                        />
-                      )}
-                      {calculation?.pfEligibility && (
-                        <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
-                          PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
-                          {formatPayrollCurrency(
-                            calculation.pfEligibility.grossSalary ?? calculation.grossSalary
-                          )}
-                          . PF calculation wages:{' '}
-                          {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage
-                          ceiling:{' '}
-                          {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
-                          {calculation.pfEligibility.issueCode
-                            ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
-                            : ''}
-                        </Alert>
-                      )}
-                    </Stack>
+                        {pfRules.map((rule: any) => (
+                          <MenuItem key={rule.id} value={rule.id}>
+                            {rule.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      select
+                      size="small"
+                      fullWidth
+                      label="Previous PF membership"
+                      value={pfEnrollment.membership}
+                      disabled={!canManage || busy}
+                      onChange={(event) => {
+                        setPfEnrollment((value) => ({
+                          ...value,
+                          membership: event.target.value as PfEnrollment['membership'],
+                        }));
+                        setCalculation(null);
+                      }}
+                    >
+                      <MenuItem value="UNKNOWN">Needs review</MenuItem>
+                      <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
+                      <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
+                    </TextField>
+                    {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
+                      <TextField
+                        size="small"
+                        fullWidth
+                        label="Employee consent reference"
+                        value={pfEnrollment.consentReference ?? ''}
+                        disabled={!canManage || busy}
+                        helperText="Required for voluntary enrollment above the coverage ceiling."
+                        onChange={(event) => {
+                          setPfEnrollment((value) => ({
+                            ...value,
+                            consentReference: event.target.value,
+                          }));
+                          setCalculation(null);
+                        }}
+                      />
+                    )}
+                    {calculation?.pfEligibility && (
+                      <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
+                        PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
+                        {formatPayrollCurrency(
+                          calculation.pfEligibility.grossSalary ?? calculation.grossSalary
+                        )}
+                        . PF calculation wages:{' '}
+                        {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage ceiling:{' '}
+                        {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
+                        {calculation.pfEligibility.issueCode
+                          ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
+                          : ''}
+                      </Alert>
+                    )}
+                  </Stack>
+                }
+                pfEnrollmentRecorded={Boolean(currentRevision)}
+                disabled={!canManage || busy}
+                grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
+                onDraftChange={(draft) => {
+                  if (draft && !initialMonth && !suggestedMonthRef.current) {
+                    suggestedMonthRef.current = [
+                      draft.effectiveMonth,
+                      dateOfJoining?.slice(0, 7) || '',
+                    ]
+                      .sort()
+                      .at(-1)!;
+                    setEffectiveMonth(suggestedMonthRef.current);
                   }
-                  pfEnrollmentRecorded={Boolean(currentRevision)}
-                  disabled={!canManage || busy}
-                  grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
-                  onDraftChange={(draft) => {
-                    if (draft && !initialMonth && !suggestedMonthRef.current) {
-                      suggestedMonthRef.current = [
-                        draft.effectiveMonth,
-                        dateOfJoining?.slice(0, 7) || '',
-                      ]
-                        .sort()
-                        .at(-1)!;
-                      setEffectiveMonth(suggestedMonthRef.current);
-                    }
-                    setStatutoryDraft(draft);
-                    if (draft)
-                      setPfChoice(
-                        draft.pfChoice == null ? null : draft.pfChoice ? 'OPT_IN' : 'OPT_OUT'
-                      );
-                  }}
-                />
-              </Box>
+                  setStatutoryDraft(draft);
+                  if (draft)
+                    setPfChoice(
+                      draft.pfChoice == null ? null : draft.pfChoice ? 'OPT_IN' : 'OPT_OUT'
+                    );
+                }}
+              />
             </Box>
-          </Grid>
-        </Grid>
-
-        <Typography variant="caption" color="text.secondary">
-          Professional tax is applied automatically using the effective salary slab.
-        </Typography>
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Professional tax is applied automatically using the effective salary slab.
+          </Typography>
+        </FormSectionCard>
 
         <Accordion
           disableGutters

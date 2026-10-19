@@ -511,3 +511,6 @@ It discloses an older source-template version before allowing a current-template
 Registration details, staff customization and salary history use progressive disclosure.
 The footer offers Preview salary or Update preview and Save salary; any input change requires a current preview before saving.
 Attendance and one-time adjustments remain in Run Payroll.
+Salary details and statutory settings use the shared form-section cards and the configured Minimal UI card theme.
+The editor has one scrollable form body and a separate persistent footer, with an outlined preview action and a contained save action.
+Employee and school contribution amounts stay together when statutory rows stack on narrow screens.

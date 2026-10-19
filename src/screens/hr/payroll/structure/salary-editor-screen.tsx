@@ -14,7 +14,7 @@ import { useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Link, Alert, Paper, Button, Skeleton } from '@mui/material';
+import { Box, Card, Link, Alert, Button, Skeleton } from '@mui/material';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 import { useSalaryEditorPrefetch } from './use-salary-editor-prefetch';
@@ -50,7 +50,14 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
   return (
     <Box
       data-testid="salary-editor-page"
-      sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
+      sx={{
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
     >
       <CustomBreadcrumbs
         heading="Edit Salary"
@@ -133,17 +140,26 @@ function SalaryEditorWorkspace({
   const accessDenied = isError && !isFetching;
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        overflow: 'hidden',
+      }}
     >
       <Box
         data-testid="salary-editor-content"
         sx={{
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
           overflowY: 'auto',
-          p: { xs: 2, md: 3 },
+          p: 0.5,
+          scrollbarGutter: 'stable',
           overscrollBehavior: 'contain',
         }}
       >
@@ -188,7 +204,7 @@ function SalaryEditorWorkspace({
           </Box>
         )}
       </Box>
-      <Box
+      <Card
         data-testid="salary-editor-footer"
         sx={{
           display: 'grid',
@@ -198,8 +214,6 @@ function SalaryEditorWorkspace({
           gap: 1,
           px: 2,
           py: 1.5,
-          borderTop: 1,
-          borderColor: 'divider',
           bgcolor: 'background.paper',
         }}
       >
@@ -213,7 +227,7 @@ function SalaryEditorWorkspace({
           Back
         </Button>
         <Box ref={setActionContainer} sx={{ display: 'contents' }} />
-      </Box>
-    </Paper>
+      </Card>
+    </Box>
   );
 }

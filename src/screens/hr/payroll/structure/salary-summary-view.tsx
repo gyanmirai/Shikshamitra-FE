@@ -6,7 +6,17 @@ import type {
 } from 'src/redux/hr/compensation-revision-api';
 
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
-import { Box, Chip, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Stack,
+  Divider,
+  CardHeader,
+  Typography,
+  CardContent,
+} from '@mui/material';
 
 const money = (amount: number | null) =>
   amount === null ? 'Unavailable' : formatPayrollCurrency(amount);
@@ -19,89 +29,91 @@ const statusLabels = {
 
 export function StatutorySummary({ schemes }: { schemes: SalaryStatutorySummary[] }) {
   return (
-    <Stack component="section" aria-label="Statutory deductions" spacing={1}>
-      <Typography variant="subtitle1">Statutory deductions</Typography>
-      <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
-        <Stack divider={<Divider />}>
+    <Card component="section" aria-label="Statutory deductions" sx={{ minWidth: 0 }}>
+      <CardHeader title="Statutory deductions" titleTypographyProps={{ component: 'h2' }} />
+      <CardContent>
+        <Stack spacing={2} divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
           {schemes.map((scheme) => (
             <Box
               key={scheme.scheme}
               sx={{
-                p: 1.5,
                 display: 'grid',
-                gridTemplateColumns: {
-                  xs: 'minmax(0, 1fr) auto',
-                  md: '160px minmax(0, 1fr) 120px 120px',
-                },
-                gap: 1.5,
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                gap: 2,
                 alignItems: 'start',
               }}
             >
-              <Stack spacing={0.75} alignItems="flex-start">
-                <Typography variant="subtitle2">
-                  {scheme.scheme === 'PT' ? 'Professional tax' : scheme.scheme}
-                </Typography>
-                <Chip
-                  size="small"
-                  variant="soft"
-                  color={
-                    scheme.status === 'APPLIED'
-                      ? 'success'
-                      : scheme.status === 'NEEDS_SETUP'
-                        ? 'warning'
-                        : 'default'
-                  }
-                  label={statusLabels[scheme.status]}
-                />
-              </Stack>
-              <Box
-                sx={{
-                  gridColumn: { xs: '1 / -1', md: 'auto' },
-                  gridRow: { xs: 2, md: 'auto' },
-                  minWidth: 0,
-                }}
-              >
+              <Stack spacing={1} sx={{ minWidth: 0 }}>
+                <Stack direction="row" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
+                  <Typography variant="subtitle2">
+                    {scheme.scheme === 'PT' ? 'Professional tax' : scheme.scheme}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    variant="soft"
+                    color={
+                      scheme.status === 'APPLIED'
+                        ? 'success'
+                        : scheme.status === 'NEEDS_SETUP'
+                          ? 'warning'
+                          : 'default'
+                    }
+                    label={statusLabels[scheme.status]}
+                  />
+                </Stack>
                 <Typography variant="body2" color="text.secondary">
                   {scheme.reason}
                 </Typography>
                 {scheme.registrationPending && (
-                  <Typography variant="caption" color="warning.dark">
+                  <Typography
+                    variant="caption"
+                    sx={(theme) => ({
+                      color: 'warning.dark',
+                      ...theme.applyStyles('dark', { color: 'warning.light' }),
+                    })}
+                  >
                     Registration pending. Contributions still apply when eligible.
                   </Typography>
                 )}
-              </Box>
+              </Stack>
               <Box
                 sx={{
-                  textAlign: 'right',
-                  gridColumn: { xs: 2, md: 'auto' },
-                  gridRow: { xs: 1, md: 'auto' },
-                  fontVariantNumeric: 'tabular-nums',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 2,
+                  alignSelf: 'center',
                 }}
               >
-                <Typography variant="caption" color="text.secondary">
-                  Employee
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {money(scheme.employeeAmount)}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  textAlign: 'right',
-                  gridColumn: { xs: 2, md: 'auto' },
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  School
-                </Typography>
-                <Typography variant="body2">{money(scheme.employerAmount)}</Typography>
+                <Box
+                  sx={{
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Employee
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {money(scheme.employeeAmount)}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    School
+                  </Typography>
+                  <Typography variant="body2">{money(scheme.employerAmount)}</Typography>
+                </Box>
               </Box>
             </Box>
           ))}
         </Stack>
-      </Paper>
-    </Stack>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -117,39 +129,44 @@ export function SalaryTotals({
   employerCost: number | null;
 }) {
   return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
-      <Box
-        component="dl"
-        sx={{
-          m: 0,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', md: 'repeat(4, minmax(0, 1fr))' },
-          gap: 2,
-        }}
-      >
-        {(
-          [
-            ['Full-month gross', gross],
-            ['Employee deductions', deductions],
-            ['Estimated take-home', net],
-            ['Total school cost', employerCost],
-          ] as const
-        ).map(([label, value]) => (
-          <Box key={label} sx={{ minWidth: 0 }}>
-            <Typography component="dt" variant="caption" color="text.secondary">
-              {label}
-            </Typography>
-            <Typography
-              component="dd"
-              variant="h6"
-              sx={{ m: 0, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}
-            >
-              {money(value)}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-    </Paper>
+    <Card sx={{ minWidth: 0 }}>
+      <CardContent>
+        <Box
+          component="dl"
+          sx={{
+            m: 0,
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, minmax(0, 1fr))',
+            },
+            gap: 3,
+          }}
+        >
+          {(
+            [
+              ['Full-month gross', gross],
+              ['Employee deductions', deductions],
+              ['Estimated take-home', net],
+              ['Total school cost', employerCost],
+            ] as const
+          ).map(([label, value]) => (
+            <Box key={label} sx={{ minWidth: 0 }}>
+              <Typography component="dt" variant="caption" color="text.secondary">
+                {label}
+              </Typography>
+              <Typography
+                component="dd"
+                variant="h5"
+                sx={{ m: 0, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}
+              >
+                {money(value)}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -163,34 +180,34 @@ function Breakdown({
   emptyText: string;
 }) {
   return (
-    <Paper component="section" variant="outlined" sx={{ p: 2, height: 1, minWidth: 0 }}>
-      <Typography variant="subtitle1" mb={1}>
-        {title}
-      </Typography>
-      <Stack divider={<Divider />}>
-        {lines.map((line, index) => (
-          <Box
-            key={`${line.code}-${index}`}
-            sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, py: 1 }}
-          >
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>
-              {line.name}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+    <Card component="section" sx={{ height: 1, minWidth: 0 }}>
+      <CardHeader title={title} titleTypographyProps={{ component: 'h2' }} />
+      <CardContent>
+        <Stack spacing={1.5} divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
+          {lines.map((line, index) => (
+            <Box
+              key={`${line.code}-${index}`}
+              sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}
             >
-              {formatPayrollCurrency(line.amount)}
-            </Typography>
-          </Box>
-        ))}
-      </Stack>
-      {!lines.length && (
-        <Typography variant="body2" color="text.secondary" py={1}>
-          {emptyText}
-        </Typography>
-      )}
-    </Paper>
+              <Typography variant="body2" sx={{ overflowWrap: 'anywhere', minWidth: 0 }}>
+                {line.name}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+              >
+                {formatPayrollCurrency(line.amount)}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+        {!lines.length && (
+          <Typography variant="body2" color="text.secondary" py={1}>
+            {emptyText}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

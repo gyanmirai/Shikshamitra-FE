@@ -180,23 +180,17 @@ export function StatutoryProfileFields({
                 }}
               >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                  <Typography component="h3" variant="subtitle2">
-                    {scheme.title}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
-                    {!(scheme.code === 'PF' && pfChoiceRequired) && (
-                      <Switch
-                        checked={apply}
-                        onChange={(_, checked) => form.setFieldValue(scheme.apply, checked)}
-                        disabled={readOnly}
-                        slotProps={{
-                          input: {
-                            'aria-label': scheme.title,
-                            'aria-describedby': `${descriptionId}-${scheme.code}`,
-                          },
-                        }}
-                      />
-                    )}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    useFlexGap
+                    flexWrap="wrap"
+                    sx={{ minWidth: 0 }}
+                  >
+                    <Typography component="h3" variant="subtitle2" sx={{ whiteSpace: 'nowrap' }}>
+                      {scheme.title}
+                    </Typography>
                     <Chip
                       size="small"
                       variant="soft"
@@ -217,6 +211,21 @@ export function StatutoryProfileFields({
                               : 'Registration pending'
                       }
                     />
+                  </Stack>
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+                    {!(scheme.code === 'PF' && pfChoiceRequired) && (
+                      <Switch
+                        checked={apply}
+                        onChange={(_, checked) => form.setFieldValue(scheme.apply, checked)}
+                        disabled={readOnly}
+                        slotProps={{
+                          input: {
+                            'aria-label': scheme.title,
+                            'aria-describedby': `${descriptionId}-${scheme.code}`,
+                          },
+                        }}
+                      />
+                    )}
                   </Stack>
                 </Stack>
                 <Typography

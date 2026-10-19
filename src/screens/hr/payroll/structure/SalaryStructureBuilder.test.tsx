@@ -395,7 +395,8 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(amount, '30000');
     await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
     const consent = await screen.findByLabelText('Employee consent reference');
-    await user.type(consent, 'Approved voluntary enrollment');
+    await user.click(consent);
+    await user.paste('Approved voluntary enrollment');
     await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
     expect(mocks.calculate).toHaveBeenLastCalledWith(
       expect.objectContaining({
