@@ -8,7 +8,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
-import { useRef, useState, type Ref, useEffect, useImperativeHandle } from 'react';
+import { useRef, useState, type Ref, useEffect, type ReactNode, useImperativeHandle } from 'react';
 import {
   emptyStatutoryProfile,
   useGetStaffStatutoryProfileQuery,
@@ -18,6 +18,8 @@ import {
 import { StatutoryProfileFields, statutoryProfileSchema } from './statutory-profile-fields';
 
 export type StatutoryProfileDraft = {
+  dirty: boolean;
+  effectiveMonth: string;
   profile: StaffStatutoryProfile;
   concurrencyStamp: string | null;
   updatePf: boolean;
@@ -30,6 +32,7 @@ export function StatutoryProfileEditor({
   employeeId,
   month,
   grossSalary,
+  pfSettings,
   draftMode = false,
   pfEnrollmentRecorded = false,
   disabled = false,
@@ -43,6 +46,7 @@ export function StatutoryProfileEditor({
   employeeId: string;
   month?: string;
   grossSalary?: number;
+  pfSettings?: ReactNode;
   draftMode?: boolean;
   pfEnrollmentRecorded?: boolean;
   disabled?: boolean;
@@ -179,6 +183,8 @@ export function StatutoryProfileEditor({
   const serializedDraft = JSON.stringify(
     data
       ? {
+          dirty,
+          effectiveMonth: data.effectiveMonth,
           profile: values,
           concurrencyStamp: baselineStamp.current,
           updatePf: data.canManagePf,
@@ -211,6 +217,8 @@ export function StatutoryProfileEditor({
     <Stack spacing={1.5}>
       <StatutoryProfileFields
         form={form}
+        compact={draftMode}
+        pfSettings={pfSettings}
         grossSalary={grossSalary}
         canManagePf={data.canManagePf}
         canManageEsic={data.canManageEsic}
@@ -225,8 +233,8 @@ export function StatutoryProfileEditor({
         }}
       />
       <Typography variant="caption" color="text.secondary">
-        Applies from {fDate(`${data.effectiveMonth}-01`, 'MMM YYYY')}. Registration numbers are
-        required for deductions. Locked payroll remains unchanged.
+        Applies from {fDate(`${data.effectiveMonth}-01`, 'MMM YYYY')}. Missing registration numbers
+        do not stop contributions. Locked payroll remains unchanged.
       </Typography>
       {!draftMode && !editorRef && (data.canManagePf || data.canManageEsic) && (
         <Button

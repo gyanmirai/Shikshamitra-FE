@@ -169,3 +169,11 @@ Generation submits a template ID, revision, and declared parameters only.
 The server resolves fixed rules and source permissions.
 Client sorting/filtering is disabled on captured result pages to avoid applying conditions to only one page.
 Staff choices use scoped server search and preserve selected labels.
+
+## Employee salary summary client
+
+compensation-revision-api.ts exposes getSalarySummary for GET /payroll/employees/{employeeId}/salary-summary with month=YYYY-MM.
+The response supplies full-month totals, recurring lines and server-authored PF/ESIC/PT decisions without registration identifiers.
+Salary setup, employee payroll registration and statutory settings invalidate this read model through the existing RTK Query tag families.
+Salary-template calculations return the same statutory-summary contract for preview presentation.
+The frontend does not calculate financial totals or infer eligibility from registration-number presence.

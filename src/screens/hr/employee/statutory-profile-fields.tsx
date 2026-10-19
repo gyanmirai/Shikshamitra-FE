@@ -1,10 +1,12 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { StaffStatutoryProfile } from 'src/redux/hr/statutory-profile-api';
 
 import * as Yup from 'yup';
 import { useId } from 'react';
+import { ExpandMore } from '@mui/icons-material';
 import { hasStatutoryNumber } from 'src/redux/hr/statutory-profile-api';
 import {
   Box,
@@ -15,9 +17,12 @@ import {
   Radio,
   Switch,
   TextField,
+  Accordion,
   RadioGroup,
   Typography,
   FormControlLabel,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 export const statutoryProfileSchema = Yup.object({
@@ -67,6 +72,8 @@ export function StatutoryProfileFields({
   canViewEsic = true,
   disabled = false,
   grossSalary,
+  pfSettings,
+  compact = false,
   pfChoiceRequired = false,
   pfChoice = null,
   onPfChoice,
@@ -78,6 +85,8 @@ export function StatutoryProfileFields({
   canViewEsic?: boolean;
   disabled?: boolean;
   grossSalary?: number;
+  pfSettings?: ReactNode;
+  compact?: boolean;
   pfChoiceRequired?: boolean;
   pfChoice?: boolean | null;
   onPfChoice?: (apply: boolean) => void;
@@ -171,23 +180,17 @@ export function StatutoryProfileFields({
                 }}
               >
                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                  <Typography component="h3" variant="subtitle2">
-                    {scheme.title}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
-                    {!(scheme.code === 'PF' && pfChoiceRequired) && (
-                      <Switch
-                        checked={apply}
-                        onChange={(_, checked) => form.setFieldValue(scheme.apply, checked)}
-                        disabled={readOnly}
-                        slotProps={{
-                          input: {
-                            'aria-label': scheme.title,
-                            'aria-describedby': `${descriptionId}-${scheme.code}`,
-                          },
-                        }}
-                      />
-                    )}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    useFlexGap
+                    flexWrap="wrap"
+                    sx={{ minWidth: 0 }}
+                  >
+                    <Typography component="h3" variant="subtitle2" sx={{ whiteSpace: 'nowrap' }}>
+                      {scheme.title}
+                    </Typography>
                     <Chip
                       size="small"
                       variant="soft"
@@ -204,10 +207,25 @@ export function StatutoryProfileFields({
                           : !apply
                             ? 'Off'
                             : registered
-                              ? 'Ready'
-                              : 'Pending'
+                              ? 'Number recorded'
+                              : 'Registration pending'
                       }
                     />
+                  </Stack>
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+                    {!(scheme.code === 'PF' && pfChoiceRequired) && (
+                      <Switch
+                        checked={apply}
+                        onChange={(_, checked) => form.setFieldValue(scheme.apply, checked)}
+                        disabled={readOnly}
+                        slotProps={{
+                          input: {
+                            'aria-label': scheme.title,
+                            'aria-describedby': `${descriptionId}-${scheme.code}`,
+                          },
+                        }}
+                      />
+                    )}
                   </Stack>
                 </Stack>
                 <Typography
@@ -243,21 +261,55 @@ export function StatutoryProfileFields({
                     />
                   </RadioGroup>
                 )}
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns:
-                      scheme.code === 'PF'
-                        ? 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))'
-                        : '1fr',
-                    gap: 1.5,
-                  }}
-                >
-                  {field(scheme.number, scheme.numberLabel, readOnly)}
-                  {scheme.code === 'PF' && field('uanNumber', 'UAN (optional)', readOnly)}
-                </Box>
+                {scheme.code === 'PF' && pfSettings}
+                {compact ? (
+                  <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+                    <AccordionSummary expandIcon={<ExpandMore />} sx={{ px: 0, minHeight: 36 }}>
+                      <Typography variant="body2">{scheme.code} registration details</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ px: 0 }}>
+                      {apply && !registered && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                          mb={1.5}
+                        >
+                          Contributions still apply when eligible. Add the number when available.
+                        </Typography>
+                      )}
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns:
+                            scheme.code === 'PF'
+                              ? 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))'
+                              : '1fr',
+                          gap: 1.5,
+                        }}
+                      >
+                        {field(scheme.number, scheme.numberLabel, readOnly)}
+                        {scheme.code === 'PF' && field('uanNumber', 'UAN', readOnly)}
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                ) : (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        scheme.code === 'PF'
+                          ? 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))'
+                          : '1fr',
+                      gap: 1.5,
+                    }}
+                  >
+                    {field(scheme.number, scheme.numberLabel, readOnly)}
+                    {scheme.code === 'PF' && field('uanNumber', 'UAN', readOnly)}
+                  </Box>
+                )}
                 {!apply && field(scheme.reason, `Reason for turning ${scheme.code} off`, readOnly)}
-                {(!apply || !registered) && (
+                {(!apply || (!compact && !registered)) && (
                   <Alert
                     severity="warning"
                     variant="outlined"
@@ -272,7 +324,7 @@ export function StatutoryProfileFields({
                   >
                     {!apply
                       ? `${scheme.code} is turned off for this employee. No contribution will be applied.`
-                      : `No ${scheme.numberLabel} is recorded. Eligible contributions will be ₹0 until it is provided.`}
+                      : `No ${scheme.numberLabel} is recorded. Contributions still apply when eligible. Add the number when available.`}
                   </Alert>
                 )}
               </Stack>

@@ -188,7 +188,7 @@ Global typecheck remains blocked by two unrelated `primaryText` prop errors on `
 
 Verify an inactive employee can open **ESIC details** under Payroll > Statutory Details and from salary setup.
 Cover View and ManageEnrollment separately, failed-save draft preservation, readiness refresh, and removal of stale salary calculations after registration changes.
-Covered employees with pending registration can activate with valid salary rules; payroll shows suppressed contributions and a registration warning.
+Covered employees with pending registration can activate with valid salary rules; payroll applies eligible contributions and shows a registration warning.
 Keep the server-side activation test in the backend compensation API suite authoritative.
 
 On 2026-10-01, the focused salary-builder and ESIC settings suites passed all 12 tests, with typecheck and scoped lint passing.
@@ -652,7 +652,7 @@ Assert compensation requests contain no temporary component collections and mont
 Run `e2e/hr/employee/employee-salary-structure.spec.ts` for page entry, draft preservation, ESIC drawer focus, legacy redirects, and return navigation.
 The salary editor tests cover denied access, unavailable staff reads, persistent footer actions, guarded navigation, and validated return destinations.
 They also cover formatted decimal and large amounts with unchanged numeric payloads, inline amount errors, missing-reason focus, and calculation/save feedback through the history refresh.
-Verify the compact employee/ESIC header, readable history months, annual equivalent labels, and footer wrapping in the authenticated browser at desktop and narrow widths.
+Verify the compact employee/ESIC header, readable history months, full-month summary amounts, and footer wrapping in the authenticated browser at desktop and narrow widths.
 
 ## Enrollment and salary document coverage
 
@@ -697,3 +697,15 @@ The remaining deployment-workflow assertion targets a file identical to main and
 Deployment files remain unchanged.
 The final signed-in Codex browser smoke verifies the library, dedicated generator, and completed 900-row result.
 All-module docs validation additionally encounters unrelated testing-document taxonomy and sibling-checkout link failures; the HR-only validators pass.
+
+## Salary structure preview regression
+
+The focused structure suite covers month and staff URL context, pending registration, unavailable totals, retry, salary permissions, preview freshness, draft protection and explicit template upgrades.
+Run the compensation client contract tests and statutory-profile editor tests with the structure suite.
+Authenticated browser acceptance covers the overview, salary edit, full-month preview, saving and returning to the same staff/month context at 390x844, 768x1024 and 1440x900.
+Backend-owned payroll review, lock and immutable payslip checks are documented in the backend HR testing guide.
+The real local API regression in `e2e/hr/payroll-salary-structure.guest.spec.ts` exercises both light and dark themes with a disposable seeded employee.
+It checks preview/save parity, return context, registration follow-up, responsive contribution rows, horizontal containment, and non-overlapping editor header, body and footer at 390, 768 and 1440 pixel widths.
+It also opens salary history and verifies month-change confirmation, draft retention on cancel, and the selected month's profile and concurrency version on the next preview.
+Verify that the monthly-payroll handoff preserves the working salary month and that identifier warnings permit reviewed rows to lock while missing attendance still blocks them.
+The visual reference is the [Minimal UI invoice editor](https://minimals.cc/dashboard/invoice/e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2/edit), adapted through the project's existing card theme, compact controls and inline HR breadcrumbs.

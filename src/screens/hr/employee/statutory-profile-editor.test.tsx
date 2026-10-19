@@ -160,7 +160,10 @@ describe('shared statutory registration editor', () => {
         })
       )
     );
-    expect(screen.getByText(/No ESIC insurance number is recorded/)).toBeVisible();
+    expect(screen.getByText('Registration pending')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'ESIC registration details' }));
+    expect(screen.getByLabelText('ESIC insurance number')).toHaveValue('');
+    expect(screen.getByText(/Contributions still apply when eligible/)).toBeVisible();
   });
 
   it('requires an explicit PF choice above the boundary even when an ESIC-only version exists', async () => {
