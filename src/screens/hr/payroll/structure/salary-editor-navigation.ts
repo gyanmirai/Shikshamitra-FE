@@ -4,8 +4,8 @@ export function salaryStructureHref(employeeId: string) {
   return `${hrPaths.payroll.structure}?${new URLSearchParams({ employeeId })}`;
 }
 
-export function salaryEditorHref(employeeId: string, returnTo: string) {
-  return `${hrPaths.payroll.salaryEditor(employeeId)}?${new URLSearchParams({ returnTo })}`;
+export function salaryEditorHref(employeeId: string, returnTo: string, month?: string) {
+  return `${hrPaths.payroll.salaryEditor(employeeId)}?${new URLSearchParams({ returnTo, ...(month ? { month } : {}) })}`;
 }
 
 /** Return navigation is limited to the two salary entry screens on this origin. */

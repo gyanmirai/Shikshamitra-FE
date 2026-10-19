@@ -161,3 +161,11 @@ Profile writes invalidate only the affected employee salary/profile tags and Run
 `src/redux/hr/payslip-api.ts` includes presentation settings and tenant logo upload.
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
+
+## Employee salary summary client
+
+compensation-revision-api.ts exposes getSalarySummary for GET /payroll/employees/{employeeId}/salary-summary with month=YYYY-MM.
+The response supplies full-month totals, recurring lines and server-authored PF/ESIC/PT decisions without registration identifiers.
+Salary setup, employee payroll registration and statutory settings invalidate this read model through the existing RTK Query tag families.
+Salary-template calculations return the same statutory-summary contract for preview presentation.
+The frontend does not calculate financial totals or infer eligibility from registration-number presence.

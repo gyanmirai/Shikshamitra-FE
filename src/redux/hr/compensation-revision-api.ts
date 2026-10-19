@@ -67,6 +67,37 @@ export type CompensationRevision = {
   estimatedStatutoryDeductions?: Array<{ code: string; name: string; amount: number }>;
 };
 
+export type SalarySummaryLine = { code: string; name: string; amount: number };
+export type SalaryStatutorySummary = {
+  scheme: 'PF' | 'ESIC' | 'PT';
+  status: 'APPLIED' | 'NOT_APPLICABLE' | 'TURNED_OFF' | 'NEEDS_SETUP';
+  reason: string;
+  registrationPending: boolean;
+  employeeAmount: number | null;
+  employerAmount: number | null;
+  contributionWages?: number | null;
+  employeePercentage?: number | null;
+  employerPercentage?: number | null;
+  ruleId?: string | null;
+  ruleVersion?: number | null;
+};
+export type SalarySummary = {
+  month: string;
+  revisionId: string | null;
+  salaryEffectiveMonth: string | null;
+  grossSalary: number;
+  totalDeductions: number | null;
+  netSalary: number | null;
+  employerCost: number | null;
+  quotedEmployerCost: number | null;
+  isComplete: boolean;
+  earnings: SalarySummaryLine[];
+  deductions: SalarySummaryLine[];
+  employerContributions: SalarySummaryLine[];
+  statutorySummary: SalaryStatutorySummary[];
+  blockingIssues: string[];
+};
+
 export type SaveEmployeeCompensation = {
   statutoryProfileOverride?: StaffStatutoryProfile;
   statutoryProfileConcurrencyStamp?: string | null;
@@ -100,6 +131,17 @@ export const buildSaveEmployeeCompensationRequest = (
 
 export const compensationRevisionApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
+    getSalarySummary: builder.query<SalarySummary, { employeeId: string; month: string }>({
+      query: ({ employeeId, month }) => ({
+        url: `/payroll/employees/${employeeId}/salary-summary`,
+        params: { month },
+      }),
+      providesTags: [
+        employeeType.salaryStructure,
+        payrollStructureType.statutoryScheme,
+        employeeType.employeePayroll,
+      ],
+    }),
     getCompensationRevisions: builder.query<{ items: CompensationRevision[] }, string>({
       query: compensationEndpoint,
       providesTags: [employeeType.salaryStructure],
@@ -135,6 +177,7 @@ export const compensationRevisionApi = employeeApi.injectEndpoints({
 
 export const {
   useGetCompensationRevisionsQuery,
+  useGetSalarySummaryQuery,
   useGetEffectiveCompensationRevisionQuery,
   useSaveEmployeeCompensationMutation,
   useGetEmployeeActivationReadinessQuery,

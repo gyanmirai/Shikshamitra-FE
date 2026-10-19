@@ -8,7 +8,7 @@ export const PAYROLL_ISSUE_LABELS: Record<
     color: 'warning',
   },
   PF_NUMBER_MISSING: {
-    label: 'PF number missing. Contributions are skipped until registration is completed.',
+    label: 'PF number missing. Contributions apply when eligible. Add the number when available.',
     severity: 'WARNING',
     color: 'warning',
   },
@@ -19,7 +19,7 @@ export const PAYROLL_ISSUE_LABELS: Record<
   },
   ESI_NUMBER_MISSING: {
     label:
-      'ESIC insurance number missing. Contributions are skipped until registration is completed.',
+      'ESIC insurance number missing. Contributions apply when eligible. Add the number when available.',
     severity: 'WARNING',
     color: 'warning',
   },
@@ -114,9 +114,10 @@ export const PAYROLL_ISSUE_LABELS: Record<
     color: 'error',
   },
   ESI_INSURANCE_NUMBER_REQUIRED: {
-    label: 'ESI insurance number required',
-    severity: 'CRITICAL',
-    color: 'error',
+    label:
+      'ESIC registration pending. Contributions apply when eligible. Add the insurance number when available.',
+    severity: 'WARNING',
+    color: 'warning',
   },
   ESI_PWD_RELIEF_EVIDENCE_REQUIRED: {
     label: 'PwD employer-share relief evidence needs review',

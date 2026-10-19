@@ -14,7 +14,7 @@ import { useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Link, Alert, Paper, Button, Skeleton } from '@mui/material';
+import { Box, Card, Link, Alert, Button, Skeleton } from '@mui/material';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 import { useSalaryEditorPrefetch } from './use-salary-editor-prefetch';
@@ -23,6 +23,9 @@ import { salaryStructureHref, resolveSalaryReturnHref } from './salary-editor-na
 export default function SalaryEditorScreen({ employeeId }: { employeeId: string }) {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
+  const initialMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(searchParams.get('month') || '')
+    ? searchParams.get('month')!
+    : undefined;
   const router = useRouter();
   const { permissions, loading, permissionsInitialized } = useSelector(
     (state: RootState) => state.auth
@@ -47,7 +50,14 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
   return (
     <Box
       data-testid="salary-editor-page"
-      sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
+      sx={{
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
     >
       <CustomBreadcrumbs
         heading="Edit Salary"
@@ -67,6 +77,7 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
         <SalaryEditorWorkspace
           key={employeeId}
           employeeId={employeeId}
+          initialMonth={initialMonth}
           returnHref={returnHref}
           requestNavigation={requestNavigation}
           editorState={editorState}
@@ -92,11 +103,13 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
 function SalaryEditorWorkspace({
   employeeId,
   returnHref,
+  initialMonth,
   requestNavigation,
   editorState,
   onEditorStateChange,
 }: {
   employeeId: string;
+  initialMonth?: string;
   returnHref: string;
   requestNavigation: (proceed: () => void) => void;
   editorState: { dirty: boolean; busy: boolean };
@@ -113,6 +126,7 @@ function SalaryEditorWorkspace({
     refetch,
   } = useGetEmployeeByIdQuery(employeeId);
   const [actionContainer, setActionContainer] = useState<HTMLDivElement | null>(null);
+  const [effectiveMonth, setEffectiveMonth] = useState(initialMonth);
   const formik = useFormik({
     initialValues: {
       firstName: employee?.firstName,
@@ -127,17 +141,26 @@ function SalaryEditorWorkspace({
   const accessDenied = isError && !isFetching;
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        overflow: 'hidden',
+      }}
     >
       <Box
         data-testid="salary-editor-content"
         sx={{
           flex: 1,
           minHeight: 0,
+          minWidth: 0,
           overflowY: 'auto',
-          p: { xs: 2, md: 3 },
+          p: 0.5,
+          scrollbarGutter: 'stable',
           overscrollBehavior: 'contain',
         }}
       >
@@ -161,6 +184,8 @@ function SalaryEditorWorkspace({
           <Box display="grid" gap={2}>
             <SalaryStructureBuilder
               formik={formik}
+              initialMonth={initialMonth}
+              onEffectiveMonthChange={setEffectiveMonth}
               employeeId={employeeId}
               dateOfJoining={employee.dateOfJoining ?? employee.doj}
               employeeIsActive={
@@ -171,7 +196,7 @@ function SalaryEditorWorkspace({
             />
             <Link
               component={RouterLink}
-              href={hrPaths.payroll.runPayroll}
+              href={`${hrPaths.payroll.runPayroll}${effectiveMonth ? `?${new URLSearchParams({ month: effectiveMonth })}` : ''}`}
               variant="body2"
               underline="hover"
               sx={{ justifySelf: 'start' }}
@@ -181,7 +206,7 @@ function SalaryEditorWorkspace({
           </Box>
         )}
       </Box>
-      <Box
+      <Card
         data-testid="salary-editor-footer"
         sx={{
           display: 'grid',
@@ -191,8 +216,6 @@ function SalaryEditorWorkspace({
           gap: 1,
           px: 2,
           py: 1.5,
-          borderTop: 1,
-          borderColor: 'divider',
           bgcolor: 'background.paper',
         }}
       >
@@ -206,7 +229,7 @@ function SalaryEditorWorkspace({
           Back
         </Button>
         <Box ref={setActionContainer} sx={{ display: 'contents' }} />
-      </Box>
-    </Paper>
+      </Card>
+    </Box>
   );
 }

@@ -138,6 +138,7 @@ export type PfEligibility = {
   issueCode?: string | null;
 };
 export type SalaryTemplateCalculation = {
+  statutorySummary: import('./compensation-revision-api').SalaryStatutorySummary[];
   pfEnrollment?: PfEnrollment;
   pfEligibility?: PfEligibility;
   templateId: string;

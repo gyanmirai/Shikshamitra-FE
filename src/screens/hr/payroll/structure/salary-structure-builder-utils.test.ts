@@ -9,6 +9,7 @@ import {
 } from './salary-structure-builder-utils';
 
 const calculation: SalaryTemplateCalculation = {
+  statutorySummary: [],
   templateId: 'template-1',
   templateVersionId: 'version-2',
   templateVersion: 2,
@@ -72,7 +73,6 @@ const calculation: SalaryTemplateCalculation = {
 };
 
 describe('salary structure builder application', () => {
-
   it('uses the local calendar month instead of UTC', () => {
     expect(getLocalMonthKey(new Date(2026, 7, 1, 0, 15))).toBe('2026-08');
   });
