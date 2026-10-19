@@ -22,6 +22,11 @@ The form's `use-employee-policy-access.ts` coordinates effective-permission chec
 Policy denial is handled by `employee-policy-access-notice.tsx`, including the backend's policy-specific submission error, while other save errors retain the existing form handler.
 The access-refresh action reads the current user's permission catalogue; it never calls a permission-update endpoint.
 
+Staff Directory uses the paged `getEmployee` query only while the directory is visible and reuses responses less than 30 seconds old.
+Employee mutations retain their existing cache invalidation.
+The table uses `currentData` so background refreshes keep the current rows visible and a newly requested page never displays the previous page's staff.
+Staff profile and edit screens load their code when opened.
+
 ## Client map
 
 Use this table before searching `src/redux`:
