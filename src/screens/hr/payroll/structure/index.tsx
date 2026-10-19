@@ -273,7 +273,7 @@ function SalaryStructureWorkspace() {
               />
               <Link
                 component={RouterLink}
-                href={hrPaths.payroll.runPayroll}
+                href={`${hrPaths.payroll.runPayroll}?${new URLSearchParams({ month })}`}
                 variant="body2"
                 sx={{ alignSelf: 'flex-start' }}
               >

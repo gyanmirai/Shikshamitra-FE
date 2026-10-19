@@ -119,6 +119,10 @@ it('shows totals and all statutory decisions while registration is pending', () 
   expect(screen.getByText('₹16,605')).toBeVisible();
   expect(screen.getByText('Professional tax')).toBeVisible();
   expect(screen.getAllByText(/Registration pending/)).toHaveLength(2);
+  expect(screen.getByRole('link', { name: /Open Run Payroll/ })).toHaveAttribute(
+    'href',
+    '/hr/payroll/run-payroll?month=2026-10'
+  );
   expect(screen.getByRole('link', { name: 'Edit salary' })).toHaveAttribute(
     'href',
     expect.stringContaining('month=2026-10')

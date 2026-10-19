@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
@@ -106,7 +106,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
                 componentId: 'basic',
                 componentName: 'Basic',
                 semanticType: 'BASIC',
-                formulaType: 'FIXED',
+                formulaType: 'FIXED_AMOUNT',
                 value: 5000,
               },
             ],
@@ -205,6 +205,26 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
     });
+  });
+
+  it('confirms month changes before discarding statutory edits and keeps other salary inputs', async () => {
+    const user = userEvent.setup();
+    renderBuilder({ initialMonth: '2026-11' });
+    fireEvent.change(screen.getByLabelText('Monthly cost to school (CTC)'), {
+      target: { value: '18000' },
+    });
+    await user.click(screen.getByRole('button', { name: 'PF registration details' }));
+    fireEvent.change(screen.getByLabelText('PF number'), { target: { value: 'GJ/DRAFT/333' } });
+    fireEvent.change(screen.getByLabelText('Effective month'), { target: { value: '2026-12' } });
+    expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
+    await user.click(screen.getByRole('button', { name: 'Keep current month' }));
+    expect(screen.getByLabelText('PF number')).toHaveValue('GJ/DRAFT/333');
+    fireEvent.change(screen.getByLabelText('Effective month'), { target: { value: '2026-12' } });
+    await user.click(screen.getByRole('button', { name: 'Change month' }));
+    expect(screen.getByLabelText('Effective month')).toHaveValue('2026-12');
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 18,000');
+    await user.click(screen.getByRole('button', { name: 'PF registration details' }));
+    expect(screen.getByLabelText('PF number')).toHaveValue('7');
   });
 
   it('renders staff identity with ESIC access in the editor header', () => {
@@ -458,11 +478,12 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('focuses the missing customization reason and preserves the draft', async () => {
     const user = userEvent.setup();
     renderBuilder();
-    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByLabelText('Monthly cost to school (CTC)'));
+    await user.paste('10000');
     await user.click(screen.getByRole('button', { name: 'Staff-specific customization' }));
     await user.click(screen.getByRole('button', { name: 'Customize' }));
     await user.clear(screen.getByLabelText('Value'));
-    await user.type(screen.getByLabelText('Value'), '6000');
+    await user.paste('6000');
     await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     const reason = screen.getByLabelText(/Customization reason/);

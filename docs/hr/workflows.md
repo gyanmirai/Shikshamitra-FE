@@ -507,10 +507,12 @@ The overview shows full-month gross, employee deductions, estimated take-home, s
 Unavailable statutory calculations show an incomplete estimate instead of zero totals.
 Registration pending appears separately from contribution applicability.
 The salary editor defaults routine changes to the current month or a future joining month, and preserves an explicitly selected month.
+Changing the effective month reloads that month's statutory profile and asks before discarding unsaved statutory edits, while retaining other salary inputs.
 It discloses an older source-template version before allowing a current-template preview.
 Registration details, staff customization and salary history use progressive disclosure.
 The footer offers Preview salary or Update preview and Save salary; any input change requires a current preview before saving.
 Attendance and one-time adjustments remain in Run Payroll.
+Links from the overview and editor carry the selected salary month into Run Payroll, where pending registration remains a warning and genuine payroll setup issues still prevent locking.
 Salary details and statutory settings use the shared form-section cards and the configured Minimal UI card theme.
 The editor has one scrollable form body and a separate persistent footer, with an outlined preview action and a contained save action.
 Employee and school contribution amounts stay together when statutory rows stack on narrow screens.

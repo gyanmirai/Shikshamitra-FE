@@ -64,9 +64,19 @@ vi.mock('src/redux/hr/employeeApi', () => ({
 vi.mock('./SalaryStructureBuilder', async () => {
   const { createPortal } = await import('react-dom');
   return {
-    SalaryStructureBuilder: ({ actionContainer, onEditorStateChange }: any) => (
+    SalaryStructureBuilder: ({
+      actionContainer,
+      onEditorStateChange,
+      onEffectiveMonthChange,
+    }: any) => (
       <>
-        <button type="button" onClick={() => onEditorStateChange({ dirty: true, busy: false })}>
+        <button
+          type="button"
+          onClick={() => {
+            onEffectiveMonthChange?.('2026-12');
+            onEditorStateChange({ dirty: true, busy: false });
+          }}
+        >
           Change input
         </button>
         <button type="button" onClick={() => onEditorStateChange({ dirty: true, busy: true })}>
@@ -86,6 +96,19 @@ vi.mock('./SalaryStructureBuilder', async () => {
       </>
     ),
   };
+});
+it('keeps the monthly payroll handoff aligned with the working salary month', () => {
+  mocks.query = 'month=2026-11';
+  render(<SalaryEditorScreen employeeId="staff" />);
+  expect(screen.getByRole('link', { name: /Manage one-time/ })).toHaveAttribute(
+    'href',
+    '/hr/payroll/run-payroll?month=2026-11'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Change input' }));
+  expect(screen.getByRole('link', { name: /Manage one-time/ })).toHaveAttribute(
+    'href',
+    '/hr/payroll/run-payroll?month=2026-12'
+  );
 });
 beforeEach(() => {
   vi.clearAllMocks();

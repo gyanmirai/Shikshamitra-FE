@@ -68,6 +68,9 @@ test.describe('Payroll salary structure with the real local API', () => {
         timeout: 60_000,
       });
       await expect(page.getByText('Professional tax', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('link', { name: /Open Run Payroll for attendance/ })
+      ).toHaveAttribute('href', `/hr/payroll/run-payroll?month=${month}`);
       await expect(page.getByText(/Registration pending\. Contributions still apply/)).toHaveCount(
         2
       );
@@ -140,6 +143,19 @@ test.describe('Payroll salary structure with the real local API', () => {
         expect(contentBounds!.y + contentBounds!.height).toBeLessThanOrEqual(footerBounds!.y + 1);
         expect(footerBounds!.y + footerBounds!.height).toBeLessThanOrEqual(900);
         await page.screenshot({ path: `.codex/salary-editor-minimal-${themeMode}-${width}.png` });
+        await page.getByRole('button', { name: /^Salary history/ }).click();
+        await page
+          .getByText(/Revision \d+ -/)
+          .first()
+          .scrollIntoViewIfNeeded();
+        await page.screenshot({
+          path: `.codex/salary-history-${themeMode}-${width}.png`,
+          animations: 'disabled',
+        });
+        expect(
+          await content.evaluate((element) => element.scrollWidth <= element.clientWidth)
+        ).toBeTruthy();
+        await page.getByRole('button', { name: /^Salary history/ }).click();
       }
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.getByRole('button', { name: 'Back', exact: true }).click();
@@ -175,6 +191,71 @@ test.describe('Payroll salary structure with the real local API', () => {
       await page.reload();
       await expect(page.getByLabel('Preview month', { exact: true })).toHaveValue(month);
       await expect(page.getByText('Estimated take-home', { exact: true })).toBeVisible();
+      const followingMonth = (offset: number) => {
+        const [year, monthNumber] = month.split('-').map(Number);
+        return new Date(Date.UTC(year, monthNumber - 1 + offset, 1)).toISOString().slice(0, 7);
+      };
+      const firstMonth = followingMonth(1);
+      const secondMonth = followingMonth(2);
+      for (const [effective, number] of [
+        [firstMonth, 'GJ/NOV/111'],
+        [secondMonth, 'GJ/DEC/222'],
+      ]) {
+        const current = await (
+          await page.request.get(`${profileURL}?month=${effective}`, { headers })
+        ).json();
+        const response = await page.request.put(profileURL, {
+          headers,
+          data: {
+            profile: { ...current.profile, pfNumber: number },
+            effectiveMonth: effective,
+            concurrencyStamp: current.concurrencyStamp,
+            idempotencyKey: crypto.randomUUID(),
+            updatePf: true,
+            updateEsic: true,
+          },
+        });
+        expect(response.ok(), await response.text()).toBeTruthy();
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(`/hr/payroll/structure?employeeId=${employeeId}&month=${firstMonth}`);
+      await page.getByRole('link', { name: 'Edit salary', exact: true }).click();
+      await expect(page.getByLabel('Effective month', { exact: true })).toHaveValue(firstMonth, {
+        timeout: 60_000,
+      });
+      await page.getByRole('button', { name: 'PF registration details', exact: true }).click();
+      await expect(page.getByLabel('PF number', { exact: true })).toHaveValue('GJ/NOV/111');
+      await page.getByLabel('PF number', { exact: true }).fill('GJ/DRAFT/333');
+      await page.getByLabel('Effective month', { exact: true }).fill(secondMonth);
+      await page.getByRole('button', { name: 'Keep current month', exact: true }).click();
+      await expect(page.getByLabel('Effective month', { exact: true })).toHaveValue(firstMonth);
+      await expect(page.getByLabel('PF number', { exact: true })).toHaveValue('GJ/DRAFT/333');
+      await page.getByLabel('Effective month', { exact: true }).fill(secondMonth);
+      await page.getByRole('button', { name: 'Change month', exact: true }).click();
+      await page.getByRole('button', { name: 'PF registration details', exact: true }).click();
+      await expect(page.getByLabel('PF number', { exact: true })).toHaveValue('GJ/DEC/222');
+      const previewAfterMonthChange = page.waitForResponse(
+        (response) =>
+          response.url().endsWith('/calculate') && response.request().method() === 'POST'
+      );
+      await page.getByRole('button', { name: /^(Preview salary|Update preview)$/ }).click();
+      const monthPreview = await previewAfterMonthChange;
+      expect(monthPreview.ok(), await monthPreview.text()).toBeTruthy();
+      await expect(page.getByRole('button', { name: 'Save salary', exact: true })).toBeEnabled();
+      // The unsaved month change must be guarded, and monthly payroll must open that working month.
+      const monthlyPayroll = page.getByRole('link', { name: /Manage one-time adjustments/ });
+      await expect(monthlyPayroll).toHaveAttribute(
+        'href',
+        `/hr/payroll/run-payroll?month=${secondMonth}`
+      );
+      await monthlyPayroll.click();
+      await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`/hr/payroll/run-payroll[?]month=${secondMonth}`), {
+        timeout: 60_000,
+      });
+      await expect(page.getByRole('heading', { name: 'Run Payroll', exact: true })).toBeVisible({
+        timeout: 60_000,
+      });
     });
   });
 });

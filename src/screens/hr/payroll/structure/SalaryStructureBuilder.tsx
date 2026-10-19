@@ -18,6 +18,7 @@ import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
@@ -71,6 +72,7 @@ type Props = {
   employeeIsActive?: boolean;
   actionContainer?: HTMLElement | null;
   initialMonth?: string;
+  onEffectiveMonthChange?: (month: string) => void;
   onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
@@ -89,6 +91,7 @@ export function SalaryStructureBuilder({
   employeeIsActive = false,
   actionContainer,
   initialMonth,
+  onEffectiveMonthChange,
   onEditorStateChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -130,6 +133,11 @@ export function SalaryStructureBuilder({
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [salaryBasis, setSalaryBasis] = useState<SalaryBasis>('EMPLOYER_COST');
   const [effectiveMonth, setEffectiveMonth] = useState(initialMonth || getLocalMonthKey());
+  const [pendingMonth, setPendingMonth] = useState<string | null>(null);
+  useEffect(
+    () => onEffectiveMonthChange?.(effectiveMonth),
+    [effectiveMonth, onEffectiveMonthChange]
+  );
   const [monthlyAmount, setMonthlyAmount] = useState(
     Number(formik.values.quotedMonthlyAmount || 0)
   );
@@ -510,6 +518,14 @@ export function SalaryStructureBuilder({
     setCalculation(null);
   };
 
+  const changeEffectiveMonth = (month: string) => {
+    setStatutoryDraft(null);
+    setSavedStatutoryProfile(undefined);
+    setEffectiveMonth(month);
+    setCalculation(null);
+    setPendingMonth(null);
+  };
+
   if (
     templatesLoading ||
     revisionsLoading ||
@@ -610,7 +626,11 @@ export function SalaryStructureBuilder({
   else if (templateChangeRequired) footerStatus = 'Review the template version change';
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
   else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
-  else if (pfChoiceMissing) footerStatus = 'Choose whether to opt in or opt out of PF';
+  else if (pfChoiceMissing)
+    footerStatus =
+      statutoryDraft?.pfChoice === null
+        ? 'Choose whether to opt in or opt out of PF'
+        : 'Review statutory details before previewing';
   else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
   else if (statutoryBlocked)
     footerStatus =
@@ -778,8 +798,10 @@ export function SalaryStructureBuilder({
                 value={effectiveMonth}
                 disabled={!canManage || busy}
                 onChange={(event) => {
-                  setEffectiveMonth(event.target.value);
-                  setCalculation(null);
+                  const month = event.target.value;
+                  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || month === effectiveMonth) return;
+                  if (statutoryDraft?.dirty) setPendingMonth(month);
+                  else changeEffectiveMonth(month);
                 }}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
@@ -840,6 +862,7 @@ export function SalaryStructureBuilder({
           <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
             <Box sx={{ gridColumn: '1 / -1' }}>
               <StatutoryProfileEditor
+                key={effectiveMonth}
                 employeeId={employeeId}
                 month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
                 savedProfile={savedStatutoryProfile}
@@ -1255,6 +1278,22 @@ export function SalaryStructureBuilder({
           {actions}
         </Box>
       )}
+      <ConfirmDialog
+        open={pendingMonth !== null}
+        onClose={() => setPendingMonth(null)}
+        icon="warning"
+        title="Change effective month?"
+        content="Unsaved statutory details will be discarded and the selected month's registration details will load. Other salary inputs will stay as entered."
+        cancelText="Keep current month"
+        action={
+          <Button
+            variant="contained"
+            onClick={() => pendingMonth && changeEffectiveMonth(pendingMonth)}
+          >
+            Change month
+          </Button>
+        }
+      />
     </Box>
   );
 }

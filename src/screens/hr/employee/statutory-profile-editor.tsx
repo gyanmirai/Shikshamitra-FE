@@ -18,6 +18,7 @@ import {
 import { StatutoryProfileFields, statutoryProfileSchema } from './statutory-profile-fields';
 
 export type StatutoryProfileDraft = {
+  dirty: boolean;
   effectiveMonth: string;
   profile: StaffStatutoryProfile;
   concurrencyStamp: string | null;
@@ -182,6 +183,7 @@ export function StatutoryProfileEditor({
   const serializedDraft = JSON.stringify(
     data
       ? {
+          dirty,
           effectiveMonth: data.effectiveMonth,
           profile: values,
           concurrencyStamp: baselineStamp.current,

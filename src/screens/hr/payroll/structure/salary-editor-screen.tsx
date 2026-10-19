@@ -126,6 +126,7 @@ function SalaryEditorWorkspace({
     refetch,
   } = useGetEmployeeByIdQuery(employeeId);
   const [actionContainer, setActionContainer] = useState<HTMLDivElement | null>(null);
+  const [effectiveMonth, setEffectiveMonth] = useState(initialMonth);
   const formik = useFormik({
     initialValues: {
       firstName: employee?.firstName,
@@ -184,6 +185,7 @@ function SalaryEditorWorkspace({
             <SalaryStructureBuilder
               formik={formik}
               initialMonth={initialMonth}
+              onEffectiveMonthChange={setEffectiveMonth}
               employeeId={employeeId}
               dateOfJoining={employee.dateOfJoining ?? employee.doj}
               employeeIsActive={
@@ -194,7 +196,7 @@ function SalaryEditorWorkspace({
             />
             <Link
               component={RouterLink}
-              href={hrPaths.payroll.runPayroll}
+              href={`${hrPaths.payroll.runPayroll}${effectiveMonth ? `?${new URLSearchParams({ month: effectiveMonth })}` : ''}`}
               variant="body2"
               underline="hover"
               sx={{ justifySelf: 'start' }}

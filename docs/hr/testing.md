@@ -188,7 +188,7 @@ Global typecheck remains blocked by two unrelated `primaryText` prop errors on `
 
 Verify an inactive employee can open **ESIC details** under Payroll > Statutory Details and from salary setup.
 Cover View and ManageEnrollment separately, failed-save draft preservation, readiness refresh, and removal of stale salary calculations after registration changes.
-Covered employees with pending registration can activate with valid salary rules; payroll shows suppressed contributions and a registration warning.
+Covered employees with pending registration can activate with valid salary rules; payroll applies eligible contributions and shows a registration warning.
 Keep the server-side activation test in the backend compensation API suite authoritative.
 
 On 2026-10-01, the focused salary-builder and ESIC settings suites passed all 12 tests, with typecheck and scoped lint passing.
@@ -684,4 +684,6 @@ Authenticated browser acceptance covers the overview, salary edit, full-month pr
 Backend-owned payroll review, lock and immutable payslip checks are documented in the backend HR testing guide.
 The real local API regression in `e2e/hr/payroll-salary-structure.guest.spec.ts` exercises both light and dark themes with a disposable seeded employee.
 It checks preview/save parity, return context, registration follow-up, responsive contribution rows, horizontal containment, and non-overlapping editor header, body and footer at 390, 768 and 1440 pixel widths.
+It also opens salary history and verifies month-change confirmation, draft retention on cancel, and the selected month's profile and concurrency version on the next preview.
+Verify that the monthly-payroll handoff preserves the working salary month and that identifier warnings permit reviewed rows to lock while missing attendance still blocks them.
 The visual reference is the [Minimal UI invoice editor](https://minimals.cc/dashboard/invoice/e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2/edit), adapted through the project's existing card theme, compact controls and inline HR breadcrumbs.

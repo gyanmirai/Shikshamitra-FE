@@ -67,7 +67,7 @@ vi.mock('src/components/customizabaleTable', () => ({
       {data.map((row: any) => (
         <div key={row.id}>
           {columns
-            .filter((column: any) => ['checkBox', 'actions'].includes(column.id))
+            .filter((column: any) => ['checkBox', 'issueFilter', 'actions'].includes(column.id))
             .map((column: any) => (
               <div key={column.id}>{column.render(null, row)}</div>
             ))}
@@ -173,6 +173,26 @@ beforeEach(() => {
 });
 
 describe('Run Payroll preview feedback', () => {
+  it('keeps pending identifiers as warnings and still blocks genuine payroll setup issues', async () => {
+    const pending = ['PF_NUMBER_MISSING', 'ESI_NUMBER_MISSING', 'ESI_INSURANCE_NUMBER_REQUIRED'];
+    mocks.preview.data.items[0].issueCodes = pending;
+    const ui = render(view());
+    expect(screen.getByText('Warning • 3')).toBeVisible();
+    await userEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeEnabled();
+    mocks.preview = {
+      ...mocks.preview,
+      data: {
+        ...mocks.preview.data,
+        items: [{ ...mocks.preview.data.items[0], issueCodes: [...pending, 'NO_ATTENDANCE'] }],
+      },
+    };
+    ui.rerender(view());
+    expect(screen.getByText('Critical • 4')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Lock Reviewed' })).toBeDisabled();
+    expect(mocks.lock).not.toHaveBeenCalled();
+  });
+
   it('keeps refresh and readiness together in the register action row', async () => {
     render(view());
     expect(
