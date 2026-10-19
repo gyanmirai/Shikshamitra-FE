@@ -23,6 +23,9 @@ import { salaryStructureHref, resolveSalaryReturnHref } from './salary-editor-na
 export default function SalaryEditorScreen({ employeeId }: { employeeId: string }) {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo');
+  const initialMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(searchParams.get('month') || '')
+    ? searchParams.get('month')!
+    : undefined;
   const router = useRouter();
   const { permissions, loading, permissionsInitialized } = useSelector(
     (state: RootState) => state.auth
@@ -67,6 +70,7 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
         <SalaryEditorWorkspace
           key={employeeId}
           employeeId={employeeId}
+          initialMonth={initialMonth}
           returnHref={returnHref}
           requestNavigation={requestNavigation}
           editorState={editorState}
@@ -92,11 +96,13 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
 function SalaryEditorWorkspace({
   employeeId,
   returnHref,
+  initialMonth,
   requestNavigation,
   editorState,
   onEditorStateChange,
 }: {
   employeeId: string;
+  initialMonth?: string;
   returnHref: string;
   requestNavigation: (proceed: () => void) => void;
   editorState: { dirty: boolean; busy: boolean };
@@ -161,6 +167,7 @@ function SalaryEditorWorkspace({
           <Box display="grid" gap={2}>
             <SalaryStructureBuilder
               formik={formik}
+              initialMonth={initialMonth}
               employeeId={employeeId}
               dateOfJoining={employee.dateOfJoining ?? employee.doj}
               employeeIsActive={

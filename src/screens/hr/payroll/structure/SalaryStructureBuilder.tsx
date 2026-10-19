@@ -10,14 +10,13 @@ import type {
 } from 'src/redux/hr/salary-template-api';
 
 import dayjs from 'dayjs';
-import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
+import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
@@ -47,7 +46,6 @@ import {
   Button,
   Select,
   Tooltip,
-  Divider,
   MenuItem,
   Skeleton,
   TextField,
@@ -63,6 +61,7 @@ import {
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 import { EmployeeEsiDetails } from '../setting/employee-esi-details';
+import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
 
 type Props = {
   formik: FormikProps<any>;
@@ -70,6 +69,7 @@ type Props = {
   dateOfJoining?: string | null;
   employeeIsActive?: boolean;
   actionContainer?: HTMLElement | null;
+  initialMonth?: string;
   onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
@@ -81,28 +81,13 @@ const contractLabel = (value: string) =>
     .replaceAll('_', ' ')
     .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 
-function Summary({ label, amount }: { label: string; amount: number }) {
-  return (
-    <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-        {formatPayrollCurrency(amount)}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">
-        Annual equivalent: {formatPayrollCurrency(amount * 12)}
-      </Typography>
-    </Paper>
-  );
-}
-
 export function SalaryStructureBuilder({
   formik,
   employeeId,
   dateOfJoining,
   employeeIsActive = false,
   actionContainer,
+  initialMonth,
   onEditorStateChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -143,7 +128,7 @@ export function SalaryStructureBuilder({
   const [activateEmployee, activationState] = useUpdateEmployeeStatusMutation();
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [salaryBasis, setSalaryBasis] = useState<SalaryBasis>('EMPLOYER_COST');
-  const [effectiveMonth, setEffectiveMonth] = useState(getLocalMonthKey);
+  const [effectiveMonth, setEffectiveMonth] = useState(initialMonth || getLocalMonthKey());
   const [monthlyAmount, setMonthlyAmount] = useState(
     Number(formik.values.quotedMonthlyAmount || 0)
   );
@@ -154,6 +139,7 @@ export function SalaryStructureBuilder({
     useState<import('src/redux/hr/statutory-profile-api').StaffStatutoryProfileResponse>();
   const [statutoryDraft, setStatutoryDraft] = useState<StatutoryProfileDraft | null>(null);
   const [customizing, setCustomizing] = useState(false);
+  const [templateChangeAccepted, setTemplateChangeAccepted] = useState(false);
   const [overrides, setOverrides] = useState<SalaryRuleOverride[]>([]);
   const [customizationReason, setCustomizationReason] = useState('');
   const [calculation, setCalculation] = useState<SalaryTemplateCalculation | null>(null);
@@ -172,6 +158,7 @@ export function SalaryStructureBuilder({
   const reasonInput = useRef<HTMLInputElement>(null);
   const operationPending = useRef(false);
   const initializedRef = useRef('');
+  const suggestedMonthRef = useRef('');
   const operationKeyRef = useRef('');
   const operationSignatureRef = useRef('');
   const salaryTemplateLabelId = useId();
@@ -211,6 +198,21 @@ export function SalaryStructureBuilder({
       setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
     }
   }, [pfApplicable, pfRuleId, selectedVersion?.defaultPfRuleId, pfRules]);
+  const sourceRevision = revisionData?.items
+    .filter(
+      (item) =>
+        item.status === 'EFFECTIVE' &&
+        item.effectiveMonth.slice(0, 7) <= (initialMonth || getLocalMonthKey())
+    )
+    .sort(
+      (a, b) =>
+        b.effectiveMonth.localeCompare(a.effectiveMonth) || b.revisionNumber - a.revisionNumber
+    )[0];
+  const templateChangeRequired = Boolean(
+    sourceRevision?.sourceSalaryTemplateVersionId &&
+    selectedVersion?.id !== sourceRevision.sourceSalaryTemplateVersionId &&
+    !templateChangeAccepted
+  );
   const exactMonthRevision = useMemo(
     () =>
       revisionData?.items
@@ -234,12 +236,11 @@ export function SalaryStructureBuilder({
     ) {
       return;
     }
-    const source =
-      revisionData?.items.find((revision) => revision.isCurrent) || revisionData?.items[0];
+    const source = sourceRevision;
     if (source) {
       setSelectedTemplateId(source.sourceSalaryTemplateId || selectedTemplate.id);
       setSalaryBasis(source.salaryBasis);
-      setEffectiveMonth(source.effectiveMonth.slice(0, 7));
+      setEffectiveMonth(initialMonth || suggestedMonthRef.current || getLocalMonthKey());
       setMonthlyAmount(source.quotedMonthlyAmount);
       setPfEnrollment(
         source.pfEnrollment ?? { membership: source.pfRuleId ? 'EXISTING_MEMBER' : 'UNKNOWN' }
@@ -255,12 +256,19 @@ export function SalaryStructureBuilder({
       setPfChoice(null);
       setPfRuleId(selectedTemplate.editableVersion.defaultPfRuleId || '');
       const joining = dateOfJoining;
-      if (joining) setEffectiveMonth(dayjs(joining).format('YYYY-MM'));
+      if (joining && !initialMonth)
+        setEffectiveMonth(
+          [suggestedMonthRef.current || getLocalMonthKey(), dayjs(joining).format('YYYY-MM')]
+            .sort()
+            .at(-1)!
+        );
     }
     initializedRef.current = initializationKey;
     setInitialized(true);
   }, [
     dateOfJoining,
+    initialMonth,
+    sourceRevision,
     employeeId,
     revisionData?.items,
     revisionsLoading,
@@ -272,6 +280,7 @@ export function SalaryStructureBuilder({
   useEffect(() => setActivationCompleted(false), [employeeId]);
 
   const signature = JSON.stringify({
+    templateChangeAccepted,
     statutoryProfile: statutoryDraft?.profile,
     statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
     templateVersionId: selectedVersion?.id,
@@ -322,6 +331,7 @@ export function SalaryStructureBuilder({
   const chooseTemplate = (templateId: string) => {
     const template = templates.find((item) => item.id === templateId);
     setSelectedTemplateId(templateId);
+    setTemplateChangeAccepted(true);
     if (template) {
       setSalaryBasis(template.editableVersion.defaultSalaryBasis);
       setPfChoice(null);
@@ -338,6 +348,7 @@ export function SalaryStructureBuilder({
       operationPending.current ||
       !canManage ||
       !selectedVersion ||
+      templateChangeRequired ||
       !Number.isFinite(monthlyAmount) ||
       monthlyAmount <= 0 ||
       !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
@@ -384,6 +395,7 @@ export function SalaryStructureBuilder({
       !canManage ||
       !employeeId ||
       !selectedVersion ||
+      templateChangeRequired ||
       !calculationCurrent ||
       pfChoiceMissing ||
       !calculation ||
@@ -437,11 +449,11 @@ export function SalaryStructureBuilder({
       setBaseline(savedSignatureValue);
       setSavedSignature(savedSignatureValue);
       if (refetchRevisions) await refetchRevisions();
-      toast.success(
-        result.isScheduled
+      shikshaMitraToast.success({
+        message: result.isScheduled
           ? `Salary revision ${result.revisionNumber} is scheduled for ${effectiveMonth}.`
-          : `Salary revision ${result.revisionNumber} is effective.`
-      );
+          : `Salary revision ${result.revisionNumber} is effective.`,
+      });
       if (canActivate) {
         await refetchReadiness();
       }
@@ -472,12 +484,12 @@ export function SalaryStructureBuilder({
         },
       }).unwrap();
       setActivationCompleted(true);
-      toast.success('Staff activated.');
+      shikshaMitraToast.success({ message: 'Staff activated.' });
       if (canActivate) {
         await refetchReadiness();
       }
     } catch (error: any) {
-      toast.error(parseApiProblemDetail(error).detail);
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
     }
   };
 
@@ -522,7 +534,7 @@ export function SalaryStructureBuilder({
         </Grid>
         <Box display="flex" justifyContent="flex-end">
           <Button size="small" variant="contained" disabled>
-            Calculate salary
+            Preview salary
           </Button>
         </Box>
       </Box>
@@ -572,6 +584,7 @@ export function SalaryStructureBuilder({
             'ESI_RATE_OVERRIDE',
             'ESI_APPLY_DISABLED',
             'ESI_NUMBER_MISSING',
+            'ESI_REGISTRATION_PENDING',
             'ESI_BASIS_RECONCILIATION_DIFFERENCE',
             'ESI_STATUTORY_ASSESSMENT_UNAVAILABLE',
           ].includes(code) &&
@@ -587,12 +600,13 @@ export function SalaryStructureBuilder({
     [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ');
   let footerStatus = '';
   if (busy) {
-    footerStatus = operation === 'calculate' ? 'Calculating salary…' : 'Refreshing salary…';
+    footerStatus = operation === 'calculate' ? 'Preparing preview…' : 'Refreshing salary…';
     if (operation === 'save') footerStatus = 'Saving salary…';
     if (activationState.isLoading) footerStatus = 'Activating staff…';
   } else if (!canManage) footerStatus = 'View-only salary';
   else if (hasConflict || revisionsError) footerStatus = 'Review salary history before saving';
   else if (!selectedVersion) footerStatus = 'Choose a salary template';
+  else if (templateChangeRequired) footerStatus = 'Review the template version change';
   else if (amountInvalid) footerStatus = 'Enter an amount greater than zero';
   else if (!/^\d{4}-\d{2}$/.test(effectiveMonth)) footerStatus = 'Choose an effective month';
   else if (pfChoiceMissing) footerStatus = 'Choose whether to opt in or opt out of PF';
@@ -631,7 +645,7 @@ export function SalaryStructureBuilder({
         size="small"
         variant="contained"
         color="primary"
-        startIcon={<Iconify icon="mdi:calculator" />}
+        startIcon={<Iconify icon="solar:eye-bold" />}
         onClick={calculateSalary}
         loading={operation === 'calculate'}
         loadingPosition="start"
@@ -648,6 +662,7 @@ export function SalaryStructureBuilder({
           !canManage ||
           busy ||
           !selectedVersion ||
+          templateChangeRequired ||
           !Number.isFinite(monthlyAmount) ||
           monthlyAmount <= 0 ||
           !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
@@ -655,7 +670,7 @@ export function SalaryStructureBuilder({
           pfChoiceMissing
         }
       >
-        Calculate salary
+        {calculatedSignature ? 'Update preview' : 'Preview salary'}
       </Button>
       <Button
         size="small"
@@ -716,10 +731,23 @@ export function SalaryStructureBuilder({
             }}
           />
         </Box>
-        {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
-          <Typography variant="body2" color="error.main">
-            Enter the staff’s ESIC insurance number before activation.
-          </Typography>
+        <Typography variant="subtitle1">Salary details</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Preview a full month before saving. Attendance and monthly adjustments are applied in Run
+          Payroll.
+        </Typography>
+        {templateChangeRequired && (
+          <Alert
+            severity="warning"
+            action={
+              <Button size="small" onClick={() => setTemplateChangeAccepted(true)}>
+                Use current template
+              </Button>
+            }
+          >
+            This salary was saved with an earlier template version. Using the current template may
+            change its earnings breakdown.
+          </Alert>
         )}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -802,31 +830,112 @@ export function SalaryStructureBuilder({
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Box
-              role="group"
-              aria-label="Provident fund"
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-                alignItems: 'center',
-                gap: { xs: 1.5, sm: 2 },
-                p: 1.25,
-                border: 1,
-                borderRadius: 1,
-                borderColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.24),
-                bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
-              }}
-            >
+            <Typography variant="subtitle1" mb={1}>
+              Statutory deductions
+            </Typography>
+            <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
               <Box sx={{ gridColumn: '1 / -1' }}>
                 <StatutoryProfileEditor
                   employeeId={employeeId}
-                  month={effectiveMonth}
+                  month={initialMonth || suggestedMonthRef.current ? effectiveMonth : undefined}
                   savedProfile={savedStatutoryProfile}
                   draftMode
+                  pfSettings={
+                    <Stack spacing={1.5}>
+                      <FormControl
+                        fullWidth
+                        size="small"
+                        disabled={
+                          !canManage ||
+                          busy ||
+                          !pfApplicable ||
+                          pfRulesError ||
+                          (statutoryDraft?.pfChoice === null && !continuingPfMember)
+                        }
+                      >
+                        <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+                        <Select
+                          labelId={pfRuleLabelId}
+                          label="PF rule"
+                          value={pfRuleId}
+                          onChange={(event) => {
+                            setPfRuleId(event.target.value);
+                            setCalculation(null);
+                          }}
+                        >
+                          {pfRules.map((rule: any) => (
+                            <MenuItem key={rule.id} value={rule.id}>
+                              {rule.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        select
+                        size="small"
+                        fullWidth
+                        label="Previous PF membership"
+                        value={pfEnrollment.membership}
+                        disabled={!canManage || busy}
+                        onChange={(event) => {
+                          setPfEnrollment((value) => ({
+                            ...value,
+                            membership: event.target.value as PfEnrollment['membership'],
+                          }));
+                          setCalculation(null);
+                        }}
+                      >
+                        <MenuItem value="UNKNOWN">Needs review</MenuItem>
+                        <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
+                        <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
+                      </TextField>
+                      {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
+                        <TextField
+                          size="small"
+                          fullWidth
+                          label="Employee consent reference"
+                          value={pfEnrollment.consentReference ?? ''}
+                          disabled={!canManage || busy}
+                          helperText="Required for voluntary enrollment above the coverage ceiling."
+                          onChange={(event) => {
+                            setPfEnrollment((value) => ({
+                              ...value,
+                              consentReference: event.target.value,
+                            }));
+                            setCalculation(null);
+                          }}
+                        />
+                      )}
+                      {calculation?.pfEligibility && (
+                        <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
+                          PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
+                          {formatPayrollCurrency(
+                            calculation.pfEligibility.grossSalary ?? calculation.grossSalary
+                          )}
+                          . PF calculation wages:{' '}
+                          {formatPayrollCurrency(calculation.pfEligibility.wages)}. Coverage
+                          ceiling:{' '}
+                          {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
+                          {calculation.pfEligibility.issueCode
+                            ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
+                            : ''}
+                        </Alert>
+                      )}
+                    </Stack>
+                  }
                   pfEnrollmentRecorded={Boolean(currentRevision)}
                   disabled={!canManage || busy}
                   grossSalary={salaryBasis === 'GROSS' ? monthlyAmount : calculation?.grossSalary}
                   onDraftChange={(draft) => {
+                    if (draft && !initialMonth && !suggestedMonthRef.current) {
+                      suggestedMonthRef.current = [
+                        draft.effectiveMonth,
+                        dateOfJoining?.slice(0, 7) || '',
+                      ]
+                        .sort()
+                        .at(-1)!;
+                      setEffectiveMonth(suggestedMonthRef.current);
+                    }
                     setStatutoryDraft(draft);
                     if (draft)
                       setPfChoice(
@@ -835,215 +944,155 @@ export function SalaryStructureBuilder({
                   }}
                 />
               </Box>
-              <FormControl
-                fullWidth
-                size="small"
-                disabled={
-                  !canManage ||
-                  busy ||
-                  !pfApplicable ||
-                  pfRulesError ||
-                  (statutoryDraft?.pfChoice === null && !continuingPfMember)
-                }
-              >
-                <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-                <Select
-                  labelId={pfRuleLabelId}
-                  label="PF rule"
-                  value={pfRuleId}
-                  onChange={(event) => {
-                    setPfRuleId(event.target.value);
-                    setCalculation(null);
-                  }}
-                >
-                  {pfRules.map((rule: any) => (
-                    <MenuItem key={rule.id} value={rule.id}>
-                      {rule.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
             </Box>
           </Grid>
         </Grid>
 
-        <Stack spacing={1}>
-          <TextField
-            select
-            size="small"
-            fullWidth
-            label="Previous PF membership"
-            value={pfEnrollment.membership}
-            disabled={!canManage || busy}
-            onChange={(event) => {
-              setPfEnrollment((value) => ({
-                ...value,
-                membership: event.target.value as PfEnrollment['membership'],
-              }));
-              setCalculation(null);
-            }}
-          >
-            <MenuItem value="UNKNOWN">Needs review</MenuItem>
-            <MenuItem value="EXISTING_MEMBER">Existing PF member</MenuItem>
-            <MenuItem value="NOT_MEMBER">Not previously enrolled</MenuItem>
-          </TextField>
-          {pfApplicable && !pfRequired && pfEnrollment.membership === 'NOT_MEMBER' && (
-            <TextField
-              size="small"
-              fullWidth
-              label="Employee consent reference"
-              value={pfEnrollment.consentReference ?? ''}
-              disabled={!canManage || busy}
-              helperText="Required for voluntary enrollment above the coverage ceiling."
-              onChange={(event) => {
-                setPfEnrollment((value) => ({ ...value, consentReference: event.target.value }));
-                setCalculation(null);
-              }}
-            />
-          )}
-          {calculation?.pfEligibility && (
-            <Alert severity={calculation.pfEligibility.canSave ? 'info' : 'warning'}>
-              PF: {contractLabel(calculation.pfEligibility.status)}. Gross salary:{' '}
-              {formatPayrollCurrency(
-                calculation.pfEligibility.grossSalary ?? calculation.grossSalary
-              )}
-              . PF calculation wages: {formatPayrollCurrency(calculation.pfEligibility.wages)}.
-              Coverage ceiling: {formatPayrollCurrency(calculation.pfEligibility.coverageCeiling)}.
-              {calculation.pfEligibility.issueCode
-                ? ` ${contractLabel(calculation.pfEligibility.issueCode)}. Review school PF coverage in PF settings and the employee enrollment above.`
-                : ''}
-            </Alert>
-          )}
-        </Stack>
-        <Divider />
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          gap={2}
-          alignItems="center"
-          flexWrap="wrap"
+        <Typography variant="caption" color="text.secondary">
+          Professional tax is applied automatically using the effective salary slab.
+        </Typography>
+
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{ border: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
         >
-          <Box>
-            <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-              <Typography variant="subtitle1">Staff-specific customization</Typography>
-              <Tooltip title="Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay locked.">
-                <IconButton
-                  size="small"
-                  aria-label="About staff-specific customization"
-                  sx={{ minWidth: 44, minHeight: 44 }}
-                >
-                  <Iconify icon="mdi:information-outline" />
-                </IconButton>
-              </Tooltip>
-              {customizing && overrides.length ? (
-                <Chip size="small" color="warning" label="Customized" />
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle1">Staff-specific customization</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              gap={2}
+              alignItems="center"
+              flexWrap="wrap"
+            >
+              <Box>
+                <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                  <Typography variant="subtitle2">Template adjustments</Typography>
+                  <Tooltip title="Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay locked.">
+                    <IconButton
+                      size="small"
+                      aria-label="About staff-specific customization"
+                      sx={{ minWidth: 44, minHeight: 44 }}
+                    >
+                      <Iconify icon="mdi:information-outline" />
+                    </IconButton>
+                  </Tooltip>
+                  {customizing && overrides.length ? (
+                    <Chip size="small" color="warning" label="Customized" />
+                  ) : null}
+                </Box>
+              </Box>
+              {canManage ? (
+                <Box display="flex" gap={1} flexWrap="wrap" sx={{ ml: 'auto' }}>
+                  {customizing ? (
+                    <Button
+                      size="small"
+                      startIcon={<Iconify icon="mdi:restore" />}
+                      onClick={resetToTemplate}
+                    >
+                      Reset to template
+                    </Button>
+                  ) : null}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:tune-variant" />}
+                    onClick={() => setCustomizing(true)}
+                    disabled={customizing}
+                  >
+                    Customize
+                  </Button>
+                </Box>
               ) : null}
             </Box>
-          </Box>
-          {canManage ? (
-            <Box display="flex" gap={1} flexWrap="wrap" sx={{ ml: 'auto' }}>
-              {customizing ? (
-                <Button
-                  size="small"
-                  startIcon={<Iconify icon="mdi:restore" />}
-                  onClick={resetToTemplate}
-                >
-                  Reset to template
-                </Button>
-              ) : null}
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:tune-variant" />}
-                onClick={() => setCustomizing(true)}
-                disabled={customizing}
-              >
-                Customize
-              </Button>
-            </Box>
-          ) : null}
-        </Box>
-        {customizing ? (
-          <Grid container spacing={1.5}>
-            {permittedRules.map((rule) => {
-              const override = overrides.find((item) => item.componentId === rule.componentId);
-              return (
-                <Grid key={rule.componentId} size={{ xs: 12, md: 6 }}>
-                  <Paper variant="outlined" sx={{ p: 1.5 }}>
-                    <Typography variant="subtitle2">{contractLabel(rule.semanticType)}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
-                    </Typography>
-                    <Grid container spacing={1} mt={0.5}>
-                      <Grid size={{ xs: 12, sm: 7 }}>
-                        <FormControl fullWidth size="small" disabled={busy}>
-                          <InputLabel id={`calculation-${rule.componentId}-label`}>
-                            Calculation
-                          </InputLabel>
-                          <Select
-                            labelId={`calculation-${rule.componentId}-label`}
-                            label="Calculation"
-                            value={override?.formulaType || rule.formulaType}
-                            onChange={(event) =>
-                              setOverride(
-                                rule.componentId,
-                                event.target.value,
-                                override?.value ?? rule.value ?? 0
-                              )
-                            }
-                          >
-                            <MenuItem value="FIXED_AMOUNT">Fixed amount</MenuItem>
-                            <MenuItem value="PERCENTAGE_OF_GROSS">Percent of gross</MenuItem>
-                            <MenuItem value="PERCENTAGE_OF_BASIC">Percent of basic</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 5 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label="Value"
-                          value={override?.value ?? rule.value ?? 0}
-                          onChange={(event) =>
-                            setOverride(
-                              rule.componentId,
-                              override?.formulaType || rule.formulaType,
-                              Number(event.target.value)
-                            )
-                          }
-                        />
-                      </Grid>
+            {customizing ? (
+              <Grid container spacing={1.5}>
+                {permittedRules.map((rule) => {
+                  const override = overrides.find((item) => item.componentId === rule.componentId);
+                  return (
+                    <Grid key={rule.componentId} size={{ xs: 12, md: 6 }}>
+                      <Paper variant="outlined" sx={{ p: 1.5 }}>
+                        <Typography variant="subtitle2">
+                          {contractLabel(rule.semanticType)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
+                        </Typography>
+                        <Grid container spacing={1} mt={0.5}>
+                          <Grid size={{ xs: 12, sm: 7 }}>
+                            <FormControl fullWidth size="small" disabled={busy}>
+                              <InputLabel id={`calculation-${rule.componentId}-label`}>
+                                Calculation
+                              </InputLabel>
+                              <Select
+                                labelId={`calculation-${rule.componentId}-label`}
+                                label="Calculation"
+                                value={override?.formulaType || rule.formulaType}
+                                onChange={(event) =>
+                                  setOverride(
+                                    rule.componentId,
+                                    event.target.value,
+                                    override?.value ?? rule.value ?? 0
+                                  )
+                                }
+                              >
+                                <MenuItem value="FIXED_AMOUNT">Fixed amount</MenuItem>
+                                <MenuItem value="PERCENTAGE_OF_GROSS">Percent of gross</MenuItem>
+                                <MenuItem value="PERCENTAGE_OF_BASIC">Percent of basic</MenuItem>
+                              </Select>
+                            </FormControl>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 5 }}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              type="number"
+                              label="Value"
+                              value={override?.value ?? rule.value ?? 0}
+                              onChange={(event) =>
+                                setOverride(
+                                  rule.componentId,
+                                  override?.formulaType || rule.formulaType,
+                                  Number(event.target.value)
+                                )
+                              }
+                            />
+                          </Grid>
+                        </Grid>
+                      </Paper>
                     </Grid>
-                  </Paper>
+                  );
+                })}
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    required={overrides.length > 0}
+                    label="Customization reason"
+                    name="customizationReason"
+                    autoComplete="off"
+                    inputRef={reasonInput}
+                    onBlur={() => setReasonTouched(true)}
+                    error={reasonTouched && reasonInvalid}
+                    value={customizationReason}
+                    onChange={(event) => {
+                      setCustomizationReason(event.target.value);
+                      setCalculation(null);
+                    }}
+                    helperText={
+                      reasonTouched && reasonInvalid
+                        ? 'Add a reason for the staff-specific salary customization.'
+                        : 'Required when any row differs from the source template.'
+                    }
+                  />
                 </Grid>
-              );
-            })}
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                size="small"
-                required={overrides.length > 0}
-                label="Customization reason"
-                name="customizationReason"
-                autoComplete="off"
-                inputRef={reasonInput}
-                onBlur={() => setReasonTouched(true)}
-                error={reasonTouched && reasonInvalid}
-                value={customizationReason}
-                onChange={(event) => {
-                  setCustomizationReason(event.target.value);
-                  setCalculation(null);
-                }}
-                helperText={
-                  reasonTouched && reasonInvalid
-                    ? 'Add a reason for the staff-specific salary customization.'
-                    : 'Required when any row differs from the source template.'
-                }
-              />
-            </Grid>
-          </Grid>
-        ) : null}
+              </Grid>
+            ) : null}
+          </AccordionDetails>
+        </Accordion>
 
         {operationError && (
           <Alert
@@ -1077,116 +1126,40 @@ export function SalaryStructureBuilder({
           </Alert>
         )}
         {calculatedSignature && !calculationCurrent && (
-          <Alert severity="info">Recalculate to review your changes.</Alert>
+          <Alert severity="info">Your changes need a new preview.</Alert>
         )}
         {calculation ? (
           <Box display="grid" gap={2} aria-live="polite">
             {calculation.targetResult.isExplainedByEnrollment && (
               <Alert severity="warning">
-                Registration changes explain a CTC difference of{' '}
+                Statutory contribution changes explain a CTC difference of{' '}
                 {formatPayrollCurrency(calculation.targetResult.difference)}. Saved gross salary is
                 unchanged.
               </Alert>
             )}
-            <Grid container spacing={1.5}>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Summary label="Full-month gross" amount={calculation.grossSalary} />
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Summary label="Deductions" amount={calculation.totalDeductions} />
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Summary label="Estimated net salary" amount={calculation.netSalary} />
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Summary label="Employer cost" amount={calculation.employerCost} />
-              </Grid>
-            </Grid>
-            <Typography variant="caption" color="text.secondary">
-              Estimated net salary excludes monthly attendance effects and one-time adjustments.
+            <Typography variant="subtitle1">
+              Salary preview · {formatPayrollMonth(effectiveMonth)}
             </Typography>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" mb={1}>
-                    Earnings
-                  </Typography>
-                  {calculation.earnings.map((line) => (
-                    <Box
-                      key={`${line.componentId}-${line.code}`}
-                      display="flex"
-                      justifyContent="space-between"
-                      py={0.5}
-                    >
-                      <Box display="flex" gap={0.75}>
-                        {line.name}
-                        {line.lineSource === 'CUSTOMIZED' ? (
-                          <Chip size="small" label="Customized" />
-                        ) : null}
-                      </Box>
-                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" mb={1}>
-                    Employee deductions
-                  </Typography>
-                  {calculation.deductions.map((line) => (
-                    <Box
-                      key={`${line.componentId}-${line.code}-${line.name}`}
-                      display="flex"
-                      justifyContent="space-between"
-                      py={0.5}
-                    >
-                      <Box display="flex" gap={0.75}>
-                        {line.name}
-                        {line.lineSource === 'CUSTOMIZED' ? (
-                          <Chip size="small" label="Customized" />
-                        ) : null}
-                      </Box>
-                      <Typography>{formatPayrollCurrency(line.amount)}</Typography>
-                    </Box>
-                  ))}
-                </Paper>
-              </Grid>
-            </Grid>
-            {calculation.employerContributions.length > 0 && (
-              <Box>
-                <Typography variant="subtitle1">Employer contributions</Typography>
-                {calculation.employerContributions.map((line) => (
-                  <Box key={line.code} display="flex" justifyContent="space-between" gap={2}>
-                    <Typography variant="body2">{line.name}</Typography>
-                    <Typography variant="body2">{formatPayrollCurrency(line.amount)}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-            {calculation.employeeStateInsurance.ruleId && (
-              <Alert
-                severity={
-                  statutoryBlocked
-                    ? 'error'
-                    : calculation.employeeStateInsurance.registrationPending
-                      ? 'warning'
-                      : 'info'
-                }
-              >
-                ESI:{' '}
-                {contractLabel(
-                  calculation.employeeStateInsurance.coverageDecision || 'not evaluated'
-                )}
-                .
-                {calculation.employeeStateInsurance.registrationPending
-                  ? ' Registration is pending. Salary can be saved and the insurance number remains a visible follow-up.'
-                  : ''}
-                {calculation.employeeStateInsurance.issueCodes.length
-                  ? ` ${calculation.employeeStateInsurance.issueCodes.map(contractLabel).join(', ')}.`
-                  : ''}
+            <SalaryTotals
+              gross={calculation.grossSalary}
+              deductions={statutoryBlocked ? null : calculation.totalDeductions}
+              net={statutoryBlocked ? null : calculation.netSalary}
+              employerCost={statutoryBlocked ? null : calculation.employerCost}
+            />
+            <Typography variant="body2" color="text.secondary">
+              Full-month estimate. Attendance and one-time adjustments are excluded.
+            </Typography>
+            <StatutorySummary schemes={calculation.statutorySummary || []} />
+            {statutoryBlocked && (
+              <Alert severity="warning">
+                This preview is incomplete. Resolve the statutory setup before saving salary.
               </Alert>
             )}
+            <SalaryBreakdown
+              earnings={calculation.earnings}
+              deductions={calculation.deductions}
+              employerContributions={calculation.employerContributions}
+            />
           </Box>
         ) : null}
 

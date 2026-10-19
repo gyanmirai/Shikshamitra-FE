@@ -207,10 +207,10 @@ The impact preview distinguishes employee, employer, and government ESI funding.
 Payslips show earned gross, employee deductions, and net pay.
 Employer contributions remain in school cost reporting and audit evidence.
 Off mode omits ESI amounts and presentation, including empty ESI payslip rows.
-Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, calculate, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
+Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, preview, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
 New employees remain Inactive after direct creation or application finalization and show Payroll setup required.
 Salary setup preselects the school default template, the template salary basis, the joining month, and the template PF defaults.
-Users calculate and save salary directly as an effective immutable revision without a draft or approval queue.
+Users preview and save salary directly as an effective immutable revision without a draft or approval queue.
 A later save creates another revision, supersedes the previous effective revision for the same month, and keeps future-effective revisions scheduled.
 After salary is ready, users with Employee Edit permission activate the employee as a separate action.
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
@@ -406,7 +406,7 @@ Payroll Structure and Staff Directory share the recurring Edit Salary sub-page.
 The staff payroll salary link and return link use client-side navigation to preserve the application shell.
 Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
 Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
-The footer owns Calculate salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+The footer owns Preview salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
 Footer feedback explains calculation readiness, active operations, and completed saves without changing action permissions or enabled states.
 The compact employee header includes ESIC access, and the quoted monthly amount uses the shared currency input without rounding its numeric request value.
 Invalid amounts show inline errors after blur; saving with a missing customization reason focuses the reason field and preserves the draft.
@@ -428,7 +428,7 @@ See the [backend calculation release and PF remediation workflow](https://github
 Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
 Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
 Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.
-The editor keeps Calculate salary and Save salary in its persistent footer and preserves current compensation behavior.
+The editor keeps Preview salary and Save salary in its persistent footer and preserves current compensation behavior.
 ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
 Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
 One-time adjustments remain in monthly payroll.
@@ -499,3 +499,15 @@ Refresh and the attendance date input are viewing controls only.
 Date, scope, and freshness use a compact caption row grouped with the standard breadcrumb header.
 The dashboard uses the shared inline CustomBreadcrumbs defaults without local colour or action-alignment overrides.
 Loading uses matching placeholders, while failed, unavailable, and forbidden summaries do not display actionable counts or completion messages.
+
+## Payroll structure salary overview
+
+The Payroll Structure route stores employeeId and month in the URL and reads the employee-scoped salary summary endpoint.
+The overview shows full-month gross, employee deductions, estimated take-home, school cost, PF, ESIC and professional-tax status before editing.
+Unavailable statutory calculations show an incomplete estimate instead of zero totals.
+Registration pending appears separately from contribution applicability.
+The salary editor defaults routine changes to the current month or a future joining month, and preserves an explicitly selected month.
+It discloses an older source-template version before allowing a current-template preview.
+Registration details, staff customization and salary history use progressive disclosure.
+The footer offers Preview salary or Update preview and Save salary; any input change requires a current preview before saving.
+Attendance and one-time adjustments remain in Run Payroll.

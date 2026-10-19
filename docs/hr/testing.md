@@ -675,3 +675,10 @@ Verify light/dark themes, reduced motion, desktop card edge alignment, mobile st
 Assert standard inline breadcrumbs and the absence of card workflow buttons, Mark Attendance, Open Payroll, and the bottom quick-action row.
 Keep view-control coverage for refresh and the date input.
 Finish automated checks with a Codex in-app browser visual review of the loading and loaded components.
+
+## Salary structure preview regression
+
+The focused structure suite covers month and staff URL context, pending registration, unavailable totals, retry, salary permissions, preview freshness, draft protection and explicit template upgrades.
+Run the compensation client contract tests and statutory-profile editor tests with the structure suite.
+Authenticated browser acceptance covers the overview, salary edit, full-month preview, saving and returning to the same staff/month context at 390x844, 768x1024 and 1440x900.
+Backend-owned payroll review, lock and immutable payslip checks are documented in the backend HR testing guide.

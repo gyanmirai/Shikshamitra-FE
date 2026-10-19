@@ -6,325 +6,282 @@ import type { EmployeeOption } from 'src/screens/hr/leave-request/leave-request.
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { isApplicableToMonth } from 'src/screens/hr/employee/salary-utils';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { Box, Grid, Card, Alert, Paper, Button, Typography } from '@mui/material';
-import { useGetEmployeeSalaryStructureQuery } from 'src/redux/hr/employee-salary-structure-api';
-import { useGetEffectiveCompensationRevisionQuery } from 'src/redux/hr/compensation-revision-api';
+import { useGetSalarySummaryQuery } from 'src/redux/hr/compensation-revision-api';
 import { useGetEmployeeByIdQuery, useLazyGetEmployeeOptionsQuery } from 'src/redux/hr/employeeApi';
 import {
   staffPayrollEditHref,
   staffPayrollProfileHref,
 } from 'src/screens/hr/employee/payroll-profile-utils';
+import {
+  Box,
+  Link,
+  Stack,
+  Alert,
+  Paper,
+  Button,
+  Skeleton,
+  TextField,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 
 import { salaryEditorHref } from './salary-editor-navigation';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
+import { formatPayrollMonth } from '../setting/esi-statutory-utils';
+import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
 
-const EmployeeSalaryStructureScreen = () => {
-  const searchParams = useSearchParams();
-  return (
-    <EmployeeSalaryStructureContent
-      key={`${searchParams.get('employeeId') || ''}:${searchParams.get('setup') || ''}`}
-    />
-  );
-};
+export default function EmployeeSalaryStructureScreen() {
+  const params = useSearchParams();
+  return <SalaryStructureWorkspace key={params.get('employeeId') || ''} />;
+}
 
-const EmployeeSalaryStructureContent = () => {
-  const searchParams = useSearchParams();
+function SalaryStructureWorkspace() {
+  const params = useSearchParams();
   const router = useRouter();
-  const queryString = searchParams.toString();
-
-  const requestedEmployeeId = searchParams.get('employeeId')?.trim() || '';
-  const openRequestedSalarySetup = searchParams.get('setup') === 'salary';
+  const employeeId = params.get('employeeId')?.trim() || '';
+  const hasRequestedMonth = params.has('month');
+  const month = /^\d{4}-(0[1-9]|1[0-2])$/.test(params.get('month') || '')
+    ? params.get('month')!
+    : getLocalMonthKey();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canViewCompensationRevisions = hasGrantedPermission(
-    permissions,
-    hrPermissions.payroll.compensationRevisionActions.view
-  );
-  const canManageCompensation = hasGrantedPermission(
+  const canManage = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.compensationRevisionActions.manage
   );
-  const canReadCompensationRevisions = canViewCompensationRevisions || canManageCompensation;
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(() =>
-    requestedEmployeeId ? { id: requestedEmployeeId, label: 'Loading staff...' } : null
+  const canRead =
+    canManage ||
+    hasGrantedPermission(permissions, hrPermissions.payroll.compensationRevisionActions.view);
+  const [selected, setSelected] = useState<EmployeeOption | null>(
+    employeeId ? { id: employeeId, label: 'Loading staff…' } : null
   );
-  const {
-    currentData: requestedEmployee,
-    isError: employeeError,
-    refetch: refetchEmployee,
-  } = useGetEmployeeByIdQuery(requestedEmployeeId, {
-    skip: !requestedEmployeeId,
+  const { currentData: employee } = useGetEmployeeByIdQuery(employeeId, {
+    skip: !employeeId || !canRead,
   });
-
-  useEffect(() => {
-    if (
-      !requestedEmployeeId ||
-      !requestedEmployee ||
-      selectedEmployee?.id !== requestedEmployeeId
-    ) {
-      return;
-    }
-    const label = requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected staff';
-    const status = requestedEmployee.status ?? requestedEmployee.employeeStatusType;
-    if (selectedEmployee.label === label && selectedEmployee.status === status) return;
-    setSelectedEmployee({
-      id: requestedEmployeeId,
-      label,
-      status,
-    });
-  }, [requestedEmployee, requestedEmployeeId, selectedEmployee]);
-
-  useEffect(() => {
-    if (!openRequestedSalarySetup || !requestedEmployeeId) return;
-    const params = new URLSearchParams(queryString);
-    const from = params.get('from');
-    params.delete('setup');
-    const returnTo =
-      from === 'staff-edit'
-        ? staffPayrollEditHref(requestedEmployeeId)
-        : from === 'staff-profile'
-          ? staffPayrollProfileHref(requestedEmployeeId)
-          : `${hrPaths.payroll.structure}?${params}`;
-    router.replace(salaryEditorHref(requestedEmployeeId, returnTo));
-  }, [openRequestedSalarySetup, requestedEmployeeId, queryString, router]);
-
+  const {
+    currentData: summary,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetSalarySummaryQuery({ employeeId, month }, { skip: !employeeId || !canRead });
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeOptionsQuery,
   });
-  const fetchEmployees = useCallback(async (query: string, page: number) => {
-    const result: EmployeeOptionsResponse = await getEmployees({ page, pageSize: 25, search: query.trim(), status: 'Active' }).unwrap();
-    return {
-      data: result.items.map((item) => ({ id: item.id, label: item.fullName, status: item.status })),
-      hasMore: result.hasMore,
-    };
-  }, [getEmployees]);
-
-  const employeeId = selectedEmployee?.id ?? '';
-
-  const { currentData: structureData, isFetching: isStructureLoading } =
-    useGetEmployeeSalaryStructureQuery({ employeeId }, { skip: !employeeId });
-  const monthKey = getLocalMonthKey();
-  const month = `${monthKey}-01T00:00:00.000Z`;
-  const { currentData: effectiveRevision, isFetching: isRevisionLoading } =
-    useGetEffectiveCompensationRevisionQuery(
-      { employeeId, month },
-      { skip: !employeeId || !canReadCompensationRevisions }
-    );
-
-  const payrollStructureRows = useMemo(() => {
-    const recurringRows = (effectiveRevision?.lines || []).map((item) => ({
-      id: item.id,
-      payElement: { name: item.name },
-      amount: item.amount,
-      payrollStructureType: item.isEarning ? 0 : 1,
-      _raw: item,
-    }));
-    const earningRows = (structureData?.earningComponents || [])
-      .filter((item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey))
-      .map((item: any) => ({
-        id: item?.id || item?.componentId,
-        payElement: { name: `${item?.name || '-'} (one-time)` },
-        amount: item?.amount || 0,
-        payrollStructureType: 0,
-        _raw: item,
-      }));
-
-    const deductionRows = (structureData?.deductionComponents || [])
-      .filter((item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey))
-      .map((item: any) => ({
-        id: item?.id || item?.componentId,
-        payElement: { name: `${item?.name || '-'} (one-time)` },
-        amount: item?.amount || 0,
-        payrollStructureType: 1,
-        _raw: item,
-      }));
-
-    return [...recurringRows, ...earningRows, ...deductionRows];
-  }, [effectiveRevision, monthKey, structureData]);
-
-  const returnParams = new URLSearchParams(queryString);
-  returnParams.set('employeeId', employeeId);
+  const fetchEmployees = useCallback(
+    async (query: string, page: number) => {
+      const result: EmployeeOptionsResponse = await getEmployees({
+        page,
+        pageSize: 25,
+        search: query.trim(),
+        status: 'Active',
+      }).unwrap();
+      return {
+        data: result.items.map((item) => ({
+          id: item.id,
+          label: item.fullName,
+          status: item.status,
+        })),
+        hasMore: result.hasMore,
+      };
+    },
+    [getEmployees]
+  );
+  useEffect(() => {
+    if (employee)
+      setSelected({
+        id: employeeId,
+        label: employee.fullName || employee.employeeName || 'Selected staff',
+        status: employee.status ?? employee.employeeStatusType,
+      });
+  }, [employee, employeeId]);
+  const updateContext = (values: { employeeId?: string; month?: string }) => {
+    const next = new URLSearchParams(params.toString());
+    Object.entries(values).forEach(([key, value]) => {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    });
+    router.replace(hrPaths.payroll.structure + (next.size ? `?${next}` : ''));
+  };
+  const returnParams = new URLSearchParams(params.toString());
   returnParams.delete('setup');
   const returnHref = `${hrPaths.payroll.structure}?${returnParams}`;
+  const editHref = salaryEditorHref(employeeId, returnHref, hasRequestedMonth ? month : undefined);
+  const legacySetup = params.get('setup') === 'salary';
+  const from = params.get('from');
+  useEffect(() => {
+    if (!legacySetup || !employeeId) return;
+    const back =
+      from === 'staff-edit'
+        ? staffPayrollEditHref(employeeId)
+        : from === 'staff-profile'
+          ? staffPayrollProfileHref(employeeId)
+          : returnHref;
+    router.replace(salaryEditorHref(employeeId, back, hasRequestedMonth ? month : undefined));
+  }, [legacySetup, employeeId, from, returnHref, router, month, hasRequestedMonth]);
 
   return (
-    <Box>
+    <Stack spacing={2}>
       <CustomBreadcrumbs
         heading="Payroll Structure"
-        description="View and manage staff salary structures."
+        headingComponent="h1"
+        layout="inline"
+        description="Review recurring salary and statutory deductions for a full month."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
           { name: 'Payroll Structure' },
         ]}
-      />
-      {['staff-profile', 'staff-edit'].includes(searchParams.get('from') || '') &&
-        requestedEmployeeId && (
-          <Button
-            size="small"
-            component={RouterLink}
-            href={
-              searchParams.get('from') === 'staff-edit'
-                ? staffPayrollEditHref(requestedEmployeeId)
-                : staffPayrollProfileHref(requestedEmployeeId)
-            }
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {searchParams.get('from') === 'staff-edit'
-              ? 'Back to staff edit'
-              : 'Back to staff profile'}
-          </Button>
-        )}
-
-      <Card variant="outlined" sx={{ boxShadow: 'none' }}>
-        <Box display="flex" gap={1} flexWrap="wrap" p={1}>
-          <PaginatedSearchSelect
-            label="Staff"
-            fetchOptions={fetchEmployees}
-            filterOptions={(options) => options}
-            value={selectedEmployee}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderOption={(prop, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            getOptionLabel={(option: any) => option?.label || ''}
-            minChars={0}
-            onChange={(_, value) => setSelectedEmployee(value as EmployeeOption | null)}
-            debounceMs={400}
-            size="small"
-            sx={{ maxWidth: '420px', width: '100%' }}
-          />
-        </Box>
-      </Card>
-
-      {employeeError && selectedEmployee?.id === requestedEmployeeId && (
-        <Alert
-          severity="error"
-          action={
-            <Button size="small" onClick={() => refetchEmployee()}>
-              Retry
+        action={
+          employeeId && canManage ? (
+            <Button
+              component={RouterLink}
+              href={editHref}
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="solar:pen-bold" />}
+            >
+              {summary?.revisionId ? 'Edit salary' : 'Set up salary'}
             </Button>
+          ) : undefined
+        }
+      />
+      {employeeId && (from === 'staff-profile' || from === 'staff-edit') && (
+        <Link
+          component={RouterLink}
+          href={
+            from === 'staff-edit'
+              ? staffPayrollEditHref(employeeId)
+              : staffPayrollProfileHref(employeeId)
           }
-          sx={{ mt: 1 }}
+          variant="body2"
+          sx={{ alignSelf: 'flex-start' }}
         >
-          Unable to load staff details.
-        </Alert>
+          Back to staff {from === 'staff-edit' ? 'edit' : 'profile'}
+        </Link>
       )}
-
-      {!employeeId ? (
-        <Paper variant="outlined" sx={{ p: 3, mt: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Select a staff member to view salary structure.
-          </Typography>
-        </Paper>
+      {!canRead ? (
+        <Alert severity="error">You do not have permission to view salary details.</Alert>
       ) : (
         <>
-          {effectiveRevision && (
-            <Paper variant="outlined" sx={{ p: 2, my: 1 }}>
+          <Paper variant="outlined" sx={{ p: 1, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+            <PaginatedSearchSelect
+              label="Staff"
+              fetchOptions={fetchEmployees}
+              filterOptions={(options) => options}
+              value={selected}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option: any) => option?.label || ''}
+              minChars={0}
+              debounceMs={400}
+              size="small"
+              sx={{ flex: '1 1 280px', maxWidth: { md: 420 } }}
+              onChange={(_, value) => {
+                setSelected(value as EmployeeOption | null);
+                updateContext({ employeeId: (value as EmployeeOption | null)?.id || '' });
+              }}
+            />
+            <TextField
+              label="Preview month"
+              type="month"
+              size="small"
+              value={month}
+              slotProps={{ inputLabel: { shrink: true } }}
+              onChange={(event) => {
+                if (/^\d{4}-(0[1-9]|1[0-2])$/.test(event.target.value))
+                  updateContext({ month: event.target.value });
+              }}
+              sx={{ width: { xs: '100%', sm: 190 } }}
+            />
+          </Paper>
+          {!employeeId ? (
+            <Paper variant="outlined" sx={{ p: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                Full-month gross
-              </Typography>
-              <Typography variant="h5">{formatCurrency(effectiveRevision.grossSalary)}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                System calculation base. Payroll adjusts this amount once using payable days.
+                Select a staff member to review salary and statutory deductions.
               </Typography>
             </Paper>
-          )}
-          {canManageCompensation && (
-            <Box display="flex" justifyContent="flex-end" mt={1} mb={1}>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="solar:pen-bold" />}
-                component={RouterLink}
-                href={salaryEditorHref(employeeId, returnHref)}
-              >
-                {effectiveRevision ? 'Edit salary' : 'Set up salary'}
-              </Button>
-            </Box>
-          )}
-          {canReadCompensationRevisions && !effectiveRevision && !isRevisionLoading && (
-            <Alert severity="warning" sx={{ mb: 1 }}>
-              This staff member has no effective compensation revision for the current month.
-              Payroll cannot be locked until salary is saved.
+          ) : isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button onClick={() => refetch()} size="small">
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load salary details. Try again.
             </Alert>
+          ) : !summary ? (
+            <Stack aria-label="Loading salary details" role="status" spacing={2}>
+              <Skeleton variant="rounded" height={90} />
+              <Skeleton variant="rounded" height={230} />
+              <Skeleton variant="rounded" height={200} />
+            </Stack>
+          ) : !summary.revisionId ? (
+            <Alert severity="info">
+              No salary is effective for {formatPayrollMonth(month)}.
+              {canManage ? ' Set up salary to see the full-month estimate.' : ''}
+            </Alert>
+          ) : (
+            <Stack spacing={2} aria-busy={isFetching}>
+              {isFetching && <LinearProgress aria-label="Refreshing salary details" />}
+              <Box>
+                <Typography variant="subtitle1">
+                  Full-month estimate · {formatPayrollMonth(month)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Salary effective from{' '}
+                  {formatPayrollMonth(summary.salaryEffectiveMonth!.slice(0, 7))}. Attendance and
+                  one-time adjustments are applied in Run Payroll.
+                </Typography>
+              </Box>
+              {!summary.isComplete && (
+                <Alert severity="warning">
+                  This estimate is incomplete. Resolve the statutory setup shown below before
+                  relying on take-home or school cost.
+                </Alert>
+              )}
+              <SalaryTotals
+                gross={summary.grossSalary}
+                deductions={summary.totalDeductions}
+                net={summary.netSalary}
+                employerCost={summary.employerCost}
+              />
+              {summary.quotedEmployerCost != null &&
+                summary.employerCost != null &&
+                Math.abs(summary.employerCost - summary.quotedEmployerCost) > 0.01 && (
+                  <Alert severity="info">
+                    Current school cost differs from saved CTC by{' '}
+                    {formatPayrollCurrency(summary.employerCost - summary.quotedEmployerCost)}.
+                    Agreed gross salary remains unchanged.
+                  </Alert>
+                )}
+              <StatutorySummary schemes={summary.statutorySummary} />
+              <SalaryBreakdown
+                earnings={summary.earnings}
+                deductions={summary.deductions}
+                employerContributions={summary.employerContributions}
+              />
+              <Link
+                component={RouterLink}
+                href={hrPaths.payroll.runPayroll}
+                variant="body2"
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Open Run Payroll for attendance and monthly adjustments
+              </Link>
+            </Stack>
           )}
-          <Grid container spacing={1} alignItems="stretch">
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Section
-                title="Earning"
-                rows={payrollStructureRows}
-                type={0}
-                isLoading={isStructureLoading || isRevisionLoading}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Section
-                title="Deduction"
-                rows={payrollStructureRows}
-                type={1}
-                isLoading={isStructureLoading || isRevisionLoading}
-              />
-            </Grid>
-          </Grid>
         </>
       )}
-    </Box>
+    </Stack>
   );
-};
-
-const Section = ({
-  title,
-  rows,
-  type,
-  isLoading,
-}: {
-  title: string;
-  rows: any[];
-  type: number;
-  isLoading: boolean;
-}) => (
-  <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-    <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-      <Typography variant="h5">{title}</Typography>
-    </Box>
-    <Box p={2} pt={0} sx={{ flex: 1 }}>
-      <CustomizableTable
-        tableId={`payroll-structure-${type}`}
-        isFilter={false}
-        isPagination={false}
-        isSearch={false}
-        isShowedDense={false}
-        isLoading={isLoading}
-        columns={[
-          { id: 'payElement.name', label: 'Type', align: 'left' },
-          {
-            id: 'amount',
-            label: 'Amount',
-            align: 'left',
-            filterType: 'number',
-            render(value) {
-              return formatCurrency(value);
-            },
-          },
-        ]}
-        data={rows.filter((i: any) => i.payrollStructureType === type)}
-      />
-    </Box>
-  </Paper>
-);
-
-export default EmployeeSalaryStructureScreen;
+}
