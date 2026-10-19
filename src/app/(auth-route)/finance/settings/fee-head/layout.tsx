@@ -1,12 +1,12 @@
 'use client';
 
 import { financePermissions } from 'src/constants/finance-menu';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
+import ExactPermissionGuard from 'src/components/exact-permission-guard';
 
 const FeeHeadLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.fees.settings.feeHead}>
+  <ExactPermissionGuard permissionKey={`${financePermissions.fees.settings.feeHead}.View`}>
     {children}
-  </StudentPermissionGuard>
+  </ExactPermissionGuard>
 );
 
 export default FeeHeadLayout;

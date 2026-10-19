@@ -10,6 +10,7 @@ export { FormSectionHeader } from './section-header';
 interface FormSectionCardProps extends FormSectionHeaderProps {
   children?: ReactNode;
   contentSpacing?: number;
+  contentSx?: SxProps<Theme>;
   sx?: SxProps<Theme>;
 }
 
@@ -25,6 +26,7 @@ export function FormSectionCard({
   actionFullWidthOnMobile,
   children,
   contentSpacing = 2,
+  contentSx,
   sx,
 }: FormSectionCardProps) {
   return (
@@ -33,7 +35,7 @@ export function FormSectionCard({
       variant="outlined"
       sx={[{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
-      <Stack spacing={contentSpacing}>
+      <Stack spacing={contentSpacing} sx={contentSx}>
         <FormSectionHeader
           icon={icon}
           iconSize={iconSize}

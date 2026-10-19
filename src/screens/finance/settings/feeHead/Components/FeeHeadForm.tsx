@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -26,10 +27,12 @@ import {
 
 import { getFeeHeadInitialValues } from './FeeHeadInitialValues';
 import { feeHeadValidationSchema } from './FeeHeadValidationSchema';
+import { useFinancePermissions } from '../../../hooks/useFinancePermissions';
 
 import type { IFeeHeadFormProps } from './type';
 
 const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) => {
+  const access = useFinancePermissions(financePermissions.fees.settings.feeHead);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
@@ -106,6 +109,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     enableReinitialize: true,
     validationSchema: feeHeadValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
+      if (!access.canAdd) return;
       // Check if updating an item that is used downstream
       if ((editData as any)?.isUsedInDownstream && editData?.id) {
         setPendingFormValues(values);
@@ -120,6 +124,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
 
   // Perform the actual form submission
   const performSubmission = async (values: any) => {
+    if (!access.canAdd) return;
     try {
       // Transform form data to API format
       const payload = {
@@ -300,6 +305,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
           variant="contained"
           size="small"
           loading={isUpdateFeeHeadLoading || isAddFeeHeadLoading}
+          disabled={!access.canAdd}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}

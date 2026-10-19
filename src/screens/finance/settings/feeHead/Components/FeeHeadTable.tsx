@@ -6,11 +6,14 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
+
+import { useFinancePermissions } from '../../../hooks/useFinancePermissions';
 
 import type { IFeeHead, IFeeHeadTableProps } from './type';
 
@@ -25,6 +28,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   onServerPagination,
   onServerSearch,
 }) => {
+  const access = useFinancePermissions(financePermissions.fees.settings.feeHead);
   const [patchFeeHead, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchFeeHeadMutation,
@@ -35,6 +39,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   const [deactivationReason, setDeactivationReason] = useState('');
 
   const handleOpenStatusConfirm = (row: IFeeHead) => {
+    if (!access.canAdd) return;
     setStatusData(row);
     setDeactivationReason('');
     statusConfirm.onTrue();
@@ -107,6 +112,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                 variant="soft"
               />
               <Switch
+                disabled={!access.canAdd}
                 size="small"
                 checked={head.isActive || false}
                 onClick={(event) => event.stopPropagation()}
@@ -131,6 +137,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                 {
                   id: 'edit',
                   label: 'Edit',
+                  disabled: !access.canAdd,
                   icon: 'solar:pen-bold',
                   onClick: () => {
                     onEdit(row as IFeeHead);
@@ -143,7 +150,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                   onClick: () => {
                     onDelete(row as IFeeHead);
                   },
-                  disabled: row?.isUsedInDownstream,
+                  disabled: !access.canDelete || row?.isUsedInDownstream,
                   tooltip:
                     'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
                   color: 'error.main',
@@ -156,7 +163,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [access.canAdd, access.canDelete, onEdit, onDelete]
   );
 
   return (
@@ -169,6 +176,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             Fee Head Data Not Found{' '}
             <Box
               onClick={() => {
+                if (!access.canAdd) return;
                 onAddFeeHead.onTrue();
                 setEditData(null);
               }}
@@ -237,9 +245,9 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
-            disabled={!nextStatus && !deactivationReason.trim()}
+            disabled={!access.canAdd || (!nextStatus && !deactivationReason.trim())}
             onClick={async () => {
-              if (!statusData) return;
+              if (!access.canAdd || !statusData) return;
               try {
                 await patchFeeHead({
                   feeHeadId: statusData.id,

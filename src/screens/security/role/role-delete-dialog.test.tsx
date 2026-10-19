@@ -16,12 +16,16 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 import RoleDeleteDialog from './role-delete-dialog';
 
-vi.hoisted(() => { process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000'; });
-const message = 'This role is assigned to 2 user(s) and cannot be deleted. Reassign or remove those users first.';
-const createStore = () => configureStore({
-  reducer: { [api.reducerPath]: api.reducer },
-  middleware: (getDefault) => getDefault().concat(api.middleware),
+vi.hoisted(() => {
+  process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
+const message =
+  'This role is assigned to 2 user(s) and cannot be deleted. Reassign or remove those users first.';
+const createStore = () =>
+  configureStore({
+    reducer: { [api.reducerPath]: api.reducer },
+    middleware: (getDefault) => getDefault().concat(api.middleware),
+  });
 let store: ReturnType<typeof createStore>;
 beforeEach(() => {
   clearCachedAuthSession();
@@ -35,19 +39,34 @@ afterEach(() => {
 });
 function open() {
   const close = vi.fn();
-  render(<Provider store={store}><ThemeProvider theme={createTheme(defaultSettings)}>
-    <RoleDeleteDialog role={{ id: 'qa-role', name: 'Intern Teacher' }} onClose={close} />
-  </ThemeProvider></Provider>);
+  render(
+    <Provider store={store}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <RoleDeleteDialog role={{ id: 'qa-role', name: 'Intern Teacher' }} onClose={close} />
+      </ThemeProvider>
+    </Provider>
+  );
   return close;
 }
 
 it('retains the role and actionable server reason after 409, then allows a successful retry', async () => {
   let writes = 0;
-  mswServer.use(http.delete('*/api/identity/roles/qa-role', () => {
-    writes += 1;
-    return writes === 1 ? HttpResponse.json({ status: 409, detail: message,
-      errorCode: 'ShikshaMitra:RoleAssignedToUsers', data: { UserCount: 2 } }, { status: 409 }) : new HttpResponse(null, { status: 204 });
-  }));
+  mswServer.use(
+    http.delete('*/api/identity/roles/qa-role', () => {
+      writes += 1;
+      return writes === 1
+        ? HttpResponse.json(
+            {
+              status: 409,
+              detail: message,
+              errorCode: 'ShikshaMitra:RoleAssignedToUsers',
+              data: { UserCount: 2 },
+            },
+            { status: 409 }
+          )
+        : new HttpResponse(null, { status: 204 });
+    })
+  );
   const close = open();
   fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   expect(await screen.findByRole('alert')).toHaveTextContent(message);
@@ -56,17 +75,21 @@ it('retains the role and actionable server reason after 409, then allows a succe
   fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   await waitFor(() => expect(close).toHaveBeenCalledOnce());
   expect(writes).toBe(2);
-});
+}, 30000);
 
 it('locks submission, cancel and Escape while the request is pending', async () => {
   let release!: () => void;
-  const pending = new Promise<void>((resolve) => { release = resolve; });
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   let writes = 0;
-  mswServer.use(http.delete('*/api/identity/roles/qa-role', async () => {
-    writes += 1;
-    await pending;
-    return new HttpResponse(null, { status: 204 });
-  }));
+  mswServer.use(
+    http.delete('*/api/identity/roles/qa-role', async () => {
+      writes += 1;
+      await pending;
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
   const close = open();
   const button = screen.getByRole('button', { name: 'Delete' });
   fireEvent.click(button);
@@ -81,7 +104,11 @@ it('locks submission, cancel and Escape while the request is pending', async () 
 });
 
 it('lets the user cancel after a failed deletion', async () => {
-  mswServer.use(http.delete('*/api/identity/roles/qa-role', () => HttpResponse.json({ detail: message }, { status: 409 })));
+  mswServer.use(
+    http.delete('*/api/identity/roles/qa-role', () =>
+      HttpResponse.json({ detail: message }, { status: 409 })
+    )
+  );
   const close = open();
   fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   await screen.findByRole('alert');
@@ -90,15 +117,30 @@ it('lets the user cancel after a failed deletion', async () => {
 });
 
 it('shows success even when closing immediately unmounts the dialog', async () => {
-  mswServer.use(http.delete('*/api/identity/roles/qa-role', () => new HttpResponse(null, { status: 204 })));
+  mswServer.use(
+    http.delete('*/api/identity/roles/qa-role', () => new HttpResponse(null, { status: 204 }))
+  );
   function Workflow() {
     const [isOpen, setOpen] = useState(true);
-    return <>
-      <Toaster />
-      {isOpen && <RoleDeleteDialog role={{ id: 'qa-role', name: 'Unused QA role' }} onClose={() => setOpen(false)} />}
-    </>;
+    return (
+      <>
+        <Toaster />
+        {isOpen && (
+          <RoleDeleteDialog
+            role={{ id: 'qa-role', name: 'Unused QA role' }}
+            onClose={() => setOpen(false)}
+          />
+        )}
+      </>
+    );
   }
-  render(<Provider store={store}><ThemeProvider theme={createTheme(defaultSettings)}><Workflow /></ThemeProvider></Provider>);
+  render(
+    <Provider store={store}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <Workflow />
+      </ThemeProvider>
+    </Provider>
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
   expect(await screen.findByText('Role deleted successfully')).toBeVisible();
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

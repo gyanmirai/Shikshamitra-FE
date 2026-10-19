@@ -168,6 +168,15 @@ const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): Allocatio
 
 // ─── Public API ────────────────────────────────────────────────────────────────
 
+/** Keep the cashier's charge order consistent in the summary, review and request. */
+export const selectedChargesInOrder = (charges: IFeeCharge[], selectedIds: string[]): IFeeCharge[] => {
+  const byId = new Map(charges.map((charge) => [charge.chargeId, charge]));
+  return selectedIds.flatMap((id) => {
+    const charge = byId.get(id);
+    return charge ? [charge] : [];
+  });
+};
+
 export interface PaymentAllocationResult {
   /** All selected rows with their allocation amounts (items that receive ₹0 are shown as Pending). */
   allocatedRows: AllocatedRow[];

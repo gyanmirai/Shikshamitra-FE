@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
 
+import { studentDirectoryQueryParams } from './student-directory-query';
+
 import type {
   RecordsPage,
   SaveRecordsDraft,
@@ -70,14 +72,10 @@ export const studentRecordsApi = api.injectEndpoints({
       RecordsPage<StudentDirectoryItem>,
       StudentDirectoryInput
     >({
-      query: (params) => {
-        const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-          if (Array.isArray(value)) value.forEach((item) => queryParams.append(key, item));
-          else if (value !== undefined && value !== null && value !== '') queryParams.set(key, String(value));
-        });
-        return { url: '/students/records/directory', params: queryParams };
-      },
+      query: (params) => ({
+        url: '/students/records/directory',
+        params: studentDirectoryQueryParams(params),
+      }),
       transformResponse: (
         response: RecordsPage<StudentDirectoryItem> | { data?: RecordsPage<StudentDirectoryItem> }
       ) => unwrapRecordsResult(response),

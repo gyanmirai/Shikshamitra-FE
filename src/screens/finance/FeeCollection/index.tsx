@@ -8,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useCreateFeeAdjustmentMutation } from 'src/redux/finance/adjustments/adjustmentApi';
@@ -16,6 +17,7 @@ import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceA
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
 import AdjustmentForm from '../adjustments/components/AdjustmentForm';
+import { useFinancePermissions } from '../hooks/useFinancePermissions';
 import FeeCollectComponentForm from './FeeCollectionComponent/FeeCollectionForm';
 import { buildAdjustmentApiPayload } from '../adjustments/types/adjustmentFormValues';
 
@@ -23,6 +25,8 @@ import type { IStudentFee } from './Components/type';
 import type { IAdjustmentFullFormValues } from '../adjustments/types/adjustmentFormValues';
 
 const FeeCollection = () => {
+  const access = useFinancePermissions(financePermissions.fees.collections);
+  const adjustmentAccess = useFinancePermissions(financePermissions.fees.adjustment);
   const academicFilters = useFinanceAcademicFilters();
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
@@ -60,8 +64,8 @@ const FeeCollection = () => {
     >
       {studentDialog.value ? (
         <CustomBreadcrumbs
-          heading="Fee Collection Form"
-          description="Select the applicable fee term and enter payment details. Once completed, click 'Generate Receipt' to collect the fee."
+          heading="Collect fees"
+          description="Select fee items from each category and record a payment."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/fee-collection' },
@@ -72,7 +76,7 @@ const FeeCollection = () => {
                 studentDialog.onFalse();
               },
             },
-            { name: 'Fee Collection Form' },
+            { name: 'Collect fees' },
           ]}
           isBack={studentDialog.value}
           onBack={() => {
@@ -141,6 +145,7 @@ const FeeCollection = () => {
           onAddFee={studentDialog}
           onDelete={() => {}}
           onCollectFee={(row) => {
+            if (!access.canAdd) return;
             studentDialog.onTrue();
             setSelectedStudent(row as any);
           }}
@@ -149,6 +154,7 @@ const FeeCollection = () => {
             setSelectedStudent(row as any);
           }}
           onGiveAdjustment={(row) => {
+            if (!adjustmentAccess.canAdd) return;
             adjustmentDialog.onTrue();
             setSelectedStudent(row as any);
           }}
@@ -156,7 +162,7 @@ const FeeCollection = () => {
         />
       )}
       <CustomDialog
-        open={studentDialog.value}
+        open={studentDialog.value && access.canAdd}
         title={`Collect Fees – ${selectedStudent?.name ?? 'Student'}`}
         fullScreen
         transitionDuration={{ enter: 0, exit: 0 }}
@@ -174,7 +180,7 @@ const FeeCollection = () => {
           viewDialog={viewDialog}
         />
       )}
-      {adjustmentDialog.value && selectedStudent && (
+      {adjustmentDialog.value && selectedStudent && adjustmentAccess.canAdd && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AdjustmentForm
             onCancel={() => {

@@ -55,6 +55,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
     selector({
+      auth: {
+        permissionsInitialized: true,
+        loading: false,
+        permissions: ['Finance.Fees.FeeCollections.View', 'Finance.Fees.FeeCollections.Add'].map(
+          (name) => ({ name, isGranted: true })
+        ),
+      },
       globalState: { currentYear: mocks.currentYear },
       confirmPopup: { isChanges: false },
     }),
@@ -65,12 +72,14 @@ vi.mock('@dnd-kit/core', () => ({
   useSensor: () => ({}),
   useSensors: () => [],
   PointerSensor: vi.fn(),
+  KeyboardSensor: vi.fn(),
   closestCenter: vi.fn(),
 }));
 vi.mock('@dnd-kit/sortable', () => ({
   SortableContext: ({ children }: any) => children,
   useSortable: () => ({ attributes: {}, listeners: {}, setNodeRef: vi.fn() }),
   verticalListSortingStrategy: vi.fn(),
+  sortableKeyboardCoordinates: vi.fn(),
   arrayMove: (items: unknown[]) => items,
 }));
 vi.mock('src/redux/feeCollection/feeCollection', () => ({
@@ -273,7 +282,7 @@ const adapter = (overrides: Partial<FeeCollectionAdapter> = {}): FeeCollectionAd
 });
 const beginCollection = async (yearName = '2026-2027') => {
   fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-  await screen.findByText('Form fee - (Jun 2026)');
+  await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
   fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '500' } });
   await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 500'));
   fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
@@ -288,38 +297,46 @@ describe('embedded Finance collection context', () => {
     mocks.defaultCollect.mockReturnValue({ unwrap: () => Promise.resolve(output) });
   });
 
-  it.each(['Ledger + Checkout', 'Period First', 'Wide Ledger'])(
-    'preserves checkout values when switching from the %s layout and keeps footer actions outside the panel',
-    async (layout) => {
-      const context = adapter();
-      render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
-      fireEvent.click(screen.getByRole('tab', { name: layout }));
-      const checkoutRegion = screen.getByRole('tabpanel');
-      expect(
-        within(checkoutRegion).getByRole('combobox', { name: /Payment method/i })
-      ).toBeInTheDocument();
-      expect(checkoutRegion).not.toContainElement(
-        screen.getByRole('button', { name: 'Collect Payment' })
-      );
-      expect(checkoutRegion).not.toContainElement(screen.getByRole('button', { name: 'Cancel' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-      await screen.findByText('Form fee - (Jun 2026)');
-      fireEvent.change(within(checkoutRegion).getByLabelText('Amount to collect *'), {
-        target: { value: '250' },
-      });
-      expect(within(checkoutRegion).getByLabelText('Amount to collect *')).toHaveValue('₹ 250');
-      fireEvent.click(
-        screen.getByRole('tab', {
-          name: layout === 'Wide Ledger' ? 'Ledger + Checkout' : 'Wide Ledger',
-        })
-      );
-      expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250');
-      expect(screen.getByText('Form fee - (Jun 2026)')).toBeInTheDocument();
-      expect(screen.getByRole('tabpanel')).toContainElement(
-        screen.getByLabelText('Amount to collect *')
-      );
-    }
-  );
+  it('keeps checkout values and collection actions in the payment summary', async () => {
+    render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={adapter()} />);
+    const checkout = screen.getByRole('heading', { name: 'Payment summary' }).closest('section')!;
+    expect(within(checkout).getByRole('combobox', { name: /Payment method/i })).toBeInTheDocument();
+    expect(checkout).toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
+    expect(checkout).toContainElement(screen.getByRole('button', { name: 'Cancel' }));
+    const details = screen.getByRole('region', { name: 'Payment details' });
+    expect(details).not.toContainElement(screen.getByRole('heading', { name: 'Payment summary' }));
+    expect(details).not.toContainElement(screen.getByText('Collecting now'));
+    expect(details).not.toContainElement(screen.getByRole('button', { name: 'Collect Payment' }));
+    expect(details).not.toContainElement(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveClass('MuiButton-outlined');
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toHaveClass(
+      'MuiButton-colorInherit'
+    );
+    expect(screen.getByRole('button', { name: 'Clear All' })).toHaveClass('MuiButton-outlined');
+    expect(screen.queryByText(/\d+ items? selected/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
+    fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
+    expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250');
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+  });
+
+  it('allows leaving when fee refresh fails while blocking another collection', () => {
+    const onCancel = vi.fn();
+    render(
+      <FeeCollectComponentForm
+        academicYear={academicYear}
+        collectionAdapter={adapter({ error: { status: 500 } })}
+        onCancel={onCancel}
+      />
+    );
+    expect(screen.getByLabelText('Amount to collect *')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+    expect(cancel).toBeEnabled();
+    fireEvent.click(cancel);
+    expect(onCancel).toHaveBeenCalledWith(null, false);
+  });
 
   it('retains global-year defaults and uses the explicit year in every Finance query', () => {
     const view = render(<FeeCollectComponentForm student={student} />);
@@ -350,7 +367,6 @@ describe('embedded Finance collection context', () => {
 
   it('skips student APIs, displays the applicant and supplies the same Finance ledger heads', () => {
     render(<FeeCollectComponentForm collectionAdapter={adapter()} academicYear={academicYear} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Student information' }));
     expect(screen.getByText('Kabir Shah')).toBeVisible();
     expect(mocks.queries).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -492,7 +508,7 @@ describe('embedded Finance collection context', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByText('Form fee - (Jun 2026)');
+    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
@@ -502,6 +518,30 @@ describe('embedded Finance collection context', () => {
       dueFeePayments: [{ dueFeeId: 'canonical-due', feeHeadId: 'form-fee', amount: 250 }],
       payments: [{ amount: 250 }],
     });
+  });
+
+  it('returns cash change without adding the tender to the collection or receipt', async () => {
+    const collect = vi.fn().mockResolvedValue(output);
+    render(
+      <FeeCollectComponentForm
+        academicYear={academicYear}
+        collectionAdapter={adapter({ collect })}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+    await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 500'));
+    fireEvent.change(screen.getByLabelText('Cash Received'), { target: { value: '499' } });
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+    expect(screen.getByText('Cash received must cover the amount to collect.')).toBeVisible();
+    fireEvent.change(screen.getByLabelText('Cash Received'), { target: { value: '1000' } });
+    const change = screen.getByText('Change to return').parentElement!;
+    expect(within(change).getByText('₹ 500')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+    await waitFor(() => expect(collect).toHaveBeenCalledOnce());
+    expect(collect.mock.calls[0][0].payments[0].amount).toBe(500);
+    expect(collect.mock.calls[0][0].dueFeePayments[0].amount).toBe(500);
   });
 
   it('retries the exact multi-due command after a saved payment response is lost and the ledger refreshes', async () => {
@@ -533,7 +573,7 @@ describe('embedded Finance collection context', () => {
       <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByText('Tuition - (Jun 2026)');
+    await screen.findByRole('row', { name: 'Tuition, Jun 2026' });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '600' } });
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
@@ -626,7 +666,7 @@ describe('embedded Finance collection context', () => {
       expect(screen.getByLabelText('Amount to collect *')).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
       fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '1' } });
-      fireEvent.click(screen.getByRole('button', { name: 'Clear all' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
       fireEvent.click(screen.getByRole('button', { name: 'Retry payment' }));
       await waitFor(() => expect(collect).toHaveBeenCalledTimes(2));
       expect(collect.mock.calls[1][0]).toEqual(collect.mock.calls[0][0]);
@@ -688,7 +728,7 @@ describe('embedded Finance collection context', () => {
       <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
-    await screen.findByText('Form fee - (Jun 2026)');
+    await screen.findByRole('row', { name: 'Form fee, Jun 2026' });
     fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
     view.rerender(
       <FeeCollectComponentForm
@@ -698,7 +738,7 @@ describe('embedded Finance collection context', () => {
     );
     await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue(''));
     expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
-    expect(screen.queryByText('Form fee - (Jun 2026)')).not.toBeInTheDocument();
+    expect(screen.queryByRole('row', { name: 'Form fee, Jun 2026' })).not.toBeInTheDocument();
     expect(context.collect).not.toHaveBeenCalled();
   });
 });

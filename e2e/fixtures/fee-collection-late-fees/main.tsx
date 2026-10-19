@@ -24,7 +24,7 @@ const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer, confirmPopup,
     globalState: () => ({ currentYear: { id: 'year-2026', name: '2026-2027', startDate: '2026-06-01', endDate: '2027-05-31', boards } }),
-    auth: () => ({ permissions: ['Finance.Fees.Collections.View', 'Finance.Fees.Collections.Add', 'Finance.Fees.Collections.Waive'].map((name) => ({ name, isGranted: true })) }),
+    auth: () => ({ permissionsInitialized: true, loading: false, permissions: ['Finance.Fees.FeeCollections.View', 'Finance.Fees.FeeCollections.Add', 'Finance.Fees.FeeCollections.Waive'].map((name) => ({ name, isGranted: true })) }),
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
 });

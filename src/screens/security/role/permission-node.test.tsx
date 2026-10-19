@@ -104,20 +104,16 @@ describe('Statutory Schemes controls', () => {
 });
 
 describe('Accounts permission controls', () => {
-  it('renders separate Edit and Change Status switches using the exact permission base', () => {
+  it('groups editing and status changes under Add using the exact permission base', () => {
     const onToggle = renderNode(['View', 'Add', 'Edit', 'ChangeStatus', 'Delete']);
-    fireEvent.click(screen.getByLabelText('Edit'));
+    fireEvent.click(screen.getByLabelText('Add'));
     expect(onToggle).toHaveBeenLastCalledWith(
       expect.objectContaining({ permissionName: `${base}.View` }),
-      'Edit',
+      'Add',
       false
     );
-    fireEvent.click(screen.getByLabelText('ChangeStatus'));
-    expect(onToggle).toHaveBeenLastCalledWith(
-      expect.objectContaining({ permissionName: `${base}.View` }),
-      'ChangeStatus',
-      false
-    );
+    expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('ChangeStatus')).not.toBeInTheDocument();
     expect(screen.queryByText(/permissions are missing/)).not.toBeInTheDocument();
   });
 

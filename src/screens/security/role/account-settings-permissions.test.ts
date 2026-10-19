@@ -88,7 +88,7 @@ describe.each(['AccountHead', 'IncomeCategory', 'ExpenseCategory', 'BankAccount'
 
     it('uses canonical action names when a menu is guarded with .View', () => {
       expect(getActionPermissionBase(`${base}.View`)).toBe(base);
-      expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(actions);
+      expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Add', 'Delete']);
       const targets = getNodeActionPermissionNames({ permissionName: `${base}.View` }, catalog);
       const changed = getChangedPermissionGrants(
         setPermissionGrants(catalog, targets, true),
@@ -113,7 +113,7 @@ describe.each(['AccountHead', 'IncomeCategory', 'ExpenseCategory', 'BankAccount'
     it('collects all five actions through the nested Accounts settings menu', () => {
       const node = { children: [{ children: [{ permissionName: `${base}.View` }] }] };
       expect(getNodeActionPermissionNames(node, catalog)).toEqual(
-        catalog.map((permission) => permission.name)
+        ['View', 'Add', 'Edit', 'ChangeStatus', 'Delete'].map((action) => `${base}.${action}`)
       );
     });
   }
@@ -125,13 +125,13 @@ it('shows only the exact posting setup grants supplied by the server', () => {
     name: `${base}.${action}`,
     isGranted: false,
   }));
-  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Edit']);
+  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Add']);
   expect(
-    getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'Edit', true, catalog)
-  ).toEqual(new Set([`${base}.Edit`]));
+    getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'Add', true, catalog)
+  ).toEqual(new Set([`${base}.Edit`, `${base}.View`]));
   expect(
     getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'View', false, catalog)
-  ).toEqual(new Set([`${base}.View`]));
+  ).toEqual(new Set([`${base}.View`, `${base}.Edit`]));
 });
 
 it('does not invent actions missing from the permission catalog', () => {
@@ -141,7 +141,7 @@ it('does not invent actions missing from the permission catalog', () => {
   expect(getNodePermissionActions('Finance.Settings.FeeCategory', [])).toEqual([]);
 });
 
-it('exposes every server-defined generic action, including disabled grants', () => {
+it('bundles Finance workflow actions into the three controls', () => {
   const base = 'Finance.Fees.Concession';
   const actions = [
     'View',
@@ -158,7 +158,7 @@ it('exposes every server-defined generic action, including disabled grants', () 
     isGranted: ['View', 'Add', 'Approve', 'Reject'].includes(action),
   }));
 
-  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(actions);
+  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Add', 'Delete']);
   expect(getNodeActionPermissionNames({ permissionName: `${base}.View` }, catalog)).toEqual(
     actions.map((action) => `${base}.${action}`)
   );
@@ -197,9 +197,7 @@ it('includes assignment policy overrides in the existing assignment Add control'
   expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'View', catalog)).toEqual([
     `${base}.View`,
   ]);
-  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Delete', catalog)).toEqual([
-    `${base}.Delete`,
-  ]);
+  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Delete', catalog)).toEqual([]);
 });
 
 it('grants the Student View group when Add is enabled', () => {

@@ -1,12 +1,12 @@
 'use client';
 
 import { financePermissions } from 'src/constants/finance-menu';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
+import ExactPermissionGuard from 'src/components/exact-permission-guard';
 
 const PaymentTermLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.fees.settings.paymentTerms}>
+  <ExactPermissionGuard permissionKey={`${financePermissions.fees.settings.paymentTerms}.View`}>
     {children}
-  </StudentPermissionGuard>
+  </ExactPermissionGuard>
 );
 
 export default PaymentTermLayout;

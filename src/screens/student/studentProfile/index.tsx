@@ -5,10 +5,9 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 import type { StudentDirectoryItem } from 'src/redux/student/records/student-records-types';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { RouterLink } from 'src/routes/components';
-import { Box, MenuList, MenuItem } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -17,6 +16,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import StudentDirectory from 'src/screens/student/records/student-directory';
 import { recordsQueryUrl } from 'src/screens/student/records/records-url-state';
+import { directoryStudentName } from 'src/screens/student/records/student-directory-columns';
 import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
 
 import Finance from './finance';
@@ -166,33 +166,28 @@ export function StudentProfile() {
       <StudentDirectory
         rowActions={
           canChange || canAssignFees
-            ? (row, { popover }) => (
-                <MenuList>
-                  {canChange && (
-                    <MenuItem
-                      component={RouterLink}
-                      href={`${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(
-                        row.studentId
-                      )}&section=status`}
-                      onClick={popover.onClose}
-                    >
-                      <Iconify icon="mdi:account-edit-outline" sx={{ mr: 1 }} />
-                      Change status
-                    </MenuItem>
-                  )}
-                  {canAssignFees && (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        setFeeStudent(row);
-                      }}
-                    >
-                      <Iconify icon="mdi:cash-multiple" sx={{ mr: 1 }} />
-                      Assign fee structure
-                    </MenuItem>
-                  )}
-                </MenuList>
-              )
+            ? (row) => [
+                ...(canChange
+                  ? [
+                      {
+                        id: 'change-status',
+                        label: `Change status for ${directoryStudentName(row)}`,
+                        icon: 'mdi:account-edit-outline',
+                        href: `${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(row.studentId)}&section=status`,
+                      },
+                    ]
+                  : []),
+                ...(canAssignFees
+                  ? [
+                      {
+                        id: 'assign-fees',
+                        label: `Assign fee structure for ${directoryStudentName(row)}`,
+                        icon: 'mdi:cash-multiple',
+                        onClick: () => setFeeStudent(row),
+                      },
+                    ]
+                  : []),
+              ]
             : undefined
         }
       />

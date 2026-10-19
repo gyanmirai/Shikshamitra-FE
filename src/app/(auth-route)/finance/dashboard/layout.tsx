@@ -1,12 +1,12 @@
 'use client';
 
 import { financePermissions } from 'src/constants/finance-menu';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
+import ExactPermissionGuard from 'src/components/exact-permission-guard';
 
 const FinanceDashboardLayout = ({ children }: { children: React.ReactNode }) => (
-  <StudentPermissionGuard permissionKey={financePermissions.dashboard}>
+  <ExactPermissionGuard permissionKey={financePermissions.dashboard}>
     {children}
-  </StudentPermissionGuard>
+  </ExactPermissionGuard>
 );
 
 export default FinanceDashboardLayout;

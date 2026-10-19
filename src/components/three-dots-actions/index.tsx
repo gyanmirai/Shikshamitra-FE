@@ -115,11 +115,14 @@ const ThreeDotsActions = ({
         <Tooltip key={action.id} title={action.tooltip ?? action.label}>
           <span>
             <IconButton
+              {...(action.href && !action.disabled && !action.loading
+                ? { component: RouterLink, href: action.href }
+                : {})}
               aria-label={action.label}
               data-testid={`table-action-${action.id}`}
               onClick={(event) => {
                 event.stopPropagation();
-                action.onClick(event);
+                action.onClick?.(event);
               }}
               disabled={action.disabled || action.loading}
               loading={action.loading}

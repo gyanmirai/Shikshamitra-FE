@@ -12,6 +12,7 @@ import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -24,10 +25,12 @@ import {
 
 import FeeHeadForm from './Components/FeeHeadForm';
 import FeeHeadTable from './Components/FeeHeadTable';
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 
 import type { IFeeHead } from './Components/type';
 
 const FeeHeadCreation = () => {
+  const access = useFinancePermissions(financePermissions.fees.settings.feeHead);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
@@ -50,6 +53,7 @@ const FeeHeadCreation = () => {
     type: 'query',
     currentQueryAndMutation: useGetFeeHeadsQuery,
     params: { academicYearId: currentYear?.id, ...queryParams },
+    options: { skip: !access.canView || !currentYear?.id },
   });
 
   // DELETE mutation
@@ -108,6 +112,7 @@ const FeeHeadCreation = () => {
         ]}
         action={
           <Button
+            disabled={!access.canAdd}
             onClick={() => addFeeHeadDialog.onTrue()}
             size="small"
             startIcon={<Add />}
@@ -121,10 +126,12 @@ const FeeHeadCreation = () => {
 
       <FeeHeadTable
         onEdit={(data) => {
+          if (!access.canAdd) return;
           setSelectedFeeHead(data);
           addFeeHeadDialog.onTrue();
         }}
         onDelete={(data) => {
+          if (!access.canDelete) return;
           setSelectedEntry(data);
           deleteDialog.onTrue();
         }}
@@ -140,7 +147,7 @@ const FeeHeadCreation = () => {
 
       {/* Add/Edit Fee Head Dialog */}
       <CustomDialog
-        open={addFeeHeadDialog.value}
+        open={addFeeHeadDialog.value && access.canAdd}
         handleClose={() => {
           addFeeHeadDialog.onFalse();
           setTimeout(() => {
@@ -172,7 +179,7 @@ const FeeHeadCreation = () => {
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        open={deleteDialog.value}
+        open={deleteDialog.value && access.canDelete}
         onClose={() => {
           setTimeout(() => {
             setSelectedEntry(null);
@@ -192,6 +199,7 @@ const FeeHeadCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
+              if (!access.canDelete) return;
               confirmWithUndo({
                 item: selectedEntry,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>

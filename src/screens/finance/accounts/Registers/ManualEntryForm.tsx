@@ -9,12 +9,12 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { financePaths } from 'src/constants/finance-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { PaymentMethod, PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import { useCreateAccountsManualEntryMutation } from 'src/redux/finance/accountsActivityApi';
@@ -32,6 +32,7 @@ import {
 
 import { entryDate } from './academicMonths';
 import { manualEntrySchema } from './manualEntrySchema';
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 
 import type { AcademicPeriod } from './academicMonths';
 
@@ -47,6 +48,7 @@ export default function ManualEntryForm({
   onClose: () => void;
 }) {
   const income = direction === 'income';
+  const access = useFinancePermissions(income ? financePermissions.accounts.income : financePermissions.accounts.expense);
   const [create, { isLoading }] = useCreateAccountsManualEntryMutation();
   const [failure, setFailure] = useState('');
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function ManualEntryForm({
   const nameInput = useRef<HTMLInputElement>(null);
   const options = useGetFinanceRoutingOptionsQuery(
     { academicYearId: period.id, operation: income ? 'income-entry' : 'expense-entry' },
-    { refetchOnMountOrArgChange: true }
+    { skip: !access.canAdd, refetchOnMountOrArgChange: true }
   );
   const formik = useFormik({
     initialValues: {
@@ -71,6 +73,7 @@ export default function ManualEntryForm({
     },
     validationSchema: manualEntrySchema,
     onSubmit: async (values) => {
+      if (!access.canAdd) return;
       if (submitting.current || options.isError || options.isFetching || !options.currentData)
         return;
       const date = dayjs(values.paymentDate);
@@ -124,7 +127,7 @@ export default function ManualEntryForm({
     },
   });
   const locked = isLoading || formik.isSubmitting;
-  const blocking = locked || options.isFetching;
+  const blocking = !access.canAdd || locked || options.isFetching;
   useEffect(() => {
     if (!options.isFetching && !options.isError) nameInput.current?.focus();
   }, [options.isFetching, options.isError]);

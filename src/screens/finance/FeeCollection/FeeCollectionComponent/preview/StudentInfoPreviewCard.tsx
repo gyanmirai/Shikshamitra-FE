@@ -81,9 +81,10 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
     .map((w: string) => w[0]?.toUpperCase())
     .join('');
 
-  const classLabel = [student.className || '10', student.division ? `Div ${student.division}` : '']
-    .filter(Boolean)
-    .join(' · ');
+  const classLabel =
+    [student.className, student.division ? `Div ${student.division}` : '']
+      .filter(Boolean)
+      .join(' · ') || '—';
 
   return (
     <Card
@@ -118,11 +119,11 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
 
           <Box>
             <Typography variant="subtitle1" fontWeight={700} color="text.primary" lineHeight={1.2}>
-              {student.name || 'Aarav Sharma'}
+              {student.name || '—'}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" fontWeight={500} mt={0.5}>
-              {student.grNumber || student.rollNumber || 'GR-001'}
+              {student.grNumber || student.rollNumber || '—'}
             </Typography>
           </Box>
         </Stack>
@@ -140,7 +141,7 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
               <MetaItem
                 icon="solar:user-id-bold"
                 label="Admission No."
-                value={student.grNumber || student.rollNumber || 'GR-001'}
+                value={student.grNumber || student.rollNumber || '—'}
               />
             </Grid>
 
@@ -152,7 +153,7 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
               <MetaItem
                 icon="solar:calendar-bold"
                 label="Academic Year"
-                value={academicYear || '2025–26'}
+                value={academicYear || '—'}
               />
             </Grid>
 

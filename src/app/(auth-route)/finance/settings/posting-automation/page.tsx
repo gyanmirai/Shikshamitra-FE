@@ -1,6 +1,6 @@
 import React from 'react';
 import PostingAutomation from 'src/screens/finance/settings/PostingAutomation';
-import StudentPermissionGuard from 'src/components/student-permission-guard';
+import ExactPermissionGuard from 'src/components/exact-permission-guard';
 import { financePermissions } from 'src/constants/finance-menu';
 
 export const metadata = {
@@ -8,7 +8,9 @@ export const metadata = {
 };
 
 export default function PostingAutomationPage() {
-  return <StudentPermissionGuard permissionKey={financePermissions.accounts.settings.postingAutomation}>
-    <PostingAutomation />
-  </StudentPermissionGuard>;
+  return (
+    <ExactPermissionGuard permissionKey={financePermissions.accounts.settings.postingAutomation}>
+      <PostingAutomation />
+    </ExactPermissionGuard>
+  );
 }

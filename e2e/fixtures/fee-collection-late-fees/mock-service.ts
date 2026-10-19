@@ -192,6 +192,17 @@ function collect(body: CollectFeeInput): CollectFeeOutput {
     result.feeReceiptId = undefined;
     result.feeReceiptNumber = undefined;
   }
+  // Exercise the real UI's pending-response branch without inventing a bank
+  // settlement model. Unverified payments have no generated receipt, and this
+  // isolated fixture leaves the underlying balances unchanged.
+  if (body.paymentConfirmed === false || body.payments.some((payment) => payment.paymentMethod === 1 || payment.paymentMethod === 2)) {
+    Object.assign(result, {
+      status: 5, receiptNumber: '', feeReceiptId: undefined, feeReceiptNumber: undefined,
+      chargeReceiptId: undefined, chargeReceiptNumber: undefined,
+    });
+    replay.set(body.idempotencyKey, result);
+    return result;
+  }
   ledger = nextLedger;
   charges = nextCharges;
   replay.set(body.idempotencyKey, result);

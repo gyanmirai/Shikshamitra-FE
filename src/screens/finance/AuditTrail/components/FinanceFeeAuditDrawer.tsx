@@ -7,6 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Alert, Drawer, IconButton, Typography, CircularProgress } from '@mui/material';
 import { useLazyGetFinanceStudentAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
+import { useFinancePermissions } from 'src/screens/finance/hooks/useFinancePermissions';
 
 import AuditTimeline from './AuditTimeline';
 import { mapFinanceAuditEventsToLogs } from '../utils/financeAudit.mapper';
@@ -18,7 +19,12 @@ type FinanceFeeAuditDrawerProps = {
   onClose: () => void;
 };
 
-export default function FinanceFeeAuditDrawer({
+export default function FinanceFeeAuditDrawer(props: FinanceFeeAuditDrawerProps) {
+  const access = useFinancePermissions('Finance.Auditing');
+  return access.canView ? <AuthorizedFinanceFeeAuditDrawer {...props} /> : null;
+}
+
+function AuthorizedFinanceFeeAuditDrawer({
   open,
   studentId,
   studentName,

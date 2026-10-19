@@ -293,7 +293,7 @@ const FinalPaymentReviewDialog = ({
         {isCash ? (
           /* ── CASH: Single action ── */
           <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-            <Tooltip title="Collect cash payment and generate receipt immediately">
+            <Tooltip describeChild title="Collect cash payment and generate receipt immediately">
               <LoadingButton
                 variant="contained"
                 color="success"
@@ -310,7 +310,10 @@ const FinalPaymentReviewDialog = ({
         ) : isChequeOrDemandDraft(paymentMethod) ? (
           /* ── CHEQUE/DEMAND DRAFT: Single action for reconciliation ── */
           <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
-            <Tooltip title="Move payment to reconciliation - receipt will be generated after verification by finance team">
+            <Tooltip
+              describeChild
+              title="Move payment to reconciliation - receipt will be generated after verification by finance team"
+            >
               <LoadingButton
                 variant="contained"
                 color="warning"
@@ -327,7 +330,10 @@ const FinalPaymentReviewDialog = ({
         ) : (
           /* ── OTHER NON-CASH: Two actions ── */
           <Stack direction="row" justifyContent="flex-end" spacing={1.5} flexWrap="wrap">
-            <Tooltip title="Save payment as pending - receipt will be generated after verification by finance team">
+            <Tooltip
+              describeChild
+              title="Save payment as pending - receipt will be generated after verification by finance team"
+            >
               <LoadingButton
                 variant="contained"
                 color="warning"
@@ -341,7 +347,7 @@ const FinalPaymentReviewDialog = ({
               </LoadingButton>
             </Tooltip>
 
-            <Tooltip title="Accept this payment immediately and generate receipt now">
+            <Tooltip describeChild title="Accept this payment immediately and generate receipt now">
               <LoadingButton
                 variant="contained"
                 color="success"

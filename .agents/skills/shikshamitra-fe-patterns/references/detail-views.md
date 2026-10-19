@@ -12,6 +12,10 @@ from a table's View action. These views may appear as dialogs, drawers, or
 focused detail surfaces depending on the amount of information. The attached
 screenshots are reference examples, not a perfect final implementation.
 
+Use [the Policy-view consistency guide](../../shikshamitra-ui-consistency/references/detail-pages.md)
+for required record-header and section info controls, matching form/view section styling,
+and the actual component help props in dialogs, drawers and pages.
+
 ## 1. Purpose and surface choice
 
 - A detail view is for understanding a record, its current state, and its
@@ -35,8 +39,9 @@ The header must identify the record immediately and establish its context.
 - Show the record type or category as concise supporting text when useful.
 - Show the current lifecycle status beside the name using the system status
   treatment.
-- Use one optional contextual information icon only when it explains a rule,
-  limitation, or dependency that is not obvious from the content.
+- Include one record-header information control, following the Policy-view reference,
+  with concise view-purpose/scope help. Every standard detail section also includes
+  adjacent info help; these controls are required even when the underlying API props are optional.
 - The information icon must have a meaningful accessible label and open a
   concise explanation.
 - Use the record's configured icon or color only when it is part of the

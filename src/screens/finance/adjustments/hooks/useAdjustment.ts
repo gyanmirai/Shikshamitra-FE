@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { financePermissions } from 'src/constants/finance-menu';
 import {
   useCreateFeeAdjustmentMutation,
   useRejectFeeAdjustmentMutation,
@@ -9,6 +10,7 @@ import {
 } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import { buildAdjustmentApiPayload } from '../types/adjustmentFormValues';
+import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 import { useFinanceAcademicFilters } from '../../hooks/useFinanceAcademicFilters';
 import { AdjustmentTabEnum, AdjustmentStatusEnum } from '../enums/adjustment.enum';
 
@@ -35,6 +37,7 @@ const mapItemToAdjustmentRequest = (item: FeeAdjustmentApplicationItemDto): Adju
 });
 
 export function useAdjustment(activeTab: AdjustmentTabEnum) {
+  const access = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { filterPayload, isReady } = useFinanceAcademicFilters();
 
@@ -64,7 +67,7 @@ export function useAdjustment(activeTab: AdjustmentTabEnum) {
     data: applications,
     isLoading,
     refetch,
-  } = useGetAdjustmentApplicationsQuery(queryParams!, { skip: !queryParams });
+  } = useGetAdjustmentApplicationsQuery(queryParams!, { skip: !queryParams || !access.canView });
 
   const [createFeeAdjustment, createState] = useCreateFeeAdjustmentMutation();
   const [rejectFeeAdjustment, rejectState] = useRejectFeeAdjustmentMutation();
@@ -85,6 +88,7 @@ export function useAdjustment(activeTab: AdjustmentTabEnum) {
   );
 
   const createAdjustment = async (values: IAdjustmentFullFormValues) => {
+    if (!access.canAdd) throw new Error('You do not have permission to create adjustments.');
     if (!currentYear?.id) throw new Error('Academic year is required.');
     const body = buildAdjustmentApiPayload(values);
     await createFeeAdjustment({ academicYearId: currentYear.id, body }).unwrap();
@@ -92,6 +96,7 @@ export function useAdjustment(activeTab: AdjustmentTabEnum) {
   };
 
   const rejectAdjustment = async (id: string, _rejectedBy: string, rejectionReason: string) => {
+    if (!access.canAdd) throw new Error('You do not have permission to reject adjustments.');
     await rejectFeeAdjustment({ id, body: { message: rejectionReason } }).unwrap();
     refetch();
   };

@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import { useTheme } from '@mui/material/styles';
+import { RouterLink } from 'src/routes/components';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -21,6 +22,9 @@ type OverflowActionMenuItemProps = {
 function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProps) {
   const menuItem = (
     <MenuItem
+      {...(action.href && !action.disabled && !action.loading
+        ? { component: RouterLink, href: action.href }
+        : {})}
       disabled={action.disabled || action.loading}
       aria-busy={action.loading || undefined}
       data-testid={`menu-action-${action.id}`}
@@ -90,7 +94,7 @@ const AdaptiveThreeDotsActions = ({
                     onSelect={() => {
                       popover.onClose();
                       onClosePopover?.();
-                      action.onClick();
+                      action.onClick?.();
                     }}
                   />
                 ))}

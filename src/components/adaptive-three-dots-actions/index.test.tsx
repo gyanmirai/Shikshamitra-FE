@@ -44,6 +44,23 @@ describe('AdaptiveThreeDotsActions', () => {
       </ThemeProvider>
     );
 
+  it('keeps native navigation links direct or in overflow and removes disabled destinations', async () => {
+    const href = '/student/profile?student=one&board=cbse&page=2';
+    renderActions([
+      { id: 'view', label: 'View student', icon: 'mdi:eye', href },
+      { id: 'disabled', label: 'Unavailable student', icon: 'mdi:eye', href, disabled: true },
+      { id: 'history', label: 'Student history', icon: 'mdi:history', href: '/student/history' },
+    ]);
+    expect(screen.getByRole('link', { name: 'View student' })).toHaveAttribute('href', href);
+    expect(screen.getByRole('button', { name: 'Unavailable student' })).toBeDisabled();
+    expect(screen.queryByRole('link', { name: 'Unavailable student' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(await screen.findByRole('menuitem', { name: 'Student history' })).toHaveAttribute(
+      'href',
+      '/student/history'
+    );
+  });
+
   it('renders up to two actions as direct icon buttons', () => {
     const handlers = [vi.fn(), vi.fn()];
     const actions = handlers.map((onClick, index) => ({

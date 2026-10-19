@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -114,19 +114,40 @@ Fee-line status and overdue classification come from the backend; see the
 
 ## Fee Collection selection and receiving bank
 
-The Collect Fees dialog opens with Student information collapsed and offers Ledger + Checkout,
-Period First and Wide Ledger layouts. Changing layout or ledger grouping preserves the same
-unsaved collection, filters and allocation order. The embedded shared ledger table shows Fee Head,
-Due Period with installment label, Outstanding Amount, Status and an icon-only View action.
+Collect Fees shows the student identity, academic year and total outstanding above expandable
+fee-head cards and a payment summary. Each card has independent group selection, a selected
+amount/count badge, and an embedded shared table showing Due Period with installment label,
+Amount, Status and an icon-only View action. The Filters button expands Month, Fee Head, Status,
+Group by and all four selection presets. Grouping by month uses the same cards and preserves
+selection, payment drafts and allocation order; additional charges retain a separate group.
 View opens the row's full breakdown, including proration, concessions, refunds, reconciliation
-and the existing waiver controls. The table owns scrolling and sorting; sorting never reorders
-the selected allocations. Period First adds period selection controls over the same ledger.
+and the existing waiver controls. The compact read-only dialog groups due period, installment
+and status in Fee Details (Charge Details for charges), followed by Amount Breakdown with a
+prominent outstanding amount. Its shared section grid uses two columns when space allows and
+stacks on narrow screens; the scrollable body keeps the outlined Close action reachable.
+Amounts retain the ledger's existing values and shared INR display formatting.
+The record header and each section expose a keyboard-accessible information control, following
+the Policy view's section typography and help pattern.
+The group list owns vertical scrolling and each embedded table contains horizontal scrolling.
+Sorting never reorders the selected allocations.
 
-Payment shows the selected count and amount, editable Amount to collect, payment method and
-its configured required details. Cash Received is a read-only reflection of the entered cash
-collection amount; this presentation does not add a separate tender/change contract. Non-cash
-methods retain the receiving-bank lookup. Allocation order remains available in a collapsed
-section, while redundant working-total and change/balance summaries are omitted. Hidden selections
+Payment summary keeps its heading and outlined Clear All action above a scrollable
+payment-details body. Selected rows appear first with Fee item, Term and Amount columns,
+drag handles and trailing remove actions. Pointer, touch and keyboard dragging reorder fee rows
+or charge rows within their own allocation groups. Fees retain precedence over charges; the
+displayed order within each group is used by both payment review and the submitted allocations.
+The neutral dark Collect action, outlined Cancel and Collecting now amount stay in a stationary
+footer, outside that scroll region. Amount to collect and one Payment Method dropdown share a
+row when the panel has room. All policy-permitted methods and their required details remain
+available directly in the dropdown. Receiving-bank lookup is preserved. Cash Received is a local
+tender draft used only to display Change to return; only Amount to collect is allocated, posted
+and printed on receipts. Insufficient cash blocks collection. Clear All also clears cash tender.
+
+The student identity card uses compact padding and a smaller avatar. Selected-item rows are
+compact, with a separate field group below. Summary guidance lives in the header info tooltip;
+fields show validation errors without routine instructional helper text.
+Collect and Cancel sit in
+the payment summary; mobile stacks it after the fee groups. Hidden selections
 are counted visibly when filters exclude them. Both existing review dialogs and receipt flows
 remain in place.
 

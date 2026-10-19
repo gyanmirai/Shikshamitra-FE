@@ -3,12 +3,33 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-17
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Finance frontend changes
+
+## Security action bundles
+
+Finance controls are defined in `src/screens/security/role/finance-permission-groups.ts`.
+They write exact catalogue keys; runtime checks continue to use exact backend action names.
+Finance layouts use `ExactPermissionGuard` with their exact View action or configured module flag.
+Policy pages require Policies module visibility; they do not require Fees module visibility.
+Run `finance-permission-groups.test.ts`, the Security role suite and Finance action-guard tests.
+Browser checks cover View-only, Add (including editing/approval), Delete-only, revoked View/direct
+URL denial, saved role grants, user overrides, and restoration of test-account overrides.
+Verify Charges, Collections, Adjustments, Income/Expenses, fee/account settings and all policy families.
+Embedded fee details require Collection Add for Collect Fees and Auditing View for
+Audit Trail; the audit drawer and adjustment audit query must also fail closed.
+The posting-setup compatibility page uses an exact View guard even though posting is unavailable.
+Receipts/Audit are read-only; Collections, Fee Structure Assign and Reconciliation have no Delete control. Use the authorized local
+test workspace and synthetic records for writes; do not perform real payments for a permission test.
+Wait for the academic-year context and the target screen to finish loading before
+checking actions; Income/Expenses initially render a context-only header. Test adjustment
+application in a disposable local database because the shipped workflow has no reversal.
+Restore exact test-account overrides, remove disposable databases, and use supported
+void/reversal/refund corrections for posted test records while retaining their audit history.
 
 TL;DR: run docs validation for documentation changes and targeted Finance tests for client, mapper, cache, and audit changes.
 Do not claim Finance behavior is validated unless the relevant tests or a stronger suite ran.
@@ -83,15 +104,27 @@ Use these commands as the first validation set.
 
 ## Add coverage when needed
 
-Collect Fees UI regressions are included in `FeeCollectionForm.charges.test.tsx`: collapsed
-student information, layout changes with an edited payment amount, table sorting without
-selection loss, and row View breakdown access. Run the collection selection/status suites in
+Collect Fees UI regressions are included in `FeeCollectionForm.charges.test.tsx`: visible
+student context, grouped fee selection, grouping changes with an edited payment amount, table
+sorting without selection loss, and row View breakdown access. Run the collection selection/status suites in
 the command table above. The `e2e/fixtures/fee-collection-late-fees` fixture renders the actual
 form against synthetic RTK Query responses. Finish in the in-app browser at 390, 768 and
-1440 px: exercise all three layouts, period selection/Show fees, filtered hidden selections,
+1440 px: exercise fee-group expansion and selection, Filters and month grouping, filtered hidden selections,
 fee/charge details and waiver access, partial collection, Cash/non-cash fields, receiving-bank
 validation, both review dialogs and generated receipts. Confirm the table owns horizontal
 scrolling and the document does not overflow. This fixture does not verify live backend writes.
+
+For repeatable browser coverage, build that fixture using its README and run
+`node node_modules/@playwright/test/cli.js test --config e2e/finance/fee-collection-ui.config.ts`.
+The suite exercises every filter option, both groupings, selection ownership, balance refresh,
+Clear All and keyboard actions, all seven payment methods through the visible dropdown,
+validation, review and request payloads. Selected-item rows are always visible in the payment
+body. Pointer and keyboard reorder tests verify fee allocation order, charge ordering through
+review/submission, and trailing remove actions. Fees continue to allocate before charges.
+It also checks independent payment scrolling and stationary summary/actions at all three
+viewports in light and dark themes. Reports are written under `.artifacts/fee-collection-ui`.
+Mock responses cover frontend receipts; backend settlement/reconciliation and PDF output remain
+separate integration checks.
 
 For the Finance drawer and navigation regressions, run these focused suites serially on memory-constrained Windows hosts:
 
