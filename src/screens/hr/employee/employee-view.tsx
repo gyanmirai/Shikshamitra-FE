@@ -1,29 +1,57 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
+import dynamic from 'next/dynamic';
 import { Icon } from '@iconify/react';
-import { motion } from 'framer-motion';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import React, { useId, useMemo } from 'react';
 import { FormSlider } from 'src/components/form-slider';
+import { motion, useReducedMotion } from 'framer-motion';
 import { EmptyContent } from 'src/components/empty-content';
-import { Tab, Box, Tabs, Paper, Avatar, Typography } from '@mui/material';
+import { Tab, Box, Tabs, Paper, Avatar, Skeleton, Typography } from '@mui/material';
 
-import PayrollSummary from './payroll-summary';
-import EmployeeInformation from './information';
-import EmployeeLibrary from './EmployeeLibrary';
-import EmployeeCalendar from './EmployeeCalendar';
-import LeaveBalance from '../leave-balance/leave-balance';
-import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeViewSkeleton from './employee-view-skeleton';
 import EmployeeProfileDashboard from './employee-dashboard';
-import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
-import EmployeeAttendanceHistory from './employee-attendance-history';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
-import QualificationAndCertification from './qualification-certification';
 import { EmployeeStatusTypeColor } from '../../../enums/employee-status-type';
+
+function ProfilePanelSkeleton() {
+  return (
+    <Box role="status" aria-label="Loading profile section" sx={{ p: 2 }}>
+      <Skeleton variant="rounded" height={240} />
+    </Box>
+  );
+}
+
+const PayrollSummary = dynamic(() => import('./payroll-summary'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeInformation = dynamic(() => import('./information'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeLibrary = dynamic(() => import('./EmployeeLibrary'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeCalendar = dynamic(() => import('./EmployeeCalendar'), {
+  loading: ProfilePanelSkeleton,
+});
+const LeaveBalance = dynamic(() => import('../leave-balance/leave-balance'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeAcademic = dynamic(() => import('./employeeAcademic/academic'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeCommunication = dynamic(() => import('./employee-communication'), {
+  loading: ProfilePanelSkeleton,
+});
+const EmployeeAttendanceHistory = dynamic(() => import('./employee-attendance-history'), {
+  loading: ProfilePanelSkeleton,
+});
+const QualificationAndCertification = dynamic(() => import('./qualification-certification'), {
+  loading: ProfilePanelSkeleton,
+});
 
 // ── Animation variants ──────────────────────
 const enterCurve = [0.22, 1, 0.36, 1] as const;
@@ -133,6 +161,7 @@ export function EmployeeCard({
   initialTab?: string;
   setSearchParams?: any;
 }) {
+  const reduceMotion = useReducedMotion();
   const tabs = useTabs(initialTab || 'dashboard');
   // Mount routed panels only after their URL is current, including browser history changes.
   const activeTab = setSearchParams ? initialTab || 'dashboard' : tabs.value;
@@ -153,9 +182,19 @@ export function EmployeeCard({
   return (
     <Box
       data-testid="hr-employee-profile"
-      sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: activeTab === 'dashboard' ? 'auto' : '100%',
+        minHeight: 0,
+        flexShrink: 0,
+      }}
     >
-      <motion.div variants={fadeSlideUp} initial="hidden" animate="show">
+      <motion.div
+        variants={fadeSlideUp}
+        initial={reduceMotion || activeTab === 'dashboard' ? false : 'hidden'}
+        animate="show"
+      >
         <Paper data-testid="hr-employee-profile-header" sx={{ p: 2, mb: 1, borderRadius: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0 }}>
             <Avatar
@@ -210,9 +249,9 @@ export function EmployeeCard({
 
       <motion.div
         variants={fadeSlideUp}
-        initial="hidden"
+        initial={reduceMotion || activeTab === 'dashboard' ? false : 'hidden'}
         animate="show"
-        style={{ transitionDelay: '80ms' }}
+        style={{ flexShrink: 0 }}
       >
         <Paper elevation={2} sx={{ mb: 1, overflow: 'hidden' }}>
           <Tabs
@@ -278,34 +317,47 @@ export function EmployeeCard({
 
       <motion.div
         variants={fadeSlideUp}
-        initial="hidden"
+        initial={reduceMotion || activeTab === 'dashboard' ? false : 'hidden'}
         animate="show"
         style={{
-          transitionDelay: '160ms',
-          flex: 1,
+          flex: activeTab === 'dashboard' ? undefined : 1,
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        <FormSlider
-          steps={TABS}
-          isBackClick={isBackClick}
-          step={currentIndex}
-          containerProps={{ sx: { p: 0, minHeight: 0, flex: 1 } }}
-        >
+        {activeTab === 'dashboard' || reduceMotion ? (
           <Box
             role="tabpanel"
             id={`${profileId}-panel-${activeTab}`}
             aria-labelledby={`${profileId}-tab-${activeTab}`}
             tabIndex={0}
-            sx={{ height: '100%' }}
+            sx={{ height: activeTab === 'dashboard' ? 'auto' : '100%', minWidth: 0 }}
           >
             {currentActiveComponent?.component && (
               <currentActiveComponent.component tabs={tabs} employee={employee} />
             )}
           </Box>
-        </FormSlider>
+        ) : (
+          <FormSlider
+            steps={TABS}
+            isBackClick={isBackClick}
+            step={currentIndex}
+            containerProps={{ sx: { p: 0, minHeight: 0, flex: 1 } }}
+          >
+            <Box
+              role="tabpanel"
+              id={`${profileId}-panel-${activeTab}`}
+              aria-labelledby={`${profileId}-tab-${activeTab}`}
+              tabIndex={0}
+              sx={{ height: '100%' }}
+            >
+              {currentActiveComponent?.component && (
+                <currentActiveComponent.component tabs={tabs} employee={employee} />
+              )}
+            </Box>
+          </FormSlider>
+        )}
       </motion.div>
     </Box>
   );
