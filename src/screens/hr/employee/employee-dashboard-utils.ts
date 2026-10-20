@@ -6,6 +6,12 @@ import type {
 } from 'src/redux/hr/employeeApi';
 
 import dayjs from 'dayjs';
+import { fNumber } from 'src/utils/format-number';
+
+export const formatDashboardDate = (value: string, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'UTC' }).format(
+    new Date(`${value.slice(0, 10)}T00:00:00Z`)
+  );
 
 export const employeeDashboardStatusCopy: Record<
   EmployeeDashboardStatus,
@@ -33,12 +39,31 @@ export const employeeDashboardStatusCopy: Record<
 export const formatEmployeeLeaveBalance = (data: EmployeeDashboardData): string => {
   if (!data.isLeaveBalanceAvailable) return 'Not set';
   if (data.hasUnlimitedLeave && data.leaveBalanceDays == null) return 'Unlimited';
-  if (data.leaveBalanceDays == null) return '—';
+  if (data.leaveBalanceDays == null) return '-';
 
-  const formatted = Number.isInteger(data.leaveBalanceDays)
-    ? String(data.leaveBalanceDays)
-    : data.leaveBalanceDays.toFixed(1);
-  return data.hasUnlimitedLeave ? `${formatted}+` : formatted;
+  return fNumber(data.leaveBalanceDays, { maximumFractionDigits: 1 });
+};
+
+export const describeEmployeeLeaveBalance = (data: EmployeeDashboardData): string => {
+  if (!data.isLeaveBalanceAvailable) return 'No active leave policy';
+  if (data.hasUnlimitedLeave && data.leaveBalanceDays != null)
+    return 'Days available, plus unlimited leave';
+  if (data.hasUnlimitedLeave) return 'Unlimited leave entitlement';
+  if (data.leaveBalanceDays == null) return 'Balance unavailable';
+  return 'Days currently available';
+};
+
+export const hasEmployeeAttendanceTrend = (data: EmployeeDashboardData): boolean =>
+  data.attendanceTrend.some((month) =>
+    [month.present, month.halfDay, month.absent, month.halfDayLeave, month.fullDayLeave].some(
+      (count) => count > 0
+    )
+  );
+
+export const getEmployeeCalendarStart = (data: EmployeeDashboardData): string => {
+  const months = data.attendanceTrend.map((month) => `${month.month}-01`);
+  const days = data.attendanceDays.map((day) => day.date.slice(0, 10));
+  return [...months, ...days, data.date.slice(0, 10)].sort()[0];
 };
 
 export const formatUpcomingHolidayDate = (

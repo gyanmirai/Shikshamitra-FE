@@ -82,6 +82,11 @@ Approved leave fills an unrecorded dashboard attendance day, while a stored atte
 Stored attendance alone drives the recorded-day count and attendance percentage.
 Approved leave remains distinct from recorded absence in the day detail and monthly trend.
 Profile tabs use a horizontally scrollable, consistently aligned tab list on narrow layouts.
+The Dashboard tab uses four compact metrics, a bounded attendance calendar, the next five holidays, and an attendance trend only when records exist.
+A finite leave balance with unlimited leave types displays the finite days separately from the unlimited entitlement explanation.
+The calendar only navigates within the period represented by the dashboard response and exposes day status and remarks to keyboard and screen-reader users.
+Inactive profile panels and populated trend charts load on demand.
+Dashboard refreshes retain the current staff member’s loaded data and offer retry feedback on failure; switching staff shows loading until the matching response arrives.
 
 ## Attendance and payroll interaction behavior
 

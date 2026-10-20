@@ -1,60 +1,25 @@
-import React from 'react';
 import dayjs from 'dayjs';
-import { motion } from 'framer-motion';
-import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Grid, Alert, Stack, Button, Skeleton } from '@mui/material';
+import { Box, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import { useGetCurrentEmployeeQuery, useGetEmployeeDashboardQuery } from 'src/redux/hr/employeeApi';
 
+import EmployeeDashboardSkeleton from './employee-dashboard-skeleton';
 import EmployeeProfileOverview from './profileDashboardComponent/ProfileOverview';
 import EmployeeUpcomingHolidays from './profileDashboardComponent/EmployeeUpcomingHolidays';
 import ProfileDashboardAttendance from './profileDashboardComponent/ProfileDashboardAttendance';
-import ProfileDashboardAttendanceTrend from './profileDashboardComponent/ProfileDashboardAttendanceTrend';
+import { EmployeeAttendanceTrend } from './profileDashboardComponent/ProfileDashboardAttendanceTrend';
 
-const enterCurve = [0.22, 1, 0.36, 1] as const;
-
-const staggerContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
-};
-
-const slideUpItem = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: enterCurve } },
-};
-
-const EmployeeDashboardSkeleton = () => (
-  <Stack spacing={1.5} aria-label="Loading staff dashboard">
-    <Grid container spacing={1.5}>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <Grid key={index} size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <Skeleton variant="rounded" height={104} />
-        </Grid>
-      ))}
-    </Grid>
-    <Grid container spacing={1.5}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Skeleton variant="rounded" height={380} />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Skeleton variant="rounded" height={380} />
-      </Grid>
-    </Grid>
-    <Skeleton variant="rounded" height={320} />
-  </Stack>
-);
-
-const EmployeeProfileDashboard = ({ editData }: { editData: any }) => {
-  const explicitEmployeeId = editData?.id as string | undefined;
+const EmployeeProfileDashboard = ({ editData }: { editData?: { id?: string } | null }) => {
+  const explicitEmployeeId = editData?.id;
   const {
-    data: currentEmployee,
-    isLoading: isCurrentEmployeeLoading,
+    currentData: currentEmployee,
+    isFetching: isCurrentEmployeeLoading,
     isError: isCurrentEmployeeError,
+    refetch: refetchEmployee,
   } = useGetCurrentEmployeeQuery(undefined, { skip: Boolean(explicitEmployeeId) });
   const employeeId = explicitEmployeeId ?? currentEmployee?.id;
   const {
-    data,
-    isLoading: isDashboardLoading,
+    currentData: data,
     isFetching,
     isError,
     refetch,
@@ -63,16 +28,27 @@ const EmployeeProfileDashboard = ({ editData }: { editData: any }) => {
     { skip: !employeeId }
   );
 
-  if (isCurrentEmployeeLoading || isDashboardLoading) {
+  if ((!explicitEmployeeId && isCurrentEmployeeLoading) || (!data && isFetching)) {
     return <EmployeeDashboardSkeleton />;
   }
 
-  if (isCurrentEmployeeError || !employeeId) {
-    return <EmptyContent title="Staff profile could not be loaded" />;
+  if (!explicitEmployeeId && (isCurrentEmployeeError || !employeeId)) {
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" onClick={() => refetchEmployee()}>
+            Retry
+          </Button>
+        }
+      >
+        Staff profile could not be loaded. Please retry.
+      </Alert>
+    );
   }
 
-  if (isError || !data) {
-    return (
+  if (!data) {
+    return isError ? (
       <Alert
         severity="error"
         action={
@@ -81,56 +57,53 @@ const EmployeeProfileDashboard = ({ editData }: { editData: any }) => {
           </Button>
         }
       >
-        Staff dashboard data could not be loaded.
+        Staff dashboard data could not be loaded. Please retry.
       </Alert>
+    ) : (
+      <EmptyContent title="Staff dashboard is unavailable" />
     );
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 'calc(100vh - 280px)',
-        minWidth: 0,
-      }}
+    <Stack
+      spacing={1.5}
+      sx={{ minWidth: 0, position: 'relative', pb: 2 }}
       aria-busy={isFetching}
+      data-testid="staff-profile-dashboard"
     >
-      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
-        <motion.div variants={staggerContainer} initial="hidden" animate="show">
-          <Grid container spacing={1.5} sx={{ alignItems: 'stretch', minWidth: 0 }}>
-            {data.dataNotice && (
-              <Grid size={12}>
-                <Alert severity="info">{data.dataNotice}</Alert>
-              </Grid>
-            )}
-
-            <Grid size={12}>
-              <motion.div variants={slideUpItem}>
-                <EmployeeProfileOverview data={data} />
-              </motion.div>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div variants={slideUpItem} style={{ height: '100%' }}>
-                <ProfileDashboardAttendance data={data} />
-              </motion.div>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div variants={slideUpItem} style={{ height: '100%' }}>
-                <EmployeeUpcomingHolidays data={data} />
-              </motion.div>
-            </Grid>
-
-            <Grid size={12}>
-              <motion.div variants={slideUpItem}>
-                <ProfileDashboardAttendanceTrend data={data} />
-              </motion.div>
-            </Grid>
-          </Grid>
-        </motion.div>
-      </Scrollbar>
-    </Box>
+      {isFetching && (
+        <LinearProgress
+          aria-label="Refreshing staff dashboard"
+          sx={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+        />
+      )}
+      {isError && (
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Could not refresh the dashboard. Showing the last loaded data.
+        </Alert>
+      )}
+      {data.dataNotice && <Alert severity="info">{data.dataNotice}</Alert>}
+      <EmployeeProfileOverview data={data} />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 5fr) minmax(0, 7fr)' },
+          gap: 1.5,
+          alignItems: 'start',
+        }}
+      >
+        <ProfileDashboardAttendance data={data} />
+        <EmployeeUpcomingHolidays data={data} />
+      </Box>
+      <EmployeeAttendanceTrend data={data} />
+    </Stack>
   );
 };
 

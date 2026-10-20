@@ -22,9 +22,9 @@ test.describe('HR Staff profile', () => {
     await expect(page.getByText(/Staff Code/i)).toBeVisible();
     await expect(page.getByText(/Role/i)).toBeVisible();
     await expect(page.getByText(/Organization/i)).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Attendance Calendar' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Upcoming Holidays' })).toBeVisible();
-    await expect(page.getByText('Attendance Trend', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Attendance calendar' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Upcoming holidays' })).toBeVisible();
+    await expect(page.getByText('Attendance trend', { exact: true })).toBeVisible();
 
     const profile = page.getByTestId(testIds.employeeProfile);
     const header = page.getByTestId(testIds.profileHeader);

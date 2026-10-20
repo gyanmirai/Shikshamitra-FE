@@ -1,88 +1,94 @@
 import type { EmployeeDashboardData } from 'src/redux/hr/employeeApi';
 
-import dayjs from 'dayjs';
-import { Iconify } from 'src/components/iconify';
+import { Label } from 'src/components/label';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 
-import { formatHolidayRange } from '../employee-dashboard-utils';
+import { formatHolidayRange, formatDashboardDate } from '../employee-dashboard-utils';
 
 const EmployeeUpcomingHolidays = ({ data }: { data: EmployeeDashboardData }) => {
+  const today = data.date.slice(0, 10);
   const upcoming = data.holidays
-    .filter((holiday) => !dayjs(holiday.toDate).isBefore(data.date, 'day'))
+    .filter((holiday) => holiday.toDate.slice(0, 10) >= today)
+    .toSorted((a, b) => a.fromDate.localeCompare(b.fromDate) || a.name.localeCompare(b.name))
     .slice(0, 5);
 
   return (
     <Paper
-      elevation={0}
-      sx={{
-        height: '100%',
-        minHeight: 360,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 2,
-        p: 2,
-      }}
+      variant="outlined"
+      component="section"
+      aria-label="Upcoming holidays"
+      sx={{ borderRadius: 2, p: 2, minWidth: 0 }}
     >
-      <Typography variant="h6">Upcoming Holidays</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+      <Typography variant="subtitle2" component="h3">
+        Upcoming holidays
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', mt: 0.5, mb: 1.5 }}
+      >
         Staff work-calendar holidays
       </Typography>
-
       {upcoming.length === 0 ? (
-        <Box
-          sx={{
-            minHeight: 240,
-            display: 'grid',
-            placeItems: 'center',
-            textAlign: 'center',
-            color: 'text.secondary',
-          }}
-        >
-          <Box>
-            <Iconify icon="solar:calendar-minimalistic-linear" width={36} />
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              No upcoming holidays in this academic year.
-            </Typography>
-          </Box>
-        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+          No upcoming holidays in this academic year.
+        </Typography>
       ) : (
-        <Stack spacing={1.25}>
-          {upcoming.map((holiday) => (
-            <Box
-              key={`${holiday.name}-${holiday.fromDate}-${holiday.toDate}`}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                p: 1.25,
-                borderRadius: 1.5,
-                bgcolor: 'background.neutral',
-              }}
-            >
+        <Stack component="ul" spacing={0} sx={{ m: 0, p: 0, listStyle: 'none' }}>
+          {upcoming.map((holiday) => {
+            const ongoing = holiday.fromDate.slice(0, 10) <= today;
+            return (
               <Box
+                component="li"
+                key={`${holiday.name}-${holiday.fromDate}-${holiday.toDate}`}
                 sx={{
-                  width: 40,
-                  height: 40,
-                  flexShrink: 0,
-                  display: 'grid',
-                  placeItems: 'center',
-                  borderRadius: 1.25,
-                  color: 'secondary.main',
-                  bgcolor: 'secondary.lighter',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  py: 1.25,
+                  '& + &': { borderTop: '1px solid', borderColor: 'divider' },
                 }}
               >
-                <Iconify icon="solar:star-outline" width={22} />
+                <Box
+                  aria-hidden="true"
+                  sx={{
+                    width: 40,
+                    minHeight: 44,
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 1,
+                    bgcolor: 'background.neutral',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25 }}>
+                    {formatDashboardDate(holiday.fromDate, { month: 'short' })}
+                  </Typography>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontVariantNumeric: 'tabular-nums', lineHeight: 1.4 }}
+                  >
+                    {formatDashboardDate(holiday.fromDate, { day: '2-digit' })}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500, overflowWrap: 'anywhere' }}>
+                    {holiday.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {formatHolidayRange(holiday)}
+                  </Typography>
+                </Box>
+                {ongoing && (
+                  <Label color="primary" sx={{ flexShrink: 0 }}>
+                    Today
+                  </Label>
+                )}
               </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2" noWrap>
-                  {holiday.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {formatHolidayRange(holiday)}
-                </Typography>
-              </Box>
-            </Box>
-          ))}
+            );
+          })}
         </Stack>
       )}
     </Paper>

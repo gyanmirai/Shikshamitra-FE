@@ -748,3 +748,13 @@ The unchanged PDF text artifact test is not counted as passing because this loca
 Backend validation and confirmed main-branch baseline failures are recorded in backend HR testing and PR 709.
 Generated browser state, screenshots, downloaded files and logs remain ignored.
 Neither pull request has been merged or deployed.
+
+## Staff profile dashboard regression coverage
+
+`employee-dashboard.test.tsx` covers explicit staff and self-service requests, stale employee data, background refresh, retry, honest zero/unavailable values, and empty versus populated trends.
+`employee-dashboard-utils.test.ts` covers leave entitlement explanations, calendar range bounds, date formatting, and leave-only chart data.
+Run `npx playwright test e2e/hr/employee/employee-profile-dashboard.spec.ts --project=chromium --workers=1` against an authenticated test environment.
+Set `E2E_EMPLOYEE_ID` to an accessible staff record when the seeded DDVS administrator record is unavailable.
+The browser cases use the real application shell and authentication, with deterministic responses only for the employee dashboard endpoint.
+They cover 350, 390, 768, 1024, 1440, and 2235 pixel widths, calendar keyboard details and month limits, request deduplication, empty/populated trends, failed-request retry, dark theme, and reduced motion.
+Use `employee-profile.spec.ts` to verify tab navigation, deep links, browser history, and long profile details.
