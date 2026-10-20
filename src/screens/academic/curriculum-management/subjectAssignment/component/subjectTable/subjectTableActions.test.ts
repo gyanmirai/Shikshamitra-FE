@@ -35,9 +35,9 @@ describe('getSubjectTableActions', () => {
     const actions = getSubjectTableActions(subject, options);
 
     expect(actions.map((action) => action.id)).toEqual(['edit', 'archive', 'remove']);
-    actions[0].onClick();
-    actions[1].onClick();
-    actions[2].onClick();
+    actions[0].onClick!();
+    actions[1].onClick!();
+    actions[2].onClick!();
     expect(options.onEdit).toHaveBeenCalledWith(subject);
     expect(options.onArchive).toHaveBeenCalledWith(subject);
     expect(options.onDelete).toHaveBeenCalledWith(subject);

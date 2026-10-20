@@ -138,8 +138,8 @@ describe('admission inquiry columns', () => {
       columnOptions
     );
     expect(actions.map((action) => action.id)).toEqual(['edit', 'follow-up', 'move']);
-    actions[0].onClick();
-    actions[1].onClick();
+    actions[0].onClick!();
+    actions[1].onClick!();
     expect(columnOptions.onManage).toHaveBeenCalled();
     expect(columnOptions.onFollowUp).toHaveBeenCalled();
     expect(actions[2]).toMatchObject({
@@ -169,7 +169,7 @@ describe('admission inquiry columns', () => {
     const row = inquiry({ applicationId: 'app-1', isTransferred: true });
     const actions = getAdmissionInquiryActions(row, { ...columnOptions, pipeline: true });
     expect(actions.map((action) => action.id)).toEqual(['application']);
-    actions[0].onClick();
+    actions[0].onClick!();
     expect(columnOptions.onManage).toHaveBeenCalledWith(row);
   });
 });
