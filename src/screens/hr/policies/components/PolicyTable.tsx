@@ -118,7 +118,14 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
   const archivedCount = archiveSummary?.totalCount || 0;
 
   const columns: IColumn[] = [
-    { id: 'name', label: 'Name', minWidth: 160, sticky: true, stickyPosition: 'left' },
+    {
+      id: 'name',
+      label: 'Name',
+      minWidth: 160,
+      sticky: true,
+      stickyOnMobile: false,
+      stickyPosition: 'left',
+    },
     {
       id: 'calendar',
       label: (
@@ -163,6 +170,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyOnMobile: false,
       stickyPosition: 'right' as const,
       enumOptions: [
         { label: 'Active', value: 'active' },
@@ -323,8 +331,8 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         : `No ${type} policies.`;
 
   return (
-    <Stack spacing={1} sx={{ width: '100%' }}>
-      <Card sx={{ p: 1 }}>
+    <Stack spacing={1} sx={{ width: 1, minWidth: 0, minHeight: 0, flex: 1 }}>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
           <Stack spacing={0.25}>
             <ArchiveToggle
@@ -365,6 +373,8 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         ) : null}
       </Card>
       <CustomizableTable
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         showColumns
         showExport
         showFullScreen
