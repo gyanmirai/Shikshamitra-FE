@@ -719,6 +719,16 @@ Verify complete multi-page exports, source query snapshots, cancellation, retrie
 The backend PostgreSQL suite checks more than 25,000 records, immutable downloads, typed dates and retention.
 Finish with signed-in Codex in-app browser review and inspection of fresh Excel/PDF outputs.
 
+## HR navigation performance validation
+
+Run `e2e/hr/hr-navigation-performance.guest.spec.ts` with the `chromium-guest` project.
+The suite uses controlled API fixtures in the real authenticated shell.
+A delayed design catalogue must not block the template library or report history.
+History and captured results must not request library or catalogue data.
+Generation must still load its template, field metadata and options.
+Repeat HR-to-Reports navigation must preserve working navigation and dashboard refresh.
+These checks isolate client dependencies; use a signed-in local or staging API session to measure database and network latency.
+
 ## HR table redesign execution, 19 October 2026
 
 The feature branches include frontend main b4b689d9b and backend main 6f6a98d0.
