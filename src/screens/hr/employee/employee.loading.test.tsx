@@ -66,6 +66,7 @@ describe('staff directory loading', () => {
     render(<HrEmployee />);
     expect(screen.getByText('Current staff')).toBeVisible();
     expect(screen.queryByText('Loading staff')).not.toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing staff directory' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
     expect(state.useQuery.mock.lastCall?.[0].options).toEqual({
       skip: false,
@@ -82,5 +83,26 @@ describe('staff directory loading', () => {
     render(<HrEmployee />);
     expect(screen.getByText('Loading staff')).toBeVisible();
     expect(screen.queryByText('Previous page staff')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing staff directory' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('removes refresh progress and unlocks pagination when the request settles', () => {
+    state.query = {
+      currentData: { items: [{ id: '1', fullName: 'Current staff' }], totalCount: 1 },
+      data: undefined,
+      isFetching: true,
+    };
+    const { rerender } = render(<HrEmployee />);
+    expect(screen.getByRole('progressbar', { name: 'Refreshing staff directory' })).toBeVisible();
+
+    state.query = { ...state.query, isFetching: false };
+    rerender(<HrEmployee />);
+    expect(screen.getByText('Current staff')).toBeVisible();
+    expect(
+      screen.queryByRole('progressbar', { name: 'Refreshing staff directory' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled();
   });
 });

@@ -54,15 +54,14 @@ import {
   FormControl,
   DialogActions,
   DialogContent,
+  LinearProgress,
 } from '@mui/material';
 
+import EmployeeProfile from './employee-profile';
 import ChangeStatusForm from './chnage-status-form';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
 
-const EmployeeView = dynamic(() => import('./employee-view'), {
-  loading: () => <LoadingScreen />,
-});
 const EmployeeFrom = dynamic(() => import('./employee-form'), {
   loading: () => <LoadingScreen />,
 });
@@ -605,6 +604,11 @@ const HrEmployee = () => {
               </Select>
             </FormControl>
           </Card>
+          <Box sx={{ height: 4, flexShrink: 0 }}>
+            {isFetching && Boolean(employee) && (
+              <LinearProgress aria-label="Refreshing staff directory" />
+            )}
+          </Box>
           <CustomizableTable
             showColumns
             showExport
@@ -674,7 +678,11 @@ const HrEmployee = () => {
           {/* </CustomDialog> */}
         </>
       ) : (
-        <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />
+        <EmployeeProfile
+          key={searchParams.employee}
+          searchParams={searchParams}
+          setSearchParams={setSearchParams}
+        />
       )}
       <CustomDialog
         open={Boolean(createdEmployee)}

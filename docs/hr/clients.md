@@ -26,6 +26,8 @@ Staff Directory uses the paged `getEmployee` query only while the directory is v
 Employee mutations retain their existing cache invalidation.
 The table uses `currentData` so background refreshes keep the current rows visible and a newly requested page never displays the previous page's staff.
 Staff profile and edit screens load their code when opened.
+The profile keeps its breadcrumbs and return navigation visible while a shared content-shaped skeleton covers code and data loading.
+Directory refreshes keep matching cached rows visible with a labelled progress bar in reserved space above the table.
 
 ## Client map
 
