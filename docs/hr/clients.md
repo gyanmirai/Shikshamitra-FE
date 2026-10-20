@@ -172,6 +172,10 @@ Salary save responses include the saved statutory profile so the editor adopts t
 ## Reporting workspace client
 
 `src/redux/hr/hrReportingWorkspaceApi.ts` owns catalogue/options, template revisions, designer preview, private runs, captured rows, cancellation/retry, and downloads.
+The template library requests templates only; the design catalogue loads when opening design or generation.
+History and captured-result routes request their own data without waiting for templates or the catalogue.
+The generation form loads as a separate client chunk when opened.
+HR route loading boundaries keep the shared application shell mounted and allow Next.js to prefetch the loading shell for dynamic routes.
 Generation submits a template ID, revision, and declared parameters only.
 The server resolves fixed rules and source permissions.
 Client sorting/filtering is disabled on captured result pages to avoid applying conditions to only one page.

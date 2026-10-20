@@ -16,17 +16,23 @@ import {
 
 import { ReportLibrary } from './workspace/ReportLibrary';
 import { reportError } from './reporting-workspace-utils';
-import { ReportGenerate } from './workspace/ReportGenerate';
 import { useHrReportPermissions } from './hooks/useHrReportPermissions';
 
+const loadingReportView = () => <LinearProgress aria-label="Loading report view" />;
+const ReportGenerate = dynamic(
+  () => import('./workspace/ReportGenerate').then((m) => m.ReportGenerate),
+  { loading: loadingReportView }
+);
 const ReportDesigner = dynamic(() =>
   import('./workspace/ReportDesigner').then((m) => m.ReportDesigner)
 );
-const ReportHistory = dynamic(() =>
-  import('./workspace/ReportHistory').then((m) => m.ReportHistory)
+const ReportHistory = dynamic(
+  () => import('./workspace/ReportHistory').then((m) => m.ReportHistory),
+  { loading: loadingReportView }
 );
-const ReportRunResult = dynamic(() =>
-  import('./workspace/ReportRunResult').then((m) => m.ReportRunResult)
+const ReportRunResult = dynamic(
+  () => import('./workspace/ReportRunResult').then((m) => m.ReportRunResult),
+  { loading: loadingReportView }
 );
 
 function ReportingWorkspace() {
@@ -35,19 +41,29 @@ function ReportingWorkspace() {
   const permissions = useHrReportPermissions();
   const mode = query.get('mode');
   const tab = query.get('tab') === 'generated' ? 'generated' : 'templates';
+  // History and captured results own their reads. Library navigation needs no designer metadata.
+  const needsCatalogue = mode === 'design' || mode === 'generate';
+  const needsLibrary = needsCatalogue || (mode !== 'result' && tab === 'templates');
   const {
-    data: datasets,
+    currentData: datasets,
     error: catalogueError,
-    isLoading: loadingCatalogue,
-  } = useGetReportingCatalogueQuery(undefined, { skip: !permissions.canView });
+    isFetching: fetchingCatalogue,
+  } = useGetReportingCatalogueQuery(undefined, {
+    skip: !permissions.canView || !needsCatalogue,
+  });
   const {
-    data: templates,
+    currentData: templates,
     error: libraryError,
-    isLoading: loadingLibrary,
-  } = useGetReportingLibraryQuery({ edit: mode === 'design' }, { skip: !permissions.canView });
+    isFetching: fetchingLibrary,
+  } = useGetReportingLibraryQuery(
+    { edit: mode === 'design' },
+    { skip: !permissions.canView || !needsLibrary }
+  );
   const template = templates?.find((t) => t.id === query.get('template'));
-  const error = catalogueError || libraryError;
-  const loading = loadingCatalogue || loadingLibrary;
+  const error = (needsCatalogue && catalogueError) || (needsLibrary && libraryError);
+  const loading =
+    (needsCatalogue && fetchingCatalogue && !datasets) ||
+    (needsLibrary && fetchingLibrary && !templates);
   if (
     mode === 'design' &&
     datasets?.length &&
