@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -199,7 +199,8 @@ The onboarding drawer omits unavailable contribution totals and the settings-onl
 Saving registration refreshes activation readiness and clears the previous salary calculation without resetting salary inputs.
 Pending PF/ESIC registration appears as a warning and a direct staff-editor action; valid salary setup remains activatable.
 Enrollment failures and background refreshes preserve the open draft.
-Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
+Salary templates pair PF and ESIC under Statutory defaults.
+Choose Calculate in ShikshaMitra with a named policy, or Handled outside ShikshaMitra with a required reason.
 ESIC uses one compact Formik settings form with a calculation switch, conditional school registration fields, and standard Save/Cancel actions.
 The server persists an ESIC-on baseline for new schools with unknown legal registration facts left empty.
 The scope text reads "Applies to current and future unlocked payroll."
@@ -535,3 +536,16 @@ Keep Columns, Export and Full screen independent of column filtering.
 Read-only tables offer Excel and PDF using all matching rows and visible ordered data columns.
 Compact embedded tables retain the same utilities without full-page sizing.
 Editable configuration controls are explicit exceptions in [the coverage checklist](./references/hr-table-coverage.md).
+
+## Select ESIC and review salary
+
+Create or select a named policy in Statutory Schemes, then use its effective-month summary in the template or staff salary editor.
+Archived policies remain visible on existing assignments but cannot be newly selected.
+Copying a template initializes the employee assignment; later template edits do not replace it.
+Change an employee assignment through the existing effective salary revision workflow.
+Salary preview keeps amount, basis, month and its single action together.
+Explain that this is a full-month estimate before attendance, unpaid leave and monthly adjustments; actual payable salary belongs to Run Payroll.
+Show Preview required, Preview needs refresh or Preview ready inline and require a current valid preview before Save.
+Show gross, estimated deductions, estimated take-home and monthly school cost, then separate earnings, employee deductions and school contributions.
+Show PF/ESIC status and actionable target differences without repeated yearly totals.
+Failed catalogue requests offer Retry and preserve the draft; missing effective versions require policy setup.

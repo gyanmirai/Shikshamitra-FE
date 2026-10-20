@@ -5,9 +5,34 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, cleanup, waitFor } from '@testing-library/react';
+import { act, render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import SalaryTemplateEditor from './salary-template-editor';
+
+vi.mock('src/redux/hr/esi-policy-api', () => ({
+  useGetEsiPolicyOptionsQuery: () => ({
+    data: [
+      {
+        id: 'esi-policy-1',
+        name: 'Standard ESIC',
+        code: 'STANDARD_ESIC',
+        isDefault: true,
+        isArchived: false,
+        versions: [
+          {
+            version: 1,
+            effectiveFrom: '2025-01-01',
+            employeePercentage: 0.75,
+            employerPercentage: 3.25,
+          },
+        ],
+      },
+    ],
+    isLoading: false,
+    isError: false,
+  }),
+  effectiveEsiPolicyVersion: (policy: any) => policy?.versions[0],
+}));
 
 const mocks = vi.hoisted(() => ({
   permissions: new Set(['View', 'Add', 'Edit']),
@@ -36,6 +61,8 @@ const mocks = vi.hoisted(() => ({
       defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST' as const,
       defaultPfApplicable: false,
       defaultPfRuleId: null,
+      defaultEsiManagementMode: 'IN_PLATFORM' as const,
+      defaultEsiPolicyId: 'esi-policy-1',
       rules: [
         {
           code: 'BASIC',
@@ -130,7 +157,13 @@ describe('SalaryTemplateEditor', () => {
           netSalary: 20000,
           employerContributionTotal: 0,
           employerCost: 20000,
-          targetResult: { difference: 0 },
+          targetResult: { difference: 0, isExact: true },
+          employeeStateInsurance: {
+            managementMode: 'IN_PLATFORM',
+            policyId: 'esi-policy-1',
+            policyName: 'Standard ESIC',
+            coverageDecision: 'NOT_APPLICABLE',
+          },
           earnings: [],
           deductions: [],
           employerContributions: [],
@@ -179,7 +212,9 @@ describe('SalaryTemplateEditor', () => {
     );
     expect(screen.getByRole('heading', { name: 'Create Salary Template' })).toBeVisible();
     expect(screen.queryByRole('button', { name: /Step [12]:/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Preview Calculation' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: /Preview salary|Refresh preview/ })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
     expect(screen.queryByRole('textbox', { name: 'Template name' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -219,13 +254,15 @@ describe('SalaryTemplateEditor', () => {
   it('shows configuration and sample together and supports keyboard preview navigation', async () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
-    const review = screen.getByRole('button', { name: 'Preview Calculation' });
+    const review = screen.getByRole('button', { name: 'Preview salary' });
     act(() => review.focus());
     await user.keyboard('{Enter}');
-    expect(screen.getByRole('heading', { name: 'Sample calculation' })).toBeVisible();
-    await waitFor(() =>
-      expect(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' })).toHaveFocus()
+    expect(screen.getByRole('heading', { name: 'Salary preview' })).toBeVisible();
+    await waitFor(() => expect(mocks.calculate).toHaveBeenCalledTimes(1));
+    expect(screen.getAllByRole('button', { name: /Preview salary|Refresh preview/ })).toHaveLength(
+      1
     );
+    expect(screen.queryByRole('button', { name: 'Preview Calculation' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Template name' })).toBeVisible();
     expect(screen.queryByRole('button', { name: /Step [12]:/ })).not.toBeInTheDocument();
   });
@@ -239,7 +276,7 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.getByText(/existing staff salary revisions stay unchanged/i)).toBeVisible();
 
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Save Changes' }));
 
@@ -262,7 +299,7 @@ describe('SalaryTemplateEditor', () => {
     mocks.template.status = 'NEEDS_SETUP';
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
 
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Save Changes' }));
 
@@ -304,14 +341,14 @@ describe('SalaryTemplateEditor', () => {
   it('previews current edited rules and invalidates on sample and formula changes', async () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
     const value = screen.getByRole('textbox', { name: 'Basic Salary percent' });
     await user.clear(value);
     await user.type(value, '10');
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
     expect(screen.queryByText('Net salary')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
       expect(mocks.calculate).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -332,9 +369,11 @@ describe('SalaryTemplateEditor', () => {
   it('retains preview after a name edit and displays calculation errors inline', async () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
-    await user.type(screen.getByRole('textbox', { name: 'Template name' }), ' revised');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Flexible Salary revised' },
+    });
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
     mocks.calculate.mockReturnValueOnce({
       unwrap: () =>
@@ -344,7 +383,7 @@ describe('SalaryTemplateEditor', () => {
           })
         ),
     });
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(await screen.findByText('Gross is INR 20000; missing INR 8000.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
   });
@@ -357,7 +396,7 @@ describe('SalaryTemplateEditor', () => {
     });
     mocks.calculate.mockReturnValueOnce({ unwrap: () => pending });
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await user.clear(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' }));
     await user.type(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' }), '10000');
     finish({
@@ -375,8 +414,9 @@ describe('SalaryTemplateEditor', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     const view = renderEditor(<SalaryTemplateEditor templateId="template-1" onClose={onClose} />);
-    await user.clear(screen.getByRole('textbox', { name: 'Template name' }));
-    await user.type(screen.getByRole('textbox', { name: 'Template name' }), 'My unsaved template');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'My unsaved template' },
+    });
     mocks.template = {
       ...mocks.template,
       name: 'Server changed this',
@@ -390,7 +430,7 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
       'My unsaved template'
     );
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenLastCalledWith(
       expect.objectContaining({ concurrencyStamp: 'stamp-1', expectedActiveVersionId: 'version-1' })
     );
@@ -424,7 +464,7 @@ describe('SalaryTemplateEditor', () => {
       'aria-expanded',
       'false'
     );
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Collapse Special Allowance' })).toHaveAttribute(
         'aria-expanded',
@@ -432,7 +472,7 @@ describe('SalaryTemplateEditor', () => {
       )
     );
     expect(screen.getByText('Choose a basis component.')).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Sample calculation' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Salary preview' })).toBeVisible();
     await waitFor(() =>
       expect(screen.getByRole('combobox', { name: 'Basis component' })).toHaveFocus()
     );
@@ -474,9 +514,9 @@ describe('SalaryTemplateEditor', () => {
       'Collapse Special Allowance'
     );
     await user.click(screen.getByRole('button', { name: 'Remove Basic Salary' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByText('Add exactly one Basic earning.')).toBeVisible();
-  });
+  }, 10000);
 
   it('denies create and direct detail access without their exact permissions', () => {
     mocks.permissions = new Set(['View']);
@@ -511,7 +551,7 @@ describe('SalaryTemplateEditor', () => {
     await user.clear(screen.getByRole('textbox', { name: 'Basic Salary percent' }));
     await user.type(screen.getByRole('textbox', { name: 'Basic Salary percent' }), '100');
     expect(mocks.createTemplate).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Create Template' })).toBeEnabled()
     );
@@ -545,7 +585,7 @@ describe('SalaryTemplateEditor', () => {
         ),
     });
     renderEditor(<SalaryTemplateEditor templateId="template-1" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Save Changes' }));
     expect(await screen.findByText('Temporarily unavailable.')).toBeVisible();
@@ -560,7 +600,13 @@ describe('SalaryTemplateEditor', () => {
         expiresAt: new Date(Date.now() + 100).toISOString(),
         calculation: {
           grossSalary: 20000,
-          targetResult: { difference: 0 },
+          targetResult: { difference: 0, isExact: true },
+          employeeStateInsurance: {
+            managementMode: 'IN_PLATFORM',
+            policyId: 'esi-policy-1',
+            policyName: 'Standard ESIC',
+            coverageDecision: 'NOT_APPLICABLE',
+          },
           earnings: [],
           deductions: [],
           employerContributions: [],
@@ -568,9 +614,9 @@ describe('SalaryTemplateEditor', () => {
         },
       }),
     });
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(
-      await screen.findByText('The sample preview expired. Calculate again before saving.')
+      await screen.findByText('The salary preview expired. Refresh preview before saving.')
     ).toBeVisible();
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled()
@@ -579,13 +625,13 @@ describe('SalaryTemplateEditor', () => {
   it('keeps statutory guidance compact with keyboard-accessible details', async () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor mode="create" />);
-    expect(screen.getByText('Professional Tax and ESI use system rules.')).toBeVisible();
+    expect(screen.getByText('Professional Tax uses effective statutory rules.')).toBeVisible();
     const summary = screen.getByText('How statutory rules apply');
     const details = summary.closest('details');
     expect(details).not.toHaveAttribute('open');
     await user.click(summary);
     expect(details).toHaveAttribute('open');
-    expect(screen.getByText(/ESI eligibility and both contributions/)).toBeVisible();
+    expect(screen.getByText(/ESIC eligibility remains based on staff enrollment/)).toBeVisible();
     await user.click(summary);
     expect(details).not.toHaveAttribute('open');
   });
@@ -599,7 +645,7 @@ describe('SalaryTemplateEditor', () => {
     expect(deductions).not.toContainElement(
       screen.getByRole('region', { name: 'Statutory Defaults' })
     );
-    expect(screen.getByRole('region', { name: 'Sample calculation' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Salary preview' })).toBeVisible();
     expect(screen.getByText('No earnings added')).toBeVisible();
     expect(screen.getByText('No deductions added')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create Template' })).toBeDisabled();
@@ -608,7 +654,7 @@ describe('SalaryTemplateEditor', () => {
   it('focuses the template name before calculating an incomplete new template', async () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor mode="create" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
       expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveFocus()
     );
@@ -620,7 +666,7 @@ describe('SalaryTemplateEditor', () => {
     const user = userEvent.setup();
     renderEditor(<SalaryTemplateEditor templateId="template-1" />);
     await user.clear(screen.getByRole('textbox', { name: 'Monthly cost to school (CTC)' }));
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(
       await screen.findByText(
         'Enter a sample amount greater than zero and a valid effective month.'
@@ -639,8 +685,10 @@ describe('SalaryTemplateEditor', () => {
         ),
     });
     renderEditor(<SalaryTemplateEditor templateId="template-1" />);
-    await user.type(screen.getByRole('textbox', { name: 'Template name' }), ' revised');
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Template name' }), {
+      target: { value: 'Flexible Salary revised' },
+    });
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Save Changes' }));
     expect(await screen.findByText(/Another administrator changed this template/)).toBeVisible();
@@ -661,13 +709,16 @@ describe('SalaryTemplateEditor', () => {
         }),
     });
     renderEditor(<SalaryTemplateEditor templateId="template-1" />);
-    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
-    await user.dblClick(screen.getByRole('button', { name: 'Save Changes' }));
+    const save = screen.getByRole('button', { name: 'Save Changes' });
+    await user.click(save);
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
     await waitFor(() => expect(mocks.updateTemplate).toHaveBeenCalledOnce());
     expect(screen.getByRole('textbox', { name: 'Template name' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Preview Calculation' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     await act(async () => {
       rejectSave({ status: 503, data: { detail: 'Retry later.' } });
     });

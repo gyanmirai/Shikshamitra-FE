@@ -2,6 +2,7 @@ import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
+import type { EsiManagementMode } from './esi-policy-api';
 import type { StaffStatutoryProfile } from './statutory-profile-api';
 import type {
   SalaryBasis,
@@ -54,6 +55,9 @@ export type CompensationRevision = {
   sourceSalaryTemplateVersionId?: string | null;
   sourceSalaryTemplateVersion?: number | null;
   pfRuleId?: string | null;
+  esiManagementMode?: EsiManagementMode;
+  esiPolicyId?: string | null;
+  esiExternalReason?: string | null;
   statutoryProfile: string;
   isCustomized: boolean;
   overrides: SalaryRuleOverride[];
@@ -110,6 +114,9 @@ export type SaveEmployeeCompensation = {
   effectiveMonth: string;
   pfApplicable: boolean;
   pfRuleId?: string | null;
+  esiManagementMode?: EsiManagementMode;
+  esiPolicyId?: string | null;
+  esiExternalReason?: string | null;
   statutoryProfile: 'IN-GJ';
   overrides: SalaryRuleOverride[];
   customizationReason?: string | null;

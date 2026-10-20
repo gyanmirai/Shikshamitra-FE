@@ -113,7 +113,7 @@ export default function SalaryTemplateSkeleton() {
           </Card>
         ))}
       </Box>
-      {['Sample calculation'].map((section) => (
+      {['Salary preview'].map((section) => (
         <Card key={section} variant="outlined" sx={{ p: 2 }}>
           <Typography variant="h6" mb={2}>
             {section}

@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -196,3 +196,13 @@ The frontend does not calculate financial totals or infer eligibility from regis
 Paginated sources never collect pages in the browser for export.
 `use-report-preview-export.ts` captures an unsaved definition through the Build-protected pipeline before exporting the complete captured result.
 Backend API and access ownership are documented in `../../../Shikshamitra-BE/docs/modules/hr/references/hr-table-exports.md`.
+
+## Named ESIC policy contracts
+
+`src/redux/hr/esi-policy-api.ts` owns policy list/options, create, immutable version creation and archive calls under `/payroll/statutory-schemes/esi/policies`.
+Writes carry concurrency and idempotency values and invalidate statutory, template, salary, employee-payroll and Run Payroll caches.
+Template defaults use `defaultEsiManagementMode`, `defaultEsiPolicyId` and `defaultEsiExternalReason`.
+Calculation and compensation contracts use `esiManagementMode`, `esiPolicyId` and `esiExternalReason`.
+Preview signatures include all three values; salary-template save additionally binds them to the server preview token.
+Calculation responses include selected policy identity, resolved rule/version and contribution breakdown.
+Backend policy invariants and migration ownership live in [HR API contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md).

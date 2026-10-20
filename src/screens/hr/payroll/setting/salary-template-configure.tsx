@@ -18,12 +18,14 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { EsiPolicyFields } from './esi-policy-fields';
 import SalaryTemplateRules from './salary-template-rules';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 import type { EditorValues } from './salary-template-form-model';
 
 type Props = {
+  previewMonth: string;
   formik: FormikProps<EditorValues>;
   readOnly: boolean;
   componentNames: Map<string, string>;
@@ -34,6 +36,7 @@ type Props = {
   issues: string[];
 };
 export default function SalaryTemplateConfigure({
+  previewMonth,
   formik,
   readOnly,
   componentNames,
@@ -53,9 +56,7 @@ export default function SalaryTemplateConfigure({
     <Box display="grid" gap={3}>
       {issues.length > 0 && (
         <Alert severity="warning">
-          <Typography variant="subtitle2">
-            Complete the configuration before calculating:
-          </Typography>
+          <Typography variant="subtitle2">Complete the configuration before previewing:</Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0 }}>
             {issues.map((issue) => (
               <li key={issue}>{issue}</li>
@@ -121,20 +122,6 @@ export default function SalaryTemplateConfigure({
                   error={formik.touched.description && Boolean(formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
                 />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl fullWidth size="small" disabled={readOnly}>
-                  <InputLabel id="salary-template-basis">Default salary basis</InputLabel>
-                  <Select
-                    size="small"
-                    labelId="salary-template-basis"
-                    label="Default salary basis"
-                    {...formik.getFieldProps('defaultSalaryBasis')}
-                  >
-                    <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
-                    <MenuItem value="GROSS">Monthly salary</MenuItem>
-                  </Select>
-                </FormControl>
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="text.secondary">
@@ -223,8 +210,25 @@ export default function SalaryTemplateConfigure({
                   PF rules could not be loaded.
                 </Alert>
               ) : null}
+              <Box sx={{ mt: 2 }}>
+                <EsiPolicyFields
+                  mode={formik.values.defaultEsiManagementMode}
+                  policyId={formik.values.defaultEsiPolicyId}
+                  reason={formik.values.defaultEsiExternalReason}
+                  month={previewMonth}
+                  disabled={readOnly}
+                  onChange={({ mode, policyId, reason }) =>
+                    formik.setValues({
+                      ...formik.values,
+                      defaultEsiManagementMode: mode,
+                      defaultEsiPolicyId: policyId,
+                      defaultEsiExternalReason: reason,
+                    })
+                  }
+                />
+              </Box>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                Professional Tax and ESI use system rules.
+                Professional Tax uses effective statutory rules.
               </Typography>
               <Box
                 component="details"
@@ -246,10 +250,9 @@ export default function SalaryTemplateConfigure({
               >
                 <Box component="summary">How statutory rules apply</Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  PF can default from this template version. Professional Tax uses effective
-                  statutory rules. ESI eligibility and both contributions are recalculated from
-                  establishment, enrollment, wage classifications, effective month, and current
-                  rules. ESI cannot be edited here.
+                  PF and ESIC policies default from this template. ESIC eligibility remains based on
+                  staff enrollment, wage classifications, and the payroll month. Professional Tax
+                  uses effective statutory rules.
                 </Typography>
               </Box>
             </Box>

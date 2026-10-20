@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -79,3 +79,10 @@ Personal design requires Build; school management requires ManageTemplates; prev
 
 Audit primary pages and reachable employee drawers against [the table checklist](./references/hr-table-coverage.md).
 Keep reporting library, designer, generation and fixed result routes separate.
+
+## ESIC policy settings
+
+`hrPaths.payroll.settings.esiPolicies` opens `/hr/payroll/setting/statutory-schemes?view=policies` in the existing Statutory Schemes area.
+School settings and ESIC Policies are URL-backed tabs gated by exact Statutory Schemes View permission.
+Policy writes additionally require Edit, Activate, ConfigureCalculation and school-wide scope.
+Template and salary editors use the selection catalogue through their own permissions without exposing policy management.

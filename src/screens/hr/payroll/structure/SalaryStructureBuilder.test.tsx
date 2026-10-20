@@ -9,6 +9,31 @@ import { act, render, screen, waitFor, fireEvent } from '@testing-library/react'
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
+vi.mock('src/redux/hr/esi-policy-api', () => ({
+  useGetEsiPolicyOptionsQuery: () => ({
+    data: [
+      {
+        id: 'esi-policy-1',
+        name: 'Standard ESIC',
+        code: 'STANDARD_ESIC',
+        isDefault: true,
+        isArchived: false,
+        versions: [
+          {
+            version: 1,
+            effectiveFrom: '2025-01-01',
+            employeePercentage: 0.75,
+            employerPercentage: 3.25,
+          },
+        ],
+      },
+    ],
+    isLoading: false,
+    isError: false,
+  }),
+  effectiveEsiPolicyVersion: (policy: any) => policy?.versions[0],
+}));
+
 const mocks = vi.hoisted(() => ({
   templatesLoading: false,
   revisionsFetching: false,
@@ -101,6 +126,8 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
             defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST',
             defaultPfApplicable: false,
             defaultPfRuleId: null,
+            defaultEsiManagementMode: 'IN_PLATFORM' as const,
+            defaultEsiPolicyId: 'esi-policy-1',
             rules: [
               {
                 componentId: 'basic',
@@ -123,6 +150,8 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
             defaultProtectionPolicy: 'PROTECT_GROSS',
             defaultPfApplicable: false,
             defaultPfRuleId: null,
+            defaultEsiManagementMode: 'IN_PLATFORM' as const,
+            defaultEsiPolicyId: 'esi-policy-1',
             rules: [],
           },
         },
@@ -251,7 +280,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const optOut = screen.getByRole('radio', { name: 'Opt out of PF' });
     expect(optIn).not.toBeChecked();
     expect(optOut).not.toBeChecked();
-    expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'PF rule' })).toHaveAttribute(
       'aria-disabled',
       'true'
@@ -280,12 +309,14 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(screen.getByLabelText('Monthly salary'), amount);
     expect(screen.getByText('Required by default up to ₹25,000 gross salary.')).toBeVisible();
     expect(screen.queryByRole('radio', { name: 'Opt out of PF' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenCalledWith(
       expect.objectContaining({
         monthlyAmount: Number(amount),
         pfApplicable: true,
         pfRuleId: 'pf-rule',
+        esiManagementMode: 'IN_PLATFORM' as const,
+        esiPolicyId: 'esi-policy-1',
       })
     );
   });
@@ -301,11 +332,11 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.type(amount, '25001');
     expect(screen.getByRole('radio', { name: 'Opt in to PF' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Opt out of PF' })).not.toBeChecked();
-    expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
     await user.click(screen.getByLabelText('Reason for turning PF off'));
     await user.paste('Employee selected opt-out');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenCalledWith(
       expect.objectContaining({ monthlyAmount: 25001, pfApplicable: false, pfRuleId: null })
     );
@@ -332,7 +363,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '26000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(
       await screen.findByText('Required by default up to ₹25,000 gross salary.')
     ).toBeVisible();
@@ -361,13 +392,13 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '30000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(await screen.findByText('Choose whether to opt in or opt out of PF')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     await user.click(screen.getByRole('radio', { name: 'Opt out of PF' }));
     await user.click(screen.getByLabelText('Reason for turning PF off'));
     await user.paste('Employee selected opt-out');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
     expect(mocks.calculate).toHaveBeenLastCalledWith(
       expect.objectContaining({ pfApplicable: false, pfRuleId: null })
@@ -386,6 +417,8 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         salaryBasis: 'GROSS',
         quotedMonthlyAmount: 15000,
         pfRuleId: 'pf-rule',
+        esiManagementMode: 'IN_PLATFORM' as const,
+        esiPolicyId: 'esi-policy-1',
         pfEnrollment: { membership: 'NOT_MEMBER' },
         warnings: ['PF_NUMBER_MISSING'],
         overrides: [],
@@ -413,11 +446,11 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const amount = await screen.findByLabelText('Monthly salary');
     await user.clear(amount);
     await user.type(amount, '30000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     const consent = await screen.findByLabelText('Employee consent reference');
     await user.click(consent);
     await user.paste('Approved voluntary enrollment');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenLastCalledWith(
       expect.objectContaining({
         pfEnrollment: {
@@ -439,13 +472,13 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const amount = screen.getByLabelText('Monthly cost to school (CTC)');
     await user.type(amount, '12345678.25');
     expect(amount).toHaveValue('₹ 1,23,45,678.25');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(mocks.calculate).toHaveBeenCalledWith(
       expect.objectContaining({ monthlyAmount: 12345678.25 })
     );
-    expect(screen.getByRole('status')).toHaveTextContent('Ready to save');
+    expect(screen.getByRole('status')).toHaveTextContent('Preview ready');
     expect(screen.getByText('₹1,23,45,678.25')).toBeVisible();
-    expect(screen.getByText('Total school cost')).toBeVisible();
+    expect(screen.getByText('Monthly cost to school')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     expect(mocks.saveSalary).toHaveBeenCalledWith(
       expect.objectContaining({ body: expect.objectContaining({ monthlyAmount: 12345678.25 }) })
@@ -454,7 +487,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.clear(amount);
     await user.type(amount, '74200.50');
     expect(amount).toHaveValue('₹ 74,200.50');
-    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    expect(screen.getByRole('status')).toHaveTextContent('Preview needs refresh');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
 
@@ -467,12 +500,12 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.tab();
     expect(amount).toHaveAttribute('aria-invalid', 'true');
     expect(amount).toHaveAccessibleDescription('Enter an amount greater than zero.');
-    expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     expect(mocks.calculate).not.toHaveBeenCalled();
     await user.clear(amount);
     await user.type(amount, '10000');
     expect(amount).toHaveAttribute('aria-invalid', 'false');
-    expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeEnabled();
   });
 
   it('focuses the missing customization reason and preserves the draft', async () => {
@@ -484,7 +517,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByRole('button', { name: 'Customize' }));
     await user.clear(screen.getByLabelText('Value'));
     await user.paste('6000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     const reason = screen.getByLabelText(/Customization reason/);
     expect(reason).toHaveFocus();
@@ -496,7 +529,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(mocks.saveSalary).not.toHaveBeenCalled();
     await user.paste('Staff salary revision');
     expect(reason).toHaveAttribute('aria-invalid', 'false');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     expect(mocks.saveSalary).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -525,11 +558,11 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     );
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByRole('status')).toHaveTextContent('Preparing preview');
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toBeDisabled();
     await act(async () => finishCalculation(result));
-    expect(screen.getByRole('status')).toHaveTextContent('Ready to save');
+    expect(screen.getByRole('status')).toHaveTextContent('Preview ready');
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     expect(screen.getByRole('status')).toHaveTextContent('Saving salary');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
@@ -604,7 +637,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await user.click(await screen.findByRole('button', { name: 'Save salary' }));
     await waitFor(() => expect(mocks.refetchReadiness).toHaveBeenCalled());
     expect(mocks.saveSalary).toHaveBeenCalledWith(
@@ -621,7 +654,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const onEditorStateChange = vi.fn();
     renderBuilder({ onEditorStateChange });
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '1');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
@@ -637,9 +670,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const user = userEvent.setup();
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeEnabled()
+      expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeEnabled()
     );
     expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue('₹ 10,000');
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
@@ -658,7 +691,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const onEditorStateChange = vi.fn();
     renderBuilder({ onEditorStateChange });
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     mocks.saveSalary.mockReturnValueOnce({ unwrap: vi.fn().mockRejectedValue({ status: 500 }) });
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     await waitFor(() =>
@@ -682,7 +715,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const user = userEvent.setup();
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     mocks.saveSalary.mockReturnValueOnce({ unwrap: vi.fn().mockRejectedValue({ status: 409 }) });
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     expect(await screen.findByText(/Salary changed in another session/)).toBeVisible();
@@ -695,7 +728,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   it('does not calculate or save without the compensation Manage permission', () => {
     mocks.canManageSalary = false;
     renderBuilder();
-    expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
     expect(mocks.calculate).not.toHaveBeenCalled();
   });
@@ -711,7 +744,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const user = userEvent.setup();
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
   });
 
@@ -731,9 +764,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     const user = userEvent.setup();
     renderBuilder();
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
-    expect(screen.getByRole('status')).toHaveTextContent('Ready to save');
+    expect(screen.getByRole('status')).toHaveTextContent('Preview ready');
   });
 
   it('keeps scheduled revisions in collapsed history until expanded', async () => {
@@ -817,7 +850,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByRole('button', { name: 'ESIC registration details' }));
     await user.type(screen.getByLabelText('ESIC insurance number'), '1234567890');
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     await user.click(screen.getByRole('button', { name: 'Save salary' }));
     await waitFor(() =>
       expect(mocks.saveSalary).toHaveBeenCalledWith(
@@ -853,7 +886,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     await user.click(screen.getByRole('button', { name: 'ESIC registration details' }));
     await user.type(screen.getByLabelText('ESIC insurance number'), '1234567890');
     await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
-    await user.click(screen.getByRole('button', { name: /Preview salary|Update preview/ }));
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
     let rejectSave!: (reason: unknown) => void;
     mocks.saveSalary.mockReturnValueOnce({
       unwrap: () =>
@@ -889,7 +922,7 @@ it('keeps form-shaped loading and removes the routine salary banner', () => {
   expect(screen.getByLabelText('Loading staff salary')).toHaveAttribute('aria-busy', 'true');
   expect(screen.getByText('Earnings')).toBeVisible();
   expect(screen.getByText('Deductions')).toBeVisible();
-  expect(screen.getByRole('button', { name: /Preview salary|Update preview/ })).toBeDisabled();
+  expect(screen.getByRole('button', { name: /Preview salary|Refresh preview/ })).toBeDisabled();
   mocks.templatesLoading = false;
   result.rerender(
     <ThemeProvider theme={theme}>

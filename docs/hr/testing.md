@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -758,3 +758,10 @@ Set `E2E_EMPLOYEE_ID` to an accessible staff record when the seeded DDVS adminis
 The browser cases use the real application shell and authentication, with deterministic responses only for the employee dashboard endpoint.
 They cover 350, 390, 768, 1024, 1440, and 2235 pixel widths, calendar keyboard details and month limits, request deduplication, empty/populated trends, failed-request retry, dark theme, and reduced motion.
 Use `employee-profile.spec.ts` to verify tab navigation, deep links, browser history, and long profile details.
+
+## Named ESIC policies and salary preview
+
+Run the focused `esi-policy-api.test.ts`, `esi-policy-fields.test.tsx`, `salary-template-editor.test.tsx`, `salary-template-form.test.ts`, `salary-template-policy-help.test.tsx`, `salary-template-api.test.ts` and `SalaryStructureBuilder.test.tsx` suites.
+Check effective boundaries and gaps, archived selection, external reasons, load/retry, template copy, stale previews, save/reopen payloads and navigation guards.
+Run typecheck, changed-file lint, docs validation and a fresh production build.
+Use authenticated Codex browser checks for policy create/version/archive, salary preview refresh/save/reopen, keyboard operation and narrow-width containment.
