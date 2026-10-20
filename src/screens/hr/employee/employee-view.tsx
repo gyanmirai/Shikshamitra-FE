@@ -1,4 +1,3 @@
-import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
@@ -6,16 +5,10 @@ import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { hrPaths } from 'src/constants/hr-menus';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useId, useMemo } from 'react';
 import { FormSlider } from 'src/components/form-slider';
-import React, { useId, useMemo, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Tab, Box, Tabs, Paper, Avatar, Skeleton, Typography } from '@mui/material';
+import { Tab, Box, Tabs, Paper, Avatar, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
@@ -23,6 +16,7 @@ import EmployeeLibrary from './EmployeeLibrary';
 import EmployeeCalendar from './EmployeeCalendar';
 import LeaveBalance from '../leave-balance/leave-balance';
 import EmployeeAcademic from './employeeAcademic/academic';
+import EmployeeViewSkeleton from './employee-view-skeleton';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
@@ -123,170 +117,11 @@ export const TABS = [
 ];
 
 interface EmployeeViewProps {
+  employee: any;
+  isLoading: boolean;
+  isError: boolean;
   setSearchParams: any;
   searchParams: any;
-}
-
-// ── Skeleton ─────────────────────────────────
-function EmployeeViewSkeleton() {
-  return (
-    <>
-      {/* Breadcrumbs skeleton */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5 }}>
-          <Skeleton width={60} height={14} />
-          <Skeleton variant="circular" width={4} height={4} />
-          <Skeleton width={70} height={14} />
-          <Skeleton variant="circular" width={4} height={4} />
-          <Skeleton width={100} height={14} />
-          <Skeleton variant="circular" width={4} height={4} />
-          <Skeleton width={130} height={14} />
-        </Box>
-        <Skeleton width={260} height={34} sx={{ mb: 1, maxWidth: '100%' }} />
-        <Skeleton width={480} height={14} sx={{ maxWidth: '100%' }} />
-      </Box>
-
-      {/* Profile header card */}
-      <Paper sx={{ p: 2, mb: 1, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0 }}>
-          <Skeleton variant="circular" width={64} height={64} sx={{ flexShrink: 0 }} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
-              <Skeleton width={180} height={28} sx={{ maxWidth: '100%' }} />
-              <Skeleton width={48} height={24} />
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                columnGap: 2,
-                rowGap: 0.5,
-                mt: 0.5,
-              }}
-            >
-              <Skeleton width={180} height={22} sx={{ maxWidth: '100%' }} />
-              <Skeleton width={100} height={22} sx={{ maxWidth: '100%' }} />
-            </Box>
-            <Skeleton width={360} height={22} sx={{ mt: 0.5, maxWidth: '100%' }} />
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Tabs skeleton */}
-      <Paper elevation={2} sx={{ mb: 1, overflow: 'hidden' }}>
-        <Box sx={{ px: 0.5, display: 'flex', gap: 0.5, overflow: 'hidden' }}>
-          {TABS.map((tab) => (
-            <Box
-              key={tab.value}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.75,
-                px: 1.25,
-                minHeight: 48,
-                flexShrink: 0,
-              }}
-            >
-              <Skeleton variant="circular" width={18} height={18} />
-              <Skeleton width={tab.label.length * 7} height={22} />
-            </Box>
-          ))}
-        </Box>
-      </Paper>
-
-      {/* Content area — mirrors dashboard tab layout */}
-      <Paper sx={{ p: 2.5 }}>
-        {/* Stat cards row */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(2, minmax(0, 1fr))',
-              md: 'repeat(4, minmax(0, 1fr))',
-            },
-            gap: 2,
-            mb: 3,
-          }}
-        >
-          {[...Array(4)].map((_, i) => (
-            <Paper key={i} variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                <Skeleton width="50%" height={13} />
-                <Skeleton variant="circular" width={28} height={28} />
-              </Box>
-              <Skeleton width="65%" height={28} sx={{ mb: 0.5 }} />
-              <Skeleton width="45%" height={12} />
-            </Paper>
-          ))}
-        </Box>
-
-        {/* Chart + sidebar row */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 2fr) minmax(0, 1fr)' },
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          {/* Chart card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-            <Box
-              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
-            >
-              <Skeleton width="35%" height={18} />
-              <Skeleton width={80} height={28} sx={{ borderRadius: 1 }} />
-            </Box>
-            <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 1, mb: 1 }} />
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {[...Array(3)].map((_, i) => (
-                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <Skeleton variant="circular" width={10} height={10} />
-                  <Skeleton width={50} height={12} />
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-
-          {/* List card */}
-          <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-            <Skeleton width="55%" height={18} sx={{ mb: 2 }} />
-            {[...Array(5)].map((_, i) => (
-              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.75 }}>
-                <Skeleton variant="circular" width={36} height={36} sx={{ flexShrink: 0 }} />
-                <Box sx={{ flex: 1 }}>
-                  <Skeleton width="72%" height={14} sx={{ mb: 0.5 }} />
-                  <Skeleton width="50%" height={12} />
-                </Box>
-                <Skeleton width={40} height={22} sx={{ borderRadius: 1 }} />
-              </Box>
-            ))}
-          </Paper>
-        </Box>
-
-        {/* Bottom detail row */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(3, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
-          {[...Array(3)].map((_, i) => (
-            <Paper key={i} variant="outlined" sx={{ p: 2, borderRadius: 1.5 }}>
-              <Skeleton width="50%" height={16} sx={{ mb: 1.5 }} />
-              {[...Array(3)].map((__, j) => (
-                <Box key={j} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Skeleton width="40%" height={13} />
-                  <Skeleton width="35%" height={13} />
-                </Box>
-              ))}
-            </Paper>
-          ))}
-        </Box>
-      </Paper>
-    </>
-  );
 }
 
 export function EmployeeCard({
@@ -476,54 +311,24 @@ export function EmployeeCard({
   );
 }
 
-const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-  const [getEmployById, { data: employee, isLoading, isError }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetEmployeeByIdQuery,
-  });
-
-  useEffect(() => {
-    if (searchParams?.employee) {
-      getEmployById(searchParams?.employee.trim());
-    }
-  }, [getEmployById, searchParams?.employee]);
-
-  return isLoading || (!employee && !!searchParams?.employee) ? (
+const EmployeeView = ({
+  employee,
+  isLoading,
+  isError,
+  setSearchParams,
+  searchParams,
+}: EmployeeViewProps) =>
+  isLoading ? (
     <EmployeeViewSkeleton />
   ) : isError ? (
     <EmptyContent title="Staff not found" />
   ) : (
-    <>
-      <CustomBreadcrumbs
-        heading={`${employee?.fullName} Profile`}
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Staff', onClick: () => setSearchParams('employee', '') },
-          { name: 'Staff Directory', onClick: () => setSearchParams('employee', '') },
-          { name: `${employee?.fullName} Profile` },
-        ]}
-        description={`View and manage ${employee?.fullName} information including personal details, documents, payroll, transportation, academic records and communications`}
-        isBack
-        onBack={() => {
-          if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
-            setSearchParams('employee', '');
-            dispatch(setIsChanges(false));
-          } else if (!isChanges) {
-            setSearchParams('employee', '');
-          }
-        }}
-      />
-      <EmployeeCard
-        key={employee?.id}
-        employee={employee}
-        initialTab={searchParams?.tab || 'dashboard'}
-        setSearchParams={setSearchParams}
-      />
-      {/* </Scrollbar> */}
-    </>
+    <EmployeeCard
+      key={employee?.id}
+      employee={employee}
+      initialTab={searchParams?.tab || 'dashboard'}
+      setSearchParams={setSearchParams}
+    />
   );
-};
 
 export default EmployeeView;

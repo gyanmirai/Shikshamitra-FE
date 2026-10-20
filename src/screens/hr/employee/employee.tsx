@@ -5,6 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
@@ -53,14 +54,17 @@ import {
   FormControl,
   DialogActions,
   DialogContent,
+  LinearProgress,
 } from '@mui/material';
 
-import EmployeeView from './employee-view';
-// eslint-disable-next-line import/no-named-as-default
-import EmployeeFrom from './employee-form';
+import EmployeeProfile from './employee-profile';
 import ChangeStatusForm from './chnage-status-form';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import { salaryEditorHref } from '../payroll/structure/salary-editor-navigation';
+
+const EmployeeFrom = dynamic(() => import('./employee-form'), {
+  loading: () => <LoadingScreen />,
+});
 
 const HrEmployee = () => {
   const router = useRouter();
@@ -188,15 +192,18 @@ const HrEmployee = () => {
   );
 
   const {
-    data: employee,
+    currentData: employee,
     error: tableError,
-    isLoading,
     refetch,
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
     params: processedEmployeeParams,
+    options: {
+      skip: open || Boolean(searchParams.employee),
+      refetchOnMountOrArgChange: 30,
+    },
   });
   const exportTable = useHrTableExport('employee-table', processedEmployeeParams);
   const handleClose = useCallback(
@@ -597,6 +604,11 @@ const HrEmployee = () => {
               </Select>
             </FormControl>
           </Card>
+          <Box sx={{ height: 4, flexShrink: 0 }}>
+            {isFetching && Boolean(employee) && (
+              <LinearProgress aria-label="Refreshing staff directory" />
+            )}
+          </Box>
           <CustomizableTable
             showColumns
             showExport
@@ -617,7 +629,8 @@ const HrEmployee = () => {
               </>
             }
             onSendNotification={handlerSendNotification}
-            isLoading={isLoading || isFetching}
+            isLoading={isFetching && !employee}
+            paginationDisabled={isFetching}
             tableId="employee-table"
             tableTitle="Staff directory"
             onExport={exportTable}
@@ -665,7 +678,11 @@ const HrEmployee = () => {
           {/* </CustomDialog> */}
         </>
       ) : (
-        <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />
+        <EmployeeProfile
+          key={searchParams.employee}
+          searchParams={searchParams}
+          setSearchParams={setSearchParams}
+        />
       )}
       <CustomDialog
         open={Boolean(createdEmployee)}
