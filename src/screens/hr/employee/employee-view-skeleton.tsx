@@ -1,90 +1,66 @@
-import { Box, Paper, Divider, Skeleton } from '@mui/material';
+import { Box, Paper, Skeleton } from '@mui/material';
 
 export default function EmployeeViewSkeleton() {
   return (
     <Box role="status" aria-label="Loading staff profile">
       {/* Profile header card */}
-      <Paper
-        sx={{
-          mb: 1,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          boxShadow: 'var(--shadows-4)',
-        }}
-      >
-        <Paper
-          sx={{
-            p: 1,
-            borderRadius: 1,
-            borderLeft: (theme) => `4px solid ${theme.vars.palette.grey[300]}`,
-          }}
-        >
-          <Box display="flex" gap={1} alignItems="center">
-            {/* Avatar */}
-            <Skeleton variant="circular" width={64} height={64} sx={{ flexShrink: 0 }} />
-
-            {/* Name */}
-            <Box>
-              <Skeleton width={36} height={13} sx={{ mb: 0.75 }} />
-              <Skeleton width={130} height={18} />
+      <Paper sx={{ p: 2, mb: 1, borderRadius: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0 }}>
+          <Skeleton variant="circular" width={64} height={64} sx={{ flexShrink: 0 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+              <Skeleton width={180} height={28} sx={{ maxWidth: '100%' }} />
+              <Skeleton width={48} height={24} />
             </Box>
-
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-
-            {/* Employee Code */}
-            <Box>
-              <Skeleton width={92} height={13} sx={{ mb: 0.75 }} />
-              <Skeleton width={80} height={18} />
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                columnGap: 2,
+                rowGap: 0.5,
+                mt: 0.5,
+              }}
+            >
+              <Skeleton width={180} height={22} sx={{ maxWidth: '100%' }} />
+              <Skeleton width={100} height={22} sx={{ maxWidth: '100%' }} />
             </Box>
-
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-
-            {/* Role */}
-            <Box>
-              <Skeleton width={36} height={13} sx={{ mb: 0.75 }} />
-              <Skeleton width={100} height={18} />
-            </Box>
+            <Skeleton width={360} height={22} sx={{ mt: 0.5, maxWidth: '100%' }} />
           </Box>
-        </Paper>
+        </Box>
       </Paper>
 
       {/* Tabs skeleton */}
-      <Paper elevation={2} sx={{ mb: 1 }}>
-        <Box
-          sx={{
-            px: 1.5,
-            display: 'flex',
-            gap: 1.5,
-            overflowX: 'auto',
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
+      <Paper elevation={2} sx={{ mb: 1, overflow: 'hidden' }}>
+        <Box sx={{ px: 0.5, display: 'flex', gap: 0.5, overflow: 'hidden' }}>
           {Array.from({ length: 10 }, (_, index) => (
             <Box
               key={index}
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 gap: 0.75,
-                py: 1.25,
-                minWidth: 76,
+                px: 1.25,
+                minHeight: 48,
+                flexShrink: 0,
               }}
             >
               <Skeleton variant="circular" width={18} height={18} />
-              <Skeleton width={58} height={11} />
+              <Skeleton width={76} height={22} />
             </Box>
           ))}
         </Box>
       </Paper>
 
-      {/* Dashboard content */}
+      {/* Content area — mirrors dashboard tab layout */}
       <Paper sx={{ p: 2.5 }}>
         {/* Stat cards row */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(4, minmax(0, 1fr))',
+            },
             gap: 2,
             mb: 3,
           }}
@@ -105,7 +81,7 @@ export default function EmployeeViewSkeleton() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 2fr) minmax(0, 1fr)' },
             gap: 2,
             mb: 2,
           }}
@@ -119,7 +95,7 @@ export default function EmployeeViewSkeleton() {
               <Skeleton width={80} height={28} sx={{ borderRadius: 1 }} />
             </Box>
             <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 1, mb: 1 }} />
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {[...Array(3)].map((_, i) => (
                 <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <Skeleton variant="circular" width={10} height={10} />
@@ -149,7 +125,7 @@ export default function EmployeeViewSkeleton() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(3, minmax(0, 1fr))' },
             gap: 2,
           }}
         >

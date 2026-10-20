@@ -1,12 +1,14 @@
+import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import { Icon } from '@iconify/react';
 import { motion } from 'framer-motion';
-import React, { useMemo } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
+import { Label } from 'src/components/label';
+import React, { useId, useMemo } from 'react';
 import { FormSlider } from 'src/components/form-slider';
 import { EmptyContent } from 'src/components/empty-content';
-import { Tab, Box, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
+import { Tab, Box, Tabs, Paper, Avatar, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
@@ -19,8 +21,9 @@ import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import EmployeeAttendanceHistory from './employee-attendance-history';
-import { EmployeeStatusType } from '../../../enums/employee-status-type';
+import { getEmployeeStatusDisplayValue } from './employee-status-display';
 import QualificationAndCertification from './qualification-certification';
+import { EmployeeStatusTypeColor } from '../../../enums/employee-status-type';
 
 // ── Animation variants ──────────────────────
 const enterCurve = [0.22, 1, 0.36, 1] as const;
@@ -28,21 +31,6 @@ const enterCurve = [0.22, 1, 0.36, 1] as const;
 const fadeSlideUp = {
   hidden: { opacity: 0, y: 14 },
   show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: enterCurve } },
-};
-
-const staggerContainer = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
-};
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.24, ease: enterCurve } },
-};
-
-const avatarVariant = {
-  hidden: { opacity: 0, scale: 0.88 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.28, ease: enterCurve } },
 };
 
 export const TABS = [
@@ -146,14 +134,21 @@ export function EmployeeCard({
   setSearchParams?: any;
 }) {
   const tabs = useTabs(initialTab || 'dashboard');
+  // Mount routed panels only after their URL is current, including browser history changes.
+  const activeTab = setSearchParams ? initialTab || 'dashboard' : tabs.value;
+  const profileId = useId();
+  const statusLabel = getEmployeeStatusDisplayValue(employee?.status, employee?.doj);
+  const statusColor: LabelColor =
+    statusLabel === 'Upcoming'
+      ? 'info'
+      : (EmployeeStatusTypeColor[
+          employee?.status as keyof typeof EmployeeStatusTypeColor
+        ] as LabelColor) || 'default';
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
   );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  const currentIndex = useMemo(() => TABS.findIndex((tab) => tab.value === activeTab), [activeTab]);
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
     <Box
@@ -161,91 +156,55 @@ export function EmployeeCard({
       sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
     >
       <motion.div variants={fadeSlideUp} initial="hidden" animate="show">
-        <Paper
-          data-testid="hr-employee-profile-header"
-          sx={{
-            mb: 1,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            boxShadow: 'var(--shadows-4)',
-          }}
-        >
-          <Paper
-            sx={{
-              p: 1,
-              // borderBottom: '1px dashed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderLeft: (theme) =>
-                employee?.status === EmployeeStatusType.Active
-                  ? `4px solid ${theme.vars.palette.success.main}`
-                  : `4px solid ${theme.palette.error.main}`,
-              borderRadius: 1,
-            }}
-          >
-            <motion.div variants={staggerContainer} initial="hidden" animate="show">
-              <Box display="flex" gap={1} alignItems="center">
-                <motion.div variants={avatarVariant}>
-                  <Avatar
-                    src={
-                      employee?.profilePicture
-                        ? convertBase64Format(employee?.profilePicture)
-                        : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
-                    }
-                    sx={{
-                      width: 64,
-                      height: 64,
-                      border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
-                    }}
-                  />
-                </motion.div>
-                <motion.div variants={staggerItem}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Name
-                    </Typography>
-                    <Typography fontWeight={500} variant="body2">
-                      {employee?.fullName}
-                    </Typography>
-                  </Box>
-                </motion.div>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <motion.div variants={staggerItem}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Staff Code
-                    </Typography>
-                    <Typography fontWeight={500} variant="body2">
-                      {employee?.employeeIdentifier}
-                    </Typography>
-                  </Box>
-                </motion.div>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <motion.div variants={staggerItem}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Role
-                    </Typography>
-                    <Typography fontWeight={500} variant="body2">
-                      {employee?.roleName}
-                    </Typography>
-                  </Box>
-                </motion.div>
-                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-                <motion.div variants={staggerItem}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Organization
-                    </Typography>
-                    <Typography fontWeight={500} variant="body2">
-                      {employee?.organizationNames?.join(', ') || '-'}
-                    </Typography>
-                  </Box>
-                </motion.div>
+        <Paper data-testid="hr-employee-profile-header" sx={{ p: 2, mb: 1, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, minWidth: 0 }}>
+            <Avatar
+              alt={employee?.fullName || 'Staff member'}
+              src={
+                employee?.profilePicture
+                  ? convertBase64Format(employee.profilePicture)
+                  : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
+              }
+              sx={{ width: 64, height: 64, flexShrink: 0 }}
+            />
+            <Box sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h6" component="h2" sx={{ minWidth: 0 }}>
+                  {employee?.fullName || '-'}
+                </Typography>
+                {statusLabel && <Label color={statusColor}>{statusLabel}</Label>}
               </Box>
-            </motion.div>
-          </Paper>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  columnGap: 2,
+                  rowGap: 0.5,
+                  mt: 0.5,
+                }}
+              >
+                <Typography variant="body2">
+                  <Box component="span" sx={{ color: 'text.secondary', mr: 0.75 }}>
+                    Staff Code:
+                  </Box>
+                  {employee?.employeeIdentifier || '-'}
+                </Typography>
+                <Typography variant="body2">
+                  <Box component="span" sx={{ color: 'text.secondary', mr: 0.75 }}>
+                    Role:
+                  </Box>
+                  {employee?.roleName || '-'}
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <Box component="span" sx={{ mr: 0.75 }}>
+                  Organization:
+                </Box>
+                {employee?.organizationNames?.join(', ') || '-'}
+              </Typography>
+            </Box>
+          </Box>
         </Paper>
       </motion.div>
 
@@ -257,7 +216,7 @@ export function EmployeeCard({
       >
         <Paper elevation={2} sx={{ mb: 1, overflow: 'hidden' }}>
           <Tabs
-            value={tabs.value}
+            value={activeTab}
             variant="scrollable"
             scrollButtons="auto"
             allowScrollButtonsMobile
@@ -274,16 +233,24 @@ export function EmployeeCard({
             }}
             sx={{
               px: 0.5,
-              minHeight: 46,
+              minHeight: 48,
               '& .MuiTabs-flexContainer': { gap: 0.5, alignItems: 'stretch' },
               '& .MuiTab-root': {
                 minWidth: 'auto',
-                minHeight: 46,
+                minHeight: 48,
                 px: 1.25,
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 0.75,
                 whiteSpace: 'nowrap',
+                typography: 'body2',
+                fontWeight: 'fontWeightMedium',
+                '&.Mui-selected': { fontWeight: 'fontWeightBold' },
+                '&.Mui-focusVisible': {
+                  outline: (theme) => `2px solid ${theme.vars.palette.primary.main}`,
+                  outlineOffset: -2,
+                  borderRadius: 1,
+                },
               },
               '& .MuiTab-iconWrapper': {
                 mb: '0 !important',
@@ -293,8 +260,11 @@ export function EmployeeCard({
           >
             {TABS.map((tab) => (
               <Tab
-                sx={{ fontSize: '0.75rem' }}
                 key={tab.value}
+                id={`${profileId}-tab-${tab.value}`}
+                aria-controls={
+                  activeTab === tab.value ? `${profileId}-panel-${tab.value}` : undefined
+                }
                 value={tab.value}
                 icon={tab.icon}
                 iconPosition="start"
@@ -324,7 +294,13 @@ export function EmployeeCard({
           step={currentIndex}
           containerProps={{ sx: { p: 0, minHeight: 0, flex: 1 } }}
         >
-          <Box sx={{ height: '100%' }}>
+          <Box
+            role="tabpanel"
+            id={`${profileId}-panel-${activeTab}`}
+            aria-labelledby={`${profileId}-tab-${activeTab}`}
+            tabIndex={0}
+            sx={{ height: '100%' }}
+          >
             {currentActiveComponent?.component && (
               <currentActiveComponent.component tabs={tabs} employee={employee} />
             )}
