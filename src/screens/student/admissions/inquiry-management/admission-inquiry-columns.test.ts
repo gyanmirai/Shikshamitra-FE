@@ -1,6 +1,6 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { vi, it, expect, describe } from 'vitest';
+import { vi, it, assert, expect, describe } from 'vitest';
 
 import { inquiryWorkState } from './admission-inquiry-work-state';
 import {
@@ -138,6 +138,8 @@ describe('admission inquiry columns', () => {
       columnOptions
     );
     expect(actions.map((action) => action.id)).toEqual(['edit', 'follow-up', 'move']);
+    assert.exists(actions[0].onClick, 'Edit must have a click handler.');
+    assert.exists(actions[1].onClick, 'Follow-up must have a click handler.');
     actions[0].onClick();
     actions[1].onClick();
     expect(columnOptions.onManage).toHaveBeenCalled();
@@ -169,6 +171,7 @@ describe('admission inquiry columns', () => {
     const row = inquiry({ applicationId: 'app-1', isTransferred: true });
     const actions = getAdmissionInquiryActions(row, { ...columnOptions, pipeline: true });
     expect(actions.map((action) => action.id)).toEqual(['application']);
+    assert.exists(actions[0].onClick, 'Application must have a click handler.');
     actions[0].onClick();
     expect(columnOptions.onManage).toHaveBeenCalledWith(row);
   });

@@ -1,8 +1,7 @@
-import { vi, it, expect, describe } from 'vitest';
-
-import { SubjectAssignmentStatus } from '../../enum/subjectType';
+import { vi, it, assert, expect, describe } from 'vitest';
 
 import { getSubjectTableActions } from './subjectTableActions';
+import { SubjectAssignmentStatus } from '../../enum/subjectType';
 
 import type { ISubjectFormValues } from '../type';
 
@@ -35,6 +34,9 @@ describe('getSubjectTableActions', () => {
     const actions = getSubjectTableActions(subject, options);
 
     expect(actions.map((action) => action.id)).toEqual(['edit', 'archive', 'remove']);
+    assert.exists(actions[0].onClick, 'Edit must have a click handler.');
+    assert.exists(actions[1].onClick, 'Archive must have a click handler.');
+    assert.exists(actions[2].onClick, 'Remove must have a click handler.');
     actions[0].onClick();
     actions[1].onClick();
     actions[2].onClick();
