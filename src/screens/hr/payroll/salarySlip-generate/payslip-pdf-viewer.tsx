@@ -4,7 +4,7 @@ import type { RefObject } from 'react';
 import type { RenderTask, PDFDocumentLoadingTask } from 'pdfjs-dist';
 
 import { useRef, useState, useEffect } from 'react';
-import { Box, Alert, Stack, Button, MenuItem, Skeleton, TextField } from '@mui/material';
+import { Box, Alert, Stack, Button, MenuItem, Skeleton, TextField, Typography } from '@mui/material';
 
 import { extractPayslipPdfText } from './payslip-pdf-text';
 
@@ -97,7 +97,10 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
         {[100, 150, 200].map((value) => <MenuItem key={value} value={String(value)}>{value}%</MenuItem>)}
       </TextField>
     </Stack>
-    {loading && <Skeleton aria-label="Rendering payslip PDF" variant="rounded" height={560} />}
+    {loading && <Stack role="status" spacing={1} aria-label="Rendering payslip PDF">
+      <Typography variant="body2" color="text.secondary">Preparing document preview...</Typography>
+      <Skeleton variant="rounded" height={96} />
+    </Stack>}
     {error && <Alert severity="error" action={<Button size="small" onClick={() => setRetry((value) => value + 1)}>Retry</Button>}>
       The payslip PDF could not be displayed.
     </Alert>}

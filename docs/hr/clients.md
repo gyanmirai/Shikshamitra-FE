@@ -165,7 +165,10 @@ The backend owns permitted groups, atomic validation, and authorization in [HR A
 `src/redux/hr/statutory-profile-api.ts` owns effective profile reads/writes and the bounded registration readiness list.
 Profile writes invalidate only the affected employee salary/profile tags and Run Payroll evidence.
 `src/redux/hr/esi-configuration-api.ts` carries independent eligibility/calculation component IDs.
-`src/redux/hr/payslip-api.ts` includes presentation settings and tenant logo upload.
+`src/redux/hr/payslip-api.ts` reads Institute Setup school details alongside document preferences.
+Settings writes send presentation, automaticEmail, concurrencyStamp and idempotencyKey.
+School identity fields are read-only and the form offers no payroll-specific logo upload.
+School Identity cache invalidation refreshes the displayed document settings.
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
 

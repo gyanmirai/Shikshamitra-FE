@@ -2,27 +2,29 @@ import type { PayslipSettings } from 'src/redux/hr/payslip-api';
 
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import {
+  useGetPayslipSettingsQuery,
+  useSavePayslipSettingsMutation,
+  defaultSalaryDocumentPresentation,
+} from 'src/redux/hr/payslip-api';
 import {
   Box,
   Stack,
   Alert,
   Switch,
   Button,
+  Divider,
   MenuItem,
   Skeleton,
   TextField,
   Typography,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetPayslipSettingsQuery,
-  useUploadPayslipLogoMutation,
-  useSavePayslipSettingsMutation,
-  defaultSalaryDocumentPresentation,
-} from 'src/redux/hr/payslip-api';
 
 import { payslipActionError } from './payslip-action-error';
 import { salaryDocumentFields } from './salary-document-fields';
@@ -101,23 +103,23 @@ function SettingsForm({
   const latestReadRequestId = useRef(readRequestId);
   latestReadRequestId.current = readRequestId;
   const ignoredReadRequestId = useRef<string | undefined>(undefined);
-  const [uploadLogo, uploading] = useUploadPayslipLogoMutation();
   const [save, saving] = useSavePayslipSettingsMutation();
   const [error, setError] = useState<string | null>(null);
   const request = useRef<{ payload: string; key: string } | null>(null);
   const form = useFormik({
     initialValues: initial,
-    validate: (values) => ({
-      ...(!values.schoolName.trim() ? { schoolName: 'Enter the school name.' } : {}),
-      ...(!values.schoolAddress.trim() ? { schoolAddress: 'Enter the school address.' } : {}),
-    }),
     onSubmit: async (values, helpers) => {
-      const payload = JSON.stringify(values);
+      const settings = {
+        presentation: values.presentation,
+        automaticEmail: values.automaticEmail,
+        concurrencyStamp: values.concurrencyStamp,
+      };
+      const payload = JSON.stringify(settings);
       if (request.current?.payload !== payload)
         request.current = { payload, key: crypto.randomUUID() };
       setError(null);
       try {
-        const saved = await save({ ...values, idempotencyKey: request.current.key }).unwrap();
+        const saved = await save({ ...settings, idempotencyKey: request.current.key }).unwrap();
         baseline.current = saved;
         // A refresh observed before this write was acknowledged cannot supersede it.
         observedInitial.current = latestInitial.current;
@@ -125,7 +127,7 @@ function SettingsForm({
         ignoredReadRequestId.current = latestReadRequestId.current;
         helpers.resetForm({ values: saved });
         request.current = null;
-        shikshaMitraToast.success({ message: 'Payslip settings saved.' });
+        shikshaMitraToast.success({ message: 'Payroll document settings saved.' });
       } catch (failure) {
         setError(payslipActionError(failure, 'Settings could not be saved. Try again.'));
       }
@@ -145,169 +147,155 @@ function SettingsForm({
   const guard = useUnsavedNavigation(form.dirty, { push: router.push });
   return (
     <>
-      <Stack component="form" spacing={1} onSubmit={form.handleSubmit} noValidate>
-        {error && <Alert severity="error">{error}</Alert>}
-        <TextField
-          label="School name"
-          name="schoolName"
-          value={form.values.schoolName}
-          onChange={form.handleChange}
-          onBlur={form.handleBlur}
-          size="small"
-          fullWidth
-          disabled={!canEdit || saving.isLoading}
-          error={!!form.touched.schoolName && !!form.errors.schoolName}
-          helperText={form.touched.schoolName && form.errors.schoolName}
-          slotProps={{ htmlInput: { maxLength: 250 } }}
-        />
-        <TextField
-          label="School address"
-          name="schoolAddress"
-          value={form.values.schoolAddress}
-          onChange={form.handleChange}
-          onBlur={form.handleBlur}
-          size="small"
-          fullWidth
-          multiline
-          minRows={2}
-          disabled={!canEdit || saving.isLoading}
-          error={!!form.touched.schoolAddress && !!form.errors.schoolAddress}
-          helperText={form.touched.schoolAddress && form.errors.schoolAddress}
-          slotProps={{ htmlInput: { maxLength: 1000 } }}
-        />
-        <Typography variant="subtitle2">Document presentation</Typography>
-        <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
-          <TextField
-            select
-            size="small"
-            label="Layout"
-            value={presentation.layout}
-            disabled={!canEdit || saving.isLoading}
-            onChange={(event) => updatePresentation('layout', event.target.value)}
-          >
-            <MenuItem value="Compact">Compact</MenuItem>
-            <MenuItem value="Detailed">Detailed</MenuItem>
-          </TextField>
-          <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack
+        component="form"
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+        onSubmit={form.handleSubmit}
+        noValidate
+      >
+        <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflow: 'auto', pr: 0.5, pb: 2 }}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <Box component="section" aria-labelledby="payroll-school-details">
+            <Typography id="payroll-school-details" variant="subtitle2" sx={{ mb: 1 }}>
+              School details
+            </Typography>
+            <Typography variant="body2">
+              {initial.schoolName || 'School name not configured'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
+              {initial.schoolAddress ||
+                'Add your school address in Institute Setup before issuing documents.'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
+              School name, address and logo come from Institute Setup. Already-issued documents keep
+              their original details.
+            </Typography>
             <Button
-              component="label"
-              variant="outlined"
+              component={RouterLink}
+              href={instituteSetupPaths.schoolIdentity}
               size="small"
-              disabled={!canEdit || saving.isLoading || uploading.isLoading}
+              sx={{ mt: 0.5 }}
             >
-              {uploading.isLoading
-                ? 'Uploading logo'
-                : presentation.logoBlobName
-                  ? 'Replace logo'
-                  : 'Upload school logo'}
-              <input
-                hidden
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = '';
-                  if (!file) return;
-                  if (file.size > 2097152) {
-                    setError('Use a PNG or JPEG logo under 2 MB.');
-                    return;
-                  }
-                  try {
-                    const result = await uploadLogo(file).unwrap();
-                    updatePresentation('logoBlobName', result.blobName);
-                    setError(null);
-                  } catch (failure) {
-                    setError(payslipActionError(failure, 'The logo could not be uploaded.'));
-                  }
-                }}
-              />
+              Open Institute Setup
             </Button>
-            {presentation.logoBlobName && (
-              <Button
-                size="small"
-                disabled={!canEdit || saving.isLoading}
-                onClick={() => updatePresentation('logoBlobName', null)}
-              >
-                Remove
-              </Button>
-            )}
-          </Stack>
-        </Box>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+          </Box>
+          <Divider />
+          <Typography variant="subtitle2">Payslip appearance</Typography>
+          <Box
+            sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}
+          >
+            <TextField
+              select
+              size="small"
+              label="Layout"
+              value={presentation.layout}
+              disabled={!canEdit || saving.isLoading}
+              onChange={(event) => updatePresentation('layout', event.target.value)}
+            >
+              <MenuItem value="Compact">Compact</MenuItem>
+              <MenuItem value="Detailed">Detailed</MenuItem>
+            </TextField>
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+              columnGap: 2,
+              '& .MuiFormControlLabel-root': { m: 0, minWidth: 0, minHeight: 44 },
+            }}
+          >
+            {(
+              [
+                ['showStaffDetails', 'Staff details'],
+                ['showBankDetails', 'Bank details'],
+                ['showAttendance', 'Attendance and leave'],
+                ['showEarningsBreakdown', 'Earnings breakdown'],
+                ['showZeroDeductions', 'Zero-value deductions'],
+              ] as const
+            ).map(([key, label]) => (
+              <FormControlLabel
+                key={key}
+                label={label}
+                control={
+                  <Switch
+                    size="small"
+                    checked={presentation[key]}
+                    disabled={!canEdit || saving.isLoading}
+                    onChange={(_, checked) => updatePresentation(key, checked)}
+                  />
+                }
+              />
+            ))}
+          </Box>
+          <Typography variant="caption" color="text.secondary">
+            Employee identity, period, totals, and every nonzero deduction always appear. Changes
+            apply to newly issued documents.
+          </Typography>
+          <Divider />
+          <Typography variant="subtitle2">Statements and register</Typography>
           {(
             [
-              ['showStaffDetails', 'Staff details'],
-              ['showBankDetails', 'Bank details'],
-              ['showAttendance', 'Attendance and leave'],
-              ['showEarningsBreakdown', 'Earnings breakdown'],
-              ['showZeroDeductions', 'Zero-value deductions'],
+              ['statementColumns', 'Employee statement columns'],
+              ['registerColumns', 'School register columns'],
             ] as const
           ).map(([key, label]) => (
-            <FormControlLabel
+            <TextField
               key={key}
-              label={label}
-              control={
-                <Switch
-                  size="small"
-                  checked={presentation[key]}
-                  disabled={!canEdit || saving.isLoading}
-                  onChange={(_, checked) => updatePresentation(key, checked)}
-                />
-              }
-            />
-          ))}
-        </Box>
-        <Typography variant="caption" color="text.secondary">
-          Employee identity, period, totals, and every nonzero deduction always appear. Changes
-          apply to newly issued documents.
-        </Typography>
-        {(
-          [
-            ['statementColumns', 'Employee statement columns'],
-            ['registerColumns', 'School register columns'],
-          ] as const
-        ).map(([key, label]) => (
-          <TextField
-            key={key}
-            select
-            size="small"
-            label={label}
-            value={presentation[key]}
-            disabled={!canEdit || saving.isLoading}
-            SelectProps={{ multiple: true }}
-            onChange={(event) =>
-              updatePresentation(
-                key,
-                typeof event.target.value === 'string'
-                  ? event.target.value.split(',')
-                  : event.target.value
-              )
-            }
-            helperText="An empty selection uses the standard columns. Identity and totals remain included."
-          >
-            {salaryDocumentFields.map(([id, name]) => (
-              <MenuItem key={id} value={id}>
-                {name}
-              </MenuItem>
-            ))}
-          </TextField>
-        ))}
-        <FormControlLabel
-          label="Email each employee after payroll finalization"
-          control={
-            <Switch
+              select
               size="small"
-              name="automaticEmail"
-              checked={form.values.automaticEmail}
-              onChange={form.handleChange}
+              label={label}
+              value={presentation[key]}
               disabled={!canEdit || saving.isLoading}
-            />
-          }
-        />
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+              SelectProps={{ multiple: true }}
+              onChange={(event) =>
+                updatePresentation(
+                  key,
+                  typeof event.target.value === 'string'
+                    ? event.target.value.split(',')
+                    : event.target.value
+                )
+              }
+              helperText="An empty selection uses the standard columns. Identity and totals remain included."
+            >
+              {salaryDocumentFields.map(([id, name]) => (
+                <MenuItem key={id} value={id}>
+                  {name}
+                </MenuItem>
+              ))}
+            </TextField>
+          ))}
+          <Divider />
+          <Typography variant="subtitle2">Delivery</Typography>
+          <FormControlLabel
+            label="Email each employee after payroll finalization"
+            sx={{ m: 0, minWidth: 0, minHeight: 44 }}
+            control={
+              <Switch
+                size="small"
+                name="automaticEmail"
+                checked={form.values.automaticEmail}
+                onChange={form.handleChange}
+                disabled={!canEdit || saving.isLoading}
+              />
+            }
+          />
+        </Stack>
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          sx={{
+            flexShrink: 0,
+            bgcolor: 'background.paper',
+            py: 1.5,
+            borderTop: 1,
+            borderColor: 'divider',
+            zIndex: 1,
+          }}
+        >
           <Button
             size="small"
-            disabled={!canEdit || saving.isLoading || uploading.isLoading || !form.dirty}
+            disabled={!canEdit || saving.isLoading || !form.dirty}
             onClick={() =>
               guard.requestNavigation(() => {
                 form.resetForm({ values: baseline.current });
@@ -322,7 +310,7 @@ function SettingsForm({
             type="submit"
             variant="contained"
             size="small"
-            disabled={!canEdit || saving.isLoading || uploading.isLoading || !form.dirty}
+            disabled={!canEdit || saving.isLoading || !form.dirty}
           >
             Save
           </Button>
