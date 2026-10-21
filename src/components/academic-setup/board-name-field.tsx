@@ -1,10 +1,12 @@
 import type { Board } from 'src/types/school';
 
 import { BoardEnum } from 'src/enums/board';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Alert, Stack, Button, TextField } from '@mui/material';
 import { useGetBoardOptionsQuery } from 'src/redux/board/boardApi';
 
 import CustomSelect from '../custom-select';
+import ShakingTextField from '../shaking-text-field';
 import { getConfiguredBoardTypes } from './board-options-model';
 
 type Props = {
@@ -32,7 +34,7 @@ export const BoardNameField = ({
   boards = [],
   academicYearId,
   editingBoardId,
-  label = 'Board Name',
+  label = 'Board name',
 }: Props) => {
   const { data = [], isLoading, isError, refetch } = useGetBoardOptionsQuery();
   const options = data
@@ -52,40 +54,44 @@ export const BoardNameField = ({
           Education board options could not be loaded. Try again.
         </Alert>
       )}
-      <CustomSelect<'value' | 'label', false>
-        fullWidth
-        required
-        name="board"
-        label={label}
-        value={String(value)}
-        SelectDisplayProps={{ 'aria-label': label, 'aria-labelledby': undefined }}
-        onChange={(next) => {
-          onChange(next);
-          onCustomNameChange('');
-        }}
-        options={options}
-        isSearch
-        isLoading={isLoading}
-        disabled={isError}
-        disabledValues={getConfiguredBoardTypes(boards, academicYearId, editingBoardId)}
-        disabledLabel="Already added"
-        noOptionsMessage="No education board options are available."
-        error={error}
-        helperText={helperText}
-      />
-      {String(value) === String(BoardEnum.Custom) && (
-        <TextField
+      <ShakingTextField error={error}>
+        <CustomSelect<'value' | 'label', false>
           fullWidth
           required
-          size="small"
-          label="Custom board name"
-          name="customName"
-          value={customName}
-          onChange={(event) => onCustomNameChange(event.target.value)}
-          error={Boolean(customNameError)}
-          helperText={customNameError}
-          inputProps={{ maxLength: 128 }}
+          name="board"
+          label={label}
+          value={String(value)}
+          SelectDisplayProps={{ 'aria-label': label, 'aria-labelledby': undefined }}
+          onChange={(next) => {
+            onChange(next);
+            onCustomNameChange('');
+          }}
+          options={options}
+          isSearch
+          isLoading={isLoading}
+          disabled={isError}
+          disabledValues={getConfiguredBoardTypes(boards, academicYearId, editingBoardId)}
+          disabledLabel="Already added"
+          noOptionsMessage="No education board options are available."
+          error={error}
+          helperText={helperText}
         />
+      </ShakingTextField>
+      {String(value) === String(BoardEnum.Custom) && (
+        <ShakingTextField error={Boolean(customNameError)}>
+          <TextField
+            fullWidth
+            required
+            size="small"
+            label="Custom board name"
+            name="customName"
+            value={customName}
+            onChange={(event) => onCustomNameChange(capitalizeFirstLetter(event.target.value))}
+            error={Boolean(customNameError)}
+            helperText={customNameError}
+            inputProps={{ maxLength: 128 }}
+          />
+        </ShakingTextField>
       )}
     </Stack>
   );

@@ -2,7 +2,6 @@
 
 // @ts-nocheck
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
@@ -11,13 +10,14 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { instituteSetupPaths } from 'src/constants/institute-setup';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -184,7 +184,9 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                       label="Institute Name *"
                       name="instituteName"
                       value={values.instituteName}
-                      onChange={(e) => setFieldValue('instituteName', capitalize(e.target.value))}
+                      onChange={(e) =>
+                        setFieldValue('instituteName', capitalizeFirstLetter(e.target.value))
+                      }
                       error={touched.instituteName && Boolean(errors.instituteName)}
                       helperText={touched.instituteName && errors.instituteName}
                       InputProps={{
@@ -319,9 +321,9 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                       touched.city &&
                       Boolean(
                         typeof errors.city === 'object' &&
-                          errors.city !== null &&
-                          'name' in errors.city &&
-                          (errors.city as any).name
+                        errors.city !== null &&
+                        'name' in errors.city &&
+                        (errors.city as any).name
                       )
                     }
                   >
@@ -333,9 +335,9 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                         touched.city &&
                         Boolean(
                           typeof errors.city === 'object' &&
-                            errors.city !== null &&
-                            'name' in errors.city &&
-                            (errors.city as any).name
+                          errors.city !== null &&
+                          'name' in errors.city &&
+                          (errors.city as any).name
                         )
                       }
                       helperText={touched.city && (errors?.city as any)?.name}
@@ -366,7 +368,9 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                       label="Address Line 1 *"
                       placeholder="Building No./Flat/House No."
                       value={values.addressLine1}
-                      onChange={handleChange}
+                      onChange={(event) =>
+                        setFieldValue('addressLine1', capitalizeFirstLetter(event.target.value))
+                      }
                       error={touched.addressLine1 && Boolean(errors.addressLine1)}
                       helperText={touched.addressLine1 && errors.addressLine1}
                       multiline
@@ -382,9 +386,18 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
           <Grid size={{ xs: 12, md: 4 }}>
             <Stack spacing={3}>
               <Card sx={{ p: 3, boxShadow: theme.customShadows.z4 }}>
-                {renderSectionHeader('School Identity', 'solar:gallery-wide-bold', 'School logos and signatures')}
-                <Typography variant="body2" sx={{ mb: 2 }}>Manage the school logo, banner and principal’s signature in School Identity after institute setup.</Typography>
-                <Button component="a" href={instituteSetupPaths.schoolIdentity}>Open School Identity</Button>
+                {renderSectionHeader(
+                  'School Identity',
+                  'solar:gallery-wide-bold',
+                  'School logos and signatures'
+                )}
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  Manage the school logo, banner and principal’s signature in School Identity after
+                  institute setup.
+                </Typography>
+                <Button component="a" href={instituteSetupPaths.schoolIdentity}>
+                  Open School Identity
+                </Button>
               </Card>
             </Stack>
           </Grid>
@@ -624,7 +637,6 @@ const BasicInformation = () => {
   );
 };
 export default BasicInformation;
-
 
 // ImageSlider component displays a modal dialog with image carousel functionality
 const ImageSlider: React.FC<IImageSliderProps> = ({ images, open, onClose }) => {

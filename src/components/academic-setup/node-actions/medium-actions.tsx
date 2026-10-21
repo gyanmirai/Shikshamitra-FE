@@ -5,15 +5,15 @@ import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomDialog from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
 
-import type { AcademicSetupParents } from '../academic-setup-model';
-
-import { MediumForm } from '../medium-setup';
-import { OrganizationForm } from '../organization-setup';
+import { MediumForm } from '../medium-form';
+import { OrganizationForm } from '../stage-form';
+import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
+
+import type { AcademicSetupParents } from '../academic-setup-model';
 
 export const MediumActions = ({
   medium,
@@ -40,15 +40,17 @@ export const MediumActions = ({
 
   return (
     <>
-      <CustomDialog
-        title={`Add stage to ${medium.name}`}
+      <AcademicFormDialog
+        kind="stage"
+        title={`Add Stage to ${medium.name}`}
         handleClose={addDialog.onFalse}
         open={addDialog.value}
       >
         <OrganizationForm handleClose={addDialog.onFalse} editData={null} mediumId={medium.id} />
-      </CustomDialog>
-      <CustomDialog
-        title={`Edit medium ${medium.name}`}
+      </AcademicFormDialog>
+      <AcademicFormDialog
+        kind="medium"
+        title={`Edit Medium ${medium.name}`}
         handleClose={editDialog.onFalse}
         open={editDialog.value}
       >
@@ -57,7 +59,7 @@ export const MediumActions = ({
           editData={medium}
           boardId={parents.board?.id ?? ''}
         />
-      </CustomDialog>
+      </AcademicFormDialog>
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={deleteDialog.onFalse}

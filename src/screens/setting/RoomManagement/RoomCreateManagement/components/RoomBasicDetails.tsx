@@ -2,6 +2,7 @@ import type { FormikProps } from 'formik';
 
 import { Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import type {
@@ -38,7 +39,10 @@ export function RoomBasicDetails({ formik, buildings, floors, roomTypes, loading
             name="roomName"
             value={formik.values.roomName}
             onChange={(event) =>
-              formik.setFieldValue('roomName', event.target.value.replace(/[^a-zA-Z-:0-9\s]/g, ''))
+              formik.setFieldValue(
+                'roomName',
+                capitalizeFirstLetter(event.target.value.replace(/[^a-zA-Z-:0-9\s]/g, ''))
+              )
             }
             onBlur={formik.handleBlur}
             error={!!fieldError('roomName')}

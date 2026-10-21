@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -83,7 +84,9 @@ const RoomTypeForm: React.FC<IRoomTypeFormProps> = ({ open, onClose, editData })
                 name="roomTypeName"
                 label="Room Type *"
                 value={formik.values.roomTypeName}
-                onChange={formik.handleChange}
+                onChange={(event) =>
+                  formik.setFieldValue('roomTypeName', capitalizeFirstLetter(event.target.value))
+                }
                 onBlur={formik.handleBlur}
                 error={formik.touched.roomTypeName && Boolean(formik.errors.roomTypeName)}
                 helperText={formik.touched.roomTypeName && formik.errors.roomTypeName}

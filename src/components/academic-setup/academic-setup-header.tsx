@@ -9,7 +9,7 @@ export const AcademicSetupHeader = (props: AcademicYearContextProps) => {
   return (
     <>
       <CustomBreadcrumbs
-        heading={isOnboarding ? undefined : 'Academic hierarchy'}
+        heading={isOnboarding ? undefined : 'Academic Setup'}
         description={
           isOnboarding
             ? undefined

@@ -1,5 +1,6 @@
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import { Box, Chip, TextField, Typography, Autocomplete } from '@mui/material';
+import { Chip, TextField, Autocomplete } from '@mui/material';
+
+import { renderRoomGroup, renderRoomOption } from './room-option-renderers';
 
 import type { RoomOption } from './roomOptions';
 
@@ -42,70 +43,8 @@ export function GroupedRoomSelector({
           sx: { mt: 0.5, border: '1px solid', borderColor: 'divider', maxHeight: 360 },
         },
       }}
-      renderGroup={(params) => (
-        <Box component="li" key={params.key} sx={{ mb: 0.25, listStyle: 'none' }}>
-          <Typography
-            component="div"
-            variant="caption"
-            sx={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              px: 1,
-              py: 0.5,
-              color: 'text.secondary',
-              bgcolor: 'background.neutral',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-            }}
-          >
-            {params.group}
-          </Typography>
-          <Box
-            component="ul"
-            sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, p: 0.75, m: 0, listStyle: 'none' }}
-          >
-            {params.children}
-          </Box>
-        </Box>
-      )}
-      renderOption={(optionProps, option, { selected }) => {
-        const { key, ...restProps } = optionProps;
-        return (
-          <Box
-            component="li"
-            key={key}
-            {...restProps}
-            sx={{
-              width: 'auto !important',
-              minWidth: 64,
-              minHeight: 44,
-              m: '0 !important',
-              display: 'inline-flex',
-              alignItems: 'center',
-              px: 1.25,
-              py: 0.75,
-              gap: 0.5,
-              border: '1px solid',
-              borderColor: selected ? 'primary.main' : 'divider',
-              borderRadius: 1,
-              bgcolor: selected ? 'action.selected' : 'background.paper',
-              color: 'text.primary',
-              fontWeight: selected ? 700 : 500,
-              justifyContent: 'center !important',
-              textAlign: 'center !important',
-              transition: 'border-color 120ms ease, background-color 120ms ease',
-              '&:hover, &[data-focus="true"]': {
-                bgcolor: 'action.hover',
-                borderColor: 'text.secondary',
-              },
-            }}
-          >
-            {selected && <CheckCircleRoundedIcon color="primary" sx={{ fontSize: 16 }} />}
-            {option.roomName}
-          </Box>
-        );
-      }}
+      renderGroup={renderRoomGroup}
+      renderOption={renderRoomOption}
       renderTags={(tagValues, getTagProps) =>
         tagValues.map((option, index) => {
           const { key, ...tagProps } = getTagProps({ index });

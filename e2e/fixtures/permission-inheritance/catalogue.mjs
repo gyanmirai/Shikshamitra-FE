@@ -11,6 +11,11 @@ export const names = [...roots.flatMap((root) => ['View', 'Add', 'Delete'].map((
   module, `${module}.Curriculum`, `${module}.Curriculum.Settings`,
   'ShikshaMitra.Module.InstituteSetup',
   'ShikshaMitra.Module.InstituteSetup.SchoolIdentity',
+  'ShikshaMitra.Module.InstituteSetup.RoomManagement',
+  ...['BuildingManagement', 'RoomTypeManagement', 'RoomManagement.Room'].flatMap((feature) => [
+    `ShikshaMitra.Module.InstituteSetup.${feature}`,
+    ...['View', 'Add', 'Delete'].map((action) => `ShikshaMitra.Module.InstituteSetup.${feature}.${action}`),
+  ]),
   ...['View', 'ManageDefaults', 'ManageOverrides', 'AccessSignature'].map(
     (action) => `InstituteSetup.SchoolIdentity.${action}`
   ),

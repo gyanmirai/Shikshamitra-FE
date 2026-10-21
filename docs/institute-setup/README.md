@@ -3,16 +3,20 @@ module: institute-setup
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
-# Institute Setup School Identity
+# Institute Setup
 
-TL;DR: School Identity manages school-wide logos, letterheads and principal signatures with board and medium overrides. The [initial setup module](../initial-setup/README.md) owns the first-login wizard.
+TL;DR: School Identity manages school-wide logos, letterheads and principal signatures with board, medium and organization overrides. The [initial setup module](../initial-setup/README.md) owns the first-login wizard.
+
+School Documents provides a whole-school approval and permission library with grouped attachments, authenticated preview/download and permission-aware editing. See [workflows](./workflows.md#school-documents) and the [backend contract](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#school-documents).
 
 ## Read order
+
+Reports adds a Curriculum-style generation/history workspace at `/setting/reports` for academic hierarchy, class division summaries, division capacity and room mapping, rooms/buildings inventory, shifts, School Documents metadata/counts and scoped School Identity configuration/counts. See [workflows](./workflows.md#reports) and the [backend contract](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#reports).
 
 | File | Purpose |
 | --- | --- |
@@ -29,6 +33,7 @@ TL;DR: School Identity manages school-wide logos, letterheads and principal sign
 | Screen | `src/screens/setting/school-identity/index.tsx` |
 | Client | `src/redux/InstituteSetup/schoolIdentityApi.ts` |
 | Menu | `src/constants/institute-setup.ts` |
+| Document library | `src/screens/setting/school-documents/`, `src/redux/InstituteSetup/schoolDocumentsApi.ts` |
 | Backend | [Institute Setup](../../../Shikshamitra-BE/docs/modules/institute-setup/README.md) |
 
 ## For agents

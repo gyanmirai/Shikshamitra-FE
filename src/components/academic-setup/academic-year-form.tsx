@@ -9,6 +9,7 @@ import { useAddYearMutation, useUpdateYearMutation } from 'src/redux/year/yearAp
 
 import { ConfirmDialog } from '../confirm-dialog';
 import { DialogScrollContent } from '../customDialog';
+import { AcademicFormSection } from './academic-form-section';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 import { AcademicYearDateFields } from './academic-year-date-fields';
 import { formatAcademicYearDateForPayload } from './academic-year-date-utils';
@@ -81,7 +82,9 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
         }
       />
       <DialogScrollContent>
-        <AcademicYearDateFields formik={formik} />
+        <AcademicFormSection kind="year">
+          <AcademicYearDateFields formik={formik} />
+        </AcademicFormSection>
       </DialogScrollContent>
       <DialogActions>
         <Button
@@ -102,7 +105,7 @@ export const AcademicYearForm = ({ editData, onClose }: AcademicYearFormProps) =
           }}
           startIcon={<AcademicFormActionIcon action="submit" />}
         >
-          {editData ? 'Update year' : 'Create year'}
+          Submit
         </LoadingButton>
       </DialogActions>
     </>

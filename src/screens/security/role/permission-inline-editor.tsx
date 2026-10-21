@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import PermissionRoleResult from './permission-role-result';
 import PermissionActionNotes from './permission-action-notes';
 import PermissionRuleSelector from './permission-rule-selector';
 
@@ -83,6 +84,7 @@ export default function PermissionInlineEditor({
           />
         </Box>
       </Tooltip>
+      {user && <PermissionRoleResult action={action} visibility={visibility} />}
       <Box id={`${id}-result`} hidden>
         {summary}
         <PermissionActionNotes action={action} />

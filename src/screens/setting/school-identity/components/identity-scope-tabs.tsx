@@ -10,7 +10,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 
 const TABS = [
   { value: 0, label: 'School defaults' },
-  { value: 1, label: 'Board & medium overrides' },
+  { value: 1, label: 'Board, medium & organization overrides' },
 ];
 
 export function IdentityScopeTabs({

@@ -1,6 +1,6 @@
 'use client';
 
-import { capitalize } from 'lodash';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Box, Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
@@ -68,7 +68,9 @@ export function OnboardingDivisionForm({
             inputRef={nameInputRef}
             label="Division Name"
             value={formik.values.name}
-            onChange={(event) => formik.setFieldValue('name', capitalize(event.target.value))}
+            onChange={(event) =>
+              formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
+            }
             onBlur={formik.handleBlur}
             error={formik.touched.name && Boolean(formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}

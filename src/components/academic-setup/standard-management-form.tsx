@@ -1,13 +1,15 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { capitalize } from 'lodash';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import { Stack, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
+import ShakingTextField from '../shaking-text-field';
 import { useStandardForm } from './use-standard-form';
 import { DialogScrollContent } from '../customDialog';
+import { AcademicFormSection } from './academic-form-section';
 import { academicValidationStyles } from './academic-form-styles';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
@@ -43,49 +45,59 @@ export function StandardManagementForm(props: StandardFormProps) {
         }
       />
       <DialogScrollContent>
-        <Stack spacing={2} sx={academicValidationStyles}>
-          <TextField
-            fullWidth
-            required
-            autoFocus
-            size="small"
-            name="name"
-            label="Class Name"
-            value={formik.values.name}
-            disabled={isSaving}
-            onChange={(event) => formik.setFieldValue('name', capitalize(event.target.value))}
-            onBlur={formik.handleBlur}
-            error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
-          />
-          <TextField
-            fullWidth
-            required
-            size="small"
-            name="ageLowerLimit"
-            label="Limit Of Age"
-            type="number"
-            value={formik.values.ageLowerLimit}
-            disabled={isSaving}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.ageLowerLimit && Boolean(formik.errors.ageLowerLimit)}
-            helperText={formik.touched.ageLowerLimit && formik.errors.ageLowerLimit}
-          />
-          <Autocomplete
-            disabled={isSaving || isShiftLoading}
-            options={shifts}
-            value={shifts.find((shift) => shift.id === formik.values.shiftId) ?? null}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            getOptionLabel={(option) =>
-              `${option.shiftName} (${dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A')}-${dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A')})`
-            }
-            renderInput={(params) => (
-              <TextField {...params} label="Shift (optional)" size="small" />
-            )}
-            onChange={(_, value) => formik.setFieldValue('shiftId', value?.id ?? '')}
-          />
-        </Stack>
+        <AcademicFormSection kind="standard">
+          <Stack spacing={2} sx={academicValidationStyles}>
+            <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
+              <TextField
+                fullWidth
+                required
+                autoFocus
+                size="small"
+                name="name"
+                label="Class name"
+                value={formik.values.name}
+                disabled={isSaving}
+                onChange={(event) =>
+                  formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
+                }
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+            </ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.ageLowerLimit && Boolean(formik.errors.ageLowerLimit)}
+            >
+              <TextField
+                fullWidth
+                required
+                size="small"
+                name="ageLowerLimit"
+                label="Limit of age"
+                type="number"
+                value={formik.values.ageLowerLimit}
+                disabled={isSaving}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.ageLowerLimit && Boolean(formik.errors.ageLowerLimit)}
+                helperText={formik.touched.ageLowerLimit && formik.errors.ageLowerLimit}
+              />
+            </ShakingTextField>
+            <Autocomplete
+              disabled={isSaving || isShiftLoading}
+              options={shifts}
+              value={shifts.find((shift) => shift.id === formik.values.shiftId) ?? null}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) =>
+                `${option.shiftName} (${dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A')}-${dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A')})`
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Shift (optional)" size="small" />
+              )}
+              onChange={(_, value) => formik.setFieldValue('shiftId', value?.id ?? '')}
+            />
+          </Stack>
+        </AcademicFormSection>
       </DialogScrollContent>
       <DialogActions>
         <Button

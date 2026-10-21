@@ -3,12 +3,28 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Institute Setup clients
+
+## Reports client
+
+`src/redux/InstituteSetup/instituteReportsApi.ts` injects typed catalogue, preview, history, generation, AI and authenticated blob-download calls into the shared RTK Query API. The screen keeps its request form mounted across preview errors, clears dependent selections when parents change, and polls history only while jobs are queued/processing. Download object URLs are revoked after use.
+
+Definitions carry backend-owned `requiredPermissions`; `report-source-permissions.ts` requires every exact source grant plus Reports View. The workspace filters choices and cached history and guards preview/generate/download actions. AI approval hides stale previews and disables approval when the planned dataset is no longer permitted. Document category and identity scope selectors use server `values`; identity context selectors are optional and stop at organization. The signature configuration dataset requires both School Identity View and AccessSignature. No automatic grants are added.
+
+The screen reuses `CommonReport` and Curriculum's visual preview-table, clarification and activity components through Institute Setup contracts. The compact chooser uses `CustomSelect` below the desktop breakpoint. It does not send Institute Setup requests to Academic endpoints or run Curriculum planning logic. Class division summaries show permitted counts and omit the division selector so it cannot narrow the population before counting. The [backend API](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#reports) owns source permissions and dataset scope.
+
+## School Documents client
+
+`src/redux/InstituteSetup/schoolDocumentsApi.ts` injects list/detail, multipart create/update, delete and binary-download endpoints into the shared authenticated API. Writes invalidate `SchoolDocuments`; detail entries have zero unused-cache retention. Edit submissions keep the version stamp captured when the form opened. Multipart payloads carry metadata, retained attachment IDs and new binary files, never tenant IDs or blob paths.
+
+Saved previews use `DocumentPreviewDialog` with `directUrl` against the owning authenticated file endpoint, including its checked API origin. Local-file previews own and release their object URLs. Downloads use RTK Query and release their temporary URLs. The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#school-documents) owns endpoints, upload limits and authorization.
+
+The shared preview loads the installed PDF.js renderer lazily, with bounded canvas dimensions, page navigation, fit/zoom and selectable extracted page text. It works without a browser PDF plugin. Protected preview requests reject foreign origins and discard responses when the authentication session changes.
 
 ## Room client
 
@@ -18,8 +34,8 @@ TL;DR: `schoolIdentityApi.ts` injects typed endpoints into the existing authenti
 
 | Operation | Client behavior |
 | --- | --- |
-| Read/update identity | Board and medium context; updates include the captured concurrency stamp |
-| Upload | Multipart `file`, numeric `kind`, optional board/medium IDs |
+| Read/update identity | Board, medium and organization context; updates include the captured concurrency stamp |
+| Upload | Multipart `file`, numeric `kind`, optional board/medium/organization IDs |
 | Read asset | Authenticated Blob response; browser object URLs are revoked on cleanup |
 | Preview | PDF Blob from current settings or an unsaved draft |
 | History | Latest 100 changes for the selected profile, including the administrator's username |

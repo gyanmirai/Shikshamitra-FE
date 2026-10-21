@@ -58,12 +58,13 @@ export const schoolIdentityApi = api.injectEndpoints({
       IdentityAsset,
       IdentityContext & { kind: IdentityKind; file: File }
     >({
-      query: ({ kind, file, boardId, mediumId }) => {
+      query: ({ kind, file, boardId, mediumId, organizationId }) => {
         const body = new FormData();
         body.append('file', file);
         body.append('kind', String(['logo', 'banner', 'signature'].indexOf(kind)));
         if (boardId) body.append('boardId', boardId);
         if (mediumId) body.append('mediumId', mediumId);
+        if (organizationId) body.append('organizationId', organizationId);
         return { url: `${base}/assets`, method: 'POST', body };
       },
     }),
@@ -87,4 +88,5 @@ export const {
   useGetSchoolIdentityHistoryQuery,
   useUploadSchoolIdentityAssetMutation,
   useGetSchoolIdentityAssetQuery,
+  useLazyGetSchoolIdentityAssetQuery,
 } = schoolIdentityApi;

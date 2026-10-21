@@ -1,6 +1,6 @@
 export type IdentityKind = 'logo' | 'banner' | 'signature';
 export type IdentityMode = 0 | 1 | 2;
-export type IdentityContext = { boardId?: string; mediumId?: string };
+export type IdentityContext = { boardId?: string; mediumId?: string; organizationId?: string };
 export type IdentitySelection = {
   mode: IdentityMode;
   assetId?: string | null;
@@ -46,8 +46,10 @@ export type IdentityRevision = {
 export type IdentityCopy = {
   sourceBoardId: string;
   sourceMediumId?: string;
+  sourceOrganizationId?: string;
   targetBoardId: string;
   targetMediumId?: string;
+  targetOrganizationId?: string;
   targetConcurrencyStamp: string;
 };
 export const IDENTITY_KINDS: IdentityKind[] = ['logo', 'banner', 'signature'];

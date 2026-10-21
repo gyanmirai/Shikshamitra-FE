@@ -3,12 +3,35 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Configure School Identity
+
+## Reports
+
+1. Open Institute Setup > Reports to review the current user's generated files. Search, column filters, export, fullscreen and density use the shared table.
+2. Choose Report, select a permitted report and configure scope/format. Hierarchy reports default to the selected permitted academic year; rooms and shifts need no academic context.
+3. Preview current matching data with server pagination, then generate the complete filtered report. Return to history while background generation runs and download completed files.
+4. Generate report using ShikshaMitra AI accepts a prompt, asks clarifying questions when needed, and displays a plan plus a live preview. Explicit approval queues the file. Errors retain the prompt; Edit request clears the previous approval.
+5. View-only users can preview current data and download their completed files. Failed/expired files offer generation again only with Add access.
+
+For shift reports, ask for total hours to add the calculated column beside start/end time. The preview renders the server-provided column and calculation summary without client arithmetic. Prepare a new plan when changing the requested columns; an existing approved plan or saved file retains its original selection. Calculation rules are owned by the [backend product guide](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#reports).
+
+School Documents adds register and category-count choices with no academic prerequisite. School Identity adds configured-profile register/count choices with optional context filters, plus signature configuration only when authorized. Source-denied datasets disappear from choices and cached history. AI prompts such as "How many school documents are available by category?" and "Count school identity profiles by scope" use the same preview/approval flow. Reports show metadata, configured selections and counts; they do not attach source files or images.
+
+## School Documents
+
+1. Open Institute Setup > School Documents. Search by document name or filter by category; the table groups all attachments under one record.
+2. Select Add Document, enter a name and category, optionally add notes, then choose supporting files. Selection and local preview do not upload anything.
+3. Submit uploads metadata and files together. The form locks while saving; failures retain the draft for retry. Cancel, Escape and navigation use the shared unsaved-navigation guard with a standard Keep Editing / Discard Changes confirmation.
+4. View opens read-only Document Details and Attachments sections. Preview opens the selected PDF/image; Download saves an authenticated copy. A failed saved preview supports Retry Preview.
+5. Edit can change metadata and add files. Removing saved attachments requires Delete permission; removing newly selected files only changes the draft. Stale saves preserve the draft and ask the user to reopen the record.
+6. Delete requires confirmation and removes the record and its files from the visible library. Backend retention is described in the [product guide](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#school-documents).
+
+Forms and views reuse CustomDialog, FormSectionCard, CustomUpload and the configured theme. Notes and filenames wrap, file actions stack at phone widths, and closing a nested preview preserves the underlying form. Expiry tracking, renewals, verification and board/medium links are outside this version.
 
 ## Academic hierarchy standard and division dialogs
 
@@ -22,17 +45,19 @@ The selected standard supplies its existing division names to `DivisionForm`. On
 
 The Module Permission dialog retains the compact View/Add/Delete layout for both users and roles. School Identity Delete is unavailable by design, so every choice in that group stays disabled. Add groups the server's existing configuration and signature capabilities; View remains separate. No Delete grant is generated or submitted. See the [backend product rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#school-identity) for supported asset changes and retention.
 
-TL;DR: submit shared assets once, then change only the assets that differ for a board or its medium. [Backend product rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md) own resolution and document retention.
+TL;DR: submit shared assets once, then change only the assets that differ for a board, medium or organization. [Backend product rules](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md) own resolution and document retention.
 
 1. Open School defaults and edit the logo, banner/letterhead and principal signature.
 2. Choose inherited, custom or do not display independently for each asset. Custom signatures require the principal's name and designation together.
 3. Upload PNG/JPEG files, review image proportions and resolution warnings, and preview the draft PDF.
 4. Submit. Uploading alone does not change saved configuration; cancellation leaves the existing settings intact.
-5. Open Board & medium overrides, choose the academic year and board, then All mediums or one medium.
+5. Open Board, medium & organization overrides, choose the academic year and board, then All mediums or one medium. Choose a specific medium to enable Organization; All organizations shows medium settings. Organization means the academic stage, such as Primary or Secondary.
 6. Review each effective asset's source before editing. Reset to inherited requires confirmation and does not change issued documents.
 7. In a new year, select the target context and Copy from another year. Review an explicitly selected source of the same override level before copying. Files are reused, not uploaded again.
 
 Editing captures the original profile and stamp. Background refetches cannot silently update an open editor's version. A conflict preserves the draft and asks the administrator to reload and review the latest settings.
+
+Changing the year, board or medium clears child selections, including the organization. The organization name dialog contains no banner upload; all organization image changes use School Identity.
 
 The override tab initially uses the application's selected academic year when it is available. Edit, reset and copy controls require both the action grant and the backend's canManage capability for the whole selected context. Restricted contexts remain readable and show a read-only explanation.
 

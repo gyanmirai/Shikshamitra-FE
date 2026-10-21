@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
@@ -98,7 +99,7 @@ export function RoomFeatures({ selected, onChange, onBusyChange }: Props) {
           value={name}
           inputProps={{ maxLength: 100 }}
           onChange={(event) => {
-            setName(event.target.value);
+            setName(capitalizeFirstLetter(event.target.value));
             setError('');
           }}
           error={Boolean(error)}
