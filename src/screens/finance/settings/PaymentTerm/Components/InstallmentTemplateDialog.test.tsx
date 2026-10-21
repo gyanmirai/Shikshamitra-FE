@@ -13,6 +13,7 @@ vi.mock('src/components/customDialog', () => ({
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ data }: any) => <div data-testid="preview">{JSON.stringify(data)}</div>,
 }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('@mui/x-date-pickers', () => ({
   DatePicker: ({ label, value, onChange }: any) => (
     <input
@@ -57,12 +58,12 @@ const props = {
   onApply: vi.fn(),
 };
 async function choose(label: string, option: string) {
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: label }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: new RegExp(`^${label}`) }));
   fireEvent.click(await screen.findByRole('option', { name: option }));
 }
 async function ready() {
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Generate preview' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeEnabled()
   );
 }
 beforeEach(() => {
@@ -71,6 +72,67 @@ beforeEach(() => {
   request.mockImplementation(() => ({ unwrap: () => Promise.resolve(geometry) }));
 });
 describe('complete payment term template schedule', () => {
+  it('closes an untouched schedule without a discard prompt', async () => {
+    render(<InstallmentTemplateDialog {...props} />);
+    await ready();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(props.onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Discard Unsaved Changes?')).not.toBeInTheDocument();
+  });
+
+  it('keeps edited rules until the user explicitly discards them', async () => {
+    const { rerender } = render(<InstallmentTemplateDialog {...props} />);
+    await ready();
+    await choose('Invoice date rule', 'On due date');
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(props.onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('combobox', { name: /^Invoice date rule/ })).toHaveTextContent(
+      'On due date'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+    expect(props.onClose).toHaveBeenCalledOnce();
+    expect(props.onApply).not.toHaveBeenCalled();
+    rerender(<InstallmentTemplateDialog {...props} open={false} />);
+    rerender(<InstallmentTemplateDialog {...props} />);
+    await ready();
+    expect(screen.getByRole('combobox', { name: /^Invoice date rule/ })).toHaveTextContent(
+      'On installment start date'
+    );
+  });
+
+  it('allows clearing a custom count and blocks preview until a valid count is entered', async () => {
+    render(<InstallmentTemplateDialog {...props} />);
+    await ready();
+    await choose('Schedule template', 'Custom installment count');
+    await ready();
+    const count = screen.getByRole('textbox', { name: /^Number of installments/ });
+    fireEvent.change(count, { target: { value: '' } });
+    expect(count).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeDisabled();
+    fireEvent.change(count, { target: { value: '3' } });
+    await ready();
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
+    await screen.findByRole('button', { name: 'Replace Installments' });
+    expect(request).toHaveBeenLastCalledWith(
+      expect.objectContaining({ customInstallmentCount: 3 })
+    );
+  });
+
+  it('restricts the day count to whole days before requesting a preview', async () => {
+    render(<InstallmentTemplateDialog {...props} />);
+    await ready();
+    await choose('Invoice date rule', 'X days before due date');
+    const days = screen.getByRole('textbox', { name: /^Days before due/ });
+    fireEvent.change(days, { target: { value: '1.5' } });
+    expect(days).toHaveValue('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
+    await screen.findByRole('button', { name: 'Replace Installments' });
+    expect(request).toHaveBeenLastCalledWith(expect.objectContaining({ demandOffsetDays: 1 }));
+  });
+
   it('explains a zero start-to-due gap instead of allowing a positive offset', async () => {
     request.mockImplementation(() => ({
       unwrap: () =>
@@ -81,9 +143,9 @@ describe('complete payment term template schedule', () => {
     }));
     render(<InstallmentTemplateDialog {...props} />);
     await ready();
-    await choose('Invoice Date Rule', 'X days before due date');
+    await choose('Invoice date rule', 'X days before due date');
     expect(screen.getByText(/No days before due are available/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Generate preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeDisabled();
   });
   it('ignores a pending final preview after the source invoice rule changes', async () => {
     const { rerender } = render(<InstallmentTemplateDialog {...props} />);
@@ -95,37 +157,37 @@ describe('complete payment term template schedule', () => {
           resolve = finish;
         }),
     }));
-    fireEvent.click(screen.getByRole('button', { name: 'Generate preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
     rerender(<InstallmentTemplateDialog {...props} demandGenerationRule="OnDueDate" />);
     await act(async () => {
       resolve(geometry);
     });
-    expect(screen.queryByRole('button', { name: 'Replace installments' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Replace Installments' })).not.toBeInTheDocument();
     expect(props.onApply).not.toHaveBeenCalled();
   });
-  it('uses the smallest server start-to-due gap and blocks excessive, fractional and empty offsets', async () => {
+  it('uses the smallest server start-to-due gap and blocks excessive, zero and empty offsets', async () => {
     render(<InstallmentTemplateDialog {...props} />);
     await ready();
-    await choose('Invoice Date Rule', 'X days before due date');
-    const input = screen.getByRole('spinbutton', { name: 'Days Before Due' });
-    for (const value of ['11', '1.5', '0', '']) {
+    await choose('Invoice date rule', 'X days before due date');
+    const input = screen.getByRole('textbox', { name: /^Days before due/ });
+    for (const value of ['11', '0', '']) {
       fireEvent.change(input, { target: { value } });
-      expect(screen.getByRole('button', { name: 'Generate preview' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeDisabled();
     }
     fireEvent.change(input, { target: { value: '11' } });
     expect(screen.getByText(/Maximum 10 days/)).toBeInTheDocument();
     fireEvent.change(input, { target: { value: '10' } });
-    expect(screen.getByRole('button', { name: 'Generate preview' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeEnabled();
   });
   it('applies the preview installments and selected rule together; changing the rule removes stale Apply', async () => {
     render(<InstallmentTemplateDialog {...props} />);
     await ready();
-    await choose('Invoice Date Rule', 'X days before due date');
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Days Before Due' }), {
+    await choose('Invoice date rule', 'X days before due date');
+    fireEvent.change(screen.getByRole('textbox', { name: /^Days before due/ }), {
       target: { value: '10' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Generate preview' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Replace installments' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Replace Installments' }));
     expect(request).toHaveBeenLastCalledWith(
       expect.objectContaining({ demandGenerationRule: 'XDaysBeforeDue', demandOffsetDays: 10 })
     );
@@ -136,21 +198,21 @@ describe('complete payment term template schedule', () => {
       'XDaysBeforeDue',
       10
     );
-    await choose('Invoice Date Rule', 'On installment start date');
-    expect(screen.queryByRole('button', { name: 'Replace installments' })).not.toBeInTheDocument();
+    await choose('Invoice date rule', 'On installment start date');
+    expect(screen.queryByRole('button', { name: 'Replace Installments' })).not.toBeInTheDocument();
   });
   it('requires valid per-installment specific dates and sends them to the server before Apply', async () => {
     render(<InstallmentTemplateDialog {...props} />);
     await ready();
-    await choose('Invoice Date Rule', 'On a specific date');
+    await choose('Invoice date rule', 'On a specific date');
     const first = screen.getByLabelText('Invoice date — First');
     fireEvent.change(first, { target: { value: '2026-05-31' } });
-    expect(screen.getByRole('button', { name: 'Generate preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeDisabled();
     fireEvent.change(first, { target: { value: '2026-06-15' } });
-    expect(screen.getByRole('button', { name: 'Generate preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Generate Preview' })).toBeDisabled();
     fireEvent.change(first, { target: { value: '2026-06-10' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Generate preview' }));
-    await screen.findByRole('button', { name: 'Replace installments' });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
+    await screen.findByRole('button', { name: 'Replace Installments' });
     expect(request).toHaveBeenLastCalledWith(
       expect.objectContaining({
         demandGenerationRule: 'SpecificDate',
@@ -158,16 +220,16 @@ describe('complete payment term template schedule', () => {
       })
     );
     fireEvent.change(first, { target: { value: '2026-06-11' } });
-    expect(screen.queryByRole('button', { name: 'Replace installments' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Replace Installments' })).not.toBeInTheDocument();
   });
   it('preserves the legacy On due date rule', async () => {
     render(<InstallmentTemplateDialog {...props} demandGenerationRule="OnDueDate" />);
     await ready();
-    expect(screen.getByRole('combobox', { name: 'Invoice Date Rule' })).toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: /^Invoice date rule/ })).toHaveTextContent(
       'On due date'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Generate preview' }));
-    await screen.findByRole('button', { name: 'Replace installments' });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Preview' }));
+    await screen.findByRole('button', { name: 'Replace Installments' });
     expect(request).toHaveBeenLastCalledWith(
       expect.objectContaining({ demandGenerationRule: 'OnDueDate', demandOffsetDays: null })
     );

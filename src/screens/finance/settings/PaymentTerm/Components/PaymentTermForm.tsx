@@ -36,11 +36,9 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
     [dispatch]
   );
   const {
-    defaultImpact,
     confirmationImpact,
     cancelDefaultConfirmation,
     termUsage,
-    isLoadingImpact,
     impactError,
     formik,
     boards,
@@ -121,22 +119,11 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                     </Alert>
                   )}
                   <GeneralInfoSection formik={formik} boards={boards} />
-                  {formik.values.isDefaultTerm &&
-                    (isLoadingImpact || impactError || defaultImpact) && (
-                      <Alert severity={impactError ? 'error' : 'info'}>
-                        {isLoadingImpact
-                          ? 'Loading default impact…'
-                          : impactError
-                            ? 'Unable to load default impact. Retry before saving.'
-                            : defaultImpact && (
-                                <PaymentTermDefaultSummary
-                                  impact={defaultImpact}
-                                  name={formik.values.paymentTermName}
-                                  version={nextVersion}
-                                />
-                              )}
-                      </Alert>
-                    )}
+                  {formik.values.isDefaultTerm && impactError && (
+                    <Alert severity="error">
+                      Unable to load default impact. Retry before saving.
+                    </Alert>
+                  )}
                   {termUsage && <PaymentTermUsageSummary usage={termUsage} />}
                   <InstallmentSection
                     formik={formik}

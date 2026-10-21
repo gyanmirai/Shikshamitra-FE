@@ -136,7 +136,7 @@ describe('proration validation and checklist consistency', () => {
     expect(form.feeHeadRules[1]).toEqual(disabled);
   });
 
-  it.each(['NoProration', 'FullMonthCharge'] as const)(
+  it.each(['NoProration'] as const)(
     'does not count %s toward the proration requirement',
     async (ruleType) => {
       const form = values({ feeHeadRules: [dailyRule({ ruleType })] });
@@ -150,6 +150,51 @@ describe('proration validation and checklist consistency', () => {
       });
     }
   );
+
+  it.each([
+    [true, false],
+    [false, true],
+    [true, true],
+  ])(
+    'accepts full-month proration (admission: %s, withdrawal: %s)',
+    async (admission, withdrawal) => {
+      const form = values({
+        feeHeadRules: [
+          dailyRule({
+            ruleType: 'FullMonthCharge',
+            configuration: {},
+            applyOnAdmission: admission,
+            applyOnEarlyWithdrawal: withdrawal,
+            earlyWithdrawalRuleType: 'FullMonthCharge',
+            earlyWithdrawalConfiguration: {},
+          }),
+        ],
+      });
+      await expect(buildProrationValidationSchema(false).validate(form)).resolves.toBeTruthy();
+      expect(getProrationFormChecks(form)).toMatchObject({
+        feeHeadsValid: true,
+        recurringEnabledCount: 1,
+        isReadyToPublish: true,
+      });
+    }
+  );
+
+  it('does not count full-month settings when both events are disabled', async () => {
+    const form = values({
+      feeHeadRules: [
+        dailyRule({
+          ruleType: 'FullMonthCharge',
+          applyOnAdmission: false,
+          applyOnEarlyWithdrawal: false,
+          earlyWithdrawalRuleType: 'FullMonthCharge',
+        }),
+      ],
+    });
+    await expect(buildProrationValidationSchema(false).validate(form)).rejects.toThrow(
+      'Enable Daily or Monthly proration'
+    );
+    expect(getProrationFormChecks(form).recurringEnabledCount).toBe(0);
+  });
 
   it('does not report an empty form as having validated event settings', () => {
     expect(getProrationFormChecks(values())).toMatchObject({

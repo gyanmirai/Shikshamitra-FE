@@ -155,6 +155,7 @@ export default function ProrationGeneralSection({
             currentDefault={Boolean(formik.initialValues.isDefault)}
             onChange={(checked) => formik.setFieldValue('isDefault', checked)}
             otherDefaultPolicyName={otherDefaultPolicyName}
+            showReplacementNotice={false}
           />
         </Grid>
 

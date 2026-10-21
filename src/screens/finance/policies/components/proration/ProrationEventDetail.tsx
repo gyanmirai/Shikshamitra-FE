@@ -10,9 +10,10 @@ const eventModel = (rule: IProrationPolicyRule, withdrawal = false) =>
     : rule.ruleType;
 
 export const hasActiveProration = (rule: IProrationPolicyRule) =>
-  ((rule.applyOnAdmission ?? true) && ['Daily', 'MonthlyCutoff'].includes(eventModel(rule))) ||
+  ((rule.applyOnAdmission ?? true) &&
+    ['Daily', 'MonthlyCutoff', 'FullMonthCharge'].includes(eventModel(rule))) ||
   ((rule.applyOnEarlyWithdrawal ?? true) &&
-    ['Daily', 'MonthlyCutoff'].includes(eventModel(rule, true)));
+    ['Daily', 'MonthlyCutoff', 'FullMonthCharge'].includes(eventModel(rule, true)));
 
 export function ProrationEventDetail({
   rule,
@@ -27,7 +28,8 @@ export function ProrationEventDetail({
   const monthly = model === 'MonthlyCutoff';
   const fullMonth = model === 'FullMonthCharge';
   const minimum = withdrawal
-    ? rule.earlyWithdrawalMinimumChargeDays ?? (rule.earlyWithdrawalRuleType ? 0 : rule.minimumChargeDays)
+    ? (rule.earlyWithdrawalMinimumChargeDays ??
+      (rule.earlyWithdrawalRuleType ? 0 : rule.minimumChargeDays))
     : rule.minimumChargeDays;
   const cutoff = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
   const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;

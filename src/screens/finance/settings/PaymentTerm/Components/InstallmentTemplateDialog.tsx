@@ -1,20 +1,31 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
-import { useState, useEffect, useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
+
 import { DatePicker } from '@mui/x-date-pickers';
-import AutoAwesome from '@mui/icons-material/AutoAwesome';
-import { Box, Alert, Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { parseDateOnly, toDateOnly, formatDateOnly } from 'src/utils/date-only';
+import { Box, Alert, Button, DialogActions } from '@mui/material';
+
+import { GlobalIcons } from 'src/utils/icons';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { toDateOnly, parseDateOnly, formatDateOnly } from 'src/utils/date-only';
+
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
+import { FormSectionCard } from 'src/components/form-section-card';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+
 import {
   type PaymentTermTemplateKind,
   type PaymentTermTemplateDueDateRule,
   type PaymentTermTemplatePreviewResponse,
   usePreviewPaymentTermTemplateMutation,
 } from 'src/redux/finance/paymentTerm';
+
 import type { IInstallment, DemandGenerationRule } from '../type';
 
 const TEMPLATE_OPTIONS = [
@@ -44,7 +55,11 @@ interface Props {
   ) => void;
 }
 
-export function InstallmentTemplateDialog({
+export function InstallmentTemplateDialog(props: Props) {
+  return props.open ? <InstallmentTemplateDialogSession {...props} /> : null;
+}
+
+function InstallmentTemplateDialogSession({
   open,
   boardId,
   existingInstallmentCount,
@@ -54,25 +69,49 @@ export function InstallmentTemplateDialog({
   onApply,
 }: Props) {
   const [templateKind, setTemplateKind] = useState<PaymentTermTemplateKind>('Quarterly');
-  const [customCount, setCustomCount] = useState(3);
+  const [customCount, setCustomCount] = useState('3');
   const [dueDateRule, setDueDateRule] = useState<PaymentTermTemplateDueDateRule>('CoverageEnd');
-  const [dueDays, setDueDays] = useState(10);
+  const [dueDays, setDueDays] = useState('10');
   const [invoiceRule, setInvoiceRule] = useState(demandGenerationRule);
-  const [invoiceDays, setInvoiceDays] = useState<number | ''>(demandOffsetDays ?? '');
+  const [invoiceDays, setInvoiceDays] = useState(String(demandOffsetDays ?? ''));
   const [geometry, setGeometry] = useState<PaymentTermTemplatePreviewResponse | null>(null);
   const [specificDates, setSpecificDates] = useState<string[]>([]);
   const [preview, setPreview] = useState<PaymentTermTemplatePreviewResponse | null>(null);
   const [error, setError] = useState('');
   const [loadingGeometry, setLoadingGeometry] = useState(false);
   const [geometryRetry, setGeometryRetry] = useState(0);
+  const [discardOpen, setDiscardOpen] = useState(false);
   const [previewTemplate, previewState] = usePreviewPaymentTermTemplateMutation();
   const revision = useRef(0);
   const customCountInvalid =
     templateKind === 'Custom' &&
-    (!Number.isInteger(customCount) || customCount < 1 || customCount > 36);
+    (!customCount ||
+      !Number.isInteger(Number(customCount)) ||
+      Number(customCount) < 1 ||
+      Number(customCount) > 36);
   const dueDaysInvalid =
     dueDateRule === 'DaysAfterCoverageStart' &&
-    (!Number.isInteger(dueDays) || dueDays < 0 || dueDays > 365);
+    (!dueDays ||
+      !Number.isInteger(Number(dueDays)) ||
+      Number(dueDays) < 0 ||
+      Number(dueDays) > 365);
+  const configuration = JSON.stringify({
+    templateKind,
+    customCount,
+    dueDateRule,
+    dueDays,
+    invoiceRule,
+    invoiceDays,
+  });
+  const initialConfiguration = useRef(configuration);
+  const dirty =
+    configuration !== initialConfiguration.current ||
+    (invoiceRule === 'SpecificDate' &&
+      Boolean(
+        geometry?.installments.some(
+          (item, index) => specificDates[index] !== toDateOnly(item.coverageStartDate)
+        )
+      ));
   const invalidate = () => {
     revision.current += 1;
     setPreview(null);
@@ -84,7 +123,7 @@ export function InstallmentTemplateDialog({
       revision.current += 1;
       setPreview(null);
       setInvoiceRule(demandGenerationRule);
-      setInvoiceDays(demandOffsetDays ?? '');
+      setInvoiceDays(String(demandOffsetDays ?? ''));
     }
   }, [open, demandGenerationRule, demandOffsetDays]);
 
@@ -101,9 +140,10 @@ export function InstallmentTemplateDialog({
     previewTemplate({
       boardId,
       templateKind,
-      customInstallmentCount: templateKind === 'Custom' ? customCount : undefined,
+      customInstallmentCount: templateKind === 'Custom' ? Number(customCount) : undefined,
       dueDateRule,
-      dueDaysAfterCoverageStart: dueDateRule === 'DaysAfterCoverageStart' ? dueDays : undefined,
+      dueDaysAfterCoverageStart:
+        dueDateRule === 'DaysAfterCoverageStart' ? Number(dueDays) : undefined,
       demandGenerationRule: 'OnInstallmentStartDate',
     })
       .unwrap()
@@ -148,7 +188,7 @@ export function InstallmentTemplateDialog({
       ? ''
       : maxDays === 0
         ? 'No days before due are available. Choose On installment start date or On due date.'
-        : !Number.isInteger(invoiceDays) || Number(invoiceDays) < 1
+        : !invoiceDays || !Number.isInteger(Number(invoiceDays)) || Number(invoiceDays) < 1
           ? 'Days Before Due must be a whole number of at least 1.'
           : maxDays !== null && Number(invoiceDays) > maxDays
             ? `Maximum ${maxDays} days; invoice dates cannot be before an installment starts.`
@@ -166,6 +206,18 @@ export function InstallmentTemplateDialog({
   const invalidInvoice =
     Boolean(offsetError) || (invoiceRule === 'SpecificDate' && specificErrors.some(Boolean));
   const busy = loadingGeometry || previewState.isLoading;
+  const requestClose = () => {
+    if (busy || discardOpen) return;
+    if (dirty) setDiscardOpen(true);
+    else onClose();
+  };
+
+  useEffect(() => {
+    if (!dirty) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   const canGenerate = Boolean(
     boardId && geometry && !customCountInvalid && !dueDaysInvalid && !invalidInvoice && !busy
   );
@@ -178,9 +230,10 @@ export function InstallmentTemplateDialog({
       const result = await previewTemplate({
         boardId,
         templateKind,
-        customInstallmentCount: templateKind === 'Custom' ? customCount : undefined,
+        customInstallmentCount: templateKind === 'Custom' ? Number(customCount) : undefined,
         dueDateRule,
-        dueDaysAfterCoverageStart: dueDateRule === 'DaysAfterCoverageStart' ? dueDays : undefined,
+        dueDaysAfterCoverageStart:
+          dueDateRule === 'DaysAfterCoverageStart' ? Number(dueDays) : undefined,
         demandGenerationRule: invoiceRule,
         demandOffsetDays: invoiceRule === 'XDaysBeforeDue' ? Number(invoiceDays) : null,
         specificDemandDates: invoiceRule === 'SpecificDate' ? specificDates : undefined,
@@ -220,266 +273,371 @@ export function InstallmentTemplateDialog({
   return (
     <CustomDialog
       open={open}
-      handleClose={onClose}
-      title="Generate installment schedule"
+      handleClose={requestClose}
+      title="Generate Installment Schedule"
+      titleInfo="Configure payment due dates and invoice dates, then preview the schedule before applying it."
       maxWidth="md"
       disableClose={busy}
       guardUnsavedChanges={false}
       hasForm={false}
     >
-      <DialogScrollContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Configure payment due dates and invoice dates together, then review the complete schedule
-          before applying it.
-        </Typography>
-        {existingInstallmentCount > 0 && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Applying this template will replace the existing {existingInstallmentCount}{' '}
-            installment(s).
-          </Alert>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-            {!geometry && !busy && (
-              <Button size="small" onClick={() => setGeometryRetry((value) => value + 1)}>
-                Retry loading schedule
-              </Button>
-            )}
-          </Alert>
-        )}
-        <Box
-          component="fieldset"
-          disabled={busy}
-          sx={{
-            border: 0,
-            p: 0,
-            m: 0,
-            minWidth: 0,
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-            gap: 2,
-          }}
-        >
-          <TextField
-            select
-            size="small"
-            label="Schedule template"
-            value={templateKind}
-            disabled={busy}
-            onChange={(event) => {
-              setTemplateKind(event.target.value as PaymentTermTemplateKind);
-              invalidate();
-            }}
-          >
-            {TEMPLATE_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          {templateKind === 'Custom' && (
-            <TextField
-              size="small"
-              type="number"
-              label="Number of installments"
-              value={customCount}
-              inputProps={{ min: 1, max: 36, step: 1 }}
-              error={customCountInvalid}
-              helperText={customCountInvalid ? 'Enter a whole number from 1 to 36' : undefined}
-              onChange={(event) => {
-                setCustomCount(Number(event.target.value));
-                invalidate();
-              }}
-            />
-          )}
-          <TextField
-            select
-            size="small"
-            label="Payment due date"
-            value={dueDateRule}
-            disabled={busy}
-            onChange={(event) => {
-              setDueDateRule(event.target.value as PaymentTermTemplateDueDateRule);
-              invalidate();
-            }}
-          >
-            <MenuItem value="CoverageEnd">On the last day of each period</MenuItem>
-            <MenuItem value="CoverageStart">On the first day of each period</MenuItem>
-            <MenuItem value="DaysAfterCoverageStart">A number of days after period starts</MenuItem>
-          </TextField>
-          {dueDateRule === 'DaysAfterCoverageStart' && (
-            <TextField
-              size="small"
-              type="number"
-              label="Days after period starts"
-              value={dueDays}
-              inputProps={{ min: 0, max: 365, step: 1 }}
-              error={dueDaysInvalid}
-              helperText={dueDaysInvalid ? 'Enter a whole number from 0 to 365' : undefined}
-              onChange={(event) => {
-                setDueDays(Number(event.target.value));
-                invalidate();
-              }}
-            />
-          )}
-          <TextField
-            select
-            size="small"
-            label="Invoice Date Rule"
-            value={invoiceRule}
-            disabled={busy}
-            onChange={(event) => {
-              setInvoiceRule(event.target.value as DemandGenerationRule);
-              invalidate();
-            }}
-          >
-            {INVOICE_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          {invoiceRule === 'XDaysBeforeDue' && (
-            <TextField
-              size="small"
-              type="number"
-              label="Days Before Due"
-              value={invoiceDays}
-              inputProps={{ min: 1, max: maxDays ?? 365, step: 1 }}
-              error={Boolean(offsetError)}
-              helperText={
-                offsetError ||
-                (maxDays === null ? 'Loading maximum days…' : `Min 1 day; Max ${maxDays} days`)
-              }
-              onChange={(event) => {
-                setInvoiceDays(event.target.value === '' ? '' : Number(event.target.value));
-                invalidate();
-              }}
-            />
-          )}
-        </Box>
-        {invoiceRule === 'SpecificDate' && geometry && (
-          <Box
-            sx={{
-              mt: 2,
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-              gap: 2,
-            }}
-          >
-            {geometry.installments.map((item, index) => (
-              <DatePicker
-                key={item.sequence}
-                label={`Invoice date — ${item.name}`}
-                format="DD/MM/YYYY"
-                value={parseDateOnly(specificDates[index])}
-                minDate={parseDateOnly(item.coverageStartDate)!}
-                maxDate={parseDateOnly(item.dueDate)!}
-                disabled={busy}
-                onChange={(date) => {
-                  setSpecificDates((dates) =>
-                    dates.map((value, i) => (i === index ? (toDateOnly(date) ?? '') : value))
-                  );
-                  invalidate();
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    error: Boolean(specificErrors[index]),
-                    helperText:
-                      specificErrors[index] || 'Between installment start and payment due date',
-                  },
-                }}
-              />
-            ))}
-          </Box>
-        )}
-        {preview && (
-          <Box sx={{ mt: 3 }}>
-            <Alert severity="success" sx={{ mb: 1.5 }}>
-              {preview.installmentCount} installments generated with valid invoice dates and a total
-              allocation of 100%.
+      <Box
+        component="form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handlePreview();
+        }}
+      >
+        <DialogScrollContent>
+          {existingInstallmentCount > 0 && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Applying this template will replace the existing {existingInstallmentCount}{' '}
+              installment(s).
             </Alert>
-            <CustomizableTable
-              tableId="payment-term-template-preview"
-              isPagination={false}
-              isFilter={false}
-              isSearch={false}
-              data={preview.installments}
-              columns={[
-                { id: 'sequence', label: '#', isSort: false, isFilter: false },
-                { id: 'name', label: 'Installment', isSort: false, isFilter: false },
-                {
-                  id: 'coverageStartDate',
-                  label: 'Start date',
-                  isSort: false,
-                  isFilter: false,
-                  render: (value) => formatDateOnly(value),
-                },
-                {
-                  id: 'coverageEndDate',
-                  label: 'End date',
-                  isSort: false,
-                  isFilter: false,
-                  render: (value) => formatDateOnly(value),
-                },
-                {
-                  id: 'dueDate',
-                  label: 'Due date',
-                  isSort: false,
-                  isFilter: false,
-                  render: (value) => formatDateOnly(value),
-                },
-                {
-                  id: 'demandDate',
-                  label: 'Invoice date',
-                  isSort: false,
-                  isFilter: false,
-                  render: (value) => formatDateOnly(value),
-                },
-                {
-                  id: 'allocationPercentage',
-                  label: 'Allocation %',
-                  isSort: false,
-                  isFilter: false,
-                  align: 'right',
-                  render: (value) => Number(value).toFixed(2) + '%',
-                },
-              ]}
-            />
-          </Box>
-        )}
-      </DialogScrollContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button startIcon={<Iconify icon="mdi:close" />} onClick={onClose} disabled={busy} >
-          Cancel
-        </Button>
-        <Button
-          variant={preview ? 'outlined' : 'contained'}
-          startIcon={<AutoAwesome />}
-          onClick={handlePreview}
-          disabled={!canGenerate}
-        >
-          {busy ? 'Generating…' : preview ? 'Regenerate preview' : 'Generate preview'}
-        </Button>
-        {preview && (
+          )}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+              {!geometry && !busy && (
+                <Button
+                  type="button"
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+                  onClick={() => setGeometryRetry((value) => value + 1)}
+                >
+                  Retry Loading Schedule
+                </Button>
+              )}
+            </Alert>
+          )}
+          <FormBusyRegion
+            busy={busy}
+            label={loadingGeometry ? 'Loading schedule…' : 'Generating preview…'}
+          >
+            <FormSectionCard
+              icon={GlobalIcons.calendar}
+              title="Schedule Configuration"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+              descriptionTooltip="Choose the installment pattern and the payment and invoice date rules for the selected board period."
+            >
+              <Box
+                sx={{
+                  minWidth: 0,
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                  gap: 2,
+                }}
+              >
+                <ShakingTextField>
+                  <CustomSelect
+                    name="templateKind"
+                    required
+                    fullWidth
+                    size="small"
+                    label="Schedule template"
+                    value={templateKind}
+                    disabled={busy}
+                    options={TEMPLATE_OPTIONS}
+                    onChange={(value) => {
+                      setTemplateKind(value as PaymentTermTemplateKind);
+                      invalidate();
+                    }}
+                  />
+                </ShakingTextField>
+                {templateKind === 'Custom' && (
+                  <ShakingTextField error={customCountInvalid}>
+                    <NumericFormatCustom
+                      name="customCount"
+                      required
+                      fullWidth
+                      size="small"
+                      prefix=""
+                      decimalScale={0}
+                      roundToWholeRupees={false}
+                      valueIsNumericString
+                      thousandSeparator={false}
+                      label="Number of installments"
+                      value={customCount}
+                      error={customCountInvalid}
+                      helperText={
+                        customCountInvalid ? 'Enter a whole number from 1 to 36' : undefined
+                      }
+                      onValueChange={({ value }, source) => {
+                        if (source.source !== 'event') return;
+                        setCustomCount(value);
+                        invalidate();
+                      }}
+                    />
+                  </ShakingTextField>
+                )}
+                <ShakingTextField>
+                  <CustomSelect
+                    name="dueDateRule"
+                    required
+                    fullWidth
+                    size="small"
+                    label="Payment due date"
+                    value={dueDateRule}
+                    disabled={busy}
+                    options={[
+                      { value: 'CoverageEnd', label: 'On the last day of each period' },
+                      { value: 'CoverageStart', label: 'On the first day of each period' },
+                      {
+                        value: 'DaysAfterCoverageStart',
+                        label: 'A number of days after period starts',
+                      },
+                    ]}
+                    onChange={(value) => {
+                      setDueDateRule(value as PaymentTermTemplateDueDateRule);
+                      invalidate();
+                    }}
+                  />
+                </ShakingTextField>
+                {dueDateRule === 'DaysAfterCoverageStart' && (
+                  <ShakingTextField error={dueDaysInvalid}>
+                    <NumericFormatCustom
+                      name="dueDays"
+                      required
+                      fullWidth
+                      size="small"
+                      prefix=""
+                      decimalScale={0}
+                      roundToWholeRupees={false}
+                      valueIsNumericString
+                      thousandSeparator={false}
+                      label="Days after period starts"
+                      value={dueDays}
+                      error={dueDaysInvalid}
+                      helperText={dueDaysInvalid ? 'Enter a whole number from 0 to 365' : undefined}
+                      onValueChange={({ value }, source) => {
+                        if (source.source !== 'event') return;
+                        setDueDays(value);
+                        invalidate();
+                      }}
+                    />
+                  </ShakingTextField>
+                )}
+                <ShakingTextField>
+                  <CustomSelect
+                    name="invoiceRule"
+                    required
+                    fullWidth
+                    size="small"
+                    label="Invoice date rule"
+                    value={invoiceRule}
+                    disabled={busy}
+                    options={INVOICE_OPTIONS}
+                    onChange={(value) => {
+                      setInvoiceRule(value as DemandGenerationRule);
+                      invalidate();
+                    }}
+                  />
+                </ShakingTextField>
+                {invoiceRule === 'XDaysBeforeDue' && (
+                  <ShakingTextField error={Boolean(offsetError)}>
+                    <NumericFormatCustom
+                      name="invoiceDays"
+                      required
+                      fullWidth
+                      size="small"
+                      prefix=""
+                      decimalScale={0}
+                      roundToWholeRupees={false}
+                      valueIsNumericString
+                      thousandSeparator={false}
+                      label="Days before due"
+                      value={invoiceDays}
+                      error={Boolean(offsetError)}
+                      helperText={
+                        offsetError ||
+                        (maxDays === null
+                          ? 'Loading maximum days…'
+                          : `Min 1 day; Max ${maxDays} days`)
+                      }
+                      onValueChange={({ value }, source) => {
+                        if (source.source !== 'event') return;
+                        setInvoiceDays(value);
+                        invalidate();
+                      }}
+                    />
+                  </ShakingTextField>
+                )}
+              </Box>
+              {invoiceRule === 'SpecificDate' && geometry && (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                    gap: 2,
+                  }}
+                >
+                  {geometry.installments.map((item, index) => (
+                    <ShakingTextField key={item.sequence} error={Boolean(specificErrors[index])}>
+                      <DatePicker
+                        label={`Invoice date — ${item.name}`}
+                        format="DD/MM/YYYY"
+                        value={parseDateOnly(specificDates[index])}
+                        minDate={parseDateOnly(item.coverageStartDate)!}
+                        maxDate={parseDateOnly(item.dueDate)!}
+                        disabled={busy}
+                        onChange={(date) => {
+                          setSpecificDates((dates) =>
+                            dates.map((value, i) =>
+                              i === index ? (toDateOnly(date) ?? '') : value
+                            )
+                          );
+                          invalidate();
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            required: true,
+                            name: `specificDates[${index}]`,
+                            error: Boolean(specificErrors[index]),
+                            helperText:
+                              specificErrors[index] ||
+                              'Between installment start and payment due date',
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  ))}
+                </Box>
+              )}
+            </FormSectionCard>
+            {preview && (
+              <FormSectionCard
+                sx={{ mt: 2 }}
+                icon={GlobalIcons.eye}
+                title="Schedule Preview"
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Review each installment's dates and allocation before applying the schedule."
+              >
+                <Alert severity="success">
+                  {preview.installmentCount} installments generated with valid invoice dates and a
+                  total allocation of 100%.
+                </Alert>
+                <CustomizableTable
+                  tableId="payment-term-template-preview"
+                  isPagination={false}
+                  isFilter={false}
+                  isSearch={false}
+                  data={preview.installments}
+                  columns={[
+                    { id: 'sequence', label: '#', isSort: false, isFilter: false },
+                    { id: 'name', label: 'Installment', isSort: false, isFilter: false },
+                    {
+                      id: 'coverageStartDate',
+                      label: 'Start date',
+                      isSort: false,
+                      isFilter: false,
+                      render: (value) => formatDateOnly(value),
+                    },
+                    {
+                      id: 'coverageEndDate',
+                      label: 'End date',
+                      isSort: false,
+                      isFilter: false,
+                      render: (value) => formatDateOnly(value),
+                    },
+                    {
+                      id: 'dueDate',
+                      label: 'Due date',
+                      isSort: false,
+                      isFilter: false,
+                      render: (value) => formatDateOnly(value),
+                    },
+                    {
+                      id: 'demandDate',
+                      label: 'Invoice date',
+                      isSort: false,
+                      isFilter: false,
+                      render: (value) => formatDateOnly(value),
+                    },
+                    {
+                      id: 'allocationPercentage',
+                      label: 'Allocation %',
+                      isSort: false,
+                      isFilter: false,
+                      align: 'right',
+                      render: (value) => Number(value).toFixed(2) + '%',
+                    },
+                  ]}
+                />
+              </FormSectionCard>
+            )}
+          </FormBusyRegion>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, flexWrap: 'wrap', rowGap: 1 }}>
           <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+            onClick={requestClose}
+            disabled={busy}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            size="small"
+            color="inherit"
+            variant={preview ? 'outlined' : 'contained'}
             startIcon={
-              <Iconify
-                icon={
-                  existingInstallmentCount > 0 ? 'mdi:swap-horizontal' : 'mdi:check-circle-outline'
-                }
-              />
+              <Iconify icon={preview ? GlobalIcons.refresh : GlobalIcons.calendar} width={18} />
             }
-            variant="contained"
-            onClick={handleApply}
+            loading={previewState.isLoading}
             disabled={!canGenerate}
           >
-            {existingInstallmentCount > 0 ? 'Replace installments' : 'Apply template'}
+            {preview ? 'Regenerate Preview' : 'Generate Preview'}
           </Button>
-        )}
-      </DialogActions>
+          {preview && (
+            <Button
+              type="button"
+              size="small"
+              color="inherit"
+              startIcon={
+                <Iconify
+                  icon={existingInstallmentCount > 0 ? GlobalIcons.transfer : GlobalIcons.submit}
+                  width={18}
+                />
+              }
+              variant="contained"
+              onClick={handleApply}
+              disabled={!canGenerate}
+            >
+              {existingInstallmentCount > 0 ? 'Replace Installments' : 'Apply Template'}
+            </Button>
+          )}
+        </DialogActions>
+      </Box>
+      <ConfirmDialog
+        open={discardOpen}
+        title="Discard Unsaved Changes?"
+        icon={<Iconify icon={GlobalIcons.alertIcon} width={24} />}
+        content="Your changes to this schedule will be lost if you discard them."
+        onClose={() => setDiscardOpen(false)}
+        cancelText="Keep Editing"
+        disableBackdropClick
+        action={
+          <Button
+            type="button"
+            size="small"
+            variant="contained"
+            color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
+            onClick={onClose}
+          >
+            Discard Changes
+          </Button>
+        }
+      />
     </CustomDialog>
   );
 }

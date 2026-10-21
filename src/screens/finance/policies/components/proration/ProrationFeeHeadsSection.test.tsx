@@ -92,6 +92,129 @@ beforeEach(() => {
 });
 
 describe('proration fee-head interactions', () => {
+  it('searches by name without changing row identity or losing edits', async () => {
+    const saved = vi.fn();
+    render(
+      <Harness
+        onSubmit={saved}
+        rules={[rule(), rule({ feeHeadId: 'hostel', feeHeadName: 'Hostel fee' })]}
+      />
+    );
+    await expand();
+    await act(async () => {
+      fireEvent.change(admission().getByRole('spinbutton'), { target: { value: '16' } });
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search fee heads' }), {
+      target: { value: '  HOSTEL  ' },
+    });
+    expect(screen.queryByRole('button', { name: 'Collapse Tuition fee' })).not.toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Configure Hostel fee' }));
+    });
+    const hostel = within(
+      screen.getByRole('region', { name: 'Admission settings for Hostel fee' })
+    );
+    await act(async () => {
+      fireEvent.change(hostel.getByRole('spinbutton'), { target: { value: '22' } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear fee head search' }));
+    expect(admission().getByRole('spinbutton')).toHaveValue(16);
+    expect(hostel.getByRole('spinbutton')).toHaveValue(22);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+    });
+    await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+    expect(
+      saved.mock.calls[0][0].feeHeadRules.map((entry: { feeHeadId: string; cutoffDay: number }) => [
+        entry.feeHeadId,
+        entry.cutoffDay,
+      ])
+    ).toEqual([
+      ['tuition', 16],
+      ['hostel', 22],
+    ]);
+  });
+
+  it('provides a clear-search action when no fee head matches', () => {
+    render(<Harness />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search fee heads' }), {
+      target: { value: 'missing fee head' },
+    });
+    expect(screen.getByText('Not found')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Configure Tuition fee' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Search' }));
+    expect(screen.getByRole('textbox', { name: 'Search fee heads' })).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Configure Tuition fee' })).toBeInTheDocument();
+  });
+
+  it('applies admission presets to all recurring heads while search is active', async () => {
+    const saved = vi.fn();
+    render(
+      <Harness
+        onSubmit={saved}
+        rules={[
+          rule(),
+          rule({ feeHeadId: 'hostel', feeHeadName: 'Hostel fee' }),
+          rule({
+            feeHeadId: 'registration',
+            feeHeadName: 'Registration',
+            feeType: 'OneTime',
+            ruleType: 'NoProration',
+            applyOnAdmission: false,
+            applyOnEarlyWithdrawal: false,
+          }),
+        ]}
+      />
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search fee heads' }), {
+      target: { value: 'hostel' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'All Daily' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+    });
+    await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+    expect(saved.mock.calls[0][0].feeHeadRules).toEqual([
+      expect.objectContaining({
+        feeHeadId: 'tuition',
+        ruleType: 'Daily',
+        minimumChargeDays: 0,
+        earlyWithdrawalRuleType: 'Daily',
+        earlyWithdrawalMinimumChargeDays: 3,
+      }),
+      expect.objectContaining({
+        feeHeadId: 'hostel',
+        ruleType: 'Daily',
+        minimumChargeDays: 0,
+        earlyWithdrawalRuleType: 'Daily',
+        earlyWithdrawalMinimumChargeDays: 3,
+      }),
+    ]);
+  });
+
+  it('clears search to reveal and focus invalid hidden fee-head settings on submit', async () => {
+    render(
+      <Harness
+        rules={[
+          rule({ configuration: { monthlyRule: 'ChargeNextMonth', cutOffDay: 32 } }),
+          rule({ feeHeadId: 'hostel', feeHeadName: 'Hostel fee' }),
+        ]}
+      />
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search fee heads' }), {
+      target: { value: 'hostel' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Search fee heads' })).toHaveValue('')
+    );
+    await waitFor(() => expect(admission().getByRole('spinbutton')).toHaveFocus());
+  });
+
   it('expands and focuses errors again after resetting the form', async () => {
     render(
       <Harness
@@ -167,12 +290,65 @@ describe('proration fee-head interactions', () => {
     });
     await act(async () => {
       expect(screen.queryByRole('option', { name: 'Full month charge' })).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('option', { name: 'No proration' }));
+      expect(screen.queryByRole('option', { name: 'No proration' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('option', { name: 'Daily proration' }));
     });
-    await waitFor(() => expect(admission().queryByRole('spinbutton')).not.toBeInTheDocument());
+    await waitFor(() => expect(admission().getByRole('spinbutton')).toHaveValue(0));
     expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);
     expect(screen.queryByRole('combobox', { name: /Rounding/ })).not.toBeInTheDocument();
   });
+
+  it.each([false, true])(
+    'offers only daily and monthly models (withdrawal: %s)',
+    async (isWithdrawal) => {
+      render(<Harness />);
+      await expand();
+      const selected = isWithdrawal ? withdrawal : admission;
+      await act(async () => {
+        fireEvent.mouseDown(selected().getByRole('combobox', { name: 'Proration model' }));
+      });
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+        'Daily proration',
+        'Monthly proration',
+      ]);
+    }
+  );
+
+  it.each([false, true])(
+    'preserves an existing no-proration value until it is edited (withdrawal: %s)',
+    async (isWithdrawal) => {
+      const saved = vi.fn();
+      render(
+        <Harness
+          onSubmit={saved}
+          rules={[
+            rule(
+              isWithdrawal
+                ? { earlyWithdrawalRuleType: 'NoProration' }
+                : { ruleType: 'NoProration' }
+            ),
+          ]}
+        />
+      );
+      await expand();
+      const selected = isWithdrawal ? withdrawal : admission;
+      expect(selected().getByRole('combobox', { name: 'Proration model' })).not.toHaveTextContent(
+        /No proration|Daily proration|Monthly proration/
+      );
+      expect(
+        selected().getByText('Choose daily or monthly proration, or turn off this event.')
+      ).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+      });
+      await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+      expect(saved.mock.calls[0][0].feeHeadRules[0]).toMatchObject(
+        isWithdrawal
+          ? { ruleType: 'MonthlyCutoff', earlyWithdrawalRuleType: 'FullCharge' }
+          : { ruleType: 'FullCharge', earlyWithdrawalRuleType: 'Daily' }
+      );
+    }
+  );
 
   it.each([false, true])(
     'selects full month from the cutoff dropdown (withdrawal: %s)',
@@ -239,6 +415,47 @@ describe('proration fee-head interactions', () => {
     }
   );
 
+  it.each([false, true])(
+    'saves full-month proration as the only enabled event (withdrawal: %s)',
+    async (isWithdrawal) => {
+      const saved = vi.fn();
+      render(
+        <Harness
+          onSubmit={saved}
+          rules={[
+            rule({
+              applyOnAdmission: !isWithdrawal,
+              applyOnEarlyWithdrawal: isWithdrawal,
+              earlyWithdrawalRuleType: 'MonthlyProration',
+              earlyWithdrawalConfiguration: { monthlyRule: 'HalfMonthRule', cutOffDay: 12 },
+            }),
+          ]}
+        />
+      );
+      await expand();
+      const selected = isWithdrawal ? withdrawal : admission;
+      await act(async () => {
+        fireEvent.mouseDown(selected().getByRole('combobox', { name: 'Cut-off behavior' }));
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'Full month charge' }));
+      });
+      expect(screen.getByText('1 / 1 prorated')).toBeInTheDocument();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+      });
+      await waitFor(() => expect(saved).toHaveBeenCalledOnce());
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(saved.mock.calls[0][0].feeHeadRules[0]).toMatchObject({
+        applyOnAdmission: !isWithdrawal,
+        applyOnEarlyWithdrawal: isWithdrawal,
+        ...(isWithdrawal
+          ? { earlyWithdrawalRuleType: 'FullMonthCharge' }
+          : { ruleType: 'FullMonthCharge' }),
+      });
+    }
+  );
+
   it('displays a saved full-month rule as monthly proration with full-month cutoff behavior', async () => {
     render(<Harness rules={[rule({ ruleType: 'FullMonthCharge', configuration: {} })]} />);
     await expand();
@@ -272,13 +489,13 @@ describe('proration fee-head interactions', () => {
     render(<Harness />);
     await act(async () => {
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Reset admission' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Reset Admission' }));
       });
       await expand();
     });
     await waitFor(() =>
-      expect(admission().getByRole('combobox', { name: 'Proration model' })).toHaveTextContent(
-        'No proration'
+      expect(admission().getByRole('combobox', { name: 'Proration model' })).not.toHaveTextContent(
+        /No proration|Daily proration|Monthly proration/
       )
     );
     expect(withdrawal().getByRole('spinbutton')).toHaveValue(3);

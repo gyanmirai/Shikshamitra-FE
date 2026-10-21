@@ -1,4 +1,3 @@
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -235,30 +234,15 @@ export default function ClassAccordionPanel({
                   <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                     {(names[key] ?? card.name) || 'New fee structure'}
                   </Typography>
-                  <Stack
-                    direction="row"
-                    spacing={0.75}
-                    alignItems="center"
-                    useFlexGap
-                    flexWrap="wrap"
-                    sx={{ mt: 0.75 }}
-                  >
-                    <Label
-                      color={
-                        card.status === FeeStructureLockStatusType.Locked ? 'success' : 'warning'
-                      }
+                  {dirtyKeys.has(key) && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mt: 0.75 }}
                     >
-                      {card.status === FeeStructureLockStatusType.Locked ? 'Published' : 'Draft'}
-                    </Label>
-                    <Typography variant="caption" color="text.secondary">
-                      v{card.record?.revisionNumber ?? 1}
+                      Unsaved
                     </Typography>
-                    {dirtyKeys.has(key) && (
-                      <Typography variant="caption" color="text.secondary">
-                        Unsaved
-                      </Typography>
-                    )}
-                  </Stack>
+                  )}
                 </Box>
               </ListItemButton>
             ))}

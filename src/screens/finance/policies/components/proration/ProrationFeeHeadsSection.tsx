@@ -3,11 +3,13 @@
 import type { FormikProps } from 'formik';
 
 import { getIn } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { SearchNotFound } from 'src/components/search-not-found';
 import React, { useId, useRef, useState, useLayoutEffect } from 'react';
 import {
   Box,
@@ -19,6 +21,7 @@ import {
   TextField,
   Typography,
   IconButton,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
@@ -32,7 +35,6 @@ import type {
 } from '../../types/finance-policy.types';
 
 const RULE_OPTIONS: { value: ProrationRuleType; label: string }[] = [
-  { value: 'NoProration', label: 'No proration' },
   { value: 'DailyProration', label: 'Daily proration' },
   { value: 'MonthlyProration', label: 'Monthly proration' },
 ];
@@ -48,9 +50,11 @@ function eventSummary(rule: IProrationFeeHeadRule, withdrawal = false) {
   const enabled = withdrawal ? rule.applyOnEarlyWithdrawal : rule.applyOnAdmission !== false;
   const model = withdrawal ? (rule.earlyWithdrawalRuleType ?? 'NoProration') : rule.ruleType;
   return enabled
-    ? model === 'FullMonthCharge'
-      ? 'Monthly proration · Full month charge'
-      : RULE_OPTIONS.find((option) => option.value === model)?.label
+    ? model === 'NoProration'
+      ? 'No proration'
+      : model === 'FullMonthCharge'
+        ? 'Monthly proration · Full month charge'
+        : RULE_OPTIONS.find((option) => option.value === model)?.label
     : 'Off';
 }
 
@@ -146,7 +150,13 @@ function EventSettings({
               options={RULE_OPTIONS}
               labelKey="label"
               valueKey="value"
-              value={model === 'FullMonthCharge' ? 'MonthlyProration' : model}
+              value={
+                model === 'NoProration'
+                  ? ''
+                  : model === 'FullMonthCharge'
+                    ? 'MonthlyProration'
+                    : model
+              }
               onBlur={() => formik.setFieldTouched(modelPath, true)}
               onChange={(value) =>
                 update(index, {
@@ -158,7 +168,12 @@ function EventSettings({
                 })
               }
               error={Boolean(modelError)}
-              helperText={modelError || description}
+              helperText={
+                modelError ||
+                (model === 'NoProration'
+                  ? 'Choose daily or monthly proration, or turn off this event.'
+                  : description)
+              }
             />
           </ShakingTextField>
           {model === 'DailyProration' && (
@@ -298,6 +313,12 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
   const rules = formik.values.feeHeadRules;
   const id = useId();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLocaleLowerCase();
+  const filteredRules = rules
+    .map((rule, index) => ({ rule, index }))
+    .filter(({ rule }) => (rule.feeHeadName || rule.feeHeadId).toLocaleLowerCase().includes(query));
+  const presetsDisabled = formik.isSubmitting || !rules.some((rule) => rule.feeType !== 'OneTime');
   const lastSubmit = useRef(0);
   const proratedCount = rules.filter(isProratedRule).length;
   const showSectionError = formik.submitCount > 0 && !proratedCount;
@@ -319,10 +340,12 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
       typeof formik.errors.feeHeadRules === 'string'
         ? []
         : rules.filter((rule, index) => getIn(formik.errors, `feeHeadRules[${index}]`));
-    if (invalidRows.length)
+    if (invalidRows.length) {
+      setSearch('');
       setExpandedRows(
         (previous) => new Set([...previous, ...invalidRows.map((rule) => rule.feeHeadId)])
       );
+    }
   }, [formik.submitCount, formik.isValidating, formik.isSubmitting, formik.errors, rules]);
 
   const update = (index: number, changes: Partial<IProrationFeeHeadRule>) => {
@@ -355,34 +378,88 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
         </Label>
       }
     >
-      <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
-        <Typography variant="caption" color="text.secondary">
-          Admission presets:
-        </Typography>
-        <Button
-          type="button"
+      <Stack spacing={1.5} sx={{ mb: 2 }}>
+        <TextField
+          name="feeHeadSearch"
+          label="Search fee heads"
+          placeholder="Search by fee head name…"
           size="small"
-          variant="outlined"
-          onClick={() => applyBulkRule('DailyProration')}
+          fullWidth
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.preventDefault();
+          }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon={GlobalIcons.search} width={18} sx={{ color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+              endAdornment: search ? (
+                <InputAdornment position="end">
+                  <CustomTooltip title="Clear fee head search">
+                    <IconButton
+                      type="button"
+                      size="small"
+                      aria-label="Clear fee head search"
+                      onClick={() => setSearch('')}
+                    >
+                      <Iconify icon={GlobalIcons.cancel} width={18} />
+                    </IconButton>
+                  </CustomTooltip>
+                </InputAdornment>
+              ) : undefined,
+            },
+          }}
+        />
+        <Stack
+          direction="row"
+          gap={1}
+          alignItems="center"
+          flexWrap="wrap"
+          role="group"
+          aria-label="Admission presets"
         >
-          All daily
-        </Button>
-        <Button
-          type="button"
-          size="small"
-          variant="outlined"
-          onClick={() => applyBulkRule('MonthlyProration')}
-        >
-          All monthly
-        </Button>
-        <Button
-          type="button"
-          size="small"
-          color="inherit"
-          onClick={() => applyBulkRule('NoProration')}
-        >
-          Reset admission
-        </Button>
+          <Typography variant="body2" fontWeight={600} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+            Admission Presets
+          </Typography>
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.clock} width={18} />}
+            disabled={presetsDisabled}
+            onClick={() => applyBulkRule('DailyProration')}
+          >
+            All Daily
+          </Button>
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.calendar} width={18} />}
+            disabled={presetsDisabled}
+            onClick={() => applyBulkRule('MonthlyProration')}
+          >
+            All Monthly
+          </Button>
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} width={18} />}
+            aria-label="Reset Admission"
+            disabled={presetsDisabled}
+            onClick={() => applyBulkRule('NoProration')}
+          >
+            Reset
+          </Button>
+        </Stack>
       </Stack>
       {showSectionError && (
         <Alert severity="error" tabIndex={-1} data-validation-error sx={{ mb: 2 }}>
@@ -394,9 +471,23 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
         <Typography color="text.secondary">
           No active fee heads found. Configure fee heads first.
         </Typography>
+      ) : !filteredRules.length ? (
+        <Stack alignItems="center" spacing={1.5} sx={{ py: 2 }}>
+          <SearchNotFound query={search.trim()} sx={{ overflowWrap: 'anywhere' }} />
+          <Button
+            type="button"
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.resetFilter} width={18} />}
+            onClick={() => setSearch('')}
+          >
+            Clear Search
+          </Button>
+        </Stack>
       ) : (
         <Stack sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
-          {rules.map((rule, index) => {
+          {filteredRules.map(({ rule, index }) => {
             const oneTime = rule.feeType === 'OneTime';
             const expanded = expandedRows.has(rule.feeHeadId);
             const rowError =

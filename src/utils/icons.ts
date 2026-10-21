@@ -1,6 +1,7 @@
 export const GlobalIcons = {
   retrunIcon: 'famicons:return-down-back-outline',
   info: 'lucide:info',
+  search: 'eva:search-fill',
   copy: 'mdi:content-copy',
   addIcon: 'si:add-duotone',
   issueBook: 'mingcute:book-5-line',

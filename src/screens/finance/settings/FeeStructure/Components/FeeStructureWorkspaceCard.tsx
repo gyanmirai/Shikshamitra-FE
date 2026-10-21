@@ -703,12 +703,6 @@ export default function FeeStructureWorkspaceCard({
           {error}
         </Alert>
       )}
-      {!record && tab !== 'policies' && families.some(({ key }) => catalogs[key].error) && (
-        <Alert severity="warning" sx={{ m: 2 }}>
-          Some default policies could not be loaded. Open Policies to retry or choose them before
-          publishing.
-        </Alert>
-      )}
       {settings && (
         <Box
           sx={{
