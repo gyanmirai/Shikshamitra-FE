@@ -466,7 +466,7 @@ async function fillSegmentedDate(dialog: Locator, label: RegExp, displayDate: st
 }
 
 async function clickLeaveRequest(page: Page) {
-  const button = page.getByRole('button', { name: /Leave Request/i }).first();
+  const button = page.getByRole('button', { name: /^Apply Leave$/i }).first();
   await expect(button).toBeVisible({ timeout: 60_000 });
   await expect(button).toBeEnabled({ timeout: 60_000 });
   await button.scrollIntoViewIfNeeded();
@@ -734,9 +734,13 @@ test.describe('Leave policy and Leave Center matrix', () => {
     await installLeaveCenterRoutes(page, state);
 
     await gotoLeaveCenter(page, 'balance');
+    await page
+      .getByRole('region', { name: 'Paid leave balance', exact: true })
+      .getByRole('button', { name: 'Balance details' })
+      .click();
     await expect(page.getByText('Accrued').first()).toBeVisible();
     await expect(page.getByText('-1').first()).toBeVisible();
-    const unpaidBalanceRow = page.getByRole('row', { name: /Unpaid .* Unlimited/i });
+    const unpaidBalanceRow = page.getByRole('region', { name: 'Unpaid leave balance' });
     await expect(unpaidBalanceRow).toBeVisible();
     await expect(unpaidBalanceRow.getByText('Unlimited')).toBeVisible();
     await page.getByRole('tab', { name: /My Requests/i }).click();

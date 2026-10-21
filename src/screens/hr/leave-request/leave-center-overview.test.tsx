@@ -1,17 +1,16 @@
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
+import { defaultSettings } from 'src/components/settings';
+import { render, screen, within, waitFor } from '@testing-library/react';
 
 import { EMPTY_LEAVE_OVERVIEW } from './leave-overview.utils';
-import { LeaveCenterOverviewPanel, getLeaveUtilizationPercent } from './leave-center-overview';
+import { LeaveCenterOverviewPanel } from './leave-center-overview';
 
 import type { LeaveOverviewData } from './leave-overview.utils';
 
-vi.mock('src/components/chart', () => ({
-  Chart: ({ series }: { series: number[] }) => (
-    <div data-testid="leave-utilization-chart">{series.join(' / ')}</div>
-  ),
-  useChart: (options: unknown) => options,
-}));
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
 const overview: LeaveOverviewData = {
   totalLeaves: 10,
@@ -28,69 +27,103 @@ const overview: LeaveOverviewData = {
       remaining: 6,
       isUnlimited: false,
     },
+    {
+      bucketId: 'Unpaid',
+      bucketName: 'Unpaid',
+      total: 0,
+      used: 2,
+      pendingDays: 0.5,
+      remaining: 0,
+      isUnlimited: true,
+    },
   ],
 };
+const renderPanel = (props: React.ComponentProps<typeof LeaveCenterOverviewPanel>) =>
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <LeaveCenterOverviewPanel {...props} />
+    </ThemeProvider>
+  );
 
 describe('LeaveCenterOverviewPanel', () => {
-  it('shows loading placeholders for metrics and utilization', () => {
-    render(<LeaveCenterOverviewPanel overview={EMPTY_LEAVE_OVERVIEW} isLoading />);
-
-    expect(screen.getByTestId('leave-overview-available-loading')).toBeInTheDocument();
-    expect(screen.getByTestId('leave-overview-accrued-loading')).toBeInTheDocument();
-    expect(screen.getByTestId('leave-overview-used-loading')).toBeInTheDocument();
-    expect(screen.getByTestId('leave-overview-chart-loading')).toBeInTheDocument();
+  it('shows loading before deciding the allocation is empty', () => {
+    renderPanel({ overview: EMPTY_LEAVE_OVERVIEW, isLoading: true });
+    expect(screen.getByRole('status', { name: 'Loading leave balances' })).toBeInTheDocument();
+    expect(screen.queryByText(/hasn't been set up/)).not.toBeInTheDocument();
   });
 
-  it('renders primary metrics and the utilization chart for finite balances', () => {
-    render(<LeaveCenterOverviewPanel overview={overview} isLoading={false} />);
-
-    expect(screen.getByText('Available')).toBeInTheDocument();
-    expect(screen.getByText('Accrued')).toBeInTheDocument();
-    expect(screen.getByText('Used')).toBeInTheDocument();
-    expect(screen.getByText('40% used')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('1.5')).toBeInTheDocument();
-    expect(screen.getByTestId('leave-utilization-chart')).toHaveTextContent('4 / 6');
+  it('shows each finite and unlimited type with its own usage and pending days', () => {
+    renderPanel({ overview, isLoading: false });
+    const paid = within(screen.getByRole('region', { name: 'Paid leave balance' }));
+    expect(paid.getByText('6')).toBeInTheDocument();
+    expect(paid.getByText('Used')).toBeInTheDocument();
+    expect(paid.getByText('4')).toBeInTheDocument();
+    expect(paid.getByText('Pending')).toBeInTheDocument();
+    expect(paid.getByText('1.5')).toBeInTheDocument();
+    const unpaid = within(screen.getByRole('region', { name: 'Unpaid leave balance' }));
+    expect(unpaid.getByText('Unlimited')).toBeInTheDocument();
+    expect(unpaid.getByText('2')).toBeInTheDocument();
+    expect(unpaid.getByText('0.5')).toBeInTheDocument();
+    expect(unpaid.getByText('No fixed entitlement limit')).toBeInTheDocument();
+    expect(unpaid.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  it('shows a clean empty state when no finite balance is allocated', () => {
-    render(<LeaveCenterOverviewPanel overview={EMPTY_LEAVE_OVERVIEW} isLoading={false} />);
+  it('reveals accrued days and finite usage through a disclosure', async () => {
+    const user = userEvent.setup();
+    renderPanel({ overview, isLoading: false });
+    const paid = within(screen.getByRole('region', { name: 'Paid leave balance' }));
+    const summary = paid.getByRole('button', { name: 'Balance details' });
+    expect(summary).toHaveAttribute('aria-expanded', 'false');
+    await user.click(summary);
+    expect(summary).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(paid.getByText('10 days')).toBeVisible());
+    expect(paid.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '40');
+  });
 
-    expect(screen.getByText('No finite leave entitlement')).toBeInTheDocument();
-    expect(screen.getByText('Balance will appear after allocation.')).toBeInTheDocument();
-    expect(screen.queryByTestId('leave-utilization-chart')).not.toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(3);
+  it('shows one allocation message without unused metrics or table tools', () => {
+    renderPanel({ overview: EMPTY_LEAVE_OVERVIEW, isLoading: false });
     expect(
-      screen.getByText('No leave allocation yet for this year — ask HR to set one up.')
+      screen.getAllByText("Your leave allocation hasn't been set up for this year.")
+    ).toHaveLength(1);
+    expect(screen.getByText(/Contact HR for assistance/)).toBeInTheDocument();
+    expect(screen.queryByText('Utilization')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Export' })).not.toBeInTheDocument();
+  });
+
+  it('preserves negative and fractional balances instead of rounding or clamping them', () => {
+    renderPanel({
+      overview: {
+        ...overview,
+        bucketBreakdown: [{ ...overview.bucketBreakdown[0], remaining: -1.5, total: 0 }],
+      },
+      isLoading: false,
+    });
+    expect(screen.getByText('-1.5')).toBeInTheDocument();
+    expect(screen.queryByText(/% used/)).not.toBeInTheDocument();
+  });
+
+  it('retains visible cards while refreshing the same balance', () => {
+    renderPanel({ overview, isLoading: true });
+    expect(screen.getByRole('region', { name: 'Paid leave balance' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('progressbar', { name: 'Refreshing leave balances' })
     ).toBeInTheDocument();
   });
 
-  it('handles unlimited or zero-balance buckets without drawing a finite chart', () => {
-    const unlimitedOverview: LeaveOverviewData = {
-      ...EMPTY_LEAVE_OVERVIEW,
-      usedLeaves: 2,
-      bucketBreakdown: [
-        {
-          bucketId: 'Unpaid',
-          bucketName: 'Unpaid',
-          total: 0,
-          used: 2,
-          pendingDays: 0,
-          remaining: 0,
-          isUnlimited: true,
-        },
-      ],
-    };
-
-    render(<LeaveCenterOverviewPanel overview={unlimitedOverview} isLoading={false} />);
-
-    expect(screen.getByText('No finite leave entitlement')).toBeInTheDocument();
-    expect(screen.getByText('Unlimited unpaid leave is tracked in history.')).toBeInTheDocument();
-    expect(screen.queryByTestId('leave-utilization-chart')).not.toBeInTheDocument();
-  });
-
-  it('calculates utilization without dividing by zero', () => {
-    expect(getLeaveUtilizationPercent(overview)).toBe(40);
-    expect(getLeaveUtilizationPercent(EMPTY_LEAVE_OVERVIEW)).toBe(0);
+  it('shows a retryable read error instead of reporting a missing allocation', async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    renderPanel({
+      overview: EMPTY_LEAVE_OVERVIEW,
+      isLoading: false,
+      error: { status: 503 },
+      onRetry,
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load leave balances');
+    expect(screen.queryByText(/hasn't been set up/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 });

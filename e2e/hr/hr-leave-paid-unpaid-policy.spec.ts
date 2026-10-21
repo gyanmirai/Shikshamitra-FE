@@ -386,7 +386,7 @@ test.describe('HR paid/unpaid leave policy workflow', () => {
     await expect(page.getByRole('heading', { name: /Apply Leave|Leave Center/i })).toBeVisible();
 
     const submitLeaveRequest = async (paidType: 'Paid' | 'Unpaid', reason: string) => {
-      await page.getByRole('button', { name: /Leave Request/i }).click();
+      await page.getByRole('button', { name: /^Apply Leave$/i }).click();
       const requestDialog = page.getByRole('dialog');
       await requestDialog.getByRole('combobox', { name: /Employee \*/i }).fill(employee.fullName);
       await page.getByRole('option', { name: new RegExp(employee.fullName, 'i') }).click();

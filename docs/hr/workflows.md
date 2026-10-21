@@ -40,6 +40,17 @@ Use this map to find the first screen and client:
 | Professional management    | `/hr/professional-management/**`                                            | `professional-management-api.ts`             |
 | HR reports                 | `/hr/reports`                                                               | `hrReportingWorkspaceApi.ts`                 |
 
+## Leave Center balance and history
+
+My Balance uses compact leave-type cards with the shared section header, contextual help, balance status, entitlement-usage bar, and grouped used/pending days.
+Finite leave cards reveal accrued days through Balance details; unlimited types explain their unbounded tracking in the same disclosure.
+Apply Leave and the active panel actions share the contained tab row, with actions wrapping below the tabs on narrow screens.
+Apply Leave from My Balance opens the existing request dialog in My Requests.
+A missing allocation shows one scoped message, while loading, failed reads, and missing academic-year or employee context remain distinct states.
+My Requests owns the single searchable request/history table, including applied date, reason, status, existing request actions, and export.
+Submitted By, Organization, and Remarks remain available through Columns without crowding the default request view.
+The staff-profile leave tab retains its existing employee-specific history.
+
 ## Employee onboarding behavior
 
 Staff Directory's Add Staff form checks policy prerequisites before loading the three default-policy lists.

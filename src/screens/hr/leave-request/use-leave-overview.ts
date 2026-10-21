@@ -39,7 +39,9 @@ export function useLeaveOverview({
   });
 
   const {
-    data: balanceDataForHr,
+    currentData: balanceDataForHr,
+    error: balanceErrorForHr,
+    refetch: refetchBalanceForHr,
     isLoading: isBalanceLoadingForHr,
     isFetching: isBalanceFetchingForHr,
   } = useQueryAndMutation({
@@ -50,8 +52,9 @@ export function useLeaveOverview({
   });
 
   const {
-    data: balanceDataForSelf,
+    currentData: balanceDataForSelf,
     error: balanceErrorForSelf,
+    refetch: refetchBalanceForSelf,
     isLoading: isBalanceLoadingForSelf,
     isFetching: isBalanceFetchingForSelf,
   } = useQueryAndMutation({
@@ -63,7 +66,7 @@ export function useLeaveOverview({
   });
 
   const {
-    data: historyDataForHr,
+    currentData: historyDataForHr,
     isLoading: isHistoryLoadingForHr,
     isFetching: isHistoryFetchingForHr,
   } = useQueryAndMutation({
@@ -81,7 +84,7 @@ export function useLeaveOverview({
   });
 
   const {
-    data: historyDataForSelf,
+    currentData: historyDataForSelf,
     error: historyErrorForSelf,
     isLoading: isHistoryLoadingForSelf,
     isFetching: isHistoryFetchingForSelf,
@@ -114,6 +117,8 @@ export function useLeaveOverview({
 
   return {
     balanceData,
+    balanceError: isSelfMode ? balanceErrorForSelf : balanceErrorForHr,
+    refetchBalance: isSelfMode ? refetchBalanceForSelf : refetchBalanceForHr,
     historyData,
     overview,
     isLoadingBalance,

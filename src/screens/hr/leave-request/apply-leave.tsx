@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
+import { createPortal } from 'react-dom';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -13,7 +14,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -23,19 +23,9 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
+import { Box, Card, Alert, Stack, Button, MenuItem, MenuList } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useAcademicOrganizationOptions } from 'src/screens/hr/hooks/useAcademicOrganizationOptions';
-import {
-  Box,
-  Card,
-  Chip,
-  Alert,
-  Stack,
-  Button,
-  MenuItem,
-  MenuList,
-  Typography,
-} from '@mui/material';
 import {
   useGetLeaveRequestByIdQuery,
   useLazyGetLeaveRequestsQuery,
@@ -67,9 +57,16 @@ const LEAVE_REQUESTS_NETWORK_ERROR_MESSAGE =
 type ApplyLeaveProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
+  actionsContainer?: HTMLElement | null;
+  openCreateOnMount?: boolean;
 };
 
-const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) => {
+const ApplyLeave = ({
+  mode = 'hr',
+  showBreadcrumbs = true,
+  actionsContainer,
+  openCreateOnMount = false,
+}: ApplyLeaveProps) => {
   const isSelfMode = mode === 'self';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { byId: organizationById } = useAcademicOrganizationOptions(currentYear?.id);
@@ -166,7 +163,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
-  const addLeaveRequestDialog = useBoolean();
+  const addLeaveRequestDialog = useBoolean(openCreateOnMount);
   const cancelConfirmation = useBoolean();
   const viewCalendarView = useBoolean();
   const [editData, setEditData] = useState<any>(null);
@@ -211,6 +208,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           ? `${item.submittedByName || '-'} (${item.submittedByEmployeeCode})`
           : (item.submittedByName ?? '-'),
         paidType: item.paidType ?? item.leaveType,
+        appliedDate: formatLeaveCalendarDateForDisplay(item.appliedDate),
         startDate: formatLeaveCalendarDateForDisplay(item.startDate),
         endDate: formatLeaveCalendarDateForDisplay(item.endDate),
         totalDays: item.totalDays,
@@ -218,7 +216,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           item.mediumStageName ||
           organizationById.get(String(item?.mediumStageId ?? ''))?.name ||
           '-',
-        description: item.description,
+        description: item.reason ?? item.description,
         remarks: item.remarks,
         status: getLeaveStatusFilterValue(item.status),
       })) || [];
@@ -266,7 +264,8 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         label: 'Name',
         id: 'name',
         sticky: true,
-        minWidth: '12vw',
+        stickyOnMobile: false,
+        minWidth: 180,
         align: 'left',
         render(value, row) {
           return (
@@ -280,13 +279,14 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         label: 'Paid Type',
         id: 'paidType',
         align: 'left',
-        minWidth: '10vw',
+        minWidth: 100,
       },
       ...(!isSelfMode
         ? [
             {
               label: 'Submitted By',
               id: 'submittedBy',
+              defaultHidden: true,
               align: 'left' as const,
               minWidth: '12vw',
               render(value: any) {
@@ -295,6 +295,15 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
             },
           ]
         : []),
+      {
+        label: 'Applied Date',
+        id: 'appliedDate',
+        filterType: 'date',
+        minWidth: '120px',
+        align: 'left',
+        isDateFilter: true,
+        cellSx: { whiteSpace: 'nowrap' },
+      },
       {
         label: 'Start Date',
         id: 'startDate',
@@ -307,32 +316,34 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         label: 'End Date',
         id: 'endDate',
         filterType: 'date',
-        minWidth: '100px',
+        minWidth: '120px',
         align: 'left',
         isDateFilter: true,
       },
       {
         label: 'Total Days',
         id: 'totalDays',
-        minWidth: '7vw',
+        minWidth: 80,
         align: 'left',
         filterType: 'number',
       },
       {
         label: 'Organization',
         id: 'organization',
+        defaultHidden: true,
         align: 'left',
         minWidth: '14vw',
       },
       {
-        label: 'Description',
+        label: 'Reason',
         id: 'description',
         align: 'left',
-        minWidth: '14vw',
+        minWidth: 180,
       },
       {
         label: 'Remarks',
         id: 'remarks',
+        defaultHidden: true,
         align: 'left',
         minWidth: '12vw',
         render(value) {
@@ -346,6 +357,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         align: 'left',
         enumOptions: EmployeeLeaveStatusOptions,
         sticky: true,
+        stickyOnMobile: false,
         stickyPosition: 'right' as const,
         minWidth: '100px',
         render(value) {
@@ -358,6 +370,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         isFilter: false,
         isSort: false,
         sticky: true,
+        stickyOnMobile: false,
         stickyPosition: 'right' as const,
         render(_value, row) {
           return <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />;
@@ -366,6 +379,13 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
     ],
     [actions, isSelfMode]
   );
+
+  const renderActions = (content: React.ReactNode) =>
+    actionsContainer ? (
+      createPortal(content, actionsContainer)
+    ) : (
+      <Box sx={{ mb: 1 }}>{content}</Box>
+    );
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -390,6 +410,17 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               isBack
               onBack={viewCalendarView.onFalse}
             />
+          )}
+          {renderActions(
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
+              onClick={viewCalendarView.onFalse}
+            >
+              Back to Requests
+            </Button>
           )}
           <Box display="flex" flexDirection="column" gap={1}>
             <LeaveCalender />
@@ -422,126 +453,68 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
             </Card>
           ) : (
             <>
-              <Card
-                variant="outlined"
-                sx={{
-                  p: 1.25,
-                  mb: 1,
-                  borderRadius: 1,
-                  boxShadow: 'none',
-                }}
-              >
+              {renderActions(
                 <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
+                  direction="row"
                   spacing={1}
-                  alignItems={{ xs: 'stretch', sm: 'center' }}
-                  justifyContent="space-between"
+                  useFlexGap
+                  flexWrap="wrap"
+                  justifyContent="flex-end"
                 >
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        flexShrink: 0,
-                        borderRadius: 1,
-                        color: 'primary.main',
-                        bgcolor: 'primary.lighter',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Iconify icon="solar:document-text-bold-duotone" width={18} />
-                    </Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                      Leave Requests
-                    </Typography>
-                    <Chip
-                      size="small"
-                      variant="soft"
-                      color="info"
-                      label={`${tableData.length} shown`}
-                      sx={{ fontWeight: 800 }}
-                    />
-                  </Stack>
-
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1}
-                    justifyContent="flex-end"
-                  >
+                  {!isSelfMode && (
                     <Button
-                      variant="contained"
+                      variant="outlined"
+                      color="inherit"
                       size="small"
-                      startIcon={<Add />}
-                      onClick={() => {
-                        addLeaveRequestDialog.onTrue();
-                      }}
-                      sx={{ borderRadius: 1, px: 2.5 }}
+                      startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
+                      onClick={viewCalendarView.onTrue}
                     >
-                      Leave Request
+                      View Calendar
                     </Button>
-                    {!isSelfMode && (
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
-                        onClick={() => {
-                          viewCalendarView.onTrue();
-                        }}
-                        sx={{ borderRadius: 1, px: 2.5 }}
-                      >
-                        View Calendar
-                      </Button>
-                    )}
-                  </Stack>
+                  )}
+                  <Button
+                    variant="contained"
+                    color="inherit"
+                    size="small"
+                    startIcon={<Add />}
+                    onClick={addLeaveRequestDialog.onTrue}
+                  >
+                    Apply Leave
+                  </Button>
                 </Stack>
-              </Card>
-
-              <CustomizableTable
-                showColumns
-                showExport
-                showFullScreen
-                exportScope="all"
-                onExport={exportTable}
-                error={tableError}
-                onRetry={() => setReloadKey((key) => key + 1)}
-                serverSidePagination
-                serverSideSearch
-                page={tableQuery.page - 1}
-                rowsPerPage={tableQuery.pageSize}
-                totalCount={totalCount}
-                onServerPagination={(page, pageSize) =>
-                  setTableQuery((query) => ({ ...query, page, pageSize }))
-                }
-                onServerSearch={(search) =>
-                  setTableQuery((query) => ({ ...query, page: 1, search }))
-                }
-                noDataText={
-                  <>
-                    No Leave Request Found{' '}
-                    <Box
-                      onClick={() => addLeaveRequestDialog.onTrue?.()}
-                      color="primary.main"
-                      fontWeight={600}
-                      sx={{
-                        '&:hover': {
-                          cursor: 'pointer',
-                          textDecoration: 'underline',
-                        },
-                      }}
-                    >
-                      Leave Request
-                    </Box>
-                  </>
-                }
-                onSendNotification={handlerSendNotification}
-                showCheckbox={selectedStudents.length !== 0}
-                isLoading={isLeaveRequestsLoading}
-                tableId="apply-leave-table"
-                data={tableData}
-                columns={columns}
-              />
+              )}
+              <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                <CustomizableTable
+                  wrapperProps={{ sx: { height: 1 } }}
+                  tableContainerProps={{ sx: { height: 1 } }}
+                  tableTitle="Leave requests and history"
+                  showColumns
+                  showExport
+                  showFullScreen
+                  exportScope="all"
+                  onExport={exportTable}
+                  error={tableError}
+                  onRetry={() => setReloadKey((key) => key + 1)}
+                  serverSidePagination
+                  serverSideSearch
+                  page={tableQuery.page - 1}
+                  rowsPerPage={tableQuery.pageSize}
+                  totalCount={totalCount}
+                  onServerPagination={(page, pageSize) =>
+                    setTableQuery((query) => ({ ...query, page, pageSize }))
+                  }
+                  onServerSearch={(search) =>
+                    setTableQuery((query) => ({ ...query, page: 1, search }))
+                  }
+                  noDataText="No leave requests for this academic year."
+                  onSendNotification={handlerSendNotification}
+                  showCheckbox={selectedStudents.length !== 0}
+                  isLoading={isLeaveRequestsLoading}
+                  tableId="apply-leave-table"
+                  data={tableData}
+                  columns={columns}
+                />
+              </Box>
             </>
           )}
         </>
@@ -597,24 +570,11 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           addLeaveRequestDialog?.onFalse?.();
           setEditData(null);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {editData ? 'View Leave Request' : 'Add Leave Request'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                editData
-                  ? 'Review the request to see all leave information.'
-                  : 'Create a leave request by entering all required fields.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
+        title={editData ? 'View Leave Request' : 'Add Leave Request'}
+        titleInfo={
+          editData
+            ? 'Review the request to see all leave information.'
+            : 'Create a leave request by entering all required fields.'
         }
       >
         {addLeaveRequestDialog?.value &&

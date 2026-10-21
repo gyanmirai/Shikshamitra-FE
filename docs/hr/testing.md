@@ -775,6 +775,18 @@ Check effective boundaries and gaps, archived selection, external reasons, load/
 Run typecheck, changed-file lint, docs validation and a fresh production build.
 Use authenticated Codex browser checks for policy create/version/archive, salary preview refresh/save/reopen, keyboard operation and narrow-width containment.
 
+## Leave Center card layout
+
+Run `leave-center-overview.test.tsx`, `leave-request.utils.test.ts`, and `leave-status.utils.test.ts` for loading, allocation, per-type pending days, fractional/negative balances, unlimited entitlement, read-error retry, and balance details.
+The existing `hr-leave-policy-leave-center.spec.ts` checks the leave-type regions and expands Balance details before checking accrued days.
+Verify My Balance has no tables and My Requests has one request/history table at 390, 768, and 1440 pixels in both themes.
+Check keyboard expansion, history after an empty allocation, applied dates, request actions, table-owned scrolling, and self-service tab visibility.
+Synthetic browser responses verify frontend rendering and navigation; authenticated deployment acceptance remains a separate check.
+
+The polished card layout uses shared section headers/help, semantic status labels, finite usage bars and MUI accordion disclosures.
+Verify the tab-row Apply Leave action opens the existing request dialog once, preserves close behavior, and does not reopen after browser Back or a later tab visit.
+Verify the embedded calendar has a Back to Requests action in the same tab action row.
+
 ## Minimal ESIC school settings
 
 Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `earning-esi-treatment-dialog.test.tsx`.
