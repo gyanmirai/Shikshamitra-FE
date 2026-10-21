@@ -1,114 +1,83 @@
 import { it, expect, describe } from 'vitest';
 
-import { configurationValues, validateConfiguration } from './esi-configuration-form';
+import {
+  configurationValues,
+  configurationPayload,
+  validateConfiguration,
+} from './esi-configuration-form';
 
-describe('ESIC calculation configuration', () => {
-  const settings = {
-    hasSchoolWideScope: true,
-    suggestedEffectiveMonth: '2026-11',
-    history: [],
-    current: {
-      id: 'existing',
-      enabled: true,
-      concurrencyStamp: 'original',
-      effectiveMonth: '2026-10',
-      registrationNumber: null,
-      coveredSince: null,
-      isCancelled: false,
-    },
-  };
-  it('preserves classified earnings for existing configurations', () => {
-    expect(configurationValues(settings)).toMatchObject({
-      effectiveMonth: '2026-11',
+const settings = {
+  hasSchoolWideScope: true,
+  suggestedEffectiveMonth: '2026-11',
+  history: [],
+  current: {
+    id: 'current',
+    enabled: true,
+    concurrencyStamp: 'original',
+    effectiveMonth: '2026-10',
+    registrationNumber: null,
+    coveredSince: null,
+    isCancelled: false,
+  },
+};
+describe('Automatic ESIC settings', () => {
+  it('uses statutory earnings and removes saved rate overrides from new edits', () => {
+    const current = {
+      ...settings.current,
       calculationSettings: {
-        eligibilityBasis: 'CLASSIFIED_EARNINGS',
-        calculationBasis: 'CLASSIFIED_EARNINGS',
+        eligibilityBasis: 'GROSS' as const,
+        calculationBasis: 'COMPONENT' as const,
+        calculationComponentId: 'basic',
+        employeePercentage: 0.5,
+        employerPercentage: 2,
+        overrideReason: 'Old override',
+        evidenceReference: 'Old evidence',
       },
+    };
+    expect(configurationValues({ ...settings, current }).calculationSettings).toEqual({
+      eligibilityBasis: 'CLASSIFIED_EARNINGS',
+      calculationBasis: 'CLASSIFIED_EARNINGS',
     });
+    expect(
+      configurationPayload({
+        ...configurationValues(settings),
+        calculationSettings: current.calculationSettings,
+      }).calculationSettings
+    ).toEqual({ eligibilityBasis: 'CLASSIFIED_EARNINGS', calculationBasis: 'CLASSIFIED_EARNINGS' });
   });
-  it('requires a selected Basic component and documented rate overrides', () => {
-    const draft = configurationValues(settings);
-    expect(
-      validateConfiguration({
-        ...draft,
-        calculationSettings: { ...draft.calculationSettings, eligibilityBasis: 'COMPONENT' },
-      })
-    ).toHaveProperty('calculationSettings.eligibilityComponentId');
-    expect(
-      validateConfiguration({
-        ...draft,
-        calculationSettings: {
-          ...draft.calculationSettings,
-          calculationBasis: 'GROSS',
-          employeePercentage: 0.5,
-        },
-      })
-    ).toHaveProperty('calculationSettings.evidenceReference');
-    expect(
-      validateConfiguration({
-        ...draft,
-        calculationSettings: {
-          ...draft.calculationSettings,
-          calculationBasis: 'GROSS',
-          employerPercentage: 101,
-          overrideReason: 'Reason',
-          evidenceReference: 'Evidence',
-        },
-      })
-    ).toHaveProperty('calculationSettings.employerPercentage');
-  });
-  it('requires Basic when only the calculation basis uses it', () => {
-    const draft = configurationValues(settings);
-    const calculationSettings = {
-      ...draft.calculationSettings,
-      eligibilityBasis: 'GROSS' as const,
-      calculationBasis: 'COMPONENT' as const,
-    };
-    expect(validateConfiguration({ ...draft, calculationSettings })).toHaveProperty(
-      'calculationSettings.calculationComponentId'
-    );
-    expect(
-      validateConfiguration({
-        ...draft,
-        calculationSettings: { ...calculationSettings, calculationComponentId: 'school-basic' },
-      })
-    ).toEqual({});
-  });
-  it('preserves independently saved and scheduled bases', () => {
-    const calculationSettings = {
-      eligibilityBasis: 'GROSS' as const,
-      calculationBasis: 'COMPONENT' as const,
-      calculationComponentId: 'school-basic',
-    };
-    const current = { ...settings.current, calculationSettings };
-    expect(configurationValues({ ...settings, current }).calculationSettings).toEqual(
-      calculationSettings
-    );
-    const scheduled = {
-      ...current,
-      effectiveMonth: '2026-11',
-      concurrencyStamp: 'future',
-      calculationSettings: {
-        ...calculationSettings,
-        eligibilityBasis: 'COMPONENT' as const,
-        eligibilityComponentId: 'other-earning',
-        calculationBasis: 'GROSS' as const,
-        calculationComponentId: null,
-      },
-    };
-    expect(
-      configurationValues({ ...settings, current, history: [scheduled] }).calculationSettings
-    ).toEqual(scheduled.calculationSettings);
-  });
-  it('uses the scheduled version concurrency token without replacing it with the current token', () => {
+  it('uses the selected scheduled version and concurrency stamp', () => {
     const scheduled = {
       ...settings.current,
-      id: 'scheduled',
+      id: 'future',
       effectiveMonth: '2026-11',
       concurrencyStamp: 'future',
+      registrationNumber: 'Scheduled',
     };
-    expect(configurationValues({ ...settings, history: [scheduled] }).concurrencyStamp).toBe(
-      'future'
-    );
+    expect(configurationValues({ ...settings, history: [scheduled] })).toMatchObject({
+      effectiveMonth: '2026-11',
+      concurrencyStamp: 'future',
+      registrationNumber: 'Scheduled',
+    });
+  });
+  it('validates month and registration without requiring optional registration', () => {
+    expect(validateConfiguration(configurationValues(settings))).toEqual({});
+    expect(
+      validateConfiguration({ ...configurationValues(settings), effectiveMonth: '' })
+    ).toHaveProperty('effectiveMonth');
+    expect(
+      validateConfiguration({
+        ...configurationValues(settings),
+        registrationNumber: 'x'.repeat(101),
+      })
+    ).toHaveProperty('registrationNumber');
+  });
+  it('trims registration and clears an empty date', () => {
+    expect(
+      configurationPayload({
+        ...configurationValues(settings),
+        registrationNumber: ' REG ',
+        coveredSince: '',
+      })
+    ).toMatchObject({ registrationNumber: 'REG', coveredSince: null });
   });
 });

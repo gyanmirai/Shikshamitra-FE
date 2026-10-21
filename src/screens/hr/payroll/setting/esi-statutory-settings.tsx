@@ -7,24 +7,25 @@ import type {
   EsiConfigurationSettings,
 } from 'src/redux/hr/esi-configuration-api';
 
+import Link from 'next/link';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { ExpandMore } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
-import { hrPermissions } from 'src/constants/hr-menus';
+import SubmitButton from 'src/components/submit-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { FormBusyRegion } from 'src/components/form-busy-region';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useGetEsiRuleQuery, usePreviewEsiImpactQuery } from 'src/redux/hr/statutory-scheme-api';
 import {
   useGetEsiConfigurationQuery,
   useSaveEsiConfigurationMutation,
 } from 'src/redux/hr/esi-configuration-api';
-import {
-  useGetEsiRuleQuery,
-  usePreviewEsiImpactQuery,
-  useGetEsiComponentTreatmentsQuery,
-} from 'src/redux/hr/statutory-scheme-api';
 import {
   Box,
   Grid,
@@ -34,26 +35,37 @@ import {
   Button,
   Switch,
   Skeleton,
-  MenuItem,
   TextField,
-  Accordion,
   Typography,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 
 import EsiOverrideDialog from './esi-override-dialog';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
-import { EsiCalculationFields } from './esi-calculation-fields';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
 import { EsiConfigurationEmployees } from './esi-configuration-employees';
-import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
+import { esiCalculationHelp, EsiAutomaticCalculation } from './esi-automatic-calculation';
 import { toApiMonth, formatEsiCurrency, formatPayrollMonth } from './esi-statutory-utils';
 import {
   configurationValues,
   configurationPayload,
   validateConfiguration,
 } from './esi-configuration-form';
+
+// The content owns scrolling; actions stay at the workspace edge at every breakpoint.
+const settingsFooterSx = {
+  flexShrink: 0,
+  display: 'flex',
+  justifyContent: 'flex-end',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  gap: 1,
+  borderTop: 1,
+  borderColor: 'divider',
+  bgcolor: 'background.paper',
+  px: { xs: 1.5, sm: 2 },
+  pt: 1,
+  pb: 'max(8px, env(safe-area-inset-bottom, 0px))',
+};
 
 export const isStalePreviewError = (error: unknown) =>
   parseApiProblemDetail(error).errorCode === 'ESI_PREVIEW_STALE';
@@ -81,34 +93,55 @@ export default function EsiStatutorySettings() {
       </Alert>
     );
   return (
-    <Stack spacing={2} aria-busy="true" aria-label="Loading ESIC settings">
-      <SectionCard
-        title="ESIC"
-        paperProps={{
-          sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
-        }}
-      >
-        <Grid size={12}>
-          <Skeleton width={190} height={36} />
-        </Grid>
-        {[0, 1].map((key) => (
-          <Grid key={key} size={{ xs: 12, sm: 6 }}>
-            <Skeleton variant="rounded" height={40} />
+    <Box
+      aria-busy="true"
+      aria-label="Loading ESIC settings"
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 2 }}>
+        <FormSectionCard
+          icon={GlobalIcons.lockIcon}
+          title="ESIC"
+          descriptionTooltip="School ESIC payroll settings."
+        >
+          <Grid container spacing={2}>
+            <Grid size={12}>
+              <Skeleton width={190} height={36} />
+            </Grid>
+            {[0, 1].map((key) => (
+              <Grid key={key} size={{ xs: 12, sm: 6 }}>
+                <Skeleton variant="rounded" height={40} />
+              </Grid>
+            ))}
           </Grid>
+        </FormSectionCard>
+        {[0, 1, 2].map((key) => (
+          <Skeleton key={key} height={44} />
         ))}
-      </SectionCard>
-      {[0, 1, 2].map((key) => (
-        <Skeleton key={key} height={44} />
-      ))}
-      <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button size="small" disabled>
+      </Stack>
+      <Box component="footer" sx={settingsFooterSx}>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+          disabled
+        >
           Cancel
         </Button>
-        <Button size="small" variant="contained" disabled>
-          Save
-        </Button>
-      </Stack>
-    </Stack>
+        <SubmitButton
+          buttonText="Save"
+          disabled
+          startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+        />
+      </Box>
+    </Box>
   );
 }
 
@@ -125,15 +158,19 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
   const canApproveOverride = hasGrantedPermission(permissions, actions.approveOverride);
   const [save, saveState] = useSaveEsiConfigurationMutation();
   const [error, setError] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const [employee, setEmployee] = useState<EsiEmployeeImpact | null>(null);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [employees, setEmployees] = useState<'all' | 'needsAttention' | null>(null);
+  const requestPending = useRef(false);
   const request = useRef<{ signature: string; key: string } | null>(null);
   const form = useFormik<EsiConfigurationDraft>({
     initialValues: configurationValues(settings),
     validate: validateConfiguration,
     onSubmit: async (values) => {
-      if (!canEdit) return;
+      if (!canEdit || requestPending.current) return;
+      requestPending.current = true;
       setError('');
       const payload = configurationPayload(values);
       const signature = JSON.stringify(payload);
@@ -150,6 +187,8 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
             ? 'Settings changed. Cancel your edits to load the latest settings before saving.'
             : 'ESIC settings could not be saved. Your changes are preserved. Try again.'
         );
+      } finally {
+        requestPending.current = false;
       }
     },
   });
@@ -185,7 +224,6 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
   const month = form.values.effectiveMonth || settings.suggestedEffectiveMonth;
   const effectiveOn = `${month}-01`;
   const rules = useGetEsiRuleQuery(effectiveOn, { skip: !form.values.enabled });
-  const treatments = useGetEsiComponentTreatmentsQuery(effectiveOn, { skip: !form.values.enabled });
   const attention = usePreviewEsiImpactQuery(
     { monthYear: toApiMonth(month), pageSize: 10, configurationDraft: previewDraft },
     { skip: !form.values.enabled || Boolean(previewDraft && previewDraft.effectiveMonth !== month) }
@@ -206,335 +244,353 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
   });
   return (
     <>
-      <Box component="form" onSubmit={form.handleSubmit} noValidate>
-        <Stack spacing={2}>
-          {error && <Alert severity="error">{error}</Alert>}
-          <SectionCard
-            title="ESIC"
-            gridProps={{ spacing: 2 }}
-            paperProps={{
-              sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
-            }}
-          >
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                alignItems={{ xs: 'stretch', sm: 'center' }}
-                justifyContent="space-between"
-                spacing={1}
-                sx={{
-                  px: 1.5,
-                  py: 1,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: 'background.neutral',
-                }}
+      <Box
+        component="form"
+        aria-label="ESIC settings form"
+        onSubmit={form.handleSubmit}
+        noValidate
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        <Stack
+          role="region"
+          aria-label="ESIC school settings"
+          spacing={2}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            overscrollBehaviorY: 'contain',
+            scrollPaddingBlock: 2,
+            pb: 2,
+            pr: 0.5,
+          }}
+        >
+          <FormBusyRegion busy={busy} label="Saving ESIC settings…">
+            <Stack spacing={2}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <FormSectionCard
+                icon={GlobalIcons.lockIcon}
+                title="ESIC"
+                sx={{ minWidth: 0, flexShrink: 0 }}
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip={esiCalculationHelp(rules.data)}
+                actionFullWidthOnMobile
+                action={
+                  settings.history.length > 0 && (
+                    <Button
+                      type="button"
+                      size="small"
+                      variant="outlined"
+                      startIcon={<Iconify icon={GlobalIcons.history} width={18} />}
+                      aria-expanded={historyOpen}
+                      aria-controls="esi-change-history"
+                      disabled={busy}
+                      onClick={() => setHistoryOpen(!historyOpen)}
+                    >
+                      {historyOpen ? 'Hide History' : 'Change History'}
+                    </Button>
+                  )
+                }
               >
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography id="esic-payroll-enable-label" variant="subtitle2">
-                    Enable ESIC for payroll
-                  </Typography>
-                  <Typography
-                    id="esic-payroll-enable-description"
-                    variant="caption"
-                    color="text.secondary"
-                  >
-                    Activate statutory ESIC calculations for eligible employees in payroll.
-                  </Typography>
-                </Box>
-                <Stack
-                  direction="row"
-                  spacing={0.5}
-                  alignItems="center"
-                  sx={{ flexShrink: 0, alignSelf: { xs: 'flex-end', sm: 'center' } }}
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 8 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.neutral',
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography id="esic-payroll-enable-label" variant="subtitle2">
+                          Calculate ESIC in ShikshaMitra
+                        </Typography>
+                        <Typography
+                          id="esic-payroll-enable-description"
+                          variant="caption"
+                          color="text.secondary"
+                        >
+                          Automatically calculate contributions for eligible staff.
+                        </Typography>
+                      </Box>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={0.5}
+                        alignItems="center"
+                        sx={{ flexShrink: 0, alignSelf: 'center' }}
+                      >
+                        <Switch
+                          name="enabled"
+                          checked={form.values.enabled}
+                          onChange={form.handleChange}
+                          disabled={!canEdit || busy}
+                          slotProps={{
+                            input: {
+                              'aria-labelledby': 'esic-payroll-enable-label',
+                              'aria-describedby': 'esic-payroll-enable-description',
+                            },
+                          }}
+                        />
+                        <Chip
+                          size="small"
+                          label={
+                            form.dirty
+                              ? 'Unsaved changes'
+                              : form.values.enabled
+                                ? 'Enabled'
+                                : 'Handled externally'
+                          }
+                          color={form.values.enabled ? 'success' : 'default'}
+                          variant="soft"
+                          aria-live="polite"
+                          sx={{ height: 22 }}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <TextField
+                      label="Changes effective from"
+                      type="month"
+                      size="small"
+                      fullWidth
+                      value={form.values.effectiveMonth ?? ''}
+                      disabled={!canEdit || busy}
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      error={Boolean(form.errors.effectiveMonth)}
+                      helperText={form.errors.effectiveMonth}
+                      onChange={(event) => {
+                        const effectiveMonth = event.target.value;
+                        const version =
+                          settings.history.find(
+                            (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
+                          ) ?? settings.current;
+                        form.setFieldValue('effectiveMonth', effectiveMonth);
+                        if (version)
+                          form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
+                      }}
+                    />
+                  </Grid>
+                  {form.values.enabled && (
+                    <Grid size={12}>
+                      <EsiAutomaticCalculation rules={rules} />
+                    </Grid>
+                  )}
+                  {form.values.enabled && (
+                    <>
+                      <Grid size={12}>
+                        <TextField
+                          label="ESIC registration number"
+                          {...field('registrationNumber')}
+                        />
+                      </Grid>
+                      <Grid size={12}>
+                        <Button
+                          type="button"
+                          size="small"
+                          disabled={busy}
+                          aria-expanded={registrationOpen}
+                          aria-controls="esi-coverage-details"
+                          onClick={() => setRegistrationOpen(!registrationOpen)}
+                        >
+                          {registrationOpen ? 'Hide registration details' : 'Registration details'}
+                        </Button>
+                        {registrationOpen && (
+                          <Box id="esi-coverage-details" sx={{ mt: 1 }}>
+                            <TextField
+                              label="Coverage start date"
+                              type="date"
+                              slotProps={{ inputLabel: { shrink: true } }}
+                              {...field('coveredSince')}
+                            />
+                          </Box>
+                        )}
+                      </Grid>
+                    </>
+                  )}
+                  <Grid size={12}>
+                    <Typography variant="body2" color="text.secondary">
+                      Applies from the selected month. Locked payroll and issued payslips stay
+                      unchanged.
+                    </Typography>
+                  </Grid>
+                  {!form.values.enabled && (
+                    <Grid size={12}>
+                      <Typography variant="caption" color="text.secondary">
+                        ESIC is handled outside ShikshaMitra. Contributions are omitted from payroll
+                        and payslips.
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </FormSectionCard>
+              {form.dirty &&
+                previewDraft &&
+                attention.data &&
+                typeof attention.data.summary.employeeContributionTotal === 'number' && (
+                  <Alert severity={attention.isError ? 'error' : 'info'}>
+                    {attention.isFetching
+                      ? 'Updating draft impact…'
+                      : `Draft impact: ${attention.data.summary.coveredEmployeeCount} staff covered. Employee ESIC ${formatEsiCurrency(attention.data.summary.employeeContributionTotal)}, employer ESIC ${formatEsiCurrency(attention.data.summary.employerContributionTotal)}.`}{' '}
+                    Staff issues remain visible for review before payroll locking.
+                  </Alert>
+                )}
+              {historyOpen && (
+                <FormSectionCard
+                  icon={GlobalIcons.history}
+                  title="Change History"
+                  sx={{ minWidth: 0, flexShrink: 0 }}
+                  titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                  descriptionTooltip="Saved ESIC settings by effective payroll month. Superseded settings remain in the history."
                 >
-                  <Switch
-                    name="enabled"
-                    checked={form.values.enabled}
-                    onChange={form.handleChange}
-                    disabled={!canEdit || busy}
-                    slotProps={{
-                      input: {
-                        'aria-labelledby': 'esic-payroll-enable-label',
-                        'aria-describedby': 'esic-payroll-enable-description',
-                      },
+                  <Stack
+                    id="esi-change-history"
+                    spacing={1}
+                    divider={<Box sx={{ borderBottom: 1, borderColor: 'divider' }} />}
+                  >
+                    {settings.history.map((version) => (
+                      <Typography key={version.id} variant="body2">
+                        {version.effectiveMonth === '1900-01'
+                          ? 'School default'
+                          : formatPayrollMonth(version.effectiveMonth)}
+                        : {version.enabled ? 'Calculated in ShikshaMitra' : 'Handled externally'}
+                        {version.isCancelled ? ' (superseded)' : ''}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </FormSectionCard>
+              )}
+              {attention.data?.summary.blockingIssues?.some(
+                (issue) => issue.resolutionTarget === 'earningClassifications'
+              ) && (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button
+                      component={Link}
+                      href={hrPaths.payroll.settings.earningComponents}
+                      size="small"
+                    >
+                      Review earnings
+                    </Button>
+                  }
+                >
+                  Review ESIC treatment for salary components before running payroll.
+                </Alert>
+              )}
+              {settings.current?.enabled && (
+                <Box>
+                  <Alert
+                    severity={
+                      (attention.data?.summary.employeesNeedingAttention ?? 0) > 0
+                        ? 'warning'
+                        : 'info'
+                    }
+                    sx={{
+                      alignItems: 'center',
+                      '& .MuiAlert-action': { alignSelf: 'center', pt: 0 },
                     }}
-                  />
-                  <Chip
-                    size="small"
-                    label={form.values.enabled ? 'Active' : 'Inactive'}
-                    color={form.values.enabled ? 'success' : 'default'}
-                    variant="soft"
-                    aria-live="polite"
-                    sx={{ height: 22 }}
-                  />
-                </Stack>
-              </Stack>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
-              <TextField
-                label="Effective payroll month"
-                type="month"
-                size="small"
-                fullWidth
-                value={form.values.effectiveMonth ?? ''}
-                disabled={!canEdit || busy}
-                slotProps={{ inputLabel: { shrink: true } }}
-                error={Boolean(form.errors.effectiveMonth)}
-                helperText={form.errors.effectiveMonth}
-                onChange={(event) => {
-                  const effectiveMonth = event.target.value;
-                  const version =
-                    settings.history.find(
-                      (item) => !item.isCancelled && item.effectiveMonth <= effectiveMonth
-                    ) ?? settings.current;
-                  form.setFieldValue('effectiveMonth', effectiveMonth);
-                  if (version) form.setFieldValue('concurrencyStamp', version.concurrencyStamp);
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <EsiCalculationFields
-                form={form}
-                disabled={!canEdit || busy}
-                components={treatments.data ?? []}
-                rule={rules.data}
-              />
-            </Grid>
-            {form.values.enabled && (
-              <>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField label="ESIC registration number" {...field('registrationNumber')} />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Coverage start date"
-                    type="date"
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    {...field('coveredSince')}
-                  />
-                </Grid>
-              </>
-            )}
-            <Grid size={12}>
-              <Typography variant="body2" color="text.secondary">
-                Applies to current and future unlocked payroll.
-              </Typography>
-            </Grid>
-            {!form.values.enabled && (
-              <Grid size={12}>
-                <Typography variant="caption" color="text.secondary">
-                  Turning off platform calculation does not establish a statutory exemption.
-                </Typography>
-              </Grid>
-            )}
-          </SectionCard>
-          {form.values.enabled && (
-            <>
-              <Accordion disableGutters>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="subtitle2">How ESIC is calculated</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {rules.isError ? (
+                    action={
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="outlined"
+                        disabled={busy || attention.isError || !attention.data}
+                        aria-expanded={Boolean(employees)}
+                        aria-controls="esi-staff-review"
+                        onClick={() =>
+                          setEmployees(
+                            employees
+                              ? null
+                              : (attention.data?.summary.employeesNeedingAttention ?? 0) > 0
+                                ? 'needsAttention'
+                                : 'all'
+                          )
+                        }
+                      >
+                        {employees ? 'Hide Staff' : 'Review Staff'}
+                      </Button>
+                    }
+                  >
+                    {attention.isError
+                      ? 'Staff review is unavailable.'
+                      : !attention.data
+                        ? 'Checking staff ESIC status…'
+                        : (attention.data.summary.employeesNeedingAttention ?? 0) > 0
+                          ? `${attention.data.summary.employeesNeedingAttention} staff need attention before payroll.`
+                          : 'No staff issues found for this payroll month.'}
+                  </Alert>
+                  {attention.isError && (
                     <Alert
                       severity="error"
                       action={
-                        <Button size="small" onClick={() => rules.refetch()}>
+                        <Button size="small" onClick={() => attention.refetch()}>
                           Retry
                         </Button>
                       }
                     >
-                      Statutory rules could not be loaded.
+                      Staff details could not be loaded.
                     </Alert>
-                  ) : rules.data ? (
-                    <Typography variant="body2">
-                      Staff: {rules.data.employeePercentage}%. Employer:{' '}
-                      {rules.data.employerPercentage}%. Monthly eligibility ceiling:{' '}
-                      {formatEsiCurrency(rules.data.standardWageCeiling)}; persons with disability:{' '}
-                      {formatEsiCurrency(rules.data.disabilityWageCeiling)}. Eligibility and
-                      contribution-period continuity are determined from staff facts and payroll
-                      history. Each share is rounded up to the next rupee. Staff with average daily
-                      wages up to {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)}{' '}
-                      are exempt from the staff share; the employer share still applies.
-                    </Typography>
-                  ) : (
-                    <Skeleton />
                   )}
-                </AccordionDetails>
-              </Accordion>
-              <Accordion disableGutters>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="subtitle2">Earning classifications</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Stack spacing={2}>
-                    <Typography variant="body2" color="text.secondary">
-                      Known earnings use statutory defaults. Review custom earnings before applying
-                      ESIC.
-                    </Typography>
-                    {treatments.isError && (
-                      <Alert
-                        severity="error"
-                        action={
-                          <Button size="small" onClick={() => treatments.refetch()}>
-                            Retry
-                          </Button>
-                        }
-                      >
-                        Earning classifications could not be loaded.
-                      </Alert>
-                    )}
-                    {treatments.data?.map((item) => (
-                      <TextField
-                        key={item.componentId}
-                        label={item.componentName}
-                        size="small"
-                        select
-                        fullWidth
-                        disabled={!canEdit || busy}
-                        value={
-                          form.values.treatments.find((x) => x.componentId === item.componentId)
-                            ?.treatment ?? item.treatment
-                        }
-                        onChange={(event) =>
-                          form.setFieldValue('treatments', [
-                            ...form.values.treatments.filter(
-                              (x) => x.componentId !== item.componentId
-                            ),
-                            { componentId: item.componentId, treatment: event.target.value },
-                          ])
-                        }
-                      >
-                        {[
-                          'Unclassified',
-                          'Included',
-                          'SpecifiedExclusion',
-                          'OtherExclusion',
-                          'InKind',
-                        ].map((treatment) => (
-                          <MenuItem key={treatment} value={treatment}>
-                            {
-                              {
-                                Unclassified: 'Needs review',
-                                Included: 'Included in ESI wages',
-                                SpecifiedExclusion: 'Specified exclusion',
-                                OtherExclusion: 'Other exclusion',
-                                InKind: 'In-kind benefit',
-                              }[treatment]
-                            }
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    ))}
-                  </Stack>
-                </AccordionDetails>
-              </Accordion>
-            </>
-          )}
-
-          {form.dirty &&
-            previewDraft &&
-            attention.data &&
-            typeof attention.data.summary.employeeContributionTotal === 'number' && (
-              <Alert severity={attention.isError ? 'error' : 'info'}>
-                {attention.isFetching
-                  ? 'Updating draft impact…'
-                  : `Draft impact: ${attention.data.summary.coveredEmployeeCount} staff covered. Employee ESIC ${formatEsiCurrency(attention.data.summary.employeeContributionTotal)}, employer ESIC ${formatEsiCurrency(attention.data.summary.employerContributionTotal)}.`}{' '}
-                Staff issues remain visible for review before payroll locking.
-              </Alert>
-            )}
-          {settings.history.length > 0 && (
-            <Accordion disableGutters>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="subtitle2">Change history</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={1}>
-                  {settings.history.map((version) => (
-                    <Typography key={version.id} variant="body2">
-                      {version.effectiveMonth === '1900-01'
-                        ? 'School default'
-                        : formatPayrollMonth(version.effectiveMonth)}
-                      : ESIC {version.enabled ? 'on' : 'off'}
-                      {version.isCancelled ? ' (superseded)' : ''}
-                    </Typography>
-                  ))}
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-          )}
-          {settings.current?.enabled && (
-            <Box>
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                {(attention.data?.summary.employeesNeedingAttention ?? 0) > 0 && (
-                  <Button
-                    size="small"
-                    onClick={() =>
-                      setEmployees(employees === 'needsAttention' ? null : 'needsAttention')
-                    }
-                  >
-                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention})
-                  </Button>
-                )}
-                <Button
-                  size="small"
-                  onClick={() => setEmployees(employees === 'all' ? null : 'all')}
-                >
-                  View staff
-                </Button>
-              </Stack>
-              {attention.isError && (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button size="small" onClick={() => attention.refetch()}>
-                      Retry
-                    </Button>
-                  }
-                >
-                  Staff details could not be loaded.
-                </Alert>
+                  {employees && (
+                    <Box id="esi-staff-review" sx={{ mt: 2 }}>
+                      <EsiConfigurationEmployees
+                        key={employees}
+                        month={month}
+                        readiness={employees}
+                        canManageEnrollment={canManageEnrollment}
+                        canApproveOverride={canApproveOverride}
+                        onOpenEmployee={setEmployee}
+                      />
+                    </Box>
+                  )}
+                </Box>
               )}
-              {employees && (
-                <EsiConfigurationEmployees
-                  key={employees}
-                  month={month}
-                  readiness={employees}
-                  canManageEnrollment={canManageEnrollment}
-                  canApproveOverride={canApproveOverride}
-                  onOpenEmployee={setEmployee}
-                />
-              )}
-            </Box>
-          )}
-          {canEdit && (
-            <Stack
-              direction="row"
-              justifyContent="flex-end"
-              spacing={1}
-              sx={{ position: 'sticky', bottom: 0, py: 2, bgcolor: 'background.paper', zIndex: 1 }}
-            >
-              <Button
-                size="small"
-                disabled={busy}
-                onClick={() =>
-                  navigation.requestNavigation(() => {
-                    form.resetForm({ values: configurationValues(settings) });
-                    setError('');
-                    request.current = null;
-                  })
-                }
-              >
-                Cancel
-              </Button>
-              <Button size="small" type="submit" variant="contained" disabled={busy || !form.dirty}>
-                {busy ? 'Saving...' : 'Save'}
-              </Button>
             </Stack>
-          )}
+          </FormBusyRegion>
         </Stack>
+        {canEdit && (
+          <Box component="footer" role="group" aria-label="ESIC form actions" sx={settingsFooterSx}>
+            <Button
+              type="button"
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+              disabled={busy}
+              onClick={() =>
+                navigation.requestNavigation(() => {
+                  form.resetForm({ values: configurationValues(settings) });
+                  setError('');
+                  request.current = null;
+                })
+              }
+            >
+              Cancel
+            </Button>
+            <SubmitButton
+              buttonText="Save"
+              loading={busy}
+              disabled={busy || !form.dirty}
+              startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+            />
+          </Box>
+        )}
       </Box>
       <EsiEnrollmentDrawer
         employee={employee}

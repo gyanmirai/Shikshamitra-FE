@@ -767,3 +767,9 @@ Run the focused `esi-policy-api.test.ts`, `esi-policy-fields.test.tsx`, `salary-
 Check effective boundaries and gaps, archived selection, external reasons, load/retry, template copy, stale previews, save/reopen payloads and navigation guards.
 Run typecheck, changed-file lint, docs validation and a fresh production build.
 Use authenticated Codex browser checks for policy create/version/archive, salary preview refresh/save/reopen, keyboard operation and narrow-width containment.
+
+## Minimal ESIC school settings
+
+Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `earning-esi-treatment-dialog.test.tsx`.
+Cover automatic statutory bases, removed rate inputs, optional registration details, help disclosure, per-component classification, scheduled school settings, restricted editing, stale versions and retry idempotency.
+Browser checks should verify the compact school settings and Earning Component treatment action at desktop and narrow widths.
