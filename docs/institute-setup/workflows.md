@@ -3,12 +3,23 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Configure School Identity
+
+## School Documents
+
+1. Open Institute Setup > School Documents. Search by document name or filter by category; the table groups all attachments under one record.
+2. Select Add Document, enter a name and category, optionally add notes, then choose supporting files. Selection and local preview do not upload anything.
+3. Submit uploads metadata and files together. The form locks while saving; failures retain the draft for retry. Cancel, Escape and navigation use the shared unsaved-navigation guard with a standard Keep Editing / Discard Changes confirmation.
+4. View opens read-only Document Details and Attachments sections. Preview opens the selected PDF/image; Download saves an authenticated copy. A failed saved preview supports Retry Preview.
+5. Edit can change metadata and add files. Removing saved attachments requires Delete permission; removing newly selected files only changes the draft. Stale saves preserve the draft and ask the user to reopen the record.
+6. Delete requires confirmation and removes the record and its files from the visible library. Backend retention is described in the [product guide](../../../Shikshamitra-BE/docs/modules/institute-setup/product.md#school-documents).
+
+Forms and views reuse CustomDialog, FormSectionCard, CustomUpload and the configured theme. Notes and filenames wrap, file actions stack at phone widths, and closing a nested preview preserves the underlying form. Expiry tracking, renewals, verification and board/medium links are outside this version.
 
 ## Academic hierarchy standard and division dialogs
 

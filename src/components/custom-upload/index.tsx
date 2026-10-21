@@ -226,7 +226,11 @@ const FileUploader = <T extends boolean = true>({
           onReject?.(message);
           return false;
         }
-        if (file instanceof File) return allowedTypes.includes(file.type);
+        if (file instanceof File && !allowedTypes.includes(file.type)) {
+          onReject?.('Select a PDF, JPG, JPEG or PNG file.');
+          return false;
+        }
+        if (file instanceof File) return true;
         if (file.type) return allowedTypes.includes(file.type);
         if (file.base64) {
           const mimeType = file.base64.split(';')[0].split(':')[1];
@@ -302,6 +306,8 @@ const FileUploader = <T extends boolean = true>({
     } catch (err) {
       console.warn('Failed to download file via fetch, opening in new tab as fallback:', err);
       window.open(url, '_blank');
+    } finally {
+      if (file instanceof File) window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
   };
 
@@ -348,7 +354,7 @@ const FileUploader = <T extends boolean = true>({
           file={file instanceof File ? file : file?.url || file?.filePath || ''}
           sx={{ height: 25, width: 25 }}
         />
-        <Box sx={{ ml: 1.5, flex: 1 }}>
+        <Box sx={{ ml: 1.5, flex: 1, minWidth: 0 }}>
           <Tooltip title={file.name}>
             <Typography
               variant="body2"

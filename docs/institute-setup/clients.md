@@ -3,12 +3,20 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Institute Setup clients
+
+## School Documents client
+
+`src/redux/InstituteSetup/schoolDocumentsApi.ts` injects list/detail, multipart create/update, delete and binary-download endpoints into the shared authenticated API. Writes invalidate `SchoolDocuments`; detail entries have zero unused-cache retention. Edit submissions keep the version stamp captured when the form opened. Multipart payloads carry metadata, retained attachment IDs and new binary files, never tenant IDs or blob paths.
+
+Saved previews use `DocumentPreviewDialog` with `directUrl` against the owning authenticated file endpoint, including its checked API origin. Local-file previews own and release their object URLs. Downloads use RTK Query and release their temporary URLs. The [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#school-documents) owns endpoints, upload limits and authorization.
+
+The shared preview loads the installed PDF.js renderer lazily, with bounded canvas dimensions, page navigation, fit/zoom and selectable extracted page text. It works without a browser PDF plugin. Protected preview requests reject foreign origins and discard responses when the authentication session changes.
 
 ## Room client
 

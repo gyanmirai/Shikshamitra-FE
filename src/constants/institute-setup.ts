@@ -8,6 +8,7 @@ const defaultInstituteSetupPermissionName = 'InstituteSetup.';
 export const instituteSetupPaths = {
   academicSetup: '/setting/academic-setup',
   schoolIdentity: '/setting/school-identity',
+  schoolDocuments: '/setting/school-documents',
   shiftManagement: '/setting/shift-management',
   roomsManagement: {
     root: '/setting/room-management',
@@ -21,6 +22,7 @@ export const instituteSetupPermissions = {
   root: `${defaultModulePermissionName}InstituteSetup`,
   academicSetup: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}AcademicSetup`,
   schoolIdentity: 'InstituteSetup.SchoolIdentity.View',
+  schoolDocuments: 'InstituteSetup.SchoolDocuments.View',
   shiftManagement: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}ShiftManagement`,
   roomsManagement: {
     root: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}RoomManagement`,
@@ -111,6 +113,14 @@ const instituteSetupModule = {
           permissionName: instituteSetupPermissions.schoolIdentity,
           visibilityPermissionName: 'ShikshaMitra.Module.InstituteSetup.SchoolIdentity',
           icon: menuIconView('mdi:badge-account-horizontal-outline'),
+        },
+        {
+          title: 'School Documents',
+          path: instituteSetupPaths.schoolDocuments,
+          _action: 'school-documents',
+          permissionName: instituteSetupPermissions.schoolDocuments,
+          visibilityPermissionName: 'ShikshaMitra.Module.InstituteSetup.SchoolDocuments',
+          icon: menuIconView('mdi:file-document-multiple-outline'),
         },
       ],
     },
