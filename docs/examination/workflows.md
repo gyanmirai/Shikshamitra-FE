@@ -3,7 +3,7 @@ module: examination
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-16
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -36,4 +36,5 @@ Changing the subjects of a populated draft plan clearly warns that its existing 
 When legacy data contains per-plan `Published` flags but no examination publication record, the guided workflow presents those complete plans as `Ready` and keeps the examination draft controls available. Only examination-wide publication makes the workspace read-only.
 Draft exam actions use **Manage plans**. Published exam actions use **View seating** and open the final room seating without rendering the four workflow steps.
 The published viewer lets users switch plan groups and rooms, inspect every final student assignment, and does not expose edit, reset, regroup, or repeat-publish controls.
+Manual allocation uses Room studio: an unassigned-student tray with search and an All students view, alongside a physical bench preview. The preview preserves uneven columns and saved seat numbers, provides zoom controls and seat menus, and uses the existing drag sensors and draft actions for placement, moving, swapping, removal and Undo/Redo. Reserved, disabled and overlapping-plan seats remain protected. Published room seating uses the same physical bench design in read-only mode, including combined simultaneous-plan occupants and zoom controls. Automatic previews retain their existing canvas.
 Publishing currently approves the plan but does not claim that student or parent messages were delivered.

@@ -1,19 +1,15 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { roomsApi, useDeleteRoomMutation } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 import RoomTable from './components/roomTable';
@@ -29,52 +25,33 @@ const RoomCreateManagement = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteRoomMutation,
   });
-  // Get changes state from redux store
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { confirmWithUndo } = useConfirmWithUndo();
 
   // State for managing selected room and room data
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
 
-  // Redux dispatch hook
-  const dispatch = useDispatch();
-
-  /**
-   * Handles closing of the add/edit room dialog
-   * @param _e - Event object
-   * @param isSubmit - Boolean indicating if form was submitted
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset component state
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedRoom(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    // Close dialog if form submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addRoomDialog.onFalse();
-      resetState();
-    }
-    // Close dialog if no unsaved changes
-    else if (!isChanges) {
-      addRoomDialog.onFalse();
-      setTimeout(() => {
-        setSelectedRoom(null);
-      }, 200);
-    }
+  const handleClose = () => {
+    addRoomDialog.onFalse();
+    setSelectedRoom(null);
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box
+      sx={{
+        height: 1,
+        minHeight: 0,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
       <CustomBreadcrumbs
         heading="Rooms"
         description="Create and manage rooms for effective facility management."
         links={[
-          { name: 'Institute Setup', href: '/academic/dashboard' },
-          { name: 'Rooms & Buildings', href: '/academic/curriculumSubjects' },
+          { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
+          { name: 'Rooms & Buildings', href: instituteSetupPaths.roomsManagement.building },
           { name: 'Rooms' },
         ]}
         action={
@@ -92,17 +69,9 @@ const RoomCreateManagement = () => {
         }
       />
 
-      <CustomDialog
-        open={addRoomDialog.value}
-        handleClose={() => {
-          addRoomDialog.onFalse();
-          setSelectedRoom(null);
-        }}
-        maxWidth="sm"
-        title={selectedRoom ? 'Update Room' : 'Add Room'}
-      >
+      {addRoomDialog.value && (
         <RoomForm open={addRoomDialog} onClose={handleClose} editData={selectedRoom} />
-      </CustomDialog>
+      )}
 
       <RoomTable
         onDelete={(data) => {
@@ -122,7 +91,7 @@ const RoomCreateManagement = () => {
           setSelectedRoom(null);
           deleteRoomDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Room?"
         content={
           <>
             Are you sure you want to delete room <strong>{selectedRoom?.roomName}</strong>?
@@ -171,7 +140,7 @@ const RoomCreateManagement = () => {
               setSelectedRoom(null);
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />

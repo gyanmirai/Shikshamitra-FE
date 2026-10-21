@@ -20,6 +20,7 @@ export default function SeatCard({
   onRemove,
   onReserve,
   isReadOnly,
+  presentation = 'standard',
 }: SeatCardProps) {
   const isExternalExam =
     propIsExternalExam || !!assignment?.isExternalExamOccupied || !!seat.isExternalExamOccupied;
@@ -55,6 +56,7 @@ export default function SeatCard({
           isExternalExam={isExternalExam}
           isReadOnly={isReadOnly}
           onClick={onClick}
+          presentation={presentation}
         />
         {!isReadOnly && (
           <>

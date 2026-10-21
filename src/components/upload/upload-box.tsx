@@ -8,7 +8,7 @@ import type { UploadProps } from './types';
 
 // ----------------------------------------------------------------------
 
-export function UploadBox({ placeholder, error, disabled, sx, ...other }: UploadProps) {
+export function UploadBox({ placeholder, error, disabled, sx, boxRootProps, ...other }: UploadProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     disabled,
     ...other,
@@ -18,7 +18,7 @@ export function UploadBox({ placeholder, error, disabled, sx, ...other }: Upload
 
   return (
     <Box
-      {...getRootProps()}
+      {...getRootProps(boxRootProps)}
       sx={{
         width: 64,
         height: 64,
