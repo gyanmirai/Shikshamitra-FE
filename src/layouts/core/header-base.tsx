@@ -6,7 +6,6 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { useSelector } from 'react-redux';
-import { SchoolBrandingLogo } from '../components/school-branding-logo';
 import { useSession } from 'next-auth/react';
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
@@ -21,8 +20,9 @@ import { MenuButton } from '../components/menu-button';
 import { SignInButton } from '../components/sign-in-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
-import GlobalAcademicSearch from '../components/global-academic-search/route-aware-search';
+import { SchoolBrandingLogo } from '../components/school-branding-logo';
 import { type WorkspacesPopoverProps } from '../components/workspaces-popover';
+import GlobalAcademicSearch from '../components/global-academic-search/route-aware-search';
 import {
   NotificationsDrawer,
   type NotificationsDrawerProps,
@@ -153,7 +153,7 @@ export function HeaderBase({
             )}
 
             {/* -- Logo -- */}
-            <SchoolBrandingLogo enabled={!isHost && Boolean(user?.profile?.tenantid)} />
+            <SchoolBrandingLogo tenantId={!isHost ? user?.profile?.tenantid : undefined} />
 
             {/* -- Divider -- */}
             <StyledDivider data-slot="divider" />

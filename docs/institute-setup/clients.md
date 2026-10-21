@@ -3,7 +3,7 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,11 +24,17 @@ TL;DR: `schoolIdentityApi.ts` injects typed endpoints into the existing authenti
 | Preview | PDF Blob from current settings or an unsaved draft |
 | History | Latest 100 changes for the selected profile, including the administrator's username |
 | Copy | Explicit source and target contexts and target concurrency stamp |
-| Branding | Authenticated school-default logo/banner; excludes signatures |
+| Branding metadata | Small typed logo/banner metadata response, keyed by tenant |
+| Branding image | Authenticated `/branding/logo` or `/branding/banner` Blob; 204 becomes null; query cache is keyed by tenant and kind |
 
 Modes are numeric: 0 inherited, 1 custom, 2 omitted. Effective responses identify each asset's source. The SchoolIdentity cache tag invalidates configuration, history and header branding after writes. Binary asset entries have no unused-cache retention; session changes use the existing base API cache reset.
 
-The default header logo is in `src/layouts/components/school-branding-logo.tsx`. Public admission inquiry image URLs come from the validated public inquiry response and are fetched through its token-bound image endpoints. Public pages do not use the authenticated configuration client.
+The default header logo is in `src/layouts/components/school-branding-logo.tsx`.
+It requests the logo directly without waiting for branding metadata, uses the application logo for missing or failed images, and revokes browser object URLs when the image changes or unmounts.
+Tenant changes immediately hide the previous image and select a separate query entry.
+Browser HTTP caching revalidates configured images through private ETags; the backend owns the cache and authorization contract.
+Public admission inquiry image URLs come from the validated public inquiry response and are fetched through its token-bound image endpoints.
+Public pages do not use the authenticated configuration client.
 
 Certificate and ID template clients carry optional identity choices. Omitting a choice preserves existing custom template values; explicitly selecting inherited or omitted changes that asset only.
 
