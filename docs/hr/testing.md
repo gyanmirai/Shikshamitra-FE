@@ -701,6 +701,8 @@ All-module docs validation additionally encounters unrelated testing-document ta
 ## Salary structure preview regression
 
 The focused structure suite covers month and staff URL context, pending registration, unavailable totals, retry, salary permissions, preview freshness, draft protection and explicit template upgrades.
+The overview tests also cover higher and lower CTC comparisons, paise, absent or immaterial differences, and unavailable school cost without suppressing incomplete-estimate warnings.
+Verify that initial loading exposes a named busy state without monetary placeholders, and that refreshes preserve existing totals and month context until the busy feedback clears.
 Run the compensation client contract tests and statutory-profile editor tests with the structure suite.
 Authenticated browser acceptance covers the overview, salary edit, full-month preview, saving and returning to the same staff/month context at 390x844, 768x1024 and 1440x900.
 Backend-owned payroll review, lock and immutable payslip checks are documented in the backend HR testing guide.

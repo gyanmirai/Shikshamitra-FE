@@ -5,13 +5,13 @@ import type { EmployeeOptionsResponse } from 'src/redux/hr/employeeApi';
 import type { EmployeeOption } from 'src/screens/hr/leave-request/leave-request.utils';
 
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
@@ -22,14 +22,12 @@ import {
   staffPayrollProfileHref,
 } from 'src/screens/hr/employee/payroll-profile-utils';
 import {
-  Box,
   Card,
   Link,
   Stack,
   Alert,
   Paper,
   Button,
-  Skeleton,
   TextField,
   Typography,
   LinearProgress,
@@ -38,7 +36,12 @@ import {
 import { salaryEditorHref } from './salary-editor-navigation';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
-import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
+import {
+  SalaryBreakdown,
+  StatutorySummary,
+  SalaryEstimateSummary,
+  SalaryStructureSkeleton,
+} from './salary-summary-view';
 
 export default function EmployeeSalaryStructureScreen() {
   const params = useSearchParams();
@@ -148,7 +151,7 @@ function SalaryStructureWorkspace() {
               href={editHref}
               variant="contained"
               size="small"
-              startIcon={<Iconify icon="solar:pen-bold" />}
+              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
             >
               {summary?.revisionId ? 'Edit salary' : 'Set up salary'}
             </Button>
@@ -213,7 +216,11 @@ function SalaryStructureWorkspace() {
             <Alert
               severity="error"
               action={
-                <Button onClick={() => refetch()} size="small">
+                <Button
+                  onClick={() => refetch()}
+                  size="small"
+                  startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+                >
                   Retry
                 </Button>
               }
@@ -221,50 +228,34 @@ function SalaryStructureWorkspace() {
               Unable to load salary details. Try again.
             </Alert>
           ) : !summary ? (
-            <Stack aria-label="Loading salary details" role="status" spacing={2}>
-              <Skeleton variant="rounded" height={90} />
-              <Skeleton variant="rounded" height={230} />
-              <Skeleton variant="rounded" height={200} />
-            </Stack>
+            <SalaryStructureSkeleton />
           ) : !summary.revisionId ? (
             <Alert severity="info">
               No salary is effective for {formatPayrollMonth(month)}.
               {canManage ? ' Set up salary to see the full-month estimate.' : ''}
             </Alert>
           ) : (
-            <Stack spacing={2} aria-busy={isFetching}>
-              {isFetching && <LinearProgress aria-label="Refreshing salary details" />}
-              <Box>
-                <Typography variant="subtitle1">
-                  Full-month estimate · {formatPayrollMonth(month)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Salary effective from{' '}
-                  {formatPayrollMonth(summary.salaryEffectiveMonth!.slice(0, 7))}. Attendance and
-                  one-time adjustments are applied in Run Payroll.
-                </Typography>
-              </Box>
+            <Stack
+              spacing={2}
+              useFlexGap
+              aria-busy={isFetching}
+              role="region"
+              aria-label="Salary details"
+              sx={{ position: 'relative' }}
+            >
+              {isFetching && (
+                <LinearProgress
+                  aria-label="Refreshing salary details"
+                  sx={{ position: 'absolute', insetInline: 0, top: -4 }}
+                />
+              )}
               {!summary.isComplete && (
                 <Alert severity="warning">
                   This estimate is incomplete. Resolve the statutory setup shown below before
                   relying on take-home or school cost.
                 </Alert>
               )}
-              <SalaryTotals
-                gross={summary.grossSalary}
-                deductions={summary.totalDeductions}
-                net={summary.netSalary}
-                employerCost={summary.employerCost}
-              />
-              {summary.quotedEmployerCost != null &&
-                summary.employerCost != null &&
-                Math.abs(summary.employerCost - summary.quotedEmployerCost) > 0.01 && (
-                  <Alert severity="info">
-                    Current school cost differs from saved CTC by{' '}
-                    {formatPayrollCurrency(summary.employerCost - summary.quotedEmployerCost)}.
-                    Agreed gross salary remains unchanged.
-                  </Alert>
-                )}
+              <SalaryEstimateSummary summary={summary} month={month} />
               <StatutorySummary schemes={summary.statutorySummary} />
               <SalaryBreakdown
                 earnings={summary.earnings}

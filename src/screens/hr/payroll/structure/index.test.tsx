@@ -1,5 +1,5 @@
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import EmployeeSalaryStructureScreen from './index';
 
@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   canRead: true,
   params: 'employeeId=staff-1&month=2026-10',
   isError: false,
+  isFetching: false,
   summary: undefined as any,
 }));
 vi.mock('next/navigation', () => ({
@@ -26,7 +27,12 @@ vi.mock('src/redux/customQueryAndMutation', () => ({ default: () => [vi.fn()] })
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
   useGetSalarySummaryQuery: (...args: any[]) => {
     mocks.query(...args);
-    return { currentData: mocks.summary, isError: mocks.isError, refetch: mocks.refetch };
+    return {
+      currentData: mocks.summary,
+      isError: mocks.isError,
+      isFetching: mocks.isFetching,
+      refetch: mocks.refetch,
+    };
   },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -101,16 +107,44 @@ beforeEach(() => {
   mocks.params = 'employeeId=staff-1&month=2026-10';
   mocks.canRead = true;
   mocks.isError = false;
+  mocks.isFetching = false;
   mocks.summary = undefined;
 });
 it('keeps a stable loading state and reads URL-selected staff and month', () => {
   render(<EmployeeSalaryStructureScreen />);
   expect(screen.getByRole('heading', { name: 'Payroll Structure' })).toBeVisible();
   expect(screen.getByRole('status', { name: 'Loading salary details' })).toBeVisible();
+  expect(screen.getByRole('status', { name: 'Loading salary details' })).toHaveAttribute(
+    'aria-busy',
+    'true'
+  );
+  expect(screen.queryByText('₹0')).not.toBeInTheDocument();
+  expect(screen.queryByText('Unavailable')).not.toBeInTheDocument();
   expect(mocks.query).toHaveBeenCalledWith(
     { employeeId: 'staff-1', month: '2026-10' },
     { skip: false }
   );
+});
+it('retains the salary and context during refresh, then removes the busy feedback', () => {
+  mocks.summary = loaded();
+  mocks.isFetching = true;
+  const { rerender } = render(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByRole('region', { name: 'Salary details' })).toHaveAttribute(
+    'aria-busy',
+    'true'
+  );
+  expect(screen.getByRole('progressbar', { name: 'Refreshing salary details' })).toBeVisible();
+  expect(screen.getByText('₹16,605')).toBeVisible();
+  expect(screen.getByDisplayValue('2026-10')).toBeVisible();
+  expect(screen.queryByRole('status', { name: 'Loading salary details' })).not.toBeInTheDocument();
+  mocks.isFetching = false;
+  rerender(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByRole('region', { name: 'Salary details' })).toHaveAttribute(
+    'aria-busy',
+    'false'
+  );
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getByText('₹16,605')).toBeVisible();
 });
 it('shows totals and all statutory decisions while registration is pending', () => {
   mocks.summary = loaded();
@@ -127,6 +161,36 @@ it('shows totals and all statutory decisions while registration is pending', () 
     'href',
     expect.stringContaining('month=2026-10')
   );
+});
+it.each([
+  [20445, '₹600 lower than saved CTC.'],
+  [19245, '₹600 higher than saved CTC.'],
+  [19844.75, '₹0.25 higher than saved CTC.'],
+])('explains the monthly CTC comparison without an alert for saved CTC %s', (quoted, message) => {
+  mocks.summary = { ...loaded(), quotedEmployerCost: quoted };
+  render(<EmployeeSalaryStructureScreen />);
+  const estimate = within(screen.getByRole('region', { name: 'Full-month estimate' }));
+  expect(estimate.getByRole('heading', { name: 'Full-month estimate', level: 2 })).toBeVisible();
+  expect(estimate.getByText('October 2026')).toBeVisible();
+  expect(estimate.getByText(message)).toBeVisible();
+  expect(estimate.getByText(/Agreed gross salary remains unchanged/)).toBeVisible();
+  expect(estimate.getByText(/Salary effective from April 2022/)).toBeVisible();
+  expect(estimate.queryByRole('alert')).not.toBeInTheDocument();
+});
+it.each([null, 19845, 19845.005])(
+  'omits the CTC comparison when absent or immaterial: %s',
+  (quoted) => {
+    mocks.summary = { ...loaded(), quotedEmployerCost: quoted };
+    render(<EmployeeSalaryStructureScreen />);
+    expect(screen.queryByText(/than saved CTC/)).not.toBeInTheDocument();
+  }
+);
+it('does not imply a known school cost when the estimate is incomplete', () => {
+  mocks.summary = { ...loaded(), isComplete: false, employerCost: null, quotedEmployerCost: 20000 };
+  render(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByRole('alert')).toHaveTextContent('This estimate is incomplete');
+  expect(screen.getByText('Unavailable')).toBeVisible();
+  expect(screen.queryByText(/than saved CTC/)).not.toBeInTheDocument();
 });
 it('never presents incomplete totals as zero', () => {
   mocks.summary = {
