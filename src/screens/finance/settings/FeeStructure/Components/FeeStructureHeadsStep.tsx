@@ -13,6 +13,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
@@ -145,17 +146,19 @@ export default function FeeStructureHeadsStep({
         descriptionTooltip="Fixed fee totals cover the selected payment term and include optional heads. Variable amounts are set during student assignment. Optional heads are charged only when selected; this subtotal is not a student's amount due."
         action={
           writable && (
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              aria-label="Add fee head"
-              aria-expanded={adding}
-              onClick={() => setAdding(!adding)}
-              disabled={!settings.permissions.headsRead || headsError}
-            >
-              Fee head
-            </Button>
+            <CustomTooltip title="Add fee head">
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label="Add fee head"
+                  aria-expanded={adding}
+                  onClick={() => setAdding(!adding)}
+                  disabled={busy || !settings.permissions.headsRead || headsError}
+                >
+                  <Iconify icon={GlobalIcons.addIcon} />
+                </IconButton>
+              </span>
+            </CustomTooltip>
           )
         }
       />
@@ -246,29 +249,9 @@ export default function FeeStructureHeadsStep({
             isSort: false,
             render: (_value, row) => (
               <Box>
-                <Stack
-                  direction="row"
-                  alignItems="flex-start"
-                  justifyContent="space-between"
-                  spacing={0.5}
-                >
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {row.feeHeadName}
-                  </Typography>
-                  {writable && (
-                    <CustomTooltip title={`Remove ${row.feeHeadName}`}>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        aria-label={`Remove ${row.feeHeadName}`}
-                        disabled={busy}
-                        onClick={() => onRemove(row.feeHeadId)}
-                      >
-                        <Iconify icon={GlobalIcons.delete} width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                </Stack>
+                <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                  {row.feeHeadName}
+                </Typography>
                 {row.categoryName && (
                   <Typography variant="caption" color="text.secondary">
                     {row.categoryName}
@@ -462,9 +445,9 @@ export default function FeeStructureHeadsStep({
           },
           {
             id: 'schedule',
-            label: 'Schedule',
-            width: 80,
-            minWidth: 80,
+            label: writable ? 'Actions' : 'Schedule',
+            width: writable ? 112 : 80,
+            minWidth: writable ? 112 : 80,
             align: 'center',
             sticky: true,
             stickyPosition: 'right',
@@ -472,20 +455,31 @@ export default function FeeStructureHeadsStep({
             isSort: false,
             excludeFromExport: true,
             render: (_value, row) => (
-              <CustomTooltip
-                title={row.scheduleMode === 'Customized' ? 'View custom schedule' : 'View schedule'}
-              >
-                <span>
-                  <IconButton
-                    size="small"
-                    aria-label={`View ${row.feeHeadName} schedule`}
-                    disabled={busy || !row.paymentTermVersionId || !settings.permissions.termsRead}
-                    onClick={() => onSchedule(row.feeHeadId)}
-                  >
-                    <Iconify icon={GlobalIcons.eye} width={20} />
-                  </IconButton>
-                </span>
-              </CustomTooltip>
+              <AdaptiveThreeDotsActions
+                actions={[
+                  {
+                    id: 'schedule',
+                    label: `View ${row.feeHeadName} schedule`,
+                    icon: GlobalIcons.eye,
+                    tooltip:
+                      row.scheduleMode === 'Customized' ? 'View custom schedule' : 'View schedule',
+                    disabled: busy || !row.paymentTermVersionId || !settings.permissions.termsRead,
+                    onClick: () => onSchedule(row.feeHeadId),
+                  },
+                  ...(writable
+                    ? [
+                        {
+                          id: 'remove',
+                          label: `Remove ${row.feeHeadName}`,
+                          icon: GlobalIcons.delete,
+                          color: 'error.main',
+                          disabled: busy,
+                          onClick: () => onRemove(row.feeHeadId),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             ),
           },
         ]}

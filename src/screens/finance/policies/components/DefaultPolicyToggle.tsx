@@ -21,6 +21,7 @@ interface DefaultPolicyToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   otherDefaultPolicyName?: string;
+  showReplacementNotice?: boolean;
   currentDefault?: boolean;
   compact?: boolean;
   descriptionDisplay?: 'inline' | 'tooltip';
@@ -32,6 +33,7 @@ export default function DefaultPolicyToggle({
   checked,
   onChange,
   otherDefaultPolicyName,
+  showReplacementNotice = true,
   currentDefault = false,
   compact = false,
   descriptionDisplay = 'inline',
@@ -129,7 +131,7 @@ export default function DefaultPolicyToggle({
         )}
       </Card>
 
-      {checked && otherDefaultPolicyName && (
+      {showReplacementNotice && checked && otherDefaultPolicyName && (
         <FormHelperText sx={{ mx: 1.75, mt: 0.75 }}>
           {`“${otherDefaultPolicyName}” is currently the default and will be replaced when you save.`}
         </FormHelperText>
