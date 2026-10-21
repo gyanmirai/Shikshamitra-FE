@@ -11,7 +11,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
@@ -22,7 +21,6 @@ import {
   staffPayrollProfileHref,
 } from 'src/screens/hr/employee/payroll-profile-utils';
 import {
-  Box,
   Card,
   Link,
   Stack,
@@ -38,7 +36,7 @@ import {
 import { salaryEditorHref } from './salary-editor-navigation';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
-import { SalaryTotals, SalaryBreakdown, StatutorySummary } from './salary-summary-view';
+import { SalaryBreakdown, StatutorySummary, SalaryEstimateSummary } from './salary-summary-view';
 
 export default function EmployeeSalaryStructureScreen() {
   const params = useSearchParams();
@@ -234,37 +232,13 @@ function SalaryStructureWorkspace() {
           ) : (
             <Stack spacing={2} aria-busy={isFetching}>
               {isFetching && <LinearProgress aria-label="Refreshing salary details" />}
-              <Box>
-                <Typography variant="subtitle1">
-                  Full-month estimate · {formatPayrollMonth(month)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Salary effective from{' '}
-                  {formatPayrollMonth(summary.salaryEffectiveMonth!.slice(0, 7))}. Attendance and
-                  one-time adjustments are applied in Run Payroll.
-                </Typography>
-              </Box>
               {!summary.isComplete && (
                 <Alert severity="warning">
                   This estimate is incomplete. Resolve the statutory setup shown below before
                   relying on take-home or school cost.
                 </Alert>
               )}
-              <SalaryTotals
-                gross={summary.grossSalary}
-                deductions={summary.totalDeductions}
-                net={summary.netSalary}
-                employerCost={summary.employerCost}
-              />
-              {summary.quotedEmployerCost != null &&
-                summary.employerCost != null &&
-                Math.abs(summary.employerCost - summary.quotedEmployerCost) > 0.01 && (
-                  <Alert severity="info">
-                    Current school cost differs from saved CTC by{' '}
-                    {formatPayrollCurrency(summary.employerCost - summary.quotedEmployerCost)}.
-                    Agreed gross salary remains unchanged.
-                  </Alert>
-                )}
+              <SalaryEstimateSummary summary={summary} month={month} />
               <StatutorySummary schemes={summary.statutorySummary} />
               <SalaryBreakdown
                 earnings={summary.earnings}

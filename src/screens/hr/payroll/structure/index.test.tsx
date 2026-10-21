@@ -1,5 +1,5 @@
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import EmployeeSalaryStructureScreen from './index';
 
@@ -127,6 +127,36 @@ it('shows totals and all statutory decisions while registration is pending', () 
     'href',
     expect.stringContaining('month=2026-10')
   );
+});
+it.each([
+  [20445, '₹600 lower than saved CTC.'],
+  [19245, '₹600 higher than saved CTC.'],
+  [19844.75, '₹0.25 higher than saved CTC.'],
+])('explains the monthly CTC comparison without an alert for saved CTC %s', (quoted, message) => {
+  mocks.summary = { ...loaded(), quotedEmployerCost: quoted };
+  render(<EmployeeSalaryStructureScreen />);
+  const estimate = within(screen.getByRole('region', { name: 'Full-month estimate' }));
+  expect(estimate.getByRole('heading', { name: 'Full-month estimate', level: 2 })).toBeVisible();
+  expect(estimate.getByText('October 2026')).toBeVisible();
+  expect(estimate.getByText(message)).toBeVisible();
+  expect(estimate.getByText(/Agreed gross salary remains unchanged/)).toBeVisible();
+  expect(estimate.getByText(/Salary effective from April 2022/)).toBeVisible();
+  expect(estimate.queryByRole('alert')).not.toBeInTheDocument();
+});
+it.each([null, 19845, 19845.005])(
+  'omits the CTC comparison when absent or immaterial: %s',
+  (quoted) => {
+    mocks.summary = { ...loaded(), quotedEmployerCost: quoted };
+    render(<EmployeeSalaryStructureScreen />);
+    expect(screen.queryByText(/than saved CTC/)).not.toBeInTheDocument();
+  }
+);
+it('does not imply a known school cost when the estimate is incomplete', () => {
+  mocks.summary = { ...loaded(), isComplete: false, employerCost: null, quotedEmployerCost: 20000 };
+  render(<EmployeeSalaryStructureScreen />);
+  expect(screen.getByRole('alert')).toHaveTextContent('This estimate is incomplete');
+  expect(screen.getByText('Unavailable')).toBeVisible();
+  expect(screen.queryByText(/than saved CTC/)).not.toBeInTheDocument();
 });
 it('never presents incomplete totals as zero', () => {
   mocks.summary = {
