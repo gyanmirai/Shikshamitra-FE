@@ -525,6 +525,8 @@ The Payroll Structure route stores employeeId and month in the URL and reads the
 The overview shows full-month gross, employee deductions, estimated take-home, school cost, PF, ESIC and professional-tax status before editing.
 One summary card groups the preview month, totals, salary effective date and full-month estimate guidance.
 The four amounts use separate tiles, with a restrained accent on available estimated take-home.
+Initial loading follows the same amount-tile and section layout, respects reduced motion, and avoids displaying placeholder monetary values.
+Same-staff refreshes retain the visible summary and month context, with progress feedback positioned outside the content flow.
 Differences from saved monthly CTC appear as a neutral comparison within the summary, with an absolute amount and a higher or lower label.
 The comparison preserves the distinction between school cost and unchanged agreed gross salary.
 Unavailable statutory calculations show an incomplete estimate instead of zero totals.

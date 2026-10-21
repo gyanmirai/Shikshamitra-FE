@@ -9,7 +9,17 @@ import type {
 import { alpha } from '@mui/material/styles';
 import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import { FormSectionCard, FormSectionHeader } from 'src/components/form-section-card';
-import { Box, Card, Chip, Grid, Stack, Divider, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Stack,
+  Divider,
+  Skeleton,
+  Typography,
+  CardContent,
+} from '@mui/material';
 
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 
@@ -136,7 +146,13 @@ type SalaryAmountsProps = {
   employerCost: number | null;
 };
 
-function SalaryAmounts({ gross, deductions, net, employerCost }: SalaryAmountsProps) {
+function SalaryAmounts({
+  gross,
+  deductions,
+  net,
+  employerCost,
+  loading = false,
+}: SalaryAmountsProps & { loading?: boolean }) {
   return (
     <Box
       component="dl"
@@ -169,7 +185,8 @@ function SalaryAmounts({ gross, deductions, net, employerCost }: SalaryAmountsPr
             bgcolor: 'background.neutral',
             display: 'flex',
             flexDirection: 'column',
-            ...(label === 'Estimated take-home' &&
+            ...(!loading &&
+              label === 'Estimated take-home' &&
               value !== null && {
                 bgcolor: alpha(theme.palette.primary.main, 0.06),
                 borderColor: alpha(theme.palette.primary.main, 0.24),
@@ -187,18 +204,91 @@ function SalaryAmounts({ gross, deductions, net, employerCost }: SalaryAmountsPr
               mt: 'auto',
               fontVariantNumeric: 'tabular-nums',
               overflowWrap: 'anywhere',
-              ...(label === 'Estimated take-home' &&
+              ...(!loading &&
+                label === 'Estimated take-home' &&
                 value !== null && {
                   color: 'primary.dark',
                   ...theme.applyStyles('dark', { color: 'primary.light' }),
                 }),
             })}
           >
-            {money(value)}
+            {loading ? <Skeleton width="75%" /> : money(value)}
           </Typography>
         </Box>
       ))}
     </Box>
+  );
+}
+
+export function SalaryStructureSkeleton() {
+  const sectionSx = { p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 };
+
+  return (
+    <Stack
+      role="status"
+      aria-label="Loading salary details"
+      aria-busy
+      spacing={2}
+      sx={{
+        '@media (prefers-reduced-motion: reduce)': { '& .MuiSkeleton-root': { animation: 'none' } },
+      }}
+    >
+      <Card variant="outlined" aria-hidden sx={sectionSx}>
+        <Stack spacing={2.5}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Skeleton variant="rounded" width={36} height={36} />
+            <Skeleton width="40%" />
+            <Skeleton width="20%" sx={{ ml: 'auto' }} />
+          </Stack>
+          <SalaryAmounts gross={0} deductions={null} net={null} employerCost={null} loading />
+          <Divider />
+          <Skeleton width="85%" />
+        </Stack>
+      </Card>
+      <Card variant="outlined" aria-hidden sx={sectionSx}>
+        <Stack spacing={2} divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
+          <Skeleton width="40%" height={44} />
+          {[0, 1, 2].map((row) => (
+            <Box
+              key={row}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(200px, 0.6fr)' },
+                gap: 2,
+              }}
+            >
+              <Stack spacing={0.5}>
+                <Skeleton width="35%" />
+                <Skeleton width="85%" />
+              </Stack>
+              <Box
+                sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2 }}
+              >
+                <Skeleton width="70%" />
+                <Skeleton width="70%" />
+              </Box>
+            </Box>
+          ))}
+        </Stack>
+      </Card>
+      <Grid container spacing={2} aria-hidden>
+        {[0, 1].map((column) => (
+          <Grid key={column} size={{ xs: 12, md: 6 }}>
+            <Card variant="outlined" sx={sectionSx}>
+              <Stack spacing={2}>
+                <Skeleton width="55%" height={44} />
+                {[0, 1, 2].map((row) => (
+                  <Stack key={row} direction="row" justifyContent="space-between" spacing={2}>
+                    <Skeleton width="55%" />
+                    <Skeleton width="20%" />
+                  </Stack>
+                ))}
+              </Stack>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Stack>
   );
 }
 
