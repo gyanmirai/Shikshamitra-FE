@@ -14,7 +14,7 @@ TL;DR: use this page to locate RTK Query clients and backend contract ownership 
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
 `src/redux/hr/pf-coverage-api.ts` owns PF school-coverage history and effective-dated writes, invalidating PF, salary, and payroll caches.
-`esi-configuration-api.ts` carries ESIC calculation settings and effective months; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
+`esi-configuration-api.ts` carries automatic ESIC settings, effective months, and component-treatment updates from Earning Component; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
 Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
 
 `employeeApi.ts` supplies `getEmployeeAssignableRoles` at `/employees/assignable-roles` for the Add/Edit Staff Role field, with role-cache invalidation.
