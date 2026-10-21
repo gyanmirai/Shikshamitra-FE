@@ -4,14 +4,14 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Tab, Alert, Paper } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
-import { useMemo, useEffect, type SyntheticEvent } from 'react';
+import { Box, Tab, Alert, Paper, Button } from '@mui/material';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
+import { useMemo, useState, useEffect, type SyntheticEvent } from 'react';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 
 import ApplyLeave from './apply-leave';
@@ -36,10 +36,13 @@ const SELF_ROUTE = '/dashboard/my-leave';
 
 const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   const isSelfContext = context === 'self';
+  const [actionsContainer, setActionsContainer] = useState<HTMLDivElement | null>(null);
+  const [openCreateOnMount, setOpenCreateOnMount] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const { permissions } = useSelector((state: RootState) => state.auth);
+  const { permissions, employee } = useSelector((state: RootState) => state.auth);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const hasApprovalPermission = permissions?.some(
@@ -82,9 +85,13 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   }, [initialTab, isSelfContext, searchParams]);
 
   const activeTab = resolveLeaveCenterTab(requestedTab, visibleTabs, initialTab);
+  useEffect(() => {
+    if (activeTab === 'my-requests') setOpenCreateOnMount(false);
+  }, [activeTab]);
+
   const leaveOverviewState = useLeaveOverview({
     mode: isSelfContext ? 'self' : 'hr',
-    enabled: !isSelfLeaveBlocked,
+    enabled: !isSelfLeaveBlocked && activeTab === 'balance',
   });
 
   const pageTitle = isSelfContext ? 'My Leave' : 'Leave Center';
@@ -104,6 +111,8 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
     if (!visibleTabs.includes(nextTab)) {
       return;
     }
+
+    if (nextTab !== 'my-requests') setOpenCreateOnMount(false);
 
     const nextParams = new URLSearchParams(searchParams.toString());
     if (nextTab === 'balance') {
@@ -138,6 +147,10 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
 
       <Paper
         sx={{
+          flexShrink: 0,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
           borderRadius: 1,
           border: '1px solid',
           borderColor: 'divider',
@@ -152,25 +165,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
           aria-label={pageTitle}
           variant="scrollable"
           scrollButtons="auto"
-          sx={{
-            minHeight: 42,
-            bgcolor: 'background.paper',
-            [`& .MuiTabs-scroller`]: { p: 0.75 },
-            [`& .MuiTabs-flexContainer`]: { gap: 0.75 },
-            [`& .MuiTabs-indicator`]: { display: 'none' },
-            [`& .MuiTab-root`]: {
-              minHeight: 44,
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-              color: 'text.secondary',
-              fontWeight: 800,
-              '&.Mui-selected': {
-                bgcolor: 'background.neutral',
-                color: 'text.primary',
-              },
-            },
-          }}
+          sx={{ flex: { xs: '1 1 100%', md: 1 }, minWidth: 0 }}
         >
           {visibleTabs.includes('balance') && (
             <Tab
@@ -178,7 +173,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
               aria-controls={`${context}-leave-panel`}
               label="My Balance"
               value="balance"
-              icon={<Iconify icon="mdi:scale-balance" width={18} />}
+              icon={<Iconify icon="mdi:scale-balance" width={20} />}
               iconPosition="start"
             />
           )}
@@ -188,7 +183,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
               aria-controls={`${context}-leave-panel`}
               label="My Requests"
               value="my-requests"
-              icon={<Iconify icon="mdi:file-document-edit-outline" width={18} />}
+              icon={<Iconify icon="mdi:file-document-edit-outline" width={20} />}
               iconPosition="start"
             />
           )}
@@ -198,11 +193,36 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
               aria-controls={`${context}-leave-panel`}
               label="Approvals"
               value="approvals"
-              icon={<Iconify icon="mdi:check-circle-outline" width={18} />}
+              icon={<Iconify icon="mdi:check-circle-outline" width={20} />}
               iconPosition="start"
             />
           )}
         </CustomTabs>
+        <Box
+          ref={setActionsContainer}
+          sx={{
+            p: 1,
+            ml: 'auto',
+            flexShrink: 0,
+            display: activeTab === 'approvals' ? 'none' : undefined,
+          }}
+        >
+          {activeTab === 'balance' && (
+            <Button
+              variant="contained"
+              color="inherit"
+              size="small"
+              disabled={!currentYear?.id || Boolean(leaveOverviewState.selfAccessError)}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              onClick={(event) => {
+                setOpenCreateOnMount(true);
+                handleTabChange(event, 'my-requests');
+              }}
+            >
+              Apply Leave
+            </Button>
+          )}
+        </Box>
       </Paper>
 
       {leaveOverviewState.selfAccessError && (
@@ -211,31 +231,42 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
         </Alert>
       )}
 
-      {activeTab === 'balance' && !leaveOverviewState.selfAccessError && (
-        <LeaveCenterOverviewPanel
-          overview={leaveOverviewState.overview}
-          isLoading={leaveOverviewState.isLoadingBalance}
-        />
-      )}
-
       <Box
         id={`${context}-leave-panel`}
         role="tabpanel"
         aria-labelledby={`${context}-leave-tab-${activeTab}`}
-        sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          overflow: activeTab === 'balance' ? 'auto' : 'hidden',
+        }}
       >
         {activeTab === 'my-requests' && (
-          <ApplyLeave mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
-        )}
-        {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
-        {activeTab === 'balance' && (
-          <LeaveBalance
+          <ApplyLeave
             mode={isSelfContext ? 'self' : 'hr'}
             showBreadcrumbs={false}
-            showSelfAccessError={false}
-            overviewState={leaveOverviewState}
+            actionsContainer={actionsContainer}
+            openCreateOnMount={openCreateOnMount}
           />
         )}
+        {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
+        {activeTab === 'balance' &&
+          !leaveOverviewState.selfAccessError &&
+          (!currentYear?.id ? (
+            <Alert severity="info">Select an academic year to view your leave balances.</Alert>
+          ) : !isSelfContext && !employee?.id ? (
+            <Alert severity="warning">
+              Your user is not linked to an employee profile. Contact admin/HR.
+            </Alert>
+          ) : (
+            <LeaveCenterOverviewPanel
+              overview={leaveOverviewState.overview}
+              isLoading={leaveOverviewState.isLoadingBalance}
+              error={leaveOverviewState.balanceError}
+              onRetry={leaveOverviewState.refetchBalance}
+            />
+          ))}
       </Box>
     </Box>
   );
