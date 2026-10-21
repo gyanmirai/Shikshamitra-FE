@@ -14,6 +14,7 @@ import { AssessmentResultEntry } from './assessment-result-entry';
 import { formatAssessmentSchedule } from './assessment-date-time';
 import { assessmentActionLabels } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
+import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
@@ -250,6 +251,8 @@ export function AssessmentAttemptCard({
                 formId={resultFormId}
                 inlineSave
               />
+            ) : attempt.effectiveProfile ? (
+              <AssessmentSubjectScoreHistory attempt={attempt} />
             ) : (
               <Typography variant="body2">
                 {(assessment.policy?.scoringEnabled ?? attempt.marks != null) &&
@@ -260,7 +263,7 @@ export function AssessmentAttemptCard({
                   : outcomeLabels[attempt.outcome]}
               </Typography>
             )}
-            {assessment.policy?.scoringEnabled && (
+            {!attempt.effectiveProfile && assessment.policy?.scoringEnabled && (
               <Typography variant="caption" color="text.secondary">
                 Pass mark: {assessment.policy.passingMarks} / {assessment.policy.totalMarks}
               </Typography>

@@ -1,6 +1,6 @@
+import { skipToken } from '@reduxjs/toolkit/query';
 import { act, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { skipToken } from '@reduxjs/toolkit/query';
 
 import { useApplicationDetail } from './use-application-detail';
 
@@ -12,12 +12,16 @@ const requests = vi.hoisted(() => ({
   form: vi.fn(),
   history: vi.fn(),
   workflow: vi.fn(),
+  advance: vi.fn(),
+  applicationRefetch: vi.fn(),
+  workflowRefetch: vi.fn(),
 }));
 const context = vi.hoisted(() => ({
   manage: false,
   canEndJourney: true,
   stageId: 'current-form',
   applicationLoaded: true,
+  emailForm: false,
 }));
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), info: vi.fn() }));
 const application = { id: 'application', concurrencyStamp: 'current', status: 0 };
@@ -44,6 +48,22 @@ const form = {
     ],
   },
 };
+const emailForm = {
+  values: [
+    { fieldCode: 'EMAIL', valueJson: '"Existing@Example.COM"' },
+    { fieldCode: 'NOTE', valueJson: '"KEEP Case"' },
+  ],
+  definition: {
+    sections: [
+      {
+        fields: [
+          { code: 'EMAIL', fieldType: 3 },
+          { code: 'NOTE', fieldType: 0 },
+        ],
+      },
+    ],
+  },
+};
 
 vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('react-redux', () => ({
@@ -64,17 +84,21 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => {
   const mutation = () => [vi.fn(), { isLoading: false }];
   return {
     useGetAdmissionApplicationQuery: () => ({
+      refetch: requests.applicationRefetch,
       data: context.applicationLoaded
         ? { ...application, canEndJourney: context.canEndJourney }
         : undefined,
     }),
     useGetAdmissionApplicationFormQuery: (input: unknown) => {
       requests.form(input);
-      return { data: input === skipToken ? undefined : form };
+      return {
+        data: input === skipToken ? undefined : context.emailForm ? emailForm : form,
+      };
     },
     useGetAdmissionApplicationWorkflowQuery: (input: unknown) => {
       requests.workflow(input);
       return {
+        refetch: requests.workflowRefetch,
         data: {
           currentStageInstanceId: context.stageId,
           stages: [
@@ -92,7 +116,7 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => {
     useUpdateAdmissionApplicationFormValuesMutation: () => [requests.update, { isLoading: false }],
     useSubmitAdmissionApplicationMutation: () => [requests.submit, { isLoading: false }],
     useReopenAdmissionApplicationFormMutation: mutation,
-    useAdvanceAdmissionApplicationWorkflowMutation: mutation,
+    useAdvanceAdmissionApplicationWorkflowMutation: () => [requests.advance, { isLoading: false }],
     useEndAdmissionApplicationJourneyMutation: () => [requests.end, { isLoading: false }],
   };
 });
@@ -104,11 +128,29 @@ describe('application answer validation timing', () => {
     context.canEndJourney = true;
     context.stageId = 'current-form';
     context.applicationLoaded = true;
+    context.emailForm = false;
+    requests.applicationRefetch.mockReset().mockReturnValue({ unwrap: async () => application });
+    requests.workflowRefetch.mockReset().mockReturnValue({ unwrap: async () => ({ stages: [] }) });
     requests.end.mockReturnValue({ unwrap: async () => ({ status: 2 }) });
     requests.update.mockReturnValue({ unwrap: async () => ({}) });
     requests.submit.mockReturnValue({
       unwrap: async () => ({ validationErrors: [], fieldErrors: {} }),
     });
+  });
+
+  it('normalizes an existing email at save without sending unchanged non-email answers', async () => {
+    context.emailForm = true;
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => {
+      expect(await result.current.save()).toBe(true);
+    });
+    expect(requests.update).toHaveBeenCalledWith({
+      id: 'application',
+      concurrencyStamp: 'current',
+      values: [{ fieldCode: 'EMAIL', valueJson: '"existing@example.com"' }],
+    });
+    expect(result.current.currentValues.EMAIL).toBe('existing@example.com');
+    expect(result.current.currentValues.NOTE).toBe('KEEP Case');
   });
 
   it('starts workflow without waiting for the application response', () => {
@@ -117,6 +159,56 @@ describe('application answer validation timing', () => {
     expect(requests.workflow).toHaveBeenLastCalledWith('application');
     expect(requests.form).toHaveBeenLastCalledWith(skipToken);
     expect(requests.history).toHaveBeenLastCalledWith(skipToken);
+  });
+
+  it('keeps Continue pending through preflight, the write and destination refresh, without duplicate writes', async () => {
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    const workflow = {
+      ...result.current.workflowQuery.data,
+      currentStageInstanceId: 'current-form',
+    };
+    const resolveApplication = { ...application, status: 1, concurrencyStamp: 'latest' };
+    let finishRefresh!: (value: unknown) => void;
+    const refresh = new Promise((resolve) => {
+      finishRefresh = resolve;
+    });
+    requests.applicationRefetch
+      .mockReturnValueOnce({ unwrap: async () => resolveApplication })
+      .mockReturnValueOnce({ unwrap: () => refresh });
+    requests.workflowRefetch.mockReturnValue({ unwrap: async () => workflow });
+    requests.advance.mockReturnValue({ unwrap: async () => workflow });
+    let pending!: Promise<boolean>;
+    await act(async () => {
+      pending = result.current.advance();
+    });
+    expect(requests.advance).toHaveBeenCalledOnce();
+    expect(result.current.advanceState.isLoading).toBe(true);
+    await act(async () => {
+      expect(await result.current.advance()).toBe(false);
+    });
+    expect(requests.advance).toHaveBeenCalledOnce();
+    await act(async () => {
+      finishRefresh(resolveApplication);
+      await pending;
+    });
+    expect(result.current.advanceState.isLoading).toBe(false);
+    expect(await pending).toBe(true);
+  });
+
+  it('unlocks Continue after preflight failure without posting a transition', async () => {
+    requests.applicationRefetch.mockReturnValue({
+      unwrap: async () => {
+        throw new Error('offline');
+      },
+    });
+    requests.workflowRefetch.mockReturnValue({ unwrap: async () => ({}) });
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => {
+      expect(await result.current.advance()).toBe(false);
+    });
+    expect(result.current.advanceState.isLoading).toBe(false);
+    expect(requests.advance).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledOnce();
   });
 
   it('does not fetch form answers or history for the document journey', () => {
@@ -251,6 +343,32 @@ describe('application answer validation timing', () => {
     expect(result.current.fieldErrors).toEqual({ City: 'City is required.' });
     expect(requests.update).not.toHaveBeenCalled();
     expect(requests.submit).not.toHaveBeenCalled();
+  });
+
+  it('keeps Submit pending while changed answers are saved and blocks a second submit', async () => {
+    let finishSave!: (value: unknown) => void;
+    const saveResponse = new Promise((resolve) => {
+      finishSave = resolve;
+    });
+    requests.update.mockReturnValue({ unwrap: () => saveResponse });
+    const { result } = renderHook(() => useApplicationDetail('application'));
+    await act(async () => result.current.setFieldValue('FirstName', 'QA'));
+    await act(async () => result.current.setFieldValue('City', JSON.stringify({ name: 'Surat' })));
+    let pending!: Promise<void>;
+    await act(async () => {
+      pending = result.current.submitApplication();
+    });
+    expect(result.current.submitState.isLoading).toBe(true);
+    expect(requests.update).toHaveBeenCalledOnce();
+    expect(requests.submit).not.toHaveBeenCalled();
+    await act(async () => result.current.submitApplication());
+    expect(requests.update).toHaveBeenCalledOnce();
+    await act(async () => {
+      finishSave({});
+      await pending;
+    });
+    expect(requests.submit).toHaveBeenCalledOnce();
+    expect(result.current.submitState.isLoading).toBe(false);
   });
 
   it('submits valid answers once while preserving an unrelated server field error during edits', async () => {

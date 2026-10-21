@@ -2,8 +2,8 @@ import type { ApplicationDocumentVerification } from 'src/redux/student/admissio
 
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
-import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { screen, within, waitFor, fireEvent } from '@testing-library/react';
 import {
   documentSummary,
@@ -18,6 +18,15 @@ import { getDocumentTableFile, getDocumentTableFormat } from './document-table-m
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
+});
+
+beforeEach(() => {
+  mswServer.use(
+    http.get(
+      '*/api/student/enrollment/admissions/document-verification/evidence/evidence-1/download',
+      () => new HttpResponse(null, { status: 403 })
+    )
+  );
 });
 
 function stubDocumentUrls(objectUrl: string) {
@@ -119,49 +128,50 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(screen.queryByText(/Complete these pending documents/)).not.toBeInTheDocument();
   });
 
-  it('renders configured requirements and formats with disabled missing-file controls', async () => {
+  it('keeps only an icon-only View action and opens collection inside the review dialog', async () => {
     renderTable();
     const table = await screen.findByRole('table');
-    ['Document Name', 'Format', 'Status', 'Upload', 'View', 'Download'].forEach((name) =>
+    ['Document Name', 'Format', 'Status', 'Actions'].forEach((name) =>
       expect(within(table).getByText(name)).toBeInTheDocument()
     );
-    expect(within(table).getAllByText('—').length).toBeGreaterThan(0);
     expect(within(table).queryByText('Accepted: PDF')).not.toBeInTheDocument();
     expect(within(table).getByText('Missing')).toBeInTheDocument();
+    const view = screen.getByRole('button', { name: 'View document for Birth certificate' });
+    expect(view).toBeEnabled();
+    expect(view).toHaveTextContent('');
+    const row = within(table).getAllByRole('row')[1];
+    expect(within(row).getAllByRole('button')).toEqual([view]);
+    await userEvent.hover(view);
     expect(
-      screen.getByRole('button', { name: 'Preview document for Birth certificate' })
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Download document for Birth certificate' })
-    ).toBeDisabled();
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Upload document for Birth certificate' })
-    );
-    expect(await screen.findByRole('dialog', { name: 'Upload document' })).toBeInTheDocument();
-    expect(screen.getByText('PDF · Maximum 10 MB')).toBeInTheDocument();
-    await userEvent.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Upload document' })
-    );
+      await screen.findByRole('tooltip', { name: 'View document for Birth certificate' })
+    ).toBeVisible();
+    await userEvent.click(view);
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Birth certificate · Document Review',
+    });
+    expect(within(dialog).getByText('No document uploaded')).toBeVisible();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Upload document' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(dialog).getByText('PDF · Maximum 10 MB')).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Upload document' }));
     expect(await screen.findByText('Choose a document to upload')).toBeInTheDocument();
   });
 
-  it('retains uploaded copy after original collection and keeps full evidence history separate', async () => {
+  it('retains the uploaded copy and shows the latest original and evidence history in View', async () => {
     renderTable(reviewedSummary());
     await screen.findByRole('table');
     expect(screen.getByText('PDF', { exact: true })).toBeInTheDocument();
-    expect(screen.queryByText('Accepted: PDF')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Download document for Birth certificate' })
-    ).toBeEnabled();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Evidence history for Birth certificate (2)' })
+      screen.getByRole('button', { name: 'View document for Birth certificate' })
     );
-    const details = await screen.findByRole('dialog', {
-      name: 'Birth certificate · Document Details',
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Birth certificate · Document Review',
     });
-    expect(within(details).getByText('Version 2 · Latest')).toBeInTheDocument();
-    expect(within(details).getByText('birth-certificate.pdf')).toBeInTheDocument();
-    expect(within(details).getByText('Physical original recorded')).toBeInTheDocument();
+    expect(within(dialog).getByText('Latest evidence · Version 2')).toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Evidence history (2)' }));
+    expect(within(dialog).getByText('Version 2 · Latest')).toBeInTheDocument();
+    expect(within(dialog).getByText('birth-certificate.pdf')).toBeInTheDocument();
+    expect(within(dialog).getAllByText('Physical original recorded')).toHaveLength(2);
   });
 
   it('opens actual uploaded bytes on View instead of evidence history and restores focus on Close', async () => {
@@ -174,41 +184,34 @@ describe('admission document table', { timeout: 15000 }, () => {
     );
     renderTable(reviewedSummary());
     const view = await screen.findByRole('button', {
-      name: 'Preview document for Birth certificate',
+      name: 'View document for Birth certificate',
     });
     await userEvent.click(view);
     expect(
       await screen.findByRole('img', { name: 'Birth certificate document preview' })
     ).toHaveAttribute('src', 'blob:uploaded-copy');
-    expect(screen.queryByText('Physical original recorded')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Physical original recorded')[0]).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(view).toHaveFocus();
   });
 
-  it('respects independent review, existing collection guards and canonical waiver permission', async () => {
+  it('respects independent review and collection/waiver permissions inside View', async () => {
     renderTable(reviewedSummary());
-    await screen.findByRole('table');
-    expect(
-      screen.queryByRole('button', { name: 'More actions for Birth certificate' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Accept document for Birth certificate' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Request replacement for Birth certificate' })
-    ).toBeEnabled();
-    expect(
-      screen.getByRole('button', { name: 'Record physical original for Birth certificate' })
-    ).toBeEnabled();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Waive requirement for Birth certificate' })
+      await screen.findByRole('button', { name: 'View document for Birth certificate' })
     );
-    expect(await screen.findByRole('dialog', { name: 'Waive requirement' })).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Reject' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Record physical original' })).toBeEnabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Waive requirement' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(dialog).getByRole('textbox', { name: 'Reason' })).toBeInTheDocument();
   });
 
-  it('downloads the selected uploaded copy through the existing protected evidence endpoint', async () => {
-    const { createObjectURL, revokeObjectURL } = stubDocumentUrls('blob:private-document');
+  it('previews and downloads the selected copy through the protected evidence endpoint', async () => {
+    stubDocumentUrls('blob:private-document');
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     let evidenceRequests = 0;
     mswServer.use(
@@ -216,66 +219,66 @@ describe('admission document table', { timeout: 15000 }, () => {
         '*/api/student/enrollment/admissions/document-verification/evidence/evidence-1/download',
         () => {
           evidenceRequests += 1;
-          return new HttpResponse(new Blob(['private file'], { type: 'application/pdf' }));
+          return new HttpResponse('private file', {
+            headers: { 'Content-Type': 'application/pdf' },
+          });
         }
       )
     );
     renderTable(reviewedSummary());
-    await screen.findByRole('table');
     await userEvent.click(
-      screen.getByRole('button', { name: 'Download document for Birth certificate' })
+      await screen.findByRole('button', { name: 'View document for Birth certificate' })
+    );
+    await screen.findByTitle('Birth certificate document preview');
+    expect(evidenceRequests).toBe(1);
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Download' })
     );
     await waitFor(() => expect(click).toHaveBeenCalledOnce());
-    expect(evidenceRequests).toBe(1);
-    expect(createObjectURL).toHaveBeenCalledOnce();
-    await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:private-document'), {
-      timeout: 2000,
-    });
+    expect(evidenceRequests).toBe(2);
   });
 
   it('keeps historical evidence available while all mutations are locked', async () => {
     renderTable(reviewedSummary(), ['View', 'Add', 'Delete'], true);
-    await screen.findByRole('table');
-    expect(
-      screen.getByRole('button', { name: 'Upload replacement for Birth certificate' })
-    ).toBeDisabled();
-    expect(
-      screen.queryByRole('button', { name: 'Request replacement for Birth certificate' })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Waive requirement for Birth certificate' })
-    ).not.toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Evidence history for Birth certificate (2)' })
+      await screen.findByRole('button', { name: 'View document for Birth certificate' })
     );
+    const dialog = screen.getByRole('dialog');
     expect(
-      await screen.findByRole('dialog', { name: 'Birth certificate · Document Details' })
-    ).toBeInTheDocument();
+      within(dialog).queryByRole('button', {
+        name: /Upload replacement|Reject|Approve|Waive requirement|Record physical original/,
+      })
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Evidence history (2)' })).toBeEnabled();
   });
 
-  it('does not infer review grants or download access, and does not offer policy-forbidden waivers', async () => {
+  it('does not infer review/download grants or offer policy-forbidden waivers', async () => {
     const summary = reviewedSummary();
     summary.policy = { ...summary.policy!, allowWaivers: false };
     summary.requirements[0].evidence[0] = { ...documentEvidence, canDownload: false };
+    let downloads = 0;
+    mswServer.use(
+      http.get(
+        '*/api/student/enrollment/admissions/document-verification/evidence/evidence-1/download',
+        () => {
+          downloads += 1;
+          return HttpResponse.error();
+        }
+      )
+    );
     renderTable(summary, ['View', 'Delete']);
-    await screen.findByRole('table');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'View document for Birth certificate' })
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Preview unavailable')).toBeVisible();
     expect(
-      screen.getByRole('button', { name: 'Upload replacement for Birth certificate' })
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Download document for Birth certificate' })
-    ).toBeDisabled();
-    expect(
-      screen.queryByRole('button', {
-        name: /Accept document|Request replacement|Waive requirement|Record physical original/,
+      within(dialog).queryByRole('button', {
+        name: /Upload|Approve|Reject|Waive requirement|Record physical original|Download/,
       })
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Evidence history for Birth certificate (2)' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Preview document for Birth certificate' })
-    ).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Evidence history (2)' })).toBeEnabled();
+    expect(downloads).toBe(0);
   });
 
   it('renders all configured rows without a hidden ten-row limit', async () => {
@@ -304,7 +307,7 @@ describe('admission document table', { timeout: 15000 }, () => {
     const table = await screen.findByRole('table');
     expect(within(table).getAllByRole('row')).toHaveLength(26);
     expect(within(table).queryByText('Document 25')).not.toBeInTheDocument();
-    ['Upload', 'View', 'Download', 'Actions'].forEach((name) => {
+    ['Actions'].forEach((name) => {
       expect(
         within(within(table).getByRole('columnheader', { name })).queryByRole('button')
       ).not.toBeInTheDocument();
@@ -324,27 +327,20 @@ describe('admission document table', { timeout: 15000 }, () => {
     const summary = reviewedSummary();
     summary.requirements[0].canAccept = true;
     renderTable(summary, ['View', 'Add', 'Delete'], false, true);
-    await screen.findByRole('table');
-    expect(
-      screen.getByRole('button', { name: 'Upload replacement for Birth certificate' })
-    ).toBeDisabled();
-    expect(
-      screen.getByRole('button', { name: 'Preview document for Birth certificate' })
-    ).toBeEnabled();
-    expect(
-      screen.getByRole('button', { name: 'Download document for Birth certificate' })
-    ).toBeEnabled();
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'View document for Birth certificate' })
+    );
+    const dialog = screen.getByRole('dialog');
     [
-      'Accept document',
-      'Request replacement',
+      'Upload replacement',
+      'Approve',
+      'Reject',
       'Record physical original',
       'Waive requirement',
     ].forEach((name) => {
-      expect(screen.getByRole('button', { name: `${name} for Birth certificate` })).toBeDisabled();
+      expect(within(dialog).getByRole('button', { name })).toBeDisabled();
     });
-    expect(
-      screen.getByRole('button', { name: 'Evidence history for Birth certificate (2)' })
-    ).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Evidence history (2)' })).toBeEnabled();
   });
 
   it('returns to a valid page when not-applicable requirements are hidden', async () => {
@@ -371,23 +367,20 @@ describe('admission document table', { timeout: 15000 }, () => {
     expect(within(screen.getByRole('table')).getByText('Birth certificate')).toBeInTheDocument();
   });
 
-  it('offers Accept only when the current evidence and reviewer are eligible', async () => {
+  it('offers Approve only inside View when the evidence and reviewer are eligible', async () => {
     const summary = reviewedSummary();
     summary.requirements[0].canAccept = true;
     renderTable(summary, ['View', 'Add']);
-    await screen.findByRole('table');
-    const accept = screen.getByRole('button', { name: 'Accept document for Birth certificate' });
-    expect(accept).toBeEnabled();
-    expect(accept).toHaveTextContent('');
-    await userEvent.hover(accept);
+    const view = await screen.findByRole('button', { name: 'View document for Birth certificate' });
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument();
+    await userEvent.click(view);
+    const dialog = screen.getByRole('dialog');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Approve' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(within(dialog).getByRole('textbox', { name: 'Notes' })).toBeInTheDocument();
     expect(
-      await screen.findByRole('tooltip', { name: 'Accept document for Birth certificate' })
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: 'Waive requirement for Birth certificate' })
+      within(dialog).queryByRole('button', { name: 'Waive requirement' })
     ).not.toBeInTheDocument();
-    await userEvent.click(accept);
-    expect(await screen.findByRole('dialog', { name: 'Accept document' })).toBeInTheDocument();
   });
 
   it('opts into one selected completed stage as read-only without fetching current documents', async () => {
@@ -418,9 +411,12 @@ describe('admission document table', { timeout: 15000 }, () => {
     );
     await screen.findByRole('table');
     expect(screen.queryByText('Current documents')).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'View document for Birth certificate' })
+    );
     expect(
-      screen.getByRole('button', { name: 'Upload replacement for Birth certificate' })
-    ).toBeDisabled();
+      within(screen.getByRole('dialog')).queryByRole('button', { name: 'Upload replacement' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
     expect(currentCalls).toBe(0);
   });

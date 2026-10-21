@@ -5,13 +5,13 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { Box, Alert, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useRef, useMemo, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Alert, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   useGetAdmissionPipelineQuery,
@@ -20,11 +20,11 @@ import {
 
 import { AdmissionQueryError } from './admission-query-error';
 import { BulkPipelineCounsellor } from './pipeline/bulk-pipeline-counsellor';
+import AdmissionApplicationDetailScreen from './admission-application-detail';
 import { useBulkPipelineCounsellor } from './pipeline/use-bulk-pipeline-counsellor';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
-import { ApplicationWorkspaceRedirect } from './application-detail/application-workspace-redirect';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
@@ -42,6 +42,9 @@ export default function AdmissionInquiryPipelineScreen() {
   const router = useRouter();
   const params = useSearchParams();
   const applicationId = params.get('application');
+  const worklistRef = useRef<HTMLDivElement>(null);
+  const previousApplication = useRef(applicationId);
+  const restoreApplicationFocus = useRef<string | null>(null);
   const state = readAdmissionPipelineState(params);
   const permissions = useSelector((value: RootState) => value.auth.permissions);
   const tenantId = useSelector((value: RootState) => value.auth.sessionContext?.tenantId);
@@ -60,18 +63,14 @@ export default function AdmissionInquiryPipelineScreen() {
     [params, router]
   );
   const previousYear = useRef(academic.academicYearId);
+  const [scopeLoading, setScopeLoading] = useState(true);
   const academicInput = {
     academicYearId: academic.academicYearId ?? '',
     boardId: academic.boardId || undefined,
     mediumId: academic.mediumId || undefined,
     ...academicClassFilterInput(academic.standardId),
   };
-  const skip =
-    Boolean(applicationId) ||
-    !canView ||
-    !academic.academicYearId ||
-    !academic.boardId ||
-    !academic.mediumId;
+  const skip = !canView || !academic.academicYearId || !academic.boardId || !academic.mediumId;
   const optionsQuery = useGetAdmissionPipelineOptionsQuery(academicInput, {
     skip,
     refetchOnMountOrArgChange: true,
@@ -91,6 +90,25 @@ export default function AdmissionInquiryPipelineScreen() {
     { skip, refetchOnMountOrArgChange: true }
   );
   const data = listQuery.currentData;
+  useEffect(() => {
+    if (previousApplication.current && !applicationId)
+      restoreApplicationFocus.current = previousApplication.current;
+    previousApplication.current = applicationId;
+    if (applicationId || !restoreApplicationFocus.current || listQuery.isFetching || scopeLoading)
+      return undefined;
+    const frame = requestAnimationFrame(() => {
+      const row = Array.from(
+        worklistRef.current?.querySelectorAll<HTMLElement>('[data-application-id]') ?? []
+      ).find((element) => element.dataset.applicationId === restoreApplicationFocus.current);
+      const target =
+        row?.querySelector<HTMLElement>('a') ??
+        row ??
+        worklistRef.current?.querySelector<HTMLElement>('[aria-label="Search Pipeline"]');
+      target?.focus();
+      restoreApplicationFocus.current = null;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [applicationId, listQuery.isFetching, scopeLoading, data]);
   const options = optionsQuery.currentData;
   const myCases = state.myCases ?? options?.defaultMyCases;
   const queryBusy =
@@ -200,21 +218,11 @@ export default function AdmissionInquiryPipelineScreen() {
     academic.standardId
   );
 
-  if (canView && applicationId) {
-    return (
-      <ApplicationWorkspaceRedirect
-        applicationId={applicationId}
-        returnTo={admissionPipelineUrl(
-          new URLSearchParams(params.toString()),
-          { application: undefined },
-          false
-        )}
-      />
-    );
-  }
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
+    <Box
+      ref={worklistRef}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}
+    >
       <CustomBreadcrumbs
         heading="Pipeline"
         description="Continue active admissions and follow up with families."
@@ -250,6 +258,7 @@ export default function AdmissionInquiryPipelineScreen() {
       ) : (
         <>
           <AdmissionAcademicFilters
+            onLoadingChange={setScopeLoading}
             boardId={academic.boardId}
             mediumId={academic.mediumId}
             standardId={academic.standardId}
@@ -281,7 +290,19 @@ export default function AdmissionInquiryPipelineScreen() {
               }}
             />
           ) : (
-            <Box inert={bulk.busy || undefined} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <Box
+              inert={bulk.busy || undefined}
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {data && listQuery.isFetching && !scopeLoading && !skip && (
+                <LinearProgress aria-label="Refreshing Pipeline" />
+              )}
               <CustomizableTable
                 tableId="admission-application-pipeline"
                 tableTitle="Active admissions"
@@ -289,8 +310,8 @@ export default function AdmissionInquiryPipelineScreen() {
                 wrapperProps={{ sx: { height: 1 } }}
                 tableContainerProps={{ sx: { height: 1 } }}
                 columns={columns}
-                data={data?.items ?? []}
-                isLoading={!skip && (listQuery.isLoading || listQuery.isFetching)}
+                data={skip || scopeLoading ? [] : (data?.items ?? [])}
+                isLoading={scopeLoading || (!skip && (listQuery.isLoading || !data))}
                 serverSidePagination
                 serverSideSearch
                 serverSideSort
@@ -318,6 +339,7 @@ export default function AdmissionInquiryPipelineScreen() {
                 rowProps={(row) => ({
                   tabIndex: 0,
                   role: 'link',
+                  'data-application-id': row.id,
                   'aria-label': `Continue ${row.applicationNumber}`,
                   onKeyDown: (event) => {
                     if (
@@ -328,7 +350,11 @@ export default function AdmissionInquiryPipelineScreen() {
                       openApplication(row as AdmissionPipelineItem);
                     }
                   },
-                  sx: { cursor: 'pointer' },
+                  sx: {
+                    cursor: 'pointer',
+                    '& > .MuiTableCell-sizeSmall': { py: 0.5 },
+                    '& > .MuiTableCell-sizeMedium': { py: 1.5 },
+                  },
                 })}
                 searchFieldProps={{
                   placeholder: 'Search applicant, application, inquiry or phone',
@@ -337,16 +363,26 @@ export default function AdmissionInquiryPipelineScreen() {
                 noDataText={
                   !academic.academicYearId
                     ? 'Select an academic year to view Pipeline'
-                    : hasFilters
-                      ? 'No active admissions match these filters'
-                      : myCases
-                        ? 'You have no active admission cases'
-                        : 'No active admissions. Move an Interested inquiry to the next stage to start.'
+                    : !academic.boardId || !academic.mediumId
+                      ? 'Select an available Board and Medium to view Pipeline'
+                      : hasFilters
+                        ? 'No active admissions match these filters'
+                        : myCases
+                          ? 'You have no active admission cases'
+                          : 'No active admissions. Move an Interested inquiry to the next stage to start.'
                 }
               />
             </Box>
           )}
         </>
+      )}
+      {canView && applicationId && (
+        <AdmissionApplicationDetailScreen
+          key={applicationId}
+          applicationId={applicationId}
+          presentation="drawer"
+          onClose={() => update({ application: undefined }, false)}
+        />
       )}
     </Box>
   );

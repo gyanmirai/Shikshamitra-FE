@@ -1,7 +1,19 @@
-import type { AssessmentAttempt } from 'src/redux/student/admissions/admission-assessment-types';
 import type { AssessmentRosterItem } from 'src/redux/student/admissions/admission-assessment-roster-api';
+import type {
+  AssessmentAttempt,
+  AssessmentSubjectScore,
+} from 'src/redux/student/admissions/admission-assessment-types';
 
 import { assessmentErrorMessage } from './assessment-utils';
+import { latestAssessmentAttempt } from './assessment-action-model';
+import {
+  assessmentProfileKey,
+  assessmentResultProfile,
+  assessmentSubjectPayload,
+  validateAssessmentSubjectValues,
+} from './assessment-subject-results';
+
+import type { AssessmentSubjectValues } from './assessment-subject-results';
 
 export type AssessmentBatchAction = 'attendance' | 'result' | 'continue';
 export type AssessmentBatchValue = {
@@ -9,33 +21,44 @@ export type AssessmentBatchValue = {
   marks: number | '';
   outcome: '' | 'passed' | 'failed';
   notes: string;
+  subjectScores?: AssessmentSubjectValues;
 };
-export type AssessmentBatchResult = { stageInstanceId: string; success: boolean; message: string };
+export type AssessmentBatchResult = {
+  stageInstanceId: string;
+  success: boolean;
+  message: string;
+  draft?: boolean;
+};
 
 export type AssessmentBatchWriteIntent = {
-  action: 'attendance' | 'result';
+  action: 'attendance' | 'result' | 'resultDraft';
   attemptId: string;
   attendance?: 'present' | 'absent';
   marks?: number;
   outcome?: 'passed' | 'failed';
   notes: string;
+  subjectScores?: AssessmentSubjectScore[];
 };
 
 export function assessmentBatchWriteIntent(
   action: 'attendance' | 'result',
   row: AssessmentRosterItem,
   attemptId: string,
-  value: AssessmentBatchValue
+  value: AssessmentBatchValue,
+  draft = false
 ): AssessmentBatchWriteIntent {
+  const profile = assessmentResultProfile(row.assessment, latestAssessmentAttempt(row.assessment));
   return {
-    action,
+    action: action === 'result' && draft ? 'resultDraft' : action,
     attemptId,
     notes: value.notes.trim(),
     ...(action === 'attendance'
       ? { attendance: value.attendance as 'present' | 'absent' }
-      : row.assessment.policy?.scoringEnabled
-        ? { marks: Number(value.marks) }
-        : { outcome: value.outcome as 'passed' | 'failed' }),
+      : profile
+        ? { subjectScores: assessmentSubjectPayload(profile, value.subjectScores) }
+        : row.assessment.policy?.scoringEnabled
+          ? { marks: Number(value.marks) }
+          : { outcome: value.outcome as 'passed' | 'failed' }),
   };
 }
 
@@ -46,6 +69,21 @@ export function assessmentBatchIntentApplied(
 ) {
   if (intent.attemptId !== attempt.id || attempt.status === 'cancelled') return false;
   if ((attempt.notes ?? '').trim() !== intent.notes) return false;
+  if (intent.subjectScores) {
+    const savedScores = attempt.subjectScores ?? [];
+    if (
+      savedScores.length !== intent.subjectScores.length ||
+      intent.subjectScores.some(
+        (score) =>
+          !savedScores.some((saved) => saved.code === score.code && saved.marks === score.marks)
+      )
+    )
+      return false;
+    return intent.action === 'resultDraft'
+      ? attempt.status === 'pending' && attempt.outcome === 'pending'
+      : ['completed', 'pendingReview'].includes(attempt.status) &&
+          ['passed', 'failed'].includes(attempt.outcome);
+  }
   return intent.action === 'attendance'
     ? attempt.attendance === intent.attendance
     : ['completed', 'pendingReview'].includes(attempt.status) &&
@@ -57,7 +95,8 @@ export function assessmentBatchIntentApplied(
 export function validateAssessmentBatchValue(
   action: AssessmentBatchAction,
   row: AssessmentRosterItem,
-  value: AssessmentBatchValue
+  value: AssessmentBatchValue,
+  draft = false
 ) {
   if (!row.isActive || !row.assessment.policy) return 'This assessment is read-only.';
   if (value.notes.trim().length > 1024) return 'Notes cannot exceed 1,024 characters.';
@@ -65,6 +104,16 @@ export function validateAssessmentBatchValue(
     return 'Select Present or Absent.';
   if (action === 'result') {
     const { policy } = row.assessment;
+    const profile = assessmentResultProfile(
+      row.assessment,
+      latestAssessmentAttempt(row.assessment)
+    );
+    if (profile)
+      return (
+        Object.values(validateAssessmentSubjectValues(profile, value.subjectScores, draft))[0] ?? ''
+      );
+    if (policy.scoringMode === 'subjects')
+      return 'The class assessment profile is unavailable. Refresh before recording results.';
     if (
       policy.scoringEnabled &&
       (value.marks === '' ||
@@ -77,6 +126,27 @@ export function validateAssessmentBatchValue(
       return 'Select Passed or Failed.';
   }
   return '';
+}
+
+export function groupAssessmentBatchRows(rows: AssessmentRosterItem[]) {
+  const groups = new Map<string, { key: string; label: string; rows: AssessmentRosterItem[] }>();
+  rows.forEach((row) => {
+    const profile = assessmentResultProfile(
+      row.assessment,
+      latestAssessmentAttempt(row.assessment)
+    );
+    const key = `${row.className ?? row.offeringName ?? ''}:${assessmentProfileKey(profile)}`;
+    const group = groups.get(key) ?? {
+      key,
+      label: [row.className ?? row.offeringName, profile?.name ?? 'Single result']
+        .filter(Boolean)
+        .join(' · '),
+      rows: [],
+    };
+    group.rows.push(row);
+    groups.set(key, group);
+  });
+  return [...groups.values()];
 }
 
 /** Each item is independently governed; failed writes stay available for an explicit retry. */

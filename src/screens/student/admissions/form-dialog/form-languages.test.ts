@@ -45,6 +45,31 @@ describe('admission form localization', () => {
     expect(localized.name).toBe('વાલીની વિગતો');
     expect(localized.entryLabel).toBe('વાલી');
     expect(localized.fields[0].label).toBe('સંબંધ');
-    expect(localizeAdmissionSection(section, 'hi')).toBe(section);
+    expect(localizeAdmissionSection(section, 'hi')).toEqual(section);
   });
+
+  it.each([undefined, {}])(
+    'localizes fields without requiring section translations (%s)',
+    (translations) => {
+      const section = {
+        name: 'Guardian details',
+        entryLabel: 'Guardian',
+        translations,
+        fields: [field],
+      };
+      const before = structuredClone(section);
+      const localized = localizeAdmissionSection(section, 'gu');
+
+      expect(localized.name).toBe('Guardian details');
+      expect(localized.entryLabel).toBe('Guardian');
+      expect(localized.fields[0].label).toBe('સંબંધ');
+      expect(localized.fields[0].placeholder).toBe('સંબંધ પસંદ કરો');
+      expect(localized.fields[0].helpText).toBe('એક વિકલ્પ પસંદ કરો');
+      expect(JSON.parse(localized.fields[0].optionsJson!)[0]).toEqual({
+        value: 'FATHER',
+        label: 'પિતા',
+      });
+      expect(section).toEqual(before);
+    }
+  );
 });

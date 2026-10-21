@@ -6,6 +6,8 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetAdmissionDocumentClassesQuery } from 'src/redux/student/admissions/admission-document-settings-api';
 
+import { DocumentClassPicker } from './document-class-picker';
+
 export function DocumentRequirementClasses({
   formik,
 }: {
@@ -37,25 +39,11 @@ export function DocumentRequirementClasses({
       {selected && (
         <>
           <ShakingTextField error={error}>
-            <CustomSelect
-              size="small"
-              fullWidth
-              multiple
-              isSearch
-              label="Classes"
+            <DocumentClassPicker
+              classes={data}
               value={ids}
               isLoading={isLoading}
               disabled={isError}
-              options={[
-                ...data.map((item) => ({
-                  value: item.id,
-                  label: `${item.name} — ${item.context}`,
-                })),
-                ...missing.map((id) => ({
-                  value: id,
-                  label: 'Unavailable class (remove or replace)',
-                })),
-              ]}
               onChange={(value) => formik.setFieldValue('standardIds', value)}
               onBlur={() => formik.setFieldTouched('standardIds')}
               error={error}
@@ -64,7 +52,6 @@ export function DocumentRequirementClasses({
                   ? String(formik.errors.standardIds)
                   : 'Uses the class selected for the Admission Offering. Additional conditions apply within these classes.'
               }
-              noOptionsMessage="No classes are available. Add classes in Institute Setup."
             />
           </ShakingTextField>
           {isError && (

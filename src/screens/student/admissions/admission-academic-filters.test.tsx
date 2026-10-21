@@ -12,6 +12,9 @@ import {
 const mocks = vi.hoisted(() => ({
   query: 'board=board-1&medium=medium-1&class=class-1&search=ada',
   replace: vi.fn(),
+  hierarchyPending: false,
+  hierarchyError: false,
+  hierarchyEmpty: false,
 }));
 
 vi.mock('react-redux', () => ({
@@ -27,20 +30,22 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('src/redux/academicOrganizationOptions/academicOrganizationOptionsApi', () => ({
   useGetAcademicOrganizationOptionsQuery: () => ({
-    currentData: {
-      items: [
-        {
-          id: 'stage-1',
-          label: 'Primary',
-          boardId: 'board-1',
-          boardName: 'CBSE',
-          mediumId: 'medium-1',
-          mediumName: 'English',
+    currentData: mocks.hierarchyPending
+      ? undefined
+      : {
+          items: [
+            {
+              id: 'stage-1',
+              label: 'Primary',
+              boardId: 'board-1',
+              boardName: 'CBSE',
+              mediumId: 'medium-1',
+              mediumName: 'English',
+            },
+          ].filter(() => !mocks.hierarchyEmpty),
         },
-      ],
-    },
     isFetching: false,
-    isError: false,
+    isError: mocks.hierarchyError,
     refetch: vi.fn(),
   }),
 }));
@@ -57,6 +62,9 @@ vi.mock('src/redux/class/classApi', () => ({
 describe('admission academic filters', () => {
   beforeEach(() => {
     mocks.replace.mockClear();
+    mocks.hierarchyPending = false;
+    mocks.hierarchyError = false;
+    mocks.hierarchyEmpty = false;
     mocks.query = 'board=board-1&medium=medium-1&class=class-1&search=ada';
   });
 
@@ -71,6 +79,56 @@ describe('admission academic filters', () => {
       { scroll: false }
     );
   });
+
+  it('keeps lists loading until the hierarchy and default Board/Medium are resolved', () => {
+    mocks.hierarchyPending = true;
+    const onLoadingChange = vi.fn();
+    const onChange = vi.fn();
+    const filters = (boardId = '', mediumId = '') => (
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionAcademicFilters
+          boardId={boardId}
+          mediumId={mediumId}
+          standardId=""
+          onChange={onChange}
+          onLoadingChange={onLoadingChange}
+        />
+      </ThemeProvider>
+    );
+    const view = render(filters());
+    expect(onLoadingChange).toHaveBeenLastCalledWith(true);
+    mocks.hierarchyPending = false;
+    view.rerender(filters());
+    expect(onChange).toHaveBeenLastCalledWith('board', 'board-1');
+    expect(onLoadingChange).toHaveBeenLastCalledWith(true);
+    view.rerender(filters('board-1'));
+    expect(onChange).toHaveBeenLastCalledWith('medium', 'medium-1');
+    expect(onLoadingChange).toHaveBeenLastCalledWith(true);
+    view.rerender(filters('board-1', 'medium-1'));
+    expect(onLoadingChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it.each(['error', 'empty'] as const)(
+    'does not leave lists loading for an %s hierarchy',
+    (state) => {
+      mocks.hierarchyError = state === 'error';
+      mocks.hierarchyPending = state === 'error';
+      mocks.hierarchyEmpty = state === 'empty';
+      const onLoadingChange = vi.fn();
+      render(
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <AdmissionAcademicFilters
+            boardId=""
+            mediumId=""
+            standardId=""
+            onChange={vi.fn()}
+            onLoadingChange={onLoadingChange}
+          />
+        </ThemeProvider>
+      );
+      expect(onLoadingChange).toHaveBeenLastCalledWith(false);
+    }
+  );
 
   it('restores an explicit dashboard year and leaves all boards and mediums selected', () => {
     mocks.query = 'dashboard=active-applications&year=year-2&division=division-a';

@@ -37,3 +37,7 @@ export function toUpperWithMax(input: string, maxLength: number): string {
   const upper = input.toUpperCase();
   return upper.slice(0, Math.max(0, maxLength));
 }
+
+export function normalizeEmail(input: string): string {
+  return input.trim().toLowerCase();
+}

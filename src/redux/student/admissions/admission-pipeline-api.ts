@@ -19,6 +19,7 @@ export type AdmissionPipelineItem = {
   currentStageName?: string | null;
   currentStageCode?: string | null;
   stageType?: number | null;
+  stageProgress?: { id: string; name: string; status: number }[];
   nextRequiredAction?: string | null;
   enteredAt?: string | null;
   dueAt?: string | null;
@@ -27,6 +28,8 @@ export type AdmissionPipelineItem = {
   openFollowUpCount: number;
   nextFollowUpAt?: string | null;
   hasOverdueFollowUp: boolean;
+  overdueFollowUpCount?: number;
+  nextFollowUpPurpose?: string | null;
   contactPhone?: string | null;
   contactEmail?: string | null;
 };

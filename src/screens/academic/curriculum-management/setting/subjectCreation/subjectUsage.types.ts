@@ -14,6 +14,7 @@ export interface SubjectUsageData {
     lessonPlansCount?: number;
     homeworkCount?: number;
     teacherMappingsCount?: number;
+    admissionAssessmentsCount?: number;
   };
 }
 

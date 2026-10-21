@@ -30,3 +30,17 @@ it('keeps entered values and blocks changes until the form is unlocked', async (
   await user.type(input, ' kept');
   expect(input).toHaveValue('Existing reason kept');
 });
+
+it('preserves control-level feedback without an overlay while locking custom controls', () => {
+  render(
+    <FormBusyRegion busy showOverlay={false} label="Finalizing admission…">
+      <button type="button">Finalizing admission…</button>
+      <a href="#another-task">Another task</a>
+    </FormBusyRegion>
+  );
+  expect(screen.getByRole('button')).toBeVisible();
+  expect(screen.getByRole('button')).toBeDisabled();
+  expect(screen.getByRole('link').closest('[inert]')).not.toBeNull();
+  expect(screen.getByRole('status', { name: 'Finalizing admission…' })).toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+});

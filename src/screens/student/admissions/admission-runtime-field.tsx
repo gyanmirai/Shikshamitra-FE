@@ -9,11 +9,13 @@ import type {
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
+import { normalizeEmail } from 'src/utils/input-format';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+import { isAdmissionEmailField } from './admission-email-values';
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
@@ -183,6 +185,7 @@ function renderDate({ field, value, disabled, error, onChange, onBlur }: Rendere
 }
 
 function renderInput({ field, value, disabled, error, onChange, options, onBlur }: RendererProps) {
+  const isEmail = isAdmissionEmailField(field);
   const isChoice = field.fieldType === 6 || field.fieldType === 8;
   const isMultiSelect = field.fieldType === 7;
   const selectedValues = isMultiSelect ? parseMultiValue(value) : [];
@@ -218,7 +221,7 @@ function renderInput({ field, value, disabled, error, onChange, options, onBlur 
         type={
           field.fieldType === 2
             ? 'number'
-            : field.fieldType === 3
+            : isEmail
               ? 'email'
               : field.fieldType === 4
                 ? 'tel'
@@ -230,9 +233,14 @@ function renderInput({ field, value, disabled, error, onChange, options, onBlur 
         error={Boolean(error)}
         helperText={error || field.helpText || undefined}
         placeholder={field.placeholder ?? undefined}
-        value={value}
+        value={isEmail ? normalizeEmail(value) : value}
+        inputProps={
+          isEmail ? { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false } : undefined
+        }
         onBlur={onBlur}
-        onChange={(event) => onChange(String(event.target.value))}
+        onChange={(event) =>
+          onChange(isEmail ? normalizeEmail(event.target.value) : event.target.value)
+        }
       />
     </ShakingTextField>
   );

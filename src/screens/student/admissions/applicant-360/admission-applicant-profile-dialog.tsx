@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import { normalizeEmail } from 'src/utils/input-format';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
@@ -60,7 +61,7 @@ export function AdmissionApplicantProfileDialog({
       dateOfBirth: applicant.dateOfBirth ?? '',
       gender: applicant.gender ?? '',
       guardianMobile: guardian?.mobile ?? '',
-      guardianEmail: guardian?.email ?? '',
+      guardianEmail: normalizeEmail(guardian?.email ?? ''),
     },
     validationSchema: Yup.object({
       firstName: Yup.string().trim().required('First name is required').max(100),
@@ -81,7 +82,7 @@ export function AdmissionApplicantProfileDialog({
         dateOfBirth: values.dateOfBirth,
         gender: values.gender as 'Male' | 'Female',
         guardianMobile: values.guardianMobile,
-        guardianEmail: values.guardianEmail.trim() || null,
+        guardianEmail: normalizeEmail(values.guardianEmail) || null,
       });
       if (success) onClose();
     },
@@ -195,6 +196,10 @@ export function AdmissionApplicantProfileDialog({
                 type="email"
                 label="Guardian email"
                 {...formik.getFieldProps('guardianEmail')}
+                onChange={(event) =>
+                  formik.setFieldValue('guardianEmail', normalizeEmail(event.target.value))
+                }
+                inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                 error={Boolean(formik.touched.guardianEmail && formik.errors.guardianEmail)}
                 helperText={formik.touched.guardianEmail && formik.errors.guardianEmail}
               />

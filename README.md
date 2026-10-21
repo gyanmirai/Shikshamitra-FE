@@ -13,6 +13,19 @@ TODO: Guide users through getting your code up and running on their own system. 
 
 # Build and Test
 
+## Local HTTPS backend
+
+With dependencies installed and the local backend running, use Node.js 22.15+ or 24+ and:
+
+```bash
+npm run dev:local
+```
+
+This development command uses the operating system's trusted certificate store for the local
+HTTPS backend. The ASP.NET development certificate must already be trusted by the operating
+system. Certificate validation stays enabled; keep `NODE_TLS_REJECT_UNAUTHORIZED=1` in
+`.env.local`. Production build and start commands are unchanged.
+
 TODO: Describe and show how to build your code and run the tests.
 
 # window

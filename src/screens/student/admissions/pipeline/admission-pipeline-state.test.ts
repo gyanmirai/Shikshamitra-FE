@@ -18,10 +18,7 @@ describe('Pipeline navigation state', () => {
       '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
     );
     const direct = admissionPipelineApplicationUrl('app-id', drawerParams);
-    expect(new URL(direct, 'https://school.test').pathname).toBe('/student/admissions/pipeline/applications/app-id');
-    expect(new URL(direct, 'https://school.test').searchParams.get('returnTo')).toBe(
-      '/student/admissions/pipeline?board=board-id&search=Jay&page=3&size=10'
-    );
+    expect(direct).toBe(opened);
   });
   it('restores shareable search, queue, filters, sort and pagination', () => {
     expect(
@@ -70,8 +67,10 @@ describe('Pipeline navigation state', () => {
       'app-id',
       new URLSearchParams('queue=all&search=Jay+Singh&page=2')
     );
-    expect(new URL(target, 'https://school.test').searchParams.get('returnTo')).toBe(
-      '/student/admissions/pipeline?queue=all&search=Jay+Singh&page=2'
-    );
+    const query = new URL(target, 'https://school.test').searchParams;
+    expect(query.get('application')).toBe('app-id');
+    expect(query.get('search')).toBe('Jay Singh');
+    expect(query.get('page')).toBe('2');
+    expect(query.get('queue')).toBe('all');
   });
 });

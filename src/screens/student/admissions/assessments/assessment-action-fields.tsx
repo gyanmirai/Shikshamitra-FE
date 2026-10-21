@@ -6,6 +6,12 @@ import CustomSelect from 'src/components/custom-select';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { AssessmentBookingField } from './assessment-booking-field';
+import { latestAssessmentAttempt } from './assessment-action-model';
+import { AssessmentSubjectScoreFields } from './assessment-subject-score-fields';
+import {
+  assessmentResultProfile,
+  validateAssessmentSubjectValues,
+} from './assessment-subject-results';
 
 import type { AssessmentAction, AssessmentActionValues } from './assessment-action-model';
 
@@ -15,6 +21,7 @@ type Props = {
   formik: FormikProps<AssessmentActionValues>;
   admissionOfferingId: string;
   workflowStageDefinitionId: string;
+  draftValidation?: boolean;
 };
 
 export function AssessmentActionFields({
@@ -23,8 +30,10 @@ export function AssessmentActionFields({
   formik,
   admissionOfferingId,
   workflowStageDefinitionId,
+  draftValidation = false,
 }: Props) {
   const { values, touched, errors, isSubmitting } = formik;
+  const profile = assessmentResultProfile(assessment, latestAssessmentAttempt(assessment));
   return (
     <Stack spacing={2}>
       {action === 'book' &&
@@ -59,7 +68,25 @@ export function AssessmentActionFields({
         />
       )}
       {action === 'result' &&
-        (assessment.policy.scoringEnabled ? (
+        (assessment.policy.scoringMode === 'subjects' && !profile ? (
+          <Alert severity="warning">
+            The class assessment profile is unavailable. Refresh before recording results.
+          </Alert>
+        ) : profile ? (
+          <AssessmentSubjectScoreFields
+            profile={profile}
+            values={values.subjectScores ?? {}}
+            errors={
+              errors.subjectScores || formik.submitCount > 0
+                ? validateAssessmentSubjectValues(profile, values.subjectScores, draftValidation)
+                : {}
+            }
+            disabled={isSubmitting}
+            onChange={(code, value) =>
+              formik.setFieldValue('subjectScores', { ...values.subjectScores, [code]: value })
+            }
+          />
+        ) : assessment.policy.scoringEnabled ? (
           <NumericFormatCustom
             fullWidth
             required

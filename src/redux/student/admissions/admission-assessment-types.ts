@@ -1,4 +1,7 @@
-import type { AdmissionAssessmentPolicy } from './admission-assessment-policy';
+import type {
+  AdmissionAssessmentPolicy,
+  AdmissionAssessmentClassProfile,
+} from './admission-assessment-policy';
 
 export type AssessmentScope = {
   className?: string;
@@ -127,6 +130,14 @@ export type AssessmentSessionListQuery = {
 
 export type AssessmentAttendance = 'pending' | 'present' | 'absent';
 export type AssessmentOutcome = 'pending' | 'passed' | 'failed' | 'absent' | 'retake' | 'waived';
+/** Server-resolved configuration, frozen when the attempt is created. */
+export type AssessmentEffectiveProfile = AdmissionAssessmentClassProfile;
+export type AssessmentSubjectScore = { code: string; marks: number | null };
+export type AssessmentResultInput = AssessmentAttemptAction & {
+  marks?: number;
+  outcome?: 'passed' | 'failed';
+  subjectScores?: AssessmentSubjectScore[];
+};
 export type AssessmentAttempt = {
   id: string;
   attemptNumber: number;
@@ -148,6 +159,8 @@ export type AssessmentAttempt = {
   concurrencyStamp: string;
   createdAt: string;
   reviewedAt?: string | null;
+  effectiveProfile?: AssessmentEffectiveProfile | null;
+  subjectScores?: AssessmentSubjectScore[];
 };
 
 export type ApplicationAssessment = {
@@ -167,6 +180,9 @@ export type ApplicationAssessment = {
   canRetake: boolean;
   canWaive: boolean;
   canCancel: boolean;
+  effectiveProfile?: AssessmentEffectiveProfile | null;
+  canSaveResultDraft?: boolean;
+  canSubmitResult?: boolean;
 };
 
 export type AssessmentStageKey = { applicationId: string; stageInstanceId: string };

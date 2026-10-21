@@ -15,6 +15,8 @@ const inquiryMutationTags = (_result: unknown, error: unknown) =>
   error ? [] : [studentAdmissionsCrmType.admissionInquiry, dashboardTag];
 
 export type AdmissionInquiryCaptureContext = {
+  academicYearStartDate?: string | null;
+  minimumAgeYears?: number | null;
   offering: AdmissionOffering;
   form: AdmissionForm | null;
   policy: AdmissionInquiryPolicy | null;

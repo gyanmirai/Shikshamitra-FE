@@ -30,6 +30,7 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import StudentOnboardingDocuments from './student-onboarding-documents';
+import { StudentOnboardingDocumentWorkspace } from './student-onboarding-document-workspace';
 
 type Selection = {
   action: Exclude<DocumentAction, 'waive'>;
@@ -143,10 +144,12 @@ export default function StudentOnboardingWorkflowDocuments({
   caseId,
   canManage,
   hasDocumentRequirementsSnapshot = false,
+  presentation = 'checklist',
 }: {
   caseId: string;
   canManage: boolean;
   hasDocumentRequirementsSnapshot?: boolean;
+  presentation?: 'checklist' | 'workspace';
 }) {
   const query = useGetStudentOnboardingWorkflowDocumentsQuery(caseId);
   const permissions = useDocumentPermissions();
@@ -179,18 +182,31 @@ export default function StudentOnboardingWorkflowDocuments({
         ) : (
           <StudentOnboardingDocuments caseId={caseId} enabled canManage={canManage} />
         ))}
-      {query.data.map((summary) => (
-        <DocumentChecklistContent
-          key={summary.stageInstanceId}
-          summary={{ ...summary, canComplete: false }}
-          permissions={{ ...permissions, waive: false }}
-          disabled={query.isFetching || !canManage}
-          readOnly={!canManage}
-          onAction={(action, requirement) => {
-            if (action !== 'waive' && canManage) setSelection({ action, summary, requirement });
-          }}
-        />
-      ))}
+      {query.data.map((summary) =>
+        presentation === 'workspace' ? (
+          <StudentOnboardingDocumentWorkspace
+            key={summary.stageInstanceId}
+            summary={{ ...summary, canComplete: false }}
+            permissions={{ ...permissions, waive: false }}
+            disabled={query.isFetching || !canManage}
+            readOnly={!canManage}
+            onAction={(action, requirement) => {
+              if (action !== 'waive' && canManage) setSelection({ action, summary, requirement });
+            }}
+          />
+        ) : (
+          <DocumentChecklistContent
+            key={summary.stageInstanceId}
+            summary={{ ...summary, canComplete: false }}
+            permissions={{ ...permissions, waive: false }}
+            disabled={query.isFetching || !canManage}
+            readOnly={!canManage}
+            onAction={(action, requirement) => {
+              if (action !== 'waive' && canManage) setSelection({ action, summary, requirement });
+            }}
+          />
+        )
+      )}
       {selection && (
         <WorkflowDocumentAction
           key={`${selection.summary.stageInstanceId}-${selection.requirement.code}-${selection.action}`}

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { AdmissionFinalizationPreview } from 'src/redux/student/admissions/admission-applications-api';
 
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { ApplicationFinalizationDialog } from './application-finalization-dialog';
 
@@ -51,8 +51,8 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 vi.mock('src/components/loading-button', () => ({
-  LoadingButton: ({ children, loading: _loading, startIcon: _startIcon, ...props }: any) => (
-    <button type="button" {...props}>
+  LoadingButton: ({ children, loading, loadingPosition: _loadingPosition, startIcon: _startIcon, ...props }: any) => (
+    <button type="button" data-loading={String(loading)} {...props}>
       {children}
     </button>
   ),
@@ -439,6 +439,32 @@ describe('ApplicationFinalizationDialog', () => {
     expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+  });
+
+  it('shows immediate Finalizing feedback, prevents double submission and restores the form after failure', async () => {
+    let finish!: (value: boolean) => void;
+    const pending = new Promise<boolean>((resolve) => {
+      finish = resolve;
+    });
+    const onSubmit = vi.fn(() => pending);
+    const onClose = vi.fn();
+    renderDialog(readyPreview, onSubmit, { presentation: 'inline', onClose });
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    const button = screen.getByRole('button', { name: 'Finalizing admission…' });
+    expect(button).toBeVisible();
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('data-loading', 'true');
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    fireEvent.click(button);
+    expect(onSubmit).toHaveBeenCalledOnce();
+    await act(async () => {
+      finish(false);
+      await pending;
+    });
+    expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeEnabled();
+    expect(screen.getByLabelText(/I verified the primary guardian/)).toBeChecked();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('renders inline readiness and Student details while preserving guardian and blocker gates', async () => {

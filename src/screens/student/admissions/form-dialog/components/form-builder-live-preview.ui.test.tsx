@@ -1,6 +1,6 @@
 import { it, vi, expect } from 'vitest';
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { screen, within } from '@testing-library/react';
 
 import { FormBuilderLivePreview } from './form-builder-live-preview';
 import { newField, getBlankAdmissionFormInitialValues } from '../form-dialog-model';
@@ -28,5 +28,60 @@ it('renders an editable preview without scenarios or validation actions and neve
   await user.keyboard('{Enter}');
   expect(input).toHaveValue('Preview student');
   expect(submit).not.toHaveBeenCalled();
+  expect(draft).toEqual(before);
+});
+
+it('switches English, Gujarati, and Hindi field copy without section translations or losing answers', async () => {
+  const user = userEvent.setup();
+  const draft = getBlankAdmissionFormInitialValues();
+  draft.name = 'Multilingual inquiry';
+  draft.supportedLanguages = ['en', 'gu', 'hi'];
+  const section = draft.sections[0];
+  section.name = 'Student details';
+  section.fields = [
+    {
+      ...newField(section.id!, 0, 0),
+      label: 'Student name',
+      placeholder: 'Enter student name',
+      required: false,
+      translations: {
+        gu: {
+          label: 'વિદ્યાર્થીનું નામ',
+          placeholder: 'વિદ્યાર્થીનું નામ લખો',
+          helpText: 'પૂર્ણ નામ લખો',
+        },
+        hi: {
+          label: 'विद्यार्थी का नाम',
+          placeholder: 'विद्यार्थी का नाम लिखें',
+          helpText: 'पूरा नाम लिखें',
+        },
+      },
+    },
+    { ...newField(section.id!, 0, 1), label: 'Untranslated field', required: false },
+  ];
+  const before = structuredClone(draft);
+  renderDocumentUi(<FormBuilderLivePreview form={draft} />);
+  await user.type(screen.getByRole('textbox', { name: 'Student name' }), 'QA student');
+
+  const checkLanguage = async (
+    language: string,
+    label: string,
+    placeholder: string,
+    help: string
+  ) => {
+    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', { name: language }));
+    expect(screen.getByRole('textbox', { name: label })).toHaveValue('QA student');
+    expect(screen.getByRole('textbox', { name: label })).toHaveAttribute(
+      'placeholder',
+      placeholder
+    );
+    if (help) expect(screen.getByText(help)).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Student details' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Untranslated field' })).toBeVisible();
+  };
+  await checkLanguage('Gujarati', 'વિદ્યાર્થીનું નામ', 'વિદ્યાર્થીનું નામ લખો', 'પૂર્ણ નામ લખો');
+  await checkLanguage('Hindi', 'विद्यार्थी का नाम', 'विद्यार्थी का नाम लिखें', 'पूरा नाम लिखें');
+  await checkLanguage('English', 'Student name', 'Enter student name', '');
   expect(draft).toEqual(before);
 });

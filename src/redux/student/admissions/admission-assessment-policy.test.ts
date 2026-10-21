@@ -1,13 +1,17 @@
 import { it, expect, describe } from 'vitest';
 
 import {
+  assessmentProfileTotal,
   DEFAULT_ASSESSMENT_POLICY,
   readAdmissionAssessmentPolicy,
   writeAdmissionAssessmentPolicy,
   getAssessmentConfigurationError,
 } from './admission-assessment-policy';
 
-import type { AdmissionAssessmentPolicy } from './admission-assessment-policy';
+import type {
+  AdmissionAssessmentPolicy,
+  AdmissionAssessmentClassProfile,
+} from './admission-assessment-policy';
 
 const configuration = (overrides: Partial<AdmissionAssessmentPolicy> = {}) =>
   JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, ...overrides } });
@@ -92,5 +96,183 @@ describe('managed admission assessment configuration', () => {
     { scoringEnabled: false, totalMarks: 0, passingMarks: -1 },
   ])('accepts valid boundaries and non-scored assessments: %j', (override) => {
     expect(getAssessmentConfigurationError(configuration(override))).toBeUndefined();
+  });
+});
+
+const profile = (
+  overrides: Partial<AdmissionAssessmentClassProfile> = {}
+): AdmissionAssessmentClassProfile => ({
+  id: 'profile-1',
+  name: 'Class 5',
+  boardId: 'board-1',
+  mediumId: 'medium-1',
+  standardIds: ['class-5'],
+  passRule: 'both',
+  passingMarks: 40,
+  subjects: [
+    {
+      code: 'subject-english',
+      subjectId: 'english',
+      name: 'English',
+      totalMarks: 30,
+      passingMarks: 12,
+    },
+    {
+      code: 'subject-maths',
+      subjectId: 'maths',
+      name: 'Mathematics',
+      totalMarks: 50,
+      passingMarks: 20,
+    },
+    { code: 'subject-custom', name: 'Entrance reasoning', totalMarks: 20, passingMarks: 8 },
+  ],
+  ...overrides,
+});
+const subjectConfiguration = (
+  profiles = [profile()],
+  changes: Partial<AdmissionAssessmentPolicy> = {}
+) => configuration({ version: 2, scoringMode: 'subjects', classProfiles: profiles, ...changes });
+
+describe('subject-wise class assessment profiles', () => {
+  it('reads v2 and preserves class groups, stable subject codes and sibling settings through edits', () => {
+    const original = JSON.stringify({
+      extension: { saved: true },
+      assessment: {
+        ...DEFAULT_ASSESSMENT_POLICY,
+        version: 2,
+        scoringMode: 'subjects',
+        classProfiles: [profile()],
+        integration: 'retained',
+      },
+    });
+    const policy = readAdmissionAssessmentPolicy(original)!;
+    expect(policy.classProfiles?.[0].subjects[2].subjectId).toBeUndefined();
+    const updated = writeAdmissionAssessmentPolicy(original, { ...policy, maxAttempts: 2 });
+    expect(JSON.parse(updated)).toMatchObject({
+      extension: { saved: true },
+      assessment: {
+        version: 2,
+        scoringMode: 'subjects',
+        maxAttempts: 2,
+        integration: 'retained',
+        classProfiles: [profile()],
+      },
+    });
+    expect(getAssessmentConfigurationError(updated)).toBeUndefined();
+  });
+
+  it('keeps old scalar policies unchanged and supports v2 scalar or manual operation', () => {
+    expect(readAdmissionAssessmentPolicy(configuration())).toEqual(DEFAULT_ASSESSMENT_POLICY);
+    expect(
+      getAssessmentConfigurationError(
+        configuration({ version: 2, scoringMode: 'total', classProfiles: [] })
+      )
+    ).toBeUndefined();
+    expect(
+      getAssessmentConfigurationError(
+        configuration({
+          version: 2,
+          scoringMode: 'total',
+          scoringEnabled: false,
+          classProfiles: [],
+        })
+      )
+    ).toBeUndefined();
+    expect(
+      getAssessmentConfigurationError(subjectConfiguration([], { scoringEnabled: false }))
+    ).toMatch(/marks-based/);
+  });
+
+  it.each([
+    { version: 3 },
+    { version: 2, scoringMode: 'subjects' },
+    { version: 2, scoringMode: 'unknown', classProfiles: [] },
+    { version: 2, scoringMode: 'subjects', classProfiles: [null] },
+    { version: 2, scoringMode: 'subjects', classProfiles: [{ ...profile(), subjects: [null] }] },
+    {
+      version: 2,
+      scoringMode: 'subjects',
+      classProfiles: [{ ...profile(), subjects: [{ ...profile().subjects[0], totalMarks: '30' }] }],
+    },
+  ])(
+    'rejects unreadable/future v2 structures without replacing saved configuration: %j',
+    (changes) => {
+      const json = JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, ...changes } });
+      expect(readAdmissionAssessmentPolicy(json)).toBeNull();
+      expect(() => writeAdmissionAssessmentPolicy(json, DEFAULT_ASSESSMENT_POLICY)).toThrow();
+    }
+  );
+
+  it('requires profiles and prevents duplicate profile IDs and overlapping classes', () => {
+    expect(getAssessmentConfigurationError(subjectConfiguration([]))).toMatch(/Add a class/);
+    expect(
+      getAssessmentConfigurationError(
+        subjectConfiguration([profile(), profile({ id: 'PROFILE-1', standardIds: ['class-6'] })])
+      )
+    ).toMatch(/unique identity/);
+    expect(
+      getAssessmentConfigurationError(
+        subjectConfiguration([profile(), profile({ id: 'profile-2' })])
+      )
+    ).toMatch(/only one/);
+    expect(
+      getAssessmentConfigurationError(
+        subjectConfiguration([profile({ standardIds: ['class-5', 'class-5'] })])
+      )
+    ).toMatch(/only one/);
+    expect(
+      getAssessmentConfigurationError(
+        subjectConfiguration([profile({ standardIds: ['class-5', 'class-6'] })])
+      )
+    ).toBeUndefined();
+  });
+
+  it.each([
+    { boardId: '' },
+    { mediumId: '' },
+    { standardIds: [] },
+    { standardIds: [''] },
+    { name: ' ' },
+    { subjects: [] },
+    { passRule: 'invalid' as AdmissionAssessmentClassProfile['passRule'] },
+    { subjects: [{ ...profile().subjects[0], totalMarks: 0 }] },
+    { subjects: [{ ...profile().subjects[0], totalMarks: 10001 }] },
+    { passingMarks: 101 },
+    { subjects: [{ ...profile().subjects[0], passingMarks: null }] },
+    { subjects: [{ ...profile().subjects[0], passingMarks: -1 }] },
+    { subjects: [{ ...profile().subjects[0], passingMarks: 31 }] },
+    { subjects: [profile().subjects[0], { ...profile().subjects[0], code: 'other-code' }] },
+    { subjects: [profile().subjects[0], { ...profile().subjects[1], name: ' english ' }] },
+  ])('rejects incomplete scopes, duplicate subjects and invalid thresholds: %j', (changes) => {
+    expect(getAssessmentConfigurationError(subjectConfiguration([profile(changes)]))).toBeTruthy();
+  });
+
+  it.each(['overall', 'everySubject', 'both'] as const)(
+    'accepts the %s pass rule with its required thresholds',
+    (passRule) => {
+      const current = profile({ passRule });
+      if (passRule === 'overall')
+        current.subjects = current.subjects.map((subject) => ({ ...subject, passingMarks: null }));
+      expect(getAssessmentConfigurationError(subjectConfiguration([current]))).toBeUndefined();
+    }
+  );
+
+  it('sums decimal marks accurately without truncating accepted precision or modifying payload values', () => {
+    const current = profile({
+      passingMarks: 0.3,
+      passRule: 'overall',
+      subjects: [
+        { code: 'one', name: 'One', totalMarks: 0.1 },
+        { code: 'two', name: 'Two', totalMarks: 0.2 },
+      ],
+    });
+    expect(assessmentProfileTotal(current)).toBe(0.3);
+    current.subjects[0].totalMarks = 0.0000000001;
+    expect(assessmentProfileTotal(current)).toBe(0.2000000001);
+    current.passingMarks = 0;
+    expect(getAssessmentConfigurationError(subjectConfiguration([current]))).toBeUndefined();
+    expect(
+      JSON.parse(subjectConfiguration([current])).assessment.classProfiles[0].subjects[0].totalMarks
+    ).toBe(0.0000000001);
   });
 });

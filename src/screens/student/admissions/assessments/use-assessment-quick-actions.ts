@@ -1,4 +1,7 @@
-import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
+import type {
+  ApplicationAssessment,
+  ManagedApplicationAssessment,
+} from 'src/redux/student/admissions/admission-assessment-types';
 
 import { useFormik } from 'formik';
 import { useRef, useState, useEffect } from 'react';
@@ -8,8 +11,22 @@ import { assessmentErrorMessage } from './assessment-utils';
 import { useAssessmentActions } from './use-assessment-actions';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { latestAssessmentAttempt, validateAssessmentAction } from './assessment-action-model';
+import { assessmentResultProfile, assessmentSubjectValues } from './assessment-subject-results';
 
 import type { AssessmentActionValues } from './assessment-action-model';
+
+function initialValues(assessment: ApplicationAssessment): AssessmentActionValues {
+  const attempt = latestAssessmentAttempt(assessment);
+  return {
+    sessionId: '',
+    attendance: 'present',
+    outcome: '',
+    approved: true,
+    marks: '',
+    notes: attempt?.effectiveProfile ? (attempt.notes ?? '') : '',
+    subjectScores: assessmentSubjectValues(attempt),
+  };
+}
 
 export function useAssessmentQuickActions(
   assessment: ManagedApplicationAssessment,
@@ -21,18 +38,15 @@ export function useAssessmentQuickActions(
   const snapshot = useRef<ManagedApplicationAssessment | null>(null);
   const submitting = useRef(false);
   const [attendanceBusy, setAttendanceBusy] = useState(false);
+  const [draftBusy, setDraftBusy] = useState(false);
+  const [draftValidation, setDraftValidation] = useState(false);
   const [error, setError] = useState('');
   const canRecordAttendance = permissions.attendance && assessment.canRecordAttendance;
   const canRecordResult = permissions.results && assessment.canRecordResult;
+  const canSaveDraft = permissions.results && Boolean(assessment.canSaveResultDraft);
+  const loadedStamp = useRef(attempt?.concurrencyStamp);
   const formik = useFormik<AssessmentActionValues>({
-    initialValues: {
-      sessionId: '',
-      attendance: 'present',
-      outcome: '',
-      approved: true,
-      marks: '',
-      notes: '',
-    },
+    initialValues: initialValues(assessment),
     validate: (values) =>
       validateAssessmentAction('result', values, snapshot.current ?? assessment),
     onSubmit: async (values) => {
@@ -44,7 +58,7 @@ export function useAssessmentQuickActions(
       submitting.current = true;
       setError('');
       try {
-        // Use the stamp staff actually reviewed; a refetch must not silently approve a stale draft.
+        // Keep the stamp staff reviewed; a refetch must not silently accept a stale result.
         await run('result', values, snapshot.current ?? assessment);
         formik.resetForm();
         snapshot.current = null;
@@ -56,16 +70,22 @@ export function useAssessmentQuickActions(
       }
     },
   });
+  const { dirty, resetForm } = formik;
   useEffect(() => {
+    if (!dirty && !submitting.current && loadedStamp.current !== attempt?.concurrencyStamp) {
+      resetForm({ values: initialValues(assessment) });
+      loadedStamp.current = attempt?.concurrencyStamp;
+      snapshot.current = null;
+    }
     if (
-      formik.dirty &&
+      dirty &&
       snapshot.current &&
       latestAssessmentAttempt(snapshot.current)?.id !== attempt?.id
     ) {
       setError('The assessment attempt changed. Discard the unsaved result and try again.');
     }
-  }, [attempt?.id, formik.dirty]);
-  const busy = attendanceBusy || formik.isSubmitting;
+  }, [assessment, attempt?.concurrencyStamp, attempt?.id, dirty, resetForm]);
+  const busy = attendanceBusy || draftBusy || formik.isSubmitting;
   return {
     attempt,
     formik,
@@ -73,14 +93,53 @@ export function useAssessmentQuickActions(
     busy,
     canRecordAttendance,
     canRecordResult,
+    canSaveDraft,
+    draftValidation,
+    prepareSubmit: () => setDraftValidation(false),
+    profile: assessmentResultProfile(assessment, attempt),
     changeResult: (field: 'marks' | 'outcome', value: number | string) => {
       if (disabled || busy || !canRecordResult) return;
       if (!formik.dirty) snapshot.current = assessment;
       formik.setFieldValue(field, value);
     },
+    changeSubject: (code: string, value: string) => {
+      if (disabled || busy || !canRecordResult) return;
+      if (!formik.dirty) snapshot.current = assessment;
+      formik.setFieldValue('subjectScores', { ...formik.values.subjectScores, [code]: value });
+    },
+    saveDraft: async () => {
+      if (disabled || busy || submitting.current || !canSaveDraft || !attempt) return;
+      if (snapshot.current && latestAssessmentAttempt(snapshot.current)?.id !== attempt.id) {
+        setError('The assessment attempt changed. Discard the unsaved result and try again.');
+        return;
+      }
+      setDraftValidation(true);
+      const errors = validateAssessmentAction(
+        'resultDraft',
+        formik.values,
+        snapshot.current ?? assessment
+      );
+      formik.setErrors(errors);
+      if (Object.keys(errors).length) return;
+      submitting.current = true;
+      setDraftBusy(true);
+      setError('');
+      try {
+        const updated = await run('resultDraft', formik.values, snapshot.current ?? assessment);
+        formik.resetForm({ values: initialValues(updated) });
+        snapshot.current = null;
+        shikshaMitraToast.success({ message: 'Assessment draft saved' });
+      } catch (failure) {
+        setError(assessmentErrorMessage(failure));
+      } finally {
+        submitting.current = false;
+        setDraftBusy(false);
+      }
+    },
     discardResult: () => {
       if (busy) return;
-      formik.resetForm();
+      formik.resetForm({ values: initialValues(assessment) });
+      loadedStamp.current = attempt?.concurrencyStamp;
       snapshot.current = null;
       setError('');
     },

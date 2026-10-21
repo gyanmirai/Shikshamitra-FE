@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-17
+updated_on: 2026-10-22
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,25 @@ audience: humans-and-agents
 # Find Student Enrollment Admissions clients
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
+
+## Admission email and document review controls
+
+`admission-email-values.ts` recognizes Email fields and `format: email` metadata, and normalizes editable scalar/repeated email answers through the shared `normalizeEmail` utility.
+Staff/public Inquiry, direct Registration and Registration form save paths send lowercase email values; read-only answers and non-email text retain their existing values.
+The backend normalizes known email answers at its existing form-save boundaries; no historical-data migration or identity/account change is introduced.
+
+The Admissions document table exposes one icon-only View control per requirement, including missing-file requirements.
+`document-review-dialog.tsx` reuses the protected blob preview, existing evidence history, Formik/Yup action fields and existing upload/original/review/waiver commands.
+Approve and Reject are available inside View only when existing permissions and server capabilities allow them.
+Rejection retains the existing replacement-request decision and required reason; the evidence ID and concurrency stamp remain pinned while the dialog is open.
+Failed writes retain entered values, pending writes lock competing controls and dismissal, and successful writes refresh the existing checklist cache.
+Historical stages remain read-only and existing card-layout consumers retain their controls.
+
+## Unified Student Setup commands
+
+`student-quick-setup-page.tsx` reuses the existing case, placement, identifier, fee, credentials and activation clients; no new backend contract is introduced. The owning screen retains the `case` URL parameter and keeps the worklist mounted but hidden while the full-page student workspace is open. `use-student-quick-setup-academic.ts` retains an editing baseline across refetches and acknowledges each saved field. `student-quick-setup-save.ts` sequences academic saves, fee confirmation, then a fresh activation preview and activation. These commands commit independently, not as a single atomic transaction; failed later steps preserve prior progress. Activation retries retain an idempotency key. The fee section exposes a focused editor handle so the shared page footer can save it with a fresh case stamp; its collection-open state locks navigation without disabling the existing payment adapter. Manual credential sending stays a separate command after activation. The lazy activation-preview hook is an additional export of the existing endpoint, not a new API.
+
+The Student-owned document workspace reuses Admissions document requirements, permissions, action commands and evidence history. View uses the existing authenticated `useDocumentPreview` blob hook; images support zoom, PDFs use an embedded browser preview, and unsupported formats retain Download. View and Download require the existing file-access permissions and evidence eligibility. The icon-only row actions keep specific accessible labels and tooltips; no public file URL, new download client or backend permission is introduced. Below `sm`, status moves into the Document cell so the sticky icon actions do not crowd out the file name. Non-applicable documents stay collapsed by default. The inactive-stage read-only notice is a compact caption; genuine missing-document and approval blockers remain visible.
 
 ## App Login settings
 
@@ -21,6 +40,15 @@ The existing Onboarding settings client persists the school's `readinessAccess` 
 `admission-fee-collection-api.ts` adapts the Finance-owned admission application summary, prepare, collect-form and collection endpoints. Reads do not prepare dues. Only Collect Fees submits preparation; the shared Finance form receives an application adapter and explicit academic year, without inventing a Student ID or navigating to Finance. Mutations invalidate application, fee-selection, Finance collection/receipt and Onboarding caches. Receipt access remains independently gated. Successful fee-selection saves also invalidate the same application's Finance collection tag, refreshing its summary and any cached collection form. Failed saves do not refresh Finance as though a new selection was accepted. Payment's Refresh action refreshes the selection and the visible collection summary together; collection remains gated by the Finance response.
 
 Workflow advance accepts `deferFeeCollection: true` with the required trimmed `reason`, expected stage, application stamp and idempotency key. Fee-selection reads include `hasRecordedFeePayment` and nullable `feeCollectionDeferral` (stage, reason, actor and timestamp), which is also displayed in Onboarding Fees. Finalization follows the existing decision path. See the [backend collection contract](../../../Shikshamitra-BE/docs/modules/finance/references/admission-fee-collection.md).
+
+## Subject-wise Assessment clients
+
+`admission-assessment-catalog-api.ts` reads `/student/enrollment/admissions/workflows/assessment-catalog` only when the stage uses subject-wise marks.
+The existing Workflow View guard owns catalog access; the returned year/Board/Medium/classes and subject suggestions do not require an Academic menu grant.
+`admission-assessment-policy.ts` preserves version 1 settings and serializes opt-in version 2 class profiles without clearing unrelated stage settings.
+`admission-assessments-api.ts` adds `saveAssessmentResultDraft` at `PUT /assessments/attempts/{id}/result-draft` and extends final results with `subjectScores`.
+Both writes invalidate the existing assessment/application/applicant tags and use the current attempt concurrency stamp.
+UI result helpers keep nullable blanks, exact decimal totals and frozen attempt profiles; backend contracts own validation and outcomes.
 
 ## Finalized application summary reads
 
@@ -203,6 +231,7 @@ Runtime counsellor search and assignment stay in `admission-inquiries-api.ts`; t
 The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups. The backend filters these queues before paging and returns the row's cycle, offering, counsellor, management readiness, deadlines, and next follow-up in the list response.
 Inquiries uses the server-paged inquiry list with `isTransferred: false`.
 Pipeline uses `src/redux/student/admissions/admission-pipeline-api.ts` for pre-decision application progress and full scoped filter options, with URL-owned search, filters, sort and pagination.
+The compact worklist reads optional `stageProgress`, `overdueFollowUpCount` and `nextFollowUpPurpose` from that same paged response; it does not request each applicant's workflow. Older responses retain the stage name and generic follow-up guidance without invented progress/counts. Every progress segment exposes its stage name through the shared custom tooltip on hover or keyboard focus. Each row has one equal-width workspace link without an arrow or overflow menu; narrow screens label it Open to leave room for student identity, while desktop retains the stage-specific label.
 `src/screens/student/admissions/pipeline/admission-pipeline-more-filters.tsx` receives those existing options and applies one operational filter patch; it adds no reads or endpoints.
 Board, Medium and Class remain visible, while Cases, Counsellor, Current step and Status use the existing `queue`, `counsellor`, `stage` and `status` URL keys.
 `src/screens/student/admissions/pipeline/use-bulk-pipeline-counsellor.ts` reuses `admission-applications-api.ts` for fresh application details, conditional runtime workflow verification, one eligible-counsellor lookup per distinct selected offering, and the existing single-application `assign-counsellor` command.

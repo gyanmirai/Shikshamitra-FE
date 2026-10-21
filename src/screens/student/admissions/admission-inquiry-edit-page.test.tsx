@@ -1,7 +1,10 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import userEvent from '@testing-library/user-event';
+import { shikshaMitraToast } from 'src/components/toast';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
@@ -152,7 +155,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   })),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }));
 vi.mock('./use-admission-unsaved-changes', () => ({
   useAdmissionUnsavedChanges: vi.fn(),
@@ -262,6 +265,8 @@ describe('Edit inquiry page', () => {
     } as unknown as ReturnType<typeof useGetAdmissionInquiryCaptureCatalogueQuery>);
     vi.mocked(useGetAdmissionInquiryCaptureContextQuery).mockReturnValue({
       currentData: {
+        academicYearStartDate: '2026-04-01',
+        minimumAgeYears: 5,
         offering: {
           id: 'offering-1',
           admissionCycleId: 'cycle-1',
@@ -291,6 +296,113 @@ describe('Edit inquiry page', () => {
       update,
       { isLoading: false },
     ] as unknown as ReturnType<typeof useUpdateAdmissionInquiryMutation>);
+  });
+
+  it('shows age from the offering year and saves a pinned-form edit despite the age warning', async () => {
+    const dob = {
+      id: 'dob',
+      code: 'DOB',
+      label: 'Date of birth',
+      bindingKey: 'Applicant.DateOfBirth',
+      bindingType: 0,
+      displayOrder: 4,
+      fieldType: 5,
+      required: false,
+      readOnly: false,
+    };
+    const edited = {
+      ...inquiry,
+      formDefinition: {
+        ...originalForm,
+        sections: originalForm.sections.map((section) => ({
+          ...section,
+          fields: [...section.fields, dob],
+        })),
+      },
+      formValues: [...inquiry.formValues!, { fieldCode: 'DOB', valueJson: '"2022-01-01"' }],
+    } as AdmissionInquiry;
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: edited,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AdmissionInquiryEditPage />
+      </LocalizationProvider>
+    );
+    expect(screen.getByText(/Age at academic year start.*4 years 3 months/)).toBeVisible();
+    await waitFor(() =>
+      expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
+        message: expect.stringContaining('below the minimum age of 5 years'),
+      })
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Family notes' }), {
+      target: { value: 'QA age warning is advisory' },
+    });
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            formValues: expect.arrayContaining([{ fieldCode: 'DOB', valueJson: '"2022-01-01"' }]),
+          }),
+        })
+      )
+    );
+  });
+
+  it('uses the pinned form default and saves original field codes after switching language', async () => {
+    const user = userEvent.setup();
+    const multilingualInquiry = {
+      ...inquiry,
+      formDefinition: {
+        ...inquiry.formDefinition!,
+        defaultLanguage: 'gu',
+        supportedLanguages: ['en', 'gu', 'hi'],
+        sections: inquiry.formDefinition!.sections.map((section) => ({
+          ...section,
+          fields: section.fields.map((field) =>
+            field.code === 'name'
+              ? {
+                  ...field,
+                  translations: {
+                    gu: { label: 'વિદ્યાર્થીનું નામ', placeholder: 'નામ લખો' },
+                    hi: { label: 'विद्यार्थी का नाम', placeholder: 'नाम लिखें' },
+                  },
+                }
+              : field
+          ),
+        })),
+      },
+    };
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: multilingualInquiry,
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.getByText('Original inquiry · Version 1')).toBeVisible();
+    expect(screen.getByRole('combobox', { name: 'Form language' })).toHaveTextContent('Gujarati');
+    expect(screen.getByRole('textbox', { name: 'વિદ્યાર્થીનું નામ' })).toHaveValue('Riya Shah');
+    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('option', { name: 'Hindi' }));
+    await user.clear(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' }));
+    await user.type(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' }), 'QA updated');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            applicantName: 'QA updated',
+            preferredLanguageCode: 'en',
+            concurrencyStamp: 'stamp-1',
+            formValues: expect.arrayContaining([{ fieldCode: 'name', valueJson: '"QA updated"' }]),
+          }),
+        })
+      )
+    );
   });
 
   it('shows editable details and saves with the current concurrency stamp', async () => {

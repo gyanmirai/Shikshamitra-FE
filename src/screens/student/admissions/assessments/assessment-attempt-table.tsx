@@ -17,6 +17,7 @@ import { Stack, Button, MenuItem, Typography } from '@mui/material';
 import { assessmentActionLabels } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { AssessmentResultEntry as ResultEntry } from './assessment-result-entry';
+import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
 
 import type { AssessmentAction } from './assessment-action-model';
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
@@ -188,6 +189,8 @@ export function AssessmentAttemptTable({
             disabled={disabled}
             formId={resultFormId}
           />
+        ) : row.effectiveProfile ? (
+          <AssessmentSubjectScoreHistory attempt={row as AssessmentAttempt} />
         ) : (
           <Typography variant="body2" textAlign="right">
             {scoringEnabled
@@ -271,7 +274,7 @@ export function AssessmentAttemptTable({
                 aria-label={`Save result for attempt ${row.attemptNumber}`}
                 disabled={disabled || !quick.canRecordResult}
               >
-                Save
+                {quick.profile ? 'Submit result' : 'Save'}
               </LoadingButton>
             )}
             {actions.length > 0 && (

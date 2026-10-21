@@ -1,5 +1,6 @@
 import type { AdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 
+import CustomSelect from 'src/components/custom-select';
 import { Grid, Stack, Switch, TextField, FormControlLabel } from '@mui/material';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
@@ -43,13 +44,66 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
                 slotProps={{ input: { 'aria-label': label } }}
                 checked={policy[field]}
                 disabled={readOnly}
-                onChange={(_, value) => onChange({ [field]: value })}
+                onChange={(_, value) =>
+                  onChange({
+                    [field]: value,
+                    ...(field === 'scoringEnabled' && !value && policy.version === 2
+                      ? { scoringMode: 'total' as const }
+                      : {}),
+                  })
+                }
               />
             }
           />
         </Stack>
       ))}
-      {policy.scoringEnabled && (
+      <Grid container spacing={1}>
+        {policy.scoringEnabled && (
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <CustomSelect
+              size="small"
+              fullWidth
+              required
+              label="Scoring method"
+              value={policy.version === 2 ? (policy.scoringMode ?? 'total') : 'total'}
+              disabled={readOnly}
+              options={[
+                { value: 'total', label: 'Total marks' },
+                { value: 'subjects', label: 'Subject-wise marks' },
+              ]}
+              onChange={(value) =>
+                onChange({
+                  version: 2,
+                  scoringMode: value as 'total' | 'subjects',
+                  classProfiles: policy.classProfiles ?? [],
+                })
+              }
+            />
+          </Grid>
+        )}
+        <Grid size={{ xs: 12, sm: policy.scoringEnabled ? 6 : 12 }}>
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label={
+              <WorkflowSettingLabel
+                label="Maximum attempts *"
+                help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
+              />
+            }
+            disabled={readOnly}
+            value={policy.maxAttempts}
+            onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
+            slotProps={{
+              htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
+            }}
+            error={invalidAttempts}
+            helperText={invalidAttempts ? 'Enter a whole number from 1 to 10.' : undefined}
+          />
+        </Grid>
+      </Grid>
+      {policy.scoringEnabled && !(policy.version === 2 && policy.scoringMode === 'subjects') && (
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
@@ -101,25 +155,6 @@ export function WorkflowAssessmentOptions({ policy, readOnly, onChange }: Props)
           </Grid>
         </Grid>
       )}
-      <TextField
-        fullWidth
-        size="small"
-        type="number"
-        label={
-          <WorkflowSettingLabel
-            label="Maximum attempts *"
-            help="Includes the first assessment. Choose 1 to disable retakes; maximum 10."
-          />
-        }
-        disabled={readOnly}
-        value={policy.maxAttempts}
-        onChange={(event) => onChange({ maxAttempts: Number(event.target.value) })}
-        slotProps={{
-          htmlInput: { min: 1, max: 10, step: 1, 'aria-label': 'Maximum attempts *' },
-        }}
-        error={invalidAttempts}
-        helperText={invalidAttempts ? 'Enter a whole number from 1 to 10.' : undefined}
-      />
     </Stack>
   );
 }

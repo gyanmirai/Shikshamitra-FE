@@ -123,7 +123,7 @@ export function DocumentRequirementDialog({
             <Alert severity="warning">Choose required or optional for this document.</Alert>
           )}
           <Grid container spacing={1.5}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <DocumentRequirementClasses formik={formik} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

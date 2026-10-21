@@ -66,6 +66,7 @@ type StudentSetupDrawerProps = {
   canManage?: boolean;
   canCancel?: boolean;
   taskView?: StudentSetupView;
+  initialView?: DrawerView;
 };
 
 const displayValue = (value?: string | number | null) =>
@@ -163,6 +164,7 @@ export default function StudentSetupDrawer({
   canManage = false,
   canCancel = false,
   taskView = 'readiness',
+  initialView,
 }: StudentSetupDrawerProps) {
   const lastStudentRef = useRef(student);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -176,11 +178,12 @@ export default function StudentSetupDrawer({
   const [credentialsBusy, setCredentialsBusy] = useState(false);
   const drawerBusy = primaryActionLoading || credentialsBusy;
   const defaultView: DrawerView =
-    student?.source === 'onboarding-case' &&
+    initialView ??
+    (student?.source === 'onboarding-case' &&
     student.backendStatus !== 4 &&
     student.backendStatus !== 5
       ? 'tasks'
-      : 'details';
+      : 'details');
   const { value: view, setValue: setView, onChange: onViewChange } = useTabs(defaultView);
   const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
     skip: !open || taskView === 'credentials' || activeStudent?.source !== 'onboarding-case',

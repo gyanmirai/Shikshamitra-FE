@@ -12,7 +12,9 @@ import type {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import * as Yup from 'yup';
+import { normalizeEmail } from 'src/utils/input-format';
 
+import { normalizeAdmissionEmailValue } from './admission-email-values';
 import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
 
 export type AdmissionInquiryFormValues = {
@@ -29,7 +31,7 @@ export type AdmissionInquiryFormValues = {
 
 export type AdmissionInquiryFormSection = Pick<
   AdmissionFormSection,
-  'id' | 'code' | 'name' | 'displayOrder' | 'fields' | 'visibilityRuleJson'
+  'id' | 'code' | 'name' | 'displayOrder' | 'fields' | 'visibilityRuleJson' | 'translations'
 >;
 
 export const admissionInquirySourceOptions = [
@@ -156,6 +158,17 @@ const legacyIdentityFieldCodes: Record<string, readonly string[]> = {
 const equalsIgnoreCase = (left?: string, right?: string) =>
   left?.localeCompare(right ?? '', undefined, { sensitivity: 'accent' }) === 0;
 
+export const isAdmissionInquiryBirthDateField = (
+  field: Pick<AdmissionFormField, 'code' | 'bindingKey'>
+) => {
+  if (equalsIgnoreCase(field.bindingKey, 'Applicant.DateOfBirth')) return true;
+  const aliases = ['applicantDateOfBirth', ...legacyIdentityFieldCodes['Applicant.DateOfBirth']];
+  return (
+    aliases.some((code) => equalsIgnoreCase(field.code, code)) &&
+    (!field.bindingKey || aliases.some((code) => equalsIgnoreCase(field.bindingKey, code)))
+  );
+};
+
 const hasIdentityField = (fields: AdmissionFormField[], bindingKey: string) => {
   const aliases = legacyIdentityFieldCodes[bindingKey] ?? [];
   return fields.some(
@@ -176,6 +189,7 @@ export const getAdmissionInquirySections = (
       name: section.name,
       displayOrder: section.displayOrder,
       visibilityRuleJson: section.visibilityRuleJson,
+      translations: section.translations,
       fields: [...section.fields].sort((left, right) => left.displayOrder - right.displayOrder),
     }));
   const fields = sections.flatMap((section) => section.fields);
@@ -286,6 +300,7 @@ const boundValue = (
 };
 
 const serializeFieldValue = (field: AdmissionFormField, value: string) => {
+  const normalized = normalizeAdmissionEmailValue(field, value, value.trim().startsWith('['));
   if ([7, 9, 11].includes(field.fieldType)) {
     try {
       JSON.parse(value);
@@ -294,7 +309,7 @@ const serializeFieldValue = (field: AdmissionFormField, value: string) => {
       return JSON.stringify(value);
     }
   }
-  return JSON.stringify(value);
+  return JSON.stringify(normalized);
 };
 
 export function buildAdmissionInquiryPayload(
@@ -314,7 +329,9 @@ export function buildAdmissionInquiryPayload(
   const applicantLastName = boundValue(values, fields, 'Applicant.LastName', 'applicantLastName');
   const guardianFirstName = boundValue(values, fields, 'Guardian.FirstName', 'guardianFirstName');
   const guardianPhone = boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
-  const guardianEmail = boundValue(values, fields, 'Guardian.Email', 'guardianEmail');
+  const guardianEmail = normalizeEmail(
+    boundValue(values, fields, 'Guardian.Email', 'guardianEmail')
+  );
   const applicantName =
     boundValue(values, fields, 'Applicant.Name', 'applicantName') ||
     [applicantFirstName, applicantLastName].filter(Boolean).join(' ');
@@ -343,7 +360,8 @@ export function buildAdmissionInquiryPayload(
       boundValue(values, fields, 'Applicant.DateOfBirth', 'applicantDateOfBirth') || null,
     formValues: fields
       .filter(
-        (field) => !inquiryIdentityFallbackIds.has(field.id) && values.fields[field.code] !== undefined
+        (field) =>
+          !inquiryIdentityFallbackIds.has(field.id) && values.fields[field.code] !== undefined
       )
       .map((field) => ({
         fieldCode: field.code,
@@ -473,8 +491,18 @@ export function readAdmissionInquiryFormValues(
 }
 
 export function preserveCompatibleInquiryAnswers(
-  previousFields: Array<Pick<AdmissionFormField, 'code' | 'fieldType'> & { bindingKey?: string; defaultValue?: string | null }>,
-  nextFields: Array<Pick<AdmissionFormField, 'code' | 'fieldType'> & { bindingKey?: string; defaultValue?: string | null }>,
+  previousFields: Array<
+    Pick<AdmissionFormField, 'code' | 'fieldType'> & {
+      bindingKey?: string;
+      defaultValue?: string | null;
+    }
+  >,
+  nextFields: Array<
+    Pick<AdmissionFormField, 'code' | 'fieldType'> & {
+      bindingKey?: string;
+      defaultValue?: string | null;
+    }
+  >,
   values: Record<string, string>
 ) {
   return Object.fromEntries(

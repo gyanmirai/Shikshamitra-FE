@@ -7,6 +7,8 @@ import { buildAdmissionPipelineColumns } from './admission-pipeline-columns';
 
 import type { PipelineRowSelection } from './admission-pipeline-columns';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 const row = { id: 'app-1', applicantName: 'Kabir Shah', applicationNumber: 'APP-1' };
 const selection = (changes: Partial<PipelineRowSelection> = {}): PipelineRowSelection => ({
   selectedIds: [],

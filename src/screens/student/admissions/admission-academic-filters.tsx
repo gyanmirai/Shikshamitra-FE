@@ -90,6 +90,7 @@ export function AdmissionAcademicFilters({
   filterAction,
   disabled = false,
   allowAllHierarchy = false,
+  onLoadingChange,
 }: {
   boardId: string;
   mediumId: string;
@@ -99,6 +100,7 @@ export function AdmissionAcademicFilters({
   filterAction?: ReactNode;
   disabled?: boolean;
   allowAllHierarchy?: boolean;
+  onLoadingChange?: (loading: boolean) => void;
 }) {
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const params = useSearchParams();
@@ -123,6 +125,19 @@ export function AdmissionAcademicFilters({
       (node) => node.mediumId === mediumId && node.id === item.educationMediumStageId
     )
   );
+  // A skipped list is not an empty result while its default scope is being restored.
+  const resolvingScope = Boolean(
+    effectiveYearId &&
+    !hierarchy.isError &&
+    (!hierarchy.currentData ||
+      (!dashboardScope &&
+        !allowAllHierarchy &&
+        ((boards.length > 0 && !boards.some((item) => item.id === boardId)) ||
+          (mediums.length > 0 && !mediums.some((item) => item.id === mediumId)))))
+  );
+  useEffect(() => {
+    onLoadingChange?.(resolvingScope);
+  }, [onLoadingChange, resolvingScope]);
 
   useEffect(() => {
     if (disabled || !hierarchy.currentData || dashboardScope || allowAllHierarchy) return;

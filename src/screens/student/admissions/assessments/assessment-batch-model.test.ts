@@ -6,6 +6,7 @@ import { assessmentResponse } from 'src/redux/student/admissions/assessment-test
 
 import {
   runAssessmentBatch,
+  groupAssessmentBatchRows,
   assessmentBatchWriteIntent,
   validateAssessmentBatchValue,
   assessmentBatchIntentApplied,
@@ -266,5 +267,138 @@ describe('assessment batch recovery', () => {
     expect(await runAssessmentBatch([], execute, report)).toEqual([]);
     expect(execute).not.toHaveBeenCalled();
     expect(report).not.toHaveBeenCalled();
+  });
+});
+
+describe('subject result batches', () => {
+  const profile = {
+    id: 'profile',
+    name: 'Entrance',
+    boardId: 'board',
+    mediumId: 'medium',
+    standardIds: ['class-1'],
+    passRule: 'both' as const,
+    passingMarks: 40,
+    subjects: [
+      { code: 'english', name: 'English', totalMarks: 50, passingMarks: 20 },
+      { code: 'maths', name: 'Maths', totalMarks: 50, passingMarks: 20 },
+    ],
+  };
+  const subjectRow = () => ({
+    ...row(),
+    className: 'Class 1',
+    assessment: { ...row().assessment, effectiveProfile: profile },
+  });
+
+  it('validates each applicant profile and allows drafts to remain incomplete', () => {
+    expect(
+      validateAssessmentBatchValue(
+        'result',
+        subjectRow(),
+        values({ subjectScores: { english: '0' } }),
+        true
+      )
+    ).toBe('');
+    expect(
+      validateAssessmentBatchValue(
+        'result',
+        subjectRow(),
+        values({ subjectScores: { english: '0' } })
+      )
+    ).toContain('Maths');
+    expect(
+      validateAssessmentBatchValue(
+        'result',
+        subjectRow(),
+        values({ subjectScores: { english: '51' } }),
+        true
+      )
+    ).toContain('English');
+  });
+
+  it('reconciles final or draft scores only on the same attempt with exact subject codes and values', () => {
+    const intent = assessmentBatchWriteIntent(
+      'result',
+      subjectRow(),
+      'attempt-1',
+      values({ subjectScores: { english: '0', maths: '' }, notes: ' Saved ' }),
+      true
+    );
+    const saved: AssessmentAttempt = {
+      id: 'attempt-1',
+      attemptNumber: 1,
+      attendance: 'present',
+      status: 'pending',
+      outcome: 'pending',
+      concurrencyStamp: 'saved',
+      createdAt: '',
+      notes: 'Saved',
+      subjectScores: [
+        { code: 'maths', marks: null },
+        { code: 'english', marks: 0 },
+      ],
+    };
+    expect(intent).toMatchObject({
+      action: 'resultDraft',
+      subjectScores: [
+        { code: 'english', marks: 0 },
+        { code: 'maths', marks: null },
+      ],
+    });
+    expect(assessmentBatchIntentApplied(intent, saved)).toBe(true);
+    expect(
+      assessmentBatchIntentApplied(intent, {
+        ...saved,
+        subjectScores: [
+          { code: 'maths', marks: 0 },
+          { code: 'english', marks: 0 },
+        ],
+      })
+    ).toBe(false);
+    expect(assessmentBatchIntentApplied(intent, { ...saved, id: 'retake' })).toBe(false);
+    expect(
+      assessmentBatchIntentApplied(intent, { ...saved, status: 'completed', outcome: 'failed' })
+    ).toBe(false);
+    const final = assessmentBatchWriteIntent(
+      'result',
+      subjectRow(),
+      'attempt-1',
+      values({ subjectScores: { english: '0', maths: '40' }, notes: 'Saved' })
+    );
+    const completed = {
+      ...saved,
+      status: 'completed' as const,
+      outcome: 'failed' as const,
+      subjectScores: [
+        { code: 'english', marks: 0 },
+        { code: 'maths', marks: 40 },
+      ],
+    };
+    expect(assessmentBatchIntentApplied(final, completed)).toBe(true);
+    expect(
+      assessmentBatchIntentApplied(final, {
+        ...completed,
+        subjectScores: [...completed.subjectScores, { code: 'other', marks: 5 }],
+      })
+    ).toBe(false);
+  });
+
+  it('groups mixed classes and profiles instead of reusing one class subject grid', () => {
+    const first = subjectRow();
+    const second = { ...first, stageInstanceId: 'second', className: 'Class 2' };
+    const changed = {
+      ...first,
+      stageInstanceId: 'changed',
+      assessment: {
+        ...first.assessment,
+        effectiveProfile: { ...profile, subjects: [{ ...profile.subjects[0], totalMarks: 25 }] },
+      },
+    };
+    const same = { ...first, stageInstanceId: 'same' };
+    expect(
+      groupAssessmentBatchRows([first, second, changed, same]).map((group) =>
+        group.rows.map((item) => item.stageInstanceId)
+      )
+    ).toEqual([['stage-1', 'same'], ['second'], ['changed']]);
   });
 });

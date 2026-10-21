@@ -162,3 +162,91 @@ it('sends waiver reason and stage concurrency stamp to the authorized waiver end
   expect(submitted).toEqual({ reason: 'Transfer exception', concurrencyStamp: 'stage-stamp' });
   expect(result.outcome).toBe('waived');
 });
+
+it('persists partial subject drafts separately from final subject results and invalidates stage evidence', async () => {
+  const writes: { path: string; body: unknown }[] = [];
+  let stamp = 'initial';
+  mswServer.use(
+    http.get(stagePath, () =>
+      HttpResponse.json({
+        ...assessmentResponse,
+        concurrencyStamp: stamp,
+        canComplete: stamp === 'submitted',
+      })
+    ),
+    http.put(`${assessmentPath}/attempts/attempt-1/:action`, async ({ request, params }) => {
+      const path = String(params.action);
+      writes.push({ path, body: await request.json() });
+      stamp = path === 'result-draft' ? 'draft' : 'submitted';
+      return HttpResponse.json({
+        ...assessmentResponse,
+        concurrencyStamp: stamp,
+        canComplete: stamp === 'submitted',
+      });
+    })
+  );
+  await store
+    .dispatch(admissionAssessmentsApi.endpoints.getApplicationAssessment.initiate(stageKey))
+    .unwrap();
+  const base = { attemptId: 'attempt-1', concurrencyStamp: 'reviewed', notes: 'QA marks' };
+  const draft = await store
+    .dispatch(
+      admissionAssessmentsApi.endpoints.saveAssessmentResultDraft.initiate({
+        ...base,
+        subjectScores: [
+          { code: 'english', marks: 0 },
+          { code: 'maths', marks: null },
+        ],
+      })
+    )
+    .unwrap();
+  expect(draft.canComplete).toBe(false);
+  await waitFor(() =>
+    expect(
+      admissionAssessmentsApi.endpoints.getApplicationAssessment.select(stageKey)(store.getState())
+        .data?.concurrencyStamp
+    ).toBe('draft')
+  );
+  await store
+    .dispatch(
+      admissionAssessmentsApi.endpoints.recordAssessmentResult.initiate({
+        ...base,
+        concurrencyStamp: 'draft',
+        subjectScores: [
+          { code: 'english', marks: 0 },
+          { code: 'maths', marks: 49.25 },
+        ],
+      })
+    )
+    .unwrap();
+  expect(writes).toEqual([
+    {
+      path: 'result-draft',
+      body: {
+        concurrencyStamp: 'reviewed',
+        notes: 'QA marks',
+        subjectScores: [
+          { code: 'english', marks: 0 },
+          { code: 'maths', marks: null },
+        ],
+      },
+    },
+    {
+      path: 'result',
+      body: {
+        concurrencyStamp: 'draft',
+        notes: 'QA marks',
+        subjectScores: [
+          { code: 'english', marks: 0 },
+          { code: 'maths', marks: 49.25 },
+        ],
+      },
+    },
+  ]);
+  await waitFor(() =>
+    expect(
+      admissionAssessmentsApi.endpoints.getApplicationAssessment.select(stageKey)(store.getState())
+        .data?.canComplete
+    ).toBe(true)
+  );
+});

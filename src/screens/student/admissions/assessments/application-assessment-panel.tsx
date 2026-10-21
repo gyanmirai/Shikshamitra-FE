@@ -12,6 +12,7 @@ import { AssessmentActionDialog } from './assessment-action-dialog';
 import { AssessmentPanelActions } from './assessment-panel-actions';
 import { AssessmentAttemptHistory } from './assessment-attempt-history';
 import { useAssessmentPermissions } from './use-assessment-permissions';
+import { assessmentPassRuleLabels } from './assessment-subject-results';
 import { AssessmentAttemptWorkspace } from './assessment-attempt-workspace';
 import { AssessmentPipelineBookingDrawer } from './assessment-pipeline-booking-drawer';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
@@ -139,9 +140,11 @@ export function ApplicationAssessmentPanel({
                 ? [
                     [
                       assessment.policy.scoringEnabled ? 'Pass mark' : 'Result',
-                      assessment.policy.scoringEnabled
-                        ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
-                        : 'Pass or fail',
+                      assessment.effectiveProfile
+                        ? assessmentPassRuleLabels[assessment.effectiveProfile.passRule]
+                        : assessment.policy.scoringEnabled
+                          ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
+                          : 'Pass or fail',
                     ],
                     [
                       'Attempts',
@@ -159,9 +162,11 @@ export function ApplicationAssessmentPanel({
                     ],
                     [
                       assessment.policy.scoringEnabled ? 'Pass mark' : 'Result',
-                      assessment.policy.scoringEnabled
-                        ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
-                        : 'Pass or fail',
+                      assessment.effectiveProfile
+                        ? assessmentPassRuleLabels[assessment.effectiveProfile.passRule]
+                        : assessment.policy.scoringEnabled
+                          ? `${assessment.policy.passingMarks} / ${assessment.policy.totalMarks}`
+                          : 'Pass or fail',
                     ],
                     [
                       'Attempts',

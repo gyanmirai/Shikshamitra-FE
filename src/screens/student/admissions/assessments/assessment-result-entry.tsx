@@ -1,9 +1,12 @@
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
 import CustomSelect from 'src/components/custom-select';
-import { Box, Stack, InputAdornment } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
+import { Box, Stack, Alert, InputAdornment } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+
+import { validateAssessmentSubjectValues } from './assessment-subject-results';
+import { AssessmentSubjectScoreFields } from './assessment-subject-score-fields';
 
 import type { useAssessmentQuickActions } from './use-assessment-quick-actions';
 
@@ -21,6 +24,67 @@ export function AssessmentResultEntry({
   inlineSave?: boolean;
 }) {
   const { formik } = quick;
+  if (assessment.policy.scoringMode === 'subjects' && !quick.profile)
+    return (
+      <Alert severity="warning">
+        The class assessment profile is unavailable. Refresh before recording results.
+      </Alert>
+    );
+  if (quick.profile) {
+    return (
+      <Box
+        component="form"
+        id={formId}
+        noValidate
+        onSubmit={(event) => {
+          quick.prepareSubmit();
+          formik.handleSubmit(event);
+        }}
+        sx={{ minWidth: 0 }}
+      >
+        <Stack spacing={1.5}>
+          <AssessmentSubjectScoreFields
+            profile={quick.profile}
+            values={formik.values.subjectScores ?? {}}
+            errors={
+              formik.errors.subjectScores || formik.submitCount > 0
+                ? validateAssessmentSubjectValues(
+                    quick.profile,
+                    formik.values.subjectScores,
+                    quick.draftValidation
+                  )
+                : {}
+            }
+            disabled={disabled || quick.busy || !quick.canRecordResult}
+            onChange={quick.changeSubject}
+          />
+          <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+            <LoadingButton
+              type="button"
+              size="small"
+              variant="outlined"
+              loading={quick.busy && !formik.isSubmitting}
+              disabled={disabled || quick.busy || !quick.canSaveDraft}
+              onClick={quick.saveDraft}
+            >
+              Save draft
+            </LoadingButton>
+            {inlineSave && (
+              <LoadingButton
+                type="submit"
+                size="small"
+                variant="contained"
+                loading={formik.isSubmitting}
+                disabled={disabled || quick.busy || !quick.canRecordResult}
+              >
+                Submit result
+              </LoadingButton>
+            )}
+          </Stack>
+        </Stack>
+      </Box>
+    );
+  }
   return (
     <Box
       component="form"

@@ -1,12 +1,11 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admission-pipeline-api';
 
-import Link from 'next/link';
 import { Label } from 'src/components/label';
-import { fDateTime } from 'src/utils/format-time';
-import { Stack, Button, Checkbox, Typography } from '@mui/material';
+import { Checkbox, Typography } from '@mui/material';
 
-import { formatAdmissionReference } from '../admission-reference';
+import { AdmissionPipelineRowActions } from './admission-pipeline-row-actions';
+import { renderPipelineStep, renderPipelineFollowUps } from './admission-pipeline-row-content';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -30,14 +29,14 @@ export function buildAdmissionPipelineColumns(
       id: 'applicantName',
       label: 'Student Name',
       sticky: true,
-      minWidth: 220,
+      stickyOnMobile: false,
+      minWidth: 170,
+      maxWidth: 240,
       isSort: true,
       render: (value) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2" fontWeight={600}>
-            {String(value)}
-          </Typography>
-        </Stack>
+        <Typography variant="body2" fontWeight={600} noWrap title={String(value)}>
+          {String(value)}
+        </Typography>
       ),
     },
     {
@@ -51,87 +50,28 @@ export function buildAdmissionPipelineColumns(
     {
       id: 'standardName',
       label: 'Class',
-      minWidth: 150,
+      minWidth: 90,
+      maxWidth: 160,
       render: (_, row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2">{row.standardName || 'Class unavailable'}</Typography>
-        </Stack>
+        <Typography variant="body2" noWrap>
+          {row.standardName || 'Class unavailable'}
+        </Typography>
       ),
     },
     {
       id: 'currentStageName',
       label: 'Current step',
-      minWidth: 170,
+      minWidth: 220,
+      maxWidth: 280,
       isSort: true,
-      render: (_, row) => row.currentStageName || 'No current step',
-    },
-    {
-      id: 'nextRequiredAction',
-      label: 'Next action',
-      minWidth: 260,
-      render: (_, row) => row.nextRequiredAction || 'Open application to review the next action',
-    },
-    {
-      id: 'assignedCounsellorName',
-      label: 'Counsellor',
-      minWidth: 160,
-      render: (_, row) =>
-        row.assignedCounsellorName ||
-        (row.assignedCounsellorId ? 'Assigned counsellor unavailable' : 'Unassigned'),
+      render: (_, row) => renderPipelineStep(row as AdmissionPipelineItem),
     },
     {
       id: 'nextFollowUpAt',
       label: 'Follow-ups',
-      minWidth: 180,
-      render: (_, row) => (
-        <Stack spacing={0.5}>
-          <Typography variant="body2">
-            {row.inquiryId === null
-              ? 'No inquiry follow-ups'
-              : row.openFollowUpCount
-                ? `${row.openFollowUpCount} open`
-                : 'No open follow-ups'}
-          </Typography>
-          {row.nextFollowUpAt ? (
-            <Typography variant="caption" color="text.secondary">
-              {fDateTime(row.nextFollowUpAt)}
-            </Typography>
-          ) : null}
-          {row.hasOverdueFollowUp ? <Label color="warning">Follow-up overdue</Label> : null}
-        </Stack>
-      ),
-    },
-    {
-      id: 'enteredAt',
-      label: 'Step entered',
-      minWidth: 190,
-      isSort: true,
-      render: (_, row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="body2">
-            {row.enteredAt ? fDateTime(row.enteredAt) : 'Not recorded'}
-          </Typography>
-          {row.dueAt ? (
-            <Typography variant="caption" color="text.secondary">
-              Due {fDateTime(row.dueAt)}
-            </Typography>
-          ) : null}
-          {row.dueAt && new Date(row.dueAt).getTime() < Date.now() ? (
-            <Label color="warning">Step deadline passed</Label>
-          ) : null}
-        </Stack>
-      ),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      sticky: true,
-      minWidth: 140,
-      render: (value) => (
-        <Label color={getAdmissionApplicationStatusColor(value)}>
-          {getAdmissionApplicationStatusLabel(value)}
-        </Label>
-      ),
+      minWidth: 210,
+      maxWidth: 260,
+      render: (_, row) => renderPipelineFollowUps(row as AdmissionPipelineItem),
     },
     {
       id: 'contactPhone',
@@ -148,39 +88,33 @@ export function buildAdmissionPipelineColumns(
       render: (value) => value || '—',
     },
     {
+      id: 'status',
+      label: 'Status',
+      minWidth: 90,
+      render: (value) => (
+        <Label color={getAdmissionApplicationStatusColor(value)}>
+          {getAdmissionApplicationStatusLabel(value)}
+        </Label>
+      ),
+    },
+    {
       id: 'actions',
       label: 'Actions',
-      minWidth: 120,
-      width: 120,
+      minWidth: 200,
+      width: 200,
+      headerSx: { width: { xs: 112, sm: 200 }, minWidth: { xs: 112, sm: 200 } },
+      cellSx: { width: { xs: 112, sm: 200 }, minWidth: { xs: 112, sm: 200 } },
       sticky: true,
       stickyPosition: 'right',
       isFilter: false,
       isSort: false,
       excludeFromExport: true,
       render: (_, row) => (
-        <Button
-          component={Link}
+        <AdmissionPipelineRowActions
+          row={row as AdmissionPipelineItem}
           href={applicationUrl(row.id)}
-          aria-label={`Continue ${formatAdmissionReference(row.applicationNumber)}`}
-          size="small"
-          variant="outlined"
-          onClick={(event) => {
-            event.stopPropagation();
-            if (
-              onOpen &&
-              !event.ctrlKey &&
-              !event.metaKey &&
-              !event.shiftKey &&
-              !event.altKey &&
-              event.button === 0
-            ) {
-              event.preventDefault();
-              onOpen(row.id);
-            }
-          }}
-        >
-          Continue
-        </Button>
+          onOpen={onOpen}
+        />
       ),
     },
   ];
@@ -190,24 +124,22 @@ export function buildAdmissionPipelineColumns(
     ).length;
     columns.forEach((column) => {
       if (column.id === 'applicantName') {
-        column.headerSx = { width: { xs: 140, sm: 220 }, minWidth: { xs: 140, sm: 220 } };
-        column.cellSx = { width: { xs: 140, sm: 220 }, minWidth: { xs: 140, sm: 220 } };
+        column.headerSx = { width: { xs: 140, sm: 170 }, minWidth: { xs: 140, sm: 170 } };
+        column.cellSx = { width: { xs: 140, sm: 170 }, minWidth: { xs: 140, sm: 170 } };
+        column.stickyOnMobile = false;
       }
       if (column.id === 'status') column.stickyOnMobile = false;
-      if (column.id === 'actions') {
-        column.headerSx = { width: { xs: 100, sm: 120 }, minWidth: { xs: 100, sm: 120 } };
-        column.cellSx = { width: { xs: 100, sm: 120 }, minWidth: { xs: 100, sm: 120 } };
-      }
     });
     columns.unshift({
       id: 'pipeline-selection',
       label: '',
-      width: 64,
-      minWidth: 64,
+      width: 56,
+      minWidth: 56,
       headerSx: { px: 1 },
       cellSx: { px: 1 },
       align: 'center',
       sticky: true,
+      stickyOnMobile: false,
       stickyPosition: 'left',
       isSort: false,
       isFilter: false,

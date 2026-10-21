@@ -686,3 +686,77 @@ it('reports unsaved results to the page and blocks continuation until discard', 
     )
   );
 });
+
+it('restores subject draft marks, requires every mark for submit, and saves partial drafts without continuing', async () => {
+  const profile = {
+    id: 'profile',
+    name: 'Class 1 entrance',
+    boardId: 'board',
+    mediumId: 'medium',
+    standardIds: ['class-1'],
+    passRule: 'both' as const,
+    passingMarks: 40,
+    subjects: [
+      { code: 'english', name: 'English', totalMarks: 50, passingMarks: 20 },
+      { code: 'maths', name: 'Maths', totalMarks: 50, passingMarks: 20 },
+    ],
+  };
+  const attempt = {
+    id: 'subject-attempt',
+    attemptNumber: 1,
+    attendance: 'present' as const,
+    status: 'pending' as const,
+    outcome: 'pending' as const,
+    createdAt: '',
+    concurrencyStamp: 'reviewed',
+    effectiveProfile: profile,
+    subjectScores: [
+      { code: 'english', marks: 0 },
+      { code: 'maths', marks: null },
+    ],
+  };
+  const assessment = {
+    ...base,
+    policy: { ...DEFAULT_ASSESSMENT_POLICY, version: 2 as const, scoringMode: 'subjects' as const },
+    effectiveProfile: profile,
+    attempts: [attempt],
+    canRecordResult: true,
+    canSaveResultDraft: true,
+    canBook: false,
+  };
+  mocks.query.mockReturnValue(query(assessment));
+  const updated = {
+    ...assessment,
+    attempts: [
+      {
+        ...attempt,
+        concurrencyStamp: 'saved',
+        subjectScores: [
+          { code: 'english', marks: 15.25 },
+          { code: 'maths', marks: null },
+        ],
+      },
+    ],
+  };
+  mocks.run.mockResolvedValue(updated);
+  const complete = vi.fn();
+  panel(complete);
+  expect(screen.getByRole('textbox', { name: /English \/ 50/ })).toHaveValue('0');
+  expect(screen.getByRole('textbox', { name: /Maths \/ 50/ })).toHaveValue('');
+  fireEvent.change(screen.getByRole('textbox', { name: /English \/ 50/ }), {
+    target: { value: '15.25' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Submit result' }));
+  await waitFor(() => expect(screen.getByText('Enter Maths marks between 0 and 50')).toBeVisible());
+  expect(mocks.run).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  await waitFor(() =>
+    expect(mocks.run).toHaveBeenCalledWith(
+      'resultDraft',
+      expect.objectContaining({ subjectScores: { english: '15.25', maths: '' } }),
+      expect.objectContaining({ canComplete: false })
+    )
+  );
+  expect(screen.getByRole('button', { name: 'Complete assessment step' })).toBeDisabled();
+  expect(complete).not.toHaveBeenCalled();
+});

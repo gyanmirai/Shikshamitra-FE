@@ -5,6 +5,7 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 
 import { useSelector } from 'react-redux';
 import { useFormik, type FormikProps } from 'formik';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
@@ -29,10 +30,13 @@ import {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
+import { useAdmissionInquiryAge } from '../use-admission-inquiry-age';
 import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
+import { useAdmissionFormLanguage } from '../use-admission-form-language';
 import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import { AdmissionSectionFields } from '../components/admission-section-fields';
+import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
@@ -42,6 +46,7 @@ import {
   readAdmissionInquiryFormValues,
   type AdmissionInquiryFormValues,
   admissionInquiryLanguageOptions,
+  isAdmissionInquiryBirthDateField,
   preserveCompatibleInquiryAnswers,
 } from '../admission-inquiry-model';
 
@@ -111,6 +116,7 @@ export function InquiryOverviewForm({
       )
         return;
       setRequestError('');
+      ageFeedback.notify();
       const payload = buildAdmissionInquiryPayload(values, fields, selectedOffering);
       try {
         const result = await update({
@@ -154,8 +160,18 @@ export function InquiryOverviewForm({
     ? (current.formDefinition ?? undefined)
     : (runtime.currentData?.form ?? undefined);
   const formId = form?.id;
+  const { language, supportedLanguages, setLanguage } = useAdmissionFormLanguage(
+    form,
+    `${current.id}:${formik.values.offeringId}`
+  );
   const sections = getAdmissionInquirySections(form);
   const fields = getAdmissionInquiryFields(form);
+  const ageFeedback = useAdmissionInquiryAge({
+    sections,
+    values: formik.values.fields,
+    context: runtime.currentData,
+    enabled: !readOnly && !runtime.isFetching && !runtime.isError,
+  });
   const selectedOffering = runtime.currentData?.offering;
   const academicOptions = catalogue.currentData?.academicOptions ?? [];
   const academic = {
@@ -427,10 +443,27 @@ export function InquiryOverviewForm({
                 to resolve this historical inquiry.
               </Alert>
             )}
+            {form && !loading && !loadError && supportedLanguages.length > 1 && (
+              <Stack direction="row" justifyContent="flex-end">
+                <CustomSelect
+                  size="small"
+                  label="Form language"
+                  value={language}
+                  options={supportedLanguages.map((code) => ({
+                    value: code,
+                    label: getAdmissionLanguageLabel(code),
+                  }))}
+                  onChange={(value) => setLanguage(String(value))}
+                  disabled={updateState.isLoading || readingPhoto}
+                  formControlProps={{ sx: { width: { xs: 1, sm: 220 } } }}
+                />
+              </Stack>
+            )}
             {!loading &&
               !loadError &&
               form &&
               sections
+                .map((section) => localizeAdmissionSection(section, language))
                 .filter((section) =>
                   isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
                 )
@@ -446,16 +479,21 @@ export function InquiryOverviewForm({
                       renderField={(field) => (
                         <AdmissionRuntimeField
                           onBusyChange={(busy) => onPhotoReading(field.code, busy)}
-                          field={field}
+                          field={ageFeedback.withAgeHelp(field)}
                           value={formik.values.fields[field.code] ?? ''}
                           disabled={locked || field.readOnly}
                           error={
                             formik.submitCount > 0 || touched?.[field.code]
-                              ? errors?.[field.code]
+                              ? errors?.[field.code] &&
+                                (field.translations?.[language]?.validationMessage ||
+                                  errors[field.code])
                               : undefined
                           }
                           formValues={formik.values.fields}
-                          onBlur={() => formik.setFieldTouched(`fields.${field.code}`, true)}
+                          onBlur={() => {
+                            if (isAdmissionInquiryBirthDateField(field)) ageFeedback.notify();
+                            formik.setFieldTouched(`fields.${field.code}`, true);
+                          }}
                           onChange={(value) => formik.setFieldValue(`fields.${field.code}`, value)}
                         />
                       )}
