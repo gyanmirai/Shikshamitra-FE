@@ -6,21 +6,21 @@ import type { StepIconProps } from '@mui/material/StepIcon';
 import dayjs from 'dayjs';
 import * as yup from 'yup';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Add } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { MobileTimePicker } from '@mui/x-date-pickers';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Step,
@@ -267,7 +267,7 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
           name="name"
           value={formik.values.name}
           onChange={(e) => {
-            const newName = capitalize(e.target.value);
+            const newName = capitalizeFirstLetter(e.target.value);
             formik.setFieldValue('name', newName);
           }}
           onBlur={formik.handleBlur}

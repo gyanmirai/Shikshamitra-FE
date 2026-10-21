@@ -7,6 +7,7 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -110,7 +111,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                     value={formik.values.buildingName}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                      formik.setFieldValue('buildingName', value);
+                      formik.setFieldValue('buildingName', capitalizeFirstLetter(value));
                     }}
                     size="small"
                     error={!!(formik.touched.buildingName && formik.errors.buildingName)}
@@ -199,7 +200,10 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                                   value={formik.values.floors[idx]?.floorName || ''}
                                   onChange={(e) => {
                                     const val = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                                    formik.setFieldValue(`floors.${idx}.floorName`, val);
+                                    formik.setFieldValue(
+                                      `floors.${idx}.floorName`,
+                                      capitalizeFirstLetter(val)
+                                    );
                                   }}
                                   size="small"
                                   error={

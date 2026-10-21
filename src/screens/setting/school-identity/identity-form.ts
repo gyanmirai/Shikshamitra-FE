@@ -32,7 +32,9 @@ export const templateIdentitySchema = Yup.object({
   logo: selectionSchema().optional().default(undefined),
   banner: selectionSchema().optional().default(undefined),
   signature: selectionSchema(true).nullable().optional().default(undefined),
-}).nullable().default(undefined);
+})
+  .nullable()
+  .default(undefined);
 export function changedSelection(mode: 0 | 1 | 2, kind: IdentityKind): IdentitySelection {
   return mode === 1
     ? {
@@ -51,6 +53,8 @@ export function identityError(error: unknown, operation: 'save' | 'upload' = 'sa
     return 'These settings changed since you opened them. Close the editor, refresh, and review the latest settings.';
   if (value.data?.error?.code?.includes('DraftExpired'))
     return 'This draft image expired. Upload the image again before submitting.';
+  if (value.data?.error?.code === 'SchoolIdentity:ImageTooSmall')
+    return 'The image is too small. Use at least 32 × 32 px for a logo or signature, or 1400 × 300 px for a letterhead.';
   if (operation === 'upload')
     return 'The image could not be uploaded. Use a valid PNG or JPG within the stated size limit and try again.';
   return 'School Identity could not be saved. Your draft is preserved; check the images and try again.';

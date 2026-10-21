@@ -37,12 +37,20 @@ export function IdentityCopyDialog({
   const [year, setYear] = useState('');
   const [board, setBoard] = useState('');
   const [medium, setMedium] = useState('');
+  const [organization, setOrganization] = useState('');
   const [error, setError] = useState('');
   const [copy, copying] = useCopySchoolIdentityMutation();
-  const context = { boardId: board || undefined, mediumId: medium || undefined };
+  const context = {
+    boardId: board || undefined,
+    mediumId: medium || undefined,
+    organizationId: organization || undefined,
+  };
   const query = useGetSchoolIdentityQuery(context, { skip: !board });
   const compatible = Boolean(
-    board && target.boardId && Boolean(medium) === Boolean(target.mediumId)
+    board &&
+    target.boardId &&
+    Boolean(medium) === Boolean(target.mediumId) &&
+    Boolean(organization) === Boolean(target.organizationId)
   );
   const copySource = async () => {
     if (!target.boardId || !compatible) return;
@@ -50,8 +58,10 @@ export function IdentityCopyDialog({
       await copy({
         sourceBoardId: board,
         sourceMediumId: medium || undefined,
+        sourceOrganizationId: organization || undefined,
         targetBoardId: target.boardId,
         targetMediumId: target.mediumId,
+        targetOrganizationId: target.organizationId,
         targetConcurrencyStamp: stamp,
       }).unwrap();
       shikshaMitraToast.success({ message: 'School Identity overrides copied.' });
@@ -75,7 +85,7 @@ export function IdentityCopyDialog({
           <FormSectionCard
             icon="mdi:content-copy"
             title="Source context"
-            descriptionTooltip="Select the source board and medium from another academic year. Copying replaces this context’s explicit choices and preserves inheritance. Shared school defaults are not copied."
+            descriptionTooltip="Select the source board, medium and organization from another academic year at the same override level. Copying replaces this context’s explicit choices and preserves inheritance. Shared school defaults are not copied."
           >
             <IdentityContextFields
               years={years.filter((item) => item.id !== targetYearId)}
@@ -83,19 +93,26 @@ export function IdentityCopyDialog({
               yearId={year}
               boardId={board}
               mediumId={medium}
+              organizationId={organization}
               disabled={copying.isLoading}
-              onChange={(nextYear, nextBoard, nextMedium) => {
+              onChange={(nextYear, nextBoard, nextMedium, nextOrganization = '') => {
                 setYear(nextYear);
                 setBoard(nextBoard);
                 setMedium(nextMedium);
+                setOrganization(nextOrganization);
                 setError('');
               }}
             />
           </FormSectionCard>
           {board && !compatible && (
             <Alert severity="warning">
-              Choose {target.mediumId ? 'a specific medium' : 'All mediums'} to match the target
-              override level.
+              Choose{' '}
+              {target.organizationId
+                ? 'a specific organization'
+                : target.mediumId
+                  ? 'a specific medium and All organizations'
+                  : 'All mediums'}{' '}
+              to match the target override level.
             </Alert>
           )}
           {query.isError && (

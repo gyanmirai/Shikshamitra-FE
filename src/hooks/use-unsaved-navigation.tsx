@@ -9,6 +9,7 @@ type Options = {
   description?: string;
   push?: (href: string) => void;
   blockNavigation?: boolean;
+  renderConfirmation?: (keepEditing: () => void, discard: () => void) => React.ReactNode;
 };
 
 type TraversalEvent = Event & {
@@ -21,7 +22,7 @@ type BrowserNavigation = EventTarget & {
 };
 
 export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
-  const { title, description, push, blockNavigation = false } = options;
+  const { title, description, push, blockNavigation = false, renderConfirmation } = options;
   const [pending, setPending] = useState<(() => void) | null>(null);
   const permittedTraversal = useRef<string | null>(null);
   const requestNavigation = useCallback(
@@ -111,7 +112,10 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
     };
   }, [isDirty, blockNavigation, push, requestNavigation]);
 
-  const confirmation = pending ? (
+  const confirmation = pending && renderConfirmation ? renderConfirmation(
+    () => setPending(null),
+    () => { const proceed = pending; setPending(null); proceed(); }
+  ) : pending ? (
     <CustomDialog
       open
       title={title || 'Discard unsaved changes?'}

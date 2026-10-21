@@ -1,12 +1,14 @@
 'use client';
 
-import { capitalize } from 'lodash';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 
 import { ConfirmDialog } from '../confirm-dialog';
+import ShakingTextField from '../shaking-text-field';
 import { DialogScrollContent } from '../customDialog';
 import { useDivisionForm } from './use-division-form';
 import { DivisionRoomField } from './division-room-field';
+import { AcademicFormSection } from './academic-form-section';
 import { academicValidationStyles } from './academic-form-styles';
 import { AcademicFormActionIcon } from './academic-form-action-icon';
 
@@ -51,45 +53,53 @@ export function DivisionManagementForm({
         }
       />
       <DialogScrollContent>
-        <Stack spacing={2} sx={academicValidationStyles}>
-          <TextField
-            fullWidth
-            required
-            autoFocus
-            size="small"
-            name="name"
-            inputRef={nameInputRef}
-            label="Division Name"
-            value={formik.values.name}
-            disabled={isSaving}
-            onChange={(event) => formik.setFieldValue('name', capitalize(event.target.value))}
-            onBlur={formik.handleBlur}
-            error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
-          />
-          <TextField
-            fullWidth
-            required
-            size="small"
-            name="strength"
-            label="Strength"
-            type="number"
-            value={formik.values.strength}
-            disabled={isSaving}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.strength && Boolean(formik.errors.strength)}
-            helperText={formik.touched.strength && formik.errors.strength}
-          />
-          {showRoomSelection && (
-            <DivisionRoomField
-              roomId={editData?.roomId}
-              roomNumber={editData?.roomNumber}
-              disabled={isSaving}
-              onChange={(value) => formik.setFieldValue('roomNumber', value)}
-            />
-          )}
-        </Stack>
+        <AcademicFormSection kind="division">
+          <Stack spacing={2} sx={academicValidationStyles}>
+            <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
+              <TextField
+                fullWidth
+                required
+                autoFocus
+                size="small"
+                name="name"
+                inputRef={nameInputRef}
+                label="Division name"
+                value={formik.values.name}
+                disabled={isSaving}
+                onChange={(event) =>
+                  formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
+                }
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+            </ShakingTextField>
+            <ShakingTextField error={formik.touched.strength && Boolean(formik.errors.strength)}>
+              <TextField
+                fullWidth
+                required
+                size="small"
+                name="strength"
+                label="Strength"
+                type="number"
+                value={formik.values.strength}
+                disabled={isSaving}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.strength && Boolean(formik.errors.strength)}
+                helperText={formik.touched.strength && formik.errors.strength}
+              />
+            </ShakingTextField>
+            {showRoomSelection && (
+              <DivisionRoomField
+                roomId={editData?.roomId}
+                roomNumber={editData?.roomNumber}
+                disabled={isSaving}
+                onChange={(value) => formik.setFieldValue('roomNumber', value)}
+              />
+            )}
+          </Stack>
+        </AcademicFormSection>
       </DialogScrollContent>
       <DialogActions>
         <Button

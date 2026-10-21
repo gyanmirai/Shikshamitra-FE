@@ -21,10 +21,13 @@ const openEditor = async (query = '') => {
   await page.getByRole('button', { name: 'Edit school defaults', exact: true }).click();
   return page.getByRole('dialog');
 };
-const png = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRZkAAAAASUVORK5CYII=',
-  'base64'
-);
+const png = Buffer.from(await page.evaluate(() => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  return canvas.toDataURL('image/png').split(',')[1];
+}), 'base64');
+const applyFrame = () => page.getByRole('dialog', { name: 'Adjust Image in Frame', exact: true })
+  .getByRole('button', { name: 'Use framed image', exact: true }).click();
 try {
   await check(
     'invalid formats and each size limit reject files without changing the draft',
@@ -77,17 +80,19 @@ try {
       const picker = await pickerEvent;
       expect(picker.isMultiple()).toBe(false);
       await picker.setFiles({ name: 'test-logo.png', mimeType: 'image/png', buffer: png });
-      await expect(section.getByText('test-logo.png', { exact: true })).toBeVisible();
+      await applyFrame();
+      await expect(section.getByText('test-logo-framed.png', { exact: true })).toBeVisible();
       await expect(section.getByRole('alert')).toHaveCount(0);
       await section
         .locator('input[type=file]')
         .setInputFiles({ name: 'test-logo.png', mimeType: 'image/png', buffer: png });
+      await applyFrame();
       await expect(dialog.getByRole('button', { name: 'Submit', exact: true })).toBeEnabled();
       page.once('dialog', (prompt) => prompt.accept());
       await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
       await expect(dialog).not.toBeVisible();
       await page.getByRole('button', { name: 'Edit school defaults', exact: true }).click();
-      await expect(page.getByRole('dialog').getByText('test-logo.png')).toHaveCount(0);
+      await expect(page.getByRole('dialog').getByText('test-logo-framed.png')).toHaveCount(0);
       await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
     }
   );
@@ -95,18 +100,13 @@ try {
     const dialog = await openEditor();
     const target = dialog.getByRole('group', { name: 'School logo upload', exact: true });
     const drop = async (names) => {
-      const transfer = await page.evaluateHandle((files) => {
+      const transfer = await page.evaluateHandle(({ files, bytes }) => {
         const data = new DataTransfer();
         files.forEach((name) =>
           data.items.add(
             new File(
               [
-                Uint8Array.from(
-                  atob(
-                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRZkAAAAASUVORK5CYII='
-                  ),
-                  (c) => c.charCodeAt(0)
-                ),
+                Uint8Array.from(bytes),
               ],
               name,
               { type: 'image/png' }
@@ -114,14 +114,15 @@ try {
           )
         );
         return data;
-      }, names);
+      }, { files: names, bytes: [...png] });
       await target.dispatchEvent('drop', { dataTransfer: transfer });
       await transfer.dispose();
     };
     await drop(['one.png', 'two.png']);
     await expect(dialog.getByRole('alert')).toHaveText('Choose one image at a time.');
     await drop(['dropped-logo.png']);
-    await expect(dialog.getByText('dropped-logo.png')).toBeVisible();
+    await applyFrame();
+    await expect(dialog.getByText('dropped-logo-framed.png')).toBeVisible();
     await expect(dialog.getByRole('alert')).toHaveCount(0);
     page.once('dialog', (prompt) => prompt.accept());
     await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();

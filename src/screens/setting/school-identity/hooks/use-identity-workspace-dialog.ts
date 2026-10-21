@@ -14,8 +14,8 @@ type WorkspaceDialog = {
 };
 
 export function useIdentityWorkspaceDialog(workspace: SchoolIdentityWorkspace) {
-  const { tab, boardId, mediumId, context } = workspace;
-  const scope = [tab, boardId, mediumId].join(':');
+  const { tab, boardId, mediumId, organizationId, context } = workspace;
+  const scope = [tab, boardId, mediumId, organizationId].join(':');
   const [selection, setSelection] = useState<WorkspaceDialog | null>(null);
   const [failure, setFailure] = useState({ scope, message: '' });
   const [save, saving] = useUpdateSchoolIdentityMutation();

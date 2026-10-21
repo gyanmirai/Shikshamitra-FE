@@ -15,7 +15,6 @@ export const AccessControlForm = (props: AccessControlFormProps) => {
     yearId,
     checkedItem,
     setCheckedItem,
-    selectedData,
     setSelectedData,
     allBoards,
     isHierarchyLoading,
@@ -82,7 +81,6 @@ export const AccessControlForm = (props: AccessControlFormProps) => {
               academicYearId={yearId}
               checkedItem={checkedItem}
               setCheckedItem={setCheckedItem}
-              selectedData={selectedData}
               setSelectedData={setSelectedData}
             />
           )}

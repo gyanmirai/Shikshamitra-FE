@@ -3,16 +3,14 @@ import { Icon } from '@iconify/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
-  Card,
-  Stack,
   Paper,
   TextField,
   Typography,
-  CardContent,
   InputAdornment,
 } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
+import { ReportChoiceCard } from './ReportChoiceCard';
 
 import type { ReportSubCategory } from './types';
 
@@ -111,74 +109,7 @@ export default function MiddlePanel({
             ) : null}
             {visibleReports.map((subCat) => (
               <motion.div key={subCat.id} variants={itemVariants}>
-                <Box sx={{ mb: 1 }}>
-                  <Card
-                    onClick={() => onSelectReport(subCat)}
-                    sx={{
-                      cursor: 'pointer',
-                      border: '1px solid',
-                      borderColor:
-                        selectedReport?.id === subCat.id ? 'primary.main' : 'transparent',
-                      boxShadow: selectedReport?.id === subCat.id ? 4 : 1,
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: 3,
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-                      {/* Existing content stays same */}
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Box
-                          sx={{
-                            borderRadius: 1,
-                            color:
-                              selectedReport?.id === subCat.id ? 'primary.main' : 'text.primary',
-                            display: 'flex',
-                          }}
-                        >
-                          <Icon icon="proicons:document" width={24} />
-                        </Box>
-                        <Stack
-                          direction="column"
-                          spacing={0}
-                          alignItems="flex-start"
-                          sx={{ minWidth: 0 }}
-                        >
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              mb: 0,
-                              px: 1,
-                              maxWidth: '100%',
-                              color: 'text.secondary',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {subCat.name}
-                          </Typography>
-                          <Box sx={{ pl: 1, minWidth: 0 }}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                display: '-webkit-box',
-                                overflow: 'hidden',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                              }}
-                            >
-                              {subCat.description}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Box>
+                <ReportChoiceCard report={subCat} selected={selectedReport?.id === subCat.id} onSelect={onSelectReport} />
               </motion.div>
             ))}
           </motion.div>

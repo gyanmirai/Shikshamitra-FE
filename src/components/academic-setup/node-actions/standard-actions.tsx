@@ -4,13 +4,13 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
-import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { ClassForm } from '../class-setup';
 import { DivisionForm } from '../division-setup';
+import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
 
 import type { AcademicSetupParents } from '../academic-setup-model';
@@ -40,8 +40,9 @@ export const StandardActions = ({
 
   return (
     <>
-      <CustomDialog
-        title={`Add division to ${standard.name}`}
+      <AcademicFormDialog
+        kind="division"
+        title={`Add Division to ${standard.name}`}
         handleClose={addDialog.onFalse}
         open={addDialog.value}
       >
@@ -51,9 +52,10 @@ export const StandardActions = ({
           classId={standard.id}
           existingDivisions={standard.divisions}
         />
-      </CustomDialog>
-      <CustomDialog
-        title={`Edit standard ${standard.name}`}
+      </AcademicFormDialog>
+      <AcademicFormDialog
+        kind="standard"
+        title={`Edit Standard ${standard.name}`}
         handleClose={editDialog.onFalse}
         open={editDialog.value}
       >
@@ -63,7 +65,7 @@ export const StandardActions = ({
           organizationId={parents.organization?.id ?? ''}
           existingStandards={parents.organization?.standards}
         />
-      </CustomDialog>
+      </AcademicFormDialog>
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={deleteDialog.onFalse}

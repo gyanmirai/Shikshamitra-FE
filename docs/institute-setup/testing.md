@@ -3,12 +3,36 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate School Identity
+
+## Reports
+
+Run `report-source-permissions.test.ts` for exact source View, Reports View, separate AccessSignature, revoked catalogue filtering and fail-closed metadata. Browser coverage includes document category/count flows, identity configuration/counts, three responsive widths and denied-source/signature choices. Fixture modes `?access=no-documents`, `?access=no-identity` and `?access=no-signatures` test frontend enforcement even when the fixture serves all dataset definitions. Actual tenant/scope/revocation enforcement is covered by backend API tests.
+
+The browser suite also checks that an AI shift request displays an extra Total hours column, with same-day and overnight example values, before explicit approval. Pass an alternate fixture base URL as the final argument to `node e2e/institute-reports/check.mjs` when the default port is in use.
+
+Run `npm run ts`, focused ESLint on `src/screens/setting/reports`, `src/redux/InstituteSetup/instituteReportsApi.ts` and the route, and focused Vitest for `institute-report-permissions.test.ts` plus `report-filters.test.ts`. Backend contracts and file-format tests are owned by the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#reports).
+
+The browser fixture is `node node_modules/vite/bin/vite.js --config e2e/fixtures/institute-reports/vite.config.mjs`. It serves the production screen at `http://127.0.0.1:4331` with explicitly synthetic APIs; it never contacts a school database or AI provider. `?access=view` and `?access=none` exercise frontend permissions. Run `node e2e/institute-reports/check.mjs` for automated UI coverage, then perform the final smoke in the Codex in-app browser. Check 390/768/1440 widths, both themes, keyboard access, manual/AI flows, preview failures, table utilities and downloads. Regression cases include Institute Setup provider-error copy with retained prompt, the exact single-division prompt preview, and no division prefilter on manual class summaries. Browser fixture downloads are synthetic; backend tests verify actual PDF/Excel/CSV bytes.
+
+## School Documents
+
+| Check | Command |
+| --- | --- |
+| Validation, multipart mapping, real RTK editor failures/concurrency, menu/permissions | `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/setting/school-documents src/screens/security/role/school-documents-permissions.test.ts --pool=threads --maxWorkers=1` |
+| Typecheck | `npm run ts` |
+| Focused lint | `npx eslint src/screens/setting/school-documents src/redux/InstituteSetup/schoolDocumentsApi.ts --max-warnings 0` |
+| Browser fixture | `node node_modules/vite/bin/vite.js --config e2e/fixtures/school-documents/vite.config.mjs` |
+| Real API browser workflows | `node e2e/school-documents/check.mjs` |
+
+Start the isolated backend bridge from the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#school-documents) first. The frontend fixture listens at `http://127.0.0.1:4324` and uses the production screen, components and RTK Query with the real ABP API and disposable in-memory SQLite. Authentication and outer workspace are explicitly synthetic. `?access=view` and `?access=none` exercise frontend access states; backend permission enforcement is proven by API tests. No school data is modified.
+
+Final in-app browser acceptance must follow automated checks and cover create/edit/reload, grouped image/PDF preview and download, failure/retry, dirty-close confirmation, read-only access, deletion, keyboard focus, both themes and 390/768/1440 widths. Keep screenshots and logs under ignored `.artifacts/school-documents/`.
 
 TL;DR: run focused form/permission tests and typecheck before browser acceptance. [Backend testing](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md) covers inheritance, storage, documents and authorization.
 
@@ -20,6 +44,7 @@ TL;DR: run focused form/permission tests and typecheck before browser acceptance
 | Documentation | `node scripts/docs/validate-docs.mjs --module institute-setup` |
 | Synthetic production-screen fixture | `node node_modules/vite/bin/vite.js --config e2e/fixtures/school-identity/vite.config.mjs` |
 | Automated fixture workflows and responsive states | `node e2e/school-identity/check.mjs` |
+| Organization image save, isolation, history, reset, selectors and responsive states | `node e2e/school-identity/organization-check.mjs` |
 | User/role permission catalogue and disabled Delete | `npx playwright test --config e2e/security/school-identity-permissions.config.ts` |
 
 Final browser acceptance must use the Codex in-app browser after automated checks. Cover defaults and partial overrides, parent selection, loading/error/retry, upload rejection, keyboard file selection, preview/download, unsaved cancellation, signature restrictions, copy confirmation, reset, and history. Check a narrow screen, both supported themes and focus visibility. Clearly label any test fixture and distinguish it from live API acceptance.

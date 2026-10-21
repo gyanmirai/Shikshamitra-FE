@@ -2,7 +2,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: '.', testMatch: 'permission-inheritance.spec.ts', fullyParallel: false, workers: 1,
+  testDir: '.', testMatch: 'permission-inheritance*.spec.ts', fullyParallel: false, workers: 1,
   timeout: 120000, expect: { timeout: 15000 },
   outputDir: '../../.artifacts/permission-inheritance/playwright',
   reporter: [['list']],

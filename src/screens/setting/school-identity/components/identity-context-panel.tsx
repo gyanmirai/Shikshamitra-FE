@@ -13,8 +13,17 @@ import { IdentityContextFields } from './identity-context-fields';
 import type { SchoolIdentityWorkspace } from '../hooks/use-school-identity';
 
 export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityWorkspace }) {
-  const { yearsQuery, boardsQuery, years, boards, selectedYear, boardId, mediumId, valid } =
-    workspace;
+  const {
+    yearsQuery,
+    boardsQuery,
+    years,
+    boards,
+    selectedYear,
+    boardId,
+    mediumId,
+    organizationId,
+    valid,
+  } = workspace;
   const loading = yearsQuery.isLoading || boardsQuery.isLoading;
   const failed = yearsQuery.isError || boardsQuery.isError;
   const hasBoards = boards.some((board) => board.academicYearId === selectedYear);
@@ -23,7 +32,7 @@ export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityW
       icon="mdi:layers-outline"
       title="Document context"
       titleTypographyProps={{ id: 'identity-context-heading' }}
-      descriptionTooltip="Choose a year and board, then a medium if its documents need different images. All mediums uses the board’s settings. Choose a medium to review its own overrides."
+      descriptionTooltip="Choose a year and board, then a medium and organization (academic stage) for more specific images. All mediums shows board settings; All organizations shows medium settings. Each level inherits images unless you set an override."
       actionFullWidthOnMobile
       action={
         workspace.currentBoard && !loading && !failed ? (
@@ -61,6 +70,7 @@ export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityW
             yearId={selectedYear}
             boardId={boardId}
             mediumId={mediumId}
+            organizationId={organizationId}
             onChange={workspace.selectContext}
           />
           {!valid ? (
@@ -83,7 +93,9 @@ export function IdentityContextPanel({ workspace }: { workspace: SchoolIdentityW
               <Stack spacing={0.5} sx={{ minWidth: 0 }}>
                 <Typography variant="subtitle2">
                   {hasBoards
-                    ? 'Select a board to review its images'
+                    ? boardId
+                      ? 'Select a valid document context'
+                      : 'Select a board to review its images'
                     : 'No boards in this academic year'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">

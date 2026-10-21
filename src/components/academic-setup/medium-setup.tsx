@@ -1,39 +1,22 @@
 'use client';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetMediumQuery,
-  useAddMediumMutation,
-  useDeleteMediumMutation,
-  useUpdateMediumMutation,
-} from 'src/redux/medium/mediumApi';
-import {
-  Tab,
-  Box,
-  Tabs,
-  Stack,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  DialogActions,
-  CircularProgress,
-} from '@mui/material';
+import { useGetMediumQuery, useDeleteMediumMutation } from 'src/redux/medium/mediumApi';
+import { Tab, Box, Tabs, Button, MenuList, MenuItem, CircularProgress } from '@mui/material';
 
 import { Iconify } from '../iconify';
+import CustomDialog from '../customDialog';
+import { MediumForm } from './medium-form';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 import { CustomStyling } from '../tree-view/custom-styling';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
-import { AcademicFormActionIcon } from './academic-form-action-icon';
+
+export { MediumForm } from './medium-form';
 
 export interface EducationMedium {
   id: string;
@@ -252,143 +235,3 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
 };
 
 export default MediumSetup;
-
-interface IMediumForm {
-  handleClose: () => void;
-  editData: null | Record<string, any>;
-  boardId: string | number;
-}
-export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
-  const confirm = useBoolean();
-  const [addMedium, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddMediumMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Medium added Successfully',
-    },
-  });
-  const [updateMedium, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateMediumMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Medium updated Successfully',
-    },
-  });
-
-  const formik = useFormik({
-    initialValues: {
-      medium: editData ? editData.name : '',
-    },
-    validationSchema: Yup.object().shape({
-      medium: Yup.string().required('Medium is required'),
-    }),
-    onSubmit: (values) => {
-      confirm.onTrue();
-    },
-  });
-
-  const onSubmit = async () => {
-    try {
-      if (editData) {
-        await updateMedium({
-          id: editData.id,
-          body: {
-            name: formik.values.medium,
-            educationBoardId: boardId,
-          },
-        }).unwrap();
-      } else {
-        await addMedium({
-          name: formik.values.medium,
-          educationBoardId: boardId,
-        }).unwrap();
-      }
-      handleClose();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-    <>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-        }}
-        title={`${editData ? 'Update Medium' : 'Create Medium'}`}
-        content={
-          <>
-            {' '}
-            Are you sure you want to {editData ? 'Update' : 'Create '}{' '}
-            {editData ? (
-              editData.name === formik.values.medium ? (
-                ''
-              ) : (
-                <>
-                  <b>{editData.name}</b> to <b>{formik.values.medium}</b>
-                </>
-              )
-            ) : (
-              <b>{formik.values.medium}</b>
-            )}{' '}
-            Medium ?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            // color="error"
-            onClick={onSubmit}
-            startIcon={<AcademicFormActionIcon action="confirm" />}
-          >
-            Confirm
-          </LoadingButton>
-        }
-      />
-      <DialogScrollContent>
-        <Stack spacing={2} direction="column">
-          <TextField
-            fullWidth
-            id="medium"
-            name="medium"
-            label="Medium Name"
-            autoFocus
-            value={formik.values.medium}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('medium', newName);
-            }}
-            error={formik.touched.medium && Boolean(formik.errors.medium)}
-            // @ts-ignore
-            helperText={formik.touched.medium && formik.errors.medium}
-            size="small"
-          />
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleClose}
-          startIcon={<AcademicFormActionIcon action="cancel" />}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          variant="contained"
-          size="small"
-          type="submit"
-          startIcon={<AcademicFormActionIcon action="submit" />}
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};

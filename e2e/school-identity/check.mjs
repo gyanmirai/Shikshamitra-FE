@@ -85,7 +85,7 @@ try {
     await expect(dialog).not.toBeVisible();
   });
   await check('copy across years and reset keep effective inheritance visible', async () => {
-    await page.getByRole('tab', { name: 'Board & medium overrides' }).click();
+    await page.getByRole('tab', { name: 'Board, medium & organization overrides' }).click();
     await choose('Board', 'GSEB');
     await page.getByRole('button', { name: 'More actions', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Copy from another year' }).click();
