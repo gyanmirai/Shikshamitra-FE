@@ -10,6 +10,7 @@ import { IdentityHistory } from './identity-history';
 import { IdentityCopyDialog } from './identity-copy';
 import { IdentityScopeTabs } from './identity-scope-tabs';
 import { IdentityContextPanel } from './identity-context-panel';
+import { getIdentityEditorScope } from '../identity-editor-scope';
 import { IdentityWorkspaceActions } from './identity-workspace-actions';
 import { useIdentityWorkspaceDialog } from '../hooks/use-identity-workspace-dialog';
 
@@ -40,7 +41,7 @@ export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWork
         href={workspace.tabHref}
         actions={
           ready && (
-            <Box sx={{  ml: 'auto', flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
+            <Box sx={{ ml: 'auto', flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
               <IdentityWorkspaceActions
                 workspace={workspace}
                 onEdit={(profile) => open('edit', profile)}
@@ -82,7 +83,9 @@ export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWork
             )}
             {!query.isError && (
               <IdentityContent
-                key={[tab, workspace.boardId, workspace.mediumId].join(':')}
+                key={[tab, workspace.boardId, workspace.mediumId, workspace.organizationId].join(
+                  ':'
+                )}
                 profile={query.currentData}
                 context={context}
                 disabled={query.isFetching}
@@ -92,7 +95,12 @@ export function IdentityWorkspace({ workspace }: { workspace: SchoolIdentityWork
         )}
       </Box>
       {dialog?.kind === 'edit' && dialog.profile && (
-        <IdentityEditor profile={dialog.profile} context={context} onClose={close} />
+        <IdentityEditor
+          profile={dialog.profile}
+          context={context}
+          onClose={close}
+          scope={getIdentityEditorScope(workspace)}
+        />
       )}
       {dialog?.kind === 'history' && <IdentityHistory context={context} onClose={close} />}
       {dialog?.kind === 'copy' && dialog.profile && (

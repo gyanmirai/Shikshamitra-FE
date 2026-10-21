@@ -22,6 +22,7 @@ export function useSchoolIdentity() {
   const yearId = params.get('academicYearId') ?? '';
   const boardId = params.get('boardId') ?? '';
   const mediumId = params.get('mediumId') ?? '';
+  const organizationId = params.get('organizationId') ?? '';
   const yearsQuery = useGetYearQuery(undefined, { skip: !permissions.canView || tab === 0 });
   const boardsQuery = useGetBoardsQuery(undefined, { skip: !permissions.canView || tab === 0 });
   const years: AcademicYear[] = yearsQuery.data?.items ?? [];
@@ -33,19 +34,37 @@ export function useSchoolIdentity() {
     years[0]?.id ||
     '';
   const context =
-    tab === 1 ? { boardId: boardId || undefined, mediumId: mediumId || undefined } : {};
-  const valid = tab === 0 || Boolean(boardId);
+    tab === 1
+      ? {
+          boardId: boardId || undefined,
+          mediumId: mediumId || undefined,
+          organizationId: organizationId || undefined,
+        }
+      : {};
+  const selectedBoard = boards.find(
+    (board) => board.id === boardId && board.academicYearId === selectedYear
+  );
+  const selectedMedium = selectedBoard?.educationMediums?.find((medium) => medium.id === mediumId);
+  const valid =
+    tab === 0 ||
+    Boolean(
+      selectedBoard &&
+      (!mediumId || selectedMedium) &&
+      (!organizationId ||
+        selectedMedium?.educationMediumStages?.some((item) => item.id === organizationId))
+    );
   const query = useGetSchoolIdentityQuery(context, { skip: !permissions.canView || !valid });
   const canManage =
     query.currentData?.canManage === true &&
     (tab === 0 ? permissions.canManageDefaults : permissions.canManageOverrides);
-  const selectContext = (year: string, board: string, medium: string) => {
+  const selectContext = (year: string, board: string, medium: string, organization = '') => {
     router.push(
       identityHref(pathname, params, {
         scope: 'overrides',
         academicYearId: year,
         boardId: board,
         mediumId: medium,
+        organizationId: organization,
       }),
       { scroll: false }
     );
@@ -70,6 +89,7 @@ export function useSchoolIdentity() {
     selectCurrentContext,
     boardId,
     mediumId,
+    organizationId,
     selectedYear,
     selectContext,
     yearsQuery,

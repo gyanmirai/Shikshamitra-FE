@@ -3,12 +3,14 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
-import { ImageUpload } from 'src/components/upload/image-upload';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { IdentityImage } from './identity-image';
 import { changedSelection } from '../identity-form';
+import { IDENTITY_MINIMUMS } from '../identity-image-frame';
 import { IDENTITY_LABELS, IDENTITY_LIMITS } from '../types';
+import { IdentityImageUpload } from './identity-image-upload';
 
 import type {
   IdentityKind,
@@ -29,6 +31,7 @@ export function IdentityAssetField({
   errors,
   onChange,
   onUpload,
+  onPreparing,
 }: {
   kind: IdentityKind;
   value: IdentitySelection;
@@ -40,6 +43,7 @@ export function IdentityAssetField({
   errors?: { assetId?: string; principalName?: string; designation?: string };
   onChange: (selection: IdentitySelection) => void;
   onUpload: (file: File) => void;
+  onPreparing?: (busy: boolean) => void;
 }) {
   const label = IDENTITY_LABELS[kind];
   const fieldId = useId();
@@ -83,7 +87,11 @@ export function IdentityAssetField({
           </TextField>
           {value.mode === 1 && (
             <>
-              <ImageUpload
+              <IdentityImageUpload
+                kind={kind}
+                context={context}
+                assetId={value.assetId}
+                onPreparing={onPreparing}
                 label={label}
                 actionLabel={`${value.assetId ? 'Replace' : 'Upload'} ${kind === 'banner' ? 'letterhead' : kind}`}
                 previewWidth={kind === 'logo' ? 88 : 160}
@@ -103,7 +111,7 @@ export function IdentityAssetField({
                 disabled={disabled || !allowCustom}
                 maxSize={IDENTITY_LIMITS[kind]}
                 onUpload={onUpload}
-                helperText={`PNG or JPG. Maximum ${IDENTITY_LIMITS[kind] / 1024 / 1024} MB. ${kind === 'signature' ? 'Transparent PNG is recommended.' : 'Keep the original proportions.'}`}
+                helperText={`PNG or JPG. Minimum ${IDENTITY_MINIMUMS[kind].width} × ${IDENTITY_MINIMUMS[kind].height} px. Maximum ${IDENTITY_LIMITS[kind] / 1024 / 1024} MB. Adjust the image in its frame before uploading.${kind === 'signature' ? ' Transparent PNG is recommended.' : ''}`}
                 error={errors?.assetId}
               />
               {kind === 'signature' && (
@@ -117,7 +125,12 @@ export function IdentityAssetField({
                     disabled={disabled}
                     error={Boolean(errors?.principalName)}
                     helperText={errors?.principalName}
-                    onChange={(event) => onChange({ ...value, principalName: event.target.value })}
+                    onChange={(event) =>
+                      onChange({
+                        ...value,
+                        principalName: capitalizeFirstLetter(event.target.value),
+                      })
+                    }
                   />
                   <TextField
                     size="small"
@@ -128,7 +141,9 @@ export function IdentityAssetField({
                     disabled={disabled}
                     error={Boolean(errors?.designation)}
                     helperText={errors?.designation}
-                    onChange={(event) => onChange({ ...value, designation: event.target.value })}
+                    onChange={(event) =>
+                      onChange({ ...value, designation: capitalizeFirstLetter(event.target.value) })
+                    }
                   />
                 </Stack>
               )}

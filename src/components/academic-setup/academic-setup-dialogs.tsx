@@ -1,8 +1,8 @@
 import type { Board } from 'src/types/school';
 
-import { BoardForm } from './board-setup';
-import CustomDialog from '../customDialog';
+import { BoardForm } from './board-form';
 import { AcademicYearForm } from './academic-year-form';
+import { AcademicFormDialog } from './academic-form-dialog';
 
 import type { AcademicYearRecord } from './academic-setup-model';
 
@@ -26,16 +26,18 @@ export const AcademicSetupDialogs = ({
   onCloseBoardDialog,
 }: AcademicSetupDialogsProps) => (
   <>
-    <CustomDialog
-      title={editYear ? `Edit academic year (${editYear.name})` : 'Create academic year'}
+    <AcademicFormDialog
+      kind="year"
+      title={editYear ? `Edit Academic Year (${editYear.name})` : 'Create Academic Year'}
       open={isYearDialogOpen}
       handleClose={onCloseYearDialog}
     >
       <AcademicYearForm editData={editYear} onClose={onCloseYearDialog} />
-    </CustomDialog>
+    </AcademicFormDialog>
 
-    <CustomDialog
-      title="Add education board"
+    <AcademicFormDialog
+      kind="board"
+      title="Add Education Board"
       open={isBoardDialogOpen}
       handleClose={onCloseBoardDialog}
     >
@@ -48,6 +50,6 @@ export const AcademicSetupDialogs = ({
           academicYear={currentYear}
         />
       ) : null}
-    </CustomDialog>
+    </AcademicFormDialog>
   </>
 );

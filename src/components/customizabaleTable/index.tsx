@@ -639,7 +639,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: variant === 'embedded' ? 0.5 : 1,
+                  p: variant === 'embedded' ? 0.5 : 2,
                   flexWrap: 'wrap',
                   width: '100%',
                   borderTop: `1px dashed ${theme.vars.palette.divider}`,
@@ -690,6 +690,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     onPageChange={handlePageChange}
                     onRowsPerPageChange={handleRowsPerPageChange}
                     sx={{
+                      width: { xs: '100%', sm: 'auto' },
+                      maxWidth: '100%',
+                      ml: 'auto',
                       '& .MuiTablePagination-toolbar': { height: 40, minHeight: 40 },
                       '& .MuiTablePagination-actions': { ml: 1 },
                       '& .MuiTablePagination-selectLabel': { fontSize: '13px' },

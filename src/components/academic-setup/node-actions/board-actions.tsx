@@ -3,13 +3,13 @@ import type { Board } from 'src/types/school';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { boardApi, useGetBoardsQuery, useDeleteBoardMutation } from 'src/redux/board/boardApi';
 
-import { BoardForm } from '../board-setup';
-import { MediumForm } from '../medium-setup';
+import { BoardForm } from '../board-form';
+import { MediumForm } from '../medium-form';
+import { AcademicFormDialog } from '../academic-form-dialog';
 import { AcademicActionButtons } from './academic-action-buttons';
 
 import type { AcademicSetupParents } from '../academic-setup-model';
@@ -46,18 +46,19 @@ export const BoardActions = ({
 
   return (
     <>
-      <CustomDialog
-        title={`Add medium to ${board.name}`}
+      <AcademicFormDialog
+        kind="medium"
+        title={`Add Medium to ${board.name}`}
         handleClose={addDialog.onFalse}
         open={addDialog.value}
       >
         <MediumForm handleClose={addDialog.onFalse} editData={null} boardId={board.id} />
-      </CustomDialog>
-      <CustomDialog
-        title={`Edit board ${board.name}`}
+      </AcademicFormDialog>
+      <AcademicFormDialog
+        kind="board"
+        title={`Edit Board ${board.name}`}
         handleClose={editDialog.onFalse}
         open={editDialog.value}
-        maxWidth="sm"
       >
         {editDialog.value && (
           <BoardForm
@@ -68,7 +69,7 @@ export const BoardActions = ({
             boards={siblingBoards}
           />
         )}
-      </CustomDialog>
+      </AcademicFormDialog>
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={deleteDialog.onFalse}

@@ -62,7 +62,7 @@ export function IdentityWorkspaceActions({
           disabled={disabled}
           onClick={() => onEdit(query.currentData ?? null)}
         >
-          {tab === 0 ? 'Edit school defaults' : 'Edit override'}
+          {tab === 0 ? 'Edit school defaults' : workspace.organizationId ? 'Edit organization images' : 'Edit override'}
         </Button>
       )}
     </Box>

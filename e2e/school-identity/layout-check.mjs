@@ -112,12 +112,12 @@ try {
     await defaults.focus();
     await defaults.press('ArrowRight');
     await expect(
-      page.getByRole('tab', { name: 'Board & medium overrides', exact: true })
+      page.getByRole('tab', { name: 'Board, medium & organization overrides', exact: true })
     ).toHaveCSS('outline-style', 'solid');
-    await page.getByRole('tab', { name: 'Board & medium overrides', exact: true }).press('Enter');
+    await page.getByRole('tab', { name: 'Board, medium & organization overrides', exact: true }).press('Enter');
     await expect(page.getByRole('combobox', { name: 'Board', exact: true })).toBeVisible();
     await page
-      .getByRole('tab', { name: 'Board & medium overrides', exact: true })
+      .getByRole('tab', { name: 'Board, medium & organization overrides', exact: true })
       .press('ArrowLeft');
     await defaults.press('Enter');
     const history = page.getByRole('button', { name: 'View history', exact: true });

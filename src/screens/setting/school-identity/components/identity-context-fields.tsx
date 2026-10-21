@@ -11,6 +11,7 @@ export function IdentityContextFields({
   yearId,
   boardId,
   mediumId,
+  organizationId,
   onChange,
   disabled = false,
 }: {
@@ -19,17 +20,24 @@ export function IdentityContextFields({
   yearId: string;
   boardId: string;
   mediumId: string;
-  onChange: (year: string, board: string, medium: string) => void;
+  organizationId?: string;
+  onChange: (year: string, board: string, medium: string, organization?: string) => void;
   disabled?: boolean;
 }) {
   const fieldId = useId();
   const currentBoards = boards.filter((board) => board.academicYearId === yearId);
   const mediums = currentBoards.find((board) => board.id === boardId)?.educationMediums ?? [];
+  const organizations =
+    mediums.find((medium) => medium.id === mediumId)?.educationMediumStages ?? [];
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(3, minmax(0, 1fr))' },
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr)',
+          sm: 'repeat(2, minmax(0, 1fr))',
+          lg: `repeat(${organizationId === undefined ? 3 : 4}, minmax(0, 1fr))`,
+        },
         gap: 2,
       }}
     >
@@ -99,6 +107,30 @@ export function IdentityContextFields({
           </MenuItem>
         ))}
       </TextField>
+      {organizationId !== undefined && (
+        <TextField
+          id={`${fieldId}-organization`}
+          select
+          size="small"
+          label="Organization"
+          value={organizationId}
+          disabled={disabled || !mediumId}
+          InputLabelProps={{ shrink: true }}
+          SelectProps={{
+            displayEmpty: true,
+            SelectDisplayProps: { 'aria-labelledby': `${fieldId}-organization-label` },
+          }}
+          sx={{ minWidth: 0 }}
+          onChange={(event) => onChange(yearId, boardId, mediumId, event.target.value)}
+        >
+          <MenuItem value="">All organizations</MenuItem>
+          {organizations.map((organization) => (
+            <MenuItem key={organization.id} value={organization.id}>
+              {organization.name}
+            </MenuItem>
+          ))}
+        </TextField>
+      )}
     </Box>
   );
 }

@@ -74,6 +74,8 @@ describe('permission source summary', () => {
     );
     expect(screen.getByText(/^Denied\. User override\./)).not.toBeVisible();
     expect(screen.getByRole('radio', { name: 'Deny' })).toBeChecked();
+    expect(screen.getByText('Allowed by role')).toBeVisible();
+    expect(screen.getByText('User override: Denied')).toBeVisible();
 
     fireEvent.click(screen.getByRole('radio', { name: 'Follow role' }));
     expect(onChange).toHaveBeenCalledWith('inherit');
@@ -96,5 +98,33 @@ describe('permission source summary', () => {
       /Role default: Mixed access from Administrative Manager/
     );
     expect(screen.queryByText(/Role default: Hidden/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['Allowed', false, 'Allowed by role'],
+    ['Denied', false, 'Denied by role'],
+    ['Mixed access', false, 'Mixed role access'],
+    ['Allowed', true, 'Visible by role'],
+    ['Denied', true, 'Hidden by role'],
+    ['Mixed access', true, 'Mixed role access'],
+  ] as const)(
+    'makes the %s role value visible (visibility: %s)',
+    (roleResult, visibility, text) => {
+      const onChange = renderEditor(
+        { rule: 'inherit', roleResult, hasDirect: false },
+        true,
+        visibility
+      );
+      expect(screen.getByText(text)).toBeVisible();
+      expect(screen.getByRole('radio', { name: 'Follow role' })).toBeChecked();
+      expect(onChange).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not present a missing catalogue action as denied by role', () => {
+    renderEditor({ rule: 'inherit', result: 'Unavailable', editable: false }, true);
+    expect(screen.getByText('Role value unavailable')).toBeVisible();
+    expect(screen.queryByText('Denied by role')).not.toBeInTheDocument();
+    screen.getAllByRole('radio').forEach((radio) => expect(radio).toBeDisabled());
   });
 });

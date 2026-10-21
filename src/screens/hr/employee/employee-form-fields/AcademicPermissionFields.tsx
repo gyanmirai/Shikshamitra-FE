@@ -17,9 +17,6 @@ function RenderAcademicPermissionFields(props: any) {
   const [checkedItem, setCheckedItemLocal] = useState(
     formik?.values?.academicPermission || emptySelection
   );
-  const [selectedData, setSelectedDataLocal] = useState(
-    formik?.values?.academicPermissionSelectedData || emptySelection
-  );
 
   // Track whether the current checkedItem was set by user interaction (not from API sync)
   // to avoid overwriting user edits when formik re-renders
@@ -35,15 +32,6 @@ function RenderAcademicPermissionFields(props: any) {
     }
   }, [formik?.values?.academicPermission]);
 
-  useEffect(() => {
-    if (!userEditedRef.current) {
-      const val = formik?.values?.academicPermissionSelectedData;
-      if (val) {
-        setSelectedDataLocal(val);
-      }
-    }
-  }, [formik?.values?.academicPermissionSelectedData]);
-
   const setCheckedItem = (value: any) => {
     userEditedRef.current = true;
     setCheckedItemLocal(value);
@@ -51,7 +39,6 @@ function RenderAcademicPermissionFields(props: any) {
   };
 
   const setSelectedData = (value: any) => {
-    setSelectedDataLocal(value);
     formik.setFieldValue('academicPermissionSelectedData', value);
   };
 
@@ -60,7 +47,6 @@ function RenderAcademicPermissionFields(props: any) {
       boards={allBoards}
       checkedItem={checkedItem}
       setCheckedItem={setCheckedItem}
-      selectedData={selectedData}
       setSelectedData={setSelectedData}
     />
   );

@@ -1,3 +1,10 @@
+export function capitalizeFirstLetter(input: string): string {
+  return input.replace(
+    /^(\s*)(\S)/u,
+    (_match, leadingSpace: string, first: string) => `${leadingSpace}${first.toUpperCase()}`
+  );
+}
+
 export function capitalizeWords(input: string): string {
   return input
     .split(' ')

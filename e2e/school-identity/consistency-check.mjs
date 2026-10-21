@@ -68,7 +68,7 @@ try {
               const row = await page
                 .getByRole('tablist', { name: 'School identity scope', exact: true })
                 .boundingBox();
-              for (const label of ['School defaults', 'Board & medium overrides']) {
+              for (const label of ['School defaults', 'Board, medium & organization overrides']) {
                 const tab = await page.getByRole('tab', { name: label, exact: true }).boundingBox();
                 expect(tab.x).toBeGreaterThanOrEqual(row.x);
                 expect(tab.x + tab.width).toBeLessThanOrEqual(row.x + row.width);
@@ -119,7 +119,7 @@ try {
         'aria-selected',
         'true'
       );
-      await page.getByRole('tab', { name: 'Board & medium overrides', exact: true }).click();
+      await page.getByRole('tab', { name: 'Board, medium & organization overrides', exact: true }).click();
       await expect(page.getByRole('combobox', { name: 'Board', exact: true })).toContainText(
         'CBSE'
       );

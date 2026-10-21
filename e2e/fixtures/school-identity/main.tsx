@@ -11,6 +11,8 @@ import { api } from 'src/redux/service';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import SchoolIdentityScreen from 'src/screens/setting/school-identity';
+import CustomDialog from 'src/components/customDialog';
+import { OrganizationForm } from 'src/components/academic-setup/stage-form';
 import { schoolIdentityActions } from 'src/screens/setting/school-identity/types';
 import { installFixture, fixtureState } from './mock-api';
 
@@ -30,6 +32,7 @@ const store = configureStore({
 });
 function App() {
   const [dark, setDark] = useState(false);
+  const [editOrganizationName, setEditOrganizationName] = useState(new URLSearchParams(window.location.search).has('organizationName'));
   const theme = createTheme({ ...defaultSettings, colorScheme: dark ? 'dark' : 'light' });
   return <Provider store={store}><ThemeProvider theme={theme} forceThemeRerender>
     <CssBaseline />
@@ -41,6 +44,9 @@ function App() {
         <Button onClick={() => { fixtureState.failUpload = true; }}>Simulate next upload error</Button>
       </Stack>
       <SchoolIdentityScreen />
+      {editOrganizationName && <CustomDialog open title="Edit Stage Primary" handleClose={() => setEditOrganizationName(false)}>
+        <OrganizationForm editData={{ id: 'synthetic-primary', name: 'Primary' }} mediumId="year-26-GSEB-gu" handleClose={() => setEditOrganizationName(false)} />
+      </CustomDialog>}
     </Box><Toaster />
   </ThemeProvider></Provider>;
 }

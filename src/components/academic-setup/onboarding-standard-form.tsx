@@ -2,11 +2,11 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
+import { capitalizeFirstLetter } from 'src/utils/input-format';
 import { useAddClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -102,7 +102,9 @@ export const OnboardingStandardForm = ({
             name="name"
             label="Class Name"
             value={formik.values.name}
-            onChange={(event) => formik.setFieldValue('name', capitalize(event.target.value))}
+            onChange={(event) =>
+              formik.setFieldValue('name', capitalizeFirstLetter(event.target.value))
+            }
             onBlur={formik.handleBlur}
             error={formik.touched.name && Boolean(formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}

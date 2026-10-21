@@ -202,6 +202,7 @@ Use a sticky right-side actions column when row actions would otherwise scroll o
 The shared table owns its toolbar, active filter chips, sticky header, body loading state, empty state, pagination, and scroll container.
 Every table has a contextual accessible name that identifies its records.
 Initial table loading uses table-shaped skeleton rows through `isLoading`.
+The animated character loader is retained in `src/assets/illustrations/table-loading-illustration.tsx` and `src/components/table-loading-state/` for future use. It is not wired into any active table or screen.
 Server refetches retain the current rows when safe and add a thin labelled progress indicator.
 Changing a filter, search term, sort, or page must not reset unrelated user context.
 Server-side pagination, sorting, search, and filtering must be used when the result set can grow beyond a bounded client-safe size.

@@ -12,8 +12,7 @@ import ThreeDotsActions from '../three-dots-actions';
 
 import type { AdaptiveThreeDotsAction, AdaptiveThreeDotsActionsProps } from './types';
 
-const DIRECT_ACTION_LIMIT = 2;
-
+const DIRECT_ACTION_LIMIT = 3;
 type OverflowActionMenuItemProps = {
   action: AdaptiveThreeDotsAction;
   onSelect: () => void;

@@ -80,7 +80,7 @@ export const TableToolbar = memo(
         useFlexGap
         alignItems="center"
         flexWrap="wrap"
-        sx={{ p: 1, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
+        sx={{ p: 2, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
       >
         {isSearch && (
           <TextField

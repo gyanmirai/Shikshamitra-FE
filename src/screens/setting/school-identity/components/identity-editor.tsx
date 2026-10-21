@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
@@ -12,20 +13,34 @@ import { IDENTITY_KINDS } from '../types';
 import { IdentityPreviewButton } from './identity-preview';
 import { IdentityAssetField } from './identity-asset-field';
 import { useIdentityEditor } from '../hooks/use-identity-editor';
+import { IdentityEditorContext } from './identity-editor-context';
 
 import type { IdentityContext, IdentityProfile } from '../types';
+import type { IdentityEditorScope } from './identity-editor-context';
 
 export function IdentityEditor({
   profile,
   context,
   onClose,
+  scope,
 }: {
   profile: IdentityProfile;
   context: IdentityContext;
   onClose: () => void;
+  scope?: IdentityEditorScope;
 }) {
-  const { formik, error, busy, bodyRef, uploadFile, cancel, uploading, uploadedAssets } =
-    useIdentityEditor(profile, context, onClose);
+  const [preparingImage, setPreparingImage] = useState(false);
+  const {
+    formik,
+    error,
+    busy: saving,
+    bodyRef,
+    uploadFile,
+    cancel,
+    uploading,
+    uploadedAssets,
+  } = useIdentityEditor(profile, context, onClose);
+  const busy = saving || preparingImage;
   const router = useRouter();
   const navigation = useUnsavedNavigation(formik.dirty, {
     push: router.push,
@@ -36,7 +51,13 @@ export function IdentityEditor({
     <>
       <CustomDialog
         open
-        title={context.boardId ? 'Edit School Identity Override' : 'Edit School Defaults'}
+        title={
+          context.organizationId
+            ? 'Edit Organization Images'
+            : context.boardId
+              ? 'Edit School Identity Override'
+              : 'Edit School Defaults'
+        }
         titleInfo="Upload school assets, review the draft PDF, then submit to apply these choices."
         handleClose={onClose}
         maxWidth="md"
@@ -50,6 +71,7 @@ export function IdentityEditor({
         <DialogScrollContent>
           <Box ref={bodyRef} sx={{ position: 'relative' }}>
             <Stack spacing={2}>
+              <IdentityEditorContext scope={scope} />
               {error && (
                 <Alert severity="error" role="alert">
                   {error}
@@ -75,6 +97,7 @@ export function IdentityEditor({
                     onUpload={(file) => {
                       uploadFile(kind, file);
                     }}
+                    onPreparing={setPreparingImage}
                   />
                 );
               })}
@@ -95,7 +118,13 @@ export function IdentityEditor({
               >
                 <Stack alignItems="center" spacing={1}>
                   <CircularProgress />
-                  <span>{uploading ? 'Uploading image…' : 'Saving…'}</span>
+                  <span>
+                    {preparingImage
+                      ? 'Preparing image…'
+                      : uploading
+                        ? 'Uploading image…'
+                        : 'Saving…'}
+                  </span>
                 </Stack>
               </Box>
             )}

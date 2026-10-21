@@ -1,44 +1,25 @@
 'use client';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
-import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { boardApi } from 'src/redux/board/boardApi';
-import { getBase64String } from 'src/utils/get-base64-string';
-import { convertBase64Format } from 'src/utils/base64Formate';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  Tab,
-  Box,
-  Tabs,
-  Stack,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  DialogActions,
-  CircularProgress,
-} from '@mui/material';
+import { Tab, Box, Tabs, Button, MenuList, MenuItem, CircularProgress } from '@mui/material';
 import {
   useGetOrganizationQuery,
-  useAddOrganizationMutation,
   useDeleteOrganizationMutation,
-  useUpdateOrganizationMutation,
 } from 'src/redux/oraganization/oraganization';
 
 import { Iconify } from '../iconify';
 import ClassSetup from './class-setup';
+import CustomDialog from '../customDialog';
+import { OrganizationForm } from './stage-form';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import CustomUpload from '../custom-upload/custom-upload';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
-import { AcademicFormActionIcon } from './academic-form-action-icon';
+
+export { OrganizationForm } from './stage-form';
 
 export interface IOrganizationSetup {
   id: string;
@@ -214,164 +195,3 @@ const OrganizationSetup = ({ mediumId }: OrganizationSetupProps) => {
 };
 
 export default OrganizationSetup;
-
-interface IOrganizationForm {
-  handleClose: () => void;
-  editData: null | Record<string, any>;
-  mediumId: string;
-}
-export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizationForm) => {
-  const confirm = useBoolean();
-  const [isReadingBanner, setIsReadingBanner] = useState(false);
-  const [addOrganization, { isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddOrganizationMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Organization added Successfully',
-    },
-  });
-  const [updateOrganization, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateOrganizationMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Organization updated Successfully',
-    },
-  });
-
-  const dispatch = useDispatch();
-
-  const formik = useFormik({
-    initialValues: {
-      organization: editData ? editData.name : '',
-      banner: editData ? editData?.bannerPicture : null,
-    },
-    validationSchema: Yup.object().shape({
-      organization: Yup.string().required('Organization is required'),
-    }),
-    onSubmit: async (values) => {
-      if (isReadingBanner) return;
-      confirm.onTrue();
-    },
-  });
-  const onSubmit = async () => {
-    try {
-      if (editData) {
-        await updateOrganization({
-          id: editData.id,
-          body: {
-            name: formik.values.organization,
-            educationMediumId: mediumId,
-            bannerPicture: formik.values.banner,
-          },
-        }).unwrap();
-      } else {
-        await addOrganization({
-          name: formik.values.organization,
-          educationMediumId: mediumId,
-          bannerPicture: formik.values.banner,
-        }).unwrap();
-      }
-      dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
-      handleClose();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return (
-    <>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-        }}
-        title={`${editData ? 'Update Organization' : 'Create Organization'}`}
-        content={
-          <>
-            {' '}
-            Are you sure you want to {editData ? 'Update' : 'Create '}{' '}
-            {editData ? (
-              editData.name === formik.values.organization ? (
-                ''
-              ) : (
-                <>
-                  <b>{editData.name}</b> to <b>{formik.values.organization}</b>
-                </>
-              )
-            ) : (
-              <b>{formik.values.organization}</b>
-            )}{' '}
-            Medium ?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading || isUpdateLoading}
-            // color="error"
-            onClick={onSubmit}
-            startIcon={<AcademicFormActionIcon action="confirm" />}
-          >
-            Confirm
-          </LoadingButton>
-        }
-      />
-      <DialogScrollContent>
-        <Stack spacing={2} direction="column">
-          <TextField
-            fullWidth
-            id="board"
-            name="organization"
-            label="Organization Name"
-            autoFocus
-            value={formik.values.organization}
-            onChange={(e) => {
-              const newName = capitalize(e.target.value);
-              formik.setFieldValue('organization', newName);
-            }}
-            error={formik.touched.organization && Boolean(formik.errors.organization)}
-            // @ts-ignore
-            helperText={formik.touched.organization && formik.errors.organization}
-            size="small"
-          />
-          <CustomUpload
-            variant="banner"
-            disabled={isLoading || isUpdateLoading}
-            value={formik.values.banner ? [convertBase64Format(formik.values.banner)] : []}
-            onBusyChange={setIsReadingBanner}
-            onChange={(files) => {
-              const image = files[0];
-              formik.setFieldValue(
-                'banner',
-                typeof image === 'string' ? getBase64String(image) : null
-              );
-            }}
-          />
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleClose}
-          startIcon={<AcademicFormActionIcon action="cancel" />}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isLoading || isUpdateLoading}
-          disabled={isReadingBanner}
-          variant="contained"
-          size="small"
-          type="submit"
-          startIcon={<AcademicFormActionIcon action="submit" />}
-          onClick={(e: any) => formik.handleSubmit(e)}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};

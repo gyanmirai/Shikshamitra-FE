@@ -7,8 +7,12 @@ import {
 } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 import { PaginatedSearchSelect } from '../paginated-search-select';
+import { sortRoomOptions, createRoomOption } from '../room-selection/roomOptions';
+import { renderRoomGroup, renderRoomOption } from '../room-selection/room-option-renderers';
 
-type RoomOption = { id: string; roomName: string; buildingName?: string; floorName?: string };
+import type { RoomOption } from '../room-selection/roomOptions';
+
+type RoomRecord = { id: string; roomName: string; buildingName?: string; floorName?: string };
 
 export function DivisionRoomField({
   roomId,
@@ -32,43 +36,54 @@ export function DivisionRoomField({
   } = useGetRoomByIdQuery(savedId, {
     skip: !isRoomId,
   });
-  // The search hook depends on this callback; a stable reference preserves its debounced loader.
+  // A stable selected-value reference keeps option refreshes from resetting the typed search.
+  const savedValue = useMemo<RoomOption | null>(() => {
+    if (!savedId) return null;
+    if (savedRoom) return createRoomOption(savedRoom);
+    return {
+      ...createRoomOption({ id: savedId, roomName: roomNumber || savedId }),
+      label: roomNumber || savedId,
+    };
+  }, [savedId, savedRoom, roomNumber]);
+
+  // The callback uses the current selection to distinguish its display label from typed searches.
   const fetchOptions = useCallback(
     async (query: string, page: number) => {
       const pageSize = 25;
       const response = await fetchRooms({
-        filter: query || undefined,
+        filter:
+          query && query !== (selected === undefined ? savedValue : selected)?.label
+            ? query
+            : undefined,
         skipCount: (page - 1) * pageSize,
         maxResultCount: pageSize,
         sorting: 'RoomName asc',
       }).unwrap();
-      const items: RoomOption[] = response?.items ?? [];
+      const items: RoomRecord[] = response?.items ?? [];
       return {
-        data: items,
+        data: items.map(createRoomOption),
         hasMore: (page - 1) * pageSize + items.length < (response?.totalCount ?? 0),
       };
     },
-    [fetchRooms]
-  );
-  // A stable selected-value reference keeps option refreshes from resetting the typed search.
-  const savedValue = useMemo<RoomOption | null>(
-    () => (savedId ? (savedRoom ?? { id: savedId, roomName: roomNumber || savedId }) : null),
-    [savedId, savedRoom, roomNumber]
+    [fetchRooms, selected, savedValue]
   );
 
   return (
     <PaginatedSearchSelect<RoomOption>
       label="Room (optional)"
-      placeholder="Search or scroll to select a room"
+      placeholder="Search by building, floor, or room"
+      fullWidth
       fetchOptions={fetchOptions}
       minChars={0}
       size="small"
       disabled={disabled}
       isLoading={isFetching || isFetchingSaved}
       value={selected === undefined ? savedValue : selected}
-      getOptionLabel={(option) =>
-        [option.buildingName, option.floorName, option.roomName].filter(Boolean).join(' > ')
-      }
+      getOptionLabel={(option) => option.label}
+      groupBy={(option) => option.group}
+      filterOptions={sortRoomOptions}
+      renderGroup={renderRoomGroup}
+      renderOption={renderRoomOption}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       onChange={(_, option) => {
         setSelected(option);

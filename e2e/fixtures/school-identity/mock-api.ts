@@ -3,7 +3,7 @@ const base = '/api/institute-setup/school-identity';
 const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRZkAAAAASUVORK5CYII='), c => c.charCodeAt(0));
 export const fixtureState = { conflict: false, failUpload: false };
 const inherit = (): IdentityChoices => ({ logo: { mode: 0 }, banner: { mode: 0 }, signature: { mode: 0 } });
-const key = (context: IdentityContext) => `${context.boardId ?? ''}:${context.mediumId ?? ''}`;
+const key = (context: IdentityContext) => `${context.boardId ?? ''}:${context.mediumId ?? ''}:${context.organizationId ?? ''}`;
 const profiles = new Map<string, IdentityProfile>();
 const assets = new Map<string, { metadata: IdentityAsset; bytes: Blob }>();
 const revisions = new Map<string, unknown[]>();
@@ -16,7 +16,10 @@ let failHistory = new URLSearchParams(window.location.search).has('failHistoryOn
 const years = [{ id: 'year-26', name: '2026-2027' }, { id: 'year-25', name: '2025-2026' }];
 const boards = years.flatMap(year => ['GSEB', 'CBSE'].map((name, index) => ({
   id: `${year.id}-${name}`, name, boardType: index + 1, academicYearId: year.id,
-  educationMediums: [{ id: `${year.id}-${name}-gu`, name: 'Gujarati' }, { id: `${year.id}-${name}-en`, name: 'English' }],
+  educationMediums: ['Gujarati', 'English'].map((medium, mediumIndex) => ({
+    id: `${year.id}-${name}-${mediumIndex === 0 ? 'gu' : 'en'}`, name: medium,
+    educationMediumStages: ['Primary', 'Secondary'].map((stage) => ({ id: `${year.id}-${name}-${mediumIndex}-${stage}`, name: stage })),
+  })),
 })));
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json' } });
 function read(context: IdentityContext): IdentityProfile {
@@ -24,9 +27,10 @@ function read(context: IdentityContext): IdentityProfile {
   const profile: IdentityProfile = structuredClone(stored ?? { ...context, concurrencyStamp: '', choices: inherit(), canAccessSignature: true, canManage: true, effective: {} });
   for (const kind of ['logo', 'banner', 'signature'] as const) {
     let selection = profile.choices[kind]!;
-    let source = context.mediumId ? 'Medium override' : context.boardId ? 'Board override' : 'School default';
+    let source = context.organizationId ? 'Organization override' : context.mediumId ? 'Medium override' : context.boardId ? 'Board override' : 'School default';
+    if (selection.mode === 0 && context.organizationId) { selection = profiles.get(key({ boardId: context.boardId, mediumId: context.mediumId }))?.choices[kind] ?? { mode: 0 }; source = 'Medium override'; }
     if (selection.mode === 0 && context.mediumId) { selection = profiles.get(key({ boardId: context.boardId }))?.choices[kind] ?? { mode: 0 }; source = 'Board override'; }
-    if (selection.mode === 0) { selection = profiles.get(':')?.choices[kind] ?? { mode: 0 }; source = 'School default'; }
+    if (selection.mode === 0) { selection = profiles.get(key({}))?.choices[kind] ?? { mode: 0 }; source = 'School default'; }
     profile.effective[kind] = { selection, source, asset: selection.assetId ? assets.get(selection.assetId)?.metadata : null };
   }
   if (restricted) { profile.choices.signature = null; delete profile.effective.signature; profile.canAccessSignature = false; }
@@ -47,7 +51,7 @@ export function installFixture() {
     const request = new Request(input, init);
     const url = new URL(request.url, window.location.origin);
     if (!url.pathname.startsWith('/api/')) return nativeFetch(input, init);
-    const context = { boardId: url.searchParams.get('boardId') ?? undefined, mediumId: url.searchParams.get('mediumId') ?? undefined };
+    const context = { boardId: url.searchParams.get('boardId') ?? undefined, mediumId: url.searchParams.get('mediumId') ?? undefined, organizationId: url.searchParams.get('organizationId') ?? undefined };
     if (url.pathname === '/api/app/academic-year') {
       if (failOptions) { failOptions = false; return json({}, 500); }
       return json({ items: new URLSearchParams(window.location.search).has('noYears') ? [] : years });
@@ -89,8 +93,8 @@ export function installFixture() {
     }
     if (url.pathname === `${base}/copy`) {
       const body = await request.json();
-      const choices = profiles.get(key({ boardId: body.sourceBoardId, mediumId: body.sourceMediumId }))?.choices ?? inherit();
-      return json(save({ boardId: body.targetBoardId, mediumId: body.targetMediumId }, structuredClone(choices)));
+      const choices = profiles.get(key({ boardId: body.sourceBoardId, mediumId: body.sourceMediumId, organizationId: body.sourceOrganizationId }))?.choices ?? inherit();
+      return json(save({ boardId: body.targetBoardId, mediumId: body.targetMediumId, organizationId: body.targetOrganizationId }, structuredClone(choices)));
     }
     if (url.pathname === `${base}/preview`) return nativeFetch('/fixture-preview.pdf');
     return json({ error: { message: 'Unsupported synthetic endpoint' } }, 404);

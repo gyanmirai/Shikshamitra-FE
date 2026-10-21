@@ -29,7 +29,7 @@ export default function SchoolIdentityScreen() {
     >
       <CustomBreadcrumbs
         heading="School Identity"
-        description="Manage shared school assets and board or medium overrides."
+        description="Manage shared school assets and board, medium or organization overrides."
         slotProps={{
           action: {},
           heading: {},

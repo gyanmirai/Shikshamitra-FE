@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { Stack } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
+import ShakingTextField from '../shaking-text-field';
 import DatePickerCalendarHeader from '../date-picker-calendar-header';
 
 import type { AcademicYearFormValues } from './academic-year-form-model';
@@ -15,28 +16,31 @@ export const AcademicYearDateFields = ({
 }) => (
   <Stack spacing={2}>
     {(['startDate', 'endDate'] as const).map((name) => (
-      <DatePicker
-        key={name}
-        label={name === 'startDate' ? 'Start date' : 'End date'}
-        value={formik.values[name]}
-        format="DD-MMM-YYYY"
-        views={['year', 'month', 'day']}
-        openTo="day"
-        slots={{ calendarHeader: DatePickerCalendarHeader }}
-        minDate={name === 'endDate' ? dayjs(formik.values.startDate).add(1, 'day') : undefined}
-        onChange={(value) => formik.setFieldValue(name, value)}
-        slotProps={{
-          textField: {
-            fullWidth: true,
-            size: 'small',
-            error: formik.touched[name] && Boolean(formik.errors[name]),
-            helperText:
-              formik.touched[name] && typeof formik.errors[name] === 'string'
-                ? formik.errors[name]
-                : undefined,
-          },
-        }}
-      />
+      <ShakingTextField key={name} error={formik.touched[name] && Boolean(formik.errors[name])}>
+        <DatePicker
+          label={name === 'startDate' ? 'Start date' : 'End date'}
+          value={formik.values[name]}
+          format="DD-MMM-YYYY"
+          views={['year', 'month', 'day']}
+          openTo="day"
+          slots={{ calendarHeader: DatePickerCalendarHeader }}
+          minDate={name === 'endDate' ? dayjs(formik.values.startDate).add(1, 'day') : undefined}
+          onChange={(value) => formik.setFieldValue(name, value)}
+          slotProps={{
+            textField: {
+              name,
+              required: true,
+              fullWidth: true,
+              size: 'small',
+              error: formik.touched[name] && Boolean(formik.errors[name]),
+              helperText:
+                formik.touched[name] && typeof formik.errors[name] === 'string'
+                  ? formik.errors[name]
+                  : undefined,
+            },
+          }}
+        />
+      </ShakingTextField>
     ))}
   </Stack>
 );

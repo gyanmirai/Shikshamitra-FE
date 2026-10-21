@@ -19,13 +19,24 @@ describe('permission security wiring', () => {
     'retains the separate legacy %s dialogs and exact management guard',
     (provider) => {
       const screen = source(`src/screens/security/${provider}/index.tsx`);
-      expect(screen).toContain('<PermissionForm');
-      expect(screen).toContain('<VisibilityForm');
       expect(screen).not.toMatch(/<PermissionDialog|<PermissionEditor|Permissions and visibility/);
-      expect(screen).toContain(
-        `AbpIdentity.${provider === 'role' ? 'Roles' : 'Users'}.ManagePermissions`
-      );
-      expect(screen).toContain('showThreeDots={canManagePermissions');
+      if (provider === 'role') {
+        expect(screen).toContain('<RolePermissionDialogs');
+        const dialogs = source('src/screens/security/role/role-permission-dialogs.tsx');
+        expect(dialogs).toContain('providerName="R"');
+        expect(dialogs).toContain("mode={visibility ? 'visibility' : 'actions'}");
+        const actions = source('src/screens/security/role/role-row-actions.tsx');
+        expect(actions).toContain(
+          "hasGrantedPermission(permissions, 'AbpIdentity.Roles.ManagePermissions')"
+        );
+        expect(actions).toContain("onAction('visibility', role)");
+        expect(actions).toContain("onAction('permissions', role)");
+      } else {
+        expect(screen).toContain('<PermissionForm');
+        expect(screen).toContain('<VisibilityForm');
+        expect(screen).toContain('AbpIdentity.Users.ManagePermissions');
+        expect(screen).toContain('showThreeDots={canManagePermissions');
+      }
     }
   );
 
