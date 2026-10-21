@@ -1,10 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Box, Tab, Stack } from '@mui/material';
-import { hrPaths } from 'src/constants/hr-menus';
+import { RouterLink } from 'src/routes/components';
+import { Box, Tab, Stack, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 
 import MonthlyPayslips from '../salarySlip-generate/salarySlipGenerate';
 import SalaryDocumentsWorkspace from '../salarySlip-generate/salary-documents-workspace';
@@ -17,6 +22,10 @@ const DOCUMENT_TABS = [
 
 export default function SalaryDocumentCenter() {
   const tabs = useTabs(DOCUMENT_TABS[0].value);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canOpenSettings =
+    hasNavigationPermission(permissions, hrPermissions.payroll.settings.root) &&
+    hasGrantedPermission(permissions, hrPermissions.payroll.settings.payrollDocuments);
   return (
     <Stack spacing={1} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
@@ -29,6 +38,17 @@ export default function SalaryDocumentCenter() {
           { name: 'Salary documents' },
         ]}
       />
+      {canOpenSettings && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            component={RouterLink}
+            href={hrPaths.payroll.settings.payrollDocuments}
+            size="small"
+          >
+            Document settings
+          </Button>
+        </Box>
+      )}
       <CustomTabs
         value={tabs.value}
         onChange={tabs.onChange}
