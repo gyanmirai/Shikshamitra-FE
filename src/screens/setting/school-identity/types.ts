@@ -1,4 +1,9 @@
 export type IdentityKind = 'logo' | 'banner' | 'signature';
+export type BrandingKind = Exclude<IdentityKind, 'signature'>;
+export type SchoolBranding = {
+  logo: Pick<IdentityAsset, 'id' | 'contentType' | 'width' | 'height'> | null;
+  banner: Pick<IdentityAsset, 'id' | 'contentType' | 'width' | 'height'> | null;
+};
 export type IdentityMode = 0 | 1 | 2;
 export type IdentityContext = { boardId?: string; mediumId?: string };
 export type IdentitySelection = {

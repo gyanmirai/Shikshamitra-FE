@@ -1,7 +1,9 @@
 import type {
   IdentityKind,
+  BrandingKind,
   IdentityCopy,
   IdentityAsset,
+  SchoolBranding,
   IdentityContext,
   IdentityChoices,
   IdentityProfile,
@@ -15,14 +17,21 @@ const base = '/institute-setup/school-identity';
 const tag = instituteSetupType.schoolIdentity;
 export const schoolIdentityApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getSchoolBranding: builder.query<IdentityProfile, void>({
+    getSchoolBranding: builder.query<SchoolBranding, { tenantId: string }>({
       query: () => `${base}/branding`,
       providesTags: [tag],
     }),
-    getSchoolBrandingImage: builder.query<Blob, number>({
-      query: (kind) => ({
+    getSchoolBrandingImage: builder.query<Blob | null, { kind: BrandingKind; tenantId: string }>({
+      query: ({ kind }) => ({
         url: `${base}/branding/${kind}`,
-        responseHandler: (response) => response.blob(),
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            return response.headers.get('content-type')?.includes('json')
+              ? response.json()
+              : response.text();
+          }
+          return response.status === 204 ? null : response.blob();
+        },
       }),
       providesTags: [tag],
       keepUnusedDataFor: 0,
