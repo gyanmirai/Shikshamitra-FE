@@ -205,4 +205,4 @@ Template defaults use `defaultEsiManagementMode`, `defaultEsiPolicyId` and `defa
 Calculation and compensation contracts use `esiManagementMode`, `esiPolicyId` and `esiExternalReason`.
 Preview signatures include all three values; salary-template save additionally binds them to the server preview token.
 Calculation responses include selected policy identity, resolved rule/version and contribution breakdown.
-Backend policy invariants and migration ownership live in [HR API contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+Backend policy invariants and migration ownership live in [HR API contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
