@@ -146,9 +146,9 @@ export function SalaryTotals({
           {(
             [
               ['Full-month gross', gross],
-              ['Employee deductions', deductions],
+              ['Estimated deductions', deductions],
               ['Estimated take-home', net],
-              ['Total school cost', employerCost],
+              ['Monthly cost to school', employerCost],
             ] as const
           ).map(([label, value]) => (
             <Box key={label} sx={{ minWidth: 0 }}>

@@ -21,6 +21,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetEsiPolicyOptionsQuery } from 'src/redux/hr/esi-policy-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
@@ -140,7 +141,7 @@ export default function SalaryTemplateEditor({
     <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading={heading}
-        description="Configure reusable salary rules, then calculate a sample before saving an active version."
+        description="Configure reusable salary rules, then preview a full month before saving an active version."
         isBack
         onBack={close}
         links={[
@@ -199,9 +200,7 @@ export default function SalaryTemplateEditor({
             <Typography variant="body2" color="text.secondary" sx={{ flex: '1 1 200px' }}>
               Loading template configuration…
             </Typography>
-            <Button size="small" variant="outlined" disabled>
-              Preview Calculation
-            </Button>
+
             {!readOnly && (
               <Button size="small" variant="contained" disabled>
                 {isCreate ? 'Create Template' : 'Save Changes'}
@@ -282,6 +281,13 @@ function SalaryTemplateWorkflow({
     },
   });
   const templateId = template?.id;
+  const { data: esiPolicies } = useGetEsiPolicyOptionsQuery();
+  const defaultEsiPolicy = esiPolicies?.find((item) => item.isDefault && !item.isArchived);
+  useEffect(() => {
+    if (isCreate && !formik.dirty && !formik.values.defaultEsiPolicyId && defaultEsiPolicy)
+      formik.resetForm({ values: { ...formik.values, defaultEsiPolicyId: defaultEsiPolicy.id } });
+  }, [isCreate, formik, defaultEsiPolicy]);
+
   const { data: versionData } = useGetSalaryTemplateVersionsQuery(templateId || '', {
     skip: !templateId,
   });
@@ -303,6 +309,7 @@ function SalaryTemplateWorkflow({
     result: SalaryTemplatePreview;
   } | null>(null);
   const [previewError, setPreviewError] = useState('');
+  const [hasPreviewed, setHasPreviewed] = useState(false);
   const requestSequence = useRef(0);
   const operationKeyRef = useRef('');
   const savingRef = useRef(false);
@@ -317,6 +324,9 @@ function SalaryTemplateWorkflow({
     effectiveMonth: effectiveMonth ? `${effectiveMonth}-01T00:00:00.000Z` : '',
     pfApplicable: formik.values.defaultPfApplicable,
     pfRuleId: formik.values.defaultPfRuleId || null,
+    esiManagementMode: formik.values.defaultEsiManagementMode,
+    esiPolicyId: formik.values.defaultEsiPolicyId || null,
+    esiExternalReason: formik.values.defaultEsiExternalReason.trim() || null,
   };
   const inputSignature = JSON.stringify(previewInput);
   const latestSignature = useRef(inputSignature);
@@ -336,7 +346,7 @@ function SalaryTemplateWorkflow({
     const timer = setTimeout(
       () => {
         setPreview(null);
-        setPreviewError('The sample preview expired. Calculate again before saving.');
+        setPreviewError('The salary preview expired. Refresh preview before saving.');
       },
       Math.max(0, Date.parse(preview.result.expiresAt) - Date.now())
     );
@@ -399,6 +409,9 @@ function SalaryTemplateWorkflow({
       defaultSalaryBasis: formik.values.defaultSalaryBasis,
       defaultPfApplicable: formik.values.defaultPfApplicable,
       defaultPfRuleId: formik.values.defaultPfRuleId || null,
+      defaultEsiManagementMode: formik.values.defaultEsiManagementMode,
+      defaultEsiPolicyId: formik.values.defaultEsiPolicyId || null,
+      defaultEsiExternalReason: formik.values.defaultEsiExternalReason.trim() || null,
       rules: normalizeRuleOrder(formik.values.rules),
       idempotencyKey: operationKeyRef.current,
       expectedActiveVersionId: template?.activeVersion ? template.editableVersion.id : null,
@@ -417,6 +430,10 @@ function SalaryTemplateWorkflow({
           defaultSalaryBasis: result.editableVersion.defaultSalaryBasis,
           defaultPfApplicable: result.editableVersion.defaultPfApplicable,
           defaultPfRuleId: result.editableVersion.defaultPfRuleId || '',
+          defaultEsiManagementMode:
+            result.editableVersion.defaultEsiManagementMode || 'IN_PLATFORM',
+          defaultEsiPolicyId: result.editableVersion.defaultEsiPolicyId || '',
+          defaultEsiExternalReason: result.editableVersion.defaultEsiExternalReason || '',
           rules: result.editableVersion.rules,
         },
       });
@@ -454,7 +471,7 @@ function SalaryTemplateWorkflow({
     const target =
       errors.name || errors.description
         ? 'salary-basic-information'
-        : errors.defaultPfRuleId
+        : errors.defaultPfRuleId || errors.defaultEsiPolicyId || errors.defaultEsiExternalReason
           ? 'salary-statutory-defaults'
           : invalidRules.length
             ? `salary-rule-${invalidRules[0].componentId}`
@@ -499,6 +516,7 @@ function SalaryTemplateWorkflow({
       const result = await calculate(previewInput).unwrap();
       if (sequence === requestSequence.current && signature === latestSignature.current) {
         setPreview({ signature, result });
+        setHasPreviewed(true);
       }
     } catch (error) {
       if (sequence === requestSequence.current && signature === latestSignature.current) {
@@ -543,12 +561,14 @@ function SalaryTemplateWorkflow({
     : busy
       ? 'Saving template…'
       : calculationState.isLoading
-        ? 'Calculating sample…'
+        ? 'Preparing preview…'
         : !valid
-          ? 'Complete the configuration, then calculate a sample to save.'
+          ? 'Complete the configuration before previewing.'
           : previewCurrent
-            ? 'Sample is current. Ready to save.'
-            : 'Calculate the current rules to enable Save.';
+            ? 'Preview ready'
+            : hasPreviewed
+              ? 'Preview needs refresh'
+              : 'Preview required';
   return (
     <Box
       component="form"
@@ -584,6 +604,7 @@ function SalaryTemplateWorkflow({
           }}
         >
           <SalaryTemplateConfigure
+            previewMonth={effectiveMonth}
             formik={formik}
             readOnly={readOnly}
             componentNames={componentNames}
@@ -602,7 +623,11 @@ function SalaryTemplateWorkflow({
           />
           <SalaryTemplateReview
             salaryBasis={formik.values.defaultSalaryBasis}
+            setSalaryBasis={(value) => formik.setFieldValue('defaultSalaryBasis', value)}
+            readOnly={readOnly}
             previewCurrent={Boolean(previewCurrent)}
+            hasPreviewed={hasPreviewed}
+            busy={busy}
             sampleAmount={sampleAmount}
             setSampleAmount={setSampleAmount}
             effectiveMonth={effectiveMonth}
@@ -664,15 +689,6 @@ function SalaryTemplateWorkflow({
               justifyContent: 'flex-end',
             }}
           >
-            <Button
-              size="small"
-              type="button"
-              variant="outlined"
-              disabled={busy}
-              onClick={() => setPendingFocus('salary-sample-calculation')}
-            >
-              Preview Calculation
-            </Button>
             {!readOnly && (
               <LoadingButton
                 size="small"

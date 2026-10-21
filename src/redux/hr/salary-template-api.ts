@@ -1,6 +1,7 @@
 import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
+import type { EsiManagementMode } from './esi-policy-api';
 import type { StaffStatutoryProfile } from './statutory-profile-api';
 
 export type SalaryBasis = 'GROSS' | 'EMPLOYER_COST';
@@ -45,6 +46,9 @@ export type SalaryTemplateVersion = {
   defaultProtectionPolicy: ProtectionPolicy;
   defaultPfApplicable: boolean;
   defaultPfRuleId?: string | null;
+  defaultEsiManagementMode?: EsiManagementMode;
+  defaultEsiPolicyId?: string | null;
+  defaultEsiExternalReason?: string | null;
   rules: SalaryTemplateRule[];
 };
 
@@ -70,6 +74,9 @@ export type SaveSalaryTemplate = {
   defaultSalaryBasis: SalaryBasis;
   defaultPfApplicable: boolean;
   defaultPfRuleId?: string | null;
+  defaultEsiManagementMode?: EsiManagementMode;
+  defaultEsiPolicyId?: string | null;
+  defaultEsiExternalReason?: string | null;
   rules: SalaryTemplateRule[];
   idempotencyKey: string;
   expectedActiveVersionId?: string | null;
@@ -86,6 +93,9 @@ export type PreviewSalaryTemplateRequest = {
   effectiveMonth: string;
   pfApplicable: boolean;
   pfRuleId?: string | null;
+  esiManagementMode?: EsiManagementMode;
+  esiPolicyId?: string | null;
+  esiExternalReason?: string | null;
 };
 
 export type SalaryTemplatePreview = {
@@ -108,6 +118,9 @@ export type CalculatedSalaryLine = {
 };
 
 export type SalaryTemplateEsiPreview = {
+  policyId?: string | null;
+  policyName?: string | null;
+  managementMode?: EsiManagementMode;
   configurationId?: string | null;
   isConfigured: boolean;
   isCovered: boolean;
@@ -169,6 +182,9 @@ export type SalaryTemplateCalculation = {
   formulaTrace: string[];
   warnings: string[];
   pfRuleId?: string | null;
+  esiManagementMode?: EsiManagementMode;
+  esiPolicyId?: string | null;
+  esiExternalReason?: string | null;
   pfRuleVersion?: number | null;
   professionalTaxProfile: string;
   generatedAt: string;
@@ -199,6 +215,9 @@ export const buildSalaryTemplateCalculationRequest = ({
   pfEnrollment?: PfEnrollment;
   pfApplicable: boolean;
   pfRuleId?: string | null;
+  esiManagementMode?: EsiManagementMode;
+  esiPolicyId?: string | null;
+  esiExternalReason?: string | null;
   overrides?: SalaryRuleOverride[];
   customizationReason?: string | null;
 }) => ({

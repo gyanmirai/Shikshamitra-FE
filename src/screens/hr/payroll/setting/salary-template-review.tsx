@@ -11,16 +11,21 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import { LoadingButton } from 'src/components/loading-button';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Chip, Grid, Alert, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { Box, Chip, Grid, Alert, MenuItem, TextField, Typography } from '@mui/material';
 
+import { SalaryTotals } from '../structure/salary-summary-view';
 import { formatRuleLabel } from './salary-template-editor-utils';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 type Props = {
   salaryBasis: SalaryBasis;
+  setSalaryBasis: (value: SalaryBasis) => void;
+  readOnly: boolean;
   previewCurrent: boolean;
+  hasPreviewed: boolean;
+  busy: boolean;
   sampleAmount: number;
   setSampleAmount: (value: number) => void;
   effectiveMonth: string;
@@ -34,7 +39,11 @@ type Props = {
 };
 export default function SalaryTemplateReview({
   salaryBasis,
+  setSalaryBasis,
+  readOnly,
   previewCurrent,
+  hasPreviewed,
+  busy,
   sampleAmount,
   setSampleAmount,
   effectiveMonth,
@@ -51,11 +60,11 @@ export default function SalaryTemplateReview({
       <Box
         component="section"
         id="salary-sample-calculation"
-        aria-label="Sample calculation"
+        aria-label="Salary preview"
         tabIndex={-1}
       >
         <SectionCard
-          title="Sample calculation"
+          title="Salary preview"
           paperProps={{
             sx: {
               mb: 0,
@@ -70,20 +79,41 @@ export default function SalaryTemplateReview({
             <Chip
               size="small"
               variant="outlined"
-              label={previewCurrent ? 'Current sample' : 'Sample only'}
+              label={
+                previewCurrent
+                  ? 'Preview ready'
+                  : hasPreviewed
+                    ? 'Preview needs refresh'
+                    : 'Preview required'
+              }
             />
           }
         >
           <Typography variant="body2" color="text.secondary" mb={2}>
-            Preview the current rules before saving. This sample validates the selected amount;
-            staff eligibility is checked during salary generation.
+            Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
+            payable salary is calculated in Run Payroll.
           </Typography>
           <Grid container spacing={1} alignItems="flex-start">
-            <Grid size={{ xs: 12, sm: 6, md: 5 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <TextField
+                select
+                size="small"
+                fullWidth
+                label="Default salary basis"
+                value={salaryBasis}
+                disabled={busy || readOnly}
+                onChange={(event) => setSalaryBasis(event.target.value as SalaryBasis)}
+              >
+                <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
+                <MenuItem value="GROSS">Monthly salary</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <ShakingTextField>
                 <NumericFormatCustom
                   size="small"
                   fullWidth
+                  disabled={busy}
                   name="sampleMonthlyAmount"
                   label={
                     salaryBasis === 'EMPLOYER_COST'
@@ -92,6 +122,7 @@ export default function SalaryTemplateReview({
                   }
                   value={sampleAmount}
                   decimalScale={2}
+                  roundToWholeRupees={false}
                   isAllowed={({ floatValue }) =>
                     floatValue === undefined || floatValue <= 100000000
                   }
@@ -100,10 +131,11 @@ export default function SalaryTemplateReview({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 5 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
-                  label="Sample effective month"
+                  label="Preview month"
+                  disabled={busy}
                   views={['year', 'month']}
                   openTo="month"
                   format="MMMM YYYY"
@@ -118,7 +150,7 @@ export default function SalaryTemplateReview({
               </LocalizationProvider>
             </Grid>
             <Grid
-              size={{ xs: 12, md: 2 }}
+              size={{ xs: 12, sm: 6, md: 3 }}
               sx={{ display: 'flex', justifyContent: 'flex-end', alignSelf: 'center' }}
             >
               <LoadingButton
@@ -127,9 +159,9 @@ export default function SalaryTemplateReview({
                 startIcon={<Iconify icon="mdi:calculator" />}
                 loading={calculating}
                 onClick={runSample}
-                disabled={archived || calculating}
+                disabled={archived || calculating || busy}
               >
-                Calculate
+                {hasPreviewed ? 'Refresh preview' : 'Preview salary'}
               </LoadingButton>
             </Grid>
           </Grid>
@@ -139,40 +171,40 @@ export default function SalaryTemplateReview({
             </Alert>
           ) : null}
           {calculation ? (
-            <Grid
-              container
-              spacing={1}
-              mt={1}
-              aria-live="polite"
-              sx={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              {[
-                ['Full-month Gross', calculation.grossSalary],
-                [
-                  'Allocated regular earnings',
-                  calculation.earnings.reduce((sum, line) => sum + line.amount, 0),
-                ],
-                ['Deductions', calculation.totalDeductions],
-                ['Net salary', calculation.netSalary],
-                ['Employer contributions', calculation.employerContributionTotal],
-                ['Employer cost', calculation.employerCost],
-                ['Target difference', calculation.targetResult.difference],
-              ].map(([label, amount]) => (
-                <Grid
-                  key={String(label)}
-                  size={{ xs: 6, md: 4 }}
-                  sx={{ minWidth: 0, overflowWrap: 'anywhere' }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    {label}
-                  </Typography>
-                  <Typography variant="subtitle1">{formatCurrency(Number(amount))}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {formatCurrency(Number(amount) * 12)} yearly
-                  </Typography>
-                </Grid>
-              ))}
-            </Grid>
+            <Box sx={{ mt: 2 }} aria-live="polite">
+              <SalaryTotals
+                gross={calculation.grossSalary}
+                deductions={calculation.totalDeductions}
+                net={calculation.netSalary}
+                employerCost={calculation.employerCost}
+              />
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={
+                    calculation.pfRuleId
+                      ? `PF · Rule version ${calculation.pfRuleVersion}`
+                      : 'PF · Not applied'
+                  }
+                />
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={
+                    calculation.employeeStateInsurance.managementMode === 'EXTERNAL'
+                      ? 'ESIC · Handled outside ShikshaMitra'
+                      : `ESIC · ${calculation.employeeStateInsurance.policyName || 'Selected policy'} · ${formatRuleLabel(calculation.employeeStateInsurance.coverageDecision || 'not evaluated')}`
+                  }
+                />
+              </Box>
+              {!calculation.targetResult.isExact && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  The preview differs from the requested amount by{' '}
+                  {formatCurrency(calculation.targetResult.difference)}. Review the selected rules.
+                </Alert>
+              )}
+            </Box>
           ) : null}
           {archived && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

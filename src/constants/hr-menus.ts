@@ -44,6 +44,7 @@ export const hrPaths = {
       // tds: '/hr/payroll/setting/tds',
       professionalTax: '/hr/payroll/setting/professional-tax',
       statutorySchemes: '/hr/payroll/setting/statutory-schemes',
+      esiPolicies: '/hr/payroll/setting/statutory-schemes?view=policies',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
       salaryTemplateCreate: '/hr/payroll/setting/salary-templates/new',
       salaryTemplateEditor: (templateId: string) =>

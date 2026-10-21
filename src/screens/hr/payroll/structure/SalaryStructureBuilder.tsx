@@ -2,6 +2,7 @@
 
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
+import type { EsiManagementMode } from 'src/redux/hr/esi-policy-api';
 import type {
   SalaryBasis,
   PfEnrollment,
@@ -25,6 +26,10 @@ import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
+import {
+  effectiveEsiPolicyVersion,
+  useGetEsiPolicyOptionsQuery,
+} from 'src/redux/hr/esi-policy-api';
 import {
   StatutoryProfileEditor,
   type StatutoryProfileDraft,
@@ -60,6 +65,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import { EsiPolicyFields } from '../setting/esi-policy-fields';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 import { formatPayrollMonth } from '../setting/esi-statutory-utils';
 import { EmployeeEsiDetails } from '../setting/employee-esi-details';
@@ -144,6 +150,10 @@ export function SalaryStructureBuilder({
   const [pfEnrollment, setPfEnrollment] = useState<PfEnrollment>({ membership: 'UNKNOWN' });
   const [pfChoice, setPfChoice] = useState<'OPT_IN' | 'OPT_OUT' | null>(null);
   const [pfRuleId, setPfRuleId] = useState('');
+  const [esiMode, setEsiMode] = useState<EsiManagementMode>('IN_PLATFORM');
+  const [esiPolicyId, setEsiPolicyId] = useState('');
+  const [esiReason, setEsiReason] = useState('');
+  const esiInvalid = esiMode === 'IN_PLATFORM' ? !esiPolicyId : !esiReason.trim();
   const [savedStatutoryProfile, setSavedStatutoryProfile] =
     useState<import('src/redux/hr/statutory-profile-api').StaffStatutoryProfileResponse>();
   const [statutoryDraft, setStatutoryDraft] = useState<StatutoryProfileDraft | null>(null);
@@ -256,6 +266,9 @@ export function SalaryStructureBuilder({
       );
       setPfChoice(source.pfRuleId ? 'OPT_IN' : 'OPT_OUT');
       setPfRuleId(source.pfRuleId || '');
+      setEsiMode(source.esiManagementMode || 'IN_PLATFORM');
+      setEsiPolicyId(source.esiPolicyId || '');
+      setEsiReason(source.esiExternalReason || '');
       setOverrides(source.overrides || []);
       setCustomizationReason(source.customizationReason || '');
       setCustomizing(source.isCustomized);
@@ -264,6 +277,9 @@ export function SalaryStructureBuilder({
       setSalaryBasis(selectedTemplate.editableVersion.defaultSalaryBasis);
       setPfChoice(null);
       setPfRuleId(selectedTemplate.editableVersion.defaultPfRuleId || '');
+      setEsiMode(selectedTemplate.editableVersion.defaultEsiManagementMode || 'IN_PLATFORM');
+      setEsiPolicyId(selectedTemplate.editableVersion.defaultEsiPolicyId || '');
+      setEsiReason(selectedTemplate.editableVersion.defaultEsiExternalReason || '');
       const joining = dateOfJoining;
       if (joining && !initialMonth)
         setEffectiveMonth(
@@ -300,6 +316,9 @@ export function SalaryStructureBuilder({
     pfApplicable,
     pfChoice,
     pfRuleId,
+    esiMode,
+    esiPolicyId,
+    esiReason,
     overrides: customizing ? overrides : [],
     customizationReason: customizing ? customizationReason.trim() : '',
   });
@@ -329,7 +348,18 @@ export function SalaryStructureBuilder({
       busy: busy || esiEditorState.busy,
     });
   }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
-  const calculationCurrent = Boolean(calculation && calculatedSignature === signature);
+  const { data: esiPolicies, refetch: refetchEsiPolicies } = useGetEsiPolicyOptionsQuery();
+  const effectiveEsiVersion = effectiveEsiPolicyVersion(
+    esiPolicies?.find((policy) => policy.id === esiPolicyId),
+    effectiveMonth
+  );
+  const calculationCurrent = Boolean(
+    calculation &&
+    calculatedSignature === signature &&
+    (esiMode === 'EXTERNAL' ||
+      (calculation.employeeStateInsurance.ruleId &&
+        calculation.employeeStateInsurance.ruleId === effectiveEsiVersion?.id))
+  );
 
   useEffect(() => {
     if (operationSignatureRef.current && operationSignatureRef.current !== signature) {
@@ -345,6 +375,9 @@ export function SalaryStructureBuilder({
       setSalaryBasis(template.editableVersion.defaultSalaryBasis);
       setPfChoice(null);
       setPfRuleId(template.editableVersion.defaultPfRuleId || '');
+      setEsiMode(template.editableVersion.defaultEsiManagementMode || 'IN_PLATFORM');
+      setEsiPolicyId(template.editableVersion.defaultEsiPolicyId || '');
+      setEsiReason(template.editableVersion.defaultEsiExternalReason || '');
       setCustomizing(false);
       setOverrides([]);
       setCustomizationReason('');
@@ -362,6 +395,7 @@ export function SalaryStructureBuilder({
       monthlyAmount <= 0 ||
       !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
       pfChoiceMissing ||
+      esiInvalid ||
       (pfApplicable && !pfRuleId)
     )
       return;
@@ -370,6 +404,7 @@ export function SalaryStructureBuilder({
     setLocalBusy(true);
     setOperationError('');
     try {
+      if (esiMode === 'IN_PLATFORM') await refetchEsiPolicies();
       const result = await calculate({
         templateVersionId: selectedVersion.id,
         salaryBasis,
@@ -379,6 +414,9 @@ export function SalaryStructureBuilder({
         pfEnrollment,
         pfApplicable,
         pfRuleId: pfApplicable ? pfRuleId : null,
+        esiManagementMode: esiMode,
+        esiPolicyId: esiPolicyId || null,
+        esiExternalReason: esiReason.trim() || null,
         statutoryProfileOverride: statutoryDraft?.profile,
         statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
         statutoryProfileUpdatePf: statutoryDraft?.updatePf,
@@ -435,6 +473,10 @@ export function SalaryStructureBuilder({
           pfEnrollment,
           pfApplicable,
           pfRuleId: pfApplicable ? pfRuleId : null,
+          esiManagementMode: esiMode,
+          esiPolicyId: esiPolicyId || null,
+          esiExternalReason: esiReason.trim() || null,
+          expectedEsiPolicyVersionId: calculation.employeeStateInsurance.ruleId || null,
           statutoryProfileOverride: statutoryDraft?.profile,
           statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
           statutoryProfileUpdatePf: statutoryDraft?.updatePf,
@@ -468,11 +510,18 @@ export function SalaryStructureBuilder({
       }
     } catch (error: any) {
       const parsed = parseApiProblemDetail(error);
-      if (error?.status === 409) setHasConflict(true);
+      const previewStale = parsed.errorCode === 'HR:Payroll:CompensationPreviewStale';
+      if (previewStale) {
+        setCalculation(null);
+        operationKeyRef.current = '';
+        await refetchEsiPolicies();
+      } else if (error?.status === 409) setHasConflict(true);
       setOperationError(
-        error?.status === 409
-          ? 'Salary changed in another session. Reload the history and review before saving again.'
-          : parsed.detail
+        previewStale
+          ? 'ESIC policy changed. Refresh preview and review the updated salary before saving.'
+          : error?.status === 409
+            ? 'Salary changed in another session. Reload the history and review before saving again.'
+            : parsed.detail
       );
     } finally {
       operationPending.current = false;
@@ -632,6 +681,11 @@ export function SalaryStructureBuilder({
         ? 'Choose whether to opt in or opt out of PF'
         : 'Review statutory details before previewing';
   else if (pfApplicable && !pfRuleId) footerStatus = 'Choose a PF rule';
+  else if (esiInvalid)
+    footerStatus =
+      esiMode === 'IN_PLATFORM'
+        ? 'Choose an ESIC policy'
+        : 'Enter the external ESIC management reason';
   else if (statutoryBlocked)
     footerStatus =
       calculation?.pfEligibility?.canSave === false
@@ -639,8 +693,11 @@ export function SalaryStructureBuilder({
         : 'Resolve ESIC details before saving';
   else if (savedSignature === signature && calculationCurrent) footerStatus = 'Saved';
   else if (calculationCurrent) {
-    footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Ready to save';
+    footerStatus = reasonInvalid ? 'Add a customization reason before saving' : 'Preview ready';
   }
+
+  if (!footerStatus)
+    footerStatus = calculatedSignature ? 'Preview needs refresh' : 'Preview required';
 
   const actions = (
     <>
@@ -662,33 +719,7 @@ export function SalaryStructureBuilder({
       >
         {footerStatus}
       </Typography>
-      <Button
-        size="small"
-        variant="outlined"
-        color="inherit"
-        startIcon={<Iconify icon="solar:eye-bold" />}
-        onClick={calculateSalary}
-        loading={operation === 'calculate'}
-        loadingPosition="start"
-        sx={{
-          ...(actionContainer
-            ? { gridColumn: { xs: 1, sm: 3 }, gridRow: { xs: 2, sm: 1 }, justifySelf: 'end' }
-            : {}),
-        }}
-        disabled={
-          !canManage ||
-          busy ||
-          !selectedVersion ||
-          templateChangeRequired ||
-          !Number.isFinite(monthlyAmount) ||
-          monthlyAmount <= 0 ||
-          !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
-          (pfApplicable && !pfRuleId) ||
-          pfChoiceMissing
-        }
-      >
-        {calculatedSignature ? 'Update preview' : 'Preview salary'}
-      </Button>
+
       <Button
         size="small"
         variant="contained"
@@ -853,6 +884,47 @@ export function SalaryStructureBuilder({
               </FormControl>
             </Grid>
           </Grid>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mt: 2,
+            }}
+          >
+            <Box sx={{ flex: '1 1 260px' }}>
+              <Typography variant="subtitle2">Salary preview</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
+                payable salary is calculated in Run Payroll.
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:eye-bold" />}
+              onClick={calculateSalary}
+              loading={operation === 'calculate'}
+              loadingPosition="start"
+              disabled={
+                !canManage ||
+                busy ||
+                !selectedVersion ||
+                templateChangeRequired ||
+                !Number.isFinite(monthlyAmount) ||
+                monthlyAmount <= 0 ||
+                !/^\d{4}-\d{2}$/.test(effectiveMonth) ||
+                (pfApplicable && !pfRuleId) ||
+                pfChoiceMissing ||
+                esiInvalid
+              }
+            >
+              {calculatedSignature ? 'Refresh preview' : 'Preview salary'}
+            </Button>{' '}
+          </Box>
         </FormSectionCard>
         <FormSectionCard
           icon="solar:shield-check-bold"
@@ -860,6 +932,19 @@ export function SalaryStructureBuilder({
           sx={{ border: 0 }}
         >
           <Box role="group" aria-label="Statutory deductions" sx={{ display: 'grid', gap: 1.5 }}>
+            <EsiPolicyFields
+              mode={esiMode}
+              policyId={esiPolicyId}
+              reason={esiReason}
+              month={effectiveMonth}
+              disabled={!canManage || busy}
+              onChange={({ mode, policyId, reason }) => {
+                setEsiMode(mode);
+                setEsiPolicyId(policyId);
+                setEsiReason(reason);
+                setCalculation(null);
+              }}
+            />
             <Box sx={{ gridColumn: '1 / -1' }}>
               <StatutoryProfileEditor
                 key={effectiveMonth}
@@ -1171,7 +1256,8 @@ export function SalaryStructureBuilder({
               employerCost={statutoryBlocked ? null : calculation.employerCost}
             />
             <Typography variant="body2" color="text.secondary">
-              Full-month estimate. Attendance and one-time adjustments are excluded.
+              Full-month estimate before attendance, unpaid leave, and monthly adjustments. Actual
+              payable salary is calculated in Run Payroll.
             </Typography>
             <StatutorySummary schemes={calculation.statutorySummary || []} />
             {statutoryBlocked && (

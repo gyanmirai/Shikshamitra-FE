@@ -262,7 +262,7 @@ Derive the compensation target from this selection; do not add a separate protec
 Use the chosen basis as the amount label, without routine helper text.
 Show the calculated breakdown in the existing calculation section before saving.
 Stretch the desktop top cards to equal content-driven heights, with matching padding and aligned headings and dividers.
-Place equal-width, separately enclosed Earnings and Deductions panels below, followed by full-width Sample Calculation.
+Place equal-width, separately enclosed Earnings and Deductions panels below, followed by full-width Salary preview.
 Desktop component panels are 480 px high with stationary headers and independently scrolling lists.
 Stack sections with natural heights on tablet and mobile, retain page scrolling to calculation results, and keep the action footer visible.
 Keep essential statutory guidance visible and expose longer explanations through a keyboard-accessible disclosure.
@@ -270,7 +270,11 @@ Reveal invalid or newly added rows inside their component list before focusing t
 Use SectionCard headers for section titles and Add actions without component-count badges, and subtle separators between component rows.
 Use a subtle success-green header divider for Earnings and warning-amber for Deductions; retain neutral panel surfaces and explicit section labels.
 These accents distinguish component categories and do not represent validation status.
-The footer shows preview validity, Preview Calculation navigation, and the save action, which requires a current successful server preview.
+Keep amount, salary basis, month and one Preview salary or Refresh preview action together in Salary preview.
+The footer shows preview validity and Save, which requires a current successful server preview.
+Show four monthly figures: full-month gross, estimated deductions, estimated take-home and monthly cost to school.
+Group earnings, employee deductions and employer contributions below, without repeated yearly amounts.
+Pair PF and ESIC controls in Statutory defaults; disclose advanced policy parameters only when requested.
 Use compact component rows with the name and calculation summary beside the value and expand action.
 Omit Ordinary from row summaries and use inline text for meaningful purposes instead of purpose chips.
 Allow long names and mobile controls to wrap, and keep advanced settings expandable.

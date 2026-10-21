@@ -1,3 +1,4 @@
+import type { EsiManagementMode } from 'src/redux/hr/esi-policy-api';
 import type {
   SalaryBasis,
   SalaryTemplate,
@@ -14,6 +15,9 @@ export type EditorValues = {
   defaultSalaryBasis: SalaryBasis;
   defaultPfApplicable: boolean;
   defaultPfRuleId: string;
+  defaultEsiManagementMode: EsiManagementMode;
+  defaultEsiPolicyId: string;
+  defaultEsiExternalReason: string;
   rules: SalaryTemplateRule[];
 };
 
@@ -23,6 +27,9 @@ export const initialEditorValues = (template?: SalaryTemplate): EditorValues => 
   defaultSalaryBasis: template?.editableVersion.defaultSalaryBasis || 'EMPLOYER_COST',
   defaultPfApplicable: template?.editableVersion.defaultPfApplicable || false,
   defaultPfRuleId: template?.editableVersion.defaultPfRuleId || '',
+  defaultEsiManagementMode: template?.editableVersion.defaultEsiManagementMode || 'IN_PLATFORM',
+  defaultEsiPolicyId: template?.editableVersion.defaultEsiPolicyId || '',
+  defaultEsiExternalReason: template?.editableVersion.defaultEsiExternalReason || '',
   rules: template?.editableVersion.rules || [],
 });
 
@@ -34,6 +41,18 @@ export const editorSchema = Yup.object({
     is: true,
     then: (schema) => schema.required('Choose the default PF rule.'),
   }),
+  defaultEsiManagementMode: Yup.string().oneOf(['IN_PLATFORM', 'EXTERNAL']).required(),
+  defaultEsiPolicyId: Yup.string().when('defaultEsiManagementMode', {
+    is: 'IN_PLATFORM',
+    then: (schema) => schema.required('Choose an ESIC policy.'),
+  }),
+  defaultEsiExternalReason: Yup.string()
+    .trim()
+    .max(500)
+    .when('defaultEsiManagementMode', {
+      is: 'EXTERNAL',
+      then: (schema) => schema.required('Enter the external management reason.'),
+    }),
   rules: Yup.array().of(
     Yup.object({
       value: Yup.number()
@@ -59,6 +78,12 @@ export const configurationIssues = (values: EditorValues) => {
   const pfPresent = values.rules.some((rule) => rule.formulaType === 'EMPLOYEE_PROVIDENT_FUND');
   return [
     ...getSaveIssues(values.rules),
+    ...(values.defaultEsiManagementMode === 'IN_PLATFORM' && !values.defaultEsiPolicyId
+      ? ['Choose an ESIC policy.']
+      : []),
+    ...(values.defaultEsiManagementMode === 'EXTERNAL' && !values.defaultEsiExternalReason.trim()
+      ? ['Enter the external ESIC management reason.']
+      : []),
     ...(pfPresent && !values.defaultPfRuleId
       ? ['Choose an active PF rule for the PF formula.']
       : []),
