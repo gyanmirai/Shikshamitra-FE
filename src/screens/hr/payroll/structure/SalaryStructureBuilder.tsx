@@ -27,6 +27,10 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {
+  effectiveEsiPolicyVersion,
+  useGetEsiPolicyOptionsQuery,
+} from 'src/redux/hr/esi-policy-api';
+import {
   StatutoryProfileEditor,
   type StatutoryProfileDraft,
 } from 'src/screens/hr/employee/statutory-profile-editor';
@@ -344,7 +348,18 @@ export function SalaryStructureBuilder({
       busy: busy || esiEditorState.busy,
     });
   }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
-  const calculationCurrent = Boolean(calculation && calculatedSignature === signature);
+  const { data: esiPolicies, refetch: refetchEsiPolicies } = useGetEsiPolicyOptionsQuery();
+  const effectiveEsiVersion = effectiveEsiPolicyVersion(
+    esiPolicies?.find((policy) => policy.id === esiPolicyId),
+    effectiveMonth
+  );
+  const calculationCurrent = Boolean(
+    calculation &&
+    calculatedSignature === signature &&
+    (esiMode === 'EXTERNAL' ||
+      (calculation.employeeStateInsurance.ruleId &&
+        calculation.employeeStateInsurance.ruleId === effectiveEsiVersion?.id))
+  );
 
   useEffect(() => {
     if (operationSignatureRef.current && operationSignatureRef.current !== signature) {
@@ -389,6 +404,7 @@ export function SalaryStructureBuilder({
     setLocalBusy(true);
     setOperationError('');
     try {
+      if (esiMode === 'IN_PLATFORM') await refetchEsiPolicies();
       const result = await calculate({
         templateVersionId: selectedVersion.id,
         salaryBasis,
@@ -460,6 +476,7 @@ export function SalaryStructureBuilder({
           esiManagementMode: esiMode,
           esiPolicyId: esiPolicyId || null,
           esiExternalReason: esiReason.trim() || null,
+          expectedEsiPolicyVersionId: calculation.employeeStateInsurance.ruleId || null,
           statutoryProfileOverride: statutoryDraft?.profile,
           statutoryProfileConcurrencyStamp: statutoryDraft?.concurrencyStamp,
           statutoryProfileUpdatePf: statutoryDraft?.updatePf,
@@ -493,11 +510,18 @@ export function SalaryStructureBuilder({
       }
     } catch (error: any) {
       const parsed = parseApiProblemDetail(error);
-      if (error?.status === 409) setHasConflict(true);
+      const previewStale = parsed.errorCode === 'HR:Payroll:CompensationPreviewStale';
+      if (previewStale) {
+        setCalculation(null);
+        operationKeyRef.current = '';
+        await refetchEsiPolicies();
+      } else if (error?.status === 409) setHasConflict(true);
       setOperationError(
-        error?.status === 409
-          ? 'Salary changed in another session. Reload the history and review before saving again.'
-          : parsed.detail
+        previewStale
+          ? 'ESIC policy changed. Refresh preview and review the updated salary before saving.'
+          : error?.status === 409
+            ? 'Salary changed in another session. Reload the history and review before saving again.'
+            : parsed.detail
       );
     } finally {
       operationPending.current = false;

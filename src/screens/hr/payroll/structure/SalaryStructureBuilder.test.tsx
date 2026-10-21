@@ -20,6 +20,7 @@ vi.mock('src/redux/hr/esi-policy-api', () => ({
         isArchived: false,
         versions: [
           {
+            id: mocks.esiRuleVersionId,
             version: 1,
             effectiveFrom: '2025-01-01',
             employeePercentage: 0.75,
@@ -30,12 +31,14 @@ vi.mock('src/redux/hr/esi-policy-api', () => ({
     ],
     isLoading: false,
     isError: false,
+    refetch: vi.fn().mockResolvedValue({}),
   }),
   effectiveEsiPolicyVersion: (policy: any) => policy?.versions[0],
 }));
 
 const mocks = vi.hoisted(() => ({
   templatesLoading: false,
+  esiRuleVersionId: 'esi-rule-1',
   revisionsFetching: false,
   revisions: [] as any[],
   readiness: { canActivate: false, blockerCodes: [] as string[] },
@@ -198,6 +201,7 @@ const renderBuilder = (props: Partial<React.ComponentProps<typeof SalaryStructur
 describe('SalaryStructureBuilder initialization and activation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.esiRuleVersionId = 'esi-rule-1';
     mocks.revisions = [];
     mocks.revisionsFetching = false;
     mocks.canManageSalary = true;
@@ -212,7 +216,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         deductions: [],
         employerContributions: [],
         warnings: [],
-        employeeStateInsurance: { canCalculate: true, issueCodes: [] },
+        employeeStateInsurance: { ruleId: 'esi-rule-1', canCalculate: true, issueCodes: [] },
         targetResult: { isExact: true, difference: 0 },
       }),
     });
@@ -620,7 +624,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         deductions: [],
         employerContributions: [],
         warnings: [],
-        employeeStateInsurance: { canCalculate: true, issueCodes: [] },
+        employeeStateInsurance: { ruleId: 'esi-rule-1', canCalculate: true, issueCodes: [] },
         targetResult: { isExact: true, difference: 0 },
       }),
     });
@@ -711,6 +715,53 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     expect(mocks.saveSalary.mock.calls[1][0].body).not.toHaveProperty('deductionComponents');
   });
 
+  it('invalidates the preview when the catalogue resolves a different ESIC version', async () => {
+    const user = userEvent.setup();
+    const view = renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+    mocks.esiRuleVersionId = 'esi-rule-2';
+    view.rerender(
+      <ThemeProvider theme={theme}>
+        <SalaryStructureBuilder
+          formik={formik}
+          employeeId="employee-1"
+          dateOfJoining="2026-11-18"
+        />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    expect(screen.getByText('Your changes need a new preview.')).toBeVisible();
+  });
+
+  it('requires a refreshed preview after the server rejects a changed ESIC version', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
+    mocks.saveSalary.mockReturnValueOnce({
+      unwrap: vi
+        .fn()
+        .mockRejectedValue({
+          status: 409,
+          data: { errorCode: 'HR:Payroll:CompensationPreviewStale' },
+        }),
+    });
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(mocks.saveSalary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ expectedEsiPolicyVersionId: 'esi-rule-1' }),
+      })
+    );
+    expect(await screen.findByText(/ESIC policy changed. Refresh preview/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Refresh preview' }));
+    expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Save salary' }));
+    expect(mocks.saveSalary).toHaveBeenCalledTimes(2);
+  });
+
   it('requires conflict review and recalculation before retrying', async () => {
     const user = userEvent.setup();
     renderBuilder();
@@ -738,7 +789,11 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.calculate.mockReturnValue({
       unwrap: vi.fn().mockResolvedValue({
         ...result,
-        employeeStateInsurance: { canCalculate: false, issueCodes: ['ESI_RULE_MISSING'] },
+        employeeStateInsurance: {
+          ruleId: 'esi-rule-1',
+          canCalculate: false,
+          issueCodes: ['ESI_RULE_MISSING'],
+        },
       }),
     });
     const user = userEvent.setup();
@@ -755,6 +810,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       unwrap: vi.fn().mockResolvedValue({
         ...result,
         employeeStateInsurance: {
+          ruleId: 'esi-rule-1',
           canCalculate: true,
           registrationPending: true,
           issueCodes: ['ESI_NUMBER_MISSING', 'ESI_REGISTRATION_PENDING'],

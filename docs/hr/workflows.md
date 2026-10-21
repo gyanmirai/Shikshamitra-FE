@@ -554,6 +554,8 @@ Change an employee assignment through the existing effective salary revision wor
 Salary preview keeps amount, basis, month and its single action together.
 Explain that this is a full-month estimate before attendance, unpaid leave and monthly adjustments; actual payable salary belongs to Run Payroll.
 Show Preview required, Preview needs refresh or Preview ready inline and require a current valid preview before Save.
+Invalidate the employee preview when the effective ESIC policy version changes, and submit the previewed version with Save.
+If Save reports `HR:Payroll:CompensationPreviewStale`, preserve the draft and require Refresh preview without treating it as a salary-history conflict.
 Show gross, estimated deductions, estimated take-home and monthly school cost, then separate earnings, employee deductions and school contributions.
 Show PF/ESIC status and actionable target differences without repeated yearly totals.
 Failed catalogue requests offer Retry and preserve the draft; missing effective versions require policy setup.

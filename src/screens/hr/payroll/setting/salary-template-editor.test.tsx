@@ -294,6 +294,15 @@ describe('SalaryTemplateEditor', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('shows readable PF and ESIC status labels after preview', async () => {
+    const user = userEvent.setup();
+    const view = renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
+    await user.click(screen.getByRole('button', { name: /Preview salary|Refresh preview/ }));
+    expect(await screen.findByText('PF · Not applied')).toBeVisible();
+    expect(screen.getByText(/ESIC · Standard ESIC ·/)).toBeVisible();
+    expect(view.container.textContent).not.toContain('\uFFFD');
+  });
+
   it('preserves the expected version when repairing a migrated template that needs setup', async () => {
     const user = userEvent.setup();
     mocks.template.status = 'NEEDS_SETUP';

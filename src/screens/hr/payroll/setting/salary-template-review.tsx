@@ -184,8 +184,8 @@ export default function SalaryTemplateReview({
                   variant="outlined"
                   label={
                     calculation.pfRuleId
-                      ? `PF � Rule version ${calculation.pfRuleVersion}`
-                      : 'PF � Not applied'
+                      ? `PF · Rule version ${calculation.pfRuleVersion}`
+                      : 'PF · Not applied'
                   }
                 />
                 <Chip
@@ -193,8 +193,8 @@ export default function SalaryTemplateReview({
                   variant="outlined"
                   label={
                     calculation.employeeStateInsurance.managementMode === 'EXTERNAL'
-                      ? 'ESIC � Handled outside ShikshaMitra'
-                      : `ESIC � ${calculation.employeeStateInsurance.policyName || 'Selected policy'} � ${formatRuleLabel(calculation.employeeStateInsurance.coverageDecision || 'not evaluated')}`
+                      ? 'ESIC · Handled outside ShikshaMitra'
+                      : `ESIC · ${calculation.employeeStateInsurance.policyName || 'Selected policy'} · ${formatRuleLabel(calculation.employeeStateInsurance.coverageDecision || 'not evaluated')}`
                   }
                 />
               </Box>

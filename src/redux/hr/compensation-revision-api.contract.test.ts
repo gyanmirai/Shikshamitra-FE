@@ -19,12 +19,11 @@ describe('compensation revision API contract', () => {
     customizationReason: null,
     idempotencyKey: 'operation-1',
     expectedRevision: null,
+    expectedEsiPolicyVersionId: 'esi-version-1',
   };
 
   it('uses the staff-scoped direct-save endpoint', () => {
-    expect(compensationEndpoint('employee-1')).toBe(
-      '/payroll/employees/employee-1/compensation'
-    );
+    expect(compensationEndpoint('employee-1')).toBe('/payroll/employees/employee-1/compensation');
     expect(buildSaveEmployeeCompensationRequest('employee-1', quote)).toEqual({
       url: '/payroll/employees/employee-1/compensation',
       method: 'PUT',
