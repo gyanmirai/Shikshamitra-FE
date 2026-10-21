@@ -367,6 +367,8 @@ export function ReportDesigner({
                   <Typography variant="body2">
                     Showing the first {previewState.data.rows.length} of{' '}
                     {previewState.data.totalCount.toLocaleString('en-IN')} matching output rows.
+                    Search, sorting and column filters refine this sample. Exports include all
+                    matching captured rows.
                   </Typography>
                   {previewState.data.warnings.map((w) => (
                     <Alert key={w} severity="info">

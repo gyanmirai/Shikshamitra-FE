@@ -12,7 +12,12 @@ import {
 } from 'src/redux/hr/hrReportingWorkspaceApi';
 
 import { ReportResultTable } from './ReportResultTable';
-import { reportError, displayReportValue } from '../reporting-workspace-utils';
+import { useReportTableState } from '../hooks/useReportTableState';
+import {
+  reportError,
+  displayReportValue,
+  reportListPagination,
+} from '../reporting-workspace-utils';
 
 const Chart = dynamic(
   () => import('../components/HrReportChartPreview').then((m) => m.HrReportChartPreview),
@@ -22,7 +27,10 @@ export function ReportRunResult({ id }: { id: string }) {
   const router = useRouter();
   const exportTable = useHrTableExport('hr-generated-report', { runId: id });
   const [poll, setPoll] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 50 });
+  const tableState = useReportTableState();
+  const { query, updateQuery } = tableState;
+  const { page: pageIndex, pageSize } = reportListPagination(query);
+  const pagination = { page: pageIndex + 1, pageSize };
   const [error, setError] = useState('');
   const {
     data: run,
@@ -30,12 +38,12 @@ export function ReportRunResult({ id }: { id: string }) {
     isLoading,
   } = useGetReportingRunQuery(id, { pollingInterval: poll ? 2000 : 0 });
   const {
-    data: page,
+    currentData: page,
     isFetching,
     error: rowsError,
     refetch: refetchRows,
   } = useGetReportingRowsQuery(
-    { id, ...pagination },
+    { id, ...pagination, criteria: tableState.criteria },
     { skip: run?.status !== 'Completed' || run.isExpired }
   );
   const [cancel] = useCancelReportingRunMutation();
@@ -138,12 +146,12 @@ export function ReportRunResult({ id }: { id: string }) {
           spacing={2}
           useFlexGap
           sx={{ overflowX: 'auto', flexShrink: 0, py: 0.5 }}
-          aria-label="Report totals"
+          aria-label="Captured report totals"
         >
           {Object.entries(run.totals).map(([field, total]) => (
             <Typography key={field} variant="body2" sx={{ whiteSpace: 'nowrap' }}>
               <Box component="span" sx={{ color: 'text.secondary' }}>
-                {run.columns.find((column) => column.id === field)?.label || field}:{' '}
+                Captured {run.columns.find((column) => column.id === field)?.label || field}:{' '}
               </Box>
               {displayReportValue(
                 total,
@@ -159,22 +167,33 @@ export function ReportRunResult({ id }: { id: string }) {
             <Alert
               severity="error"
               action={
-                <Button size="small" disabled={isFetching} onClick={() => refetchRows()}>
-                  Retry
-                </Button>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    onClick={() => updateQuery({ search: '', filters: '', sorts: '', page: '0' })}
+                  >
+                    Reset table
+                  </Button>
+                  <Button size="small" disabled={isFetching} onClick={() => refetchRows()}>
+                    Retry
+                  </Button>
+                </Stack>
               }
             >
               {reportError(rowsError)}
             </Alert>
           ) : (
             <ReportResultTable
+              tableState={tableState}
               onExport={exportTable}
               columns={run.columns}
               rows={page?.rows || []}
-              count={run.rowCount}
+              count={page?.totalCount ?? 0}
               loading={isFetching}
               {...pagination}
-              onPage={(next, pageSize) => setPagination({ page: next, pageSize })}
+              onPage={(next, size) =>
+                updateQuery({ page: String(next - 1), pageSize: String(size) })
+              }
               timezone={run.parameters.timeZone}
             />
           )}

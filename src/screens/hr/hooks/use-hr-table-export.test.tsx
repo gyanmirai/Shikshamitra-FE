@@ -26,6 +26,29 @@ const completed = { id: 'export-1', status: 'Completed', rowCount: 25001 };
 const response = (value: unknown) => ({ unwrap: () => Promise.resolve(value) });
 
 describe('complete HR table exports', () => {
+  it('captures report search, filters and sorts independently of pagination and display labels', async () => {
+    const { result } = renderHook(() =>
+      useHrTableExport('hr-generated-report', { runId: 'run-1' })
+    );
+    await act(() =>
+      result.current({
+        ...request,
+        searchTerm: 'staff',
+        filters: [
+          { column: 'active', type: 'equals', value: false, valueType: 'enum', label: 'Active' },
+        ],
+        sorts: [{ column: 'netPay', direction: 'desc' }],
+      })
+    );
+    expect(rpc.create.mock.calls[0][0].query).toEqual({
+      runId: 'run-1',
+      criteria: {
+        search: 'staff',
+        filters: [{ column: 'active', type: 'equals', value: false }],
+        sorts: [{ column: 'netPay', direction: 'desc' }],
+      },
+    });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     Object.values(rpc).forEach((mock) => mock.mockReset());

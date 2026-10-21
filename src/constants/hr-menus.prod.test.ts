@@ -124,3 +124,18 @@ describe('HR production menu', () => {
     ).toBeUndefined();
   });
 });
+
+it('groups Reports and Templates under Reporting without changing grants', async () => {
+  const { default: hrModule, hrPermissions } = await import('./hr-menus');
+  const items = Object.values(hrModule(true)).flatMap((sections) =>
+    sections.flatMap((section) => section.items)
+  );
+  const reporting = items.find((item) => item.title === 'Reporting');
+  expect(reporting).toMatchObject({ path: '/hr/reports', permissionName: hrPermissions.reports });
+  expect(
+    reporting?.children?.map((item: any) => [item.title, item.path, item.permissionName])
+  ).toEqual([
+    ['Reports', '/hr/reports', hrPermissions.reports],
+    ['Templates', '/hr/reports/templates', hrPermissions.reports],
+  ]);
+});

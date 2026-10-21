@@ -36,12 +36,15 @@ const normalizeNavigationPath = (path?: string) => {
 export const isNavigationPathActive = (
   pathname: string,
   itemPath?: string,
-  includeDescendants = false
+  includeDescendants = false,
+  excludeActivePaths: readonly string[] = []
 ) => {
   const currentPath = normalizeNavigationPath(pathname);
   const targetPath = normalizeNavigationPath(itemPath);
 
   if (!currentPath || !targetPath) return false;
+  if (excludeActivePaths.some((path) => isNavigationPathActive(currentPath, path, true)))
+    return false;
   if (currentPath === targetPath) return true;
 
   return includeDescendants && targetPath !== '/' && currentPath.startsWith(`${targetPath}/`);

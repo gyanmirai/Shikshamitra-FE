@@ -14,6 +14,7 @@ const RouterLink = (props: any) => {
   delete linkProps.externalLink;
   delete linkProps.hasChild;
   delete linkProps.preserveQueryParams;
+  delete linkProps.excludeActivePaths;
 
   return <Link {...linkProps} />;
 };

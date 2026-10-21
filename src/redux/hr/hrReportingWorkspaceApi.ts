@@ -10,6 +10,11 @@ import type {
   HrReportFilterCondition,
 } from './hrReportsApi';
 
+export type ReportTableCriteria = {
+  search: string;
+  filters: { column: string; type: string; value: unknown }[];
+  sorts: { column: string; direction: 'asc' | 'desc' }[];
+};
 export type ReportColumn = { field: string; label: string; format: string };
 export type ReportConditionGroup = {
   match: 'all' | 'any';
@@ -177,16 +182,22 @@ export const reportingWorkspaceApi = api.injectEndpoints({
       query: (body) => ({ url: `${root}/runs`, method: 'POST', body }),
       invalidatesTags: runTags,
     }),
-    getReportingRuns: builder.query<ReportRunHistory, { skip?: number; take?: number }>({
-      query: (params) => ({ url: `${root}/runs`, params }),
+    getReportingRuns: builder.query<
+      ReportRunHistory,
+      { skip?: number; take?: number; criteria?: ReportTableCriteria }
+    >({
+      query: (body) => ({ url: `${root}/runs/query`, method: 'POST', body }),
       providesTags: runTags,
     }),
     getReportingRun: builder.query<ReportRun, string>({
       query: (id) => `${root}/runs/${id}`,
       providesTags: (_result, _error, id) => [{ type: employeeType.hrReports, id }],
     }),
-    getReportingRows: builder.query<ReportPage, { id: string; page: number; pageSize: number }>({
-      query: ({ id, ...params }) => ({ url: `${root}/runs/${id}/rows`, params }),
+    getReportingRows: builder.query<
+      ReportPage,
+      { id: string; page: number; pageSize: number; criteria?: ReportTableCriteria }
+    >({
+      query: ({ id, ...body }) => ({ url: `${root}/runs/${id}/rows/query`, method: 'POST', body }),
     }),
     cancelReportingRun: builder.mutation<void, string>({
       query: (id) => ({ url: `${root}/runs/${id}/cancel`, method: 'POST' }),

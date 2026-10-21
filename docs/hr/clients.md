@@ -172,7 +172,8 @@ Salary save responses include the saved statutory profile so the editor adopts t
 ## Reporting workspace client
 
 `src/redux/hr/hrReportingWorkspaceApi.ts` owns catalogue/options, template revisions, designer preview, private runs, captured rows, cancellation/retry, and downloads.
-The template library requests templates only; the design catalogue loads when opening design or generation.
+Template management requests the editable library; the generation chooser requests the published library.
+The design catalogue loads only when opening design or report options.
 History and captured-result routes request their own data without waiting for templates or the catalogue.
 The generation form loads as a separate client chunk when opened.
 HR route loading boundaries keep the shared application shell mounted and allow Next.js to prefetch the loading shell for dynamic routes.
@@ -206,3 +207,10 @@ Calculation and compensation contracts use `esiManagementMode`, `esiPolicyId` an
 Preview signatures include all three values; salary-template save additionally binds them to the server preview token.
 Calculation responses include selected policy identity, resolved rule/version and contribution breakdown.
 Backend policy invariants and migration ownership live in [HR API contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
+
+### Reporting table criteria
+
+Report history and captured rows use POST query endpoints with typed search, column filters, sorting and pagination.
+The table view state lives in the page URL and is restored by reload and browser history.
+`useHrTableExport` captures the same report criteria and visible ordered columns for complete server exports.
+Template management and template selection use the shared table over the accessible library.

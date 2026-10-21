@@ -68,9 +68,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   serverSideFilter = false,
   onServerSort,
   onServerPagination,
+  onPaginationChange,
   onSearchInputChange,
   onServerSearch,
   onServerFilter,
+  onSortChange,
+  onFiltersChange,
+  onClearCriteria,
   totalCount,
   maxServerRowsPerPage,
   handleRowClick = () => {},
@@ -132,7 +136,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [customErrorContent, queryError, onRetry]
   );
   const incompleteExport = exportScope === 'all' && serverSidePagination && !onExport;
-  const canUseColumnFilters = !serverSidePagination || Boolean(onServerFilter);
+  const canUseColumnFilters = !serverSidePagination || Boolean(onServerFilter || onFiltersChange);
   const shouldUseServerFilter = serverSideFilter || Boolean(onServerFilter);
 
   // Memoize columns to ensure stability (especially if not memoized by parent)
@@ -140,10 +144,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () =>
       columns.map((col) => ({
         ...col,
-        isSort: serverSidePagination && !onServerSort ? false : col.isSort,
+        isSort: serverSidePagination && !onServerSort && !onSortChange ? false : col.isSort,
         isFilter: canUseColumnFilters ? (col.isFilter ?? true) : false,
       })),
-    [canUseColumnFilters, columns, serverSidePagination, onServerSort]
+    [canUseColumnFilters, columns, serverSidePagination, onServerSort, onSortChange]
   );
 
   const { tableConfig, setTableConfig, handleChangeParams } = useTableConfig({
@@ -296,22 +300,24 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const handlePageChange = useCallback(
     (event: unknown, newPage: number) => {
       handleChangeParams({ page: newPage });
+      onPaginationChange?.(newPage, rowsPerPage);
       if (serverSidePagination && onServerPagination) {
         onServerPagination(newPage + 1, rowsPerPage);
       }
     },
-    [handleChangeParams, serverSidePagination, onServerPagination, rowsPerPage]
+    [handleChangeParams, serverSidePagination, onServerPagination, onPaginationChange, rowsPerPage]
   );
 
   const handleRowsPerPageChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const newRowsPerPage = +event.target.value;
       handleChangeParams({ rowsPerPage: newRowsPerPage, page: 0 });
+      onPaginationChange?.(0, newRowsPerPage);
       if (serverSidePagination && onServerPagination) {
         onServerPagination(1, newRowsPerPage);
       }
     },
-    [handleChangeParams, serverSidePagination, onServerPagination]
+    [handleChangeParams, serverSidePagination, onServerPagination, onPaginationChange]
   );
 
   const handleTableSort = useCallback(
@@ -321,9 +327,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           ? getNextSingleTableSort(sorts, column, originalId)
           : getNextTableSorts(sorts, column, originalId);
       handleChangeParams({ sorts: nextSorts, page: 0 });
+      onSortChange?.(nextSorts);
       if (serverSideSort) onServerSort?.(column, nextSorts);
     },
-    [handleChangeParams, onServerSort, serverSideSort, serverSideSortMode, sorts]
+    [handleChangeParams, onServerSort, onSortChange, serverSideSort, serverSideSortMode, sorts]
   );
 
   const handleSearch = useCallback(
@@ -373,15 +380,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     (index: number) => {
       const nextFilters = filters.filter((filterItem, i) => i !== index);
       handleChangeParams({ filters: nextFilters });
+      onFiltersChange?.(nextFilters);
       onServerFilter?.(nextFilters);
     },
-    [filters, handleChangeParams, onServerFilter]
+    [filters, handleChangeParams, onServerFilter, onFiltersChange]
   );
 
   const handleClearAllFilters = useCallback(() => {
     handleChangeParams({ filters: [] });
+    onFiltersChange?.([]);
     onServerFilter?.([]);
-  }, [handleChangeParams, onServerFilter]);
+  }, [handleChangeParams, onServerFilter, onFiltersChange]);
 
   const handleApplyColumnFilter = useCallback(
     (
@@ -402,10 +411,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       };
       const nextFilters = [...filters, newFilter];
       handleChangeParams({ filters: nextFilters, page: 0 });
+      onFiltersChange?.(nextFilters);
       onServerFilter?.(nextFilters);
       setFilterAnchorEl(null);
     },
-    [filters, handleChangeParams, onServerFilter]
+    [filters, handleChangeParams, onServerFilter, onFiltersChange]
   );
 
   useEffect(() => {
@@ -626,8 +636,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   searchTerm={searchTerm}
                   hasActiveFilters={filters.length > 0}
                   onClearCriteria={() => {
-                    handleClearSearch();
-                    handleClearAllFilters();
+                    if (onClearCriteria) {
+                      handleChangeParams({ searchTerm: '', filters: [], page: 0 });
+                      onClearCriteria();
+                    } else {
+                      handleClearSearch();
+                      handleClearAllFilters();
+                    }
                   }}
                 />
               </Table>
@@ -693,7 +708,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                       width: { xs: '100%', sm: 'auto' },
                       maxWidth: '100%',
                       ml: 'auto',
-                      '& .MuiTablePagination-toolbar': { height: 40, minHeight: 40 },
+                      '& .MuiTablePagination-toolbar': {
+                        height: 'auto',
+                        minHeight: 40,
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-end',
+                      },
                       '& .MuiTablePagination-actions': { ml: 1 },
                       '& .MuiTablePagination-selectLabel': { fontSize: '13px' },
                       '& .MuiTablePagination-input': { fontSize: '13px' },
@@ -729,6 +749,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       filters,
       handleRemoveFilter,
       handleClearAllFilters,
+      onClearCriteria,
       filterAnchorEl,
       handleApplyColumnFilter,
       sx,

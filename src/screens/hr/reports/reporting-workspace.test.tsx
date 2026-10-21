@@ -5,17 +5,37 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { renderWithProviders } from 'src/test/test-utils';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
+import { act, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
 import { ReportLibrary } from './workspace/ReportLibrary';
 import { ReportGenerate } from './workspace/ReportGenerate';
-import { displayReportValue, defaultReportParameters } from './reporting-workspace-utils';
+import {
+  displayReportValue,
+  reportListPagination,
+  defaultReportParameters,
+} from './reporting-workspace-utils';
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), generate: vi.fn(), archive: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  generate: vi.fn(),
+  archive: vi.fn(),
+  query: new URLSearchParams(),
+  canBuild: true,
+  canDelete: true,
+}));
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => mocks.query,
+  useRouter: () => ({ push: mocks.push, replace: mocks.push }),
+  usePathname: () => '/hr/reports/templates',
+}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock('./hooks/useHrReportPermissions', () => ({
-  useHrReportPermissions: () => ({ canBuild: true, canDelete: true, canView: true }),
+  useHrReportPermissions: () => ({
+    canBuild: mocks.canBuild,
+    canDelete: mocks.canDelete,
+    canView: true,
+  }),
 }));
 vi.mock('src/redux/hr/hrReportingWorkspaceApi', () => ({
   useArchiveReportingTemplateMutation: () => [mocks.archive, { isLoading: false }],
@@ -34,6 +54,9 @@ vi.mock('src/redux/hr/hrReportingWorkspaceApi', () => ({
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  mocks.query = new URLSearchParams();
+  mocks.canBuild = true;
+  mocks.canDelete = true;
 });
 const template: ReportTemplate = {
   id: 'builtin:in-out',
@@ -68,15 +91,86 @@ function render(component: React.ReactNode) {
   );
 }
 
-it('keeps the category library and makes generation the primary built-in action', () => {
+it('keeps template configuration separate from report generation', () => {
   render(<ReportLibrary templates={[template]} />);
   expect(screen.getByRole('textbox', { name: 'Search report templates' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: /^Generate$/ }));
-  expect(mocks.push).toHaveBeenCalledWith(expect.stringContaining('mode=generate'));
-  fireEvent.click(screen.getByRole('button', { name: 'Actions for Staff in/out register' }));
-  expect(screen.getByRole('menuitem', { name: 'Customize a copy' })).toBeVisible();
-  expect(screen.queryByRole('menuitem', { name: 'Edit template' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('menuitem', { name: 'Archive' })).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Category' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: /^Generate$/ })).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('link', { name: 'Customize a copy of Staff in/out register' })
+  ).toHaveAttribute('href', '/hr/reports/templates/new?copyFrom=builtin%3Ain-out');
+  expect(
+    screen.queryByRole('link', { name: 'Edit Staff in/out register' })
+  ).not.toBeInTheDocument();
+  expect(screen.getByText('Published')).toBeVisible();
+});
+
+it('offers only published templates in the chooser and carries URL filters into options', () => {
+  mocks.query = new URLSearchParams('category=Attendance&search=Staff&pageSize=25');
+  render(
+    <ReportLibrary
+      purpose="choose"
+      templates={[
+        template,
+        { ...template, id: 'draft', name: 'Draft staff report', publishedRevision: 0 },
+      ]}
+    />
+  );
+  expect(screen.getByRole('link', { name: 'Choose Staff in/out register' })).toHaveAttribute(
+    'href',
+    '/hr/reports/generate/builtin%3Ain-out?category=Attendance&search=Staff&pageSize=25'
+  );
+  expect(screen.queryByText('Draft staff report')).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /Customize/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: 'Status' })).not.toBeInTheDocument();
+});
+
+it('hides design actions without Build and retains owned edits independently', () => {
+  mocks.canBuild = false;
+  render(
+    <ReportLibrary
+      templates={[
+        template,
+        { ...template, id: 'school', name: 'School report', canEdit: true, isBuiltIn: false },
+      ]}
+    />
+  );
+  expect(screen.queryByRole('link', { name: /Customize/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Edit School report' })).toHaveAttribute(
+    'href',
+    '/hr/reports/templates/school/edit'
+  );
+});
+
+it('restores category, library, search and page size from the URL', () => {
+  mocks.query = new URLSearchParams(
+    'category=Attendance&library=builtin&search=punches&pageSize=25'
+  );
+  render(
+    <ReportLibrary
+      templates={[
+        template,
+        { ...template, id: 'salary', name: 'Salary register', category: 'Payroll' },
+      ]}
+    />
+  );
+  expect(screen.getByRole('textbox', { name: 'Search report templates' })).toHaveValue('punches');
+  expect(screen.getByText('Staff in/out register')).toBeVisible();
+  expect(screen.queryByText('Salary register')).not.toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: /Rows per page/ })).toHaveTextContent('25');
+});
+
+it('validates URL pagination before using it for a server request', () => {
+  expect(reportListPagination(new URLSearchParams('page=2&pageSize=25'))).toEqual({
+    page: 2,
+    pageSize: 25,
+  });
+  ['-1', 'NaN', 'Infinity', '1.5', '99999999999999'].forEach((value) => {
+    expect(reportListPagination(new URLSearchParams(`page=${value}&pageSize=999`))).toEqual({
+      page: 0,
+      pageSize: 50,
+    });
+  });
 });
 
 it('filters templates by purpose without changing definitions', () => {
@@ -163,7 +257,7 @@ it('offers complete months for a monthly register', () => {
   expect(screen.queryByRole('option', { name: 'Custom dates' })).not.toBeInTheDocument();
 });
 
-it('uses month boundaries for a salary statement range', () => {
+it('uses month boundaries for a salary statement range', async () => {
   render(
     <ReportGenerate
       template={{
@@ -174,9 +268,39 @@ it('uses month boundaries for a salary statement range', () => {
   );
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Reporting period' }));
   expect(screen.queryByRole('option', { name: /^Today$/ })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('option', { name: 'Custom months' }));
-  fireEvent.change(screen.getByLabelText('From month'), { target: { value: '2026-08' } });
-  fireEvent.change(screen.getByLabelText('To month'), { target: { value: '2026-10' } });
+  await act(async () => {
+    fireEvent.click(screen.getByRole('option', { name: 'Custom months' }));
+  });
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText('From month'), { target: { value: '2026-08' } });
+  });
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText('To month'), { target: { value: '2026-10' } });
+  });
   expect(screen.getByLabelText('From month')).toHaveValue('2026-08');
   expect(screen.getByLabelText('To month')).toHaveValue('2026-10');
+});
+
+it('surfaces archive failures on the management page instead of behind the dialog', async () => {
+  mocks.canBuild = false;
+  mocks.archive.mockImplementation(() => ({
+    unwrap: async () => {
+      throw Object.assign(new Error('Archive failed'), {
+        data: { error: { message: 'This template changed. Reload and try again.' } },
+      });
+    },
+  }));
+  render(
+    <ReportLibrary
+      templates={[
+        { ...template, id: 'owned', name: 'Owned template', canEdit: true, isBuiltIn: false },
+      ]}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Archive Owned template' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Archive template$/ }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'This template changed. Reload and try again.'
+  );
 });

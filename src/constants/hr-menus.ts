@@ -83,6 +83,7 @@ export const hrPaths = {
     },
   },
   reports: '/hr/reports',
+  reportTemplates: '/hr/reports/templates',
   notification: '/hr/hr-notification',
 };
 
@@ -633,13 +634,30 @@ const hrModule = (isDdvs: boolean) => ({
           ],
         },
         {
-          title: 'Reports',
+          title: 'Reporting',
           path: hrPaths.reports,
           _action: 'reports',
           shortcutKey: 'Alt+H+R',
           shortcutKeyName: 'Alt+H+R',
           permissionName: hrPermissions.reports,
           icon: menuIconView('mdi:chart-box-outline'),
+          children: [
+            {
+              title: 'Reports',
+              path: hrPaths.reports,
+              _action: 'report-history',
+              permissionName: hrPermissions.reports,
+              excludeActivePaths: [hrPaths.reportTemplates],
+              icon: menuIconView('mdi:chart-box-outline'),
+            },
+            {
+              title: 'Templates',
+              path: hrPaths.reportTemplates,
+              _action: 'report-templates',
+              permissionName: hrPermissions.reports,
+              icon: menuIconView('mdi:file-document-edit-outline'),
+            },
+          ],
         },
         // {
         //   title: 'Events & Holidays',

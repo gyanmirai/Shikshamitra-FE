@@ -84,11 +84,15 @@ export interface ICustomizableTableProps {
     column: string,
     sortData: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   ) => void;
+  /** Reports zero-based pages for URL-backed client pagination. */
+  onPaginationChange?: (page: number, rowsPerPage: number) => void;
   /** Reports one-based server pages; the controlled `page` prop is zero-based. */
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onSearchInputChange?: (searchTerm: string) => void;
   onServerSearch?: (searchTerm: string) => void;
   onServerFilter?: (filters: IParams['filters']) => void;
+  onSortChange?: (sorts: IParams['sorts']) => void;
+  onFiltersChange?: (filters: IParams['filters']) => void;
   /** Atomically clear search and column filters when the owning server query controls both. */
   onClearCriteria?: () => void;
   totalCount?: number;

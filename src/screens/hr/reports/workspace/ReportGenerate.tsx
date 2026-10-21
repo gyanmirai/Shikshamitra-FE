@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useRouter } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { Chip, Alert, Stack, Button, Typography } from '@mui/material';
@@ -19,9 +20,11 @@ import {
 export function ReportGenerate({
   template,
   dataset,
+  backHref = hrReportPaths.choose,
 }: {
   template: ReportTemplate;
   dataset?: ReportDataset;
+  backHref?: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -64,7 +67,7 @@ export function ReportGenerate({
       {error && <Alert severity="error">{error}</Alert>}
       <FormSectionCard
         icon="solar:settings-bold"
-        title="Report options"
+        title="Period and staff"
         descriptionTooltip="Choose the reporting period and staff for this generation. The template stays unchanged."
       >
         <ReportParameters
@@ -103,9 +106,10 @@ export function ReportGenerate({
           color="inherit"
           size="small"
           disabled={busy}
-          onClick={() => router.push(hrReportPaths.library)}
+          component={RouterLink}
+          href={backHref}
         >
-          Cancel
+          Back to templates
         </Button>
       </Stack>
     </Stack>

@@ -1,3 +1,4 @@
+import { reportTableCriteria } from 'src/screens/hr/reports/report-table-query';
 /* eslint-disable no-await-in-loop */
 // Poll each export sequentially so a stale response cannot finish a newer request.
 import type { TableExportRequest } from 'src/components/customizabaleTable/types';
@@ -36,11 +37,13 @@ export function useHrTableExport(table: string, query: Record<string, unknown>) 
   const [cancel] = useCancelHrTableExportMutation();
   return useCallback(
     async (
-      { format, columns, searchTerm, signal }: TableExportRequest,
+      { format, columns, searchTerm, filters, sorts, signal }: TableExportRequest,
       queryOverride?: Record<string, unknown>
     ) => {
       const captured = structuredClone({ ...currentQuery.current, ...queryOverride });
-      if (searchTerm || Object.hasOwn(captured, 'search')) captured.search = searchTerm;
+      if (table === 'hr-generated-report' || table === 'hr-generated-report-history')
+        captured.criteria = reportTableCriteria(searchTerm, filters, sorts);
+      else if (searchTerm || Object.hasOwn(captured, 'search')) captured.search = searchTerm;
       let job = await create({
         table,
         query: captured,

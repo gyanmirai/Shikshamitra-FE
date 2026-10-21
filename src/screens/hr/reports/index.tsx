@@ -5,10 +5,10 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'src/routes/hooks';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useSearchParams } from 'next/navigation';
-import { CustomTabs } from 'src/components/custom-tabs';
+import { RouterLink } from 'src/routes/components';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Alert, Stack, Button, LinearProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, LinearProgress } from '@mui/material';
 import {
   useGetReportingLibraryQuery,
   useGetReportingCatalogueQuery,
@@ -23,8 +23,9 @@ const ReportGenerate = dynamic(
   () => import('./workspace/ReportGenerate').then((m) => m.ReportGenerate),
   { loading: loadingReportView }
 );
-const ReportDesigner = dynamic(() =>
-  import('./workspace/ReportDesigner').then((m) => m.ReportDesigner)
+const ReportDesigner = dynamic(
+  () => import('./workspace/ReportDesigner').then((m) => m.ReportDesigner),
+  { loading: loadingReportView }
 );
 const ReportHistory = dynamic(
   () => import('./workspace/ReportHistory').then((m) => m.ReportHistory),
@@ -35,19 +36,25 @@ const ReportRunResult = dynamic(
   { loading: loadingReportView }
 );
 
-function ReportingWorkspace() {
+type ReportsScreenProps = {
+  view?: 'history' | 'templates' | 'choose' | 'generate' | 'design' | 'result';
+  templateId?: string;
+  runId?: string;
+};
+
+function ReportingWorkspace({ view = 'history', templateId, runId }: ReportsScreenProps) {
   const query = useSearchParams();
   const router = useRouter();
   const permissions = useHrReportPermissions();
-  const mode = query.get('mode');
-  const tab = query.get('tab') === 'generated' ? 'generated' : 'templates';
-  // History and captured results own their reads. Library navigation needs no designer metadata.
-  const needsCatalogue = mode === 'design' || mode === 'generate';
-  const needsLibrary = needsCatalogue || (mode !== 'result' && tab === 'templates');
+  const canDesign = permissions.canBuild || permissions.canManageTemplates;
+  const isDesign = view === 'design';
+  const needsCatalogue = view === 'generate' || (isDesign && canDesign);
+  const needsLibrary = view === 'templates' || view === 'choose' || needsCatalogue;
   const {
     currentData: datasets,
     error: catalogueError,
     isFetching: fetchingCatalogue,
+    refetch: refetchCatalogue,
   } = useGetReportingCatalogueQuery(undefined, {
     skip: !permissions.canView || !needsCatalogue,
   });
@@ -55,138 +62,190 @@ function ReportingWorkspace() {
     currentData: templates,
     error: libraryError,
     isFetching: fetchingLibrary,
+    refetch: refetchLibrary,
   } = useGetReportingLibraryQuery(
-    { edit: mode === 'design' },
+    { edit: isDesign || view === 'templates' },
     { skip: !permissions.canView || !needsLibrary }
   );
-  const template = templates?.find((t) => t.id === query.get('template'));
+  const copyFrom = isDesign && !templateId ? query.get('copyFrom') : null;
+  // Path params can remain encoded after a hard reload in the current Next.js runtime.
+  let routeTemplateId: string | null = null;
+  if (templateId) {
+    try {
+      routeTemplateId = decodeURIComponent(templateId);
+    } catch {
+      routeTemplateId = null;
+    }
+  }
+  const selectedId = templateId ? routeTemplateId : copyFrom;
+  const hasTemplateSelection = !!(templateId || copyFrom);
+  const template = templates?.find((item) => item.id === selectedId);
   const error = (needsCatalogue && catalogueError) || (needsLibrary && libraryError);
   const loading =
     (needsCatalogue && fetchingCatalogue && !datasets) ||
     (needsLibrary && fetchingLibrary && !templates);
+  const chooserHref = `${hrReportPaths.choose}${query.size ? `?${query}` : ''}`;
+  const templateArea = view === 'templates' || isDesign;
+  const backHref = isDesign
+    ? hrReportPaths.library
+    : view === 'generate'
+      ? chooserHref
+      : hrReportPaths.history;
+  const title = {
+    history: 'Reports',
+    templates: 'Report templates',
+    choose: 'Choose report template',
+    generate: 'Report options',
+    design: templateId ? 'Edit template' : 'Create template',
+    result: 'Generated report',
+  }[view];
+
   if (
-    mode === 'design' &&
+    isDesign &&
+    permissions.canView &&
+    canDesign &&
     datasets?.length &&
-    (!query.get('template') || template) &&
+    (!hasTemplateSelection || template) &&
     !loading &&
     !error &&
-    (permissions.canBuild || permissions.canManageTemplates)
+    (!template || copyFrom || template.canEdit)
   ) {
-    if (template && !query.get('copy') && !template.canEdit)
-      return <Alert severity="warning">Choose Customize a copy to edit this template.</Alert>;
     return (
       <ReportDesigner
-        key={`${template?.id || 'new'}-${query.get('copy') || 'edit'}`}
+        key={`${selectedId || 'new'}-${!!copyFrom}`}
         datasets={datasets}
         template={template}
-        copy={query.get('copy') === '1'}
+        copy={!!copyFrom}
       />
     );
   }
+
+  let content;
+  if (!permissions.canView) {
+    content = <Alert severity="info">Report access is required to open this workspace.</Alert>;
+  } else if (error) {
+    content = (
+      <Alert
+        severity="error"
+        action={
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => {
+              if (needsCatalogue) refetchCatalogue();
+              if (needsLibrary) refetchLibrary();
+            }}
+          >
+            Retry
+          </Button>
+        }
+      >
+        {reportError(error)}
+      </Alert>
+    );
+  } else if (loading) {
+    content = <LinearProgress aria-label="Loading report templates" />;
+  } else if (view === 'history') {
+    content = <ReportHistory />;
+  } else if (view === 'result' && runId) {
+    content = <ReportRunResult key={runId} id={runId} />;
+  } else if (view === 'generate' && template && template.publishedRevision > 0) {
+    content = (
+      <ReportGenerate
+        key={template.id}
+        template={template}
+        dataset={datasets?.find((dataset) => dataset.id === template.definition.dataSource)}
+        backHref={chooserHref}
+      />
+    );
+  } else if (view === 'templates' || view === 'choose') {
+    content = (
+      <ReportLibrary
+        templates={templates || []}
+        purpose={view === 'choose' ? 'choose' : 'manage'}
+      />
+    );
+  } else {
+    content = (
+      <Alert
+        severity="warning"
+        action={
+          <Button component={RouterLink} href={backHref} color="inherit" size="small">
+            {isDesign ? 'Back to templates' : 'Choose another template'}
+          </Button>
+        }
+      >
+        {isDesign && !canDesign
+          ? 'Template design access is required.'
+          : isDesign && template && !copyFrom && !template.canEdit
+            ? 'Choose Customize a copy to edit this template.'
+            : 'This template is unavailable or outside your access.'}
+      </Alert>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading={
-          mode === 'generate'
-            ? 'Generate report'
-            : mode === 'result'
-              ? 'Generated report'
-              : 'HR reports'
-        }
+        heading={title}
         description={
-          mode === 'generate'
-            ? 'Choose the period and staff to capture this report.'
-            : 'Create a template once. Generate it whenever your school needs it.'
+          templateArea
+            ? 'Create and maintain reusable report templates.'
+            : view === 'choose'
+              ? 'Step 1 of 2: choose a template for this report.'
+              : view === 'generate'
+                ? 'Step 2 of 2: choose the period and staff, then generate your report.'
+                : 'Generate reports and reopen captured results.'
         }
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'HR reports', ...(mode ? { href: hrReportPaths.library } : {}) },
-          ...(mode ? [{ name: mode === 'generate' ? 'Generate' : 'Report result' }] : []),
+          ...(view === 'history' || view === 'templates'
+            ? []
+            : [
+                {
+                  name: templateArea ? 'Report templates' : 'Reports',
+                  href: templateArea ? hrReportPaths.library : hrReportPaths.history,
+                },
+              ]),
+          ...(view === 'generate' ? [{ name: 'Choose template', href: chooserHref }] : []),
+          { name: title },
         ]}
-        isBack={!!mode}
-        onBack={() => router.push(hrReportPaths.library)}
-        sx={{ px: 1 }}
+        isBack={!['history', 'templates'].includes(view)}
+        onBack={() => router.push(backHref)}
         action={
-          !mode && (permissions.canBuild || permissions.canManageTemplates) ? (
+          view === 'history' && permissions.canView ? (
             <Button
+              component={RouterLink}
+              href={hrReportPaths.choose}
               variant="contained"
               size="small"
-              onClick={() => router.push(hrReportPaths.design())}
+            >
+              Generate report
+            </Button>
+          ) : view === 'templates' && permissions.canView && canDesign ? (
+            <Button
+              component={RouterLink}
+              href={hrReportPaths.design()}
+              variant="contained"
+              size="small"
             >
               Create template
             </Button>
           ) : null
         }
+        sx={{ px: 1 }}
       />
       <Stack spacing={1} sx={{ p: 1, flex: 1, minHeight: 0 }}>
-        {!permissions.canView ? (
-          <Alert severity="info">Report access is required to open this workspace.</Alert>
-        ) : loading ? (
-          <LinearProgress aria-label="Loading report templates" />
-        ) : error ? (
-          <Alert severity="error">{reportError(error)}</Alert>
-        ) : mode === 'generate' ? (
-          template ? (
-            <ReportGenerate
-              key={template.id}
-              template={template}
-              dataset={datasets?.find((dataset) => dataset.id === template.definition.dataSource)}
-            />
-          ) : (
-            <Alert severity="warning">This template is unavailable or outside your access.</Alert>
-          )
-        ) : mode === 'result' && query.get('run') ? (
-          <ReportRunResult key={query.get('run')} id={query.get('run')!} />
-        ) : mode === 'design' ? (
-          <Alert severity="warning">
-            Template design requires personal design or school template management access and an
-            available dataset.
-          </Alert>
-        ) : (
-          <>
-            <CustomTabs
-              value={tab}
-              onChange={(_, value) =>
-                router.push(value === 'generated' ? hrReportPaths.history : hrReportPaths.library)
-              }
-              aria-label="HR reports"
-            >
-              <Tab
-                value="templates"
-                label="Templates"
-                id="hr-report-templates-tab"
-                aria-controls="hr-report-templates-panel"
-              />
-              <Tab
-                value="generated"
-                label="Generated reports"
-                id="hr-report-generated-tab"
-                aria-controls="hr-report-generated-panel"
-              />
-            </CustomTabs>
-            <Box
-              role="tabpanel"
-              id={`hr-report-${tab}-panel`}
-              aria-labelledby={`hr-report-${tab}-tab`}
-              sx={{ flex: 1, minHeight: 0 }}
-            >
-              {tab === 'templates' ? (
-                <ReportLibrary templates={templates || []} />
-              ) : (
-                <ReportHistory />
-              )}
-            </Box>
-          </>
-        )}
+        {content}
       </Stack>
     </Box>
   );
 }
 
-export default function ReportsScreen() {
+export default function ReportsScreen(props: ReportsScreenProps) {
   return (
     <Suspense fallback={<LinearProgress aria-label="Loading HR reports" />}>
-      <ReportingWorkspace />
+      <ReportingWorkspace {...props} />
     </Suspense>
   );
 }

@@ -53,7 +53,7 @@ describe('CustomizableTable controlled server state', () => {
     expect(screen.getByRole('combobox', { name: /Rows per page/ })).toHaveTextContent('50');
     expect(screen.getByRole('button', { name: 'Go to next page' })).toBeDisabled();
   });
-  it('mounts one table in full screen and restores focus after closing it', () => {
+  it('mounts one table in full screen and restores focus after closing it', async () => {
     vi.useRealTimers();
     renderTable(
       <CustomizableTable
@@ -63,9 +63,13 @@ describe('CustomizableTable controlled server state', () => {
         showFullScreen
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Full screen' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Full screen' }));
+    });
     expect(screen.getAllByRole('table')).toHaveLength(1);
-    fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Exit full screen' }));
+    });
     expect(screen.getAllByRole('table')).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Full screen' })).toHaveFocus();
   });
@@ -291,4 +295,19 @@ describe('CustomizableTable controlled server state', () => {
       { column: 'createdAt', direction: 'asc', originalId: undefined },
     ]);
   });
+});
+
+it('reports zero-based client pagination to URL-owning screens', () => {
+  const onPaginationChange = vi.fn();
+  renderTable(
+    <CustomizableTable
+      tableId="report-url-pagination"
+      columns={columns}
+      data={Array.from({ length: 30 }, (_, i) => ({ name: `Staff ${i}` }))}
+      rowsPerPage={10}
+      onPaginationChange={onPaginationChange}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
+  expect(onPaginationChange).toHaveBeenCalledWith(1, 10);
 });

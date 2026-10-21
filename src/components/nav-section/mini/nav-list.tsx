@@ -13,6 +13,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { NavItem } from './nav-item';
 import { NavUl, NavLi } from '../styles';
 import { navSectionClasses } from '../classes';
+import { isNavigationPathActive } from '../path-utils';
 
 import type { NavListProps, NavSubListProps } from '../types';
 
@@ -70,7 +71,10 @@ export function NavList({
       caption={data.caption}
       // state
       depth={depth}
-      active={currentModule === data._action}
+      active={
+        currentModule === data._action ||
+        isNavigationPathActive(removeTrailingSlash, data.path, true, data.excludeActivePaths)
+      }
       disabled={data.disabled}
       hasChild={!!data.children}
       open={data.children && openMenu}
