@@ -8,6 +8,13 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Payroll document settings regression
+
+`e2e/hr/payroll-document-settings.guest.spec.ts` verifies the settings link, removal of the embedded form, save/reload, view-only controls and contained widths at 390, 768 and 1440 pixels.
+The settings component suites cover draft preservation, optimistic concurrency, interrupted responses, request ordering and deliberate navigation discard.
+The navigation component suite verifies exact Overview selection while retaining payroll ancestry.
+The shared ProgressBar currently adds a same-URL history guard entry; browser traversal coverage accounts for that existing behavior.
+
 ## Staff terminology and policy setup regression coverage
 
 Run `e2e/hr/hr-staff-policy-navigation.spec.ts` and `e2e/hr/employee/employee-list.spec.ts` with the authenticated Chromium project.
@@ -779,3 +786,9 @@ Synthetic browser responses verify frontend rendering and navigation; authentica
 The polished card layout uses shared section headers/help, semantic status labels, finite usage bars and MUI accordion disclosures.
 Verify the tab-row Apply Leave action opens the existing request dialog once, preserves close behavior, and does not reopen after browser Back or a later tab visit.
 Verify the embedded calendar has a Back to Requests action in the same tab action row.
+
+## Minimal ESIC school settings
+
+Run `esi-statutory-settings.test.tsx`, `esi-configuration-form.test.ts`, and `earning-esi-treatment-dialog.test.tsx`.
+Cover automatic statutory bases, removed rate inputs, optional registration details, help disclosure, per-component classification, scheduled school settings, restricted editing, stale versions and retry idempotency.
+Browser checks should verify the compact school settings and Earning Component treatment action at desktop and narrow widths.

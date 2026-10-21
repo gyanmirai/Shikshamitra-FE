@@ -12,7 +12,7 @@ export function configurationValues(settings: EsiConfigurationSettings): EsiConf
     ) ?? settings.current;
   return {
     effectiveMonth: settings.suggestedEffectiveMonth,
-    calculationSettings: selected.calculationSettings ?? {
+    calculationSettings: {
       eligibilityBasis: 'CLASSIFIED_EARNINGS',
       calculationBasis: 'CLASSIFIED_EARNINGS',
     },
@@ -31,39 +31,15 @@ export function validateConfiguration(
     errors.registrationNumber = 'Use 100 characters or fewer.';
   if (!values.effectiveMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(values.effectiveMonth))
     errors.effectiveMonth = 'Choose an effective month.';
-  const config = values.calculationSettings;
-  const componentErrors: Record<string, string> = {};
-  if (config.eligibilityBasis === 'COMPONENT' && !config.eligibilityComponentId)
-    componentErrors.eligibilityComponentId = 'Choose the eligibility component.';
-  if (config.calculationBasis === 'COMPONENT' && !config.calculationComponentId)
-    componentErrors.calculationComponentId = 'Choose the calculation component.';
-  if (Object.keys(componentErrors).length) errors.calculationSettings = componentErrors;
-  if (config?.employeePercentage != null || config?.employerPercentage != null) {
-    const configurationErrors: Record<string, string> = {};
-    (['employeePercentage', 'employerPercentage'] as const).forEach((key) => {
-      const value = config[key];
-      if (value != null && (!Number.isFinite(value) || value < 0 || value > 100))
-        configurationErrors[key] = 'Use a percentage from 0 to 100.';
-    });
-    if (!config.overrideReason?.trim())
-      configurationErrors.overrideReason = 'Explain the rate override.';
-    if (!config.evidenceReference?.trim())
-      configurationErrors.evidenceReference = 'Add the supporting evidence reference.';
-    if ((config.overrideReason?.length ?? 0) > 500)
-      configurationErrors.overrideReason = 'Use 500 characters or fewer.';
-    if ((config.evidenceReference?.length ?? 0) > 1000)
-      configurationErrors.evidenceReference = 'Use 1000 characters or fewer.';
-    if (Object.keys(configurationErrors).length)
-      errors.calculationSettings = {
-        ...(typeof errors.calculationSettings === 'object' ? errors.calculationSettings : {}),
-        ...configurationErrors,
-      };
-  }
   return errors;
 }
 export function configurationPayload(values: EsiConfigurationDraft): EsiConfigurationDraft {
   return {
     ...values,
+    calculationSettings: {
+      eligibilityBasis: 'CLASSIFIED_EARNINGS',
+      calculationBasis: 'CLASSIFIED_EARNINGS',
+    },
     registrationNumber: values.registrationNumber.trim(),
     coveredSince: values.coveredSince || null,
   };

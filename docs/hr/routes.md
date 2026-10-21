@@ -25,6 +25,7 @@ The route map is frontend integration truth, not backend product truth:
 | Document settings         | `/hr/setting`                                                                                           | `HR.Employee.Setting.DocumentTypes`                                        |
 | Payroll overview          | `/hr/payroll`                                                                                           | `HR.PayrollManagement.Overview`                                            |
 | Run payroll               | `/hr/payroll/run-payroll`                                                                               | `HR.PayrollManagement.RunPayroll` plus lock, audit, and adjustment actions |
+| Payroll documents | `/hr/payroll/setting/payroll-documents` | Payroll Settings visibility plus `HR.PayrollManagement.GenerateSalarySlip.View`; editing uses `.Add` and server HR-wide scope. |
 | Payslips                  | `/hr/payroll/payslip-generation`                                                                        | `HR.PayrollManagement.GenerateSalarySlip`                                  |
 | Payroll compensation      | `/hr/payroll/structure/{employeeId}/edit`                                            | `HR.PayrollManagement.PayrollStructure` plus Compensation View or Manage   |
 | Payroll settings          | `/hr/payroll/setting/*`                                                                                 | `HR.PayrollManagement.Settings.*`                                          |

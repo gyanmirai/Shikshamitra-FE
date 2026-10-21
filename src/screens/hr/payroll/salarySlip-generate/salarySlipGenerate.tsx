@@ -40,7 +40,6 @@ import {
   useLazyGetPayslipDocumentPdfQuery,
 } from 'src/redux/hr/payslip-api';
 
-import PayslipSettingsForm from './payslip-settings-form';
 import { usePayslipActions } from './use-payslip-actions';
 import { payslipActionError } from './payslip-action-error';
 import PayslipCorrectionDialog from './payslip-correction-dialog';
@@ -566,15 +565,18 @@ export default function PaySlipGenerationScreen({
               Select a staff member and pay period.
             </Typography>
           )}
-          {(slips.isLoading ||
-            versions.isLoading ||
-            (versions.isFetching && (!displayedDocument || !canReadDocument)) ||
-            actions.isLoading) && (
-            <Box aria-busy="true" aria-label="Loading payslip">
-              <Skeleton width="45%" height={36} />
-              <Skeleton variant="rounded" height={560} />
-            </Box>
-          )}
+          {selection &&
+            (slips.isLoading ||
+              versions.isLoading ||
+              (versions.isFetching && (!displayedDocument || !canReadDocument)) ||
+              actions.isLoading) && (
+              <Box aria-busy="true" aria-label="Loading payslip">
+                <Typography variant="body2" color="text.secondary">
+                  Loading payslip preview...
+                </Typography>
+                <Skeleton variant="rounded" height={96} />
+              </Box>
+            )}
           {printError && (
             <Alert severity="error">
               The print window could not be opened. Retry printing or download the PDF.
@@ -690,14 +692,6 @@ export default function PaySlipGenerationScreen({
               </AccordionDetails>
             </Accordion>
           )}
-          <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle2">Payslip settings</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <PayslipSettingsForm canEdit={canSend} />
-            </AccordionDetails>
-          </Accordion>
         </>
       )}
       {canReadDocument && action && (

@@ -60,6 +60,47 @@ function Navigation({ data = fees }: { data?: NavItemBaseProps }) {
 afterEach(cleanup);
 
 describe('active navigation ancestors', () => {
+  it.each(['/hr/payroll/payslip-generation', '/hr/payroll/setting/payroll-documents'])(
+    'keeps Overview unselected on %s while revealing the payroll ancestry',
+    (pathname) => {
+      route.pathname = pathname;
+      render(
+        <Navigation
+          data={{
+            title: 'Payroll Management',
+            path: '/hr/payroll',
+            _action: 'payroll',
+            children: [
+              { title: 'Overview', path: '/hr/payroll', exactMatch: true },
+              { title: 'Payslips', path: '/hr/payroll/payslip-generation' },
+              {
+                title: 'Settings',
+                path: '/hr/payroll/setting',
+                children: [
+                  { title: 'Payroll documents', path: '/hr/payroll/setting/payroll-documents' },
+                ],
+              },
+            ],
+          }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute(
+        'data-active',
+        'false'
+      );
+      expect(
+        screen.getByRole('button', {
+          name: pathname.includes('/setting/') ? 'Payroll documents' : 'Payslips',
+        })
+      ).toHaveAttribute('data-active', 'true');
+    }
+  );
+
+  it('selects Overview on the exact payroll root', () => {
+    route.pathname = '/hr/payroll/';
+    render(<Navigation data={{ title: 'Overview', path: '/hr/payroll', exactMatch: true }} />);
+    expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('data-active', 'true');
+  });
   it('opens every ancestor on direct access and allows active groups to collapse and reopen', () => {
     route.pathname = '/finance/settings/fee-category/';
     render(<Navigation />);

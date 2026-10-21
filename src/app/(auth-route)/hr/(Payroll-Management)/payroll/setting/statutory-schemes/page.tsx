@@ -66,7 +66,15 @@ export default function StatutorySchemesPage() {
             role="tabpanel"
             id={`esi-${view}-panel`}
             aria-labelledby={`esi-${view}-tab`}
-            sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', overflowX: 'hidden' }}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              overflowY: view === 'policies' ? 'auto' : 'hidden',
+              overflowX: 'hidden',
+            }}
           >
             {view === 'policies' ? (
               configuration.isError ? (
