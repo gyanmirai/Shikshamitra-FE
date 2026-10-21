@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-19
+updated_on: 2026-10-20
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -102,6 +102,14 @@ The device attendance screen starts with the current month and keeps the empty-s
 Payslip content is keyed by both employee and payroll month, and a previous response is not rendered while a new selection is loading.
 Only a 404 response is shown as a missing payslip, while access, server, and network failures provide a retry action.
 Percentage-based earning components list only valid earning-component dependencies and surface backend dependency errors on the component field.
+
+### Policies & Rules navigation
+
+Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments use the HR sidebar for navigation.
+Each page shows its current title in the shared header and uses the global academic-year selector without a duplicate year row or navigation tabs.
+The primary table fills the remaining workspace.
+Expanded year-end settlement details scroll within a bounded secondary panel so settlement rows and the main leave-policy table remain reachable on narrow screens.
+On mobile, policy identity and status columns scroll with the table while row actions remain pinned, avoiding overlapping frozen columns.
 
 ### Run Payroll preview feedback
 

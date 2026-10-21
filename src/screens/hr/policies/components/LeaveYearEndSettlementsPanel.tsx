@@ -162,7 +162,7 @@ export function LeaveYearEndSettlementsPanel() {
   };
 
   return (
-    <Card sx={{ p: 1.25 }}>
+    <Card sx={{ p: 1, flexShrink: 0, maxHeight: expanded ? '50%' : undefined, overflowY: 'auto' }}>
       <Stack spacing={1.25}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}

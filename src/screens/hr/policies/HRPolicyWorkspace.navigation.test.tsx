@@ -39,7 +39,10 @@ function setup(kind: string, mode = 'edit') {
     reducer: {
       confirmPopup,
       auth: () => ({
-        permissions: Object.values(hrPermissions.policies).map((name) => ({ name, isGranted: true })),
+        permissions: Object.values(hrPermissions.policies).map((name) => ({
+          name,
+          isGranted: true,
+        })),
       }),
     },
   });
@@ -59,6 +62,18 @@ function setup(kind: string, mode = 'edit') {
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <ProgressBar />
+        <nav aria-label="HR navigation">
+          <a
+            href="/hr/payrollPolicies"
+            onClick={(event) => {
+              if (event.defaultPrevented) return;
+              event.preventDefault();
+              mocks.push('/hr/payrollPolicies');
+            }}
+          >
+            Payroll Policies
+          </a>
+        </nav>
         <HRPolicyWorkspace focus="calendars" />
       </ThemeProvider>
     </Provider>
@@ -88,8 +103,11 @@ describe('policy workspace draft navigation', () => {
       expect(mocks.push).not.toHaveBeenCalled();
       expect(mocks.back).not.toHaveBeenCalled();
       expect(store.getState().confirmPopup.isChanges).toBe(true);
+      const payrollLink = screen.getByRole('link', { name: 'Payroll Policies', hidden: true });
+      fireEvent.click(payrollLink);
+      expect(mocks.push).not.toHaveBeenCalled();
       confirm.mockReturnValue(true);
-      fireEvent.click(screen.getByRole('tab', { name: 'Payroll Policies', hidden: true }));
+      fireEvent.click(payrollLink);
       expect(mocks.push).toHaveBeenCalledWith('/hr/payrollPolicies');
       expect(store.getState().confirmPopup.isChanges).toBe(false);
     }

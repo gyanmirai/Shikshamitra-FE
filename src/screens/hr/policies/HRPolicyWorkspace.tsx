@@ -13,14 +13,12 @@ import type { RootState } from 'src/redux/store';
 
 import { useRouter } from 'src/routes/hooks';
 import React, { useRef, useEffect } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
-import { CustomTabs } from 'src/components/custom-tabs';
 import { hasNavigationPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { Box, Alert, Drawer, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Tab, Alert, Paper, Drawer, Typography, LinearProgress } from '@mui/material';
 
 import { PolicyTable } from './components/PolicyTable';
 import { CalendarsTab } from './components/CalendarsTab';
@@ -101,12 +99,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
 
   const {
     tab,
-    setTab,
     drawer,
     closeDrawer,
     isLoading,
     academicYearId,
-    currentYear,
     activePolicyOperation,
     drawerTransitionDuration,
   } = ctx;
@@ -115,25 +111,25 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const currentTabLabel = HR_POLICY_TABS.find((t) => t.value === tab)?.label || 'Policies';
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
       <CustomBreadcrumbs
-        heading="Policies & Rules"
-        description="Configure staff calendars, policies, and assignments."
+        heading={currentTabLabel}
+        description={
+          tab === 'leave'
+            ? 'Manage entitlements, accrual, carry-forward, encashment, and approval rules. Each policy contains one Paid bucket and one Unpaid bucket.'
+            : 'Configure staff calendars, policies, and assignments.'
+        }
+        sx={{ flexShrink: 0 }}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules', href: hrPaths.policies.root },
           { name: currentTabLabel },
         ]}
       />
-      {currentYear?.name ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Academic year: {currentYear.name}
-        </Typography>
-      ) : null}
       {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
       {isLoading ? <LinearProgress /> : null}
       {academicYearId && !drawer ? (
-        <Box sx={{ mt: 1 }}>
+        <>
           <PolicySetupAlert
             state={ctx.leaveSetupState}
             policy="leave"
@@ -152,38 +148,11 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             canOpen={ctx.canOpenPayrollPolicies}
             onOpen={() => router.push(hrPaths.policies.payroll)}
           />
-        </Box>
+        </>
       ) : null}
 
-      <Paper
-        sx={{
-          mt: 1,
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
-        <CustomTabs
-          value={tab}
-          onChange={(_, value: keyof typeof destinations) => {
-            setTab(value);
-            router.push(destinations[value].href);
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
-          role="tablist"
-        >
-          {tabs.map((item) => (
-            <Tab
-              key={item.value}
-              value={item.value}
-              label={item.label}
-              icon={<Iconify icon={item.icon} width={20} />}
-              disabled={item.disabled}
-            />
-          ))}
-        </CustomTabs>
-      </Paper>
-
       {/* Tab content */}
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, mt: 1 }}>
+      <Box sx={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', mt: 1 }}>
         {tab === 'calendars' ? <CalendarsTab ctx={ctx} /> : null}
         {tab === 'payroll' ? <PolicyTable type="payroll" ctx={ctx} /> : null}
         {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}

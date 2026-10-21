@@ -81,6 +81,7 @@ export function ProgressBar() {
     const mutationObserver = new MutationObserver(handleMutation);
 
     mutationObserver.observe(document, { childList: true, subtree: true });
+    handleMutation();
 
     // Save the original pushState so we can restore it on cleanup and avoid stacking proxies.
     const originalPushState = window.history.pushState;

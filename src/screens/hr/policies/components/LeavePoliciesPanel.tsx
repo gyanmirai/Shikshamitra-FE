@@ -227,6 +227,7 @@ export function LeavePoliciesPanel() {
         label: 'Name',
         minWidth: 180,
         sticky: true,
+        stickyOnMobile: false,
         render: (_value, row) => getLeavePolicyTitle(row.policyItem),
       },
       {
@@ -324,6 +325,7 @@ export function LeavePoliciesPanel() {
         label: 'Status',
         minWidth: 120,
         sticky: true,
+        stickyOnMobile: false,
         stickyPosition: 'right',
         render: (_value, row) => {
           const policyStatus = String(row.policyItem?.status || 'Draft');
@@ -445,12 +447,11 @@ export function LeavePoliciesPanel() {
   }));
 
   return (
-    <Stack spacing={1} sx={{ width: '100%' }}>
-      <Card sx={{ p: 1.25 }}>
+    <Stack spacing={1} sx={{ width: 1, minWidth: 0, minHeight: 0, flex: 1 }}>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1.5}>
           <Stack spacing={0.5}>
             <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Chip size="small" label="Policies & Rules" color="primary" variant="outlined" />
               <Button
                 size="small"
                 variant={archiveView === 'current' ? 'contained' : 'outlined'}
@@ -472,10 +473,6 @@ export function LeavePoliciesPanel() {
                 Archived ({archivedCount})
               </Button>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-              Entitlements, accrual, carry-forward, encashment, and approval rules live here. Each
-              policy contains one Paid bucket and one Unpaid bucket.
-            </Typography>
           </Stack>
           {archiveView === 'current' ? (
             <Button
@@ -500,6 +497,8 @@ export function LeavePoliciesPanel() {
       <LeaveYearEndSettlementsPanel />
 
       <CustomizableTable
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         showColumns
         showExport
         showFullScreen
