@@ -211,10 +211,13 @@ Salary templates pair PF and ESIC under Statutory defaults.
 Choose Calculate in ShikshaMitra with a named policy, or Handled outside ShikshaMitra with a required reason.
 ESIC uses one compact Formik settings form with a calculation switch, conditional school registration fields, and standard Save/Cancel actions.
 The server persists an ESIC-on baseline for new schools with unknown legal registration facts left empty.
-The scope text reads "Applies to current and future unlocked payroll."
-Save is direct, without an impact preview, confirmation, month picker, or scheduling controls.
+Changes apply from the selected effective payroll month without rewriting locked payroll or issued payslips.
+Save is direct, without a separate confirmation step.
 Errors and background refreshes preserve the draft and original concurrency token.
-Rules, earning classifications, and change history remain collapsed.
+Calculation help uses the ESIC section information control; Change History is an outlined section-header action.
+A compact staff status row provides one Review Staff action, initially filtering to attention items when present.
+Save and Cancel use compact shared button styling in the stationary bottom-right footer.
+Earning classification is managed beside each salary component through its ESIC treatment action.
 Employee attention items appear only when relevant.
 An optional shared employee table uses server-backed paging, search, and sorting.
 Employee details open in the existing drawer, where HR supplies registration facts and supported exceptions.
@@ -466,19 +469,21 @@ The salary calculation returns the enrollment decision and blocks saving when re
 The PF settings page records school establishment coverage with an effective month and evidence reference.
 Its write requires the exact PF Add capability and backend-confirmed school-wide scope.
 
-ESIC settings provide an effective month, independently selectable ESIC eligibility and calculation bases, and optional documented employee/employer rate overrides.
-Eligibility uses the full-month salary under the selected included-components, Gross, or Basic source.
-The calculation basis chooses the payable salary source after attendance adjustments.
-Changing one basis preserves the other choice.
-The compact form pairs both selectors and shows default contribution rates inline.
-Selecting Basic for either basis reveals one shared Basic salary component selector; its selection is retained until neither basis uses Basic.
-Salary-basis guidance is available through a keyboard-accessible help control; documented rate overrides keep their warning and evidence fields visible.
-Calculation editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
-Read-only users retain the compact settings and impact preview without enabled calculation controls.
-Basic uses a school earning component marked Basic in the salary template, including percentage-of-Gross formulas such as 60 percent.
-The settings page explains that other statutory included wages and add-back still apply.
-Valid unsaved settings request a debounced draft impact preview; saving retains the concurrency token and idempotency key across retries.
-Run Payroll displays rate-override evidence from the saved calculation snapshot and keeps employee deductions separate from employer contributions.
+ESIC school settings use automatic statutory calculation, an effective payroll month, and an optional registration number.
+The settings panel owns one scrollable content region and a separate bottom action footer.
+Save and Cancel remain compact, content-width and right-aligned at every breakpoint.
+The footer reserves safe-area space and does not cover form fields or expanded details.
+Coverage start date is available under Registration details.
+The page displays server-provided rates as one read-only summary, with calculation help and history available on demand.
+School administrators cannot enter contribution-rate overrides or choose wage bases in this form.
+Earning Component row actions open ESIC treatment for one earning, with an effective month and explicit statutory classification.
+The page-level ESIC treatment action also lists custom staff earnings that are outside the master table.
+That dialog uses the existing configuration save client, preserving school registration, calculation mode, concurrency and idempotency while changing one classification.
+Treatment editing requires Edit, Activate, ConfigureCalculation, and backend-confirmed school-wide scope.
+Failed saves preserve the draft and reuse the idempotency key; a stale concurrency token requires reviewing the latest settings.
+Missing classifications link to Earning Component from the ESIC settings page.
+Locked payroll and issued payslips retain their original calculation snapshots.
+
 See the [backend contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#pf-enrollment-and-esic-calculation-settings) for eligibility, effective dates, rates, and immutable payroll rules.
 
 ## Shared enrollment and salary documents
@@ -488,7 +493,7 @@ Existing staff use `src/screens/hr/employee/statutory-profile-editor.tsx` for gu
 Each compact card shows the Apply switch, status, identifier and contextual Off or Pending warning.
 Run Payroll offers a registration review list before preparation and staff-editor links from distinct missing-number and disabled-scheme warnings.
 Mark Reviewed acknowledges the displayed warning evidence before locking.
-ESIC settings choose eligibility and calculation bases separately, each with its own recurring component.
+ESIC eligibility and contributions use classified earnings automatically; salary components own the statutory treatment.
 
 The existing payslip-generation route now presents Monthly payslips, Employee statements and School register tabs.
 Monthly issuance retains its existing immutable PDF workflow.
@@ -498,7 +503,12 @@ Previews debounce, cancel obsolete requests and reject stale responses.
 PDF/Excel use existing export jobs, ownership checks, status, download and expiry.
 Salary documents use the shared soft status chips and download actions in the compact toolbar, with one standard success toast when an active export completes.
 The report-notes information control beside Preview exposes all coverage and truncation notes in the shared popover; failures retain an announced error and a relevant recovery action.
-School settings provide Compact/Detailed layouts, logo upload, optional fields and saved column presets.
+Payroll Management > Settings > Payroll documents owns Compact/Detailed layouts, optional fields, saved column presets and automatic email.
+The Payslips workspace retains a Document settings link and no longer embeds the settings form below its preview.
+School name, address and logo use Institute Setup; the settings page displays the returned name and address without editable duplicates.
+The existing save, retry, concurrency and dirty-navigation safeguards remain in the dedicated settings form.
+Preview loading is labelled and compact rather than reserving a 560-pixel grey block.
+Overview matches only the payroll root so sibling payroll destinations do not also select it.
 Identity, totals and all nonzero deductions remain mandatory.
 
 Staff Edit Payroll saves its statutory draft before bank changes through Save and Save & Next.

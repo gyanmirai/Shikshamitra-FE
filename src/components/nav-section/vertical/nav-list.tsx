@@ -34,7 +34,12 @@ export function NavList({
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
   const active = isSubLayout
-    ? isNavigationPathActive(removeTrailingSlash, data.path, true, data.excludeActivePaths)
+    ? isNavigationPathActive(
+        removeTrailingSlash,
+        data.path,
+        !data.exactMatch,
+        data.excludeActivePaths
+      )
     : removeTrailingSlash === data.path ||
       (data.path !== '/dashboard' && currentModule === data._action);
 
@@ -44,7 +49,12 @@ export function NavList({
     (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
       menuData?.find(
         (i) =>
-          isNavigationPathActive(removeTrailingSlash, i.path, isSubLayout, i.excludeActivePaths) ||
+          isNavigationPathActive(
+            removeTrailingSlash,
+            i.path,
+            isSubLayout && !i.exactMatch,
+            i.excludeActivePaths
+          ) ||
           (i?.children?.length && recur(i.children))
       ),
     [isSubLayout, removeTrailingSlash]

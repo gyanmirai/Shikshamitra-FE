@@ -9,12 +9,13 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -27,12 +28,21 @@ import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+  usePreviewEarningComponentDeleteImpactQuery,
+  usePreviewEarningComponentUpdateImpactMutation,
+} from 'src/redux/hr/employee-payroll-api';
+import {
   Box,
   Grid,
   Alert,
   Button,
   Dialog,
   MenuItem,
+  MenuList,
   FormLabel,
   TextField,
   Typography,
@@ -46,15 +56,8 @@ import {
   DialogContentText,
   ToggleButtonGroup,
 } from '@mui/material';
-import {
-  useGetEarningComponentsQuery,
-  useAddEarningComponentMutation,
-  useDeleteEarningComponentMutation,
-  useUpdateEarningComponentMutation,
-  usePreviewEarningComponentDeleteImpactQuery,
-  usePreviewEarningComponentUpdateImpactMutation,
-} from 'src/redux/hr/employee-payroll-api';
 
+import { EarningEsiTreatmentDialog } from './earning-esi-treatment-dialog';
 import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 import {
@@ -79,6 +82,14 @@ interface PayElement {
 }
 
 const EarningComponent = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canViewEsi = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.settings.statutorySchemes
+  );
+  const [esiComponent, setEsiComponent] = useState<{ id: string; name: string } | 'all' | null>(
+    null
+  );
   const [tableQuery, setTableQuery] = useState({ page: 1, pageSize: 20, search: '' });
   const exportTable = useHrTableExport('hr-earning-components', tableQuery);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -150,14 +161,21 @@ const EarningComponent = () => {
           { name: 'Earning Component' },
         ]}
         action={
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            size="small"
-            onClick={isEarningComponentOpen.onTrue}
-          >
-            Add earning
-          </Button>
+          <Box display="flex" gap={1} flexWrap="wrap">
+            {canViewEsi && (
+              <Button size="small" onClick={() => setEsiComponent('all')}>
+                ESIC treatment
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              size="small"
+              onClick={isEarningComponentOpen.onTrue}
+            >
+              Add earning
+            </Button>
+          </Box>
         }
       />
       <Dialog
@@ -372,7 +390,23 @@ const EarningComponent = () => {
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  showThreeDots={false}
+                  showThreeDots={canViewEsi}
+                  moreLabel={`More actions for ${row.earningComponentName}`}
+                  actions={({ popover }) => (
+                    <MenuList dense>
+                      <MenuItem
+                        onClick={() => {
+                          popover.onClose();
+                          setEsiComponent({
+                            id: row.id,
+                            name: row.earningComponentName || row.componentName || 'Earning',
+                          });
+                        }}
+                      >
+                        ESIC treatment
+                      </MenuItem>
+                    </MenuList>
+                  )}
                   showEditIcon
                   showDeleteIcon
                   handleEditClick={() => {
@@ -390,6 +424,13 @@ const EarningComponent = () => {
         ]}
         data={getEarningComponentsData?.items || []}
       />
+      {esiComponent && (
+        <EarningEsiTreatmentDialog
+          key={esiComponent === 'all' ? 'all' : esiComponent.id}
+          component={esiComponent === 'all' ? undefined : esiComponent}
+          onClose={() => setEsiComponent(null)}
+        />
+      )}
       <CustomDialog
         maxWidth="md"
         open={isEarningComponentOpen.value}

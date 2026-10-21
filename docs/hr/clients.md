@@ -14,7 +14,7 @@ TL;DR: use this page to locate RTK Query clients and backend contract ownership 
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
 `src/redux/hr/pf-coverage-api.ts` owns PF school-coverage history and effective-dated writes, invalidating PF, salary, and payroll caches.
-`esi-configuration-api.ts` carries ESIC calculation settings and effective months; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
+`esi-configuration-api.ts` carries automatic ESIC settings, effective months, and component-treatment updates from Earning Component; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
 Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
 
 `employeeApi.ts` supplies `getEmployeeAssignableRoles` at `/employees/assignable-roles` for the Add/Edit Staff Role field, with role-cache invalidation.
@@ -165,7 +165,10 @@ The backend owns permitted groups, atomic validation, and authorization in [HR A
 `src/redux/hr/statutory-profile-api.ts` owns effective profile reads/writes and the bounded registration readiness list.
 Profile writes invalidate only the affected employee salary/profile tags and Run Payroll evidence.
 `src/redux/hr/esi-configuration-api.ts` carries independent eligibility/calculation component IDs.
-`src/redux/hr/payslip-api.ts` includes presentation settings and tenant logo upload.
+`src/redux/hr/payslip-api.ts` reads Institute Setup school details alongside document preferences.
+Settings writes send presentation, automaticEmail, concurrencyStamp and idempotencyKey.
+School identity fields are read-only and the form offers no payroll-specific logo upload.
+School Identity cache invalidation refreshes the displayed document settings.
 `src/redux/hr/hrReportsApi.ts` retains existing preview/export jobs for payroll_statement and payroll_register.
 Salary save responses include the saved statutory profile so the editor adopts the new concurrency stamp atomically.
 

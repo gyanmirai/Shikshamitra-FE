@@ -41,12 +41,16 @@ it('protects a dirty settings draft on internal links, including keep-editing an
     </>
   );
   await act(async () => {
-    fireEvent.change(screen.getByLabelText('School name'), { target: { value: 'Unsaved school' } });
+    fireEvent.click(
+      screen.getByRole('switch', { name: 'Email each employee after payroll finalization' })
+    );
   });
   fireEvent.click(screen.getByRole('link', { name: 'Run payroll' }));
   expect(state.push).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-  expect(screen.getByLabelText('School name')).toHaveValue('Unsaved school');
+  expect(
+    screen.getByRole('switch', { name: 'Email each employee after payroll finalization' })
+  ).toBeChecked();
   fireEvent.click(screen.getByRole('link', { name: 'Run payroll' }));
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
@@ -61,7 +65,9 @@ it('protects browser traversal and only resumes it after discard', async () => {
   Object.defineProperty(window, 'navigation', { configurable: true, value: navigation });
   render(<PayslipSettingsForm canEdit />);
   await act(async () => {
-    fireEvent.change(screen.getByLabelText('School name'), { target: { value: 'Unsaved school' } });
+    fireEvent.click(
+      screen.getByRole('switch', { name: 'Email each employee after payroll finalization' })
+    );
   });
   const traverse = () => {
     const event = Object.assign(new Event('navigate', { cancelable: true }), {

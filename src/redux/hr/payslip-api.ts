@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { employeeType } from 'src/redux/tagTypes';
+import { employeeType, instituteSetupType } from 'src/redux/tagTypes';
 
 export type PayslipDocument = {
   id: string;
@@ -187,9 +187,15 @@ export const payslipApi = api.injectEndpoints({
     }),
     getPayslipSettings: builder.query<PayslipSettings, void>({
       query: () => '/payroll/payslip-settings',
-      providesTags: tags,
+      providesTags: [...tags, instituteSetupType.schoolIdentity],
     }),
-    savePayslipSettings: builder.mutation<PayslipSettings, PayslipSettings>({
+    savePayslipSettings: builder.mutation<
+      PayslipSettings,
+      Pick<
+        PayslipSettings,
+        'presentation' | 'automaticEmail' | 'concurrencyStamp' | 'idempotencyKey'
+      >
+    >({
       query: (body) => ({ url: '/payroll/payslip-settings', method: 'PUT', body }),
       invalidatesTags: tags,
     }),
