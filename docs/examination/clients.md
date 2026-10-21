@@ -3,7 +3,7 @@ module: examination
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-02
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -31,3 +31,5 @@ Request and response wire types are in `src/redux/academicAPI/ExaminationApi/Sch
 Draft and apply requests echo the opaque server `version`; the frontend does not derive concurrency from timestamps.
 The guided client never calls the legacy per-plan finalize or publish routes. The older `v2/session` route remains a backend compatibility surface.
 Backend endpoint and permission truth is in [backend api.md](../../../Shikshamitra-BE/docs/modules/examination/api.md).
+
+`src/screens/examination/seatingPlan/utils/room-layout.ts` adapts the room details returned by seat-layout queries, including `columnRows` and `totalBenches`. The guided preview, manual editor, published room viewer, and compatibility editors share this adapter through `utils/mappers.ts`. Geometry and usable-seat summaries are derived from the returned physical seats; see the [backend room-layout rules](../../../Shikshamitra-BE/docs/modules/examination/product.md).

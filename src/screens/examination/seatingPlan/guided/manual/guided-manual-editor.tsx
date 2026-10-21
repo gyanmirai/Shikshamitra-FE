@@ -114,8 +114,9 @@ function GuidedManualEditorContent({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'minmax(0, 1fr)', xl: '320px minmax(0, 1fr)' },
-            minHeight: { xs: 760, xl: 620 },
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '280px minmax(0, 1fr)' },
+            minWidth: 0,
+            minHeight: { xs: 760, md: 620 },
           }}
         >
           <GuidedStudentTray
@@ -128,6 +129,7 @@ function GuidedManualEditorContent({
             isReadOnly={isReadOnly}
           />
           <GuidedClassroomPanel
+            presentation="studio"
             rooms={editor.visibleRooms}
             assignments={editor.draft.assignments}
             students={editor.draft.students}

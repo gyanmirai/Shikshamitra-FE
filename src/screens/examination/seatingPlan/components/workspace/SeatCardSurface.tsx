@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import { useDraggable, useDroppable, useDndContext } from '@dnd-kit/core';
 
 import SeatCardContent from './SeatCardContent';
+import RoomStudioSeatContent from './RoomStudioSeatContent';
 import { getSeatSurfaceSx, SEAT_STATE_STYLES } from './seat-card-style';
 
 import type { SeatVisualState } from './seat-card-types';
@@ -18,6 +19,7 @@ interface Props {
   isExternalExam: boolean;
   isReadOnly?: boolean;
   onClick?: () => void;
+  presentation?: 'standard' | 'studio';
 }
 
 function getSeatAriaLabel(
@@ -47,6 +49,7 @@ export default function SeatCardSurface({
   isExternalExam,
   isReadOnly = false,
   onClick,
+  presentation = 'standard',
 }: Props) {
   const isUnavailable = seat.isDisabled || seat.isReserved || isExternalExam;
   const { setNodeRef: setDropNodeRef, isOver } = useDroppable({
@@ -76,6 +79,7 @@ export default function SeatCardSurface({
   const isSwapTarget =
     !isReadOnly && !isUnavailable && isOver && !!assignment && !isSelfDrag && !!draggedType;
   const isPlaceTarget = !isReadOnly && !isUnavailable && isOver && !assignment;
+  const Content = presentation === 'studio' ? RoomStudioSeatContent : SeatCardContent;
 
   return (
     <Box
@@ -86,6 +90,16 @@ export default function SeatCardSurface({
       {...(assignment && !isReadOnly && !isUnavailable ? draggable.listeners : {})}
       {...(assignment && !isReadOnly && !isUnavailable ? draggable.attributes : {})}
       onClick={isReadOnly || isUnavailable ? undefined : onClick}
+      {...(presentation === 'studio' && !assignment && !isReadOnly && !isUnavailable
+        ? {
+            onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+              if (!active && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                event.currentTarget.click();
+              }
+            },
+          }
+        : {})}
       tabIndex={isReadOnly || isUnavailable ? -1 : 0}
       data-seat-id={seat.seatId}
       role={isReadOnly ? 'img' : 'button'}
@@ -103,9 +117,11 @@ export default function SeatCardSurface({
         isPlaceTarget,
         isReadOnly,
         transform: draggable.transform,
+        presentation,
+        visualState: state,
       })}
     >
-      <SeatCardContent
+      <Content
         seat={seat}
         assignment={assignment}
         studentName={studentName}

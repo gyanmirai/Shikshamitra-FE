@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import Box from '@mui/material/Box';
+import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
+import { Tab, Tabs } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
@@ -27,6 +28,8 @@ export function GuidedStudentTray({
   isReadOnly,
 }: GuidedStudentTrayProps) {
   const [search, setSearch] = useState('');
+  const id = useId();
+  const [showAssigned, setShowAssigned] = useState(false);
   const query = search.trim().toLowerCase();
   const visibleStudents = students
     .filter((student) => !student.isExternalExamOccupied)
@@ -39,20 +42,39 @@ export function GuidedStudentTray({
     )
     .sort((left, right) => left.rollNo - right.rollNo);
   const assignedIds = new Set(assignments.map((assignment) => assignment.studentId));
-  const assignedCount = visibleStudents.filter((student) => assignedIds.has(student.studentId)).length;
+  const assignedCount = visibleStudents.filter((student) =>
+    assignedIds.has(student.studentId)
+  ).length;
 
   return (
     <Stack
       spacing={1}
-      sx={{ height: '100%', minHeight: 0, p: 1.5, borderRight: { lg: '1px solid' }, borderColor: 'divider' }}
+      sx={{
+        height: '100%',
+        minWidth: 0,
+        minHeight: 0,
+        p: 2,
+        borderRight: { md: '1px solid' },
+        borderBottom: { xs: '1px solid', md: 0 },
+        borderColor: 'divider',
+      }}
       aria-label="Students available for manual seating"
     >
       <Stack spacing={0.25}>
-        <Typography variant="h6">Students</Typography>
+        <Typography variant="subtitle2">Students</Typography>
         <Typography variant="caption" color="text.secondary" aria-live="polite">
           {assignedCount} assigned · {Math.max(0, visibleStudents.length - assignedCount)} remaining
         </Typography>
       </Stack>
+      <Tabs
+        variant="fullWidth"
+        value={showAssigned ? 'all' : 'unassigned'}
+        onChange={(_, value) => setShowAssigned(value === 'all')}
+        aria-label="Student list"
+      >
+        <Tab id={`${id}-unassigned`} aria-controls={`${id}-students`} value="unassigned" label="Unassigned" />
+        <Tab id={`${id}-all`} aria-controls={`${id}-students`} value="all" label="All students" />
+      </Tabs>
       <TextField
         size="small"
         fullWidth
@@ -70,26 +92,34 @@ export function GuidedStudentTray({
         }}
       />
       <Typography variant="caption" color="text.secondary">
-        Drag an available student, or select one and then choose an empty seat. Assigned students
-        are greyed out.
+        Drag an available student, or select one and then choose an empty seat.
+        {showAssigned ? ' Assigned students are greyed out.' : ''}
       </Typography>
-      <Scrollbar sx={{ flex: 1, minHeight: 280 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 0.5 }}>
-          {visibleStudents.map((student) => (
-            <StudentCard
-              key={student.studentId}
-              student={student}
-              assignment={assignments.find(
-                (assignment) => assignment.studentId === student.studentId
-              )}
-              isSelected={selectedStudentId === student.studentId}
-              onSelect={onSelectStudent}
-              isReadOnly={isReadOnly}
-            />
-          ))}
-          {visibleStudents.length === 0 && (
+      <Scrollbar role="tabpanel" id={`${id}-students`} aria-labelledby={`${id}-${showAssigned ? 'all' : 'unassigned'}`}
+        sx={{ flex: 1, minHeight: { xs: 160, md: 280 }, maxHeight: { xs: 260, md: 600 } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pr: 0.5,
+          '& [role="button"]:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 } }}>
+          {visibleStudents
+            .filter((student) => showAssigned || !assignedIds.has(student.studentId))
+            .map((student) => (
+              <StudentCard
+                key={student.studentId}
+                student={student}
+                assignment={assignments.find(
+                  (assignment) => assignment.studentId === student.studentId
+                )}
+                isSelected={selectedStudentId === student.studentId}
+                onSelect={onSelectStudent}
+                isReadOnly={isReadOnly}
+              />
+            ))}
+          {!visibleStudents.some(
+            (student) => showAssigned || !assignedIds.has(student.studentId)
+          ) && (
             <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-              No students match this search.
+              {query
+                ? 'No students match this search.'
+                : 'All students have a seat. Open All students to review assignments.'}
             </Typography>
           )}
         </Box>

@@ -27,6 +27,7 @@ export type MultiFilePreviewProps = {
 };
 
 export type UploadProps = DropzoneOptions & {
+  boxRootProps?: React.HTMLAttributes<HTMLDivElement>;
   avatarRootProps?: React.HTMLAttributes<HTMLElement>;
   error?: boolean;
   sx?: SxProps<Theme>;

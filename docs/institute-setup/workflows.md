@@ -3,7 +3,7 @@ module: institute-setup
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -37,3 +37,9 @@ Editing captures the original profile and stamp. Background refetches cannot sil
 The override tab initially uses the application's selected academic year when it is available. Edit, reset and copy controls require both the action grant and the backend's canManage capability for the whole selected context. Restricted contexts remain readable and show a read-only explanation.
 
 Template controls use the same upload/editor rules. Existing custom values have a Keep existing custom asset choice until deliberately replaced. Signature controls require signature access. On narrow screens, selectors and asset sections stack; every upload has a file-picker action.
+
+## Room configuration
+
+At `/setting/room`, Add Room and Update Room use shared section cards for location, bench layout and features. Enter a column count to show one labelled group per column, with a row-count field, bounded plus/minus controls and a bench/student subtotal. Changing the count preserves the remaining column values. Totals are read-only and update from those rows and students per bench. Legacy partial grids open with their existing bench count distributed in row order.
+
+Preview room opens a separate read-only dialog showing unequal columns, illustrated desks/benches, seated student figures and total capacity. Fit room shows the complete layout; zoom controls allow closer inspection in a keyboard-scrollable canvas. Student figures indicate capacity. Back to form, Close and Escape dismiss only the preview and restore the draft and trigger focus. Extra feature saves a reusable catalogue choice immediately and selects it for this room; cancelling the room does not remove that catalogue choice. Submit waits for success, locks closing while a write is pending, and retains the draft after failure.

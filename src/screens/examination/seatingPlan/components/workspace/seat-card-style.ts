@@ -25,6 +25,8 @@ interface SurfaceStyleOptions {
   isPlaceTarget: boolean;
   isReadOnly: boolean;
   transform?: { x: number; y: number } | null;
+  presentation?: 'standard' | 'studio';
+  visualState?: SeatVisualState;
 }
 
 export function getSeatSurfaceSx(options: SurfaceStyleOptions): SxProps<Theme> {
@@ -94,6 +96,29 @@ export function getSeatSurfaceSx(options: SurfaceStyleOptions): SxProps<Theme> {
             : 'primary.main',
         boxShadow: isUnavailable ? 'none' : '0 8px 18px rgba(15, 23, 42, 0.10)',
       },
+    }),
+    ...(options.presentation === 'studio' && {
+      minHeight: 112,
+      borderWidth: 1,
+      alignItems: 'center',
+      bgcolor: (theme: Theme) => {
+        const color = isSwapTarget
+          ? theme.palette.warning.main
+          : isPlaceTarget
+            ? theme.palette.primary.main
+            : options.visualState === 'allocated'
+              ? theme.palette.success.main
+              : options.visualState === 'reserved'
+                ? theme.palette.warning.main
+                : options.visualState === 'conflict'
+                  ? theme.palette.error.main
+                  : options.visualState === 'accessible'
+                    ? theme.palette.info.main
+                    : undefined;
+        return color ? alpha(color, 0.12) : theme.vars.palette.background.paper;
+      },
+      ...(!isOver && { boxShadow: 'none' }),
+      '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 3 },
     }),
   };
 }

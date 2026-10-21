@@ -1,3 +1,5 @@
+import { getUsableSeatCount } from './room-layout';
+
 import type { SeatingPlanDraft, SeatingValidationIssue } from '../types';
 
 /**
@@ -15,7 +17,9 @@ export function validateSeatingDraft(draft: SeatingPlanDraft): {
 
   // Duplicate assignment: one student in more than one seat.
   const byStudent = new Map<string, number>();
-  draft.assignments.forEach((a) => byStudent.set(a.studentId, (byStudent.get(a.studentId) ?? 0) + 1));
+  draft.assignments.forEach((a) =>
+    byStudent.set(a.studentId, (byStudent.get(a.studentId) ?? 0) + 1)
+  );
   byStudent.forEach((count, studentId) => {
     if (count > 1) {
       blockers.push({
@@ -72,7 +76,7 @@ export function validateSeatingDraft(draft: SeatingPlanDraft): {
   // Room capacity exceeded.
   draft.rooms.forEach((room) => {
     const occupied = draft.assignments.filter((a) => a.roomId === room.roomId).length;
-    const usable = room.seats.filter((s) => !s.isDisabled).length || room.capacity;
+    const usable = getUsableSeatCount(room);
     if (occupied > usable) {
       blockers.push({
         code: 'ROOM_CAPACITY_EXCEEDED',

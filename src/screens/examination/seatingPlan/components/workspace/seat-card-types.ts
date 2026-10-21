@@ -13,6 +13,7 @@ export interface SeatCardProps {
   onRemove?: () => void;
   onReserve?: () => void;
   isReadOnly?: boolean;
+  presentation?: 'standard' | 'studio';
 }
 
 export type SeatVisualState =

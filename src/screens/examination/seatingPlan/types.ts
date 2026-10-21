@@ -75,6 +75,7 @@ export interface SeatingRoomLayout {
   rows: number;
   columns: number;
   benchCapacity: number;
+  columnRows?: number[];
   seats: SeatingSeat[];
   boardPosition?: string;
   entrancePosition?: string;

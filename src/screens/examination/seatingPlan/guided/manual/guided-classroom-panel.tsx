@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 
 import RoomSwitcher from '../../components/workspace/RoomSwitcher';
 import SeatLayoutCanvas from '../../components/workspace/SeatLayoutCanvas';
+import RoomStudioCanvas from '../../components/workspace/RoomStudioCanvas';
 
 import type {
   SeatingSeat,
@@ -23,6 +24,7 @@ interface GuidedClassroomPanelProps {
   hideRoomSwitcher?: boolean;
   readOnlyDescription?: string;
   includeProtectedAssignmentsInCount?: boolean;
+  presentation?: 'standard' | 'studio';
   onSwitchRoom: (roomId: string) => void;
   onAssign: (student: SeatingStudent, roomId: string, seat: SeatingSeat) => void;
   onUnassign: (studentId: string) => void;
@@ -39,12 +41,14 @@ export function GuidedClassroomPanel({
   hideRoomSwitcher = false,
   readOnlyDescription = 'Published seating is read-only. Seats from simultaneous plans are combined and labelled in this room view.',
   includeProtectedAssignmentsInCount = false,
+  presentation = 'standard',
   onSwitchRoom,
   onAssign,
   onUnassign,
   onToggleReserve,
 }: GuidedClassroomPanelProps) {
   const activeRoom = rooms.find((room) => room.roomId === activeRoomId) ?? rooms[0];
+  const Canvas = presentation === 'studio' ? RoomStudioCanvas : SeatLayoutCanvas;
   /**
    * Memoization Justification:
    * - The classroom canvas performs repeated occupant lookups while rendering every seat.
@@ -78,7 +82,7 @@ export function GuidedClassroomPanel({
     const isOccupied = assignments.some(
       (assignment) => assignment.roomId === activeRoom.roomId && assignment.seatId === seat?.seatId
     );
-    if (!seat || seat.isDisabled || seat.isReserved || isOccupied) return;
+    if (!seat || seat.isDisabled || seat.isReserved || seat.isExternalExamOccupied || isOccupied) return;
     onAssign(selectedStudent, activeRoom.roomId, seat);
   };
 
@@ -98,7 +102,7 @@ export function GuidedClassroomPanel({
         </Alert>
       )}
       <Box onClick={handleCanvasClick} sx={{ flex: 1, minHeight: 460, p: 1.5 }}>
-        <SeatLayoutCanvas
+        <Canvas
           room={activeRoom}
           assignments={assignments}
           studentsById={studentsById}
