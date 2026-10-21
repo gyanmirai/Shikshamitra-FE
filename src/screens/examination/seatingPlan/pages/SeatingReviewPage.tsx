@@ -2,32 +2,33 @@
 
 import type { RootState, AppDispatch } from 'src/redux/store';
 
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { academicPermissions } from 'src/constants/academic-menu';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { shikshaMitraToast } from 'src/components/toast';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
+import { shikshaMitraToast } from 'src/components/toast';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { Box, Stack, Skeleton, Typography } from '@mui/material';
+import { academicPermissions } from 'src/constants/academic-menu';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Skeleton, Stack, Typography } from '@mui/material';
 import {
   seatAllocationApi,
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
   useGetSeatingPlanDraftQuery,
-  useFinalizeSeatingPlanMutation,
   usePublishSeatingPlanMutation,
+  useFinalizeSeatingPlanMutation,
   useGetSeatAllocationStudentsQuery,
   useLazyDownloadSeatingPrintPdfQuery,
   useLazyDownloadSeatingPrintExcelQuery,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import { validateSeatingDraft } from '../utils/validate';
+import { getUsableSeatCount } from '../utils/room-layout';
 import StudentExceptionList from '../components/review/StudentExceptionList';
 import RoomAllocationSummary from '../components/review/RoomAllocationSummary';
 import SeatingReadinessBanner from '../components/review/SeatingReadinessBanner';
@@ -254,7 +255,7 @@ export default function SeatingReviewPage({
     () =>
       rooms.map((room) => {
         const occupied = assignments.filter((a) => a.roomId === room.roomId).length;
-        const usable = room.seats.filter((s) => !s.isDisabled).length || room.capacity;
+        const usable = getUsableSeatCount(room);
         return {
           roomId: room.roomId,
           roomName: room.roomName,

@@ -20,7 +20,7 @@ Apply these priorities in order.
 | Concern                                      | Current reference                                                                   |
 | -------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Full-height HR table workspace               | `src/screens/hr/attendance-tracking/index.tsx`                                     |
-| Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
+| Sidebar route workspace                      | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
 | Compact icon tab workspace                   | `src/screens/academic/course-management/lessonPlan/LessonPlanScreen.tsx`            |
 | Shared table                                 | `src/components/customizabaleTable/index.tsx`                                       |
 
@@ -51,6 +51,8 @@ Global navigation and the page header stay mounted while page content loads, ref
 Page-specific filters and context controls appear between the header and the primary content.
 Contained page-header rows, including filter/action and status-tab rows, use one spacing unit of horizontal padding (`px: 1`); keep vertical padding aligned to the controls.
 Repeated actions use the same label, icon, order, and placement across related pages.
+When the sidebar already lists peer pages, use it as the navigation for that family instead of repeating the same destinations in page tabs.
+Use the global academic-year selector for current application context instead of repeating a year-only row below the page header.
 
 Do not add a second page title inside the primary card.
 Do not place explanatory cards above a primary table when concise helper text or an information action is sufficient.

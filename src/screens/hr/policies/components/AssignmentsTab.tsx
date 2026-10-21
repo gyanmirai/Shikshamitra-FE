@@ -157,6 +157,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Target',
       minWidth: 240,
       sticky: true,
+      stickyOnMobile: false,
       render: (_, row) => {
         const item = row as AssignmentTableRow;
         return (
@@ -203,6 +204,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Status',
       filterType: 'enum',
       sticky: true,
+      stickyOnMobile: false,
       stickyPosition: 'right' as const,
       enumOptions: [
         { label: 'Active', value: 'Active' },
@@ -266,9 +268,16 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
   ];
 
   return (
-    <Stack spacing={2} sx={{ width: '100%' }}>
-      <Card sx={{ px: 1.5, py: 1 }}>
-        <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.5}>
+    <Stack spacing={1} sx={{ width: 1, minWidth: 0, minHeight: 0, flex: 1 }}>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="flex-end"
+          spacing={1.5}
+          flexWrap="wrap"
+          useFlexGap
+        >
           <Badge
             badgeContent={activeFilterCount || undefined}
             color="primary"
@@ -588,6 +597,8 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         noDataText="No assignments match the current filters."
         wrapperProps={{
           sx: {
+            flex: 1,
+            minHeight: 0,
             '& [data-testid="hr-policy-assignments"] > .MuiStack-root': {
               justifyContent: 'flex-start',
               alignItems: 'stretch',
@@ -597,7 +608,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         }}
         tableContainerProps={{
           sx: {
-            maxHeight: 620,
+            height: 1,
             '& .MuiTable-root': {
               borderSpacing: 0,
             },

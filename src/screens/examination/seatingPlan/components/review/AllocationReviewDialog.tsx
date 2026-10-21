@@ -18,25 +18,25 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Stack,
   Paper,
   Skeleton,
   Typography,
-  LinearProgress,
   DialogActions,
+  LinearProgress,
 } from '@mui/material';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   seatAllocationApi,
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
-  useGetSeatingPlanScopesQuery,
   useGetSeatingPlanDraftQuery,
+  useGetSeatingPlanScopesQuery,
+  usePublishSeatingPlanMutation,
   useValidateSeatingPlanMutation,
   useFinalizeSeatingPlanMutation,
-  usePublishSeatingPlanMutation,
   useGetSeatAllocationStudentsQuery,
   useLazyDownloadSeatingPrintPdfQuery,
   useLazyDownloadSeatingPrintExcelQuery,
@@ -44,6 +44,7 @@ import {
 
 import StudentExceptionList from './StudentExceptionList';
 import { validateSeatingDraft } from '../../utils/validate';
+import { getUsableSeatCount } from '../../utils/room-layout';
 import { toSeatingStudents, toSeatingRoomLayout, toSeatingAssignments } from '../../utils/mappers';
 
 import type { SeatingRoomLayout, SeatingAssignment } from '../../types';
@@ -468,7 +469,7 @@ export default function AllocationReviewDialog({
     () =>
       rooms.map((room) => {
         const occupied = assignments.filter((a) => a.roomId === room.roomId).length;
-        const usable = room.seats.filter((s) => !s.isDisabled).length || room.capacity;
+        const usable = getUsableSeatCount(room);
         const utilization = usable === 0 ? 0 : Math.round((occupied / usable) * 100);
         return {
           roomId: room.roomId,
@@ -742,7 +743,10 @@ export default function AllocationReviewDialog({
                   </Typography>
                   <Stack spacing={0.5} sx={{ mt: 0.75 }}>
                     {serverValidation.blockers.map((issue, index) => (
-                      <Typography key={`${issue.code ?? 'issue'}-${issue.studentId ?? index}`} variant="body2">
+                      <Typography
+                        key={`${issue.code ?? 'issue'}-${issue.studentId ?? index}`}
+                        variant="body2"
+                      >
                         {issue.message}
                         {issue.code ? ` (${issue.code})` : ''}
                       </Typography>
@@ -803,7 +807,11 @@ export default function AllocationReviewDialog({
                     : 'Publish Plan'
               }
               loading={isPublishing}
-              disabled={!canPublish || isPublishing || planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED}
+              disabled={
+                !canPublish ||
+                isPublishing ||
+                planDraftData?.status === SEATING_PLAN_STATUS_PUBLISHED
+              }
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={handlePublish}
               type="button"

@@ -53,6 +53,7 @@ export function PublishedPlanRoomView({ examId, standardId, group }: Props) {
     <Box aria-label={`Combined published seating for room ${group.roomName}`}>
       <DndContext>
         <GuidedClassroomPanel
+          presentation="studio"
           rooms={data.rooms}
           assignments={data.assignments}
           students={data.students}

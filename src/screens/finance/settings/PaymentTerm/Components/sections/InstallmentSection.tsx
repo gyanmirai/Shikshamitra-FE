@@ -87,13 +87,6 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
         </Stack>
       }
     >
-      {board?.startDate && board?.endDate && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Installment periods must be between {dayjs(board.startDate).format('DD/MM/YYYY')} and{' '}
-          {dayjs(board.endDate).format('DD/MM/YYYY')} for {board.name}.
-        </Alert>
-      )}
-
       <Card variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 1.5 }}>
         <FormControlLabel
           sx={{ m: 0, alignItems: 'flex-start' }}

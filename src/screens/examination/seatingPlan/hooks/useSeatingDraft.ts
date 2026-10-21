@@ -1,6 +1,8 @@
 import { useMemo, useState, useCallback } from 'react';
 
 import { DEFAULT_ALLOCATION_RULES } from '../types';
+import { getUsableSeatCount } from '../utils/room-layout';
+
 import type {
   SeatingSeat,
   SeatingStudent,
@@ -59,7 +61,7 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
     () =>
       draft.rooms.map((room) => {
         const occupied = draft.assignments.filter((a) => a.roomId === room.roomId).length;
-        const usable = room.seats.filter((s) => !s.isDisabled).length || room.capacity;
+        const usable = getUsableSeatCount(room);
         return {
           roomId: room.roomId,
           roomName: room.roomName,
@@ -135,12 +137,12 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
         const next = d.assignments.map((a) =>
           a.studentId === studentId
             ? {
-              ...a,
-              roomId,
-              seatId: seatId(roomId, seat.seatNumber),
-              seatNumber: seat.seatNumber,
-              benchId: seat.benchId,
-            }
+                ...a,
+                roomId,
+                seatId: seatId(roomId, seat.seatNumber),
+                seatNumber: seat.seatNumber,
+                benchId: seat.benchId,
+              }
             : a
         );
         pushHistory('move', d.assignments, next);
@@ -158,10 +160,22 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
         if (!a || !b) return d;
         const next = d.assignments.map((x) => {
           if (x.studentId === studentIdA) {
-            return { ...x, roomId: b.roomId, seatId: b.seatId, seatNumber: b.seatNumber, benchId: b.benchId };
+            return {
+              ...x,
+              roomId: b.roomId,
+              seatId: b.seatId,
+              seatNumber: b.seatNumber,
+              benchId: b.benchId,
+            };
           }
           if (x.studentId === studentIdB) {
-            return { ...x, roomId: a.roomId, seatId: a.seatId, seatNumber: a.seatNumber, benchId: a.benchId };
+            return {
+              ...x,
+              roomId: a.roomId,
+              seatId: a.seatId,
+              seatNumber: a.seatNumber,
+              benchId: a.benchId,
+            };
           }
           return x;
         });
@@ -235,20 +249,17 @@ export function useSeatingDraft(initialDraft: SeatingPlanDraft) {
     [pushHistory]
   );
 
-  const includeStudents = useCallback(
-    (studentIds: string[]) => {
-      setDraft((d) => {
-        const idSet = new Set(studentIds);
-        const nextExcluded = d.excludedStudentIds.filter((id) => !idSet.has(id));
-        return {
-          ...d,
-          excludedStudentIds: nextExcluded,
-          isDirty: true,
-        };
-      });
-    },
-    []
-  );
+  const includeStudents = useCallback((studentIds: string[]) => {
+    setDraft((d) => {
+      const idSet = new Set(studentIds);
+      const nextExcluded = d.excludedStudentIds.filter((id) => !idSet.has(id));
+      return {
+        ...d,
+        excludedStudentIds: nextExcluded,
+        isDirty: true,
+      };
+    });
+  }, []);
 
   return {
     draft,

@@ -3,7 +3,7 @@ module: institute-setup
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -58,3 +58,9 @@ Start the backend bridge using the command in the [backend testing guide](../../
 The automated run expects a freshly started bridge: DDVS has four shifts, Swaminarayan is empty, and a host-only legacy shift exists. It creates and edits one synthetic Swaminarayan shift. Restart the bridge before rerunning the complete script. Save evidence to ignored `.artifacts/shift-isolation/`. Final Codex in-app browser acceptance verifies both grids, the dropdown and an owned edit after automated checks. Stop the two test servers when finished.
 
 The existing shift form emits React warnings about nested block elements inside a paragraph. This is an unrelated baseline markup issue; the isolation checks distinguish these warnings from uncaught runtime exceptions.
+
+## Room form
+
+Run `node node_modules/vitest/vitest.mjs run src/screens/setting/RoomManagement/RoomCreateManagement` for layout validation, legacy partial grids, dynamic column fields, per-column stepper limits, separate preview dialogs, zoom, Escape, draft/focus restoration, reusable feature creation, failed-save preservation and successful retry. The tests use real components and RTK Query with controlled network responses.
+
+The final Codex browser smoke used the production form with labelled sample data and a temporary sample API because the local authenticated API was unavailable. It verified column fields, calculated capacity, visual benches/seats, feature selection/reuse, submission, scrolling, light/dark themes and phone/tablet/desktop widths. This is UI evidence only; the [backend testing guide](../../../Shikshamitra-BE/docs/modules/institute-setup/testing.md#room-layout-and-features) owns database acceptance. Evidence stays in ignored `.codex/room-preview/`.

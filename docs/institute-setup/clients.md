@@ -3,12 +3,16 @@ module: institute-setup
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-19
 owner: frontend-team
 audience: humans-and-agents
 ---
 
-# School Identity clients
+# Institute Setup clients
+
+## Room client
+
+`src/redux/InstituteSetup/RoomApi/RoomApi.ts` keeps room CRUD under `/app/room` and adds typed feature-catalogue GET/POST calls under `/institute-setup/rooms/features`. Catalogue writes invalidate the existing Rooms tag. `useRoomForm.ts` submits ordered `columnRows` along with the existing layout totals, and waits for `.unwrap()` before closing. Server contracts, defaults and migration requirements are owned by the [backend API guide](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md#rooms-management-endpoint-families).
 
 TL;DR: `schoolIdentityApi.ts` injects typed endpoints into the existing authenticated RTK Query API. [Backend API documentation](../../../Shikshamitra-BE/docs/modules/institute-setup/api.md) owns contracts, access rules and errors.
 

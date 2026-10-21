@@ -4,6 +4,19 @@ import { instituteSetupApi } from '../instituteSetupApi';
 
 export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
+    getRoomImage: builder.query<{ contentType: string; content: string } | null, string>({
+      query: (id) => `/institute-setup/rooms/${id}/image`,
+      providesTags: [instituteSetupType.rooms],
+      keepUnusedDataFor: 0,
+    }),
+    getRoomFeatures: builder.query<{ items: { id: string; name: string }[] }, void>({
+      query: () => '/institute-setup/rooms/features',
+      providesTags: [instituteSetupType.rooms],
+    }),
+    addRoomFeature: builder.mutation<{ id: string; name: string }, { name: string }>({
+      query: (body) => ({ url: '/institute-setup/rooms/features', method: 'POST', body }),
+      invalidatesTags: [instituteSetupType.rooms],
+    }),
     getRooms: builder.query({
       query: (params) => ({
         url: '/app/room',
@@ -51,6 +64,9 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 });
 
 export const {
+  useGetRoomImageQuery,
+  useGetRoomFeaturesQuery,
+  useAddRoomFeatureMutation,
   useGetRoomsQuery,
   useLazyGetRoomsQuery,
   useAddRoomMutation,

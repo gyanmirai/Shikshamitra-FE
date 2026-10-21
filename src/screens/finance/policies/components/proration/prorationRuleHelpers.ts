@@ -5,7 +5,7 @@ import type {
 } from '../../types/finance-policy.types';
 
 export const isProratedModel = (model?: ProrationRuleType) =>
-  model === 'DailyProration' || model === 'MonthlyProration';
+  model === 'DailyProration' || model === 'MonthlyProration' || model === 'FullMonthCharge';
 
 export const enabledModels = (rule: IProrationFeeHeadRule): ProrationRuleType[] => [
   ...(rule.applyOnAdmission !== false ? [rule.ruleType] : []),

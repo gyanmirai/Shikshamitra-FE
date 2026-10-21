@@ -1,6 +1,7 @@
 export interface IRoom {
   id: string;
   roomName: string;
+  hasImage?: boolean;
   capacity: number;
   buildingId: string;
   buildingName: string;
@@ -13,6 +14,7 @@ export interface IRoom {
   benchCapacity: number;
   benchesPerRow: number;
   benchesPerColumn: number;
+  columnRows?: number[] | null;
   features: string[];
   lastModificationTime: string | null;
   lastModifierId: string | null;

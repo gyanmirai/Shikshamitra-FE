@@ -7,7 +7,6 @@ import type {
   IStudentRoomAssignment,
 } from '../../seatAllocation/type';
 import type {
-  SeatingSeat,
   SeatingStudent,
   SeatingPlanDraft,
   SeatingPlanStatus,
@@ -113,80 +112,7 @@ export function toSeatingPlanListRow(exam: IExamAllocation): SeatingPlanListRow 
   };
 }
 
-function parseIntCsv(csv?: string | null): Set<number> {
-  if (!csv) return new Set();
-  return new Set(
-    csv
-      .split(',')
-      .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !Number.isNaN(n))
-  );
-}
-
-export function toSeatingRoomLayout(
-  room:
-    | {
-        roomId?: string;
-        room?: {
-          capacity?: number;
-          benchesPerRow?: number;
-          benchesPerColumn?: number;
-          benchCapacity?: number;
-          boardPosition?: string;
-          entrancePosition?: string;
-          disabledSeatNumbersCsv?: string;
-          reservedSeatNumbersCsv?: string;
-          accessibleSeatNumbersCsv?: string;
-          aisleAfterColumnsCsv?: string;
-        };
-      }
-    | undefined,
-  roomId: string,
-  roomName: string
-): SeatingRoomLayout {
-  const capacity = room?.room?.capacity ?? 0;
-  const rows = room?.room?.benchesPerRow ?? 0;
-  const columns = room?.room?.benchesPerColumn ?? 0;
-  const benchCapacity = room?.room?.benchCapacity ?? 1;
-
-  const disabledSeats = parseIntCsv(room?.room?.disabledSeatNumbersCsv);
-  const reservedSeats = parseIntCsv(room?.room?.reservedSeatNumbersCsv);
-  const accessibleSeats = parseIntCsv(room?.room?.accessibleSeatNumbersCsv);
-  const aisleAfterColumns = [...parseIntCsv(room?.room?.aisleAfterColumnsCsv)];
-
-  const seats: SeatingSeat[] = [];
-  let seatNumber = 1;
-  for (let r = 0; r < rows; r += 1) {
-    for (let c = 0; c < columns; c += 1) {
-      for (let b = 0; b < benchCapacity; b += 1) {
-        if (seats.length >= capacity) break;
-        seats.push({
-          seatId: seatId(roomId, seatNumber),
-          seatNumber,
-          row: r,
-          column: c,
-          isDisabled: disabledSeats.has(seatNumber),
-          isReserved: reservedSeats.has(seatNumber),
-          isAccessible: accessibleSeats.has(seatNumber),
-        });
-        seatNumber += 1;
-      }
-    }
-  }
-
-  return {
-    roomId,
-    roomName,
-    capacity,
-    rows,
-    columns,
-    benchCapacity,
-    seats,
-    boardPosition: room?.room?.boardPosition,
-    entrancePosition: room?.room?.entrancePosition,
-    aisleAfterColumns,
-  };
-}
+export { toSeatingRoomLayout } from './room-layout';
 
 export function upsertSeatingRoomLayout(
   rooms: SeatingRoomLayout[],

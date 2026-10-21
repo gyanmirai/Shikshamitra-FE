@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/core';
 
 import SeatCard from './SeatCard';
+import { getUsableSeatCount } from '../../utils/room-layout';
 
 import type {
   SeatingSeat,
@@ -68,7 +69,7 @@ export default function SeatLayoutCanvas({
     const assignedInRoom = assignments.filter(
       (assignment) => assignment.roomId === room.roomId
     ).length;
-    const usableSeats = room.seats.filter((seat) => !seat.isDisabled).length || room.capacity;
+    const usableSeats = getUsableSeatCount(room);
     const groupedRows = seatByRow.map(([rowIndex, seatsInRow]) => {
       const byColumn = new Map<number, SeatingSeat[]>();
       seatsInRow.forEach((seat) => {
@@ -391,7 +392,7 @@ export default function SeatLayoutCanvas({
                           Bench {columnIndex + 1}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                          {seats.length || room.benchCapacity} seats
+                          {seats.length} seats
                         </Typography>
                       </Stack>
 

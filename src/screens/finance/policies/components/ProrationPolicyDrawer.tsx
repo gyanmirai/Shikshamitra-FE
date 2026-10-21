@@ -19,7 +19,6 @@ import ProrationFooterActions from './proration/ProrationFooterActions';
 import { useProrationPolicyForm } from '../hooks/useProrationPolicyForm';
 import ProrationGeneralSection from './proration/ProrationGeneralSection';
 import ProrationFeeHeadsSection from './proration/ProrationFeeHeadsSection';
-import ProrationSimulationSection from './proration/ProrationSimulationSection';
 import { useProrationValidationFocus } from '../hooks/useProrationValidationFocus';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
@@ -35,8 +34,8 @@ interface ProrationPolicyDrawerProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-// Scope form hooks to the open drawer so discarded drafts and simulation state
-// cannot survive into the next create, edit, or duplicate session.
+// Scope form hooks to the open drawer so discarded drafts cannot survive into
+// the next create, edit, or duplicate session.
 export default function ProrationPolicyDrawer(props: ProrationPolicyDrawerProps) {
   const { open } = props;
   return open ? <ProrationPolicyDrawerSession {...props} /> : null;
@@ -53,10 +52,6 @@ function ProrationPolicyDrawerSession({
   const canActivate = hasGrantedPermission(
     permissions,
     financePermissions.policies.prorationPolicyActions.activate
-  );
-  const canSimulate = hasGrantedPermission(
-    permissions,
-    financePermissions.policies.prorationPolicyActions.simulate
   );
 
   const {
@@ -184,14 +179,6 @@ function ProrationPolicyDrawerSession({
 
                 {/* Card 2 — Fee Head Configuration */}
                 <ProrationFeeHeadsSection formik={formik} />
-
-                {/* Card 3 — Calculation Simulator (when editing saved policy) */}
-                {editData?.id && canSimulate && (
-                  <ProrationSimulationSection
-                    policyId={editData.id}
-                    rules={formik.values.feeHeadRules}
-                  />
-                )}
               </Stack>
             </Scrollbar>
           </Box>

@@ -29,6 +29,8 @@ export interface ManualSeatItemDto {
 
 export interface ManualRoomDto {
   capacity?: number;
+  totalBenches?: number;
+  columnRows?: number[] | null;
   benchesPerRow?: number;
   benchesPerColumn?: number;
   benchCapacity?: number;
