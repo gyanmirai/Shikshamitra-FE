@@ -9,6 +9,9 @@ it('exposes Payroll documents in Settings while keeping existing payslip grants 
   )!;
   const settings = payroll.children!.find((item) => item.title === 'Settings')!;
   const payslips = payroll.children!.find((item) => item.title === 'Payslips')!;
+  if (!('children' in settings)) {
+    throw new Error('Expected payroll settings navigation children');
+  }
   const documents = settings.children!.find((item) => item.title === 'Payroll documents')!;
   const catalogue = ['View', 'Add'].map((action) => ({
     name: `${hrPermissions.payroll.generateSalarySlip}.${action}`,
