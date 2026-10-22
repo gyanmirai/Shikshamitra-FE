@@ -187,7 +187,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                   formik.setFieldTouched('feeCategoryId', false);
                 }}
                 error={!!(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || false}
-                helperText={(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || ''}
+                helperText={formik.touched.feeCategoryId ? formik.errors.feeCategoryId : ''}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
@@ -214,9 +214,8 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={
-                  formik.touched.name && formik.errors.name
-                    ? formik.errors.name
-                    : `${formik.values.name.length}/40 Maximum characters allowed`
+                  (formik.touched.name && formik.errors.name ? formik.errors.name : undefined) ||
+                  undefined
                 }
                 inputProps={{ maxLength: 40 }}
               />
@@ -257,11 +256,11 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                 }}
                 error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
                 helperText={
-                  formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                  (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
                     ? (formik.errors.incomeCategoryId as string)
                     : editData?.isUsedInDownstream
                       ? 'Locked because this Fee Head is already used in a locked Fee Structure.'
-                      : 'Collections are recorded under the selected Income Category.'
+                      : 'Collections are recorded under the selected Income Category.') || undefined
                 }
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />

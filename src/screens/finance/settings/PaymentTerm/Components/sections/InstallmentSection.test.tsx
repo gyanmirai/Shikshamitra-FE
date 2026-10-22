@@ -1,4 +1,5 @@
 import { useFormik } from 'formik';
+import userEvent from '@testing-library/user-event';
 import { vi, it, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -62,7 +63,22 @@ function renderSection(specificDate = false) {
     });
     return (
       <form onSubmit={formik.handleSubmit}>
-        <InstallmentSection formik={formik} board={board} onAdd={vi.fn()} onRemove={vi.fn()} />
+        <InstallmentSection
+          formik={formik}
+          board={board}
+          onAdd={() =>
+            formik.setFieldValue('installments', [
+              ...formik.values.installments,
+              {
+                ...formik.values.installments[0],
+                installmentName: 'Third',
+                sequence: 3,
+                allocationPercentage: 0,
+              },
+            ])
+          }
+          onRemove={vi.fn()}
+        />
         <output data-testid="schedule">{JSON.stringify(formik.values.installments)}</output>
         <button type="submit">Save</button>
       </form>
@@ -79,6 +95,32 @@ function renderSection(specificDate = false) {
 }
 
 describe('Payment Term installment date entry', () => {
+  it('focuses the newly added installment name', async () => {
+    renderSection();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Installment' }));
+    await waitFor(() => expect(screen.getByDisplayValue('Third')).toHaveFocus());
+  });
+
+  it('shows one allocation error and marks allocation fields when the total exceeds 100%', async () => {
+    renderSection();
+    const allocations = screen.getAllByRole('textbox', { name: 'Allocation % *' });
+    fireEvent.change(allocations[0], { target: { value: '51.63' } });
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'Allocation total is 101.63%. Reduce the allocation by 1.63% so the total equals 100%.'
+        )
+      ).toBeInTheDocument()
+    );
+    expect(screen.queryByText('Percentage allocations must total 100%')).not.toBeInTheDocument();
+    allocations.forEach((input) => expect(input).toHaveAttribute('aria-invalid', 'true'));
+  });
+
+  it('does not show an allocation alert when allocations total 100%', () => {
+    renderSection();
+    expect(screen.queryByText(/Allocation totals/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete installment 1' })).toBeInTheDocument();
+  });
   it('stores typed ranges independently, calculates invoice dates, and blocks invalid saves', async () => {
     const onSubmit = renderSection();
     const inputs = screen.getAllByRole('textbox', { name: 'Installment Start–End Date *' });
@@ -103,20 +145,21 @@ describe('Payment Term installment date entry', () => {
   });
 
   it('allows typing due and specific invoice dates through their date sections', async () => {
+    const user = userEvent.setup();
     renderSection(true);
     const invoice = screen.getAllByRole('group', { name: 'Invoice Date *' })[0];
     const due = screen.getAllByRole('group', { name: 'Payment Due Date *' })[0];
-    [invoice, due].forEach((field) => {
-      [
+    for (const field of [invoice, due]) {
+      for (const [name, text] of [
         ['Day', '10'],
         ['Month', '06'],
         ['Year', '2026'],
-      ].forEach(([name, text]) => {
+      ]) {
         const section = within(field).getByRole('spinbutton', { name });
-        fireEvent.focus(section);
-        [...text].forEach((key) => fireEvent.keyDown(section, { key }));
-      });
-    });
+        await user.click(section);
+        await user.keyboard(text);
+      }
+    }
     await waitFor(() => {
       expect(screen.getByTestId('schedule')).toHaveTextContent('"demandDate":"2026-06-10"');
       expect(screen.getByTestId('schedule')).toHaveTextContent('"dueDate":"2026-06-10"');

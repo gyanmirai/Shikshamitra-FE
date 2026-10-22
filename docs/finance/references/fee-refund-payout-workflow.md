@@ -3,7 +3,7 @@ module: finance
 domain: accounts
 content_type: Reference
 status: active
-updated_on: 2026-10-13
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -31,6 +31,21 @@ filters, History status labels, narrow-screen scrolling, and the pinned right co
 The request form uses shared Student information, Refund details, and Refund payment details sections, with optional guidance in accessible heading tooltips and one **Submit** action in the stable footer. Refund details shows the resolved policy name and server-returned maximum refundable amount beside the full/partial controls. The fee allocation table retains paid, refunded, refundable, and receipt information; duplicate summary cards, utilization progress, and instructional banners are omitted. The request captures the allowed payout method, required recipient details, and a single optional Refund reason; payment remarks, instrument details, school account, and payout dates belong to payment recording. The server recalculates on submission. A Failed request can open a linked replacement form with the source allocations filled in; staff must choose and review payment details again.
 
 Full-refund selections stay within the server policy limit, and a policy that disallows partial refunds resets a partial selection to full. Eligibility loading retains entered amounts and never reuses a previous student's response. The method selector and submission both enforce the policy's allowed methods; legacy drafts use their saved method snapshot. Checking or saving locks the form using the shared busy overlay.
+
+Paid installments remain visible after selection. Refund selection is restricted to one original
+receipt: the fee-head checkbox selects eligible installments from the selected receipt, or the
+first refundable receipt when none is selected. Other receipts remain visible and disabled with
+a tooltip explaining how to switch; clearing the selection unlocks them. Counts, amounts, and
+the submitted allocation lines use the same selection. Adjustment selection still permits
+multiple receipts. Selection validation appears as compact field feedback after submission,
+without instructional or receipt-lock banners. Narrow tables scroll inside the fee-head card.
+
+Add-form eligibility loading uses matching refund and payment section skeletons. Edit and
+replacement forms retain skeletons for student, refund, payment, and footer summary content
+until the saved request and allocation mapping are ready. Failed reads expose Retry and block
+submission; stale allocation responses cannot replace a newer request. Focused checks are
+`RefundSelection.test.tsx`, `RefundForm.test.tsx`, `FeeHeadRefundTable.test.tsx`, and
+`FeeRefundDetailForm.test.tsx` in `src/screens/finance/feeRefund/NewRefundForm/`.
 
 Approved refunds first show **Record payment**. After recording, they show **Confirm outcome**. An uncertain bank, UPI, cheque, or demand draft result remains Approved and says **Awaiting verification**. Cash uses the same steps with one staff-entered signed handover receipt or document reference; the system generates its unique transaction reference. Confirm paid moves the request to Processed; Mark failed moves it to Failed. A confirmed non-cash return is recorded from the Processed row.
 

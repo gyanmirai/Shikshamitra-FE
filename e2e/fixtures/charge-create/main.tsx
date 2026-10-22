@@ -88,7 +88,12 @@ function Fixture() {
           />
         </Card>
       ) : (
-        <Typography>Charges list · last charge Pending</Typography>
+        <Typography>
+          Charges list · last charge{' '}
+          {new URLSearchParams(window.location.search).has('approvalNotRequired')
+            ? 'Approved'
+            : 'Pending'}
+        </Typography>
       )}
       <ConfirmDialog
         open={discardOpen}

@@ -51,7 +51,7 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       onChange={(e) => formik.setFieldValue('class', e)}
                       fullWidth
                       error={formik.touched.class && Boolean(formik.errors.class)}
-                      helperText={(formik.touched.class && formik.errors.class) || ''}
+                      helperText={(formik.touched.class && formik.errors.class) || undefined}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -74,7 +74,7 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       onBlur={formik.handleBlur}
                       fullWidth
                       error={formik.touched.division && Boolean(formik.errors.division)}
-                      helperText={(formik.touched.division && formik.errors.division) || ''}
+                      helperText={(formik.touched.division && formik.errors.division) || undefined}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -98,7 +98,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                           size="small"
                           fullWidth
                           error={formik.touched.studentName && Boolean(formik.errors.studentName)}
-                          helperText={formik.touched.studentName && formik.errors.studentName}
+                          helperText={
+                            (formik.touched.studentName && formik.errors.studentName) || undefined
+                          }
                         />
                       )}
                       onChange={(e, value) =>
@@ -125,7 +127,7 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                           size="small"
                           fullWidth
                           error={formik.touched.grNo && Boolean(formik.errors.grNo)}
-                          helperText={formik.touched.grNo && formik.errors.grNo}
+                          helperText={(formik.touched.grNo && formik.errors.grNo) || undefined}
                         />
                       )}
                       onChange={(e, value) =>
@@ -156,7 +158,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                           size="small"
                           fullWidth
                           error={formik.touched.feeType && Boolean(formik.errors.feeType)}
-                          helperText={formik.touched.feeType && formik.errors.feeType}
+                          helperText={
+                            (formik.touched.feeType && formik.errors.feeType) || undefined
+                          }
                         />
                       )}
                       onChange={(e, value) =>
@@ -190,7 +194,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                           size="small"
                           fullWidth
                           error={formik.touched.paidTerms && Boolean(formik.errors.paidTerms)}
-                          helperText={formik.touched.paidTerms && formik.errors.paidTerms}
+                          helperText={
+                            (formik.touched.paidTerms && formik.errors.paidTerms) || undefined
+                          }
                         />
                       )}
                       onChange={(e, value) =>
@@ -217,8 +223,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       Boolean(formik.errors.amountApplicableForRefund)
                     }
                     helperText={
-                      formik.touched.amountApplicableForRefund &&
-                      formik.errors.amountApplicableForRefund
+                      (formik.touched.amountApplicableForRefund &&
+                        formik.errors.amountApplicableForRefund) ||
+                      undefined
                     }
                     disabled
                   />
@@ -236,7 +243,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       onChange={formik.handleChange}
                       fullWidth
                       error={formik.touched.askForRefund && Boolean(formik.errors.askForRefund)}
-                      helperText={formik.touched.askForRefund && formik.errors.askForRefund}
+                      helperText={
+                        (formik.touched.askForRefund && formik.errors.askForRefund) || undefined
+                      }
                     />
                   </ShakingTextField>
                 </Grid>
@@ -256,7 +265,7 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
                       onBlur={formik.handleBlur}
                       fullWidth
                       error={formik.touched.reason && Boolean(formik.errors.reason)}
-                      helperText={formik.touched.reason && formik.errors.reason}
+                      helperText={(formik.touched.reason && formik.errors.reason) || undefined}
                     />
                   </ShakingTextField>
                 </Grid>

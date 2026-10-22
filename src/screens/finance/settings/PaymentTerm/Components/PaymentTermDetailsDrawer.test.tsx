@@ -144,13 +144,17 @@ describe('PaymentTermDetailsDrawer version history', () => {
     );
 
     expect(screen.getByText('Quarterly Payment Term')).toBeInTheDocument();
-    expect(screen.getByText('Immutable payment-term snapshot')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View version 2' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.queryByRole('button', { name: /^(Save|Submit)$/ })).not.toBeInTheDocument();
     expect(screen.getByText('Revision Created')).toBeInTheDocument();
     expect(screen.getByText(/Finance Admin/)).toBeInTheDocument();
     expect(screen.getByText('Edited published schedule')).toBeInTheDocument();
     expect(screen.getByText('X Days Before Due')).toBeInTheDocument();
     expect(screen.queryByText('XDaysBeforeDue')).not.toBeInTheDocument();
-    expect(screen.getByText('Installment 2')).toBeInTheDocument();
+    expect(screen.getByText('2. Installment 2')).toBeInTheDocument();
   });
 
   it('switches between version snapshots from the version list', () => {

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Label } from 'src/components/label';
 import { Box, Grid, Stack, Switch, Typography, FormControlLabel } from '@mui/material';
 
@@ -15,8 +14,9 @@ export default function CollectionOnlineSection({ formik }: CollectionOnlineSect
 
   return (
     <SectionCard
-      title="Online Collections"
       subtitle="Choose whether families can pay through the online payment gateway."
+      title="Online Collections"
+
       icon="solar:card-bold"
       action={
         <Label color={isOnlineAllowed ? 'success' : 'default'} sx={{ height: 22 }}>

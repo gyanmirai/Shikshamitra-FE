@@ -20,7 +20,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByScopeQuery } from 'src/redux/student';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -354,11 +354,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     }}
                   >
                     <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                      <Iconify
-                        icon="mdi:information-outline"
-                        width={18}
-                        sx={{ color: 'primary.main' }}
-                      />
                       <Box>
                         <Typography variant="subtitle2" fontWeight={700}>
                           Charge Details
@@ -385,7 +380,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             value={values.chargeCategoryId}
                             onChange={(value) => setFieldValue('chargeCategoryId', value)}
                             error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
-                            helperText={(touched.chargeCategoryId && errors.chargeCategoryId) || ''}
+                            helperText={
+                              (touched.chargeCategoryId && errors.chargeCategoryId) || undefined
+                            }
                             formControlProps={{ fullWidth: true }}
                           />
                         </ShakingTextField>
@@ -418,7 +415,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                               borderRadius: 1,
                             }}
                             error={!!(touched.amount && errors.amount)}
-                            helperText={(touched.amount && errors.amount) as string}
+                            helperText={((touched.amount && errors.amount) as string) || undefined}
                           />
                         </ShakingTextField>
                       </Grid>
@@ -463,7 +460,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             value={values.priority}
                             onChange={(value) => setFieldValue('priority', value)}
                             error={!!(touched.priority && errors.priority) || false}
-                            helperText={(touched.priority && errors.priority) || ''}
+                            helperText={(touched.priority && errors.priority) || undefined}
                             formControlProps={{ fullWidth: true }}
                           />
                         </ShakingTextField>
@@ -487,7 +484,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             onBlur={formik.handleBlur}
                             error={!!(touched.purposeDescription && errors.purposeDescription)}
                             helperText={
-                              (touched.purposeDescription && errors.purposeDescription) as string
+                              ((touched.purposeDescription &&
+                                errors.purposeDescription) as string) || undefined
                             }
                           />
                         </ShakingTextField>
@@ -543,7 +541,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                               setFieldValue('selectedStudentIds', []);
                             }}
                             error={!!errors.boardId && touched.boardId}
-                            helperText={(touched.boardId && errors.boardId) as string}
+                            helperText={
+                              ((touched.boardId && errors.boardId) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -568,7 +568,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             }}
                             error={!!errors.educationMediumId && touched.educationMediumId}
                             helperText={
-                              (touched.educationMediumId && errors.educationMediumId) as string
+                              ((touched.educationMediumId && errors.educationMediumId) as string) ||
+                              undefined
                             }
                           />
                         </ShakingTextField>
@@ -592,7 +593,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                               setFieldValue('selectedStudentIds', []);
                             }}
                             error={!!(touched.classIds && errors.classIds) || false}
-                            helperText={(touched.classIds && (errors.classIds as string)) || ''}
+                            helperText={
+                              (touched.classIds && (errors.classIds as string)) || undefined
+                            }
                             formControlProps={{ sx: { width: '100%' } }}
                             multiple
                           />
@@ -619,7 +622,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                               }}
                               formControlProps={{ sx: { width: '100%' } }}
                               error={!!(touched.divisionIds && errors.divisionIds)}
-                              helperText={(touched.divisionIds && errors.divisionIds) as string}
+                              helperText={
+                                ((touched.divisionIds && errors.divisionIds) as string) || undefined
+                              }
                               multiple
                             />
                           </ShakingTextField>

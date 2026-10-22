@@ -16,7 +16,6 @@ import type { IFeeStructureData } from './type';
 export default function AssignmentDrawer({
   students,
   academicYearId,
-  academicYearName,
   onClose,
 }: {
   students: IFeeStructureData[];
@@ -65,7 +64,7 @@ export default function AssignmentDrawer({
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
           <DrawerHeader
             title={title}
-            subtitle={academicYearName ? `Academic year: ${academicYearName}` : undefined}
+
             onClose={requestClose}
             closeDisabled={busy}
           />

@@ -1,3 +1,4 @@
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
@@ -276,22 +277,13 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
     setDivision('');
   }, [allClass, classes]);
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
-    };
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addInvoiceDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addInvoiceDialog.onFalse();
-    }
-  };
+  const { handleClose, confirmation } = useFinanceFormClose(addInvoiceDialog.value, () => {
+    addInvoiceDialog.onFalse();
+  });
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {confirmation}
       <Box
         display="flex"
         sx={{
@@ -385,9 +377,8 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
       />
       <CustomDialog
         open={addInvoiceDialog.value}
-        handleClose={() => {
-          addInvoiceDialog?.onFalse();
-        }}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
         title={
           <Box>
             <Typography variant="h6" fontWeight={700}>
@@ -397,7 +388,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
         }
         maxWidth="sm"
       >
-        <InvoiceForm open={addInvoiceDialog} onClose={handleClose} />
+        {addInvoiceDialog.value && <InvoiceForm open={addInvoiceDialog} onClose={handleClose} />}
       </CustomDialog>
 
       <CustomDialog

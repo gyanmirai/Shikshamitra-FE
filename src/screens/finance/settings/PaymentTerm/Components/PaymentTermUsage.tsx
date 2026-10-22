@@ -46,7 +46,7 @@ export function PaymentTermDefaultSummary({
 
 export function PaymentTermUsageBreakdown({ usage }: { usage: Usage }) {
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1} sx={{ flex: 1, minHeight: 0 }}>
       <PaymentTermUsageSummary usage={usage} />
       <CustomizableTable
         tableId="payment-term-usage"
@@ -66,6 +66,9 @@ export function PaymentTermUsageBreakdown({ usage }: { usage: Usage }) {
           id: `${row.feeStructureId}-${row.feeHeadId}-${index}`,
         }))}
         isPagination
+        variant="embedded"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         noDataText="This payment term has no fee head assignments."
       />
     </Stack>

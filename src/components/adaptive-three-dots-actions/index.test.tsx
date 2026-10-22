@@ -15,6 +15,32 @@ vi.mock('../iconify', () => ({
 describe('AdaptiveThreeDotsActions', () => {
   const theme = createTheme(defaultSettings);
 
+  it('shows three Finance actions directly and only overflows additional actions', async () => {
+    const actions = ['View', 'Edit', 'Clone', 'Archive'].map((label) => ({
+      id: label.toLowerCase(),
+      label,
+      icon: 'mdi:circle',
+      onClick: vi.fn(),
+    }));
+    const { rerender } = render(
+      <ThemeProvider theme={theme}>
+        <AdaptiveThreeDotsActions actions={actions.slice(0, 3)} directActionLimit={3} />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Clone' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'More actions' })).toBeNull();
+    rerender(
+      <ThemeProvider theme={theme}>
+        <AdaptiveThreeDotsActions actions={actions} directActionLimit={3} />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Clone' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(await screen.findAllByRole('menuitem')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Archive' }));
+    expect(actions[3].onClick).toHaveBeenCalledOnce();
+  });
+
   it('keeps the complete action set in one menu when collapseOnOverflow is enabled', async () => {
     const actions = ['View', 'Edit', 'Clone', 'Archive'].map((label) => ({
       id: label.toLowerCase(),

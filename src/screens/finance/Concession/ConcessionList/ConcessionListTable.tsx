@@ -18,6 +18,7 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
     noDataText="No student data found"
     columns={[
       {
+        stickyPosition: 'left',
         id: 'studentName',
         label: 'Name(Gr No.)',
         align: 'left',
@@ -63,6 +64,8 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
         minWidth: 150,
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'actions',
         label: 'Action',
         align: 'left',
@@ -71,7 +74,7 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
         sticky: true,
         minWidth: 40,
         render: (value, row) => (
-          <AdaptiveThreeDotsActions
+          <AdaptiveThreeDotsActions directActionLimit={2}
             actions={[
               {
                 id: 'view',

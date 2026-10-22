@@ -4,7 +4,7 @@ import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import {
   Box,
   Stack,
@@ -20,6 +20,7 @@ import {
 import { formatVersionTimestamp } from './finance-policy-version-formatters';
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 interface VersionSidebarProps {
   versions: PolicyVersion[];

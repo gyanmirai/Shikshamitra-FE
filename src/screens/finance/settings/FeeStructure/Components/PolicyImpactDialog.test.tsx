@@ -30,8 +30,6 @@ function setup(overrides: Partial<React.ComponentProps<typeof PolicyImpactDialog
           <PolicyImpactDialog
             title="Concession Policy"
             policyLabel="Sibling concession · v4"
-            description="Selected policy description"
-            summary="Eligible on approval."
             rows={[{ id: 'internal-id', name: 'Tuition', treatment: 'Eligible on approval' }]}
             loading={false}
             error={false}
@@ -61,7 +59,7 @@ it('opens by keyboard, shows readable coverage, closes with Escape and preserves
   vi.stubGlobal('confirm', confirm);
   await user.tab();
   await user.keyboard('{Enter}');
-  expect(await screen.findByRole('dialog', { name: 'Concession Policy impact' })).toBeTruthy();
+  expect(await screen.findByRole('dialog', { name: 'Sibling concession · v4' })).toBeTruthy();
   expect(screen.getByText('Sibling concession · v4')).toBeTruthy();
   expect(screen.getByText('Tuition')).toBeTruthy();
   expect(screen.queryByText('internal-id')).toBeNull();

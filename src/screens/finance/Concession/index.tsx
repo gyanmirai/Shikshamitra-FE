@@ -8,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -23,6 +23,7 @@ import StudentConcessionTable from './Components/StudentConcessionTable';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const Concession = () => {
   // Redux state and dispatch
@@ -81,6 +82,7 @@ const Concession = () => {
     >
       {addConcessionRequest.value ? (
         <CustomBreadcrumbs
+          description="View and manage student concession requests."
           heading={
             selectedConcession?.sourceRequestId
               ? 'Replacement Concession Request'
@@ -88,7 +90,7 @@ const Concession = () => {
                 ? 'Update Concession Request'
                 : 'Concession Request'
           }
-          description="View and manage student concession requests."
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Fees', href: financePaths.concession },
@@ -114,8 +116,9 @@ const Concession = () => {
         />
       ) : viewConcessionRequest.value ? (
         <CustomBreadcrumbs
-          heading="View Concession"
           description="View and manage student concession requests."
+          heading="View Concession"
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Fees', href: financePaths.concession },
@@ -136,8 +139,9 @@ const Concession = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Concessions"
           description="View and manage student concession requests."
+          heading="Concessions"
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Fees', href: financePaths.concession },

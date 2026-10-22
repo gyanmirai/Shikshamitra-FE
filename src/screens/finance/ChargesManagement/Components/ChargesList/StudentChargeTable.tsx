@@ -39,6 +39,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({
       noDataText="No student charge data found"
       columns={[
         {
+          stickyPosition: 'left',
           id: 'studentName',
           label: 'Student Name',
           align: 'left',
@@ -77,6 +78,8 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({
           render: (value, row) => row.charges.length || 0,
         },
         {
+          stickyPosition: 'right',
+          excludeFromExport: true,
           id: 'actions',
           label: 'Action',
           align: 'left',
@@ -85,7 +88,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({
           sticky: true,
           minWidth: 40,
           render: (value, row) => (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={[
                 {
                   id: 'view',

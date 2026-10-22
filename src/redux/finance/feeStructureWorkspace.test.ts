@@ -18,6 +18,46 @@ vi.mock('./financeModuleApi', () => ({
 }));
 
 describe('Fee Structure workspace API', () => {
+  it('loads copy sources only from the metadata-scoped classes and groups every saved structure', async () => {
+    const baseQuery = vi.fn(async ({ params }) => ({
+      data: { standardFeeStructures: [{ id: `${params.standardId}-structure`, name: 'Annual' }] },
+    }));
+    const result = await endpoints.getStructureCopySources.queryFn(
+      {
+        feeStructureMetadataId: 'current-medium',
+        classes: [
+          { id: 'one', name: 'Class 1' },
+          { id: 'two', name: 'Class 2' },
+        ],
+      },
+      {},
+      {},
+      baseQuery
+    );
+    expect(baseQuery.mock.calls.map(([args]) => args.params.standardId)).toEqual(['one', 'two']);
+    expect(result.data).toEqual([
+      {
+        standardId: 'one',
+        className: 'Class 1',
+        structure: { id: 'one-structure', name: 'Annual' },
+      },
+      {
+        standardId: 'two',
+        className: 'Class 2',
+        structure: { id: 'two-structure', name: 'Annual' },
+      },
+    ]);
+  });
+  it('reports failed class reads instead of displaying an incomplete source list', async () => {
+    const error = { status: 403, data: 'Forbidden' };
+    const result = await endpoints.getStructureCopySources.queryFn(
+      { classes: [{ id: 'denied', name: 'Class 1' }] },
+      {},
+      {},
+      async () => ({ error })
+    );
+    expect(result).toEqual({ error });
+  });
   it('sends an idempotency key for create and only the changed fields for update', () => {
     const candidate = {
       name: 'Annual',

@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentWorkflow from './AssignmentWorkflow';
 
@@ -101,6 +101,7 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   }),
   useAssignmentUpdatePoliciesMutation: () => [mocks.update, {}],
   assignmentError: () => 'Preview again',
+  assignmentErrorCode: () => '',
   useAssignmentCandidatesQuery: () => ({
     data: [
       {
@@ -180,6 +181,117 @@ beforeEach(() => {
   }));
 });
 describe('assignment review and commit boundaries', () => {
+  it('requires a new preview when its server expiry has passed before confirmation', async () => {
+    mocks.preview.mockImplementation(() => ({
+      unwrap: async () => ({
+        ...result(),
+        previewExpiresAt: new Date(Date.now() - 1000).toISOString(),
+      }),
+    }));
+    mount();
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await screen.findByText('This preview has expired. Preview again before assigning fees.');
+    expect(screen.getByRole('button', { name: 'Assign fees (1)' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Review and refresh' }));
+    expect(await screen.findByRole('button', { name: 'Preview assignments' })).toBeEnabled();
+    expect(mocks.commit).not.toHaveBeenCalled();
+  });
+
+  it('shows truthful batch progress and prevents dismissing or submitting again', async () => {
+    let finish!: (value: any) => void;
+    mocks.bulkPreview.mockImplementation(({ items }) => ({
+      unwrap: async () => ({
+        results: items.map((item: any) => ({
+          studentId: item.studentId,
+          preview: result(item.studentId),
+        })),
+      }),
+    }));
+    mocks.bulkCommit.mockImplementation(() => ({
+      unwrap: () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    }));
+    mount([
+      { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
+      { studentId: 'two', studentName: 'Meera', isFeeStructureAssigned: false },
+    ]);
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (2)' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Assigning 2 students…');
+    expect(screen.getByRole('progressbar', { name: 'Assigning 2 students…' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Assign fees (2)' }));
+    expect(mocks.bulkCommit).toHaveBeenCalledTimes(1);
+    finish({
+      successCount: 1,
+      alreadyAssignedCount: 0,
+      skippedCount: 0,
+      failedCount: 1,
+      results: [
+        {
+          studentId: 'one',
+          outcome: 'Assigned',
+          result: { assignmentId: 'a', outcome: 'Assigned', assignment: result() },
+        },
+        { studentId: 'two', outcome: 'Failed', errorMessage: 'Preview expired or changed' },
+      ],
+    });
+    await screen.findByText('1 assigned · 1 need attention.');
+    expect(
+      screen.queryByRole('progressbar', { name: 'Assigning 2 students…' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Select Meera' }));
+    expect(await screen.findByText('Preview expired or changed')).toBeVisible();
+    expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
+  }, 15000);
+
+  it('retrieves the saved result with the same token after a lost response and expiry', async () => {
+    const reviewedAt = Date.now();
+    mocks.preview.mockImplementation(() => ({
+      unwrap: async () => ({
+        ...result(),
+        previewExpiresAt: new Date(reviewedAt + 20 * 60_000).toISOString(),
+      }),
+    }));
+    mocks.commit
+      .mockImplementationOnce(() => ({
+        unwrap: async () => {
+          throw new Error('Confirmation response was not received');
+        },
+      }))
+      .mockImplementationOnce(() => ({
+        unwrap: async () => ({
+          assignmentId: 'saved',
+          outcome: 'AlreadyAssigned',
+          assignment: result(),
+        }),
+      }));
+    mount();
+    await selectStructure();
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (1)' }));
+    await screen.findByText(
+      'Assignment status could not be confirmed. Retry this review to safely retrieve any saved assignments.'
+    );
+    expect(screen.queryByText('Committed amount 12000')).not.toBeInTheDocument();
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(reviewedAt + 21 * 60_000);
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Assign fees (1)' }));
+      await screen.findByText('Committed amount 12000');
+      expect(mocks.commit.mock.calls[1][0]).toEqual(mocks.commit.mock.calls[0][0]);
+      expect(screen.getByText('Already assigned')).toBeVisible();
+      expect(
+        screen.queryByText(/Assignment status could not be confirmed/)
+      ).not.toBeInTheDocument();
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   it('uses exactly three steps and a single open student form', async () => {
     mount();
     expect(screen.getAllByRole('button', { name: /^Step [0-9]:/ })).toHaveLength(3);
@@ -410,9 +522,7 @@ describe('assignment review and commit boundaries', () => {
       target: { value: 'collection-version' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    await screen.findByText(
-      'Enter a policy override reason for each student whose policies changed.'
-    );
+    await screen.findByText('Aarav: Enter a policy override reason.');
     expect(mocks.preview).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved student exception' },
@@ -563,5 +673,27 @@ describe('assignment review and commit boundaries', () => {
     await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
     expect(mocks.preview).not.toHaveBeenCalled();
+  });
+
+  it('confirms before restoring student-specific policy defaults and clears the override only after confirmation', async () => {
+    mount(undefined, true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Fee structure' }), {
+      target: { value: 'structure' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
+      target: { value: 'collection-version' },
+    });
+    const select = screen.getByRole('combobox', { name: 'Collection policy' });
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Defaults' }));
+    expect(select).toHaveValue('collection-version');
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    expect(select).toHaveValue('collection-version');
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Defaults' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Restore Defaults' })
+    );
+    expect(select).toHaveValue('default-version');
+    expect(screen.queryByRole('textbox', { name: /Policy override reason/ })).toBeNull();
   });
 });

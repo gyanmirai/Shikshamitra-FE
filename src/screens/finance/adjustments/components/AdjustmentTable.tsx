@@ -109,7 +109,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <AdaptiveThreeDotsActions
+        <AdaptiveThreeDotsActions directActionLimit={2}
           placement="right-top"
           actions={[
             { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => onView(row) },
@@ -201,6 +201,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
         noDataText={<>No adjustment records found.</>}
         columns={[
           {
+            stickyPosition: 'left',
             id: 'studentName',
             label: 'Name(Gr No.)',
             align: 'left',
@@ -271,6 +272,7 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             ),
           },
           {
+            stickyPosition: 'right',
             id: 'status',
             label: 'Status',
             align: 'left',
@@ -290,6 +292,8 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
             },
           },
           {
+            stickyPosition: 'right',
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             isFilter: false,

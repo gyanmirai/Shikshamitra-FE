@@ -9,10 +9,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Stack, Tooltip, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee, FeeCollectionFormValues } from '../../Components/type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 

@@ -2,13 +2,13 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -29,6 +29,7 @@ import ChargeReasonApprovalForm from './Component/ChargeApproveRejectForm';
 
 import type { IChargeData } from './Component/type';
 import { useChargePermissions } from '../../useChargePermissions';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const ChargesManagement = () => {
   // State to store the currently selected charge data
@@ -164,8 +165,9 @@ const ChargesManagement = () => {
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {viewChargeDetailsDialog.value ? (
         <CustomBreadcrumbs
-          heading="View Charge"
           description="View and manage student charges."
+          heading="View Charge"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -187,8 +189,9 @@ const ChargesManagement = () => {
         />
       ) : addChargeDialog.value ? (
         <CustomBreadcrumbs
-          heading="Add Charge"
           description="Create a new charge for students."
+          heading="Add Charge"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -209,8 +212,9 @@ const ChargesManagement = () => {
         />
       ) : editChargeDialog.value ? (
         <CustomBreadcrumbs
-          heading="Update Charge"
           description="Edit and update charge details and mappings."
+          heading="Update Charge"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -232,12 +236,13 @@ const ChargesManagement = () => {
         />
       ) : approvalReviewDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedMode === 'Approve' ? 'Approve Charge' : 'Reject Charge'}
           description={
             selectedMode === 'Approve'
               ? 'Review and approve the charge for selected students.'
               : 'Review and reject the charge request.'
           }
+          heading={selectedMode === 'Approve' ? 'Approve Charge' : 'Reject Charge'}
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -262,8 +267,9 @@ const ChargesManagement = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Charges"
           description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
+          heading="Charges"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
@@ -515,7 +521,6 @@ const ChargesManagement = () => {
               value={voidReason}
               onChange={(event) => setVoidReason(event.target.value)}
               error={voidReason.length > 0 && voidReason.trim().length < 10}
-              helperText="Enter at least 10 characters for the audit trail."
             />
           </Stack>
         }

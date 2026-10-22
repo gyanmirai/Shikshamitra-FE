@@ -1,7 +1,15 @@
 import type { FinanceReportFormat } from 'src/redux/finance/reports/financeReportsApi';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Alert, Stack, Paper, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Stack,
+  Paper,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@mui/material';
 import { CurriculumReportPreviewTable } from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewTable';
 
 import type { FinanceAiReview } from '../hooks/useFinanceAiReport';
@@ -14,14 +22,17 @@ type Props = {
 function getFilterChips(review: FinanceAiReview) {
   const { filters } = review.plan;
   const chips: string[] = [];
-  if (filters.academicYearIds?.length) chips.push(`${filters.academicYearIds.length} academic year(s)`);
+  if (filters.academicYearIds?.length)
+    chips.push(`${filters.academicYearIds.length} academic year(s)`);
   if (filters.months?.length) chips.push(`Months: ${filters.months.join(', ')}`);
   if (filters.organizationIds?.length) chips.push(`${filters.organizationIds.length} stage(s)`);
   if (filters.classIds?.length) chips.push(`${filters.classIds.length} class(es)`);
   if (filters.divisionIds?.length) chips.push(`${filters.divisionIds.length} division(s)`);
   if (filters.feeHeadIds?.length) chips.push(`${filters.feeHeadIds.length} fee head(s)`);
-  if (filters.receiptBookIds?.length) chips.push(`${filters.receiptBookIds.length} receipt book(s)`);
-  if (filters.fromDate || filters.toDate) chips.push(`${filters.fromDate ?? 'Start'} to ${filters.toDate ?? 'Today'}`);
+  if (filters.receiptBookIds?.length)
+    chips.push(`${filters.receiptBookIds.length} receipt book(s)`);
+  if (filters.fromDate || filters.toDate)
+    chips.push(`${filters.fromDate ?? 'Start'} to ${filters.toDate ?? 'Today'}`);
   return chips;
 }
 
@@ -39,17 +50,20 @@ export function FinanceAiReportPlanReview({ review, onFormatChange }: Props) {
             <Iconify icon="solar:clipboard-check-bold" color="success.main" />
             <Box>
               <Typography variant="subtitle2">Finance report plan ready</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Review the interpretation and live authorized preview before approval.
-              </Typography>
             </Box>
           </Stack>
           <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
-            <Typography variant="caption" color="text.secondary">Selected report</Typography>
-            <Typography variant="body2" fontWeight={600}>{plan.reportType}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Selected report
+            </Typography>
+            <Typography variant="body2" fontWeight={600}>
+              {plan.reportType}
+            </Typography>
           </Box>
           <Box>
-            <Typography variant="caption" color="text.secondary">Understood request</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Understood request
+            </Typography>
             <Typography variant="body2">{review.interpretedRequest}</Typography>
           </Box>
           <Typography variant="body2">{review.summary}</Typography>
@@ -60,11 +74,6 @@ export function FinanceAiReportPlanReview({ review, onFormatChange }: Props) {
           </Stack>
         </Stack>
       </Paper>
-
-      <Alert severity="success" icon={<Iconify icon="solar:shield-check-bold" />}>
-        <Typography variant="subtitle2">Permission-safe scope</Typography>
-        <Typography variant="body2">{review.permissionSummary}</Typography>
-      </Alert>
 
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
@@ -85,15 +94,6 @@ export function FinanceAiReportPlanReview({ review, onFormatChange }: Props) {
           </ToggleButtonGroup>
         </Stack>
       </Paper>
-
-      {review.assumptions.length > 0 && (
-        <Alert severity="info">
-          <Typography variant="subtitle2">Defaults used</Typography>
-          {review.assumptions.map((assumption) => (
-            <Typography key={assumption} variant="body2">• {assumption}</Typography>
-          ))}
-        </Alert>
-      )}
 
       <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}>

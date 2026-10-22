@@ -2,18 +2,10 @@
 
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
+
+import { Box, Card, Stack, Switch, Typography, FormControlLabel, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import {
-  Box,
-  Card,
-  Stack,
-  Switch,
-  Typography,
-  IconButton,
-  FormHelperText,
-  FormControlLabel,
-} from '@mui/material';
 
 interface DefaultPolicyToggleProps {
   policyLabel: string;
@@ -32,23 +24,17 @@ export default function DefaultPolicyToggle({
   status,
   checked,
   onChange,
-  otherDefaultPolicyName,
-  showReplacementNotice = true,
   currentDefault = false,
   compact = false,
   descriptionDisplay = 'inline',
 }: DefaultPolicyToggleProps) {
-  const disabled = status !== 'Active' || currentDefault;
   const helpText = currentDefault
     ? 'Designate another Active policy as Default before removing this default or archiving this policy.'
     : status !== 'Active'
       ? 'Only an Active policy can be selected as the default.'
       : 'Replaces the current academic-year default.';
-  const shortDescription = currentDefault
-    ? 'Choose another default to change this.'
-    : status !== 'Active'
-      ? 'Activate this policy to make it the default.'
-      : null;
+
+  const disabled = status !== 'Active' || currentDefault;
 
   return (
     <Box sx={{ height: compact ? '100%' : undefined }}>
@@ -97,24 +83,16 @@ export default function DefaultPolicyToggle({
             <Box>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                  Default {policyLabel} Policy
+                  {descriptionDisplay === 'tooltip'
+                    ? 'Set as default'
+                    : `Default ${policyLabel} Policy`}
                 </Typography>
-                {checked && (
+                {checked && descriptionDisplay === 'inline' && (
                   <Label color="primary" sx={{ height: 18, fontSize: '0.65rem' }}>
-                    {descriptionDisplay === 'tooltip' ? 'Default' : 'Default Selected'}
+                    Default Selected
                   </Label>
                 )}
               </Stack>
-              {(descriptionDisplay === 'inline' || shortDescription) && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ mt: compact ? 0 : 0.25, lineHeight: compact ? 1.25 : undefined }}
-                >
-                  {descriptionDisplay === 'inline' ? helpText : shortDescription}
-                </Typography>
-              )}
             </Box>
           }
         />
@@ -130,12 +108,6 @@ export default function DefaultPolicyToggle({
           </CustomTooltip>
         )}
       </Card>
-
-      {showReplacementNotice && checked && otherDefaultPolicyName && (
-        <FormHelperText sx={{ mx: 1.75, mt: 0.75 }}>
-          {`“${otherDefaultPolicyName}” is currently the default and will be replaced when you save.`}
-        </FormHelperText>
-      )}
     </Box>
   );
 }

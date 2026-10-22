@@ -10,7 +10,7 @@ import { Label } from 'src/components/label';
 
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Chip, Stack, Typography, Button, Drawer, Box } from '@mui/material';
-import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import { PaymentTermUsageBreakdown } from './PaymentTermUsage';
 
 import type { IPaymentTermTableProps } from '../type';
@@ -75,25 +75,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         ),
       },
       {
-        id: 'status',
-        label: 'Status',
-        align: 'left',
-        minWidth: 240,
-        render: (_, row) => {
-          const term = row as PaymentTermListItem;
-          const displayStatus = getPaymentTermDisplayStatus(term);
-
-          return (
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Label color={statusColor(displayStatus)}>{displayStatus}</Label>
-              {term.isDefault ? (
-                <Chip size="small" label="Default" color="primary" variant="outlined" />
-              ) : null}
-            </Stack>
-          );
-        },
-      },
-      {
         id: 'currentVersionNumber',
         label: 'Version',
         align: 'left',
@@ -123,14 +104,36 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         },
       },
       {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        minWidth: 240,
+        sticky: true,
+        stickyPosition: 'right',
+        render: (_, row) => {
+          const term = row as PaymentTermListItem;
+          const displayStatus = getPaymentTermDisplayStatus(term);
+
+          return (
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Label color={statusColor(displayStatus)}>{displayStatus}</Label>
+              {term.isDefault ? (
+                <Chip size="small" label="Default" color="primary" variant="outlined" />
+              ) : null}
+            </Stack>
+          );
+        },
+      },
+      {
+        stickyPosition: 'right',
         id: 'actions',
         label: 'Actions',
-        align: 'right',
+        align: 'left',
         isSort: false,
         isFilter: false,
         sticky: true,
-        stickyPosition: 'right',
-        minWidth: 120,
+        minWidth: 160,
+        excludeFromExport: true,
         render: (_, row) => {
           const term = row as PaymentTermListItem;
           const canActivate = !archived && term.hasDraft && canPublish;
@@ -139,6 +142,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
 
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
+              sx={{ justifyContent: 'flex-start' }}
               moreLabel={`More actions for ${term.name}`}
               actions={[
                 ...(canView
@@ -246,11 +251,12 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
     <>
       <CustomizableTable
         tableId="payment-term-table"
+        tableTitle="Payment terms"
+        exportLabel="Export current page"
         columns={columns}
         data={data}
         isLoading={loading}
         isSearch
-        isFilter={false}
         isPagination
         serverSidePagination
         serverSideSearch
@@ -271,12 +277,24 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
         PaperProps={{ sx: { width: { xs: '100%', md: 800 }, maxWidth: '100%' } }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <DrawerHeader
+          <FinancePolicyDrawerHeader
+            description="Assigned fee heads by class, fee structure, and term version."
+            titleId="payment-term-usage-title"
             title={`${usageTerm?.name ?? 'Payment Term'} — Used In`}
-            subtitle="Assigned fee heads by class, fee structure, and term version."
+
+            descriptionDisplay="tooltip"
             onClose={() => setUsageTerm(null)}
           />
-          <Box sx={{ p: 3, overflow: 'auto', flex: 1 }}>
+          <Box
+            sx={{
+              p: 1.5,
+              overflow: 'hidden',
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             {usageTerm?.usage && <PaymentTermUsageBreakdown usage={usageTerm.usage} />}
           </Box>
         </Box>

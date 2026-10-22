@@ -4,7 +4,7 @@ import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Alert, Paper, Drawer, Button, Typography } from '@mui/material';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -57,7 +57,7 @@ export default function FinancePolicyVersionDrawer({
       labelsById[head.id.toLowerCase()] = head.name;
     });
 
-    return { labelsById };
+    return { labelsById, policyType: policy?.policyType };
   }, [policy, feeHeadData]);
 
   const handleSelectVersion = useCallback(
@@ -105,23 +105,25 @@ export default function FinancePolicyVersionDrawer({
         }}
       >
         <FinancePolicyDrawerHeader
+          description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+          helpText="Review recorded policy snapshots. Select a version to compare its values with the previous version. Viewing history does not change the current policy."
           title="Policy Version History"
           titleId="policy-versions-title"
-          description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+
           badges={<Label color="default">Read Only</Label>}
-          helpText="Review recorded policy snapshots. Select a version to compare its values with the previous version. Viewing history does not change the current policy."
+
           onClose={onClose}
         />
 
         {/* Content Body */}
         {isLoading || (policy.policyType === 'collection' && isFeeHeadsLoading) ? (
-          <Box sx={{ p: { xs: 2, sm: 3 }, overflow: 'auto', flex: 1, minHeight: 0 }}>
+          <Box sx={{ p: 2, overflow: 'auto', flex: 1, minHeight: 0 }}>
             <FinancePolicySkeleton label="Loading policy version history" />
           </Box>
         ) : isError ? (
           <Box sx={{ p: 3 }}>
             <Alert
-              severity="warning"
+              severity="error"
               sx={{ borderRadius: 1.5 }}
               action={
                 <Button size="small" onClick={() => refetch()}>
@@ -161,9 +163,6 @@ export default function FinancePolicyVersionDrawer({
               <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
                 No version history recorded yet.
               </Typography>
-              <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5 }}>
-                Subsequent updates and activations will create incremental version snapshots.
-              </Typography>
             </Paper>
           </Box>
         ) : (
@@ -174,7 +173,7 @@ export default function FinancePolicyVersionDrawer({
               flex: 1,
               minHeight: 0,
               overflow: 'hidden',
-              p: { xs: 2, sm: 3 },
+              p: 2,
               gap: 2,
             }}
           >
@@ -209,7 +208,7 @@ export default function FinancePolicyVersionDrawer({
         {/* Footer */}
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
+            px: 2,
             py: 1.5,
             bgcolor: 'background.paper',
             borderTop: '1px solid',

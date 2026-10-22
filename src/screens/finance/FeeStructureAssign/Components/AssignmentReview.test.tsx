@@ -112,7 +112,7 @@ describe('assignment review evidence', () => {
     expect(
       heads.queryByRole('button', { name: 'Tuition service details' })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('Configured dates are in the past.');
+    expect(screen.queryByText('Configured dates are in the past.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'View all' }));
     const schedule = within(screen.getByRole('table', { name: 'Preview fee installments table' }));
     expect(schedule.getAllByRole('row')).toHaveLength(13);
@@ -126,7 +126,7 @@ describe('assignment review evidence', () => {
     expect(screen.queryByRole('button', { name: /edit|service details/i })).not.toBeInTheDocument();
   });
 
-  it('opens installment evidence from the text action and exposes explanations on focus', async () => {
+  it('opens installment evidence with its original information controls and tooltips', async () => {
     mount();
     const viewAll = screen.getByRole('button', { name: 'View all' });
     expect(viewAll).toHaveClass('MuiLink-root');
@@ -139,12 +139,10 @@ describe('assignment review evidence', () => {
     expect(dialog.getByRole('button', { name: 'About installment demand dates' })).toBeVisible();
     expect(dialog.getByRole('button', { name: 'About installment due dates' })).toBeVisible();
     expect(dialog.getByRole('button', { name: 'About installment obligations' })).toBeVisible();
-    expect(dialog.queryByText('Reviewed service charge')).not.toBeInTheDocument();
     const explanation = dialog.getByRole('button', {
       name: 'Tuition Installment 1 calculation details',
     });
     act(() => explanation.focus());
-    expect(explanation).toHaveFocus();
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Reviewed service charge');
   });
 

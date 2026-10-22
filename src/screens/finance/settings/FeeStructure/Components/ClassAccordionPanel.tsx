@@ -1,7 +1,11 @@
+import { CONFIG } from 'src/config-global';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { SvgColor } from 'src/components/svg-color';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useResponsive } from 'src/hooks/use-responsive';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
@@ -18,8 +22,10 @@ import {
   IconButton,
   LinearProgress,
   ListItemButton,
+  InputAdornment,
 } from '@mui/material';
 
+import CopyFeeStructureDialog from './CopyFeeStructureDialog';
 import FeeStructureWorkspaceCard from './FeeStructureWorkspaceCard';
 import { useFetchStandardFeeStructures } from '../hooks/useClassWiseFeeStructureHooks';
 
@@ -27,6 +33,7 @@ import type { IClassWiseFeeStructureCard } from '../type';
 
 interface ClassAccordionPanelProps {
   classId: string;
+  classes?: { id: string; name: string }[];
   feeStructureMetaDataId: string;
   viewOnly?: boolean;
   canAdd?: boolean;
@@ -72,6 +79,7 @@ const mapToCardModel = (
 // customized schedules survive local navigation. Only the selected one is visible.
 export default function ClassAccordionPanel({
   classId,
+  classes = [],
   feeStructureMetaDataId,
   viewOnly = false,
   canAdd = false,
@@ -81,6 +89,7 @@ export default function ClassAccordionPanel({
 }: ClassAccordionPanelProps) {
   type DraftCard = IClassWiseFeeStructureCard & { __draftId: string };
   const [localDrafts, setLocalDrafts] = useState<DraftCard[]>([]);
+  const copyDialog = useBoolean();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState('');
   const [busy, setBusy] = useState(false);
@@ -135,6 +144,7 @@ export default function ClassAccordionPanel({
       },
     ]);
     setSelectedKey(key);
+    setSearch('');
     setListOpen(false);
   }, [classId, feeStructureMetaDataId]);
   useEffect(() => {
@@ -167,7 +177,7 @@ export default function ClassAccordionPanel({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ px: 2, py: 1.5 }}
+        sx={{ px: 1.5, py: 1.5 }}
       >
         <Typography component="h2" variant="subtitle2">
           Structures{' '}
@@ -187,10 +197,11 @@ export default function ClassAccordionPanel({
         )}
       </Stack>
       {canAdd && (
-        <Box sx={{ px: 1.5, pb: 1 }}>
+        <Stack spacing={1} sx={{ px: 1.5, pb: 2 }}>
           <Button
             size="small"
-            variant="outlined"
+            variant="contained"
+            color="inherit"
             fullWidth
             startIcon={<Iconify icon={GlobalIcons.addIcon} />}
             onClick={addNew}
@@ -198,54 +209,125 @@ export default function ClassAccordionPanel({
           >
             Add structure
           </Button>
-        </Box>
+          <Button
+            size="small"
+            variant="outlined"
+            fullWidth
+            startIcon={<Iconify icon={GlobalIcons.copy} />}
+            onClick={() => {
+              setListOpen(false);
+              copyDialog.onTrue();
+            }}
+            disabled={busy}
+          >
+            Copy structure
+          </Button>
+        </Stack>
       )}
-      {cards.length > 6 && (
+      <Box sx={{ px: 1.5, pb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <TextField
+          fullWidth
           size="small"
           label="Search structures"
           value={search}
           disabled={busy}
           onChange={(event) => setSearch(event.target.value)}
-          sx={{ mx: 2, mb: 1 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Iconify icon={GlobalIcons.search} width={20} />
+              </InputAdornment>
+            ),
+          }}
         />
-      )}
+      </Box>
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-        <List aria-label="Fee structures" sx={{ px: 1, py: 0 }}>
+        <List aria-label="Fee structures" sx={{ p: 1.5 }}>
           {cards
             .filter(({ card, key }) =>
               ((names[key] ?? card.name) || 'New fee structure')
                 .toLowerCase()
                 .includes(search.toLowerCase())
             )
-            .map(({ card, key }) => (
-              <ListItemButton
-                key={key}
-                selected={key === activeKey}
-                disabled={busy}
-                aria-current={key === activeKey ? 'true' : undefined}
-                onClick={() => {
-                  setSelectedKey(key);
-                  setListOpen(false);
-                }}
-                sx={{ borderRadius: 1, alignItems: 'flex-start', px: 1.5, py: 1.5, mb: 0.5 }}
-              >
-                <Box sx={{ minWidth: 0, width: 1 }}>
-                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-                    {(names[key] ?? card.name) || 'New fee structure'}
-                  </Typography>
-                  {dirtyKeys.has(key) && (
+            .map(({ card, key, isLocal }) => {
+              const name = (names[key] ?? card.name) || 'New fee structure';
+              const selected = key === activeKey;
+              const unsaved = dirtyKeys.has(key) || (isLocal && !card._id);
+              return (
+                <ListItemButton
+                  key={key}
+                  selected={selected}
+                  disabled={busy}
+                  aria-current={selected ? 'true' : undefined}
+                  onClick={() => {
+                    setSelectedKey(key);
+                    setListOpen(false);
+                  }}
+                  sx={(theme) => ({
+                    borderRadius: 2,
+                    minHeight: 56,
+                    gap: 1.5,
+                    p: 1.25,
+                    mb: 1,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: selected ? 'primary.main' : 'transparent',
+                    boxShadow: theme.shadows[selected ? 4 : 1],
+                    transition: theme.transitions.create(
+                      ['background-color', 'border-color', 'box-shadow', 'transform'],
+                      { duration: theme.transitions.duration.shorter }
+                    ),
+                    '&.Mui-selected': { bgcolor: 'action.selected' },
+                    '&:hover, &.Mui-selected:hover': {
+                      bgcolor: 'action.hover',
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[3],
+                    },
+                    '&.Mui-focusVisible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: 2,
+                    },
+                    '@media (prefers-reduced-motion: reduce)': {
+                      transition: 'none',
+                      '&:hover, &.Mui-selected:hover': { transform: 'none' },
+                    },
+                  })}
+                >
+                  <SvgColor
+                    src={`${CONFIG.site.basePath}/assets/icons/navbar/ic-file.svg`}
+                    width={24}
+                    aria-hidden="true"
+                    sx={{ color: selected ? 'primary.main' : 'text.secondary', flexShrink: 0 }}
+                  />
+                  <CustomTooltip title={name}>
                     <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: 'block', mt: 0.75 }}
+                      variant="subtitle2"
+                      noWrap
+                      sx={{ minWidth: 0, flex: 1, color: 'text.secondary' }}
                     >
-                      Unsaved
+                      {name}
                     </Typography>
+                  </CustomTooltip>
+                  {unsaved && (
+                    <CustomTooltip title="Unsaved changes">
+                      <Box
+                        component="span"
+                        role="img"
+                        aria-label="Unsaved changes"
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: 'warning.main',
+                          flexShrink: 0,
+                        }}
+                      />
+                    </CustomTooltip>
                   )}
-                </Box>
-              </ListItemButton>
-            ))}
+                </ListItemButton>
+              );
+            })}
         </List>
         {search &&
           !cards.some(({ card, key }) =>
@@ -290,6 +372,7 @@ export default function ClassAccordionPanel({
             borderColor: 'divider',
             display: 'flex',
             gap: 1,
+            flexWrap: 'wrap',
             alignItems: 'center',
           }}
         >
@@ -314,16 +397,28 @@ export default function ClassAccordionPanel({
             </Box>
           </Button>
           {canAdd && (
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{ flexShrink: 0 }}
-              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-              disabled={busy}
-              onClick={addNew}
-            >
-              Add structure
-            </Button>
+            <>
+              <Button
+                size="small"
+                variant="contained"
+                color="inherit"
+                sx={{ flexShrink: 0 }}
+                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                disabled={busy}
+                onClick={addNew}
+              >
+                Add structure
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon={GlobalIcons.copy} />}
+                disabled={busy}
+                onClick={copyDialog.onTrue}
+              >
+                Copy structure
+              </Button>
+            </>
           )}
         </Box>
       )}
@@ -333,7 +428,7 @@ export default function ClassAccordionPanel({
         onClose={() => {
           if (!busy) setListOpen(false);
         }}
-        slotProps={{ paper: { sx: { width: 280, maxWidth: '100%' } } }}
+        slotProps={{ paper: { sx: { width: 320, maxWidth: '100%' } } }}
       >
         {structureList}
       </Drawer>
@@ -342,7 +437,7 @@ export default function ClassAccordionPanel({
           <Box
             component="aside"
             aria-label="Structure navigation"
-            sx={{ width: 248, flexShrink: 0, borderRight: 1, borderColor: 'divider', minHeight: 0 }}
+            sx={{ width: 320, flexShrink: 0, borderRight: 1, borderColor: 'divider', minHeight: 0 }}
           >
             {structureList}
           </Box>
@@ -416,6 +511,25 @@ export default function ClassAccordionPanel({
           ))}
         </Box>
       </Box>
+      {canAdd && copyDialog.value && (
+        <CopyFeeStructureDialog
+          feeStructureMetadataId={feeStructureMetaDataId}
+          standardId={classId}
+          classes={classes}
+          existingNames={cards.map(({ card, key }) => names[key] ?? card.name)}
+          onClose={copyDialog.onFalse}
+          onBusyChange={busyChange}
+          onCopied={(record) => {
+            setLocalDrafts((previous) => [
+              ...previous,
+              { ...mapToCardModel(record, classId, feeStructureMetaDataId), __draftId: record.id },
+            ]);
+            setSelectedKey(record.id);
+            setSearch('');
+            copyDialog.onFalse();
+          }}
+        />
+      )}
     </Box>
   );
 }

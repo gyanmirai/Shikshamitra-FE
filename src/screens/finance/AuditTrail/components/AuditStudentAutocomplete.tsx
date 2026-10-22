@@ -93,9 +93,7 @@ const AuditStudentAutocomplete = ({
         <TextField
           {...params}
           label="Student"
-          helperText={
-            inputValue.trim().length < MIN_SEARCH_LENGTH ? 'Type at least 2 characters' : ''
-          }
+
           sx={{ '& .MuiInputBase-root': { height: 38 } }}
           InputProps={{
             ...params.InputProps,

@@ -1,8 +1,9 @@
 import { Formik } from 'formik';
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { GeneralInfoSection } from './GeneralInfoSection';
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 import type { IPaymentTerm } from '../../type';
 
@@ -42,6 +43,24 @@ function renderSection(status: 'Draft' | 'Active', isDefaultTerm = false) {
 }
 
 describe('GeneralInfoSection default payment term', () => {
+  it('shows the server name conflict inline and removes it after the name changes', async () => {
+    const message = 'A payment term named Monthly already exists for GSEB. Use a different name.';
+    render(
+      <Formik<IPaymentTerm>
+        initialValues={values}
+        initialStatus={{ nameConflict: { name: 'Monthly', boardId: 'board-1', message } }}
+        onSubmit={() => {}}
+      >
+        {(formik) => <GeneralInfoSection formik={formik} boards={boards} />}
+      </Formik>
+    );
+    const name = screen.getByRole('textbox', { name: 'Payment term name *' });
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText(message)).toBeInTheDocument();
+    fireEvent.change(name, { target: { value: 'Quarterly' } });
+    await waitFor(() => expect(screen.queryByText(message)).not.toBeInTheDocument());
+    expect(name).toHaveAttribute('aria-invalid', 'false');
+  });
   it('does not expose the internal payment term code', () => {
     renderSection('Draft');
 
@@ -52,25 +71,27 @@ describe('GeneralInfoSection default payment term', () => {
     renderSection('Draft');
 
     expect(screen.getByRole('switch', { name: /Default Payment Term/ })).toBeDisabled();
-    fireEvent.click(screen.getByTestId('default-payment-term-toggle'));
+    fireEvent.click(screen.getByRole('switch', { name: /Default Payment Term/ }));
 
     expect(screen.getByRole('switch', { name: /Default Payment Term/ })).not.toBeChecked();
-    expect(screen.getByText('Only an Active payment term can be the default.')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Only an Active payment term can be the default.')
+    ).not.toBeInTheDocument();
   });
 
   it('allows an Active term to replace the board default', async () => {
     renderSection('Active');
 
-    fireEvent.click(screen.getByTestId('default-payment-term-toggle'));
+    fireEvent.click(screen.getByRole('switch', { name: /Default Payment Term/ }));
 
     await waitFor(() => {
       expect(screen.getByRole('switch', { name: /Default Payment Term/ })).toBeChecked();
     });
     expect(
-      screen.getByText(
+      screen.queryByText(
         'Only one default is allowed per board. Selecting this replaces that board’s previous default.'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   it('clears the default when status changes back to Draft', async () => {

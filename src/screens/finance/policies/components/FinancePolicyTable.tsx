@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn, IParams } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -10,7 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -24,9 +24,9 @@ import {
   Alert,
   Stack,
   Button,
-  IconButton,
   Typography,
   LinearProgress,
+  IconButton,
 } from '@mui/material';
 import {
   useGetRefundPoliciesQuery,
@@ -86,6 +86,7 @@ import type {
   FinancePolicyStatus,
   IFinancePolicyTableProps,
 } from '../types/finance-policy.types';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 // ─── Status label colour map ───────────────────────────────────────────────────
 
@@ -550,7 +551,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
             {
               id: 'policyLimit',
               label: 'Value / limit',
-              align: 'right' as const,
+              align: 'left' as const,
               minWidth: 140,
               filterType: 'number' as const,
               renderColumn: () => (
@@ -646,7 +647,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                   </Box>
                 </CustomTooltip>
               ),
-              render: (value: string[], row: any) => {
+              render: (value: string[], row: IData) => {
                 const methods = Array.isArray(value)
                   ? value.map(
                       (method) =>
@@ -707,9 +708,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       ...(policyType === 'collection'
         ? [
             {
+              cellSx: { textAlign: 'center' as const },
               id: 'enableLateFee',
               label: 'Late Fee',
-              align: 'center' as const,
+              align: 'left' as const,
               filterType: 'enum' as const,
               enumOptions: [
                 { label: 'Enabled', value: 'true' },
@@ -737,9 +739,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               ),
             },
             {
+              cellSx: { textAlign: 'center' as const },
               id: 'gracePeriodDays',
               label: 'Grace Days',
-              align: 'center' as const,
+              align: 'left' as const,
               filterType: 'number' as const,
               render: (value: any) => (
                 <Typography variant="caption" fontSize="13px">
@@ -748,9 +751,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
               ),
             },
             {
+              cellSx: { textAlign: 'center' as const },
               id: 'allowOnlineCollection',
               label: 'Online Pay',
-              align: 'center' as const,
+              align: 'left' as const,
               filterType: 'enum' as const,
               enumOptions: BOOLEAN_OPTIONS,
               render: (value: any) => (
@@ -767,9 +771,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       ...(policyType === 'proration'
         ? [
             {
+              cellSx: { textAlign: 'center' as const },
               id: 'feeHeadRules',
               label: 'Fee Heads Configured',
-              align: 'center' as const,
+              align: 'left' as const,
               filterType: 'number' as const,
               render: (_: any, row: any) => {
                 const rules: any[] = row.feeHeadRules ?? [];
@@ -866,19 +871,20 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        align: 'right',
+        align: 'left',
         excludeFromExport: true,
         isSort: false,
         isFilter: false,
         sticky: true,
         stickyPosition: 'right',
-        minWidth: 120,
-        width: 120,
+        minWidth: 176,
+        width: 176,
         render: (_, row) => {
           const policy = row as IFinancePolicyRow;
           return (
             <AdaptiveThreeDotsActions
               directActionLimit={2}
+              sx={{ justifyContent: 'flex-start' }}
               placement="right-top"
               moreLabel={`Actions for ${policy.policyName}`}
               actions={[
@@ -1262,7 +1268,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                   sx={{ mt: 1.5 }}
                   startIcon={<Iconify icon="mingcute:add-line" />}
                 >
-                  {isRefundKind ? 'Policy' : 'Create policy'}
+                  {isRefundKind ? 'Policy' : 'Create Policy'}
                 </Button>
               )}
             </Box>

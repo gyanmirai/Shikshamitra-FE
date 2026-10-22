@@ -4,13 +4,13 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -20,6 +20,8 @@ import StudentChargeListTable from './StudentChargeTable';
 import ViewStudentAllCharges from './StudentChargesListTable';
 
 import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const ChargesList = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -107,8 +109,9 @@ const ChargesList = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Charges List"
         description="View and manage student charges."
+        heading="Charges List"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/charge-management' },
@@ -172,9 +175,7 @@ const ChargesList = () => {
         }}
         maxWidth="md"
       >
-        {selectedCharge && (
-		  <ViewStudentAllCharges data={selectedCharge} />
-        )}
+        {selectedCharge && <ViewStudentAllCharges data={selectedCharge} />}
       </CustomDialog>
     </Box>
   );

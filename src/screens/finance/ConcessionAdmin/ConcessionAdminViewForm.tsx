@@ -14,7 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -63,6 +63,7 @@ import type {
   IConcessionRequestItem,
   IViewConcessionRequestProps,
 } from './type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 // ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 

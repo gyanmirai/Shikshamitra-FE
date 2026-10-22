@@ -1,23 +1,24 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Alert, Stack, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
-  incomeCategoryApi,
   useGetIncomeCategoriesQuery,
   useDeleteIncomeCategoryMutation,
 } from 'src/redux/finance/incomeCategory';
@@ -46,7 +47,6 @@ const FinanceIncomeCategoriesScreen = () => {
     data: incomeCategoryData,
     isLoading: incomeCategoryLoading,
     isFetching: incomeCategoryFetching,
-    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
@@ -57,6 +57,7 @@ const FinanceIncomeCategoriesScreen = () => {
   const [deleteIncomeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteIncomeCategoryMutation,
+    popupConfig: { error: false },
   });
 
   // Dialog control states
@@ -65,34 +66,22 @@ const FinanceIncomeCategoriesScreen = () => {
   const [open, setOpen] = useState(false);
 
   // State management
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedIncomeCategory, setSelectedIncomeCategory] = useState<IIncomeCategory | null>(
     null
   );
-  const { confirmWithUndo } = useConfirmWithUndo();
+  const [deleteError, setDeleteError] = useState('');
   const dispatch = useDispatch();
 
   /**
    * Handles closing of the income category form dialog
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedIncomeCategory(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addIncomeCategoryDialog.value,
+    () => {
       addIncomeCategoryDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addIncomeCategoryDialog.onFalse();
-      setTimeout(() => {
-        setSelectedIncomeCategory(null);
-      }, 200);
+      setSelectedIncomeCategory(null);
     }
-  };
+  );
 
   if (incomeCategoryLoading) {
     return <Box>Loading...</Box>;
@@ -100,9 +89,11 @@ const FinanceIncomeCategoriesScreen = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Income Category"
         description="This screen displays all the created income categories with an option to create a new income category."
+        heading="Income Category"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Accounts', href: '/finance/income-tracking' },
@@ -125,6 +116,8 @@ const FinanceIncomeCategoriesScreen = () => {
 
       <IncomeCategoryTable
         onDelete={(data) => {
+          if (!access.canDelete || !data.canDelete || data.isUsedInDownstream) return;
+          setDeleteError('');
           setSelectedIncomeCategory(data);
           deleteIncomeCategoryDialog.onTrue();
         }}
@@ -145,36 +138,42 @@ const FinanceIncomeCategoriesScreen = () => {
       />
 
       <CustomDialog
-        open={addIncomeCategoryDialog.value}
-        handleClose={() => {
-          addIncomeCategoryDialog.onFalse();
-          setTimeout(() => {
-            setSelectedIncomeCategory(null);
-          }, 200);
-        }}
-        title={selectedIncomeCategory ? 'Edit Income Category' : 'Add Income Category'}
         titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        open={addIncomeCategoryDialog.value}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
+        title={selectedIncomeCategory ? 'Edit Income Category' : 'Add Income Category'}
+
         maxWidth="sm"
       >
-        <IncomeCategoryForm
-          open={addIncomeCategoryDialog}
-          onClose={handleClose}
-          editData={selectedIncomeCategory}
-        />
+        {addIncomeCategoryDialog.value && (
+          <IncomeCategoryForm
+            open={addIncomeCategoryDialog}
+            onClose={handleClose}
+            editData={selectedIncomeCategory}
+          />
+        )}
       </CustomDialog>
 
       <ConfirmDialog
         open={deleteIncomeCategoryDialog.value}
         onClose={() => {
+          if (isDeleting) return;
           setSelectedIncomeCategory(null);
+          setDeleteError('');
           deleteIncomeCategoryDialog.onFalse();
         }}
-        title="Delete"
+        disableBackdropClick
+        disableEscapeKeyDown={isDeleting}
+        disableCancel={isDeleting}
+        title="Delete Income Category"
         content={
-          <>
-            Are you sure you want to delete income category{' '}
-            <strong>{selectedIncomeCategory?.name}</strong>?
-          </>
+          <Stack spacing={2}>
+            <Box>
+              Delete income category <strong>{selectedIncomeCategory?.name}</strong>?
+            </Box>
+            {deleteError && <Alert severity="error">{deleteError}</Alert>}
+          </Stack>
         }
         action={
           <LoadingButton
@@ -183,37 +182,34 @@ const FinanceIncomeCategoriesScreen = () => {
             color="error"
             size="small"
             loading={isDeleting}
-            disabled={isDeleting}
-            onClick={() => {
-              if (!selectedIncomeCategory?.id) return;
-
-              confirmWithUndo({
-                message: 'Deletion pending',
-                item: selectedIncomeCategory,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    incomeCategoryApi.util.updateQueryData(
-                      'getIncomeCategories',
-                      { academicYearId: currentYear?.id, ...queryParams },
-                      (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.items || [];
-                        const index = list.findIndex(
-                          (c: any) => c.id === (selectedIncomeCategory as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          list.splice(index, 1);
-                          if (typeof draft?.totalCount === 'number')
-                            draft.totalCount = Math.max(0, draft.totalCount - 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteIncomeCategory(selectedIncomeCategory.id),
-              });
-              deleteIncomeCategoryDialog.onFalse();
-              setSelectedIncomeCategory(null);
+            disabled={
+              isDeleting ||
+              !access.canDelete ||
+              !selectedIncomeCategory?.canDelete ||
+              selectedIncomeCategory.isUsedInDownstream
+            }
+            onClick={async () => {
+              if (
+                isDeleting ||
+                !access.canDelete ||
+                !selectedIncomeCategory?.canDelete ||
+                selectedIncomeCategory.isUsedInDownstream
+              )
+                return;
+              setDeleteError('');
+              try {
+                await deleteIncomeCategory(selectedIncomeCategory.id).unwrap();
+                deleteIncomeCategoryDialog.onFalse();
+                setSelectedIncomeCategory(null);
+                shikshaMitraToast.success({ message: 'Income category deleted successfully' });
+              } catch (error) {
+                const problem = parseApiProblemDetail(error);
+                setDeleteError(
+                  problem.errorCode === 'Finance:Accounts:Settings:CategoryInUse'
+                    ? 'This income category is now referenced by other Finance records and cannot be deleted.'
+                    : problem.detail
+                );
+              }
             }}
           >
             Delete

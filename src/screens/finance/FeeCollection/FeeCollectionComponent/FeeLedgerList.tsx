@@ -97,9 +97,10 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
 
         return (
           <FeeRow
+            subtitle={charge.isSystemGenerated ? 'System generated' : undefined}
             key={charge.chargeId}
             name={charge.chargeName}
-            subtitle={charge.isSystemGenerated ? 'System generated' : undefined}
+
             total={charge.total ?? charge.amount}
             paid={charge.paid ?? 0}
             due={charge.amount}

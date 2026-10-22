@@ -120,7 +120,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                   formik.setFieldValue('board', value);
                 }}
                 error={!!(formik.touched.board && formik.errors.board) || false}
-                helperText={(formik.touched.board && formik.errors.board) || ''}
+                helperText={(formik.touched.board && formik.errors.board) || undefined}
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
@@ -137,7 +137,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.medium}
                 onChange={(val) => formik.setFieldValue('medium', val)}
                 error={!!(formik.touched.medium && formik.errors.medium)}
-                helperText={(formik.touched.medium && formik.errors.medium) as string}
+                helperText={
+                  ((formik.touched.medium && formik.errors.medium) as string) || undefined
+                }
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -154,7 +156,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.className}
                 onChange={(val) => formik.setFieldValue('className', val)}
                 error={!!(formik.touched.className && formik.errors.className)}
-                helperText={(formik.touched.className && formik.errors.className) as string}
+                helperText={
+                  ((formik.touched.className && formik.errors.className) as string) || undefined
+                }
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -171,7 +175,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.division}
                 onChange={(val) => formik.setFieldValue('division', val)}
                 error={!!(formik.touched.division && formik.errors.division)}
-                helperText={(formik.touched.division && formik.errors.division) as string}
+                helperText={
+                  ((formik.touched.division && formik.errors.division) as string) || undefined
+                }
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -207,7 +213,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                     label="Student *"
                     fullWidth
                     error={!!(formik.touched.student && formik.errors.student)}
-                    helperText={(formik.touched.student && formik.errors.student) as string}
+                    helperText={
+                      ((formik.touched.student && formik.errors.student) as string) || undefined
+                    }
                   />
                 )}
                 renderOption={(prop: any, option: any) => (
@@ -234,7 +242,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                   formik.setFieldValue('amountApplicable', selectedTerm?.amount || '');
                 }}
                 error={!!(formik.touched.paidTerms && formik.errors.paidTerms)}
-                helperText={(formik.touched.paidTerms && formik.errors.paidTerms) as string}
+                helperText={
+                  ((formik.touched.paidTerms && formik.errors.paidTerms) as string) || undefined
+                }
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -253,7 +263,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.amountApplicable || ''}
                 disabled
                 error={!!(formik.touched.amountApplicable && formik.errors.amountApplicable)}
-                helperText={formik.touched.amountApplicable && formik.errors.amountApplicable}
+                helperText={
+                  (formik.touched.amountApplicable && formik.errors.amountApplicable) || undefined
+                }
               />
             </ShakingTextField>
           </Grid>
@@ -272,7 +284,9 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                   formik.setFieldValue('refundAmount', Number(val));
                 }}
                 error={!!(formik.touched.refundAmount && formik.errors.refundAmount)}
-                helperText={formik.touched.refundAmount && formik.errors.refundAmount}
+                helperText={
+                  (formik.touched.refundAmount && formik.errors.refundAmount) || undefined
+                }
               />
             </ShakingTextField>
           </Grid>
@@ -292,7 +306,10 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.refundMethod}
                 onChange={(val) => formik.setFieldValue('refundMethod', val)}
                 error={!!(formik.touched.refundMethod && formik.errors.refundMethod)}
-                helperText={(formik.touched.refundMethod && formik.errors.refundMethod) as string}
+                helperText={
+                  ((formik.touched.refundMethod && formik.errors.refundMethod) as string) ||
+                  undefined
+                }
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -310,7 +327,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
                 value={formik.values.reason}
                 onChange={formik.handleChange}
                 error={!!(formik.touched.reason && formik.errors.reason)}
-                helperText={formik.touched.reason && formik.errors.reason}
+                helperText={(formik.touched.reason && formik.errors.reason) || undefined}
               />
             </ShakingTextField>
           </Grid>

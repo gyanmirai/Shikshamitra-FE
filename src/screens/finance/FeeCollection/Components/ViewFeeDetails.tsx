@@ -47,7 +47,7 @@ const ViewFeeDetails = ({
   const overview = feeDetails?.feeOverview;
 
   if (!currentYear?.id) {
-    return <Alert severity="info">Select an academic year to view fee details.</Alert>;
+    return <Box>Select an academic year to view fee details.</Box>;
   }
 
   if (isFeeDetailsError) {
@@ -81,7 +81,7 @@ const ViewFeeDetails = ({
   }
 
   if (!feeDetails) {
-    return <Alert severity="warning">Fee details are unavailable for this student.</Alert>;
+    return <Box>Fee details are unavailable for this student.</Box>;
   }
 
   return (

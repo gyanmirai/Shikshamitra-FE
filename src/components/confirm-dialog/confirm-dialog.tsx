@@ -32,12 +32,15 @@ export function ConfirmDialog({
   open,
   onClose,
   icon = 'error',
-  disableBackdropClick = false,
+  disableBackdropClick = true,
   disableCancel = false,
   cancelText = 'Cancel',
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
+  const isBusy =
+    disableCancel ||
+    (isValidElement(action) && Boolean((action.props as { loading?: boolean }).loading));
 
   return (
     <Dialog
@@ -45,10 +48,12 @@ export function ConfirmDialog({
       maxWidth="xs"
       open={open}
       onClose={(_event, reason) => {
+        if (isBusy || reason === 'escapeKeyDown') return;
         if (disableBackdropClick && reason === 'backdropClick') return;
         onClose();
       }}
       {...other}
+      disableEscapeKeyDown={isBusy || other.disableEscapeKeyDown}
       transitionDuration={{
         enter: theme.transitions.duration.shortest,
         exit: 0,
@@ -61,9 +66,11 @@ export function ConfirmDialog({
         </Box>
       </DialogTitle>
       {content && (
-        <DialogContent sx={{ typography: 'body2', padding: '0 16px 16px 16px' }}>
+        <DialogContent sx={{ typography: 'body2', padding: '8px 16px 16px' }}>
           {' '}
-          {content}{' '}
+          <Box component="fieldset" disabled={isBusy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+            <Box inert={isBusy || undefined}>{content}</Box>
+          </Box>
         </DialogContent>
       )}
       {/* <Divider /> */}
@@ -74,7 +81,7 @@ export function ConfirmDialog({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           color="inherit"
           onClick={onClose}
-          disabled={disableCancel}
+          disabled={isBusy}
           size="small"
         >
           {cancelText}

@@ -231,7 +231,7 @@ function RequestEnteredInstallments({
                       helperText={
                         (formik.touched.dueFeeEntries?.[line.dueFeeId] &&
                           formik.errors.dueFeeEntries?.[line.dueFeeId]) ||
-                        `Max ${percentage ? `${maximum}%` : money(Math.min(line.eligibleConcessionAmount, maximum))}`
+                        undefined
                       }
                       FormHelperTextProps={{ sx: { minHeight: '1.5em', mx: 0 } }}
                     />
@@ -411,12 +411,7 @@ const ValueEntryStepItem = ({
       <Typography variant="body2" fontWeight={600}>
         {concessionType.concessionName || concessionType.name}
       </Typography>
-      {isPolicyFixed && (
-        <Typography variant="caption" color="text.secondary">
-          Values are calculated automatically by {assignedStructureData?.concessionPolicyName} v
-          {assignedStructureData?.concessionPolicyVersion} and cannot be edited.
-        </Typography>
-      )}
+
       {isRequestEnteredFixed && (
         <Box sx={{ maxWidth: 320 }}>
           <NumericFormatCustom
@@ -432,7 +427,6 @@ const ValueEntryStepItem = ({
             onValueChange={(input, source) => {
               if (source.source === 'event') setRequestFixedTotal(input.floatValue ?? 0);
             }}
-            helperText={`Maximum per request: ${formatCurrency(maximumValue ?? selectedBaseTotal)}`}
           />
         </Box>
       )}
@@ -500,11 +494,6 @@ const ValueEntryStepItem = ({
                           baseAmount - discount
                         );
                       }}
-                      helperText={
-                        isPercentage
-                          ? `Max ${Math.min(100, maximumValue ?? 100)}%`
-                          : 'Allocated from the request total'
-                      }
                     />
                   )}
                 </Grid>

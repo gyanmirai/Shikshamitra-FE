@@ -16,7 +16,6 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   Box,
   Chip,
-  Alert,
   Stack,
   Button,
   Divider,
@@ -469,7 +468,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               value={approvedAmount}
               onChange={(event) => onApprovedAmountChange(Math.max(0, Number(event.target.value)))}
               inputProps={{ min: 1, max: group.liveMaximumConcessionAmount, step: 1 }}
-              helperText={`Requested: ₹${formatNumber(group.requestedConcessionAmount)} · Current maximum: ₹${formatNumber(group.liveMaximumConcessionAmount)}. You may approve a lower amount.`}
+
               sx={{ width: { xs: '100%', sm: 320 } }}
             />
           </Box>
@@ -580,7 +579,7 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
   const [previewReversal, { isLoading: isPreviewingReversal }] =
     usePreviewConcessionReversalMutation();
   const [confirmedPreviewKey, setConfirmedPreviewKey] = useState('');
-  const [serverPreviewTotal, setServerPreviewTotal] = useState<number | null>(null);
+  const [, setServerPreviewTotal] = useState<number | null>(null);
 
   const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';
 
@@ -1033,20 +1032,6 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
       </Box>
 
       <Scrollbar sx={{ flex: 1, p: 1.5 }}>
-        {resolvedApprovalContext?.hasChangedSinceSubmission && (
-          <Alert severity="warning" sx={{ mb: 1.5 }}>
-            Fee balances changed after submission. The values below use the current eligible
-            balance; review the updated proposal before continuing.
-          </Alert>
-        )}
-        {confirmedPreviewKey === reviewKey && serverPreviewTotal !== null && (
-          <Alert severity="success" sx={{ mb: 1.5 }}>
-            The server validated a total of {formatNumber(serverPreviewTotal, 'INR')}. Confirm to
-            {isApprove
-              ? ' apply this concession to the selected dues.'
-              : ' reopen this obligation.'}
-          </Alert>
-        )}
         {/* ── Description Field ── */}
         <ShakingTextField error={!!formik.errors.description && formik.touched.description}>
           <TextField
@@ -1066,7 +1051,7 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
             onBlur={formik.handleBlur}
             name="description"
             error={!!formik.errors.description && formik.touched.description}
-            helperText={formik.touched.description && formik.errors.description}
+            helperText={(formik.touched.description && formik.errors.description) || undefined}
             sx={{ mb: 2 }}
           />
         </ShakingTextField>
@@ -1092,10 +1077,6 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
             width={16}
             sx={{ color: isApprove ? 'info.main' : 'warning.main', flexShrink: 0 }}
           />
-          <Typography variant="caption" color="text.secondary">
-            Select due fee lines per fee head to {isApprove ? 'approve' : 'reverse'} the concession.
-            Lines with no outstanding balance cannot be selected.
-          </Typography>
         </Box>
 
         {/* ── Fee Head Groups ── */}
@@ -1180,7 +1161,9 @@ const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> =
 };
 
 export default function ConcessionFeeHeadApprovalView(props: IFeeHeadApprovalViewProps) {
-  return props.mode === 'Approve'
-    ? <ReadOnlyConcessionApprovalView {...props} />
-    : <ConcessionFeeHeadApprovalLegacyView {...props} />;
+  return props.mode === 'Approve' ? (
+    <ReadOnlyConcessionApprovalView {...props} />
+  ) : (
+    <ConcessionFeeHeadApprovalLegacyView {...props} />
+  );
 }

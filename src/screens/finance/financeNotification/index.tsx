@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Tab, Paper } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSlider } from 'src/components/form-slider';
@@ -80,8 +80,9 @@ const FinanceNotificationScreen = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {dialog.value ? (
         <CustomBreadcrumbs
-          heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for fee collection, charges, concessions, and financial tracking."
+          heading={isViewMode ? 'View Notification' : 'Edit Notification'}
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
@@ -98,8 +99,9 @@ const FinanceNotificationScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Notification"
           description="Configure notifications for fee collection, charges, concessions, and financial tracking."
+          heading="Notification"
+
           links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Notifications' }]}
           sx={{ px: 1 }}
         />

@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -21,9 +21,10 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 1. Select an academic year. Refresh academic workspaces if board/medium containers have not been prepared.
 2. Open the full-screen workspace dialog. Its horizontal class tabs come from the scoped metadata response, not the generic class API.
 3. Add a Fee Structure draft. Enter its name. Eligible current default policies initialize once in a new draft.
-4. In **Fee Heads & Terms**, add active Fee Heads, set total amounts and optional flags, and select each head's exact published Payment Term version.
-5. Open the shared schedule dialog to inspect inherited dates/percentages. Customize locally or restore the inherited schedule. Replacing a customized term requires confirmation.
-6. In **Policies**, select exact Collection and Refund policy versions. A missing Collection Policy shows an inline error and blocks Next and navigation to Review; Refund remains optional. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns have been removed from Fee Structure settings.
+   **Copy structure**, immediately after **Add structure**, opens a compact dialog. Its searchable source dropdown groups every saved structure by class using only the current metadata's accessible classes (same medium, board and academic year). Choose a source and confirm the destination class and structure name, then Submit. The existing create API saves a new draft with fresh structure/line identities, preserving amounts (including variable nulls), fee-head flags, pinned payment terms and policy versions, concession scope and customized installments. Duplicate names get an editable copy-name suggestion; backend uniqueness and attachment permissions still apply. The new draft is selected without discarding other mounted edits. Failed writes retain the selection/name and reuse the creation request ID for an unchanged retry. Loading failures offer Retry and never show a partial source list as complete. Copy is available under the existing Fee Structure Add permission and absent from view-only workspaces.
+4. In **Fee Heads & Terms**, use **Add fee head** to the right of Structure name. The shared Add/Edit dialog collects an available fee head, annual amount, and published payment frequency (the exact Payment Term version), with variable-pricing and optional flags. Save commits a complete validated row to the local structure draft.
+5. View opens read-only fee-head details and an installment breakdown with dates, allocations, amounts and totals. Authorized draft editors can choose **Edit installments** to customize locally or restore the inherited schedule. Replacing a customized term requires confirmation when saving the row.
+6. In **Policies**, review the centered checklist with one shared outlined card for Collection and Refund policy attachments. Each row shows required/optional status, its selected name/version, exact-version coverage, and Edit/Select. Coverage links open the existing detail dialog. Edit opens the published-version picker; Remove is in its footer. Authorized removal remains available when replacement browsing is denied. Missing Collection Policy shows an error and blocks **Review & continue** and navigation to Review; Refund remains optional, and an excluded refund scope shows a warning instead of the ready state. The ready banner describes selected policies, not backend publication readiness. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns remain absent from Fee Structure settings.
 7. Save the draft. Each added row requires an entered amount and a published Payment Term. Policy configuration may remain incomplete in a draft; invalid selected relationships are rejected by the backend.
 8. Open **Review & Publish** for backend readiness errors, mismatch warnings, per-head policy/accounting coverage and resolved installments.
 9. Publish only after saving and obtaining a ready review. The server revalidates and protects the configuration.
@@ -38,10 +39,10 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 | Structure navigation                                         | MUI `ListItemButton`, `Scrollbar`, `Label`; responsive MUI `Drawer`                                                                                 |
 | Policy selection                                             | Searchable `CustomizableTable` inside `CustomDialog` + `DialogScrollContent`                                                                        |
 | Full-screen workspace                                        | Unmodified shared `CustomDialog` with `fullScreen`, following the timetable workspace                                                               |
-| Horizontal class navigation                                  | Unmodified shared `CustomTabs` with scroll buttons; the owning form guards dirty class switches                                                     |
+| Horizontal class navigation                                  | Shared `CustomTabs` with a workspace-scoped underline indicator and scroll buttons; the owning form guards dirty class switches                      |
 | Guided setup (Fee heads & terms, Policies, Review & publish) | Shared `CustomStepperWithFormik` owns navigation, scrolling and action footer, reusing the editor's one Formik instance and Yup schema              |
-| Fee-head editing                                             | Overview table opens a focused `FormSectionCard`; MUI fields, `ShakingTextField`, and `NumericFormatCustom` retain exact configured decimal amounts |
-| Policy sections                                              | `FormSectionCard` with pinned-version identity, accessible help, View/Change/Remove actions, and available exact-version coverage                   |
+| Fee-head editing                                             | One `CustomDialog` + `DialogScrollContent` + `FormSectionCard`, Formik/Yup, `CustomSelect`, `ShakingTextField`, `NumericFormatCustom`, and shared submit button |
+| Policy checklist                                             | One outlined MUI `Card` with shared `FormSectionHeader` rows, status banner, pinned-version identity, Edit/Select, and coverage links; existing shared picker and detail dialogs |
 | Installment editor                                           | `CustomDialog` + `DialogScrollContent`                                                                                                              |
 | Publication, revision, delete, discard and term replacement  | `ConfirmDialog`                                                                                                                                     |
 | Row and structure actions                                    | `AdaptiveThreeDotsActions`; compact row actions and secondary header actions in overflow                                                            |
@@ -51,7 +52,7 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 
 Stepper navigation preserves the parent candidate without a leave prompt. The nested schedule dialog opts out of the global leave prompt through `guardUnsavedChanges={false}`. Leaving the workspace or switching class uses the shared confirmation dialog and the actual aggregate dirty state.
 
-Fee-head columns allocate flexible width to the name, bounded width to pricing and payment-term identity, right alignment to amounts, and a compact sticky Actions column. Policy coverage uses proportional column widths. Installments are grouped by fee head so its name and term version appear once per group; demand date and allocation percentage remain available through Show Details. All setup/review tables disable irrelevant sorting/filtering. Readiness keeps every server blocker visible and offers navigation to the relevant step; policy mismatch guidance is also shown on Policies when exact-version coverage is available.
+Fee-head columns allocate flexible width to the name, right-align annual amounts, show payment-term identity as payment frequency, and keep a compact sticky Actions column. Policy coverage uses proportional column widths. Review installments are grouped by fee head so its name and term version appear once per group; demand date and allocation percentage remain available through Show Details. The fee-head View dialog shows every installment's dates, allocations and calculated amounts as readable values. All setup/review tables disable irrelevant sorting/filtering. Readiness keeps every server blocker visible and offers navigation to the relevant step; policy mismatch guidance is also shown on Policies when exact-version coverage is available.
 
 Metadata list pagination/search uses the server. Empty, loading and error states are distinct. Settings refresh preserves unsaved changes and invalidates the previous readiness result. Parent refetch never overwrites a dirty card. Out-of-order previews are discarded using an editor generation counter. Publication is disabled for an unsaved or unreviewed draft.
 
@@ -67,7 +68,7 @@ Display validation messages from both ABP `error.data.Errors` and the host's Pro
 
 Policy selectors are editable only in an authorized draft edit session. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
 
-The active path uses `FeeStructureWorkspaceCard.tsx`, `FeeStructureHeadsStep.tsx`, `FeeStructurePoliciesStep.tsx`, `FeeStructureReviewStep.tsx`, `useFeeStructureWorkspaceForm.ts`, and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
+The active path uses `FeeStructureWorkspaceCard.tsx`, `FeeStructureHeadsStep.tsx`, `FeeStructureHeadDialog.tsx`, `FeeStructurePoliciesStep.tsx`, `FeeStructureReviewStep.tsx`, `useFeeStructureWorkspaceForm.ts`, and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
 
 ## Edge cases to verify
 
@@ -159,7 +160,7 @@ Cards use a centered, bounded two-column grid on desktop and a single column bel
 
 Each card provides a labelled eye action using shared Iconify, CustomTooltip and MUI IconButton controls.
 The shared `src/screens/finance/settings/FeeStructure/Components/PolicyImpactDialog.tsx` uses CustomDialog and DialogScrollContent with a compact, theme-aware layout.
-It lists structure heads with coverage and exclusions, selected policy/version and descriptive impact; it does not calculate amounts or eligibility outcomes for students.
+The selected policy name/version is the dialog title. The body lists fee-head coverage and exclusions without repeating the policy description or generic impact explanations. Published views retain the saved-publication label; availability states remain distinct.
 Closing with the header, footer or Escape preserves the parent draft's dirty state and returns focus to the opener.
 
 The presentation adapter `src/screens/finance/settings/FeeStructure/policyImpactModel.ts` uses the already-loaded policy catalog only when its policy and current-version IDs match the selected attachment.
@@ -200,20 +201,49 @@ Policy fields use three aligned columns on wide screens, two at medium widths an
 
 Focused regression files include the shared stepper's existing tests, `feeStructureFields.test.tsx`, `Components/ClassAccordionPanel.test.tsx` and `Components/FeeStructureWorkspaceDialog.test.tsx`. The isolated browser fixture offers **Open full-screen workspace** to exercise the real dialog, horizontal class tabs, structure selector and class/dismissal guards with synthetic data. The fixture performs no backend financial transactions; authenticated full-stack integration is outside this fixture's coverage.
 
-Verification: 61 focused tests, TypeScript, focused ESLint and Finance documentation validation pass. The final in-app browser smoke covers full-screen desktop/tablet/mobile geometry, horizontal class scrolling, light/dark themes, class and dialog dirty guards, Save & next, review, and protected publication. No shared-component source files are changed.
+The earlier workspace checks covered full-screen geometry, class navigation, review and protected publication. For the 21 October 2026 fee-head dialog update, 31 focused tests, TypeScript diagnostics for all six changed source/test files, focused ESLint and Finance documentation validation pass. The in-app browser smoke uses synthetic data and covers Add/Edit/View/Delete, required-field focus, unsaved-change confirmation, Enter submission, draft saving, totals, light/dark themes and 390/768/1440 px layouts. Full-project TypeScript and unscoped lint exceeded the local memory limits; authenticated backend integration was not run for this UI-only change.
 
-## Inline fee head editing and compact review
+## Dialog fee head editing and compact review
 
-The class tabs use compact horizontal padding. Add structure is above the structure list on
-desktop and beside the Structures selector on smaller screens. Selecting a fee head adds it
-immediately; amount, pricing, payment term and optionality are editable in the shared table.
-There is no separate fee head editor. The remove icon sits beside the fee head name; the
-schedule action uses the shared View icon. Published rows remain read-only.
+The workspace header includes the metadata's board and medium alongside its name and academic year. Edit draft uses the shared icon action with an accessible label and tooltip. Add structure is contained in both desktop and mobile navigation, with a separate gap before Search structures. The Fee Heads heading and summary table share a compact one-unit gap.
 
-Policy cards use accessible View, Change/Select and Remove icons from `GlobalIcons`.
+The class tabs use flat, unfilled labels with a thin underline and bold text for the selected class, following the supplied Fee Structure reference. Theme colors adapt to light and dark modes; narrow rows retain horizontal scrolling. This workspace-specific treatment uses the shared `CustomTabs` slots without changing other screens. Add structure is above the structure list on
+desktop and beside the Structures selector on smaller screens. The fee-head summary shows
+Fee head name, Annual amount, Payment frequency and Actions. View, Edit and Delete use the shared
+action component with three direct icons, matching the requested ledger actions and the current Finance action configuration. Delete requires confirmation. Add and Edit use
+the same dialog. Cancel/X/Escape protect local dialog edits without clearing the parent draft.
+Rows are added only after field validation. Duplicate heads are excluded, blank fixed amounts
+and missing published terms block Save, and retained term pins remain selectable after a
+catalog refresh fails. Zero and two-decimal values follow the existing amount contract.
+After Save/Continue validation, each invalid amount and payment frequency shows its own error
+under the affected table value, linked by accessible field descriptions. Focus moves to the
+first invalid field. Opening Edit after validation reveals the same required-field errors in
+the dialog. Errors clear per row as values are corrected. Existing incomplete term attachments
+require explicit selection; adding a new head still uses the eligible published default.
+On mobile the row also lists its labelled field errors under the fee-head name, keeping them
+visible when amount/frequency columns require horizontal scrolling.
+The bottom Total annual amount sums fixed amounts in paise and includes optional heads.
+It shows only the total label and formatted amount. It is a configuration total, not an amount due.
+Published rows remain read-only. Row Save updates the draft; Save draft persists it.
+
+The Policies checklist uses accessible shared section headers and compact Edit/Select buttons.
+The card footer links to Collection and Refund coverage. Removing an attachment through the
+picker footer updates the local draft and preserves the required Collection validation.
 Choosing a policy reports one success toast that it was added to the draft; saving is separate.
-Policy picker and impact dialogs expose header information. Impact coverage uses the shared
-table with readable treatment labels and retains loading, missing-access and error states.
+The Policies checklist omits the ready-state success alert while retaining required-policy and
+coverage warnings. Coverage dialogs use the policy name/version as their title and the shared
+table with readable treatment labels, retaining loading, missing-access and error states.
+
+The structure header places Draft/Published status at the right edge after the actions and omits
+Refresh Context. A context-load failure offers Retry. The sidebar and footer omit unsaved-status
+text while dirty-state tracking and discard confirmation remain active. Unsaved items show a
+small warning dot at the right, with an accessible label and tooltip. The dot remains on inactive
+items and clears after a successful save or discard; new unsaved structures also show it.
+The structure sidebar follows the Report list's 320px panel, always-visible search, rounded
+document rows, selected border and restrained hover transitions. Motion respects reduced-motion
+preferences. Searching and switching preserve mounted editors; Add structure clears the filter.
+The shared stepper's
+buttons sit directly in the bottom footer without a status-text row underneath.
 
 Review starts with the structure name, fixed fee total and optional/variable head counts,
 followed by attached policy summaries, publication checks and coverage. Each payment schedule

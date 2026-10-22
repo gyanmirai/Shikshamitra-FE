@@ -288,7 +288,7 @@ const SectionGeneral = ({
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched.policyName && Boolean(formik.errors.policyName)}
-        helperText={formik.touched.policyName && formik.errors.policyName}
+        helperText={(formik.touched.policyName && formik.errors.policyName) || undefined}
       />
     </Grid>
 
@@ -808,7 +808,6 @@ const SectionApprovalRules = ({
         value={formik.values.requireApprovalAboveAmount ?? ''}
         onChange={formik.handleChange}
         InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-        helperText="Leave blank to skip approval"
       />
     </Grid>
   </Grid>
@@ -1065,11 +1064,6 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
             <Typography variant="h6" fontWeight={700}>
               {editData ? 'Edit Payment Policy' : 'Create Payment Policy'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {editData
-                ? 'Update the payment policy configuration.'
-                : 'Define payment collection rules, allocation, modes, and approval workflows.'}
-            </Typography>
           </Box>
           <Button
             size="small"
@@ -1099,16 +1093,6 @@ const PaymentPolicyDrawer: React.FC<PaymentPolicyDrawerProps> = ({
               {/* 3. Partial Payment Rules */}
               <SectionCard title={SECTION_LABELS.partial}>
                 <SectionPartialPayment formik={formik} />
-              </SectionCard>
-
-              {/* 4. Allocation Rules — info card */}
-              <SectionCard title={SECTION_LABELS.allocation}>
-                <Box p={1}>
-                  <Typography variant="caption" color="text.secondary">
-                    Allocation method is configured in Payment Behaviour above. Current:{' '}
-                    <strong>{formik.values.allocationMethod}</strong>
-                  </Typography>
-                </Box>
               </SectionCard>
 
               {/* 5. Advance Payment */}

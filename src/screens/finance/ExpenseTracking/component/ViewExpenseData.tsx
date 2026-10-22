@@ -153,6 +153,7 @@ const ViewExpenseData = ({
             noDataText="No Expense data found"
             columns={[
               {
+                stickyPosition: 'left',
                 id: 'name',
                 label: 'Expense Name',
                 align: 'left',
@@ -188,9 +189,10 @@ const ViewExpenseData = ({
                 ),
               },
               {
+                cellSx: { textAlign: 'right' as const },
                 id: 'amount',
                 label: 'Amount (₹)',
-                align: 'right',
+                align: 'left',
                 render: (value, row) => (
                   <Typography variant="subtitle2" fontWeight="bold">
                     ₹ {Math.ceil(Number(row.amount || 0)).toLocaleString('en-IN')}

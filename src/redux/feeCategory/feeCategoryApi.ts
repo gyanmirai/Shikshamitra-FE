@@ -12,7 +12,16 @@ export interface IFeeHeadItemRequest {
   description?: string;
 }
 
+export interface IFeeHeadDependencies {
+  studentCount: number;
+  assignmentCount: number;
+  feeStructureCount: number;
+  paymentTermCount: number;
+  isBlocked: boolean;
+}
+
 export interface IFeeHeadResponse {
+  dependencies?: IFeeHeadDependencies;
   id: string;
   academicYearId: string;
   feeCategoryId: string;
@@ -103,6 +112,9 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
 
@@ -120,6 +132,9 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
 
@@ -133,6 +148,9 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
 
@@ -150,6 +168,9 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeCategory,
         financeModuleType.feeHead,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
   }),

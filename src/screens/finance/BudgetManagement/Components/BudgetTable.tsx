@@ -121,6 +121,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           noDataText="Pending Budgets Not Found"
           columns={[
             {
+              stickyPosition: 'left',
               id: 'budgetTitle',
               label: 'Budget Title',
               align: 'left',
@@ -224,6 +225,8 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
             {
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'action',
               label: 'Actions',
               isFilter: false,
@@ -232,7 +235,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     placement="right-top"
                     actions={[
                       {
@@ -296,6 +299,8 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
             {
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'action',
               label: 'Actions',
               isFilter: false,
@@ -304,7 +309,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     actions={[
                       {
                         id: 'view',
@@ -366,6 +371,8 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
             {
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'action',
               label: 'Actions',
               align: 'left',
@@ -374,7 +381,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     actions={[
                       {
                         id: 'view',

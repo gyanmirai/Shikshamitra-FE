@@ -21,9 +21,9 @@ interface SectionCardProps {
   action?: React.ReactNode;
 }
 
-export function SectionCard({ title, subtitle, icon, children, action }: SectionCardProps) {
+export function SectionCard({ title, icon, children, action, subtitle }: SectionCardProps) {
   return (
-    <ConcessionSectionCard title={title} subtitle={subtitle} icon={icon} action={action}>
+    <ConcessionSectionCard subtitle={subtitle} title={title} icon={icon} action={action}>
       {children}
     </ConcessionSectionCard>
   );
@@ -98,9 +98,6 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
                 Live Policy Summary
               </Typography>
             </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Real-time parameter overview and calculated preview.
-            </Typography>
           </Box>
 
           {/* Policy Identity Pill */}
@@ -312,15 +309,6 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
                 height={18}
                 sx={{ flexShrink: 0, mt: 0.2 }}
               />
-              <Box>
-                <Typography variant="caption" fontWeight={700} color="info.main" display="block">
-                  Settled Money Only Invariant
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.71rem' }}>
-                  Refund payouts are strictly constrained to settled receipts. Prior refunds and
-                  active reservations are always subtracted first before calculating eligibility.
-                </Typography>
-              </Box>
             </Stack>
           </Paper>
         </Stack>
@@ -329,7 +317,7 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
   );
 }
 
-function CheckItem({ label, valid, hint }: { label: string; valid: boolean; hint: string }) {
+function CheckItem({ label, valid }: { label: string; valid: boolean; hint: string }) {
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between">
       <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
@@ -347,14 +335,6 @@ function CheckItem({ label, valid, hint }: { label: string; valid: boolean; hint
             noWrap
           >
             {label}
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.disabled"
-            display="block"
-            sx={{ fontSize: '0.68rem' }}
-          >
-            {hint}
           </Typography>
         </Box>
       </Stack>

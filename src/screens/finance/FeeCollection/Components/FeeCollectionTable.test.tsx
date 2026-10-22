@@ -10,8 +10,27 @@ vi.mock('react-redux', () => ({
   useSelector: () => ({ currentYear: { id: 'academic-year' } }),
 }));
 
+vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
+  useFinancePermissions: () => ({ isReady: true, canView: true, canAdd: true, canDelete: true }),
+}));
+
 vi.mock('src/hooks/use-boolean', () => ({ useBoolean: vi.fn() }));
-vi.mock('src/components/adaptive-three-dots-actions', () => ({ default: () => null }));
+vi.mock('src/components/adaptive-three-dots-actions', () => ({
+  default: ({ actions }: any) => (
+    <>
+      {actions.map((action: any) => (
+        <button
+          key={action.id}
+          disabled={action.disabled}
+          title={action.tooltip}
+          onClick={action.onClick}
+        >
+          {action.label}
+        </button>
+      ))}
+    </>
+  ),
+}));
 vi.mock('src/screens/finance/components/FinanceAcademicContextFilter', () => ({
   default: () => null,
 }));
@@ -57,6 +76,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ columns, data }: any) => {
     const statusColumn = columns.find((column: any) => column.id === 'status');
+    const actionColumn = columns.find((column: any) => column.id === 'action');
     return (
       <>
         <select aria-label="Status filter">
@@ -66,12 +86,13 @@ vi.mock('src/components/customizabaleTable', () => ({
             </option>
           ))}
         </select>
-        <table>
+        <table data-status-sort={String(statusColumn.isSort)}>
           <tbody>
             {data.map((row: any) => (
               <tr key={row.studentId}>
                 <td>{row.name}</td>
                 <td>{statusColumn.render(row.status, row)}</td>
+                <td>{actionColumn.render(null, row)}</td>
               </tr>
             ))}
           </tbody>
@@ -105,6 +126,18 @@ describe('Collections status', () => {
     expect(within(unassignedRow).queryByText('Paid')).not.toBeInTheDocument();
     const paidRow = screen.getByText('Paid Student').closest('tr')!;
     expect(within(paidRow).getByText('Paid')).toBeVisible();
+    expect(within(paidRow).getByRole('button', { name: /Collect fee/ })).toBeEnabled();
+    expect(within(unassignedRow).getByRole('button', { name: /View details/ })).toBeEnabled();
     expect(screen.getByRole('option', { name: 'No Fee Assigned' })).toHaveValue('7');
+    expect(screen.getByRole('table')).toHaveAttribute('data-status-sort', 'true');
+    const collect = within(unassignedRow).getByRole('button', { name: /Collect fee/ });
+    expect(collect).toBeDisabled();
+    expect(collect).toHaveAttribute(
+      'title',
+      'No fee structure assigned. Assign a fee structure to collect fees.'
+    );
+    expect(
+      within(unassignedRow).getByRole('button', { name: /Give fee adjustment/ })
+    ).toBeDisabled();
   });
 });

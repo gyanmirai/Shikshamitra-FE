@@ -23,6 +23,7 @@ const InvoiceTable = ({
       noDataText={<>No Invoice Data Found</>}
       columns={[
         {
+          stickyPosition: 'left',
           id: 'invoiceNumber',
           label: 'Invoice #',
           align: 'left',
@@ -32,6 +33,7 @@ const InvoiceTable = ({
           sticky: true,
         },
         {
+          stickyPosition: 'left',
           id: 'student',
           label: 'Name(Gr No.)',
           align: 'left',
@@ -82,6 +84,7 @@ const InvoiceTable = ({
           render: (value: number) => `₹ ${value.toLocaleString()}`,
         },
         {
+          stickyPosition: 'right',
           id: 'status',
           label: 'Status',
           align: 'left',
@@ -98,6 +101,9 @@ const InvoiceTable = ({
           },
         },
         {
+          align: 'left',
+          stickyPosition: 'right',
+          excludeFromExport: true,
           id: 'actions',
           label: 'Action',
           isFilter: false,
@@ -107,7 +113,7 @@ const InvoiceTable = ({
           minWidth: 64,
           render(_value: any, row: any) {
             return (
-              <AdaptiveThreeDotsActions
+              <AdaptiveThreeDotsActions directActionLimit={2}
                 actions={[
                   {
                     id: 'view',

@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useCreateFeeAdjustmentMutation } from 'src/redux/finance/adjustments/adjustmentApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
@@ -33,21 +34,17 @@ const FeeCollection = () => {
   const adjustmentDialog = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<IStudentFee | null>(null);
   // Get the changes status from the confirm popup redux state
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const dispatch = useDispatch();
   const [createFeeAdjustment] = useCreateFeeAdjustmentMutation();
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      studentDialog.onFalse();
-      setSelectedStudent(null);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    studentDialog.value,
+    () => {
       studentDialog.onFalse();
       setSelectedStudent(null);
     }
-  };
+  );
 
   return (
     <Box
@@ -62,10 +59,12 @@ const FeeCollection = () => {
         flexDirection: 'column',
       }}
     >
+      {discardConfirmation}
       {studentDialog.value ? (
         <CustomBreadcrumbs
-          heading="Collect fees"
           description="Select fee items from each category and record a payment."
+          heading="Collect fees"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/fee-collection' },
@@ -85,8 +84,9 @@ const FeeCollection = () => {
         />
       ) : viewDialog.value ? (
         <CustomBreadcrumbs
-          heading="Fee Details"
           description="View detailed fee information and payment history for the selected student."
+          heading="Fee Details"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/fee-collection' },
@@ -108,8 +108,9 @@ const FeeCollection = () => {
         />
       ) : adjustmentDialog.value ? (
         <CustomBreadcrumbs
-          heading="Give Adjustment"
           description="Fill in the adjustment details for the selected student."
+          heading="Give Adjustment"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/fee-collection' },
@@ -131,8 +132,9 @@ const FeeCollection = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Collections"
           description="Select class and division to view students. Click a student to see their fee details and collect fees or send reminders."
+          heading="Collections"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/fee-collection' },
@@ -163,6 +165,7 @@ const FeeCollection = () => {
       )}
       <CustomDialog
         open={studentDialog.value && access.canAdd}
+        guardUnsavedChanges={false}
         title={`Collect Fees – ${selectedStudent?.name ?? 'Student'}`}
         fullScreen
         transitionDuration={{ enter: 0, exit: 0 }}

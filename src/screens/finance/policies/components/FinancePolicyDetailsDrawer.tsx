@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
@@ -124,12 +123,13 @@ export default function FinancePolicyDetailsDrawer({
         }}
       >
         <FinancePolicyDrawerHeader
-          title={policy.policyName}
-          titleId="policy-details-title"
           helpText="Review this policy's saved settings, status, and version. This view is read-only."
           description={`${formatEnumValue(policy.policyType)} policy · ${
             policy.academicYearName || 'Current academic year'
           }`}
+          title={policy.policyName}
+          titleId="policy-details-title"
+
           onClose={onClose}
           badges={
             <>
@@ -151,7 +151,7 @@ export default function FinancePolicyDetailsDrawer({
 
         {/* Scrollable Content Body */}
         <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-          <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+          <Box sx={{ p: 2, pb: 2 }}>
             {isLoading ? (
               <FinancePolicySkeleton label="Loading policy configuration" />
             ) : isError ? (
@@ -171,12 +171,13 @@ export default function FinancePolicyDetailsDrawer({
               <>
                 {/* ── 1. General Information ── */}
                 <DetailSection
+                  helpText="Policy identity, academic year, default selection, effective dates, and description."
                   sx={{ mb: 2 }}
                   title="General Information"
-                  helpText="Policy identity, academic year, default selection, effective dates, and description."
+
                   icon={GlobalIcons.notebook}
                 >
-                  <Grid container spacing={2}>
+                  <Grid container spacing={1.5}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <DetailField label="Policy Name" value={policy.policyName} />
                     </Grid>
@@ -245,12 +246,30 @@ export default function FinancePolicyDetailsDrawer({
                     {type === 'collection' && (
                       <>
                         <DetailSection
+                          title="Payment Allocation"
+                          icon={GlobalIcons.receiptIcon}
+                          sx={{ mb: 2 }}
+                          helpText="Payments follow the top-to-bottom order shown on the fee collection screen."
+                        >
+                          <DetailField
+                            label="Allocate payment by"
+                            value={
+                              policyDetails.allocationBasis === 'FeeHead'
+                                ? 'By fee head'
+                                : policyDetails.allocationBasis === 'Installment'
+                                  ? 'By installment'
+                                  : 'Existing selection order'
+                            }
+                          />
+                        </DetailSection>
+                        <DetailSection
+                          helpText="Online collection settings and how collected payments are treated as income."
                           sx={{ mb: 2 }}
                           title="Collection & Gateway Settings"
-                          helpText="Online collection settings and how collected payments are treated as income."
+
                           icon="solar:card-bold"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Grace Period"
@@ -284,12 +303,13 @@ export default function FinancePolicyDetailsDrawer({
                         </DetailSection>
 
                         <DetailSection
+                          helpText="When late fees start, how they accrue, and the limits or escalation slabs that apply."
                           sx={{ mb: 2 }}
                           title="Late Fee Accrual Rules"
-                          helpText="When late fees start, how they accrue, and the limits or escalation slabs that apply."
+
                           icon={GlobalIcons.receiptIcon}
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <BooleanChip
                                 label="Late Fee Accrual"
@@ -479,12 +499,13 @@ export default function FinancePolicyDetailsDrawer({
                     {/* ── Payment Policy Details ── */}
                     {type === 'payment' && (
                       <DetailSection
+                        helpText="Allowed payment methods and any minimum payment requirements."
                         sx={{ mb: 2 }}
                         title="Payment Behaviour & Modes"
-                        helpText="Allowed payment methods and any minimum payment requirements."
+
                         icon="mdi:cash-register"
                       >
-                        <Grid container spacing={2}>
+                        <Grid container spacing={1.5}>
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <BooleanChip
                               label="Allow Partial Payment"
@@ -522,12 +543,13 @@ export default function FinancePolicyDetailsDrawer({
                       <>
                         {/* Calculation Configuration */}
                         <DetailSection
+                          helpText="The source of the concession value and the method used to calculate it."
                           sx={{ mb: 2 }}
                           title="Calculation Rules"
-                          helpText="The source of the concession value and the method used to calculate it."
+
                           icon="solar:tag-price-bold"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Value Source"
@@ -561,12 +583,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Application Behaviour & Recalculation Scope */}
                         <DetailSection
+                          helpText="Which fees and balances this concession can affect."
                           sx={{ mb: 2 }}
                           title="Application Scope"
-                          helpText="Which fees and balances this concession can affect."
+
                           icon="solar:shield-check-bold"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Apply Concession On"
@@ -616,12 +639,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Downstream Utilization & Audit Metadata */}
                         <DetailSection
+                          helpText="Where this policy is attached, its active version, and when it was created or changed."
                           sx={{ mb: 2 }}
                           title="Usage And History"
-                          helpText="Where this policy is attached, its active version, and when it was created or changed."
+
                           icon="solar:history-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Downstream Attachment"
@@ -679,12 +703,13 @@ export default function FinancePolicyDetailsDrawer({
                       <>
                         {/* Scope & Eligibility */}
                         <DetailSection
+                          helpText="Which fee heads, paid charges, and late fees can be included in a refund."
                           sx={{ mb: 2 }}
                           title="Refund Scope & Eligibility"
-                          helpText="Which fee heads, paid charges, and late fees can be included in a refund."
+
                           icon="solar:shield-check-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Fee Head Scope"
@@ -761,12 +786,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Calculation & Ceilings */}
                         <DetailSection
+                          helpText="How the refund amount is calculated and the caps applied per request or student."
                           sx={{ mb: 2 }}
                           title="Refund Calculation & Ceilings"
-                          helpText="How the refund amount is calculated and the caps applied per request or student."
+
                           icon="solar:calculator-minimalistic-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Amount Calculation Mode"
@@ -819,12 +845,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Deductions & Payout Methods */}
                         <DetailSection
+                          helpText="Administrative deductions, processing target, and permitted payout channels."
                           sx={{ mb: 2 }}
                           title="Deductions & Allowed Disbursement"
-                          helpText="Administrative deductions, processing target, and permitted payout channels."
+
                           icon="solar:tag-price-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Administrative Deduction Rule"
@@ -903,7 +930,7 @@ export default function FinancePolicyDetailsDrawer({
                             {(policyDetails.expenseCategoryId ||
                               policyDetails.defaultPayingBankAccountId) && (
                               <Grid size={{ xs: 12 }}>
-                                <Grid container spacing={2}>
+                                <Grid container spacing={1.5}>
                                   {policyDetails.expenseCategoryId && (
                                     <Grid size={{ xs: 12, sm: 6 }}>
                                       <DetailField
@@ -933,12 +960,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Guarantees & Settlement Callout */}
                         <DetailSection
+                          helpText="Refund eligibility is limited to settled payments after prior refunds and reservations."
                           sx={{ mb: 2 }}
                           title="Settlement Guarantees & Constraints"
-                          helpText="Refund eligibility is limited to settled payments after prior refunds and reservations."
+
                           icon="solar:shield-check-bold"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12 }}>
                               <Paper
                                 variant="outlined"
@@ -958,16 +986,6 @@ export default function FinancePolicyDetailsDrawer({
                                   height={20}
                                   sx={{ color: 'info.main', flexShrink: 0 }}
                                 />
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{ fontSize: '0.74rem' }}
-                                >
-                                  <strong>Settled Money Only Invariant:</strong> Refunds can only be
-                                  created from verified settled money. Prior processed refunds and
-                                  active reservations are permanently subtracted from the eligible
-                                  base before calculating payout amounts.
-                                </Typography>
                               </Paper>
                             </Grid>
                           </Grid>
@@ -975,12 +993,13 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Audit Metadata */}
                         <DetailSection
+                          helpText="The current policy version, downstream attachment, and recorded changes."
                           sx={{ mb: 2 }}
                           title="Version & Audit Trail"
-                          helpText="The current policy version, downstream attachment, and recorded changes."
+
                           icon="solar:history-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Active Policy Version"
@@ -1048,12 +1067,13 @@ export default function FinancePolicyDetailsDrawer({
                       <>
                         {/* Strategy & Overview */}
                         <DetailSection
+                          helpText="The default and attachment settings, plus the number of fee heads with proration rules."
                           sx={{ mb: 2 }}
                           title="Proration Strategy & Scope"
-                          helpText="The default and attachment settings, plus the number of fee heads with proration rules."
+
                           icon="solar:calculator-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Default Academic Policy"
@@ -1121,9 +1141,10 @@ export default function FinancePolicyDetailsDrawer({
 
                         {/* Fee Head Rules Table */}
                         <DetailSection
+                          helpText="Admission and early withdrawal proration rules for each fee head."
                           sx={{ mb: 2 }}
                           title="Fee Head Proration Rules"
-                          helpText="Admission and early withdrawal proration rules for each fee head."
+
                           icon="solar:widget-bold-duotone"
                         >
                           {(policyDetails.feeHeadRules ?? []).length === 0 ? (
@@ -1178,56 +1199,15 @@ export default function FinancePolicyDetailsDrawer({
                           )}
                         </DetailSection>
 
-                        {/* Zero Refund & Demand Guarantee Callout */}
-                        <DetailSection
-                          sx={{ mb: 2 }}
-                          title="Application Guarantees & Constraints"
-                          helpText="Proration affects demand generation and does not change past ledger entries or receipts."
-                          icon="solar:shield-check-bold"
-                        >
-                          <Grid container spacing={2}>
-                            <Grid size={{ xs: 12 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{
-                                  p: 1.5,
-                                  bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
-                                  borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
-                                  borderRadius: 1.25,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1.25,
-                                }}
-                              >
-                                <Iconify
-                                  icon="solar:shield-check-bold"
-                                  width={20}
-                                  height={20}
-                                  sx={{ color: 'info.main', flexShrink: 0 }}
-                                />
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{ fontSize: '0.74rem' }}
-                                >
-                                  <strong>Demand Generation Only:</strong> Proration policies
-                                  strictly compute initial demand amounts using admission and
-                                  available withdrawal dates. They never adjust historical ledger
-                                  entries, existing receipts, or posted student transactions.
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                          </Grid>
-                        </DetailSection>
-
                         {/* Audit Metadata */}
                         <DetailSection
+                          helpText="The current policy version and recorded creation or modification details."
                           sx={{ mb: 2 }}
                           title="Version & Audit Trail"
-                          helpText="The current policy version and recorded creation or modification details."
+
                           icon="solar:history-bold-duotone"
                         >
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.5}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                               <DetailField
                                 label="Active Policy Version"
@@ -1283,7 +1263,7 @@ export default function FinancePolicyDetailsDrawer({
         {/* Footer */}
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
+            px: 2,
             py: 1.5,
             bgcolor: 'background.paper',
             borderTop: '1px solid',

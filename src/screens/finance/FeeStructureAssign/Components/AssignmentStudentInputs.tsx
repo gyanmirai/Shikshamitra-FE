@@ -7,7 +7,7 @@ import type {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Label } from 'src/components/label';
-import { fDate } from 'src/utils/format-time';
+
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
@@ -32,6 +32,7 @@ import AssignmentMoneyInput from './AssignmentMoneyInput';
 import { servicePeriodErrors, serializeServiceDate } from './assignmentServiceDates';
 
 import type { AssignmentYearBounds } from './assignmentServiceDates';
+import { fDate } from 'src/utils/format-time';
 
 export default function AssignmentStudentInputs({
   candidate,
@@ -213,7 +214,7 @@ export default function AssignmentStudentInputs({
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: 'minmax(0, 1fr)',
-                    sm: 'minmax(0, 1fr) minmax(0, 1fr)',
+                    sm: 'minmax(0, 1fr) minmax(0, 2fr)',
                   },
                   gap: 1.5,
                   alignItems: 'start',
@@ -301,7 +302,7 @@ export default function AssignmentStudentInputs({
                     </Typography>
                   )}
                 </Box>
-                {!head.isVariable && (
+                {!head.isVariable && !flat && (
                   <Typography
                     variant="subtitle2"
                     sx={{
@@ -347,15 +348,16 @@ export default function AssignmentStudentInputs({
                       gridTemplateColumns: {
                         xs: 'minmax(0, 1fr)',
                         sm:
-                          head.isVariable && !flat ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
+                          flat || head.isVariable ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
                       },
                       gap: 1,
                       alignItems: 'start',
                     }}
                   >
                     <Stack spacing={1}>
-                      {(canOverrideDates || (head.supportsTransportSource && !head.isVariable)) && (
+                      {canOverrideDates || (head.supportsTransportSource && !head.isVariable) ? (
                         <CustomSelect
+                          optionDescriptionKey="description"
                           size="small"
                           name={`${head.feeHeadId}-source`}
                           label="Service period"
@@ -363,7 +365,7 @@ export default function AssignmentStudentInputs({
                           disabled={disabled}
                           labelKey="label"
                           valueKey="value"
-                          optionDescriptionKey="description"
+
                           options={[
                             {
                               value: 'AcademicYear',
@@ -400,7 +402,20 @@ export default function AssignmentStudentInputs({
                             })
                           }
                         />
-                      )}
+                      ) : flat ? (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Service period
+                          </Typography>
+                          <Typography variant="body2">
+                            {period.source === 'ManualOverride'
+                              ? 'Custom dates'
+                              : period.source === 'TransportService'
+                                ? 'Transport service'
+                                : 'Academic year'}
+                          </Typography>
+                        </Box>
+                      ) : null}
                       {period.source === 'TransportService' && (
                         <>
                           <CustomSelect
@@ -442,6 +457,18 @@ export default function AssignmentStudentInputs({
                       )}
                       {!flat && period.source === 'ManualOverride' && manualDateFields}
                     </Stack>
+                    {!head.isVariable && flat && (
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Amount
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {head.configuredAmount == null
+                            ? '—'
+                            : formatNumber(head.configuredAmount, 'INR')}
+                        </Typography>
+                      </Box>
+                    )}
                     {head.isVariable && (
                       <Stack spacing={1.5}>
                         <AssignmentMoneyInput
@@ -456,10 +483,10 @@ export default function AssignmentStudentInputs({
                             !!amountError(variable?.amount)
                           }
                           helperText={
-                            (showErrors || touchedAmounts.includes(head.feeHeadId)) &&
+                            ((showErrors || touchedAmounts.includes(head.feeHeadId)) &&
                             amountError(variable?.amount)
                               ? amountError(variable?.amount)
-                              : undefined
+                              : undefined) || undefined
                           }
                           onBlur={() =>
                             setTouchedAmounts((previous) =>
@@ -519,7 +546,7 @@ export default function AssignmentStudentInputs({
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ p: 1.5, borderRadius: 1, bgcolor: 'background.neutral' }}
+        sx={{ px: 0, py: 1.5, borderTop: 1, borderColor: 'divider', '& > :last-child': { pr: 0 } }}
       >
         <Typography variant="subtitle2">Selected fees</Typography>
         <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>

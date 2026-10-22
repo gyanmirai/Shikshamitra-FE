@@ -5,6 +5,8 @@ import PolicyAuditTimeline from './PolicyAuditTimeline';
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 vi.mock('./VersionDiffTable', () => ({
   default: ({ selectedVersion }: { selectedVersion: PolicyVersion }) => (
     <div>Recorded changes for {selectedVersion.eventId}</div>

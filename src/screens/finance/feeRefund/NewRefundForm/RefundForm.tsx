@@ -12,7 +12,7 @@ import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -22,18 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
-import {
-  Box,
-  Chip,
-  Grid,
-  Alert,
-  Paper,
-  Stack,
-  Button,
-  Divider,
-  Skeleton,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 import {
   useGetFeeRefundByIdQuery,
   type FeeRefundRequestDto,
@@ -49,6 +38,7 @@ import {
 
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
+import RefundFormSkeleton from './RefundFormSkeleton';
 import { normalizeRefundMethod, isAllowedRefundMethod } from './refundPayoutMethods';
 import {
   refundAllocationLabel,
@@ -71,109 +61,6 @@ interface FeeRefundFormProps {
   editRefundId?: string;
   replacementRefundId?: string;
 }
-
-const RefundFormSkeleton = (): React.ReactElement => (
-  <Stack gap={1}>
-    {/* Student Information Card Skeleton */}
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 1.5,
-        borderRadius: 2,
-      }}
-    >
-      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-        <Skeleton variant="circular" width={18} height={18} />
-        <Box sx={{ width: '40%' }}>
-          <Skeleton variant="text" width="60%" height={20} />
-          <Skeleton variant="text" width="100%" height={14} />
-        </Box>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-      <Grid container spacing={2}>
-        {[...Array(4)].map((_, index) => (
-          <Grid key={index} size={{ xs: 6, md: 3 }}>
-            <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-          </Grid>
-        ))}
-        <Grid size={{ xs: 12 }}>
-          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-      </Grid>
-    </Paper>
-
-    {/* Fee Refund Details Skeleton */}
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 1.5,
-        borderRadius: 2,
-      }}
-    >
-      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-        <Skeleton variant="circular" width={18} height={18} />
-        <Box sx={{ width: '45%' }}>
-          <Skeleton variant="text" width="50%" height={20} />
-          <Skeleton variant="text" width="90%" height={14} />
-        </Box>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-      <Stack gap={1} mb={2}>
-        {[...Array(3)].map((_, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1.5,
-              borderRadius: 1,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Skeleton variant="text" width="30%" height={20} />
-            <Skeleton variant="rounded" width={80} height={32} />
-          </Box>
-        ))}
-      </Stack>
-    </Paper>
-
-    {/* Payment Details Skeleton */}
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 1.5,
-        borderRadius: 2,
-      }}
-    >
-      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-        <Skeleton variant="circular" width={18} height={18} />
-        <Box sx={{ width: '50%' }}>
-          <Skeleton variant="text" width="40%" height={20} />
-          <Skeleton variant="text" width="80%" height={14} />
-        </Box>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Skeleton variant="rounded" height={40} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-        <Grid size={12}>
-          <Skeleton variant="rounded" height={60} width="100%" sx={{ borderRadius: 1 }} />
-        </Grid>
-      </Grid>
-    </Paper>
-  </Stack>
-);
 
 const FeeRefundFormComponent = ({
   onCancel,
@@ -214,7 +101,10 @@ const FeeRefundFormComponent = ({
   const sourceRefundId = replacementRefundId || editRefundId;
   const hasSourceRefund = isEdit || Boolean(replacementRefundId);
   const requestKey = React.useRef(crypto.randomUUID());
-  const [loadingEditData, setLoadingEditData] = React.useState(false);
+  const [loadingEditData, setLoadingEditData] = React.useState(hasSourceRefund);
+  const [hydratedEditKey, setHydratedEditKey] = React.useState('');
+  const [editEligibilityError, setEditEligibilityError] = React.useState(false);
+  const [editLoadAttempt, setEditLoadAttempt] = React.useState(0);
   const [reviewedPreview, setReviewedPreview] = React.useState<{
     fingerprint: string;
     result: FeeRefundPreviewDto;
@@ -241,16 +131,14 @@ const FeeRefundFormComponent = ({
     popupConfig: { error: false },
   });
   const {
-    data: editRefundDetail,
+    currentData: editRefundDetail,
     isLoading: editLoading,
     isFetching: editFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeRefundByIdQuery,
-    params: sourceRefundId,
-    options: {
-      skip: !hasSourceRefund || !sourceRefundId,
-    },
+    isError: editError,
+    refetch: refetchEdit,
+  } = useGetFeeRefundByIdQuery(sourceRefundId ?? '', {
+    skip: !hasSourceRefund || !sourceRefundId,
+    refetchOnMountOrArgChange: true,
   });
 
   const [getRefundEligibility] = useQueryAndMutation({
@@ -263,6 +151,7 @@ const FeeRefundFormComponent = ({
   >([]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadEditMonths = async () => {
       if (!hasSourceRefund || !sourceRefundId) {
         setPrefilledFeeHeadRefunds([]);
@@ -277,6 +166,7 @@ const FeeRefundFormComponent = ({
       }
 
       setLoadingEditData(true);
+      setEditEligibilityError(false);
       const detail = editRefundDetail as FeeRefundRequestDto;
       const lineAmountByAllocationId = new Map<string, number>(
         (detail.lines || []).map((line) => [
@@ -321,8 +211,10 @@ const FeeRefundFormComponent = ({
           })
           .filter((feeHead) => feeHead.months.length > 0);
 
+        if (cancelled) return;
         setPrefilledFeeHeadRefunds(mappedFeeHeads);
       } catch (_err) {
+        if (cancelled) return;
         if (replacementRefundId && detail.concessionRequestId) {
           const byHead = new Map<string, IFeeHeadRefundItem>();
           detail.lines.forEach((line) => {
@@ -339,15 +231,22 @@ const FeeRefundFormComponent = ({
           });
           setPrefilledFeeHeadRefunds(Array.from(byHead.values()));
         } else {
-          setPrefilledFeeHeadRefunds([]);
+          setEditEligibilityError(true);
         }
       } finally {
-        setLoadingEditData(false);
+        if (!cancelled) {
+          setHydratedEditKey(`${sourceRefundId}:${currentYear.id}`);
+          setLoadingEditData(false);
+        }
       }
     };
 
     loadEditMonths();
+    return () => {
+      cancelled = true;
+    };
   }, [
+    editLoadAttempt,
     hasSourceRefund,
     sourceRefundId,
     replacementRefundId,
@@ -547,6 +446,7 @@ const FeeRefundFormComponent = ({
   const refundEligibility = useGetRefundEligibilityQuery(
     { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
     {
+      refetchOnMountOrArgChange: true,
       skip:
         isEdit ||
         Boolean(replacementRefundId && editRefundDetail?.concessionRequestId) ||
@@ -586,8 +486,15 @@ const FeeRefundFormComponent = ({
     return { totalSelectedMonths: months, totalRefundRequested: total };
   }, [formik.values.feeHeadRefunds]);
 
+  const editLoadError = hasSourceRefund && (editError || editEligibilityError);
   const showSkeleton =
-    hasSourceRefund && (editLoading || editFetching || loadingEditData || !editRefundDetail);
+    hasSourceRefund &&
+    !editLoadError &&
+    (editLoading ||
+      editFetching ||
+      loadingEditData ||
+      !editRefundDetail ||
+      hydratedEditKey !== `${sourceRefundId}:${currentYear?.id}`);
   const busy =
     loading ||
     isSubmitting ||
@@ -617,15 +524,33 @@ const FeeRefundFormComponent = ({
         <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
           <FormBusyRegion busy={busy} label="Checking and submitting refund…">
             <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-              {showSkeleton ? (
+              {editLoadError ? (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => {
+                        if (editError) refetchEdit();
+                        else setEditLoadAttempt((attempt) => attempt + 1);
+                      }}
+                    >
+                      Retry
+                    </Button>
+                  }
+                >
+                  Unable to load the refund request. Try again.
+                </Alert>
+              ) : showSkeleton ? (
                 <RefundFormSkeleton />
               ) : (
                 <Stack spacing={1}>
                   {/* ── Student Information Card ── */}
                   <FormSectionCard
+                    descriptionTooltip="Select the student's board, medium, class and division for the current academic year, then choose the student. Refund eligibility comes from paid fees and the linked refund policy."
                     title="Student information"
                     icon="solar:users-group-rounded-bold-duotone"
-                    descriptionTooltip="Select the student's board, medium, class and division for the current academic year, then choose the student. Refund eligibility comes from paid fees and the linked refund policy."
                   >
                     <RefundGeneralInfoCard formik={formik} disabled={hasSourceRefund} />
                   </FormSectionCard>
@@ -657,14 +582,13 @@ const FeeRefundFormComponent = ({
         }}
       >
         {currentPreview && (
-          <Alert severity="info" sx={{ mb: 1.5 }}>
-            <strong>Review calculated refund:</strong> {currentPreview.refundPolicyName} · Requested{' '}
-            {formatCurrency(currentPreview.requestedAmount)} · Deduction{' '}
-            {formatCurrency(currentPreview.deductionAmount)} · Cap adjustment{' '}
-            {formatCurrency(currentPreview.capAdjustment)} · Final{' '}
-            {formatCurrency(currentPreview.maximumAllowedAmount)}. Select{' '}
-            {isEdit ? 'Update draft' : 'Submit request'} to confirm.
-          </Alert>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            <strong>Calculated refund:</strong> {currentPreview.refundPolicyName} · Requested{' '}
+            {formatNumber(currentPreview.requestedAmount, 'INR')} · Deduction{' '}
+            {formatNumber(currentPreview.deductionAmount, 'INR')} · Cap adjustment{' '}
+            {formatNumber(currentPreview.capAdjustment, 'INR')} · Final{' '}
+            {formatNumber(currentPreview.maximumAllowedAmount, 'INR')}.
+          </Typography>
         )}
         <Box
           display="flex"
@@ -675,7 +599,9 @@ const FeeRefundFormComponent = ({
         >
           {/* Left: selection summary */}
           <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-            {totalSelectedMonths > 0 ? (
+            {showSkeleton ? (
+              <Skeleton variant="rounded" width={240} height={28} />
+            ) : editLoadError ? null : totalSelectedMonths > 0 ? (
               <>
                 <Chip
                   size="small"
@@ -690,7 +616,7 @@ const FeeRefundFormComponent = ({
                       Refund Amount:
                     </Typography>
                     <Typography variant="subtitle2" fontWeight={800} color="primary.main">
-                      {formatCurrency(totalRefundRequested)}
+                      {formatNumber(totalRefundRequested, 'INR')}
                     </Typography>
                   </Box>
                 )}
@@ -726,6 +652,7 @@ const FeeRefundFormComponent = ({
               disabled={
                 busy ||
                 showSkeleton ||
+                editLoadError ||
                 sessionStatus === 'loading' ||
                 (!hasSourceRefund && !refundCanSubmit)
               }
@@ -759,7 +686,7 @@ const FeeRefundFormComponent = ({
               {adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}
             </Typography>
             <Typography>
-              Refund: {formatCurrency(adminConfirmation?.amount ?? 0)} via{' '}
+              Refund: {formatNumber(adminConfirmation?.amount ?? 0, 'INR')} via{' '}
               {adminConfirmation?.method}
             </Typography>
             {adminConfirmation?.receiptNumber && (

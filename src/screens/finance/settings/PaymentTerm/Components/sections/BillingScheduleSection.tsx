@@ -54,7 +54,7 @@ export function BillingScheduleSection({ formik, board }: BillingScheduleSection
             helperText={
               formik.touched.demandGenerationRule
                 ? String(formik.errors.demandGenerationRule ?? '')
-                : ''
+                : undefined
             }
           />
         </ShakingTextField>

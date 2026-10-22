@@ -5,21 +5,31 @@ import { AuthPasswordField } from './auth-password-field';
 
 import type { LoginValues } from '../hooks/use-login-form';
 
-export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> }) {
+export function LoginCredentials({
+  formik,
+  hostLogin = false,
+}: {
+  formik: FormikProps<LoginValues>;
+  hostLogin?: boolean;
+}) {
   return (
     <>
-      <LoginField
-        name="organization"
-        label="School code"
-        placeholder="Enter your school code"
-        autoComplete="organization"
-        formik={formik}
-      />
+      {!hostLogin && (
+        <LoginField
+          name="organization"
+          label="School code"
+          placeholder="Enter your school code"
+          autoComplete="organization"
+          required
+          formik={formik}
+        />
+      )}
       <LoginField
         name="email"
         label="Email or username"
         placeholder="Enter your email or username"
         autoComplete="username"
+        required
         formik={formik}
       />
       <AuthPasswordField
@@ -27,6 +37,7 @@ export function LoginCredentials({ formik }: { formik: FormikProps<LoginValues> 
         label="Password"
         placeholder="Enter your password"
         autoComplete="current-password"
+        required
         formik={formik}
       />
     </>

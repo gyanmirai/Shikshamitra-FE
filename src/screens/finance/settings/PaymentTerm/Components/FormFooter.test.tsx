@@ -9,8 +9,12 @@ describe('payment term Submit', () => {
   it('blocks an invalid payment term and becomes actionable once corrected', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const props = { isSubmitting: false, onSubmit, onCancel: vi.fn() };
-    const { rerender } = render(<FormFooter {...props} disabled disabledReason="Percentage allocations must total 100%" />);
+    const { rerender } = render(
+      <FormFooter {...props} disabled disabledReason="Percentage allocations must total 100%" />
+    );
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Percentage allocations must total 100%');
+    expect(screen.getAllByRole('button')).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(onSubmit).not.toHaveBeenCalled();
     rerender(<FormFooter {...props} disabled={false} />);

@@ -145,6 +145,7 @@ interface CustomStepperWithFormikProps {
   saveButtonLabel?: React.ReactNode;
   nextButtonLabel?: React.ReactNode;
   finalButtonLabel?: React.ReactNode;
+  loadingLabel?: string;
   footerPlacement?: 'outside' | 'content';
   handleNext: (
     isLastStep: boolean,
@@ -361,6 +362,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   saveButtonLabel = 'Save',
   nextButtonLabel = 'Save & Next',
   finalButtonLabel = 'Submit',
+  loadingLabel = 'Saving...',
   saveButtonProps = {},
   backButtonProps = {},
   saveAndNextButtonProps = {},
@@ -741,9 +743,9 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             cursor: 'wait',
           }}
         >
-          <CircularProgress size={40} color="primary" />
+          <CircularProgress size={40} color="primary" aria-label={loadingLabel} />
           <Box component="span" sx={{ typography: 'body2', fontWeight: 600 }}>
-            Saving...
+            {loadingLabel}
           </Box>
         </Box>
       )}

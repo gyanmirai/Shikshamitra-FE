@@ -24,9 +24,10 @@ export const ConsolidatedFeeDetails = ({
   const columns = (isCharge: boolean): IColumn[] => [
     { id: 'name', label: isCharge ? 'Charge name' : 'Fee head', minWidth: 180 },
     ...['total', 'paid', 'pending'].map((id) => ({
+      cellSx: { textAlign: 'right' as const },
       id,
       label: id === 'total' ? 'Total' : id === 'paid' ? 'Paid' : 'Pending',
-      align: 'right' as const,
+      align: 'left' as const,
       render: (value: number) => formatNumber(value, 'INR'),
     })),
     {

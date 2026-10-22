@@ -377,7 +377,7 @@ const ChargesTable = ({
           {
             id: 'actions',
             label: 'Actions',
-            align: 'right',
+            align: 'left',
             isSort: false,
             isFilter: false,
             width: 150,
@@ -395,10 +395,10 @@ const ChargesTable = ({
               const canVoid = permissions.canVoid && actions.includes('Void');
               const name = row.chargeName || 'charge';
               return (
-                <AdaptiveThreeDotsActions
+                <AdaptiveThreeDotsActions directActionLimit={2}
                   moreLabel={`More actions for ${name}`}
                   placement="right-top"
-                  sx={{ justifyContent: 'flex-end' }}
+                  sx={{ justifyContent: 'flex-start' }}
                   actions={[
                     {
                       id: 'view',

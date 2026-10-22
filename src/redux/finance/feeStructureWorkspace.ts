@@ -131,6 +131,12 @@ export interface StructurePreviewRequest {
   standardFeeStructures: StructureCandidate;
 }
 
+export interface StructureCopySource {
+  standardId: string;
+  className: string;
+  structure: StructureRecord;
+}
+
 const classTags = (_r: unknown, error: unknown, arg: { standardId: string }) =>
   error
     ? []
@@ -140,6 +146,34 @@ const classTags = (_r: unknown, error: unknown, arg: { standardId: string }) =>
       ];
 export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getStructureCopySources: builder.query<
+      StructureCopySource[],
+      { feeStructureMetadataId: string; classes: { id: string; name: string }[] }
+    >({
+      // Metadata supplies only classes accessible in the current medium/year/board.
+      // Reuse the scoped class read contract; do not fetch other metadata/mediums.
+      async queryFn({ classes }, _api, _extra, baseQuery) {
+        const results = await Promise.all(
+          classes.map(async (item) => ({
+            item,
+            result: await baseQuery({ url: '/fee-structures', params: { standardId: item.id } }),
+          }))
+        );
+        const failure = results.find(({ result }) => result.error);
+        if (failure?.result.error) return { error: failure.result.error };
+        return {
+          data: results.flatMap(({ item, result }) => {
+            const response = result.data as { standardFeeStructures: StructureRecord[] };
+            return response.standardFeeStructures.map((structure) => ({
+              standardId: item.id,
+              className: item.name,
+              structure,
+            }));
+          }),
+        };
+      },
+      providesTags: [financeModuleType.classWiseFeeStructure, financeModuleType.feeStructure],
+    }),
     getStructureContext: builder.query<
       StructureContext,
       { feeStructureMetadataId: string; standardId: string }
@@ -221,6 +255,7 @@ export const feeStructureWorkspaceApi = financeModuleApi.injectEndpoints({
   }),
 });
 export const {
+  useGetStructureCopySourcesQuery,
   useGetStructureContextQuery,
   usePreviewStructureMutation,
   useSaveStructureDraftMutation,

@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { Division } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSession } from 'next-auth/react';
@@ -21,7 +22,6 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -51,6 +51,7 @@ import {
 import { useChargePermissions } from '../../useChargePermissions';
 import { emptyStudentFilters, filterChargeStudents } from './studentFilters';
 import { useStudentsInScope } from './useStudentsInScope';
+import { useChargeAcademicStructure } from './useChargeAcademicStructure';
 import { SelectedStudentsPanel } from './SelectedStudentsPanel';
 import { StudentSelectionLayout } from './StudentSelectionLayout';
 import { useDirtyState, useChargeDetails } from './useChargeDetails';
@@ -89,7 +90,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   } | null>(null);
   const confirmedAdminSnapshotRef = useRef<string | null>(null);
   const [studentFilters, setStudentFilters] = useState(emptyStudentFilters);
-  const [selectionNotice, setSelectionNotice] = useState('');
+  const [, setSelectionNotice] = useState('');
   const [allScopeConfirmation, setAllScopeConfirmation] = useState<{
     count: number;
     snapshot: string;
@@ -119,7 +120,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   // State for academic structure
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
-  const [allDivision, setAllDivision] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
   const [showStudentFilters, setShowStudentFilters] = useState(false);
   const [pendingSelectionChange, setPendingSelectionChange] = useState<null | {
@@ -131,10 +131,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   }>(null);
 
   // Query hooks
-  const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetClassByMediumQuery,
-  });
 
   const { data: chargeCategories, isLoading: chargeCategoriesLoading } = useQueryAndMutation({
     type: 'query',
@@ -216,10 +212,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           return;
         }
 
-        const categoryName =
-          availableChargeCategories.find(
-            (item: { id: string }) => item.id === values.chargeCategoryId
-          )?.name ?? values.chargeName;
+        const category = availableChargeCategories.find(
+          (item: { id: string }) => item.id === values.chargeCategoryId
+        );
+        const categoryName = category?.name ?? values.chargeName;
+        const automaticallyApproved = isAdminCreator || category?.isApprovalRequired === false;
 
         if (values.selectionMode === 'all' && candidateStudentIdsRef.current.length === 0) {
           shikshaMitraToast.error({
@@ -252,7 +249,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
 
         if (
           !isEditMode &&
-          isAdminCreator &&
+          automaticallyApproved &&
           confirmedAdminSnapshotRef.current !== audienceSnapshot
         ) {
           setAdminConfirmation({
@@ -283,7 +280,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
             academicYearId: currentYear.id,
             body: payload,
           }).unwrap();
-          if (isAdminCreator && created.data.status !== 1) {
+          if (automaticallyApproved && created.data.status !== 1) {
             shikshaMitraToast.warning({
               message: 'Charge was created as Pending. Automatic approval did not occur.',
             });
@@ -311,7 +308,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched, setValues } = formik;
+  const selectedCategoryRequiresApproval =
+    availableChargeCategories.find((item: { id: string }) => item.id === values.chargeCategoryId)
+      ?.isApprovalRequired !== false;
   const isDirty = useDirtyState(initialValues, values);
+  const {
+    classes,
+    divisions: allDivision,
+    isFetching: classesLoading,
+    isError: classesError,
+    refetch: retryClasses,
+  } = useChargeAcademicStructure(values.educationMediumId, values.standardId);
 
   const applySelectionChange = useCallback(
     (
@@ -329,7 +336,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         setValues((previous) => ({
           ...previous,
           standardId: nextStandardIds,
-          divisionIds: nextStandardIds.length === 1 ? previous.divisionIds : [],
+          divisionIds:
+            nextStandardIds.length === 1 &&
+            previous.standardId.length === 1 &&
+            nextStandardIds[0] === previous.standardId[0]
+              ? previous.divisionIds
+              : [],
         }));
         setFieldTouched('standardId', false, false);
         if (nextStandardIds.length !== 1) {
@@ -424,19 +436,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   useEffect(() => {
     const selectedBoard = boards.find((b: any) => b.id === values.boardId);
     setMediums(selectedBoard?.educationMediums || []);
-
-    if (values.educationMediumId) {
-      getClassByMedium(values.educationMediumId);
-    }
-  }, [values.boardId, values.educationMediumId, boards, getClassByMedium]);
-
-  // Load divisions when class changes
-  useEffect(() => {
-    const selectedClass = classes?.find(
-      (cls: any) => values.standardId.length === 1 && cls.id === values.standardId[0]
-    );
-    setAllDivision(selectedClass?.divisions || []);
-  }, [values.standardId, classes]);
+  }, [values.boardId, boards]);
 
   // Track dirty state in Redux
   useEffect(() => {
@@ -516,7 +516,10 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         ? 'Checking charge permissions…'
         : !(isEditMode ? permissions.canEdit : permissions.canAdd)
           ? `You do not have permission to ${isEditMode ? 'update' : 'create'} charges.`
-          : !isEditMode && isAdminCreator && !permissions.canApprove
+          : !isEditMode &&
+              isAdminCreator &&
+              selectedCategoryRequiresApproval &&
+              !permissions.canApprove
             ? 'Approve permission is required for an administrator to create an automatically approved charge.'
             : studentsLoading
               ? 'Wait for the student list to finish loading.'
@@ -564,25 +567,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           >
             <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
               <Grid container spacing={1.5}>
-                {/* Restrictions Alert - Only show in edit mode */}
-                {isEditMode &&
-                  (!restrictions.canChangeBoardId || !restrictions.canChangeEducationMediumId) && (
-                    <Grid size={{ xs: 12 }}>
-                      <Alert severity="info" icon={<Iconify icon="solar:info-circle-bold" />}>
-                        <Typography variant="body2">
-                          This charge has been applied and some fields are now read-only to prevent
-                          inconsistencies.
-                        </Typography>
-                      </Alert>
-                    </Grid>
-                  )}
-
                 {/* Charge Details Section */}
                 <Grid size={{ xs: 12 }}>
                   <FormSectionCard
+                    descriptionTooltip="Set the charge name, category, amount, due date, and reason."
                     icon="solar:bill-list-bold-duotone"
                     title="Charge details"
-                    descriptionTooltip="Set the charge name, category, amount, due date, and reason."
                   >
                     <Grid container spacing={1.5}>
                       {/* Charge Name */}
@@ -598,7 +588,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             error={!!(touched.chargeName && errors.chargeName)}
-                            helperText={(touched.chargeName && errors.chargeName) as string}
+                            helperText={
+                              ((touched.chargeName && errors.chargeName) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -632,13 +624,14 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             }}
                             error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                             helperText={
-                              (touched.chargeCategoryId && errors.chargeCategoryId) as string
+                              ((touched.chargeCategoryId && errors.chargeCategoryId) as string) ||
+                              undefined
                             }
                             formControlProps={{ fullWidth: true }}
                           />
-                          {values.chargeCategoryId && (
+                          {!isEditMode && values.chargeCategoryId && (
                             <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
-                              {isAdminCreator
+                              {isAdminCreator || !selectedCategoryRequiresApproval
                                 ? 'Your charge will be approved automatically after confirmation.'
                                 : 'This charge will start as Pending and require approval.'}
                             </Typography>
@@ -662,7 +655,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               setFieldValue('amount', numericValues.value);
                             }}
                             error={!!(touched.amount && errors.amount)}
-                            helperText={(touched.amount && errors.amount) as string}
+                            helperText={((touched.amount && errors.amount) as string) || undefined}
                           />
                         </ShakingTextField>
                       </Grid>
@@ -708,7 +701,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             onBlur={formik.handleBlur}
                             error={!!(touched.purposeDescription && errors.purposeDescription)}
                             helperText={
-                              (touched.purposeDescription && errors.purposeDescription) as string
+                              ((touched.purposeDescription &&
+                                errors.purposeDescription) as string) || undefined
                             }
                           />
                         </ShakingTextField>
@@ -720,9 +714,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                 {/* Student Information */}
                 <Grid size={{ xs: 12 }}>
                   <FormSectionCard
+                    descriptionTooltip="Choose the board, medium, and classes whose students can receive this charge."
                     icon="solar:users-group-rounded-bold-duotone"
                     title="Academic scope"
-                    descriptionTooltip="Choose the board, medium, and classes whose students can receive this charge."
                   >
                     <Grid container spacing={1.5}>
                       {/* Board */}
@@ -761,7 +755,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             error={!!errors.boardId && touched.boardId}
                             helperText={
                               restrictions.boardChangeReason ||
-                              ((touched.boardId && errors.boardId) as string)
+                              ((touched.boardId && errors.boardId) as string) ||
+                              undefined
                             }
                           />
                         </ShakingTextField>
@@ -804,7 +799,8 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             error={!!errors.educationMediumId && touched.educationMediumId}
                             helperText={
                               restrictions.mediumChangeReason ||
-                              ((touched.educationMediumId && errors.educationMediumId) as string)
+                              ((touched.educationMediumId && errors.educationMediumId) as string) ||
+                              undefined
                             }
                           />
                         </ShakingTextField>
@@ -832,7 +828,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           </Stack>
                           <Divider sx={{ mb: 1.5 }} />
                           <Box display="flex" flexWrap="wrap" gap={1}>
-                            {classesLoading ? (
+                            {classesLoading && classes.length === 0 ? (
                               Array.from(new Array(6)).map((_, index) => (
                                 <Skeleton
                                   key={index}
@@ -840,6 +836,17 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                                   sx={{ width: 90, height: 36, borderRadius: 1 }}
                                 />
                               ))
+                            ) : classesError && classes.length === 0 ? (
+                              <Alert
+                                severity="error"
+                                action={
+                                  <Button size="small" onClick={() => retryClasses()}>
+                                    Retry
+                                  </Button>
+                                }
+                              >
+                                Classes and divisions could not be loaded.
+                              </Alert>
                             ) : (classes || []).length > 0 ? (
                               (classes || []).map((cls: any) => (
                                 <Button
@@ -909,25 +916,30 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                               />
                               <Box>
                                 <Typography variant="subtitle2" fontWeight={700}>
-                                  Divisions *
+                                  Divisions (optional)
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
                                   {values.divisionIds.length === 0
-                                    ? 'Select one or more divisions'
+                                    ? 'All divisions included; select divisions to narrow the scope'
                                     : `${values.divisionIds.length} selected`}
                                 </Typography>
                               </Box>
                             </Stack>
                             <Divider sx={{ mb: 1.5 }} />
                             <Box display="flex" flexWrap="wrap" gap={1}>
-                              {!allDivision || allDivision.length === 0 ? (
+                              {classesLoading && classes.length === 0 ? (
+                                <Typography role="status" variant="body2">
+                                  Loading divisions…
+                                </Typography>
+                              ) : !allDivision || allDivision.length === 0 ? (
                                 <Box sx={{ p: 2, width: '100%', textAlign: 'center' }}>
                                   <Typography variant="body2" color="text.secondary">
-                                    No divisions available
+                                    No divisions are configured for this class. Students from the
+                                    whole class are included.
                                   </Typography>
                                 </Box>
                               ) : (
-                                allDivision.map((div) => (
+                                allDivision.map((div: Division) => (
                                   <Button
                                     key={div.id}
                                     variant={
@@ -985,9 +997,9 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                 {/* Student Selection Section */}
                 <Grid size={{ xs: 12 }}>
                   <FormSectionCard
+                    descriptionTooltip="Only enrolled students with a fee structure assignment can receive charges. Already charged means a pending or approved charge in this category and academic year. Search and filters change the visible list only."
                     icon="solar:user-check-rounded-bold-duotone"
                     title="Student selection"
-                    descriptionTooltip="Only enrolled students with a fee structure assignment can receive charges. Already charged means a pending or approved charge in this category and academic year. Search and filters change the visible list only."
                   >
                     <Stack
                       direction={{ xs: 'column', sm: 'row' }}
@@ -1021,18 +1033,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           : `${values.studentIds.length} students selected`}
                       </Typography>
                     </Stack>
-                    {values.selectionMode === 'all' && (
-                      <Alert severity="warning" sx={{ mb: 2 }}>
-                        All {candidateStudentIds.length} eligible students in the academic scope
-                        will receive this charge. Quick filters and search only narrow the displayed
-                        list.
-                      </Alert>
-                    )}
-                    {selectionNotice && (
-                      <Alert severity="info" onClose={() => setSelectionNotice('')} sx={{ mb: 1 }}>
-                        {selectionNotice}
-                      </Alert>
-                    )}
+
                     {studentsError && (
                       <Alert
                         severity="error"
@@ -1205,11 +1206,13 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           students={filteredStudents}
                           totalCount={scopeStudents.length}
                           emptyMessage={
-                            values.standardId.length === 0
-                              ? 'Select at least one class to see students.'
-                              : studentSearch || activeStudentFilterCount > 0
-                                ? 'No students match the current search or filters.'
-                                : 'No students are available in this academic scope.'
+                            studentsError
+                              ? 'Student availability could not be checked. Use Retry to load this scope.'
+                              : values.standardId.length === 0
+                                ? 'Select at least one class to see students.'
+                                : studentSearch || activeStudentFilterCount > 0
+                                  ? 'No students match the current search or filters.'
+                                  : 'No students are available in this academic scope.'
                           }
                           selectedStudentIds={
                             values.selectionMode === 'all' ? candidateStudentIds : values.studentIds
@@ -1356,11 +1359,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
               <Typography variant="body2">
                 Quick filters and search do not restrict this audience.
               </Typography>
-              {allScopeConfirmation?.updated && (
-                <Alert severity="warning">
-                  The scope changed. Review the updated student count before confirming.
-                </Alert>
-              )}
             </Stack>
           }
           onClose={() => {

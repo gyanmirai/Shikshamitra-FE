@@ -10,9 +10,12 @@ import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Alert, Stack, Button, Typography, DialogActions } from '@mui/material';
 
@@ -25,10 +28,18 @@ interface Props {
   readOnly: boolean;
   onClose: () => void;
   onSave: (rows: StructureInstallment[], customized: boolean) => void;
+  onEdit?: () => void;
 }
 
-export default function StructureScheduleDialog({ line, term, readOnly, onClose, onSave }: Props) {
-  const [rows, setRows] = useState(() =>
+export default function StructureScheduleDialog({
+  line,
+  term,
+  readOnly,
+  onClose,
+  onSave,
+  onEdit,
+}: Props) {
+  const [initialRows] = useState(() =>
     [...term.installments]
       .sort((a, b) => a.sequence - b.sequence)
       .map((master) => {
@@ -43,7 +54,13 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
         ) as unknown as StructureInstallment;
       })
   );
+  const [rows, setRows] = useState(initialRows);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [error, setError] = useState('');
+  const requestClose = () => {
+    if (!readOnly && JSON.stringify(rows) !== JSON.stringify(initialRows)) setConfirmClose(true);
+    else onClose();
+  };
   const amounts = structureScheduleAmounts(line.isVariable ? null : line.amount, rows);
   const totalAllocation = rows.reduce((sum, row) => sum + (row.allocationPercentage ?? 0), 0);
   const totalAmount = amounts.every((amount) => amount !== null)
@@ -125,198 +142,357 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
       const rawDate = id === 'demandDate' ? derivedDate(row as StructureInstallment) : row[id];
       const selectedDate =
         typeof rawDate === 'string' && dayjs(rawDate).isValid() ? dayjs(rawDate) : null;
+      if (readOnly) return selectedDate ? selectedDate.format('DD MMM YYYY') : '—';
+      const showError = Boolean(error && !disabled && !selectedDate);
       return (
-        <DatePicker
-          format="DD/MM/YYYY"
-          sx={{ width: 1, minWidth: 0 }}
-          value={selectedDate}
-          disabled={readOnly || disabled}
-          onChange={(date) =>
-            change(
-              row.sourcePaymentTermInstallmentId,
-              id,
-              date?.isValid() ? date.format('YYYY-MM-DD') : null
-            )
-          }
-          slotProps={{
-            textField: {
-              size: 'small',
-              fullWidth: true,
-              InputProps: { 'aria-label': `${row.name} ${label}` },
-              inputProps: { 'aria-label': `${row.name} ${label}` },
-            },
-            openPickerButton: { 'aria-label': `${row.name} ${label} calendar` },
-          }}
-        />
+        <ShakingTextField error={showError}>
+          <DatePicker
+            label={label}
+            format="DD/MM/YYYY"
+            sx={{ width: 1, minWidth: 0 }}
+            value={selectedDate}
+            disabled={readOnly || disabled}
+            onChange={(date) =>
+              change(
+                row.sourcePaymentTermInstallmentId,
+                id,
+                date?.isValid() ? date.format('YYYY-MM-DD') : null
+              )
+            }
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true,
+                name: `${id}-${row.sourcePaymentTermInstallmentId}`,
+                required: !disabled,
+                error: showError,
+                helperText: showError ? `${label} is required` : undefined,
+                InputProps: { 'aria-label': `${row.name} ${label}` },
+                inputProps: { 'aria-label': `${row.name} ${label}` },
+              },
+              openPickerButton: { 'aria-label': `${row.name} ${label} calendar` },
+            }}
+          />
+        </ShakingTextField>
       );
     },
   });
   return (
-    <CustomDialog
-      guardUnsavedChanges={false}
-      open
-      handleClose={onClose}
-      title={`${line.feeHeadName || 'Fee Head'} · ${term.name} v${term.versionNumber}`}
-      maxWidth="lg"
-      paperProps={{ sx: { maxWidth: 1320, width: 'calc(100% - 32px)', m: 2 } }}
-      hasForm={false}
-    >
-      <DialogScrollContent>
-        <Stack spacing={2}>
-          <Alert severity="info">
-            Changes apply only to this Fee Structure. The published Payment Term remains unchanged.
-            Demand dates follow the term rule unless it uses a specific date.
-          </Alert>
-          {error && <Alert severity="error">{error}</Alert>}
-          <CustomizableTable
-            tableId="fee-structure-schedule-editor"
-            tableTitle="Payment term installments"
-            data={rows.map((x, index) => ({
-              ...x,
-              _id: x.sourcePaymentTermInstallmentId,
-              amount: amounts[index],
-            }))}
-            showToolbar={false}
-            page={0}
-            rowsPerPage={Math.max(rows.length, 1)}
-            sorts={[]}
-            filters={[]}
-            searchTerm=""
-            isPagination={false}
-            isSearch={false}
-            isFilter={false}
-            isShowedDense={false}
-            tableContainerProps={{
-              sx: {
-                '& .MuiTable-root': { tableLayout: 'fixed', minWidth: 1088 },
-                '& .MuiTableCell-root': { px: 1.5, py: 1.5 },
-                '& .MuiTableCell-head': { whiteSpace: 'nowrap' },
-              },
-            }}
-            columns={[
-              {
-                id: 'name',
-                label: 'Installment',
-                sticky: true,
-                stickyPosition: 'left',
-                width: 150,
-                minWidth: 150,
-                isSort: false,
-                isFilter: false,
-                cellSx: { overflowWrap: 'anywhere' },
-              },
-              dateColumn('coverageStartDate', 'Coverage start'),
-              dateColumn('coverageEndDate', 'Coverage end'),
-              dateColumn('demandDate', 'Demand date', term.demandGenerationRule !== 'SpecificDate'),
-              dateColumn('dueDate', 'Due date'),
-              {
-                id: 'allocationPercentage',
-                label: 'Allocation %',
-                width: 112,
-                minWidth: 112,
-                align: 'right',
-                isSort: false,
-                isFilter: false,
-                render: (_v, row) => (
-                  <NumericFormatCustom
-                    size="small"
-                    fullWidth
-                    sx={{ '& input': { textAlign: 'right', fontVariantNumeric: 'tabular-nums' } }}
-                    label="Allocation"
-                    name={`allocation-${row.sourcePaymentTermInstallmentId}`}
-                    prefix=""
-                    suffix="%"
-                    roundToWholeRupees={false}
-                    decimalScale={2}
-                    isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= 100}
-                    disabled={readOnly}
-                    value={row.allocationPercentage ?? ''}
-                    inputProps={{
-                      min: 0.01,
-                      max: 100,
-                      step: 0.01,
-                      'aria-label': `${row.name} allocation percentage`,
-                    }}
-                    onValueChange={({ floatValue }, source) => {
-                      if (source.source === 'event')
-                        change(
-                          row.sourcePaymentTermInstallmentId,
-                          'allocationPercentage',
-                          floatValue ?? null
-                        );
-                    }}
-                  />
-                ),
-              },
-              {
-                id: 'amount',
-                label: 'Amount',
-                width: 130,
-                minWidth: 130,
-                align: 'right',
-                isSort: false,
-                isFilter: false,
-                cellSx: { fontVariantNumeric: 'tabular-nums' },
-                render: (_value, row) =>
-                  line.isVariable ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Calculated during assignment
-                    </Typography>
-                  ) : row.amount === null ? (
-                    '—'
-                  ) : (
-                    formatNumber(row.amount, 'INR')
-                  ),
-              },
-            ]}
-          />
-          <Stack direction="row" spacing={3} justifyContent="flex-end" flexWrap="wrap">
-            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              Total allocation: {totalAllocation.toFixed(2)}%
-            </Typography>
-            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              Total amount:{' '}
-              {line.isVariable
-                ? 'Calculated during assignment'
-                : totalAmount === null
-                  ? '—'
-                  : formatNumber(totalAmount, 'INR')}
-            </Typography>
-          </Stack>
-        </Stack>
-      </DialogScrollContent>
-      <DialogActions
-        sx={{ p: 2, flexShrink: 0, borderTop: 1, borderColor: 'divider', flexWrap: 'wrap', gap: 1 }}
+    <>
+      <CustomDialog
+        titleInfo="Review installment dates, allocations, and calculated amounts for the selected fee head."
+        guardUnsavedChanges={false}
+        open
+        handleClose={requestClose}
+        title={readOnly ? 'View Installment Schedule' : 'Edit Installment Schedule'}
+
+        maxWidth="lg"
+        hasForm={!readOnly}
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!readOnly) save();
+        }}
       >
-        {!readOnly && (
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <FormSectionCard
+              descriptionTooltip="Annual amount and charge options configured for this fee head. Variable amounts are determined during student assignment."
+              icon={GlobalIcons.receiptIcon}
+              title="Fee Head Details"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            >
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+                  gap: 2,
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Fee head name
+                  </Typography>
+                  <Typography variant="body2">{line.feeHeadName || 'Fee head'}</Typography>
+                </Box>
+                {line.categoryName && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Category
+                    </Typography>
+                    <Typography variant="body2">{line.categoryName}</Typography>
+                  </Box>
+                )}
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Annual amount
+                  </Typography>
+                  <Typography variant="body2">
+                    {line.isVariable
+                      ? 'Set during assignment'
+                      : line.amount == null
+                        ? 'Not set'
+                        : formatNumber(line.amount, 'INR')}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Payment frequency
+                  </Typography>
+                  <Typography variant="body2">
+                    {term.name} · v{term.versionNumber}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Charge option
+                  </Typography>
+                  <Typography variant="body2">
+                    {line.isOptional ? 'Optional' : 'Required'}
+                  </Typography>
+                </Box>
+              </Box>
+            </FormSectionCard>
+            <FormSectionCard
+              descriptionTooltip="Each installment shows its coverage, demand date, due date, percentage allocation, and calculated amount. Remainders follow the existing payment-term allocation rules."
+              icon={GlobalIcons.calendar}
+              title="Installment Breakdown"
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+
+              contentSx={{ minWidth: 0 }}
+            >
+              {error && <Alert severity="error">{error}</Alert>}
+              <CustomizableTable
+                tableId="fee-structure-schedule-editor"
+                variant="embedded"
+                tableTitle="Payment term installments"
+                data={rows.map((x, index) => ({
+                  ...x,
+                  _id: x.sourcePaymentTermInstallmentId,
+                  amount: amounts[index],
+                }))}
+                showToolbar={false}
+                page={0}
+                rowsPerPage={Math.max(rows.length, 1)}
+                sorts={[]}
+                filters={[]}
+                searchTerm=""
+                isPagination={false}
+                isSearch={false}
+                isFilter={false}
+                isShowedDense={false}
+                tableContainerProps={{
+                  sx: {
+                    '& .MuiTable-root': { tableLayout: 'fixed', minWidth: 1088 },
+                    '& .MuiTableCell-root': { px: 1.5, py: 1.5 },
+                    '& .MuiTableCell-head': { whiteSpace: 'nowrap' },
+                  },
+                }}
+                columns={[
+                  {
+                    id: 'name',
+                    label: 'Installment',
+                    sticky: true,
+                    stickyPosition: 'left',
+                    width: 150,
+                    minWidth: 150,
+                    isSort: false,
+                    isFilter: false,
+                    cellSx: { overflowWrap: 'anywhere' },
+                  },
+                  dateColumn('coverageStartDate', 'Coverage start'),
+                  dateColumn('coverageEndDate', 'Coverage end'),
+                  dateColumn(
+                    'demandDate',
+                    'Demand date',
+                    term.demandGenerationRule !== 'SpecificDate'
+                  ),
+                  dateColumn('dueDate', 'Due date'),
+                  {
+                    cellSx: { textAlign: 'right' as const },
+                    id: 'allocationPercentage',
+                    label: 'Allocation %',
+                    width: 112,
+                    minWidth: 112,
+                    align: 'left',
+                    isSort: false,
+                    isFilter: false,
+                    render: (_v, row) =>
+                      readOnly ? (
+                        row.allocationPercentage == null ? (
+                          '—'
+                        ) : (
+                          `${row.allocationPercentage}%`
+                        )
+                      ) : (
+                        <ShakingTextField
+                          error={Boolean(
+                            error &&
+                            (!row.allocationPercentage ||
+                              row.allocationPercentage > 100 ||
+                              row.allocationPercentage < 0)
+                          )}
+                        >
+                          <NumericFormatCustom
+                            size="small"
+                            fullWidth
+                            sx={{
+                              '& input': { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
+                            }}
+                            label="Allocation"
+                            required
+                            error={Boolean(
+                              error &&
+                              (!row.allocationPercentage ||
+                                row.allocationPercentage > 100 ||
+                                row.allocationPercentage < 0)
+                            )}
+                            helperText={
+                              (error &&
+                              (!row.allocationPercentage ||
+                                row.allocationPercentage > 100 ||
+                                row.allocationPercentage < 0)
+                                ? 'Enter a percentage greater than 0 and up to 100'
+                                : undefined) || undefined
+                            }
+                            name={`allocation-${row.sourcePaymentTermInstallmentId}`}
+                            prefix=""
+                            suffix="%"
+                            roundToWholeRupees={false}
+                            decimalScale={2}
+                            isAllowed={({ floatValue }) =>
+                              floatValue === undefined || floatValue <= 100
+                            }
+                            disabled={readOnly}
+                            value={row.allocationPercentage ?? ''}
+                            inputProps={{
+                              min: 0.01,
+                              max: 100,
+                              step: 0.01,
+                              'aria-label': `${row.name} allocation percentage`,
+                            }}
+                            onValueChange={({ floatValue }, source) => {
+                              if (source.source === 'event')
+                                change(
+                                  row.sourcePaymentTermInstallmentId,
+                                  'allocationPercentage',
+                                  floatValue ?? null
+                                );
+                            }}
+                          />
+                        </ShakingTextField>
+                      ),
+                  },
+                  {
+                    id: 'amount',
+                    label: 'Amount',
+                    width: 130,
+                    minWidth: 130,
+                    align: 'left',
+                    isSort: false,
+                    isFilter: false,
+                    cellSx: { fontVariantNumeric: 'tabular-nums' },
+                    render: (_value, row) =>
+                      line.isVariable ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Calculated during assignment
+                        </Typography>
+                      ) : row.amount === null ? (
+                        '—'
+                      ) : (
+                        formatNumber(row.amount, 'INR')
+                      ),
+                  },
+                ]}
+              />
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                justifyContent="flex-end"
+                useFlexGap
+                flexWrap="wrap"
+                sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
+              >
+                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  Total allocation: {totalAllocation.toFixed(2)}%
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  Total amount:{' '}
+                  {line.isVariable
+                    ? 'Calculated during assignment'
+                    : totalAmount === null
+                      ? '—'
+                      : formatNumber(totalAmount, 'INR')}
+                </Typography>
+              </Stack>
+            </FormSectionCard>
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, flexShrink: 0, flexWrap: 'wrap', rowGap: 1 }}>
+          {!readOnly && (
+            <Button
+              size="small"
+              type="button"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+              onClick={() => onSave([], false)}
+            >
+              Restore Inherited Schedule
+            </Button>
+          )}
+          <Box sx={{ flex: 1 }} />
+          {readOnly && onEdit && (
+            <Button
+              size="small"
+              variant="contained"
+              type="button"
+              startIcon={<Iconify icon={GlobalIcons.edit} width={18} />}
+              onClick={onEdit}
+            >
+              Edit Installments
+            </Button>
+          )}
           <Button
             size="small"
-            startIcon={<Iconify icon={GlobalIcons.refresh} />}
-            onClick={() => onSave([], false)}
+            variant="outlined"
+            type="button"
+            startIcon={<Iconify icon={GlobalIcons.cancel} width={18} />}
+            onClick={requestClose}
           >
-            Restore inherited schedule
+            {readOnly ? 'Close' : 'Cancel'}
           </Button>
-        )}
-        <Box sx={{ flex: 1 }} />
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          {readOnly ? 'Close' : 'Cancel'}
-        </Button>
-        {!readOnly && (
+          {!readOnly && (
+            <Button
+              size="small"
+              variant="contained"
+              type="submit"
+              startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+            >
+              Submit
+            </Button>
+          )}
+        </DialogActions>
+      </CustomDialog>
+      <ConfirmDialog
+        open={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        title="Discard Changes?"
+        content="Your changes to this installment schedule will be lost if you discard them."
+        cancelText="Keep Editing"
+        action={
           <Button
             size="small"
+            type="button"
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            onClick={save}
+            color="error"
+            startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
+            onClick={onClose}
           >
-            Use this schedule
+            Discard Changes
           </Button>
-        )}
-      </DialogActions>
-    </CustomDialog>
+        }
+      />
+    </>
   );
 }

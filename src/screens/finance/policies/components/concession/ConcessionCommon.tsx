@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { Stack, Paper, Typography, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+
 import CustomTooltip from 'src/components/custom-tooltip';
 
 export function ConcessionSectionCard({

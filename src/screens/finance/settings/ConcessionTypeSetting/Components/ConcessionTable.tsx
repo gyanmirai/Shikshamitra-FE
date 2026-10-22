@@ -5,6 +5,7 @@ import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
 
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -12,13 +13,30 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
-import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Box, Chip, Stack, Button, TextField, Typography } from '@mui/material';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
+
+function TruncatedText({ value, width = 240 }: { value: unknown; width?: number }) {
+  const text = typeof value === 'string' && value ? value : '-';
+  return (
+    <CustomTooltip title={text === '-' ? '' : text}>
+      <Typography
+        variant="body2"
+        noWrap
+        tabIndex={text === '-' ? undefined : 0}
+        sx={{ maxWidth: width }}
+      >
+        {text}
+      </Typography>
+    </CustomTooltip>
+  );
+}
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   archived,
   canView,
+  canAdd = false,
   canEdit,
   canChangeStatus,
   canDelete,
@@ -31,6 +49,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   onView,
   onVersionHistory,
   totalCount,
+  page,
+  rowsPerPage,
+  searchTerm,
   onServerPagination,
   onServerSearch,
 }) => {
@@ -65,45 +86,52 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         id: 'name',
         label: 'Concession Type Name',
         align: 'left',
-        width: 150,
-        minWidth: 150,
-        maxWidth: 200,
+        width: 190,
+        minWidth: 180,
         sticky: true,
+        stickyPosition: 'left',
       },
       {
         id: 'description',
         label: 'Description',
         align: 'left',
-        width: 280,
-        minWidth: 200,
-        maxWidth: 360,
+        width: 240,
+        minWidth: 180,
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        render: (value) => <TruncatedText value={value} />,
       },
       {
         id: 'documents',
         label: 'Documents',
         align: 'left',
-        width: 260,
-        minWidth: 200,
-        maxWidth: 340,
+        width: 200,
+        minWidth: 160,
         cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-        render: (value) => (value || []).map((doc: any) => doc.documentName).join(', '),
+        render: (value) => (
+          <TruncatedText
+            value={Array.isArray(value) ? value.map((doc: any) => doc.documentName).join(', ') : ''}
+            width={200}
+          />
+        ),
+        exportValue: (value) =>
+          Array.isArray(value) ? value.map((doc: any) => doc.documentName).join(', ') : '',
       },
       {
         id: 'deactivationReason',
         label: 'Deactivation Reason',
         align: 'left',
-        width: 220,
-        minWidth: 180,
-        render: (value) => value || '-',
+        width: 200,
+        minWidth: 170,
+        render: (value) => <TruncatedText value={value} width={200} />,
       },
       {
         id: 'isActive',
         label: 'Status',
-        width: 100,
-        minWidth: 120,
-        maxWidth: 120,
+        width: 110,
+        minWidth: 100,
+        align: 'left',
         sticky: true,
+        stickyPosition: 'right',
         render(value, row) {
           const concession = row as IConcessionTypeForm;
           return (
@@ -123,12 +151,15 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         isSort: false,
         isFilter: false,
         sticky: true,
-        width: 96,
-        minWidth: 80,
+        width: 128,
+        minWidth: 128,
+        stickyPosition: 'right',
+        excludeFromExport: true,
         render: (value, row) => {
           const concessionType = row as IConcessionTypeForm;
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               moreLabel={`More actions for ${concessionType.name}`}
               actions={[
                 ...(canView
@@ -151,7 +182,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                       },
                     ]
                   : []),
-                ...(canDelete && !archived
+                ...(canDelete && archived
                   ? [
                       {
                         id: 'delete',
@@ -209,28 +240,24 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
     <>
       <CustomizableTable
         tableId="concession-table"
+        tableTitle="Concession Types"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}
         noDataText={
           <>
             {archived ? 'No archived concession types.' : 'No concession types found.'}
-            {!archived ? (
-              <Box
+            {!archived && canAdd ? (
+              <Button
+                size="small"
+                variant="text"
                 onClick={() => {
                   addConcessionType.onTrue();
                   setEditData(null);
                 }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
               >
-                Add Concession
-              </Box>
+                Add Concession Type
+              </Button>
             ) : null}
           </>
         }
@@ -239,6 +266,9 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        searchTerm={searchTerm}
         onServerPagination={onServerPagination}
         onServerSearch={onServerSearch}
       />

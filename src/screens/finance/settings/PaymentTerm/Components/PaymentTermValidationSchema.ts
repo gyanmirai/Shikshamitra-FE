@@ -1,3 +1,4 @@
+import { getAllocationSummary, ALLOCATION_TOTAL_ERROR } from '../allocationValidation';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
@@ -81,10 +82,9 @@ export const paymentTermValidationSchema = (
     installments: Yup.array()
       .of(installmentSchema)
       .min(1, 'At least one installment is required')
-      .test('allocation-total', 'Percentage allocations must total 100%', (items) => {
+      .test('allocation-total', ALLOCATION_TOTAL_ERROR, (items) => {
         if (!items?.length) return true;
-        const total = items.reduce((sum, i) => sum + (Number(i?.allocationPercentage) || 0), 0);
-        return Math.abs(total - 100) <= 0.01;
+        return getAllocationSummary(items).valid;
       })
       .test('due-dates-sequential', 'Due dates must be in chronological order', (items) => {
         if (!items?.length) return true;

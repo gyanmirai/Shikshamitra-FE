@@ -5,44 +5,49 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
+
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { shikshaMitraToast } from 'src/components/toast';
-import { LoadingScreen } from 'src/components/loading-screen';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
+import FeeHeadDependencies, {
+  feeHeadDependencyMessage,
+} from '../../components/FeeHeadDependencies';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
-import {
-  Box,
-  Drawer,
-  Button,
-  Switch,
-  Divider,
-  Paper,
-  Stack,
-  Tooltip,
-  TextField,
-  Typography,
-  IconButton,
-  Autocomplete,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
   useGetFeeCategoryByIdQuery,
   useUpdateFeeCategoryMutation,
 } from 'src/redux/feeCategory/feeCategoryApi';
+import {
+  Box,
+  Paper,
+  Stack,
+  Drawer,
+  Button,
+  Switch,
+  Divider,
+  Tooltip,
+  Skeleton,
+  TextField,
+  Typography,
+  IconButton,
+  Autocomplete,
+  FormControlLabel,
+} from '@mui/material';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
@@ -63,7 +68,12 @@ const capitalizeWords = (value: string) =>
     .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
     .join(' ');
 
-const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
+const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
+  open,
+  onClose,
+  editData,
+  onBusyChange,
+}) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
@@ -73,13 +83,15 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   const removeConfirm = useBoolean();
   const [removeIndex, setRemoveIndex] = useState<number | null>(null);
 
-  // Fetch all fee categories for unique name validation
+  const [formikNameSearch, setFormikNameSearch] = useState('');
+
+  // Search current and archived categories for name validation
   const { data: feeCategoriesData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, search: formikNameSearch, page: 1, pageSize: 100 },
     options: {
-      skip: !currentYear?.id || !open?.value || editData,
+      skip: !currentYear?.id || !open?.value || !formikNameSearch,
     },
   });
 
@@ -129,28 +141,47 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   const existingNames = useMemo(
     () =>
       new Set<string>(
-        (feeCategoriesData?.items ?? []).map((t: any) => t.name.trim().toLowerCase())
+        (feeCategoriesData?.items ?? []).map((t: any) =>
+          t.name.trim().replace(/\s+/g, ' ').toLowerCase()
+        )
       ),
     [feeCategoriesData]
+  );
+  const existingNamesSignature = JSON.stringify(
+    (feeCategoriesData?.items ?? []).map((category: any) => [
+      category.id,
+      category.name,
+      category.isActive,
+    ])
   );
 
   const [addFeeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFeeCategoryMutation,
+    popupConfig: { error: false },
   });
 
   const [updateFeeCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFeeCategoryMutation,
+    popupConfig: { error: false },
   });
 
-  const categoryDetails = feeCategoryDetails || editData;
+  const categoryDetails = editData?.id
+    ? feeCategoryDetails?.id === editData.id
+      ? feeCategoryDetails
+      : editData
+    : null;
 
   const formik = useFormik({
     initialValues: getFeeCategoryInitialValues(categoryDetails),
     enableReinitialize: true,
-    validationSchema: feeCategoryValidationSchema(existingNames, categoryDetails),
-    onSubmit: (values) => {
+    validationSchema: feeCategoryValidationSchema(
+      existingNames,
+      categoryDetails,
+      feeCategoriesData?.items
+    ),
+    onSubmit: async (values) => {
       // Check if updating an item that is used downstream
       if (editData?.isUsedInDownstream && editData?.id) {
         setPendingFormValues(values);
@@ -159,15 +190,26 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       }
 
       // Proceed with submission if not used downstream
-      performSubmission(values);
+      return performSubmission(values);
     },
   });
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setFormikNameSearch(formik.values.name.trim().replace(/\s+/g, ' ')),
+      300
+    );
+    return () => clearTimeout(timer);
+  }, [formik.values.name]);
+  useEffect(() => {
+    if (formik.values.name) void formik.validateField('name');
+  }, [existingNamesSignature]);
 
   // Perform the actual form submission -- single call creates/updates the category and all its fee heads together
   const performSubmission = async (values: any) => {
     try {
       const body = {
-        name: values.name.trim(),
+        name: values.name.trim().replace(/\s+/g, ' '),
         description: values.description || '',
         feeHeads: values.feeHeads.map((fh: any) => ({
           id: fh.id || null,
@@ -196,7 +238,11 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
 
       onClose(null, true);
     } catch (error) {
-      console.error('Save operation failed:', error);
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === 'Finance:FeeCategory:010002') {
+        formik.setFieldError('name', problem.detail);
+        formik.setFieldTouched('name', true, false);
+      } else shikshaMitraToast.error({ message: problem.detail });
     }
   };
 
@@ -214,6 +260,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   };
 
   const handleRemoveClick = (idx: number) => {
+    const original = categoryDetails?.feeHeads.find(
+      (head: any) => head.id === formik.values.feeHeads[idx]?.id
+    );
+    if (original?.isUsedInDownstream || original?.dependencies?.isBlocked) return;
     if (formik.values.feeHeads.length <= 1) return;
     setRemoveIndex(idx);
     removeConfirm.onTrue();
@@ -229,9 +279,14 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     setRemoveIndex(null);
   };
 
-  const isSaving = isAddLoading || isUpdateLoading;
+  const isSaving = isAddLoading || isUpdateLoading || formik.isSubmitting;
+  useEffect(() => {
+    onBusyChange?.(isSaving);
+    return () => onBusyChange?.(false);
+  }, [isSaving, onBusyChange]);
 
   const handleSubmit = async () => {
+    if (isSaving) return;
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) {
       await formik.setTouched({
@@ -264,8 +319,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       <Drawer
         anchor="right"
         open={open.value}
-        onClose={() => {
-          if (!isSaving) onClose(null, false);
+        onClose={(_event, reason) => {
+          if (!isSaving && reason !== 'backdropClick') onClose(null, false);
         }}
         PaperProps={{ sx: { width: { xs: '100%', sm: 760 }, maxWidth: '100%' } }}
       >
@@ -275,7 +330,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         >
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
+              px: 2,
               py: 2,
               display: 'flex',
               alignItems: 'center',
@@ -283,20 +338,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
               flexShrink: 0,
             }}
           >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: 'primary.lighter',
-                color: 'primary.main',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon="solar:tag-bold-duotone" width={22} />
-            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1, minWidth: 0 }}>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {editData ? 'Update Fee Category' : 'Add Fee Category'}
@@ -317,16 +358,24 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
           </Box>
           <Divider />
           {isLoadingDetails ? (
-            <LoadingScreen />
+            <Stack
+              spacing={2}
+              sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'hidden' }}
+              role="status"
+              aria-label="Loading fee category editor"
+            >
+              <Skeleton variant="rounded" height={180} />
+              <Skeleton variant="rounded" height={260} />
+            </Stack>
           ) : (
             <Scrollbar sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}>
-              <Box sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ p: 2 }}>
                 <Stack spacing={2} sx={{ minWidth: 0 }}>
                   <Paper
                     component="section"
                     aria-labelledby="category-details-heading"
                     variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
+                    sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 }}
                   >
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                       <Iconify
@@ -363,9 +412,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                           }}
                           error={formik.touched.name && Boolean(formik.errors.name)}
                           helperText={
-                            formik.touched.name && formik.errors.name
+                            (formik.touched.name && formik.errors.name
                               ? (formik.errors.name as string)
-                              : ''
+                              : undefined) || undefined
                           }
                           inputProps={{ maxLength: 100 }}
                         />
@@ -382,9 +431,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                         onChange={formik.handleChange}
                         error={formik.touched.description && Boolean(formik.errors.description)}
                         helperText={
-                          formik.touched.description && formik.errors.description
+                          (formik.touched.description && formik.errors.description
                             ? (formik.errors.description as string)
-                            : ''
+                            : undefined) || undefined
                         }
                         inputProps={{ maxLength: 500 }}
                       />
@@ -395,9 +444,16 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                     component="section"
                     aria-labelledby="fee-heads-heading"
                     variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
+                    sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 }}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      useFlexGap
+                      flexWrap="wrap"
+                      sx={{ mb: 2 }}
+                    >
                       <Iconify
                         icon="solar:layers-linear"
                         width={20}
@@ -464,6 +520,13 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                             ? formik.touched.feeHeads[idx]
                             : undefined;
 
+                          const originalHead = categoryDetails?.feeHeads.find(
+                            (head: any) => head.id === fh.id
+                          );
+                          const removalBlocked = Boolean(
+                            originalHead?.isUsedInDownstream ||
+                            originalHead?.dependencies?.isBlocked
+                          );
                           const selectedIncomeCategory =
                             incomeCategoryOptions.find(
                               (option: any) => option.id === fh.incomeCategoryId
@@ -482,10 +545,20 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 borderLeft: '4px solid',
                                 borderLeftColor: 'primary.main',
                                 display: 'grid',
-                                gridTemplateColumns: '38px minmax(0, 1fr) 44px',
-                                columnGap: 1.5,
+                                gridTemplateColumns: 'minmax(0, 1fr) 44px',
+                                columnGap: 1,
+                                rowGap: 1.5,
                               }}
                             >
+                              {removalBlocked && (
+                                <Box sx={{ gridColumn: '1 / -1', gridRow: 2, mt: 1.5 }}>
+                                  <FeeHeadDependencies
+                                    name={fh.name}
+                                    feeHeadId={fh.id}
+                                    dependencies={originalHead?.dependencies}
+                                  />
+                                </Box>
+                              )}
                               <Box
                                 sx={{
                                   gridColumn: 1,
@@ -514,8 +587,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
 
                               <Box
                                 sx={{
-                                  gridColumn: 2,
-                                  gridRow: 1,
+                                  gridColumn: '1 / -1',
+                                  gridRow: 2,
                                   display: 'grid',
                                   gridTemplateColumns: {
                                     xs: 'minmax(0, 1fr)',
@@ -545,9 +618,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                       }}
                                       error={!!(feeHeadTouched?.name && feeHeadError?.name)}
                                       helperText={
-                                        feeHeadTouched?.name && feeHeadError?.name
+                                        (feeHeadTouched?.name && feeHeadError?.name
                                           ? (feeHeadError.name as string)
-                                          : `${fh.name.length}/40 characters`
+                                          : undefined) || undefined
                                       }
                                       inputProps={{ maxLength: 40 }}
                                     />
@@ -632,11 +705,23 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                             )
                                           }
                                           helperText={
-                                            feeHeadTouched?.incomeCategoryId &&
+                                            (feeHeadTouched?.incomeCategoryId &&
                                             feeHeadError?.incomeCategoryId
                                               ? (feeHeadError.incomeCategoryId as string)
-                                              : 'Classifies income from this fee head.'
+                                              : undefined) || undefined
                                           }
+                                          InputProps={{
+                                            ...params.InputProps,
+                                            endAdornment: (
+                                              <>
+                                                <FormInfoIcon
+                                                  label="About income categories"
+                                                  title="Income categories are configured in Accounts Settings."
+                                                />
+                                                {params.InputProps.endAdornment}
+                                              </>
+                                            ),
+                                          }}
                                           inputProps={{
                                             ...params.inputProps,
                                             title: selectedIncomeCategory?.displayName || '',
@@ -667,11 +752,20 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                   <FormControlLabel
                                     sx={{
                                       m: 0,
-                                      gap: 0.5,
+                                      width: '100%',
+                                      justifyContent: 'space-between',
+                                      gap: 1,
                                     }}
+                                    labelPlacement="start"
                                     control={
                                       <Switch
                                         checked={fh.isConcessionApplied}
+                                        slotProps={{
+                                          input: {
+                                            role: 'switch',
+                                            'aria-label': `Enable concessions for ${fh.name.trim() || `fee head ${idx + 1}`}`,
+                                          },
+                                        }}
                                         onChange={(e) => {
                                           formik.setFieldValue(
                                             `feeHeads.${idx}.isConcessionApplied`,
@@ -703,9 +797,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                       !!(feeHeadTouched?.description && feeHeadError?.description)
                                     }
                                     helperText={
-                                      feeHeadTouched?.description && feeHeadError?.description
+                                      (feeHeadTouched?.description && feeHeadError?.description
                                         ? (feeHeadError.description as string)
-                                        : ''
+                                        : undefined) || undefined
                                     }
                                     inputProps={{ maxLength: 500 }}
                                   />
@@ -713,7 +807,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                               </Box>
                               <Box
                                 sx={{
-                                  gridColumn: 3,
+                                  gridColumn: 2,
                                   gridRow: 1,
                                   justifySelf: 'end',
                                   alignSelf: 'start',
@@ -723,7 +817,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                   title={
                                     formik.values.feeHeads.length <= 1
                                       ? 'At least one fee head is required'
-                                      : 'Remove fee head'
+                                      : removalBlocked
+                                        ? feeHeadDependencyMessage(
+                                            fh.name,
+                                            originalHead?.dependencies
+                                          )
+                                        : 'Remove fee head'
                                   }
                                 >
                                   <span>
@@ -731,7 +830,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                       color="error"
                                       size="small"
                                       sx={{ width: 44, height: 44 }}
-                                      disabled={formik.values.feeHeads.length <= 1}
+                                      disabled={
+                                        formik.values.feeHeads.length <= 1 || removalBlocked
+                                      }
                                       aria-label={`Remove ${fh.name.trim() || `fee head ${idx + 1}`}`}
                                       onClick={() => handleRemoveClick(idx)}
                                     >
@@ -758,7 +859,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
 
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
+              px: 2,
               py: 1.75,
               display: 'flex',
               justifyContent: 'flex-end',

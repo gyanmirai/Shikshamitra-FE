@@ -6,13 +6,13 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
+
+import { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -27,6 +27,8 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const DebitCardTable = ({
   queryParams,
@@ -99,6 +101,7 @@ const DebitCardTable = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'studentName',
         label: 'Name(Gr No.)',
         width: 180,
@@ -211,6 +214,7 @@ const DebitCardTable = ({
         filterType: 'string',
       },
       {
+        stickyPosition: 'right',
         id: 'status',
         sticky: true,
         label: 'Status',
@@ -227,6 +231,8 @@ const DebitCardTable = ({
         },
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         isSort: false,
@@ -261,6 +267,7 @@ const DebitCardTable = ({
 
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               actions={[
                 ...(row.status !== PaymentMethodsStatusType.Approved &&
                 row.status !== PaymentMethodsStatusType.Rejected &&

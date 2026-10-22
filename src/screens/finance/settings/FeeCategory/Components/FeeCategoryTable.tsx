@@ -1,13 +1,14 @@
-import type { RootState } from 'src/redux/store';
+import type { RootState, AppDispatch } from 'src/redux/store';
 import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -16,9 +17,11 @@ import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { exportTable } from 'src/components/customizabaleTable/table-export';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { TableExportContext } from 'src/components/customizabaleTable/export-context';
 import {
   Box,
   Chip,
@@ -28,6 +31,7 @@ import {
   Drawer,
   Switch,
   Divider,
+  Skeleton,
   TextField,
   Typography,
   LinearProgress,
@@ -40,6 +44,10 @@ import {
   usePatchFeeCategoryStatusMutation,
 } from 'src/redux/feeCategory/feeCategoryApi';
 
+import FeeHeadDependencies from '../../components/FeeHeadDependencies';
+
+import { collectFeeCategoryExportRows } from './fee-category-export';
+
 import type { IFeeCategory, IFeeCategoryTableProps } from './type';
 
 const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
@@ -48,6 +56,8 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   setEditData,
   onView,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const exportContext = React.useContext(TableExportContext);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(
@@ -138,6 +148,22 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const feeHeadStatusConfirm = useBoolean();
   const [feeHeadStatusData, setFeeHeadStatusData] = useState<any | null>(null);
   const [feeHeadDeactivationReason, setFeeHeadDeactivationReason] = useState('');
+  const categoryDependencyCheck = useGetFeeCategoryByIdQuery(statusData?.id ?? '', {
+    skip: !statusConfirm.value || !statusData?.isActive,
+    refetchOnMountOrArgChange: true,
+  });
+  const blockedCategoryHeads =
+    categoryDependencyCheck.currentData?.feeHeads.filter(
+      (head) => head.isUsedInDownstream || head.dependencies?.isBlocked
+    ) ?? [];
+  const headDependencyCheck = useGetFeeCategoryByIdQuery(feeHeadsCategoryId ?? '', {
+    skip: !feeHeadStatusConfirm.value || !feeHeadStatusData?.isActive,
+    refetchOnMountOrArgChange: true,
+  });
+  const currentHead = headDependencyCheck.currentData?.feeHeads.find(
+    (head) => head.id === feeHeadStatusData?.id
+  );
+  const headBlocked = currentHead?.isUsedInDownstream || currentHead?.dependencies?.isBlocked;
   const {
     currentData: feeHeadsCategory,
     isFetching: isFeeHeadsLoading,
@@ -218,7 +244,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           <Chip
             size="small"
             label={value ? 'Yes' : 'No'}
-            color={value ? 'primary' : 'default'}
+            color={value ? 'success' : 'default'}
             variant="soft"
           />
         ),
@@ -248,9 +274,10 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
 
     if (canAdd)
       feeHeadColumns.push({
+        excludeFromExport: true,
         id: 'action',
         label: 'Change status',
-        align: 'right',
+        align: 'left',
         minWidth: 120,
         sticky: true,
         stickyPosition: 'right',
@@ -282,18 +309,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
 
     return (
       <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
-        <Stack direction="row" alignItems="baseline" spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="subtitle2" fontWeight={600}>
-            Mapped fee heads
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {heads.length} {heads.length === 1 ? 'head' : 'heads'}
-          </Typography>
-        </Stack>
         <CustomizableTable
           tableId={`fee-category-heads-table-${category.id}`}
           tableTitle={`Fee heads mapped to ${category.name}`}
           exportLabel="Export fee heads"
+          variant="embedded"
           columns={feeHeadColumns}
           data={heads}
           isLoading={false}
@@ -315,6 +335,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       id: 'name',
       label: 'Category name',
       align: 'left',
+      sticky: true,
       minWidth: 240,
       filterType: 'string',
       render: (value) => (
@@ -350,9 +371,10 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       ),
     },
     {
+      cellSx: { textAlign: 'left' as const },
       id: 'totalFeeHeads',
       label: 'Mapped fee heads',
-      align: 'right',
+      align: 'left',
       filterType: 'number',
       render(value, row) {
         const category = row as IFeeCategory;
@@ -388,18 +410,20 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       },
     },
     {
+      align: 'left',
+      stickyPosition: 'right',
+      excludeFromExport: true,
       id: 'action',
       label: 'Actions',
-      minWidth: 50,
-      align: 'right',
+      minWidth: 176,
       isSort: false,
       sticky: true,
-      stickyPosition: 'right',
       isFilter: false,
       render(value, row) {
         return (
           <AdaptiveThreeDotsActions
             placement="right-top"
+            sx={{ justifyContent: 'flex-start' }}
             directActionLimit={2}
             moreLabel={`More actions for ${(row as IFeeCategory).name}`}
             actions={[
@@ -408,7 +432,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     {
                       id: 'edit',
                       label: 'Edit',
-                      icon: 'solar:pen-bold',
+                      icon: GlobalIcons.edit,
                       onClick: () => {
                         setEditData(row as IFeeCategory);
                         onAddFeeCategory.onTrue();
@@ -421,7 +445,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     {
                       id: 'fee-heads',
                       label: 'View fee heads',
-                      icon: 'solar:list-bold-duotone',
+                      icon: GlobalIcons.eye,
                       onClick: () => setFeeHeadsCategoryId((row as IFeeCategory).id),
                     },
                   ]
@@ -431,7 +455,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     {
                       id: 'delete',
                       label: 'Delete',
-                      icon: 'solar:trash-bin-trash-bold',
+                      icon: GlobalIcons.delete,
                       color: 'error.main',
                       disabled: row?.isUsedInDownstream,
                       tooltip: row?.isUsedInDownstream
@@ -467,14 +491,56 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   ];
 
   return (
-    <>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {isFeeCategoryFetching && feeCategoryData && (
         <LinearProgress aria-label="Updating fee categories" />
       )}
       <CustomizableTable
         tableId="fee-category-data-table"
         tableTitle="Fee categories"
-        exportLabel="Export current page"
+        exportLabel="Export"
+        exportScope="all"
+        onExport={async ({
+          signal = new AbortController().signal,
+          format,
+          columns: exportColumns,
+        }) => {
+          const rows = await collectFeeCategoryExportRows(async (page) => {
+            const request = dispatch(
+              feeCategoryApi.endpoints.getFeeCategories.initiate(
+                { ...categoryQueryArgs, page, pageSize: 100 },
+                { subscribe: false, forceRefetch: true }
+              )
+            );
+            const abortRequest = () => request.abort();
+            signal.addEventListener('abort', abortRequest, { once: true });
+            try {
+              return await request.unwrap();
+            } finally {
+              signal.removeEventListener('abort', abortRequest);
+              request.unsubscribe();
+            }
+          }, signal);
+          signal.throwIfAborted();
+          await exportTable({
+            format,
+            columns: exportColumns,
+            columnVisibility: Object.fromEntries(exportColumns.map((column) => [column.id, true])),
+            rows,
+            tableTitle: 'Fee categories',
+            context: [
+              ...exportContext,
+              `Status: ${archived ? 'Archived' : 'Current'}`,
+              queryParams.search ? `Search: ${queryParams.search}` : '',
+              ...filters.map(
+                (filter) => `${filter.column}: ${filter.type} ${JSON.stringify(filter.value)}`
+              ),
+              ...sorts.map((sort) => `${sort.column}: ${sort.direction}`),
+            ].filter(Boolean),
+          });
+        }}
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isFeeCategoryLoading || (isFeeCategoryFetching && !feeCategoryData)}
         errorContent={
           isFeeCategoryError ? (
@@ -536,7 +602,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         }
         columns={columns}
         data={feeCategoryData?.items || []}
-        handleRowClick={canView ? (row) => onView?.(row as IFeeCategory) : undefined}
+        handleRowClick={
+          canView
+            ? (row) => (onView ? onView(row as IFeeCategory) : setFeeHeadsCategoryId(row.id))
+            : undefined
+        }
         rowProps={(row) =>
           canView
             ? {
@@ -548,7 +618,8 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     (event.key === 'Enter' || event.key === ' ')
                   ) {
                     event.preventDefault();
-                    onView?.(row as IFeeCategory);
+                    if (onView) onView(row as IFeeCategory);
+                    else setFeeHeadsCategoryId(row.id);
                   }
                 },
                 sx: {
@@ -573,7 +644,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         searchTerm={queryParams.search}
         filters={filters}
         sorts={sorts}
-        searchFieldProps={{ placeholder: 'Search category names...' }}
         totalCount={feeCategoryData?.totalCount}
         onServerPagination={(page, rowsPerPage) => {
           setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
@@ -597,10 +667,18 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         onClose={() => setFeeHeadsCategoryId(null)}
         PaperProps={{ sx: { width: { xs: '100%', md: 980 }, maxWidth: '100%' } }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            overflowWrap: 'anywhere',
+          }}
+        >
           <DrawerHeader
-            title={feeHeadsCategory?.name ?? 'Fee heads'}
             helpText="Fee heads mapped to this category, including their income category, concession setting, and status."
+            title={feeHeadsCategory?.name ?? 'Fee heads'}
+
             onClose={() => setFeeHeadsCategoryId(null)}
           />
           <Divider />
@@ -613,7 +691,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 Fee heads could not be loaded.
               </Alert>
             ) : isFeeHeadsLoading && !feeHeadsCategory ? (
-              <LinearProgress aria-label="Loading fee heads" />
+              <Stack spacing={1.5} sx={{ p: 2 }} role="status" aria-label="Loading fee heads">
+                {Array.from({ length: 5 }, (_, index) => (
+                  <Skeleton key={index} variant="rounded" height={48} />
+                ))}
+              </Stack>
             ) : feeHeadsCategory ? (
               renderFeeHeadsTable(feeHeadsCategory)
             ) : null}
@@ -677,7 +759,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       />
       <ConfirmDialog
         open={statusConfirm.value}
+        disableCancel={isStatusLoading}
+        disableEscapeKeyDown={isStatusLoading}
+        disableBackdropClick={isStatusLoading}
         onClose={() => {
+          if (isStatusLoading) return;
           statusConfirm.onFalse();
           setStatusData(null);
           setDeactivationReason('');
@@ -692,7 +778,31 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               </Box>
               ?
             </Typography>
-            {!nextStatus && (
+            {!nextStatus && categoryDependencyCheck.isFetching && (
+              <Typography role="status">Checking fee category dependencies…</Typography>
+            )}
+            {!nextStatus && categoryDependencyCheck.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button size="small" onClick={() => categoryDependencyCheck.refetch()}>
+                    Retry
+                  </Button>
+                }
+              >
+                Could not verify dependencies. Retry before archiving.
+              </Alert>
+            )}
+            {!nextStatus &&
+              blockedCategoryHeads.map((head) => (
+                <FeeHeadDependencies
+                  key={head.id}
+                  name={head.name}
+                  feeHeadId={head.id}
+                  dependencies={head.dependencies}
+                />
+              ))}
+            {!nextStatus && blockedCategoryHeads.length === 0 && (
               <TextField
                 fullWidth
                 multiline
@@ -702,9 +812,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 required
                 error={!!deactivationReason && !deactivationReason.trim()}
                 helperText={
-                  deactivationReason && !deactivationReason.trim()
+                  (deactivationReason && !deactivationReason.trim()
                     ? 'Enter a reason containing text.'
-                    : undefined
+                    : undefined) || undefined
                 }
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
@@ -719,7 +829,14 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
-            disabled={!nextStatus && !deactivationReason.trim()}
+            disabled={
+              !nextStatus &&
+              (!deactivationReason.trim() ||
+                categoryDependencyCheck.isFetching ||
+                categoryDependencyCheck.isError ||
+                !categoryDependencyCheck.currentData ||
+                blockedCategoryHeads.length > 0)
+            }
             onClick={async () => {
               if (!statusData) return;
               try {
@@ -747,7 +864,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       />
       <ConfirmDialog
         open={feeHeadStatusConfirm.value}
+        disableCancel={isFeeHeadStatusLoading}
+        disableEscapeKeyDown={isFeeHeadStatusLoading}
+        disableBackdropClick={isFeeHeadStatusLoading}
         onClose={() => {
+          if (isFeeHeadStatusLoading) return;
           feeHeadStatusConfirm.onFalse();
           setFeeHeadStatusData(null);
           setFeeHeadDeactivationReason('');
@@ -762,7 +883,29 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               </Box>
               ?
             </Typography>
-            {!nextFeeHeadStatus && (
+            {!nextFeeHeadStatus && headDependencyCheck.isFetching && (
+              <Typography role="status">Checking fee head dependencies…</Typography>
+            )}
+            {!nextFeeHeadStatus && headDependencyCheck.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button size="small" onClick={() => headDependencyCheck.refetch()}>
+                    Retry
+                  </Button>
+                }
+              >
+                Could not verify dependencies. Retry before deactivating.
+              </Alert>
+            )}
+            {!nextFeeHeadStatus && headBlocked && (
+              <FeeHeadDependencies
+                name={currentHead?.name ?? feeHeadStatusData?.name ?? 'Fee head'}
+                feeHeadId={currentHead?.id}
+                dependencies={currentHead?.dependencies}
+              />
+            )}
+            {!nextFeeHeadStatus && !headBlocked && (
               <TextField
                 fullWidth
                 multiline
@@ -772,9 +915,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 required
                 error={!!feeHeadDeactivationReason && !feeHeadDeactivationReason.trim()}
                 helperText={
-                  feeHeadDeactivationReason && !feeHeadDeactivationReason.trim()
+                  (feeHeadDeactivationReason && !feeHeadDeactivationReason.trim()
                     ? 'Enter a reason containing text.'
-                    : undefined
+                    : undefined) || undefined
                 }
                 value={feeHeadDeactivationReason}
                 onChange={(event) => setFeeHeadDeactivationReason(event.target.value)}
@@ -791,7 +934,14 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             variant="contained"
             color={nextFeeHeadStatus ? 'primary' : 'warning'}
             size="small"
-            disabled={!nextFeeHeadStatus && !feeHeadDeactivationReason.trim()}
+            disabled={
+              !nextFeeHeadStatus &&
+              (!feeHeadDeactivationReason.trim() ||
+                headDependencyCheck.isFetching ||
+                headDependencyCheck.isError ||
+                !currentHead ||
+                Boolean(headBlocked))
+            }
             onClick={async () => {
               if (!feeHeadStatusData || archived || !feeHeadsCategory?.isActive) return;
               try {
@@ -818,7 +968,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           </LoadingButton>
         }
       />
-    </>
+    </Box>
   );
 };
 

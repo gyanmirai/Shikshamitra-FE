@@ -17,10 +17,11 @@ export default defineConfig({
     },
   ],
   root: here,
-  cacheDir: `${repo}/node_modules/.vite/fee-assignment`,
+  cacheDir: `${repo}/node_modules/.vite/fee-assignment-regression`,
   publicDir: `${repo}/public`,
   resolve: {
     alias: [
+      { find: 'next/navigation', replacement: `${here}/../finance-settings-regression/mock-navigation.ts` },
       { find: /^@mui\/icons-material$/, replacement: `${here}/../fee-structure/icon-barrel.ts` },
       { find: /^src\/redux\/service$/, replacement: `${here}/mock-service.ts` },
       { find: 'src', replacement: `${repo}/src` },

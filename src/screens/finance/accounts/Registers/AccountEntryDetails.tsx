@@ -34,6 +34,7 @@ export default function AccountEntryDetails({
   const data = query.currentData;
   return (
     <CustomDialog
+      titleInfo="Review this entry and its available source, payment and allocation details."
       open
       title={
         <Stack
@@ -56,7 +57,7 @@ export default function AccountEntryDetails({
           </Label>
         </Stack>
       }
-      titleInfo="Review this entry and its available source, payment and allocation details."
+
       handleClose={onClose}
       maxWidth="md"
       hasForm={false}
@@ -78,12 +79,6 @@ export default function AccountEntryDetails({
         )}
         {data && !query.isError && (
           <Stack spacing={1.5}>
-            {data.sourceStatus === 'Awaiting payout' && (
-              <Alert severity="warning">
-                Approved refund awaiting payout confirmation. This amount is excluded from paid
-                expenses.
-              </Alert>
-            )}
             <DetailSection icon="mdi:receipt-text-outline" title="Transaction details">
               <DetailGrid>
                 <DetailField
@@ -174,9 +169,10 @@ export default function AccountEntryDetails({
                       isSort: false,
                     },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
-                      align: 'right',
+                      align: 'left',
                       isFilter: false,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),
@@ -223,9 +219,10 @@ export default function AccountEntryDetails({
                           : '—',
                     },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
-                      align: 'right',
+                      align: 'left',
                       isFilter: false,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),
@@ -270,9 +267,10 @@ export default function AccountEntryDetails({
                       render: (value: string) => fDateTime(value),
                     },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
-                      align: 'right',
+                      align: 'left',
                       isFilter: false,
                       isSort: false,
                       render: (value: number) => formatNumber(value, 'INR'),

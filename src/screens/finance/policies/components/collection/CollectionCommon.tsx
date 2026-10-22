@@ -6,12 +6,23 @@ import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Paper, Stack, Typography, IconButton } from '@mui/material';
 
 import { validCollectionNumber } from '../../collectionNumericLimits';
 
 import type { ILateFeeEscalationRule } from '../../types/finance-policy.types';
+import CustomTooltip from 'src/components/custom-tooltip';
+
+export function CollectionInfoTip({ label, title }: { label: string; title: string }) {
+  return (
+    <CustomTooltip arrow placement="right" title={title}>
+      <IconButton size="small" aria-label={`${label} information`}>
+        <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+      </IconButton>
+    </CustomTooltip>
+  );
+}
 
 // ─── Slab overlap/gap detection ────────────────────────────────────────────────
 // Single source of truth for slab-range validity, consumed by both the
@@ -128,16 +139,6 @@ export function SectionCard({
       </Stack>
       {children}
     </Paper>
-  );
-}
-
-export function CollectionInfoTip({ label, title }: { label: string; title: string }) {
-  return (
-    <CustomTooltip arrow placement="right" title={title}>
-      <IconButton size="small" aria-label={`${label} information`}>
-        <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
-      </IconButton>
-    </CustomTooltip>
   );
 }
 

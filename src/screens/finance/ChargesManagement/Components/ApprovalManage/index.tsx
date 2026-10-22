@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 
@@ -11,6 +11,8 @@ import ChargesApprovalTable from './Components/ApptovalChangeTable';
 import ChargeDetailsCard from '../ChargesManage/Component/ViewChargeForm';
 
 import type { IChargeData } from '../ChargesManage/Component/type';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const ApproveManage = () => {
   // State to store the currently selected charge data for viewing details

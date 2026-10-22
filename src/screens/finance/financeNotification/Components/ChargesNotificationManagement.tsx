@@ -230,6 +230,9 @@ const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
               },
             },
             {
+              align: 'left',
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'action',
               label: 'Action',
               isFilter: false,
@@ -238,7 +241,7 @@ const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
               minWidth: 60,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     actions={[
                       {
                         id: 'view',

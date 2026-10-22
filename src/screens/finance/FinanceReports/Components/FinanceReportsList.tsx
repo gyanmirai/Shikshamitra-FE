@@ -23,9 +23,22 @@ type QueuedReport = {
 
 const columns: IColumn[] = [
   { label: 'Report', id: 'reportName', minWidth: 220, align: 'left', filterType: 'string' },
-  { label: 'Requested at', id: 'generatedDate', minWidth: 170, align: 'left', filterType: 'dateTime' },
   {
-    label: 'Status', id: 'status', minWidth: 110, align: 'center', filterType: 'enum', sticky: true,
+    label: 'Requested at',
+    id: 'generatedDate',
+    minWidth: 170,
+    align: 'left',
+    filterType: 'dateTime',
+  },
+  {
+    cellSx: { textAlign: 'center' as const },
+    stickyPosition: 'right',
+    label: 'Status',
+    id: 'status',
+    minWidth: 110,
+    align: 'left',
+    filterType: 'enum',
+    sticky: true,
     render: (value) => <Chip size="small" color="info" variant="soft" label={String(value)} />,
   },
   { label: 'Job reference', id: 'jobId', minWidth: 280, align: 'left', filterType: 'string' },
@@ -37,12 +50,15 @@ const FinanceReportsList = () => {
   const [queuedReports, setQueuedReports] = useState<QueuedReport[]>([]);
 
   const handleExportQueued = (jobId: string) => {
-    setQueuedReports((current) => [{
-      jobId,
-      reportName: 'AI-generated Finance report',
-      generatedDate: new Date().toISOString(),
-      status: 'Queued',
-    }, ...current]);
+    setQueuedReports((current) => [
+      {
+        jobId,
+        reportName: 'AI-generated Finance report',
+        generatedDate: new Date().toISOString(),
+        status: 'Queued',
+      },
+      ...current,
+    ]);
     shikshaMitraToast.success({ message: 'Finance report export queued successfully.' });
   };
 
@@ -51,15 +67,26 @@ const FinanceReportsList = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Reports"
         description="Build permission-scoped finance reports manually or describe the outcome to ShikshaMitra AI."
+        heading="Reports"
+
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Reports' }]}
         action={
           <Stack direction="row" spacing={1}>
-            <Button size="small" variant="soft" startIcon={<Iconify icon="solar:magic-stick-3-bold" />} onClick={aiReportDrawer.onTrue}>
+            <Button
+              size="small"
+              variant="soft"
+              startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
+              onClick={aiReportDrawer.onTrue}
+            >
               Generate with AI
             </Button>
-            <Button size="small" variant="contained" startIcon={<Add />} onClick={addReportDialog.onTrue}>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Add />}
+              onClick={addReportDialog.onTrue}
+            >
               Build manually
             </Button>
           </Stack>
@@ -79,9 +106,6 @@ const FinanceReportsList = () => {
           noDataText={
             <Box sx={{ py: 2, textAlign: 'center' }}>
               <Typography variant="subtitle2">No report requested in this session</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Generate with AI or use the manual builder to create a report.
-              </Typography>
             </Box>
           }
         />

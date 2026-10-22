@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -57,8 +57,9 @@ const ChargesManagement = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Charges Management"
         description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
+        heading="Charges Management"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/charge-management' },

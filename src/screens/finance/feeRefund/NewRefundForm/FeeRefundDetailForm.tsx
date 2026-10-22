@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
@@ -22,11 +22,11 @@ import {
   Typography,
   RadioGroup,
   FormControl,
-  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
+import { RefundDetailsSkeleton } from './RefundFormSkeleton';
 import { isAllowedRefundMethod, getAllowedRefundMethodOptions } from './refundPayoutMethods';
 import {
   isRefundRequestField,
@@ -88,12 +88,14 @@ export default function FeeRefundDetailsForm({
       setFieldValue('refundType', 'full', false);
     }
   }, [eligibility, eligibilityFetching, eligibilityError, formik.values.refundType, setFieldValue]);
+  if (formik.values.studentId && eligibilityFetching) return <RefundDetailsSkeleton />;
+
   return (
     <Box display="flex" flexDirection="column" gap={1} mt={0}>
       <FormSectionCard
+        descriptionTooltip="Select paid fee months from one receipt. Full refund uses the available policy limit; partial refund lets you enter an amount when the linked policy permits it. The server checks deductions and limits on submission."
         title="Refund details"
         icon="solar:bill-list-bold-duotone"
-        descriptionTooltip="Select paid fee months from one receipt. Full refund uses the available policy limit; partial refund lets you enter an amount when the linked policy permits it. The server checks deductions and limits on submission."
       >
         {formik.values.studentId && canConfigureRefund && (
           <FormControl>
@@ -116,9 +118,6 @@ export default function FeeRefundDetailsForm({
                 disabled={eligibility != null && !eligibility.allowPartialRefund}
               />
             </RadioGroup>
-            {eligibility && !eligibility.allowPartialRefund && (
-              <FormHelperText>The linked refund policy allows full refunds only.</FormHelperText>
-            )}
           </FormControl>
         )}
 
@@ -128,7 +127,8 @@ export default function FeeRefundDetailsForm({
               Policy: <strong>{eligibility.refundPolicyName}</strong>
             </Typography>
             <Typography variant="body2">
-              Maximum refundable: <strong>{formatCurrency(eligibility.totalRefundable)}</strong>
+              Maximum refundable:{' '}
+              <strong>{formatNumber(eligibility.totalRefundable, 'INR')}</strong>
             </Typography>
           </Stack>
         )}
@@ -137,10 +137,7 @@ export default function FeeRefundDetailsForm({
         <FeeHeadRefundTable
           compact
           formik={formik}
-          showError={
-            !!(formik.touched.feeHeadRefunds && formik.errors.feeHeadRefunds) &&
-            typeof formik.errors.feeHeadRefunds === 'string'
-          }
+          showError={formik.submitCount > 0 && typeof formik.errors.feeHeadRefunds === 'string'}
           errorMessage={
             typeof formik.errors.feeHeadRefunds === 'string'
               ? (formik.errors.feeHeadRefunds as string)
@@ -153,9 +150,9 @@ export default function FeeRefundDetailsForm({
       {/* ── Refund Payment Details Card ── */}
       {formik.values.studentId && hasPaymentRecords && canConfigureRefund && (
         <FormSectionCard
+          descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Payment is recorded separately after approval."
           title="Refund payment details"
           icon="solar:wallet-bold-duotone"
-          descriptionTooltip="Choose a payment method allowed by the refund policy linked to the student's fee structure and enter the recipient details. Payment is recorded separately after approval."
         >
           <Grid container spacing={1}>
             {/* Refund Method */}
@@ -184,13 +181,14 @@ export default function FeeRefundDetailsForm({
                   multiple={false}
                   error={formik.touched.refundMethod && Boolean(formik.errors.refundMethod)}
                   helperText={
-                    eligibilityError && allowedPayoutMethods === undefined
+                    (eligibilityError && allowedPayoutMethods === undefined
                       ? 'Unable to load refund policy payment methods. Retry before submitting.'
                       : !methodsReady
                         ? 'Loading refund policy payment methods…'
                         : methodOptions.length === 0
                           ? 'No payment methods are available under this refund policy.'
-                          : ((formik.touched.refundMethod && formik.errors.refundMethod) as string)
+                          : ((formik.touched.refundMethod &&
+                              formik.errors.refundMethod) as string)) || undefined
                   }
                 />
               </ShakingTextField>
@@ -243,7 +241,10 @@ export default function FeeRefundDetailsForm({
                             onBlur={formik.handleBlur}
                             size="small"
                             error={Boolean(touched && error)}
-                            helperText={touched && typeof error === 'string' ? error : ''}
+                            helperText={
+                              (touched && typeof error === 'string' ? error : undefined) ||
+                              undefined
+                            }
                           >
                             {field.options?.map((opt: any) => (
                               <MenuItem key={opt.id} value={opt.id}>
@@ -279,7 +280,10 @@ export default function FeeRefundDetailsForm({
                               formik.handleBlur(e);
                             }}
                             error={Boolean(touched && error)}
-                            helperText={touched && typeof error === 'string' ? error : ''}
+                            helperText={
+                              (touched && typeof error === 'string' ? error : undefined) ||
+                              undefined
+                            }
                           />
                         ) : (
                           <TextField
@@ -343,7 +347,10 @@ export default function FeeRefundDetailsForm({
                               formik.handleBlur(e);
                             }}
                             error={Boolean(touched && error)}
-                            helperText={touched && typeof error === 'string' ? error : ''}
+                            helperText={
+                              (touched && typeof error === 'string' ? error : undefined) ||
+                              undefined
+                            }
                             inputProps={
                               field.type === 'number' ? { min: field.min, max: field.max } : {}
                             }
@@ -378,7 +385,7 @@ export default function FeeRefundDetailsForm({
                   formik.handleBlur(e);
                 }}
                 error={Boolean(formik.touched.notes && formik.errors.notes)}
-                helperText={formik.touched.notes && formik.errors.notes}
+                helperText={(formik.touched.notes && formik.errors.notes) || undefined}
               />
             </Grid>
           </Grid>

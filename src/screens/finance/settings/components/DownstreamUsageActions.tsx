@@ -39,7 +39,7 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
         placement="top"
       >
         <span>
-          <AdaptiveThreeDotsActions
+          <AdaptiveThreeDotsActions directActionLimit={2}
             actions={[
               ...(showViewIcon
                 ? [
@@ -82,7 +82,7 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
   }
 
   return (
-    <AdaptiveThreeDotsActions
+    <AdaptiveThreeDotsActions directActionLimit={2}
       actions={[
         ...(showViewIcon
           ? [

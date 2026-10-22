@@ -3,18 +3,19 @@
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financePermissions } from 'src/constants/finance-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -30,6 +31,7 @@ import ConcessionDocumentTable from './Components/ConcessionDocuments';
 import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersionHistoryDrawer';
 
 import type { IConcessionTypeForm } from './type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const ConcessionType = () => {
   const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
@@ -97,7 +99,6 @@ const ConcessionType = () => {
   });
 
   // Redux state and dispatch
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
   // Delete mutation
@@ -111,26 +112,24 @@ const ConcessionType = () => {
   /**
    * Handles closing the concession type dialog
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      addConcessionTypeDialog.onFalse();
-      setSelectedConcessionType(null);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      addConcessionTypeDialog.onFalse();
-      setSelectedConcessionType(null);
-    }
-  };
+  const { handleClose, confirmation } = useFinanceFormClose(addConcessionTypeDialog.value, () => {
+    addConcessionTypeDialog.onFalse();
+    setSelectedConcessionType(null);
+  });
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+    >
+      {confirmation}
       <CustomBreadcrumbs
-        heading="Concession Type"
         description={
           addConcessionTypeDialog.value
             ? 'Access detailed information on the selected concession type such as discount rules and applicable conditions.'
             : 'Define and manage concession types by linking them with student categories and fee structures.'
         }
+        heading="Concession Type"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/concession' },
@@ -140,18 +139,22 @@ const ConcessionType = () => {
         action={
           canAdd && archiveView === 'current' ? (
             <Button
-              onClick={() => addConcessionTypeDialog.onTrue()}
+              onClick={() => {
+                setSelectedConcessionType(null);
+                dispatch(setIsChanges(false));
+                addConcessionTypeDialog.onTrue();
+              }}
               size="small"
-              startIcon={<Add />}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               variant="contained"
-              sx={{ px: '32px' }}
+              color="inherit"
             >
-              Concession Type
+              Add Concession Type
             </Button>
           ) : undefined
         }
       />
-      <Card sx={{ p: 1, mb: 1.5 }}>
+      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
         <Stack direction="row" spacing={1}>
           <Button
             size="small"
@@ -180,10 +183,8 @@ const ConcessionType = () => {
 
         <CustomDialog
           open={addConcessionTypeDialog.value}
-          handleClose={() => {
-            addConcessionTypeDialog.onFalse();
-            setSelectedConcessionType(null);
-          }}
+          guardUnsavedChanges={false}
+          handleClose={() => handleClose()}
           maxWidth="lg"
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -205,17 +206,20 @@ const ConcessionType = () => {
             </Box>
           }
         >
-          <ConcessionTypeForm
-            open={addConcessionTypeDialog}
-            onClose={handleClose}
-            editData={selectedConcessionType}
-          />
+          {addConcessionTypeDialog.value && (
+            <ConcessionTypeForm
+              open={addConcessionTypeDialog}
+              onClose={handleClose}
+              editData={selectedConcessionType}
+            />
+          )}
         </CustomDialog>
 
         <ConcessionTypeTable
           key={archiveView}
           archived={archiveView === 'archived'}
           canView={canView}
+          canAdd={canAdd}
           canEdit={canEdit}
           canChangeStatus={canChangeStatus}
           canDelete={canDelete}
@@ -237,6 +241,9 @@ const ConcessionType = () => {
           }}
           onVersionHistory={setVersionHistoryTarget}
           totalCount={concessionTypes?.data?.totalCount}
+          page={queryParams.page - 1}
+          rowsPerPage={queryParams.pageSize}
+          searchTerm={queryParams.search}
           onServerPagination={handleServerPagination}
           onServerSearch={handleServerSearch}
         />

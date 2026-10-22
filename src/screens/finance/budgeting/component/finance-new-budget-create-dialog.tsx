@@ -104,9 +104,9 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                   autoFocus
                   error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
                   helperText={
-                    formik.touched.categoryType && formik.errors.categoryType
+                    (formik.touched.categoryType && formik.errors.categoryType
                       ? String(formik.errors.categoryType)
-                      : ''
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>
@@ -124,9 +124,9 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                   disabled={edit}
                   error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
                   helperText={
-                    formik.touched.categoryName && formik.errors.categoryName
+                    (formik.touched.categoryName && formik.errors.categoryName
                       ? String(formik.errors.categoryName)
-                      : ''
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>
@@ -145,9 +145,9 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                   fullWidth
                   error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
                   helperText={
-                    formik.touched.fundAllocation && formik.errors.fundAllocation
+                    (formik.touched.fundAllocation && formik.errors.fundAllocation
                       ? String(formik.errors.fundAllocation)
-                      : ''
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>

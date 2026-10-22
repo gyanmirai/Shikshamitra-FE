@@ -20,7 +20,7 @@ export default function ConcessionFooterActions({
   return (
     <Box
       sx={{
-        px: { xs: 2, sm: 3 },
+        px: 2,
         py: 1.75,
         bgcolor: 'background.paper',
         borderTop: 1,

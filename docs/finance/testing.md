@@ -10,6 +10,16 @@ audience: humans-and-agents
 
 # Validate Finance frontend changes
 
+Automatic collection allocation: run focused Vitest checks for
+`collectionAllocationOrder.test.ts`, `preview/paymentAllocationUtils.test.ts`,
+`FeeCollectionForm.context.test.tsx`, `CollectionLedgerTable.test.tsx`,
+`useCollectionPolicyForm.test.tsx` and `CollectionPolicyDrawer.test.tsx` in their owning Finance
+folders. Browser fixtures are `e2e/fixtures/collection-policy` and
+`e2e/fixtures/fee-collection-late-fees` (append `?allocationBasis=Installment` or `FeeHead`).
+They render production components with synthetic data and do not establish backend correctness.
+Check mode selection/save, matching displayed/funded order, partial/exact/excess amounts,
+remaining balances, review, stale refresh and keyboard/mobile behavior. No priority editor is expected.
+
 ## Security action bundles
 
 Finance controls are defined in `src/screens/security/role/finance-permission-groups.ts`.
@@ -46,6 +56,22 @@ npm run docs:check
 ```
 
 ## Focused frontend checks
+
+### Policy clone, names and recorded scope
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/policies --pool=threads --maxWorkers=1 --no-file-parallelism`.
+The policy regressions cover normalized payload names, inline server conflicts with preserved
+values, two-decimal concession precision, every Apply On label/representation and semantic
+snapshot comparisons. These checks do not prove live cloning or database uniqueness.
+
+In the Codex in-app browser, inspect Create Policy casing, Value/limit and Actions alignment,
+three direct row actions, compact default control and the single Status field presentation.
+Try percentage typing/paste beyond two decimals, discard/reopen, and saving locks. Inspect
+Apply On before/after in both Audit Trail and Version History, including numeric legacy snapshots,
+right-anchored help, full policy-name tooltips and right-aligned read-only metadata. Use the
+existing `e2e/fixtures/concession-policy` fixture for isolated component checks. A rebuilt backend
+and authenticated session are required to verify cloning the default proration policy after
+archiving previous copies and rejecting normalized duplicate names through direct API calls.
 
 ### Concession request form presentation
 
@@ -261,3 +287,26 @@ Full-page entry-form regressions (cash/non-cash, exact decimal payloads, draft p
 The config isolates pure date/money tests from unrelated global browser setup.
 For the real-component smoke test, run `node node_modules/vite/bin/vite.js --config e2e/fixtures/accounts-register/vite.config.mts` and open `http://127.0.0.1:4209/` in the Codex in-app browser.
 The fixture exercises both registers, View, cash/non-cash creates, year/month filtering, permission visibility, failure states and refund cache refresh using synthetic data only.
+
+## Finance consistency and form lifecycle regressions
+
+Focused regressions cover the three-direct-action threshold, disabled assignment-dependent
+collection actions, protected confirmation dialogs, in-app discard and unload cleanup,
+Fee Category Edit-to-Add reset, normalized/archived duplicate guidance, Payment Term code
+conflicts, and Apply On numeric/name equivalence in both audit renderers. Key suites include
+`src/hooks/use-finance-form-close.test.tsx`, `src/components/customDialog/close-guard.test.tsx`,
+`src/screens/finance/settings/FeeCategory/FeeCategory.lifecycle.test.tsx`, and
+`src/screens/finance/settings/PaymentTerm/hooks/usePaymentTermForm.errors.test.tsx`.
+
+Browser smoke checks use the real components with synthetic responses. Verify blank Add after
+closing Edit; Keep editing and Discard; archived-name guidance; Status ascending/descending;
+three direct actions; unassigned Collect Fees/Adjustment tooltips; archive-reason retention on
+backdrop and Escape; footer alignment; Payment Term grids and allocation validation; and policy
+percentage precision and audit labels. The Payment Term fixture is
+`e2e/fixtures/payment-term-template`; policy checks use `e2e/fixtures/concession-policy`.
+These checks do not authenticate to a deployed tenant or perform financial writes. Follow with
+a signed-in API-backed smoke test in the target academic year before deployment acceptance.
+
+Backend suites independently cover current/archived copy names, default-source cloning,
+repeated clone-code uniqueness, normalized names, and Status ordering before pagination.
+Existing historical duplicate records are preserved; no reconciliation migration is included.

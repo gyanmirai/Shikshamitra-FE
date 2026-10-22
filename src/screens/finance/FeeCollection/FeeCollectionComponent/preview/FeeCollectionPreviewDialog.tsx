@@ -9,6 +9,7 @@ import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import PaymentInfoPreview from './PaymentInfoPreview';
@@ -32,6 +33,7 @@ export interface FeeCollectionPreviewDialogProps {
   student: IStudentFee | null;
   chargesData: IFeeCharge[];
   feeHeadMap: Record<string, string>;
+  preserveAllocationOrder?: boolean;
   academicYear?: string;
   feeStructureName?: string;
   bankAccounts?: { id: string; name: string }[];
@@ -49,7 +51,7 @@ const parsePaidAmount = (raw: string | number): number => {
 interface HeroSectionProps {
   paidAmount: number;
   paymentMethod?: string;
-  selectedItems: { period?: string }[];
+  selectedItems: { period?: string; feeHeadId?: string }[];
 }
 
 const HeroSection = ({ paidAmount, paymentMethod, selectedItems }: HeroSectionProps) => {
@@ -67,7 +69,7 @@ const HeroSection = ({ paidAmount, paymentMethod, selectedItems }: HeroSectionPr
     }, []);
   }, [selectedItems]);
 
-  const feeHeadCount = selectedItems.length;
+  const feeHeadCount = new Set(selectedItems.map((item) => item.feeHeadId).filter(Boolean)).size;
 
   return (
     <Card
@@ -179,6 +181,7 @@ const FeeCollectionPreviewDialog = ({
   student,
   chargesData,
   feeHeadMap,
+  preserveAllocationOrder,
   academicYear,
   feeStructureName,
   bankAccounts,
@@ -240,7 +243,10 @@ const FeeCollectionPreviewDialog = ({
           />
 
           {/* ── Allocation Breakdown ── */}
-          <AllocationPreviewTable allocatedRows={allocatedRows} />
+          <AllocationPreviewTable
+            allocatedRows={allocatedRows}
+            preserveOrder={preserveAllocationOrder}
+          />
 
           {/* ── Payment Method & Remarks ── */}
           <PaymentInfoPreview

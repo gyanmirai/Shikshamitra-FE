@@ -24,6 +24,7 @@ type BrowserNavigation = EventTarget & {
 export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
   const { title, description, push, blockNavigation = false, renderConfirmation } = options;
   const [pending, setPending] = useState<(() => void) | null>(null);
+  const cancelNavigation = useCallback(() => setPending(null), []);
   const permittedTraversal = useRef<string | null>(null);
   const requestNavigation = useCallback(
     (proceed: () => void) => {
@@ -122,6 +123,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
       handleClose={() => setPending(null)}
       hasForm={false}
       guardUnsavedChanges={false}
+      disableClose={blockNavigation}
       maxWidth="xs"
       aria-describedby="unsaved-changes-description"
       paperProps={{ sx: { maxWidth: 460 } }}
@@ -153,6 +155,7 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
           size="small"
           variant="outlined"
           color="inherit"
+          disabled={blockNavigation}
           onClick={() => setPending(null)}
           startIcon={<Close fontSize="small" />}
         >
@@ -162,8 +165,10 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
           size="small"
           color="error"
           variant="contained"
+          disabled={blockNavigation}
           startIcon={<DeleteOutline fontSize="small" />}
           onClick={() => {
+            if (blockNavigation) return;
             const proceed = pending;
             setPending(null);
             proceed();
@@ -175,5 +180,5 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
     </CustomDialog>
   ) : null;
 
-  return { requestNavigation, confirmation };
+  return { requestNavigation, cancelNavigation, confirmation };
 }

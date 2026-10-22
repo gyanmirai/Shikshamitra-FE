@@ -3,7 +3,7 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Chip, Button, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
 
@@ -15,6 +15,7 @@ export interface FeeHeadGroupHeaderProps {
   isOpen: boolean;
   totalRefundInput: number;
   mode?: 'refund' | 'adjustment';
+  selectedReceiptId?: string;
   onCheckboxToggle: () => void;
   onExpandToggle: () => void;
   applyInAllState?: { isApplying: boolean; amount: number | string };
@@ -29,6 +30,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
   isOpen,
   totalRefundInput,
   mode = 'refund',
+  selectedReceiptId,
   onCheckboxToggle,
   onExpandToggle,
   applyInAllState = { isApplying: false, amount: '' },
@@ -38,11 +40,12 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
-  const selectableItems = isAdj
-    ? feeHead.items.filter((i) => i.refundable > 0)
-    : feeHead.items.filter((i) => Math.max(0, i.paid - i.refunded) > 0);
-  const selectedCount = selectableItems.filter((i) => selectedMonths.includes(i.month)).length;
-  const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
+  const refundableItems = feeHead.items.filter((i) => i.refundable > 0);
+  const selectableItems = refundableItems.filter(
+    (item) => isAdj || !selectedReceiptId || item.sourceReceiptId === selectedReceiptId
+  );
+  const selectedCount = refundableItems.filter((i) => selectedMonths.includes(i.month)).length;
+  const isAllSelected = refundableItems.length > 0 && selectedCount === refundableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
   const hasSelectable = selectableItems.length > 0;
   const hasSelectedMonths = selectedMonths.length > 0;
@@ -71,11 +74,13 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       {/* Checkbox */}
       <Tooltip
         title={
-          !hasSelectable
-            ? isAdj
-              ? 'No adjustable months for this fee head'
-              : 'No refundable months for this fee head'
-            : ''
+          !hasSelectable && refundableItems.length > 0
+            ? 'Clear the selected installments to choose this receipt.'
+            : !hasSelectable
+              ? isAdj
+                ? 'No adjustable months for this fee head'
+                : 'No refundable months for this fee head'
+              : ''
         }
         placement="top"
       >
@@ -85,6 +90,9 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
             checked={isAllSelected}
             indeterminate={isPartialSelected}
             disabled={!hasSelectable}
+            inputProps={{
+              'aria-label': `Select refundable installments for ${feeHead.feeHeadName}`,
+            }}
             onChange={onCheckboxToggle}
             onClick={(e) => e.stopPropagation()}
             sx={{
@@ -115,14 +123,14 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         }}
       >
         <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: 10 }}>
-          {selectableItems.length} {isAdj ? 'adjustable' : 'refundable'}
+          {refundableItems.length} {isAdj ? 'adjustable' : 'refundable'}
         </Typography>
       </Box>
 
       {/* Apply in all controls - visible only when months are selected */}
 
       {/* Fully refunded badge */}
-      {!hasSelectable && (
+      {refundableItems.length === 0 && (
         <Chip
           label={isAdj ? 'Fully Adjusted' : 'Fully Refunded'}
           size="small"
@@ -145,7 +153,7 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {formatCurrency(totalRefundInput)}
+          {formatNumber(totalRefundInput, 'INR')}
         </Typography>
       )}
 
@@ -154,11 +162,17 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
         <Box display="flex" alignItems="center" gap={1}>
           <NumericFormatCustom
             size="small"
+            name={`apply-amount-${feeHead.feeHeadId}`}
+            roundToWholeRupees={false}
+            decimalScale={2}
             value={applyInAllState.amount}
-            onValueChange={(vals) => onApplyInAllAmountChange?.(vals.value)}
+            onValueChange={(vals, source) => {
+              if (source.source === 'event') onApplyInAllAmountChange?.(vals.value);
+            }}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             placeholder=""
             inputProps={{
+              'aria-label': `Amount for selected installments in ${feeHead.feeHeadName}`,
               // min: 0,
               style: {
                 textAlign: 'right',
@@ -208,6 +222,8 @@ const FeeHeadGroupHeader: React.FC<FeeHeadGroupHeaderProps> = ({
       {/* Expand / Collapse chevron */}
       <IconButton
         size="small"
+        aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${feeHead.feeHeadName}`}
+        aria-expanded={isOpen}
         onClick={(e) => {
           e.stopPropagation();
           onExpandToggle();

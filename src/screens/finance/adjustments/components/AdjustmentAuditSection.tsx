@@ -53,7 +53,7 @@ export default function AdjustmentAuditSection({
       );
     }
     if (isError) {
-      return <Alert severity="warning">Unable to load adjustment audit events.</Alert>;
+      return <Alert severity="error">Unable to load adjustment audit events.</Alert>;
     }
     const logs = data?.items?.length ? mapFinanceAuditEventsToLogs(data.items) : [];
     if (!logs.length) {

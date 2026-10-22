@@ -205,6 +205,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
         noDataText={<>No student refund fee data found.</>}
         columns={[
           {
+            stickyPosition: 'left',
             id: 'name',
             label: 'Name(Gr No.)',
             align: 'left',
@@ -269,6 +270,8 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
             filterType: 'date',
           },
           {
+            stickyPosition: 'right',
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             isFilter: false,
@@ -282,7 +285,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
               const isDraft = actions.includes('edit');
               return (
                 <Box display="flex" gap={1} alignItems="center">
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     actions={[
                       {
                         id: 'view',

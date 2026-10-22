@@ -9,6 +9,8 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { getCloneAcademicYears } from './cloneAcademicYears';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -102,6 +104,7 @@ const PaymentTerm = () => {
   const [publishTarget, setPublishTarget] = useState<PaymentTermListItem | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<PaymentTermListItem | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
+  const [restoreTarget, setRestoreTarget] = useState<PaymentTermListItem | null>(null);
   const [cloneSourceYearId, setCloneSourceYearId] = useState('');
   const [selectedBoardId, setSelectedBoardId] = useState('');
 
@@ -109,7 +112,7 @@ const PaymentTerm = () => {
   const deletePaymentTermDialog = useBoolean();
   const cloneDialog = useBoolean();
 
-  const { currentYear, academicYears } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: boardData, isLoading: boardsLoading } = useGetBoardsQuery('');
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const paymentTermPermissions = financePermissions.fees.settings.paymentTermActions;
@@ -122,6 +125,15 @@ const PaymentTerm = () => {
   const canClone = hasGrantedPermission(permissions, paymentTermPermissions.clone);
   const canDelete = hasGrantedPermission(permissions, paymentTermPermissions.delete);
   const targetAcademicYearId = currentYear?.id ?? '';
+  const yearsQuery = useGetYearQuery(undefined, { skip: !canClone });
+  const { sources: cloneSourceYears, previousYear } = useMemo(
+    () => getCloneAcademicYears(yearsQuery.data?.items ?? [], currentYear),
+    [yearsQuery.data?.items, currentYear]
+  );
+  useEffect(() => {
+    if (cloneDialog.value) setCloneSourceYearId(previousYear?.id ?? '');
+  }, [cloneDialog.value, targetAcademicYearId, previousYear?.id]);
+  const cloneSourceYear = cloneSourceYears.find((year) => year.id === cloneSourceYearId);
   const isArchived = archiveView === 'archived';
   const boards = useMemo<IBoard[]>(() => {
     if (!boardData?.items || !targetAcademicYearId) return [];
@@ -176,7 +188,7 @@ const PaymentTerm = () => {
   );
 
   const handleCloneSubmit = useCallback(async () => {
-    if (!cloneSourceYearId) {
+    if (!cloneSourceYears.some((year) => year.id === cloneSourceYearId)) {
       shikshaMitraToast.error({ message: 'Please select a source academic year.' });
       return;
     }
@@ -205,7 +217,14 @@ const PaymentTerm = () => {
     } catch {
       shikshaMitraToast.error({ message: 'Failed to clone payment terms.' });
     }
-  }, [cloneDialog, clonePaymentTerms, cloneSourceYearId, fetchSourceTerms, targetAcademicYearId]);
+  }, [
+    cloneDialog,
+    clonePaymentTerms,
+    cloneSourceYearId,
+    cloneSourceYears,
+    fetchSourceTerms,
+    targetAcademicYearId,
+  ]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedPaymentTerm?.id) return;
@@ -270,19 +289,19 @@ const PaymentTerm = () => {
     }
   }, [archivePaymentTerm, archiveReason, archiveTarget]);
 
-  const handleRestore = useCallback(
-    async (term: PaymentTermListItem) => {
-      try {
-        await restorePaymentTerm(term.id).unwrap();
-        shikshaMitraToast.success({
-          message: `Payment term "${term.name}" restored successfully.`,
-        });
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to restore the payment term.' });
-      }
-    },
-    [restorePaymentTerm]
-  );
+  const handleRestore = useCallback(async () => {
+    if (!restoreTarget || restoreState.isLoading) return;
+    const term = restoreTarget;
+    try {
+      await restorePaymentTerm(term.id).unwrap();
+      shikshaMitraToast.success({
+        message: `Payment term "${term.name}" restored successfully.`,
+      });
+      setRestoreTarget(null);
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to restore the payment term.' });
+    }
+  }, [restorePaymentTerm, restoreTarget, restoreState.isLoading]);
 
   const actionLoading =
     deleteState.isLoading ||
@@ -293,8 +312,9 @@ const PaymentTerm = () => {
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <CustomBreadcrumbs
-        heading="Payment Terms"
         description="Configure board-period installment schedules, billing dates, and versioned Draft/Active terms."
+        heading="Payment Terms"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
@@ -315,7 +335,7 @@ const PaymentTerm = () => {
             alignItems={{ xs: 'stretch', sm: 'center' }}
             spacing={1}
           >
-            <FormControl size="small" sx={{ width: { xs: '100%', sm: 300 } }}>
+            <FormControl size="small" sx={{ width: { xs: '100%', sm: 220 } }}>
               <InputLabel id="payment-term-board-filter-label">Education Board</InputLabel>
               <Select
                 labelId="payment-term-board-filter-label"
@@ -430,7 +450,7 @@ const PaymentTerm = () => {
             setArchiveTarget(term);
             setArchiveReason('');
           }}
-          onRestore={handleRestore}
+          onRestore={setRestoreTarget}
           canView={canView}
           canEdit={canEdit}
           canPublish={canPublish}
@@ -549,38 +569,89 @@ const PaymentTerm = () => {
         }
       />
 
-      <Dialog open={cloneDialog.value} onClose={cloneDialog.onFalse} maxWidth="xs" fullWidth>
-        <DialogTitle>Clone Previous Year Payment Terms</DialogTitle>
-        <DialogContent sx={{ pt: 1.5 }}>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Alert severity="info">
-              Cloning will copy all payment terms and their installments from the selected source
-              year into the current target year ({currentYear?.name ?? 'Current Year'}).
-            </Alert>
+      <ConfirmDialog
+        open={Boolean(restoreTarget)}
+        icon="warning"
+        title="Restore Payment Term"
+        onClose={() => setRestoreTarget(null)}
+        disableCancel={restoreState.isLoading}
+        content={
+          <>
+            Restore <strong>{restoreTarget?.name}</strong>? It will return to the Current list and
+            become available for use again.
+          </>
+        }
+        action={
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={restoreState.isLoading}
+            onClick={handleRestore}
+            startIcon={<Iconify icon="mdi:archive-arrow-up-outline" />}
+          >
+            Restore
+          </LoadingButton>
+        }
+      />
+      <Dialog
+        open={cloneDialog.value}
+        onClose={cloneState.isLoading ? undefined : cloneDialog.onFalse}
+        disableEscapeKeyDown={cloneState.isLoading}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ p: 3 }}>Clone Previous Year Payment Terms</DialogTitle>
+        <DialogContent sx={{ px: 3, pb: 3, pt: '8px !important' }}>
+          <Stack spacing={3}>
             <FormControl fullWidth size="small">
-              <InputLabel>Source Academic Year</InputLabel>
+              <InputLabel id="clone-payment-term-year-label" shrink>
+                Source Academic Year
+              </InputLabel>
               <Select
+                labelId="clone-payment-term-year-label"
                 label="Source Academic Year"
+                displayEmpty
+                disabled={cloneState.isLoading || yearsQuery.isFetching || !cloneSourceYears.length}
                 value={cloneSourceYearId}
                 onChange={(event) => setCloneSourceYearId(event.target.value)}
               >
-                {academicYears
-                  ?.filter((year: { id: string; name: string }) => year.id !== targetAcademicYearId)
-                  ?.map((year: { id: string; name: string }) => (
-                    <MenuItem key={year.id} value={year.id}>
-                      {year.name}
-                    </MenuItem>
-                  ))}
+                <MenuItem value="" disabled>
+                  Select an academic year
+                </MenuItem>
+                {cloneSourceYears.map((year) => (
+                  <MenuItem key={year.id} value={year.id}>
+                    {year.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
+            {yearsQuery.isError ? (
+              <Alert
+                severity="error"
+                action={
+                  <Button size="small" onClick={() => yearsQuery.refetch()}>
+                    Retry
+                  </Button>
+                }
+              >
+                Unable to load source academic years.
+              </Alert>
+            ) : yearsQuery.isFetching ? (
+              <Box>Loading academic years…</Box>
+            ) : !cloneSourceYears.length ? (
+              <Box>No other academic years are available to clone.</Box>
+            ) : !previousYear && !cloneSourceYear ? (
+              <Box>No previous academic year is available. Select another source year.</Box>
+            ) : null}
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: 3, gap: 1, borderTop: 1, borderColor: 'divider' }}>
           <Button
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" />}
             onClick={cloneDialog.onFalse}
+            disabled={cloneState.isLoading}
           >
             Cancel
           </Button>
@@ -589,7 +660,7 @@ const PaymentTerm = () => {
             variant="contained"
             loading={cloneState.isLoading}
             startIcon={<Iconify icon="mdi:content-copy" />}
-            disabled={!cloneSourceYearId}
+            disabled={!cloneSourceYear || yearsQuery.isFetching || yearsQuery.isError}
             onClick={handleCloneSubmit}
           >
             Clone Now

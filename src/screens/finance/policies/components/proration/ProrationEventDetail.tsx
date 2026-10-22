@@ -1,5 +1,5 @@
 import { Label } from 'src/components/label';
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 
 import type { IProrationPolicyRule } from '../../types/finance-policy.types';
 
@@ -27,12 +27,7 @@ export function ProrationEventDetail({
   const daily = model === 'Daily';
   const monthly = model === 'MonthlyCutoff';
   const fullMonth = model === 'FullMonthCharge';
-  const minimum = withdrawal
-    ? (rule.earlyWithdrawalMinimumChargeDays ??
-      (rule.earlyWithdrawalRuleType ? 0 : rule.minimumChargeDays))
-    : rule.minimumChargeDays;
-  const cutoff = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
-  const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;
+
   const label = !enabled
     ? 'Disabled'
     : daily
@@ -42,17 +37,7 @@ export function ProrationEventDetail({
         : fullMonth
           ? 'Full Month Charge'
           : 'No Proration';
-  const description = !enabled
-    ? 'This event does not reduce the charge.'
-    : daily
-      ? `Calendar Days · Minimum ${minimum ?? 0} days`
-      : monthly
-        ? withdrawal
-          ? `On/before day ${cutoff}: ${action === 'HalfCharge' ? '50% exit month' : 'waive exit month'}; after: full exit month. Later months excluded.`
-          : `On/before day ${cutoff}: full current month; after: ${action === 'HalfCharge' ? '50% current month' : 'charge from next month'}.`
-        : fullMonth
-          ? 'Charge touched calendar months in full.'
-          : 'Full coverage amount for this event.';
+
   return (
     <Stack spacing={0.5} alignItems="flex-start">
       <Label
@@ -70,9 +55,6 @@ export function ProrationEventDetail({
       >
         {label}
       </Label>
-      <Typography variant="caption" color="text.secondary">
-        {description}
-      </Typography>
     </Stack>
   );
 }

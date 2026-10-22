@@ -236,9 +236,17 @@ export const api = createApi({
       }
       if (url.endsWith('/collect-form')) {
         const balance = balances();
+        const basis = new URLSearchParams(window.location.search).get('allocationBasis');
+        const configured = basis === 'Installment' || basis === 'FeeHead';
+        const lines = ledger.flatMap(month => month.items);
+        const order = basis === 'FeeHead'
+          ? [...lines].sort((a, b) => a.feeHeadName.toLowerCase() < b.feeHeadName.toLowerCase() ? -1 : a.feeHeadName.toLowerCase() > b.feeHeadName.toLowerCase() ? 1 : 0)
+          : lines;
         const form: FeeCollectFormDto = {
           student, summary: { totalFee: balance.totalFees, paidFee: balance.paidFees, pendingFee: balance.pendingFees },
           ledger, charges, allowOnlineCollection: true,
+          ...(configured ? { allocationBasis: basis, collectionPolicyId: 'sample-policy', collectionPolicyName: 'Screen order policy', collectionPolicyVersion: 2,
+            allocationDueFeeOrder: order.map(line => line.dueFeeId), allocationRevision: '0'.repeat(64) } : {}),
         };
         return { data: structuredClone(form) };
       }

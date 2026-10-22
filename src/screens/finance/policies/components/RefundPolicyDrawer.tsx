@@ -54,8 +54,10 @@ function RefundPolicyDrawerSession({
   editData,
   academicYearId = '',
 }: RefundPolicyDrawerProps) {
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+
   const canSubmit = hasGrantedPermission(
     permissions,
     editData
@@ -121,9 +123,10 @@ function RefundPolicyDrawerSession({
           sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}
         >
           <FinancePolicyDrawerHeader
+            description={`Choose refundable paid fees and payment methods · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}. Refunds remain limited to the eligible paid balance.`}
             title={editData ? 'Edit Refund Policy' : 'Create Refund Policy'}
             titleId="refund-policy-title"
-            description={`Choose refundable paid fees and payment methods · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}. Refunds remain limited to the eligible paid balance.`}
+
             descriptionDisplay="tooltip"
             onClose={close}
             disabled={busy}
@@ -186,8 +189,9 @@ function RefundPolicyDrawerSession({
                         isFeeHeadsLoading={isFeeHeadsLoading}
                       />
                       <SectionCard
-                        title="Refund Accounting"
                         subtitle="Choose payment methods, expense category, and default bank account for refund payments."
+                        title="Refund Accounting"
+
                         icon="solar:card-recive-linear"
                       >
                         <Stack spacing={2}>
@@ -209,10 +213,10 @@ function RefundPolicyDrawerSession({
                               formik.errors.allowedPayoutMethods
                             )}
                             helperText={
-                              formik.touched.allowedPayoutMethods &&
+                              (formik.touched.allowedPayoutMethods &&
                               formik.errors.allowedPayoutMethods
                                 ? String(formik.errors.allowedPayoutMethods)
-                                : 'Only selected methods are available for refund requests and payments.'
+                                : undefined) || undefined
                             }
                           />
                           <FinanceRoutingFields

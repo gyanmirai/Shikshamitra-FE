@@ -42,14 +42,15 @@ export default function AccountSettingVersionDialog({
   onClose,
 }: Props) {
   const items = [...(data?.items || [])].sort((a, b) => b.versionNumber - a.versionNumber);
-  const {timeZone} = Intl.DateTimeFormat().resolvedOptions();
+  const { timeZone } = Intl.DateTimeFormat().resolvedOptions();
 
   return (
     <CustomDialog
+      titleInfo="Review recorded changes, who made them, and the values before and after each change."
       open={open}
       handleClose={onClose}
       title="Version History"
-      titleInfo="Review recorded changes, who made them, and the values before and after each change."
+
       maxWidth="sm"
       hasForm={false}
       guardUnsavedChanges={false}

@@ -49,19 +49,35 @@ export function NavVertical({
     [data]
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNavVertical = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: '1 1 0',
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
       {slots?.topArea ?? (
-        <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
+        <Box sx={{ pl: 3.5, pt: 2.5, pb: 1, flexShrink: 0 }}>
           <LogoWithText href={isHost ? hostTenantPath : '/'} />
         </Box>
       )}
-      <Box sx={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          flex: '1 1 0',
+          minHeight: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <Scrollbar fillContent>
           <NavSectionVertical data={filteredData} sx={{ px: 2 }} {...other} />
         </Scrollbar>
       </Box>
+      {slots?.bottomArea}
       {/* Bottom section (Institute Setup) will be rendered outside this Box */}
     </Box>
   );
@@ -69,14 +85,14 @@ export function NavVertical({
   const renderNavMini = (
     <>
       {slots?.topArea ?? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5, flexShrink: 0 }}>
           <Logo href={isHost ? hostTenantPath : '/dashboard'} />
         </Box>
       )}
 
       <NavSectionMini
         data={filteredData}
-        sx={{ pb: 2, px: 0.5, ...hideScrollY, flex: '1 1 auto', overflowY: 'auto' }}
+        sx={{ pb: 2, px: 0.5, ...hideScrollY, flex: '1 1 0', minHeight: 0, overflowY: 'auto' }}
         {...other}
       />
 
@@ -124,7 +140,7 @@ export function NavVertical({
         {isNavMini ? renderNavMini : renderNavVertical}
         {/* Bottom section (Institute Setup) pinned to bottom */}
         {!isHost && (
-          <Box sx={{ width: '100%' }}>
+          <Box sx={{ width: '100%', flexShrink: 0 }}>
             {isNavMini ? (
               <NavSectionMini
                 data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}

@@ -165,10 +165,11 @@ const FeeHeadGroup = ({
           return (
             <React.Fragment key={item.dueFeeId ?? `${item.month}-${item.year ?? year}-${idx}`}>
               <FeeRow
-                name={item.installmentLabel || `${FeeMonth[item.month]} ${item.year ?? year}`}
                 subtitle={
                   item.installmentLabel ? `${FeeMonth[item.month]} ${item.year ?? year}` : undefined
                 }
+                name={item.installmentLabel || `${FeeMonth[item.month]} ${item.year ?? year}`}
+
                 total={item.total}
                 scheduledTotal={item.scheduledTotal}
                 prorationPolicyName={item.prorationPolicyName}

@@ -109,6 +109,14 @@ describe('refund policy payment methods', () => {
     expect(screen.queryByRole('combobox', { name: 'Refund method *' })).not.toBeInTheDocument();
   });
 
+  it('shows section skeletons for eligibility loading, including payment details', () => {
+    mocks.eligibility.isFetching = true;
+    render(<FeeRefundDetailsForm formik={formik()} />);
+    expect(screen.getByRole('status', { name: 'Loading refund details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Refund payment details' })).toBeInTheDocument();
+  });
+
   it('hides refund controls when paid fees have no refundable balance left', () => {
     mocks.eligibility.currentData = {
       allowedPayoutMethods: ['Cash'],

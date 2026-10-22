@@ -339,7 +339,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               ],
               sticky: true,
               stickyPosition: 'right',
-              isSort: false,
+              isSort: true,
               width: 150,
               minWidth: 140,
               maxWidth: 180,
@@ -354,7 +354,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               label: 'Actions',
               width: 150,
               minWidth: 140,
-              align: 'right',
+              align: 'left',
               isSort: false,
               sticky: true,
               stickyPosition: 'right',
@@ -363,20 +363,30 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render(value, row) {
                 return (
                   <AdaptiveThreeDotsActions
+                    directActionLimit={2}
                     placement="right-top"
                     moreLabel={`More actions for ${row.name}`}
-                    sx={{ justifyContent: 'flex-end' }}
+                    sx={{ justifyContent: 'flex-start' }}
                     actions={[
                       {
                         id: 'collect',
                         label: `Collect fee for ${row.name}`,
                         icon: 'mdi:cash-plus',
-                        disabled: !access.canAdd || !row.studentId,
-                        tooltip: !row.studentId
-                          ? 'Collect applicant fees from Applicant 360 or Onboarding.'
-                          : undefined,
+                        disabled:
+                          !access.canAdd ||
+                          !row.studentId ||
+                          row.status === FeeCollectionStatusType.NoFeeAssigned,
+                        tooltip:
+                          row.status === FeeCollectionStatusType.NoFeeAssigned
+                            ? 'No fee structure assigned. Assign a fee structure to collect fees.'
+                            : !row.studentId
+                              ? 'Collect applicant fees from Applicant 360 or Onboarding.'
+                              : undefined,
                         onClick: () =>
-                          access.canAdd && row.studentId && onCollectFee({ ...row, id: row.studentId } as IFeeData),
+                          access.canAdd &&
+                          row.studentId &&
+                          row.status !== FeeCollectionStatusType.NoFeeAssigned &&
+                          onCollectFee({ ...row, id: row.studentId } as IFeeData),
                       },
                       {
                         id: 'view',
@@ -392,12 +402,20 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                         id: 'adjust',
                         label: `Give fee adjustment for ${row.name}`,
                         icon: 'tdesign:adjustment',
-                        disabled: !adjustmentAccess.canAdd || !row.studentId,
-                        tooltip: !row.studentId
-                          ? 'Fee adjustments require a Student fee assignment.'
-                          : undefined,
+                        disabled:
+                          !adjustmentAccess.canAdd ||
+                          !row.studentId ||
+                          row.status === FeeCollectionStatusType.NoFeeAssigned,
+                        tooltip:
+                          row.status === FeeCollectionStatusType.NoFeeAssigned
+                            ? 'No fee structure assigned. Assign a fee structure to give an adjustment.'
+                            : !row.studentId
+                              ? 'Fee adjustments require a Student fee assignment.'
+                              : undefined,
                         onClick: () =>
-                          adjustmentAccess.canAdd && row.studentId &&
+                          adjustmentAccess.canAdd &&
+                          row.studentId &&
+                          row.status !== FeeCollectionStatusType.NoFeeAssigned &&
                           onGiveAdjustment({ ...row, id: row.studentId } as IFeeData),
                       },
                     ]}

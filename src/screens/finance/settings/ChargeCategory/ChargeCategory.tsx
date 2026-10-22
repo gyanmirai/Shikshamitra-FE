@@ -6,7 +6,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -21,9 +20,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
+
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -38,6 +38,8 @@ import {
   TextField,
   Typography,
   DialogActions,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   chargeCategoryApi,
@@ -177,68 +179,74 @@ const FinanceChargeCategory = () => {
   };
 
   // Redux state and dispatch
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
   /**
    * Handles closing the charge category dialog
    */
-  const handleDialogClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose: handleDialogClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addDialog.value || editDialog.value,
+    () => {
       addDialog.onFalse();
       editDialog.onFalse();
-      setTimeout(() => {
-        setSelectedItem(null);
-      }, 200);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      addDialog.onFalse();
-      editDialog.onFalse();
-      setTimeout(() => {
-        setSelectedItem(null);
-      }, 200);
+      setSelectedItem(null);
     }
-  };
+  );
 
   const columns: IColumn[] = useMemo(
     () => [
       {
+        id: 'name',
+        label: 'Name',
+        width: 200,
+        minWidth: 170,
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+        sticky: true,
+        stickyPosition: 'left',
+      },
+      {
         id: 'incomeCategoryName',
         label: 'Income Category',
-        minWidth: '220px',
+        width: 220,
+        minWidth: 180,
         align: 'left',
         render: (_value: unknown, row: any) =>
           row.isAccountingReady ? row.incomeCategoryName || '-' : 'Income Category required',
       },
       {
-        id: 'name',
-        label: 'Name',
-        minWidth: '200px',
-        isSort: true,
-        isFilter: true,
-        align: 'left',
-        sticky: true,
-      },
-      {
         id: 'isApprovalRequired',
         label: 'Approval Required',
-        minWidth: '200px',
+        width: 170,
+        minWidth: 160,
         align: 'left',
-        render: () => 'Yes',
+        render: (_value, row) => (row.isApprovalRequired === false ? 'No' : 'Yes'),
       },
       {
         id: 'description',
         label: 'Description',
-        minWidth: '200px',
+        width: 260,
+        minWidth: 180,
         isSort: true,
         isFilter: true,
         align: 'left',
+        render: (value) => (
+          <CustomTooltip title={typeof value === 'string' ? value : ''}>
+            <Typography variant="body2" noWrap tabIndex={0} sx={{ maxWidth: 260 }}>
+              {value || '-'}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'isActive',
         label: 'Status',
-        minWidth: '140px',
+        width: 110,
+        minWidth: 100,
+        align: 'left',
         sticky: true,
+        stickyPosition: 'right',
         render(value: boolean, row: any) {
           return (
             <Chip
@@ -253,14 +261,18 @@ const FinanceChargeCategory = () => {
       {
         id: 'actions',
         label: 'Actions',
-        minWidth: '70px',
+        width: 120,
+        minWidth: 120,
         isSort: false,
         isFilter: false,
         align: 'left',
         sticky: true,
+        stickyPosition: 'right',
+        excludeFromExport: true,
         render(value, row: any) {
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               placement="right-top"
               actions={[
                 ...(canEdit && archiveView === 'current'
@@ -309,10 +321,14 @@ const FinanceChargeCategory = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, minWidth: 0 }}
+    >
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Charge Category"
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
+        heading="Charge Category"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/charge-management' },
@@ -324,17 +340,17 @@ const FinanceChargeCategory = () => {
             <Button
               variant="contained"
               size="small"
-              startIcon={<Add />}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               onClick={handleAdd}
-              sx={{ px: '32px' }}
+              color="inherit"
             >
-              Charge Category
+              Add Charge Category
             </Button>
           ) : undefined
         }
       />
 
-      <Card sx={{ p: 1, mb: 1.5 }}>
+      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
         <Stack direction="row" spacing={1}>
           <Button
             size="small"
@@ -361,6 +377,9 @@ const FinanceChargeCategory = () => {
 
       <CustomizableTable
         tableId="charge-category-table"
+        tableTitle="Charge Categories"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' } }}
+        tableContainerProps={{ sx: { height: 1 } }}
         noDataText={
           archiveView === 'archived'
             ? 'No archived charge categories.'
@@ -372,6 +391,9 @@ const FinanceChargeCategory = () => {
         serverSidePagination
         serverSideSearch
         totalCount={data?.totalCount}
+        page={queryParams.page - 1}
+        rowsPerPage={queryParams.pageSize}
+        searchTerm={queryParams.search}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}
       />
@@ -379,13 +401,8 @@ const FinanceChargeCategory = () => {
       {/* Add/Edit Dialog */}
       <CustomDialog
         open={addDialog.value || editDialog.value}
-        handleClose={() => {
-          addDialog.onFalse();
-          editDialog.onFalse();
-          setTimeout(() => {
-            setSelectedItem(null);
-          }, 200);
-        }}
+        guardUnsavedChanges={false}
+        handleClose={() => handleDialogClose()}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h6">
@@ -395,18 +412,20 @@ const FinanceChargeCategory = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This modal allows you to create a new charge Category by defining its name, selecting whether it is fixed or percentage-based, and entering the respective amount or percentage."
+              title="Set the category name, income category, and whether new charges require approval."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        <ChargeCategoryDialog
-          open={addDialog.value || editDialog.value}
-          onClose={handleDialogClose}
-          editData={selectedItem}
-        />
+        {(addDialog.value || editDialog.value) && (
+          <ChargeCategoryDialog
+            open={addDialog.value || editDialog.value}
+            onClose={handleDialogClose}
+            editData={selectedItem}
+          />
+        )}
       </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
@@ -464,9 +483,9 @@ const FinanceChargeCategory = () => {
                 required
                 error={deactivationReason.length > 0 && !deactivationReason.trim()}
                 helperText={
-                  deactivationReason.length > 0 && !deactivationReason.trim()
+                  (deactivationReason.length > 0 && !deactivationReason.trim()
                     ? 'Archive reason is required.'
-                    : `${deactivationReason.trim().length}/${ARCHIVE_REASON_MAX_LENGTH} characters`
+                    : undefined) || undefined
                 }
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
@@ -524,9 +543,10 @@ interface ChargeCategoryFormValues {
   chargeName: string;
   description: string;
   incomeCategoryId: string;
+  isApprovalRequired: boolean;
 }
 
-const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
+export const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
@@ -610,6 +630,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
       chargeName: editData?.name || '',
       description: editData?.description || '',
       incomeCategoryId: editData?.incomeCategoryId || '',
+      isApprovalRequired: editData?.isApprovalRequired ?? true,
     },
     validationSchema,
     enableReinitialize: true,
@@ -631,7 +652,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     try {
       const payload = {
         name: values.chargeName,
-        isApprovalRequired: true,
+        isApprovalRequired: values.isApprovalRequired,
         description: values.description || '',
         incomeCategoryId: values.incomeCategoryId,
       };
@@ -664,7 +685,6 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
 
   // Handle dialog cancellation and form reset
   const handleClose = () => {
-    formik.resetForm();
     onClose(null, false);
   };
 
@@ -699,9 +719,9 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                 error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
                 inputProps={{ maxLength: 40 }}
                 helperText={
-                  formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
+                  (formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
                     ? formik.errors.chargeName
-                    : undefined
+                    : undefined) || undefined
                 }
               />
             </ShakingTextField>
@@ -722,16 +742,26 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                 onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
                 error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
                 helperText={
-                  formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                  (formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
                     ? (formik.errors.incomeCategoryId as string)
-                    : 'Its default income account will be used for collection posting.'
+                    : undefined) || undefined
                 }
               />
             </ShakingTextField>
 
-            <Typography variant="body2" color="text.secondary">
-              Charges in every category require approval from an authorized person.
-            </Typography>
+            <Box>
+              <FormControlLabel
+                sx={{ m: 0 }}
+                label="Approval Required"
+                control={
+                  <Switch
+                    name="isApprovalRequired"
+                    checked={formik.values.isApprovalRequired}
+                    onChange={(_, checked) => formik.setFieldValue('isApprovalRequired', checked)}
+                  />
+                }
+              />
+            </Box>
 
             {/* Description Field */}
             <ShakingTextField

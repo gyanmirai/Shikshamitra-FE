@@ -159,8 +159,9 @@ const MonthGroup = ({
           return (
             <React.Fragment key={item.dueFeeId ?? `${item.feeHeadId}-${idx}`}>
               <FeeRow
-                name={item.feeHeadName}
                 subtitle={item.installmentLabel}
+                name={item.feeHeadName}
+
                 total={item.total}
                 scheduledTotal={item.scheduledTotal}
                 prorationPolicyName={item.prorationPolicyName}

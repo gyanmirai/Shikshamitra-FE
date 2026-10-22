@@ -8,6 +8,25 @@ import {
 } from './financeAudit.mapper';
 
 describe('financeAudit.mapper', () => {
+  it('uses policy form labels and hides representation-only Apply On changes', () => {
+    const event = {
+      id: 'policy-event',
+      subModuleCode: 'concession_policy',
+      entityType: 'concession_policy',
+      action: 'update',
+      occurredAt: '2026-10-21T00:00:00Z',
+      changedFields: [{ field: 'ApplyOn', oldValue: '1', newValue: '3' }],
+    } as never;
+    const log = mapFinanceAuditEventDtoToLog(event);
+    expect(log.beforeData?.ApplyOn).toBe('Current unpaid installment');
+    expect(log.afterData?.ApplyOn).toBe('All installments, including paid');
+    const unchanged = mapFinanceAuditEventDtoToLog({
+      ...(event as object),
+      changedFields: [{ field: 'ApplyOn', oldValue: '3', newValue: 'AllFees' }],
+    } as never);
+    expect(unchanged.beforeData).toBeUndefined();
+    expect(unchanged.afterData).toBeUndefined();
+  });
   it('maps API event to FinanceAuditLog', () => {
     const log = mapFinanceAuditEventDtoToLog({
       id: 'evt-1',

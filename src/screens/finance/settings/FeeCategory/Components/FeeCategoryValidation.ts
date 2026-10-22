@@ -4,7 +4,8 @@ import type { IFeeCategory } from './type';
 
 export const feeCategoryValidationSchema = (
   existingNames: Set<string>,
-  editData?: IFeeCategory | null
+  editData?: IFeeCategory | null,
+  existingCategories: IFeeCategory[] = []
 ) =>
   Yup.object().shape({
     name: Yup.string()
@@ -15,11 +16,23 @@ export const feeCategoryValidationSchema = (
       .test('max-length', 'Category Name must be between 3 and 100 characters', (value) =>
         value ? value.trim().length <= 100 : true
       )
-      .test('unique-fee-category', 'Category Name already exists', (value) => {
+      .test('unique-fee-category', 'Category Name already exists', function checkUnique(value) {
         if (!value?.trim()) return true;
-        const trimmed = value.trim().toLowerCase();
+        const trimmed = value.trim().replace(/\s+/g, ' ').toLowerCase();
         // Allow saving the same name when editing the current record
-        if (editData && editData.name?.trim().toLowerCase() === trimmed) return true;
+        if (editData && editData.name?.trim().replace(/\s+/g, ' ').toLowerCase() === trimmed)
+          return true;
+        const duplicate = existingCategories.find(
+          (category) =>
+            category.id !== editData?.id &&
+            category.name.trim().replace(/\s+/g, ' ').toLowerCase() === trimmed
+        );
+        if (duplicate)
+          return this.createError({
+            message: duplicate.isActive
+              ? 'Category name already exists in Current categories. Use a different name.'
+              : 'Category name already exists in Archived categories. Restore it from the Archived tab or use a different name.',
+          });
         return !existingNames.has(trimmed);
       }),
     description: Yup.string()

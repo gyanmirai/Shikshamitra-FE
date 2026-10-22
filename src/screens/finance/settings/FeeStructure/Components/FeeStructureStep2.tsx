@@ -7,7 +7,7 @@ import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
@@ -29,6 +29,7 @@ import FeeGeneralInfoCard from './GeneralFeeInfoCard';
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 import AddFeeStructureDialog from './FeeStructureDialog';
 import { useFeeStructureClassData } from './useFeeStructureClassData';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const FeeStructureStep = ({
   formik,

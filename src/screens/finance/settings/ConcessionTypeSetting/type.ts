@@ -58,6 +58,7 @@ export interface IConcessionTableProps {
   canEdit: boolean;
   canChangeStatus: boolean;
   canDelete: boolean;
+  canAdd?: boolean;
   data: IConcessionTypeForm[];
   isLoading: boolean;
   addConcessionType: UseBooleanReturn;
@@ -67,6 +68,9 @@ export interface IConcessionTableProps {
   onVersionHistory?: (row: IConcessionTypeForm) => void;
   onDelete?: (row: IConcessionTypeForm) => void;
   totalCount?: number;
+  page?: number;
+  rowsPerPage?: number;
+  searchTerm?: string;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
   onServerSearch?: (searchTerm: string) => void;
 }

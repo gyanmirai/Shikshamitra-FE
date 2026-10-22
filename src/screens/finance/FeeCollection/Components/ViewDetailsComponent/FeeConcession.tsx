@@ -87,6 +87,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
         {
+          stickyPosition: 'right',
           id: 'status',
           label: 'Status',
           align: 'left',
@@ -101,6 +102,8 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           },
         },
         {
+          stickyPosition: 'right',
+          excludeFromExport: true,
           id: 'action',
           label: 'Action',
           align: 'left',
@@ -110,7 +113,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           minWidth: 50,
           render(value, row) {
             return (
-              <AdaptiveThreeDotsActions
+              <AdaptiveThreeDotsActions directActionLimit={2}
                 actions={[
                   { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => {} },
                 ]}

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { getIn } from 'formik';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
@@ -36,7 +35,7 @@ import {
 
 import SlabTimelinePreview from './SlabTimelinePreview';
 import CollectionNumberField from './CollectionNumberField';
-import { SectionCard, CollectionInfoTip, computeSlabIssues } from './CollectionCommon';
+import { SectionCard, computeSlabIssues, CollectionInfoTip } from './CollectionCommon';
 
 interface CollectionLateFeeSectionProps {
   formik: any;
@@ -59,8 +58,9 @@ export default function CollectionLateFeeSection({
 
   return (
     <SectionCard
-      title="Late Fee Rules"
       subtitle="Enable charges on unpaid fee heads, then set the grace period, calculation method, escalation slabs, and limits."
+      title="Late Fee Rules"
+
       icon={GlobalIcons.receiptIcon}
       headerSpacing={isLateFeeEnabled ? 2 : 0}
       action={
@@ -99,11 +99,11 @@ export default function CollectionLateFeeSection({
                     input: {
                       endAdornment: (
                         <InputAdornment position="end">
-                          days
                           <CollectionInfoTip
                             label="Grace period"
                             title="Number of buffer days after the due date before late fees start accruing."
                           />
+                          days
                         </InputAdornment>
                       ),
                     },
@@ -111,7 +111,8 @@ export default function CollectionLateFeeSection({
                   }}
                   error={formik.touched.gracePeriodDays && Boolean(formik.errors.gracePeriodDays)}
                   helperText={
-                    formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)
+                    (formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)) ||
+                    undefined
                   }
                 />
               </ShakingTextField>
@@ -214,8 +215,9 @@ export default function CollectionLateFeeSection({
                         Boolean(formik.errors.lateFeeApplyOnFeeHeads)
                       }
                       helperText={
-                        formik.touched.lateFeeApplyOnFeeHeads &&
-                        (formik.errors.lateFeeApplyOnFeeHeads as string)
+                        (formik.touched.lateFeeApplyOnFeeHeads &&
+                          (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
+                        undefined
                       }
                     />
                   )}
@@ -251,11 +253,9 @@ export default function CollectionLateFeeSection({
                     onBlur={formik.handleBlur}
                   >
                     <MenuItem value="Flat">Flat Fixed Amount (₹)</MenuItem>
-                    <MenuItem value="Percentage">Percentage Per Day (%)</MenuItem>
                     <MenuItem value="PerDay">Daily Fixed Amount (₹/day)</MenuItem>
                     <MenuItem value="PerWeek">Weekly Fixed Amount (₹/week)</MenuItem>
                     <MenuItem value="PerMonth">Monthly Fixed Amount (₹/month)</MenuItem>
-                    <MenuItem value="Compound">Compound Interest</MenuItem>
                     <MenuItem value="Slab">Escalation Slab Based</MenuItem>
                   </Select>
                   {formik.touched.lateFeeType && formik.errors.lateFeeType && (
@@ -293,7 +293,10 @@ export default function CollectionLateFeeSection({
                       htmlInput: { min: 0 },
                     }}
                     error={formik.touched.flatAmount && Boolean(formik.errors.flatAmount)}
-                    helperText={formik.touched.flatAmount && (formik.errors.flatAmount as string)}
+                    helperText={
+                      (formik.touched.flatAmount && (formik.errors.flatAmount as string)) ||
+                      undefined
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -327,7 +330,10 @@ export default function CollectionLateFeeSection({
                       htmlInput: { min: 0, max: 100, step: 0.01 },
                     }}
                     error={formik.touched.percentage && Boolean(formik.errors.percentage)}
-                    helperText={formik.touched.percentage && (formik.errors.percentage as string)}
+                    helperText={
+                      (formik.touched.percentage && (formik.errors.percentage as string)) ||
+                      undefined
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -400,7 +406,8 @@ export default function CollectionLateFeeSection({
                     }}
                     error={formik.touched.amountPerDay && Boolean(formik.errors.amountPerDay)}
                     helperText={
-                      formik.touched.amountPerDay && (formik.errors.amountPerDay as string)
+                      (formik.touched.amountPerDay && (formik.errors.amountPerDay as string)) ||
+                      undefined
                     }
                   />
                 </ShakingTextField>
@@ -436,7 +443,8 @@ export default function CollectionLateFeeSection({
                     }}
                     error={formik.touched.amountPerWeek && Boolean(formik.errors.amountPerWeek)}
                     helperText={
-                      formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)
+                      (formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)) ||
+                      undefined
                     }
                   />
                 </ShakingTextField>
@@ -472,7 +480,8 @@ export default function CollectionLateFeeSection({
                     }}
                     error={formik.touched.amountPerMonth && Boolean(formik.errors.amountPerMonth)}
                     helperText={
-                      formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)
+                      (formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)) ||
+                      undefined
                     }
                   />
                 </ShakingTextField>
@@ -618,8 +627,9 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.errors, `escalationRules[${idx}].startDay`)
                                     )}
                                     helperText={
-                                      getIn(formik.touched, `escalationRules[${idx}].startDay`) &&
-                                      getIn(formik.errors, `escalationRules[${idx}].startDay`)
+                                      (getIn(formik.touched, `escalationRules[${idx}].startDay`) &&
+                                        getIn(formik.errors, `escalationRules[${idx}].startDay`)) ||
+                                      undefined
                                     }
                                     sx={{ width: 100 }}
                                     slotProps={{
@@ -649,8 +659,9 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.errors, `escalationRules[${idx}].endDay`)
                                     )}
                                     helperText={
-                                      getIn(formik.touched, `escalationRules[${idx}].endDay`) &&
-                                      getIn(formik.errors, `escalationRules[${idx}].endDay`)
+                                      (getIn(formik.touched, `escalationRules[${idx}].endDay`) &&
+                                        getIn(formik.errors, `escalationRules[${idx}].endDay`)) ||
+                                      undefined
                                     }
                                     sx={{ width: 100 }}
                                     slotProps={{
@@ -707,8 +718,9 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.errors, `escalationRules[${idx}].value`)
                                     )}
                                     helperText={
-                                      getIn(formik.touched, `escalationRules[${idx}].value`) &&
-                                      getIn(formik.errors, `escalationRules[${idx}].value`)
+                                      (getIn(formik.touched, `escalationRules[${idx}].value`) &&
+                                        getIn(formik.errors, `escalationRules[${idx}].value`)) ||
+                                      undefined
                                     }
                                     sx={{ width: 125 }}
                                     slotProps={{
@@ -751,102 +763,6 @@ export default function CollectionLateFeeSection({
                 </Paper>
               </Grid>
             )}
-
-            {/* Rounding Method */}
-
-            {/* Runaway Caps */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <ShakingTextField
-                error={
-                  formik.touched.maximumLateFeeAmount && Boolean(formik.errors.maximumLateFeeAmount)
-                }
-              >
-                <CollectionNumberField
-                  fullWidth
-                  size="small"
-                  kind="amount"
-                  label="Maximum late fee amount"
-                  placeholder="No limit"
-                  name="maximumLateFeeAmount"
-                  value={formik.values.maximumLateFeeAmount ?? ''}
-                  onChange={(e) =>
-                    formik.setFieldValue(
-                      'maximumLateFeeAmount',
-                      e.target.value === '' ? null : Number(e.target.value)
-                    )
-                  }
-                  onBlur={formik.handleBlur}
-                  slotProps={{
-                    input: {
-                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <CollectionInfoTip
-                            label="Maximum late fee amount"
-                            title="Optional cap: late fees will never exceed this total amount."
-                          />
-                        </InputAdornment>
-                      ),
-                    },
-                    htmlInput: { min: 0 },
-                  }}
-                  error={
-                    formik.touched.maximumLateFeeAmount &&
-                    Boolean(formik.errors.maximumLateFeeAmount)
-                  }
-                  helperText={
-                    formik.touched.maximumLateFeeAmount &&
-                    (formik.errors.maximumLateFeeAmount as string)
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <ShakingTextField
-                error={
-                  formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
-                }
-              >
-                <CollectionNumberField
-                  fullWidth
-                  size="small"
-                  kind="days"
-                  label="Maximum charging days"
-                  placeholder="No limit"
-                  name="maximumChargingDays"
-                  value={formik.values.maximumChargingDays ?? ''}
-                  onChange={(e) =>
-                    formik.setFieldValue(
-                      'maximumChargingDays',
-                      e.target.value === '' ? null : Number(e.target.value)
-                    )
-                  }
-                  onBlur={formik.handleBlur}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          days
-                          <CollectionInfoTip
-                            label="Maximum charging days"
-                            title="Optional cutoff: stop accruing additional late fees after this many days."
-                          />
-                        </InputAdornment>
-                      ),
-                    },
-                    htmlInput: { min: 0 },
-                  }}
-                  error={
-                    formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
-                  }
-                  helperText={
-                    formik.touched.maximumChargingDays &&
-                    (formik.errors.maximumChargingDays as string)
-                  }
-                />
-              </ShakingTextField>
-            </Grid>
 
             <Grid size={{ xs: 12 }}>
               <FinanceRoutingFields

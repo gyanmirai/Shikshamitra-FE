@@ -3,7 +3,44 @@ import { useState } from 'react';
 
 export const useGetStructureContextQuery = 'context';
 export const usePreviewStructureMutation = 'preview';
-export const useSaveStructureDraftMutation = 'save';
+export function useSaveStructureDraftMutation() {
+  return [
+    (args: any) => ({
+      unwrap: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const record = {
+          ...structuredClone(args.standardFeeStructures),
+          id: args.requestId,
+          status: 1,
+          revisionRootId: args.requestId,
+          revisionNumber: 1,
+          concurrencyStamp: 'copied-stamp',
+          creationTime: '2026-10-22T10:30:00Z',
+        };
+        fixtureClassRecords[args.standardId] ??= [];
+        fixtureClassRecords[args.standardId].push(record);
+        return record;
+      },
+    }),
+    { isLoading: false },
+  ] as const;
+}
+
+export function useGetStructureCopySourcesQuery({ classes }: any) {
+  return {
+    currentData: classes.flatMap((item: any) =>
+      (fixtureClassRecords[item.id] ?? []).map((structure) => ({
+        standardId: item.id,
+        className: item.name,
+        structure,
+      }))
+    ),
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: () => {},
+  };
+}
 export const usePublishStructureMutation = 'publish';
 export const useReviseStructureMutation = 'revision';
 export const useDeleteClassWiseFeeStructureMutation = 'delete';
@@ -124,6 +161,32 @@ export const pinnedPolicyFixture = {
   refundPolicyId: null,
   refundPolicyVersionId: null,
 };
+export const fixtureClassRecords: Record<string, any[]> = {
+  class: [readyFixture, { ...readyFixture, id: 'second', name: 'Class 5 Activity Fees' }],
+  other: [{ ...readyFixture, id: 'class-six-fees', name: 'Class 6 Annual Fees' }],
+};
+export const incompleteHeadsFixture = {
+  ...readyFixture,
+  feeHeads: [
+    {
+      ...readyFixture.feeHeads[0],
+      amount: null,
+      paymentTermId: null,
+      paymentTermVersionId: null,
+      paymentTermName: null,
+    },
+    {
+      ...readyFixture.feeHeads[0],
+      id: 'transport-line',
+      feeHeadId: 'transport',
+      feeHeadName: 'Transport Fee',
+      amount: 2500,
+      paymentTermId: null,
+      paymentTermVersionId: null,
+      paymentTermName: null,
+    },
+  ],
+};
 let saved: any = readyFixture;
 const preview = (candidate: any) => {
   const errors = [
@@ -181,7 +244,7 @@ export default function useFixtureApi({ type, currentQueryAndMutation: action }:
         setLoading(true);
         try {
           if (action === 'preview') return preview(args.standardFeeStructures);
-          if (action === 'save') {
+          if (action === 'save' || action === useSaveStructureDraftMutation) {
             saved = {
               ...structuredClone(args.standardFeeStructures),
               id: 'saved',

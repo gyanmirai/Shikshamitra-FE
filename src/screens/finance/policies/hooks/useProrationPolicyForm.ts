@@ -32,6 +32,12 @@ import type {
   IProrationPolicyFormValues,
 } from '../types/finance-policy.types';
 
+import {
+  normalizePolicyName,
+  isDuplicatePolicyNameError,
+  DUPLICATE_POLICY_NAME_MESSAGE,
+} from '../utils/policy-name';
+
 interface FeeHeadLookup {
   id: string;
   name: string;
@@ -40,15 +46,32 @@ interface FeeHeadLookup {
 
 export function apiRuleToForm(rule: IProrationPolicyRule): IProrationFeeHeadRule {
   const toFormModel = (model?: IProrationPolicyRule['ruleType']) =>
-    model === 'Daily' ? 'DailyProration' as const :
-      model === 'MonthlyCutoff' ? 'MonthlyProration' as const :
-        model === 'FullMonthCharge' ? 'FullMonthCharge' as const : 'NoProration' as const;
-  const configuration = (model: IProrationFeeHeadRule['ruleType'], withdrawal = false): IProrationFeeHeadRule['configuration'] => {
+    model === 'Daily'
+      ? ('DailyProration' as const)
+      : model === 'MonthlyCutoff'
+        ? ('MonthlyProration' as const)
+        : model === 'FullMonthCharge'
+          ? ('FullMonthCharge' as const)
+          : ('NoProration' as const);
+  const configuration = (
+    model: IProrationFeeHeadRule['ruleType'],
+    withdrawal = false
+  ): IProrationFeeHeadRule['configuration'] => {
     const minimum = withdrawal ? rule.earlyWithdrawalMinimumChargeDays : rule.minimumChargeDays;
     const cutoff = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
     const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;
-    if (model === 'DailyProration') return { calculationBasis: 'CalendarDays', minimumChargeDays: minimum ?? 0, ...(!withdrawal && { roundOff: 'RoundUp' as const }) };
-    if (model === 'MonthlyProration') return { cutOffDay: cutoff ?? 15, monthlyRule: action === 'HalfCharge' ? 'HalfMonthRule' : 'ChargeNextMonth', ...(!withdrawal && { roundOff: 'RoundUp' as const }) };
+    if (model === 'DailyProration')
+      return {
+        calculationBasis: 'CalendarDays',
+        minimumChargeDays: minimum ?? 0,
+        ...(!withdrawal && { roundOff: 'RoundUp' as const }),
+      };
+    if (model === 'MonthlyProration')
+      return {
+        cutOffDay: cutoff ?? 15,
+        monthlyRule: action === 'HalfCharge' ? 'HalfMonthRule' : 'ChargeNextMonth',
+        ...(!withdrawal && { roundOff: 'RoundUp' as const }),
+      };
     return {};
   };
   const ruleType = toFormModel(rule.ruleType);
@@ -130,7 +153,7 @@ export function toProrationPolicyPayload(
 ): ProrationPolicySavePayload {
   return {
     academicYearId: values.academicYearId,
-    policyName: values.policyName.trim(),
+    policyName: normalizePolicyName(values.policyName),
     policyCode: values.policyCode.trim() || null,
     description: values.description?.trim() || null,
     status: values.status,
@@ -371,7 +394,13 @@ export function useProrationPolicyForm({
         resetForm();
         onClose();
       } catch (error) {
-        shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+        const parsed = parseApiProblemDetail(error);
+        if (isDuplicatePolicyNameError(parsed.errorCode)) {
+          await formik.setFieldTouched('policyName', true, false);
+          formik.setFieldError('policyName', DUPLICATE_POLICY_NAME_MESSAGE);
+          return;
+        }
+        shikshaMitraToast.error({ message: parsed.detail });
       }
     },
   });

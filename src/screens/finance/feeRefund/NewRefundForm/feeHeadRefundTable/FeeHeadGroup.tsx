@@ -3,7 +3,7 @@
 import { isNaN } from 'lodash';
 import React, { useMemo, useState } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Divider, Collapse, Typography } from '@mui/material';
 
 import RefundMonthRow from './RefundMonthRow';
@@ -19,6 +19,7 @@ export interface FeeHeadGroupProps {
   formik: RefundFormik;
   showValidation: boolean;
   mode?: 'refund' | 'adjustment';
+  selectedReceiptId?: string;
   onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
   applyInAllState?: { isApplying: boolean; amount: number | string };
@@ -32,6 +33,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   formik,
   showValidation,
   mode = 'refund',
+  selectedReceiptId,
   onToggleMonth,
   onToggleAll,
   applyInAllState = { isApplying: false, amount: 0 },
@@ -81,7 +83,8 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
   const handleAmountChange = (month: string, refundable: number, value: number | string): void => {
     let clamped: number | string = value;
     if (value !== '' && !isNaN(Number(value))) {
-      clamped = Math.min(Math.max(0, Number(value)), refundable);
+      if (Number(value) < 0) clamped = 0;
+      else if (Number(value) > refundable) clamped = refundable;
     } else if (value === '') {
       clamped = '';
     }
@@ -130,6 +133,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         isOpen={open}
         totalRefundInput={totalRefundInput}
         mode={mode}
+        selectedReceiptId={selectedReceiptId}
         isFullRefund={isFullRefund}
         onCheckboxToggle={onToggleAll}
         onExpandToggle={() => setOpen((o) => !o)}
@@ -139,74 +143,88 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
       />
 
       <Collapse in={open} timeout={250}>
-        <Divider />
-        <RefundColHeader mode={mode} />
-
-        {visibleItems.map((item, idx) => {
-          const refundable = Math.max(0, item.refundable);
-          const isSelected = selectedMonths.includes(item.month);
-          const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? '';
-          const inputError =
-            showValidation &&
-            isSelected &&
-            (refundValue === '' || Number(refundValue) <= 0 || Number(refundValue) > refundable);
-
-          return (
-            <React.Fragment key={item.month}>
-              <RefundMonthRow
-                item={item}
-                isSelected={isSelected}
-                isDisabled={refundable === 0}
-                refundValue={refundValue}
-                showInputError={inputError}
-                mode={mode}
-                isFullRefund={isFullRefund}
-                onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
-                onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
-              />
-              {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.35 }} />}
-            </React.Fragment>
-          );
-        })}
-
-        {/* ── Per-head selection summary footer ── */}
-        {selectedMonths.length > 0 && (
-          <>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Box sx={{ minWidth: 960 }}>
             <Divider />
-            <Box
-              display="flex"
-              justifyContent="flex-end"
-              alignItems="center"
-              gap={1}
-              px={2}
-              py={1}
-              sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                Selected:{' '}
-                <strong>
-                  {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''}
-                </strong>
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
-                <strong style={{ color: theme.palette.success.main }}>
-                  {formatCurrency(totalRefundable)}
-                </strong>
-              </Typography>
-              {totalRefundInput > 0 && (
-                <Typography
-                  variant="caption"
-                  color="primary.main"
-                  fontWeight={700}
-                  sx={{ fontVariantNumeric: 'tabular-nums' }}
+            <RefundColHeader mode={mode} />
+
+            {visibleItems.map((item, idx) => {
+              const refundable = Math.max(0, item.refundable);
+              const isSelected = selectedMonths.includes(item.month);
+              const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? '';
+              const inputError =
+                showValidation &&
+                isSelected &&
+                (refundValue === '' ||
+                  Number(refundValue) <= 0 ||
+                  Number(refundValue) > refundable);
+              const receiptLocked = Boolean(
+                !isAdj && selectedReceiptId && item.sourceReceiptId !== selectedReceiptId
+              );
+
+              return (
+                <React.Fragment key={item.month}>
+                  <RefundMonthRow
+                    item={item}
+                    isSelected={isSelected}
+                    isDisabled={refundable === 0 || receiptLocked}
+                    disabledReason={
+                      receiptLocked
+                        ? 'Clear the selected installments to choose this receipt.'
+                        : undefined
+                    }
+                    refundValue={refundValue}
+                    showInputError={inputError}
+                    mode={mode}
+                    isFullRefund={isFullRefund}
+                    onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
+                    onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
+                  />
+                  {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.35 }} />}
+                </React.Fragment>
+              );
+            })}
+
+            {/* ── Per-head selection summary footer ── */}
+            {selectedMonths.length > 0 && (
+              <>
+                <Divider />
+                <Box
+                  display="flex"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  gap={1}
+                  px={2}
+                  py={1}
+                  sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
                 >
-                  {isAdj ? 'Adjustment' : 'Refund'}: {formatCurrency(totalRefundInput)}
-                </Typography>
-              )}
-            </Box>
-          </>
-        )}
+                  <Typography variant="caption" color="text.secondary">
+                    Selected:{' '}
+                    <strong>
+                      {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''}
+                    </strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {isAdj ? 'Max adjustable' : 'Max refundable'}:{' '}
+                    <strong style={{ color: theme.palette.success.main }}>
+                      {formatNumber(totalRefundable, 'INR')}
+                    </strong>
+                  </Typography>
+                  {totalRefundInput > 0 && (
+                    <Typography
+                      variant="caption"
+                      color="primary.main"
+                      fontWeight={700}
+                      sx={{ fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {isAdj ? 'Adjustment' : 'Refund'}: {formatNumber(totalRefundInput, 'INR')}
+                    </Typography>
+                  )}
+                </Box>
+              </>
+            )}
+          </Box>
+        </Box>
       </Collapse>
     </Box>
   );

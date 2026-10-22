@@ -654,8 +654,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: variant === 'embedded' ? 0.5 : 2,
+                  p: variant === 'embedded' ? 1 : 2,
                   flexWrap: 'wrap',
+                  gap: 1,
+                  flexShrink: 0,
                   width: '100%',
                   borderTop: `1px dashed ${theme.vars.palette.divider}`,
                 }}
@@ -671,7 +673,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     }
                     label="Dense"
                     sx={{
-                      ml: 1,
+                      ml: 0,
+                      mr: 0,
+                      minHeight: 40,
                       '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
                     }}
                   />
@@ -708,12 +712,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                       width: { xs: '100%', sm: 'auto' },
                       maxWidth: '100%',
                       ml: 'auto',
+                      flex: '0 1 auto',
                       '& .MuiTablePagination-toolbar': {
                         height: 'auto',
                         minHeight: 40,
                         flexWrap: 'wrap',
                         justifyContent: 'flex-end',
+                        rowGap: 1,
+                        pl: 0,
+                        pr: 0,
                       },
+                      '& .MuiTablePagination-spacer': { display: 'none' },
                       '& .MuiTablePagination-actions': { ml: 1 },
                       '& .MuiTablePagination-selectLabel': { fontSize: '13px' },
                       '& .MuiTablePagination-input': { fontSize: '13px' },

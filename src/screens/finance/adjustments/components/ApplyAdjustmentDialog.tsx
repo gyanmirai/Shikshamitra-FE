@@ -117,7 +117,7 @@ const ApplyAdjustmentDialog = ({
           <Stack spacing={1}>
             <AdjustmentSummaryCards summary={summary} />
 
-            {errorText && <Alert severity="warning">{errorText}</Alert>}
+            {errorText && <Alert severity="error">{errorText}</Alert>}
 
             {!isPreviewMode && (
               <>

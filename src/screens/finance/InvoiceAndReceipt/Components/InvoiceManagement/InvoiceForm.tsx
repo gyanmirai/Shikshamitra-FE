@@ -13,13 +13,12 @@ import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Chip,
   Grid,
-  Alert,
   Paper,
   Button,
   Divider,
@@ -443,16 +442,6 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
             </Box>
 
             {/* Info alert */}
-            <Alert
-              severity="info"
-              variant="outlined"
-              sx={{ mt: 2, borderRadius: 2, '& .MuiAlert-message': { width: '100%' } }}
-            >
-              <Typography variant="body2">
-                Invoice will be created with <b>Pending</b> status. Payment can be recorded
-                separately.
-              </Typography>
-            </Alert>
           </Box>
         </Paper>
       </DialogScrollContent>
@@ -538,7 +527,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       setFieldValue('academicYear', value);
                     }}
                     error={!!(touched.academicYear && errors.academicYear)}
-                    helperText={(touched.academicYear && errors.academicYear) || ''}
+                    helperText={(touched.academicYear && errors.academicYear) || undefined}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -563,7 +552,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       setFieldValue('board', value);
                     }}
                     error={!!(touched.board && errors.board)}
-                    helperText={(touched.board && errors.board) || ''}
+                    helperText={(touched.board && errors.board) || undefined}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     disabled={!values.academicYear}
                   />
@@ -593,7 +582,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       await getClassByMedium(value);
                     }}
                     error={!!(touched.medium && errors.medium)}
-                    helperText={(touched.medium && errors.medium) || ''}
+                    helperText={(touched.medium && errors.medium) || undefined}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -621,7 +610,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       }
                     }}
                     error={!!(touched.class && errors.class)}
-                    helperText={(touched.class && errors.class) || ''}
+                    helperText={(touched.class && errors.class) || undefined}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>
@@ -640,7 +629,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                     }}
                     onBlur={() => setFieldTouched('divisions', true)}
                     error={touched.divisions && Boolean(errors.divisions)}
-                    helperText={(touched.divisions && errors.divisions) as string}
+                    helperText={((touched.divisions && errors.divisions) as string) || undefined}
                     labelKey="name"
                     valueKey="id"
                     multiple
@@ -680,7 +669,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                         label="Student *"
                         fullWidth
                         error={!!(touched.students && errors.students)}
-                        helperText={(touched.students && errors.students) as string}
+                        helperText={((touched.students && errors.students) as string) || undefined}
                       />
                     )}
                     renderOption={(prop: any, option: any) => (
@@ -712,7 +701,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
                       );
                     }}
                     error={!!(touched.billingCycle && errors.billingCycle)}
-                    helperText={(touched.billingCycle && errors.billingCycle) || ''}
+                    helperText={(touched.billingCycle && errors.billingCycle) || undefined}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
                 </ShakingTextField>

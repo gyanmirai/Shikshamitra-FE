@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -55,8 +55,9 @@ export default function RefundPolicyWorkspace() {
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Refund Policy"
         description="Configure refundable paid fees, eligibility, payment methods, and accounting for refund requests."
+        heading="Refund Policy"
+
         links={[
           { name: 'Finance', href: financePaths.dashboard },
           { name: 'Policies & Rules', href: financePaths.policies.root },
@@ -87,7 +88,7 @@ export default function RefundPolicyWorkspace() {
               disabled={!academicYearId}
               sx={{ px: 2 }}
             >
-              Create policy
+              Policy
             </Button>
           )}
         </Stack>

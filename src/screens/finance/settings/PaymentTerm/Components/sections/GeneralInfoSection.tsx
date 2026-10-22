@@ -35,16 +35,20 @@ interface GeneralInfoSectionProps {
 // ---------------------------------------------------------------------------
 export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) {
   const defaultSelectionDisabled = formik.values.status !== 'Active';
+  const conflict = formik.status?.nameConflict;
+  const nameError =
+    (conflict?.name === formik.values.paymentTermName && conflict.message) ||
+    (formik.touched.paymentTermName && formik.errors.paymentTermName);
 
   return (
     <SectionCard
-      title="General information"
       subtitle="Identify the schedule and optionally make it the board default after publishing."
       info="Draft keeps the schedule editable. Active publishes the current version for use by Fee Structures."
+      title="General information"
     >
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         {/* Name */}
-        <Grid size={{ xs: 12, sm: 7 }}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <TextField
             fullWidth
             size="small"
@@ -54,17 +58,14 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
             value={formik.values.paymentTermName || ''}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            error={formik.touched.paymentTermName && Boolean(formik.errors.paymentTermName)}
-            helperText={
-              (formik.touched.paymentTermName && formik.errors.paymentTermName) ||
-              `${(formik.values.paymentTermName || '').length}/100`
-            }
+            error={Boolean(nameError)}
+            helperText={nameError}
             inputProps={{ maxLength: 100 }}
           />
         </Grid>
 
         {/* Editable lifecycle status — archive remains a guarded table action. */}
-        <Grid size={{ xs: 12, sm: 5 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl
             fullWidth
             size="small"
@@ -88,22 +89,23 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               <MenuItem value="Draft">Draft</MenuItem>
               <MenuItem value="Active">Active</MenuItem>
             </Select>
-            {formik.touched.status && formik.errors.status && (
-              <FormHelperText>{formik.errors.status}</FormHelperText>
-            )}
+            <FormHelperText>
+              {(formik.touched.status && formik.errors.status) || ' '}
+            </FormHelperText>
           </FormControl>
         </Grid>
 
         {/* Board */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl
             fullWidth
             size="small"
             error={formik.touched.boardId && Boolean(formik.errors.boardId)}
           >
-            <InputLabel>Board *</InputLabel>
+            <InputLabel id="payment-term-board-label">Board *</InputLabel>
             <Select
               label="Board *"
+              labelId="payment-term-board-label"
               name="boardId"
               value={formik.values.boardId}
               disabled={Boolean(formik.values.id)}
@@ -116,14 +118,14 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
                 </MenuItem>
               ))}
             </Select>
-            {formik.touched.boardId && formik.errors.boardId && (
-              <FormHelperText>{formik.errors.boardId}</FormHelperText>
-            )}
+            <FormHelperText>
+              {(formik.touched.boardId && formik.errors.boardId) || ' '}
+            </FormHelperText>
           </FormControl>
         </Grid>
 
         {/* Description */}
-        <Grid size={{ xs: 12, sm: 7 }}>
+        <Grid size={{ xs: 12, sm: 8 }}>
           <TextField
             fullWidth
             size="small"
@@ -135,15 +137,13 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
             value={formik.values.description || ''}
             onChange={formik.handleChange}
             error={Boolean(formik.errors.description)}
-            helperText={
-              formik.errors.description || `${(formik.values.description || '').length}/500`
-            }
+            helperText={formik.errors.description}
             inputProps={{ maxLength: 500 }}
           />
         </Grid>
 
         {/* Default Term toggle */}
-        <Grid size={{ xs: 12, sm: 5 }}>
+        <Grid size={12} sx={{ display: 'flex', flexDirection: 'column' }}>
           <Card
             data-testid="default-payment-term-toggle"
             variant="outlined"
@@ -152,7 +152,7 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               py: 1,
               display: 'flex',
               alignItems: 'center',
-              minHeight: 88,
+              flex: 1,
             }}
           >
             <FormControlLabel
@@ -167,18 +167,8 @@ export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) 
               }
               label={
                 <Box ml={0.5}>
-                  <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
+                  <Typography variant="body2" fontWeight={600}>
                     Default Payment Term
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    fontSize="0.68rem"
-                  >
-                    {defaultSelectionDisabled
-                      ? 'Only an Active payment term can be the default.'
-                      : 'Only one default is allowed per board. Selecting this replaces that board’s previous default.'}
                   </Typography>
                 </Box>
               }

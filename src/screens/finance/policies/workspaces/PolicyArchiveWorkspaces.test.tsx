@@ -72,18 +72,18 @@ it.each([
       { skip: false }
     );
     expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:false`);
-    expect(screen.getByRole('button', { name: 'Create policy' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
     const currentButton = screen.getByRole('button', { name: 'Current' });
     const archivedButton = screen.getByRole('button', { name: /Archived.*7/ });
     expect(currentButton).toHaveClass('MuiButton-contained');
     expect(archivedButton).toHaveClass('MuiButton-outlined');
     fireEvent.click(archivedButton);
     expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:true`);
-    expect(screen.queryByRole('button', { name: 'Create policy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
     expect(archivedButton).toHaveClass('MuiButton-contained');
     fireEvent.click(currentButton);
     expect(screen.getByTestId('policy-table')).toHaveTextContent(`${kind}:false`);
-    expect(screen.getByRole('button', { name: 'Create policy' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
   }
 );
 
@@ -102,9 +102,9 @@ it('collection uses the same Current and Archived buttons with the archive count
   expect(screen.getByTestId('policy-table')).toHaveTextContent('collection:false');
   fireEvent.click(screen.getByRole('button', { name: /Archived.*7/ }));
   expect(screen.getByTestId('policy-table')).toHaveTextContent('collection:true');
-  expect(screen.queryByRole('button', { name: 'Create policy' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Current' }));
-  expect(screen.getByRole('button', { name: 'Create policy' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Create Policy' })).toBeVisible();
 });
 
 it.each([
@@ -120,6 +120,6 @@ it.each([
     expect(list).toHaveBeenCalledWith(expect.objectContaining({ academicYearId: '' }), {
       skip: true,
     });
-    expect(screen.queryByRole('button', { name: 'Create policy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Policy' })).not.toBeInTheDocument();
   }
 );

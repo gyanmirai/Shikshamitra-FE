@@ -13,6 +13,7 @@ type Props<T extends Record<string, string>> = {
   label: string;
   placeholder: string;
   autoComplete: string;
+  required?: boolean;
 };
 
 export function AuthPasswordField<T extends Record<string, string>>({

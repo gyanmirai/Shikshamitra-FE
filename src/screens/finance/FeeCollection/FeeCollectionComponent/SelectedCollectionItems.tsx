@@ -27,6 +27,7 @@ export interface SelectedCollectionRow {
   term: string;
   amount: number;
   onRemove: () => void;
+  remainingAmount?: number;
 }
 
 interface Props {
@@ -35,6 +36,8 @@ interface Props {
   disabled: boolean;
   onMoveFee: (from: number, to: number) => void;
   onMoveCharge: (from: number, to: number) => void;
+  fixedFeeOrder?: boolean;
+  showAllocation?: boolean;
 }
 
 const rowLayout = {
@@ -45,10 +48,18 @@ const rowLayout = {
   px: 0.5,
 } as const;
 
-function SortableRow({ row, disabled }: { row: SelectedCollectionRow; disabled: boolean }) {
+function SortableRow({
+  row,
+  disabled,
+  order,
+}: {
+  row: SelectedCollectionRow;
+  disabled: boolean;
+  order?: number;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
-    disabled,
+    disabled: disabled || order !== undefined,
   });
   const name = row.term === '—' ? row.label : `${row.label}, ${row.term}`;
   return (
@@ -69,20 +80,26 @@ function SortableRow({ row, disabled }: { row: SelectedCollectionRow; disabled: 
       }}
     >
       <Box role="cell">
-        <CustomTooltip title={`Drag to reorder ${name}`}>
-          <span>
-            <IconButton
-              {...attributes}
-              {...listeners}
-              aria-label={`Reorder ${name}`}
-              disabled={disabled}
-              size="small"
-              sx={{ p: 0.5, touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
-            >
-              <Iconify icon="mdi:drag" width={16} />
-            </IconButton>
-          </span>
-        </CustomTooltip>
+        {order !== undefined ? (
+          <Typography variant="caption" color="text.secondary">
+            {order}
+          </Typography>
+        ) : (
+          <CustomTooltip title={`Drag to reorder ${name}`}>
+            <span>
+              <IconButton
+                {...attributes}
+                {...listeners}
+                aria-label={`Reorder ${name}`}
+                disabled={disabled}
+                size="small"
+                sx={{ p: 0.5, touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
+              >
+                <Iconify icon="mdi:drag" width={16} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        )}
       </Box>
       <Typography role="cell" variant="body2" sx={{ overflowWrap: 'anywhere' }}>
         {row.label}
@@ -96,6 +113,16 @@ function SortableRow({ row, disabled }: { row: SelectedCollectionRow; disabled: 
         sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
       >
         {formatNumber(row.amount, 'INR')}
+        {row.remainingAmount !== undefined && (
+          <Typography
+            component="span"
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block' }}
+          >
+            Remaining {formatNumber(row.remainingAmount, 'INR')}
+          </Typography>
+        )}
       </Typography>
       <Box role="cell">
         <CustomTooltip title={`Remove ${name} from collection`}>
@@ -122,6 +149,8 @@ export default function SelectedCollectionItems({
   disabled,
   onMoveFee,
   onMoveCharge,
+  fixedFeeOrder = false,
+  showAllocation = false,
 }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -132,7 +161,13 @@ export default function SelectedCollectionItems({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={({ active, over }: DragEndEvent) => {
-        if (disabled || !over || active.id === over.id) return;
+        if (
+          disabled ||
+          (fixedFeeOrder && name === 'Selected fees') ||
+          !over ||
+          active.id === over.id
+        )
+          return;
         const from = rows.findIndex((row) => row.id === active.id);
         const to = rows.findIndex((row) => row.id === over.id);
         if (from >= 0 && to >= 0) onMove(from, to);
@@ -140,8 +175,13 @@ export default function SelectedCollectionItems({
     >
       <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
         <Box role="rowgroup" aria-label={name}>
-          {rows.map((row) => (
-            <SortableRow key={row.id} row={row} disabled={disabled} />
+          {rows.map((row, index) => (
+            <SortableRow
+              key={row.id}
+              row={row}
+              disabled={disabled}
+              order={fixedFeeOrder && name === 'Selected fees' ? index + 1 : undefined}
+            />
           ))}
         </Box>
       </SortableContext>
@@ -151,7 +191,13 @@ export default function SelectedCollectionItems({
     <Box role="table" aria-label="Selected collection items" sx={{ minWidth: 0 }}>
       <Box role="rowgroup" sx={{ bgcolor: 'background.neutral', borderRadius: 1 }}>
         <Box role="row" sx={{ ...rowLayout, py: 0.75 }}>
-          {['Reorder', 'Fee item', 'Term', 'Amount', 'Remove'].map((label, index) => (
+          {[
+            fixedFeeOrder ? 'Order' : 'Reorder',
+            'Fee item',
+            'Term',
+            showAllocation ? 'Pay now' : 'Amount',
+            'Remove',
+          ].map((label, index) => (
             <Typography
               key={label}
               role="columnheader"

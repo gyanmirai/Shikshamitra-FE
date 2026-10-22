@@ -97,6 +97,9 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:FeeRefund:010012': 'The selected fee head is not refundable under the assigned policy.',
   'Finance:FeeRefund:010025': 'This payment is not settled yet, so it cannot be refunded.',
   'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
+  'Finance:PaymentTerm:000023':
+    'A payment term with this name or generated code already exists. Use a different payment term name.',
+  'Finance:ConcessionPolicy:010027': 'Enter a percentage with no more than two decimal places.',
   'Finance:PaymentTerm:000039':
     'These template options cannot produce a valid schedule for the selected board period. Review the installment count and date rules, then try again.',
   'Finance:Concession:030002':
@@ -180,10 +183,14 @@ const addValidationErrorCandidates = (candidates: string[], validationErrors: un
 export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   error = normalizePermissionDeniedError(error);
   const isProblemBody =
-    error && typeof error === 'object' &&
-    ('detail' in error || 'title' in error || 'errorCode' in error || 'code' in error ||
+    error &&
+    typeof error === 'object' &&
+    ('detail' in error ||
+      'title' in error ||
+      'errorCode' in error ||
+      'code' in error ||
       (error.error && typeof error.error === 'object'));
-  const data = error?.response?.data ?? (isProblemBody ? error : error?.data ?? error) ?? {};
+  const data = error?.response?.data ?? (isProblemBody ? error : (error?.data ?? error)) ?? {};
   const candidates: string[] = [];
 
   if (typeof error === 'string') addCandidate(candidates, error);
@@ -209,6 +216,12 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
 
   const errorCode = data?.errorCode || data?.error?.code || data?.code;
   const businessData = data?.data ?? data?.error?.data;
+  const duplicateCategoryMessage =
+    errorCode === 'Finance:FeeCategory:010002'
+      ? businessData?.Location === 'Archived'
+        ? 'Category name already exists in Archived categories. Restore it from the Archived tab or use a different name.'
+        : 'Category name already exists in Current categories. Use a different name.'
+      : undefined;
   const isDivisionDuplicate = isDuplicateDivisionError(errorCode, businessData);
   const duplicateStandardName = businessData?.name;
   const isLegacyStandardDuplicate =
@@ -235,6 +248,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
         typeof businessData?.name === 'string' ? businessData.name : undefined
       )) ||
     duplicateStandardMessage ||
+    duplicateCategoryMessage ||
     knownMessage ||
     specificCandidate ||
     candidates[0] ||

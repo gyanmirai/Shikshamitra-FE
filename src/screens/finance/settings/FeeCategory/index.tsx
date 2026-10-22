@@ -2,18 +2,18 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
-import { Add } from '@mui/icons-material';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
+import { useDispatch, useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Stack, Button, DialogActions } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
@@ -45,44 +45,28 @@ const FeeCategoryCreation = () => {
     { skip: !academicYearId }
   );
 
-  // Global state for tracking unsaved changes
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
   // State to store currently selected fee category for edit/delete/view operations
   const [selectedFeeCategory, setSelectedFeeCategory] = useState<IFeeCategory | null>(null);
 
   const dispatch = useDispatch();
 
-  /**
-   * Handles closing of add/edit fee category dialog
-   * @param _e - Event object
-   * @param isSubmit - Boolean indicating if form was submitted
-   */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset state after dialog closes
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedFeeCategory(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    // If form was submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addFeeCategoryDialog.onFalse();
-      resetState();
-    }
-    // If no unsaved changes, simply close dialog
-    else if (!isChanges) {
-      addFeeCategoryDialog.onFalse();
-      setTimeout(() => {
-        setSelectedFeeCategory(null);
-      }, 200);
-    }
+  const handleCloseDetails = () => {
+    viewFeeCategoryDialog.onFalse();
+    setSelectedFeeCategory(null);
   };
 
+  const [formBusy, setFormBusy] = useState(false);
+  const { handleClose, confirmation } = useFinanceFormClose(
+    addFeeCategoryDialog.value,
+    () => {
+      addFeeCategoryDialog.onFalse();
+      setSelectedFeeCategory(null);
+    },
+    formBusy
+  );
+
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Fee Category"
         description="Organize fee heads into categories and manage their status."
@@ -95,12 +79,15 @@ const FeeCategoryCreation = () => {
         action={
           canAdd && archiveView === 'current' ? (
             <Button
-              onClick={() => addFeeCategoryDialog.onTrue()}
+              onClick={() => {
+                setSelectedFeeCategory(null);
+                dispatch(setIsChanges(false));
+                addFeeCategoryDialog.onTrue();
+              }}
               aria-label="Add Fee Category"
               size="small"
-              startIcon={<Add />}
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               variant="contained"
-              sx={{ px: '32px' }}
             >
               Fee Category
             </Button>
@@ -108,7 +95,7 @@ const FeeCategoryCreation = () => {
         }
       />
 
-      <Card sx={{ p: 1, mb: 1.5 }}>
+      <Card sx={{ p: 1, mb: 1, flexShrink: 0 }}>
         <Stack direction="row" spacing={1}>
           <Button
             size="small"
@@ -127,48 +114,52 @@ const FeeCategoryCreation = () => {
         </Stack>
       </Card>
 
-      <FeeCategoryTable
-        key={archiveView}
-        archived={archiveView === 'archived'}
-        onAddFeeCategory={addFeeCategoryDialog}
-        setEditData={setSelectedFeeCategory}
-        onView={(data) => {
-          setSelectedFeeCategory(data);
-          viewFeeCategoryDialog.onTrue();
-        }}
-      />
+      <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+        <FeeCategoryTable
+          key={archiveView}
+          archived={archiveView === 'archived'}
+          onAddFeeCategory={addFeeCategoryDialog}
+          setEditData={setSelectedFeeCategory}
+          onView={(data) => {
+            setSelectedFeeCategory(data);
+            viewFeeCategoryDialog.onTrue();
+          }}
+        />
+      </Box>
 
-      <FeeCategoryForm
-        open={addFeeCategoryDialog}
-        onClose={handleClose}
-        editData={selectedFeeCategory}
-      />
+      {confirmation}
+      {addFeeCategoryDialog.value && (
+        <FeeCategoryForm
+          open={addFeeCategoryDialog}
+          onClose={handleClose}
+          editData={selectedFeeCategory}
+          onBusyChange={setFormBusy}
+        />
+      )}
 
       {/* View Details Dialog */}
       <CustomDialog
         open={viewFeeCategoryDialog.value}
-        handleClose={() => {
-          viewFeeCategoryDialog.onFalse();
-          setTimeout(() => {
-            setSelectedFeeCategory(null);
-          }, 200);
-        }}
+        handleClose={handleCloseDetails}
         maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Fee Category Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View detailed information about this fee category including mapped fee heads and concession rules."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title="View Fee Category Details"
+        titleInfo="View this fee category, its mapped fee heads, and their concession settings."
+        hasForm={false}
+        guardUnsavedChanges={false}
       >
-        {selectedFeeCategory?.id && <FeeCategoryView id={selectedFeeCategory.id} />}
+        <DialogScrollContent sx={{ p: 2 }} scrollBarProps={{ sx: { flex: 1, minHeight: 0 } }}>
+          {selectedFeeCategory?.id && <FeeCategoryView id={selectedFeeCategory.id} />}
+        </DialogScrollContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={handleCloseDetails}
+          >
+            Close
+          </Button>
+        </DialogActions>
       </CustomDialog>
     </Box>
   );

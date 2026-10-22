@@ -8,7 +8,7 @@ import CustomSelect from 'src/components/custom-select';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
 import { Box, Chip, Grid, Alert, Stack, Divider, Typography } from '@mui/material';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
-import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+
 import { useValidateCollectionPolicyAttachmentMutation } from 'src/redux/finance/financeFeeStructure';
 import {
   type FinancePolicyType,
@@ -104,7 +104,6 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
   icon,
   color,
   required,
-  description,
   value,
   onChange,
   isEditing,
@@ -217,9 +216,6 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
             />
           )}
         </Box>
-        <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 1 }}>
-          {description}
-        </Typography>
 
         <CustomSelect
           label={`Select ${label}`}
@@ -258,7 +254,6 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
     (p: any) => p.id === values.collectionPolicyId
   );
 
-
   const [validateAttachment, { data: attachmentImpact, isLoading: impactLoading }] =
     useValidateCollectionPolicyAttachmentMutation();
   const feeHeadIdsKey = feeHeads
@@ -275,21 +270,13 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
     });
   }, [feeStructureMetadataId, values.collectionPolicyId, feeHeadIdsKey, validateAttachment]);
 
-  const { data: feeHeadData } = useGetActiveFeeHeadsQuery(currentYear?.id as string, {
-    skip: !currentYear?.id,
-  });
-  const structureFeeHeadIds = new Set(feeHeads.map((x) => x.feeHeadId));
   const lateFeePolicyHeadIds = new Set<string>(
     selectedCollectionPolicy?.enableLateFee
       ? (selectedCollectionPolicy.lateFeeApplyOnFeeHeads ?? [])
       : []
   );
-  const applicablePolicyHeadIds = lateFeePolicyHeadIds;
+
   const lateFeeCovered = feeHeads.filter((x) => lateFeePolicyHeadIds.has(x.feeHeadId));
-  const headsWithoutLateFee = feeHeads.filter((x) => !lateFeePolicyHeadIds.has(x.feeHeadId));
-  const policyOnlyHeads = (feeHeadData ?? []).filter(
-    (x) => applicablePolicyHeadIds.has(x.id) && !structureFeeHeadIds.has(x.id)
-  );
 
   return (
     <Box sx={{ p: 2 }}>
@@ -379,43 +366,9 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
                 This policy cannot be attached to the selected fee structure.
               </Alert>
             )}
-
-            {selectedCollectionPolicy?.enableLateFee && lateFeeCovered.length === 0 && (
-              <Alert severity="warning" sx={{ mb: 1 }}>
-                None of this structure&apos;s Fee Heads are in the policy&apos;s late-fee scope. The
-                policy can still be attached, but it will not charge a late fee here.
-              </Alert>
-            )}
-
-            {selectedCollectionPolicy?.enableLateFee && headsWithoutLateFee.length > 0 && (
-              <Alert severity="warning" sx={{ mb: 1 }}>
-                Late fee will not apply to:{' '}
-                {headsWithoutLateFee.map((x) => x.feeHeadName || x.feeHeadId).join(', ')}.
-              </Alert>
-            )}
-
-            {policyOnlyHeads.length > 0 && (
-              <Alert severity="info">
-                Policy heads not present in this structure are ignored:{' '}
-                {policyOnlyHeads.map((x) => x.name).join(', ')}.
-              </Alert>
-            )}
-
-            {(attachmentImpact?.warnings ?? []).map((warning: string) => (
-              <Typography
-                key={warning}
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                mt={0.75}
-              >
-                {warning}
-              </Typography>
-            ))}
           </Box>
         </>
       )}
-
     </Box>
   );
 };

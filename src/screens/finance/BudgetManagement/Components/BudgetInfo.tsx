@@ -77,7 +77,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                 formik.setFieldValue('board', value);
               }}
               error={!!(formik.touched.board && formik.errors.board) || false}
-              helperText={(formik.touched.board && formik.errors.board) || ''}
+              helperText={(formik.touched.board && formik.errors.board) || undefined}
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
             />
           </ShakingTextField>
@@ -101,7 +101,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                 formik.setFieldTouched('budgetTitle', false);
               }}
               error={formik.touched.budgetTitle && Boolean(formik.errors.budgetTitle)}
-              helperText={formik.touched.budgetTitle && formik.errors.budgetTitle}
+              helperText={(formik.touched.budgetTitle && formik.errors.budgetTitle) || undefined}
               size="small"
             />
           </ShakingTextField>
@@ -257,7 +257,9 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                 formik.setFieldTouched('totalBudgetAmount', false);
               }}
               error={formik.touched.totalBudgetAmount && Boolean(formik.errors.totalBudgetAmount)}
-              helperText={formik.touched.totalBudgetAmount && formik.errors.totalBudgetAmount}
+              helperText={
+                (formik.touched.totalBudgetAmount && formik.errors.totalBudgetAmount) || undefined
+              }
               sx={{ width: '100%', padding: 0, borderRadius: 1 }}
             />
           </ShakingTextField>

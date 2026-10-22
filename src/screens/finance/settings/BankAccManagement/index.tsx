@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
@@ -14,7 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   bankAccountApi,
@@ -67,7 +68,6 @@ const BankAccountManagement: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   // Global state for tracking unsaved changes
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State to store currently selected bank account for edit/delete operations
   const [selectedBankAccount, setSelectedBankAccount] = useState<IBankAccount | null>(null);
@@ -79,30 +79,21 @@ const BankAccountManagement: React.FC = () => {
    * @param _e - Event object
    * @param isSubmit - Boolean indicating if form was submitted
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedBankAccount(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addBankAccountDialog.value,
+    () => {
       addBankAccountDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addBankAccountDialog.onFalse();
-      setTimeout(() => {
-        setSelectedBankAccount(null);
-      }, 200);
+      setSelectedBankAccount(null);
     }
-  };
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Bank Accounts"
         description="Manage bank accounts used by the school. Add, edit or delete bank account details and link payment methods or branches."
+        heading="Bank Accounts"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Accounts', href: '/finance/reconciliation' },
@@ -151,23 +142,21 @@ const BankAccountManagement: React.FC = () => {
       />
 
       <CustomDialog
-        open={addBankAccountDialog.value}
-        handleClose={() => {
-          addBankAccountDialog.onFalse();
-          setTimeout(() => {
-            setSelectedBankAccount(null);
-          }, 200);
-        }}
-        title={selectedBankAccount ? 'Edit Bank Account' : 'Add Bank Account'}
         titleInfo="Maintain bank, account, and payment details used by Finance."
+        open={addBankAccountDialog.value}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
+        title={selectedBankAccount ? 'Edit Bank Account' : 'Add Bank Account'}
 
         maxWidth="sm"
       >
-        <BankAccountForm
-          open={addBankAccountDialog}
-          onClose={handleClose}
-          editData={selectedBankAccount}
-        />
+        {addBankAccountDialog.value && (
+          <BankAccountForm
+            open={addBankAccountDialog}
+            onClose={handleClose}
+            editData={selectedBankAccount}
+          />
+        )}
       </CustomDialog>
 
       <ConfirmDialog

@@ -20,6 +20,7 @@ export const useIncomeTableColumns = ({
   useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'categoryName',
         label: 'Income Category',
         align: 'left',
@@ -71,6 +72,8 @@ export const useIncomeTableColumns = ({
       ...(onEdit || onDelete
         ? [
             {
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'actions',
               label: 'Actions',
               align: 'left',
@@ -79,7 +82,7 @@ export const useIncomeTableColumns = ({
               sticky: true,
               minWidth: 50,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions
+                <AdaptiveThreeDotsActions directActionLimit={2}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

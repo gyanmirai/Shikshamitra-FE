@@ -2,7 +2,6 @@
 
 import type { FormikProps } from 'formik';
 
-import React from 'react';
 import {
   Grid,
   Select,
@@ -33,8 +32,9 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
 
   return (
     <SectionCard
-      title="Refund Calculation & Ceilings"
       subtitle="Configure refund formula mode, rate values and regulatory hard caps."
+      title="Refund Calculation & Ceilings"
+
       icon="solar:calculator-minimalistic-bold-duotone"
     >
       <Grid container spacing={2}>
@@ -51,10 +51,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
               onBlur={handleBlur}
             >
               <MenuItem value="RemainingPaidAmount">Entire Remaining Paid Amount (100%)</MenuItem>
-              <MenuItem
-                value="ManualUpToEligible"
-                disabled={!values.allowPartialRefund}
-              >
+              <MenuItem value="ManualUpToEligible" disabled={!values.allowPartialRefund}>
                 Manual (Entered in request up to eligible)
               </MenuItem>
               <MenuItem value="Percentage">Percentage of Eligible Amount (%)</MenuItem>
@@ -86,7 +83,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
               }
               onBlur={handleBlur}
               error={isFieldInvalid('percentageValue')}
-              helperText={getHelperText('percentageValue') || 'Calculated against the eligible settled balance'}
+              helperText={getHelperText('percentageValue')}
               slotProps={{
                 input: {
                   endAdornment: <InputAdornment position="end">%</InputAdornment>,
@@ -114,7 +111,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
               }
               onBlur={handleBlur}
               error={isFieldInvalid('fixedAmount')}
-              helperText={getHelperText('fixedAmount') || 'Fixed amount refunded up to available balance'}
+              helperText={getHelperText('fixedAmount')}
               slotProps={{
                 input: {
                   startAdornment: <InputAdornment position="start">₹</InputAdornment>,
@@ -126,7 +123,6 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
         )}
 
         {/* Rounding Method */}
-
 
         {/* Maximum Per Request */}
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -146,10 +142,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
             }
             onBlur={handleBlur}
             error={isFieldInvalid('maximumPerRequest')}
-            helperText={
-              getHelperText('maximumPerRequest') ||
-              'Hard ceiling on any single refund voucher. Leave empty for no single-voucher cap.'
-            }
+            helperText={getHelperText('maximumPerRequest')}
             slotProps={{
               input: {
                 startAdornment: <InputAdornment position="start">₹</InputAdornment>,
@@ -177,10 +170,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
             }
             onBlur={handleBlur}
             error={isFieldInvalid('maximumPerStudentYear')}
-            helperText={
-              getHelperText('maximumPerStudentYear') ||
-              'Cumulative limit per student in this academic year (includes processed & reserved).'
-            }
+            helperText={getHelperText('maximumPerStudentYear')}
             slotProps={{
               input: {
                 startAdornment: <InputAdornment position="start">₹</InputAdornment>,

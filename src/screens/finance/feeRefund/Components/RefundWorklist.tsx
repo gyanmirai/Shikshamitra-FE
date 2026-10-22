@@ -352,6 +352,7 @@ export default function RefundWorklist({
               },
             },
             {
+              align: 'left',
               id: 'actions',
               label: 'Actions',
               sticky: true,
@@ -364,7 +365,7 @@ export default function RefundWorklist({
                 const actions: string[] = row._availableActions ?? [];
                 const refund = row as IStudentFeeData;
                 return (
-                  <AdaptiveThreeDotsActions
+                  <AdaptiveThreeDotsActions directActionLimit={2}
                     moreLabel={`More refund actions for ${row.name}`}
                     placement="right-top"
                     actions={[

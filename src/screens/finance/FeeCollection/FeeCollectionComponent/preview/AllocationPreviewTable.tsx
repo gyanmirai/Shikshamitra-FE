@@ -3,6 +3,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomizableTable from 'src/components/customizabaleTable';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import { Box, Stack, Divider, Collapse, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
@@ -451,9 +453,10 @@ const GrandTotalsFooter = ({ rows }: { rows: AllocatedRow[] }) => {
 
 interface Props {
   allocatedRows: AllocatedRow[];
+  preserveOrder?: boolean;
 }
 
-const AllocationPreviewTable = ({ allocatedRows }: Props) => {
+const AllocationPreviewTable = ({ allocatedRows, preserveOrder = false }: Props) => {
   const theme = useTheme();
 
   if (allocatedRows.length === 0) {
@@ -489,6 +492,51 @@ const AllocationPreviewTable = ({ allocatedRows }: Props) => {
         <Typography variant="body2" color="text.disabled">
           No items can be covered by the entered payment amount.
         </Typography>
+      </Box>
+    );
+  }
+
+  if (preserveOrder) {
+    const columns: IColumn[] = [
+      { id: 'order', label: 'Order', width: 56 },
+      { id: 'name', label: 'Fee item', minWidth: 180 },
+      { id: 'term', label: 'Installment', minWidth: 140 },
+      ...(['originalAmount', 'paidAmount', 'remainingAmount'] as const).map((id, index) => ({
+        id,
+        label: ['Outstanding', 'Pay now', 'Remaining'][index],
+        align: 'right' as const,
+        minWidth: 100,
+        render: (value: number) => formatNumber(value, 'INR'),
+      })),
+      { id: 'statusLabel', label: 'Status', minWidth: 100 },
+    ].map((column) => ({ ...column, isSort: false, isFilter: false }));
+    const data = allocatedRows.map((row, index) => ({
+      ...row,
+      id: `${row.type}:${row.key}`,
+      order: index + 1,
+      name: row.type === 'fee' ? row.feeHeadName : row.chargeName,
+      term: row.type === 'fee' ? row.installmentLabel || row.period : 'Additional charge',
+      statusLabel:
+        row.paidAmount === 0 ? 'Unpaid' : row.remainingAmount > 0 ? 'Partially paid' : 'Cleared',
+    }));
+    return (
+      <Box>
+        <Typography variant="subtitle1" component="h3" sx={{ pb: 1 }}>
+          Payment Allocation Breakdown
+        </Typography>
+        <CustomizableTable
+          tableId="collection-allocation-review"
+          tableTitle="Payment allocation"
+          columns={columns}
+          data={data}
+          showToolbar={false}
+          isPagination={false}
+          isSearch={false}
+          isFilter={false}
+          isShowedDense={false}
+          tableContainerProps={{ sx: { height: 'auto' } }}
+        />
+        <GrandTotalsFooter rows={allocatedRows} />
       </Box>
     );
   }
