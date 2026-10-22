@@ -42,7 +42,6 @@ import {
 } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   useLazyFindAdmissionDirectFamiliesQuery,
-  useGetAdmissionApplicationCounsellorsQuery,
   useStartAdmissionDirectRegistrationMutation,
 } from 'src/redux/student/admissions/admission-applications-api';
 
@@ -174,7 +173,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         const application = await start({
           requestId,
           admissionOfferingId: values.offeringId,
-          counsellorId: values.counsellorId || null,
+          counsellorId: null,
           existingFamilyId: values.existingFamilyId || null,
           createSeparateFamily: values.createSeparateFamily,
           separateFamilyReason: values.createSeparateFamily
@@ -239,11 +238,6 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
     skip: !formik.values.offeringId,
     refetchOnMountOrArgChange: true,
   });
-  const counsellors = useGetAdmissionApplicationCounsellorsQuery(
-    { offeringId: formik.values.offeringId },
-    { skip: !formik.values.offeringId }
-  );
-
   const fetchCycles = useCallback(
     async (search: string, page: number) => {
       const skipCount = (page - 1) * 25;
@@ -557,30 +551,6 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                       ? 'Admission room capacity is not set. Division seats are checked during onboarding.'
                       : `${capacity.remainingSeats} of ${capacity.capacity} admission room seats available.`}
                     {capacity.isFull && ' Admission room capacity is full; you can still register.'}
-                  </Alert>
-                )}
-                <CustomSelect
-                  fullWidth
-                  size="small"
-                  label="Journey counsellor (optional)"
-                  value={formik.values.counsellorId}
-                  disabled={
-                    !formik.values.offeringId || counsellors.isLoading || counsellors.isError
-                  }
-                  onChange={(value) => formik.setFieldValue('counsellorId', String(value))}
-                  helperText="Leave blank to use the offering's counsellor assignment settings."
-                  options={[
-                    { value: '', label: 'Use offering settings' },
-                    ...(counsellors.currentData ?? []).map((counsellor) => ({
-                      value: counsellor.id,
-                      label: counsellor.name || counsellor.userName,
-                    })),
-                  ]}
-                />
-                {counsellors.isError && (
-                  <Alert severity="warning">
-                    Counsellor choices could not be loaded. Automatic assignment still uses the
-                    offering settings.
                   </Alert>
                 )}
               </FormSectionCard>

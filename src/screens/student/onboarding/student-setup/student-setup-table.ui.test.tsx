@@ -243,11 +243,8 @@ describe('Student Setup table task interactions', () => {
     const tableProps = vi.mocked(CustomizableTable).mock.lastCall?.[0];
     expect(
       tableProps?.columns.filter((column) => column.defaultHidden).map((column) => column.id)
-    ).toEqual(['admissionRoute', 'identifiers', 'accounts', 'ownerName']);
-    expect(tableProps?.columns.find((column) => column.id === 'ownerName')).toMatchObject({
-      isFilter: true,
-      isSort: true,
-    });
+    ).toEqual(['admissionRoute', 'identifiers', 'accounts']);
+    expect(tableProps?.columns.find((column) => column.id === 'ownerName')).toBeUndefined();
     expect(tableProps?.columns.find((column) => column.id === 'pendingWork')).toMatchObject({
       isFilter: false,
       isSort: false,
@@ -698,9 +695,7 @@ describe('Student Setup table task interactions', () => {
     (view) => {
       render(tableElement(props(view)));
       const columns = vi.mocked(CustomizableTable).mock.lastCall?.[0].columns ?? [];
-      expect(columns.find((column) => column.id === 'ownerName')).toMatchObject({
-        defaultHidden: true,
-      });
+      expect(columns.find((column) => column.id === 'ownerName')).toBeUndefined();
       expect(columns.find((column) => column.id === 'statusLabel')).toMatchObject({
         defaultHidden: true,
         label: 'Setup status',

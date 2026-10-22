@@ -1,10 +1,10 @@
 import { it, vi, expect, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
-import { defaultOnboardingSettings, defaultOnboardingProfiles } from '../onboarding-settings-model';
 import { OnboardingSettingsProvider } from '../onboarding-settings-context';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
+import { defaultOnboardingSettings, defaultOnboardingProfiles } from '../onboarding-settings-model';
 
 const consentMocks = vi.hoisted(() => ({
   handoffs: [] as Array<{
@@ -90,7 +90,7 @@ it('records required service consent only after enrollment and keeps its evidenc
   );
 });
 
-it('preserves the persisted owner while staff choices load with the settings accordion closed', () => {
+it('does not offer case ownership even when historical records have an assigned owner', () => {
   consentMocks.usersFetching = true;
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const student = {
@@ -110,13 +110,8 @@ it('preserves the persisted owner while staff choices load with the settings acc
   );
   expect(warning.mock.calls.flat().join(' ')).not.toMatch(/out-of-range/);
   fireEvent.click(screen.getByRole('button', { name: 'Case Settings' }));
-  expect(screen.getByRole('combobox', { name: 'Case owner' })).toHaveTextContent('Admin DDVS');
-  expect(screen.getByRole('combobox', { name: 'Case owner' })).toHaveAttribute(
-    'aria-disabled',
-    'true'
-  );
-  expect(screen.getByRole('button', { name: 'Save owner' })).toBeDisabled();
-  warning.mockRestore();
+  expect(screen.queryByRole('combobox', { name: 'Case owner' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save owner' })).not.toBeInTheDocument();
 });
 
 it('does not offer consent confirmation before enrollment or to a read-only user', () => {

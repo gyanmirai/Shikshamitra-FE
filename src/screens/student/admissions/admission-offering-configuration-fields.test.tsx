@@ -64,7 +64,7 @@ describe('Offering configuration field layout', () => {
     ).toHaveClass('MuiGrid-grid-sm-7');
   });
 
-  it('uses equal two-column cells for all four edit fields without rendering the code', () => {
+  it('uses equal two-column cells for retained edit fields without rendering the code', () => {
     show({ showCode: false, twoColumnLayout: true });
     expect(screen.queryByRole('textbox', { name: 'Offering code *' })).not.toBeInTheDocument();
     expect(screen.queryByText('ADM-CLASS-1')).not.toBeInTheDocument();
@@ -72,7 +72,6 @@ describe('Offering configuration field layout', () => {
       screen.getByRole('textbox', { name: 'Offering name *' }),
       screen.getByRole('combobox', { name: 'Published workflow' }),
       screen.getByRole('combobox', { name: 'Published inquiry form' }),
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' }),
     ];
     fields.forEach((field) => {
       expect(field.closest('.MuiGrid-root')).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-sm-6');
@@ -85,7 +84,7 @@ describe('Offering configuration field layout', () => {
       screen.queryByRole('combobox', { name: 'Published inquiry form' })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' })
-    ).toBeVisible();
+      screen.queryByRole('combobox', { name: 'Intake & assignment setup (optional)' })
+    ).not.toBeInTheDocument();
   });
 });

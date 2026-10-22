@@ -17,6 +17,8 @@ export type AdmissionActivityTimelineItem = {
   activityType: string;
   description: string;
   occurredAt: string;
+  actorName?: string | null;
+  creatorId?: string | null;
 };
 
 type Props = {
@@ -77,6 +79,10 @@ export function AdmissionActivityTimeline({
                   </Typography>
                 )}
                 <Typography variant="caption" color="text.secondary">
+                  Handled by:{' '}
+                  {activity.actorName ||
+                    (activity.creatorId ? 'Staff name unavailable' : 'No staff recorded')}
+                  {' · '}
                   {fDateTime(activity.occurredAt) || 'Time not recorded'}
                 </Typography>
               </TimelineContent>

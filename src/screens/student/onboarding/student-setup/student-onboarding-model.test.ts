@@ -335,3 +335,24 @@ describe('mapOnboardingCaseToItem', () => {
     expect(mapOnboardingCaseToItem(buildCase({ status })).status).toBe(expected);
   });
 });
+
+it('preserves the actual step handler and activity actor without using the former case owner', () => {
+  const original = buildCase();
+  const result = mapOnboardingCaseToItem(
+    buildCase({
+      assignedToUserName: 'Old case owner',
+      steps: [{ ...original.steps[0], completedByName: 'Asha Sharma' }],
+      events: [
+        {
+          id: 'event-1',
+          eventType: 'ReadinessRefreshed',
+          description: 'Readiness checked',
+          occurredAt: '2026-10-22T09:00:00Z',
+          actorName: 'Ravi Patel',
+        },
+      ],
+    })
+  );
+  expect(result.readinessItems[0].handledByName).toBe('Asha Sharma');
+  expect(result.activity[0].actorName).toBe('Ravi Patel');
+});

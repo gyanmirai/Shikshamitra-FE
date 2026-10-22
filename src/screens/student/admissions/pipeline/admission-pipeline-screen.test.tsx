@@ -208,7 +208,7 @@ describe('Pipeline worklist', () => {
       expect.objectContaining({
         academicYearId: 'year-1',
         boardId: 'board-1',
-        myCases: undefined,
+        myCases: false,
         skipCount: 10,
         maxResultCount: 10,
         search: 'Jay',
@@ -302,20 +302,6 @@ describe('Pipeline worklist', () => {
     expect(context.replace).not.toHaveBeenCalled();
   });
 
-  it('adds checkbox selection only with exact Applications View and Add grants', () => {
-    const rendered = render(<AdmissionInquiryPipelineScreen />);
-    expect(context.table.columns.some((column: any) => column.id === 'pipeline-selection')).toBe(
-      false
-    );
-    context.canAssign = true;
-    rendered.rerender(<AdmissionInquiryPipelineScreen />);
-    expect(context.table.columns[0].id).toBe('pipeline-selection');
-    expect(context.bulkInput.canAssign).toBe(true);
-    context.canView = false;
-    rendered.rerender(<AdmissionInquiryPipelineScreen />);
-    expect(context.bulkInput.canAssign).toBe(false);
-  });
-
   it('places operational filters in the academic row and applies them in one URL update', () => {
     context.params = new URLSearchParams(
       'board=board-1&medium=medium-1&class=class-1&search=QA&page=3&size=10'
@@ -346,36 +332,12 @@ describe('Pipeline worklist', () => {
     expect(context.academicUpdate).toHaveBeenCalledWith('board', 'board-2');
   });
 
-  it('includes actor, academic scope and page filters in the selection boundary', () => {
+  it('does not mount retired bulk assignment or ownership selection even for managers', () => {
     context.canAssign = true;
-    context.params = new URLSearchParams('page=2&size=10&queue=my&search=QA');
-    const rendered = render(<AdmissionInquiryPipelineScreen />);
-    const initialScope = context.bulkInput.scopeKey;
-    expect(JSON.parse(initialScope)).toEqual([
-      'tenant-1',
-      'operator-1',
-      { academicYearId: 'year-1', boardId: 'board-1', mediumId: 'medium-1' },
-      'page=2&size=10&queue=my&search=QA',
-      true,
-    ]);
-    context.params = new URLSearchParams('page=3&size=10&queue=my&search=QA');
-    rendered.rerender(<AdmissionInquiryPipelineScreen />);
-    expect(context.bulkInput.scopeKey).not.toBe(initialScope);
-  });
-
-  it('blocks row navigation and filter/search/page changes while assignment runs', () => {
-    context.canAssign = true;
-    context.bulkBusy = true;
     render(<AdmissionInquiryPipelineScreen />);
-    expect(screen.getByRole('link', { name: 'Open Applications' })).toHaveClass('Mui-disabled');
-    expect(screen.getByText('Change board')).toBeDisabled();
-    expect(screen.getByText('Apply operational filters')).toBeDisabled();
-    fireEvent.click(screen.getByText('Open row'));
-    context.table.onServerSearch('other');
-    context.table.onServerPagination(2, 10);
-    context.filterProps.onApply({ queue: 'my' });
-    expect(context.push).not.toHaveBeenCalled();
-    expect(context.replace).not.toHaveBeenCalled();
-    expect(context.academicUpdate).not.toHaveBeenCalled();
+    expect(context.table.columns.some((column: any) => column.id === 'pipeline-selection')).toBe(
+      false
+    );
+    expect(context.bulkInput).toEqual({});
   });
 });

@@ -14,7 +14,8 @@ export function InquiryTimeline({
   scope?: 'all' | 'form';
 }) {
   const query = useGetAdmissionInquiryTimelineQuery(inquiryId);
-  const activities = (query.data ?? []).filter(
+  const loading = query.isLoading || (query.isFetching && !query.currentData);
+  const activities = (query.currentData ?? []).filter(
     (item) => scope !== 'form' || isInquiryFormActivity(item)
   );
   const title = scope === 'form' ? 'Form history' : 'Timeline and communications';
@@ -30,13 +31,13 @@ export function InquiryTimeline({
             <Typography variant="body2" color="text.secondary">
               {scope === 'form'
                 ? 'Inquiry form creation and saved changes, newest first.'
-                : 'Contact, follow-up, assignment, and communication history in one place.'}
+                : 'Staff handling, follow-ups, and communications in one place.'}
             </Typography>
           </Stack>
-          {!query.isLoading && <Label color="default">{activities.length}</Label>}
+          {!loading && <Label color="default">{activities.length}</Label>}
         </Stack>
 
-        {query.isLoading && (
+        {loading && (
           <Stack spacing={1} aria-label="Loading inquiry timeline">
             <Skeleton variant="rounded" height={64} />
             <Skeleton variant="rounded" height={64} />
@@ -60,7 +61,7 @@ export function InquiryTimeline({
             {title} could not be loaded.
           </Alert>
         )}
-        {!query.isLoading && !query.isError && (
+        {!loading && !query.isError && (
           <AdmissionActivityTimeline
             activities={activities}
             initiallyVisible={5}

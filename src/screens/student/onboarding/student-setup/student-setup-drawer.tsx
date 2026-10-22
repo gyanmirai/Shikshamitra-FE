@@ -1,7 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import Link from 'next/link';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -10,6 +13,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -26,6 +30,7 @@ import {
   Button,
   Drawer,
   Divider,
+  Skeleton,
   Accordion,
   IconButton,
   Typography,
@@ -42,10 +47,12 @@ import StudentOnboardingPortalAccounts from './student-onboarding-portal-account
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
 import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
 import StudentOnboardingWorkflowDocuments from './student-onboarding-workflow-documents';
+import { ApplicationJourneyHistory } from '../../admissions/application-detail/application-journey-history';
 import {
   onboardingCheckMeta,
   onboardingStageMeta,
   getReadinessSummary,
+  mapOnboardingEventToActivity,
 } from './student-onboarding-model';
 
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
@@ -177,6 +184,11 @@ export default function StudentSetupDrawer({
   const [showPassedChecks, setShowPassedChecks] = useState(false);
   const [credentialsBusy, setCredentialsBusy] = useState(false);
   const drawerBusy = primaryActionLoading || credentialsBusy;
+  const permissions = useSelector((state: RootState) => state.auth?.permissions);
+  const canViewAdmissions = hasGrantedPermission(
+    permissions,
+    'Students.Admissions.Applications.View'
+  );
   const defaultView: DrawerView =
     initialView ??
     (student?.source === 'onboarding-case' &&
@@ -186,8 +198,18 @@ export default function StudentSetupDrawer({
       : 'details');
   const { value: view, setValue: setView, onChange: onViewChange } = useTabs(defaultView);
   const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
-    skip: !open || taskView === 'credentials' || activeStudent?.source !== 'onboarding-case',
+    skip:
+      !open ||
+      (taskView === 'credentials' && view !== 'history') ||
+      activeStudent?.source !== 'onboarding-case',
   });
+  const historyCase =
+    capturedFieldsQuery.currentData?.id === activeStudent?.id && !capturedFieldsQuery.isError
+      ? capturedFieldsQuery.currentData
+      : undefined;
+  const handlingEvents = historyCase
+    ? historyCase.events.map(mapOnboardingEventToActivity)
+    : (activeStudent?.activity ?? []);
   const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
     activeStudent?.id ?? '',
     {
@@ -214,8 +236,13 @@ export default function StudentSetupDrawer({
   }, [student?.id, defaultView, open, setView]);
 
   useEffect(() => {
-    if (view === 'history' && !activeStudent?.activity.length) setView('details');
-  }, [view, activeStudent?.activity.length, setView]);
+    if (
+      view === 'history' &&
+      activeStudent?.source !== 'onboarding-case' &&
+      !activeStudent?.activity.length
+    )
+      setView('details');
+  }, [view, activeStudent?.source, activeStudent?.activity.length, setView]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -355,7 +382,9 @@ export default function StudentSetupDrawer({
           {DRAWER_TABS.filter(
             (tab) =>
               (tab.value !== 'tasks' || activeStudent.source === 'onboarding-case') &&
-              (tab.value !== 'history' || activeStudent.activity.length > 0)
+              (tab.value !== 'history' ||
+                activeStudent.source === 'onboarding-case' ||
+                handlingEvents.length > 0)
           ).map((tab) => (
             <Tab
               key={tab.value}
@@ -528,7 +557,7 @@ export default function StudentSetupDrawer({
                   <SectionCard
                     icon="mdi:account-cog-outline"
                     title="Case Actions"
-                    description="Review service handoffs and, while the case is open, update its route or owner."
+                    description="Review service handoffs and, while the case is open, update its admission route."
                   >
                     <StudentOnboardingCaseOperations
                       student={activeStudent}
@@ -616,7 +645,6 @@ export default function StudentSetupDrawer({
                         'Admission date',
                         activeStudent.admissionDate ? fDateTime(activeStudent.admissionDate) : '—',
                       ],
-                      ['Owner', activeStudent.ownerName],
                       ...(activeStudent.source === 'onboarding-case'
                         ? (capturedFieldsQuery.data?.capturedStudentFields ?? []).map(
                             (field): [string, ReactNode] => [field.label, field.value]
@@ -815,12 +843,14 @@ export default function StudentSetupDrawer({
                                 <Typography variant="body2" fontWeight={600}>
                                   {check.label}
                                 </Typography>
-                                {(check.detail || (check.status !== 'passed' && check.owner)) && (
+                                {check.status === 'passed' && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Handled by: {check.handledByName || 'Name not recorded'}
+                                  </Typography>
+                                )}
+                                {check.detail && (
                                   <Typography variant="caption" color="text.secondary">
                                     {check.detail}
-                                    {check.status !== 'passed' && check.owner
-                                      ? `${check.detail ? ' · ' : ''}Owner: ${check.owner}`
-                                      : ''}
                                   </Typography>
                                 )}
                               </Box>
@@ -906,14 +936,37 @@ export default function StudentSetupDrawer({
               sx={{ display: view === 'history' ? 'block' : 'none' }}
             >
               <Stack spacing={1.5}>
-                {activeStudent.activity.length > 0 && (
+                {capturedFieldsQuery.isFetching && !historyCase && (
+                  <Skeleton variant="rounded" height={160} aria-label="Loading handling history" />
+                )}
+                {capturedFieldsQuery.isError && (
+                  <Alert
+                    severity="error"
+                    action={
+                      <Button size="small" onClick={() => capturedFieldsQuery.refetch()}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Handling history could not be loaded.
+                  </Alert>
+                )}
+                {!capturedFieldsQuery.isFetching &&
+                  !capturedFieldsQuery.isError &&
+                  handlingEvents.length === 0 && (
+                    <Alert severity="info">No onboarding activity recorded yet.</Alert>
+                  )}
+                {view === 'history' && canViewAdmissions && historyCase?.applicantId && (
+                  <ApplicationJourneyHistory applicantId={historyCase.applicantId} />
+                )}
+                {!capturedFieldsQuery.isError && handlingEvents.length > 0 && (
                   <SectionCard
                     icon="mdi:history"
                     title="Activity & Audit"
                     description="A chronological record of preparation, approval and activation events."
                   >
                     <Stack spacing={1}>
-                      {activeStudent.activity.map((event) => (
+                      {handlingEvents.map((event) => (
                         <Stack key={event.id} direction="row" spacing={1} alignItems="flex-start">
                           <Box
                             sx={{
@@ -931,6 +984,8 @@ export default function StudentSetupDrawer({
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               {event.detail}
+                              {' · Handled by: '}
+                              {event.actorName || 'Name not recorded'}
                             </Typography>
                           </Box>
                           <Typography
@@ -938,7 +993,9 @@ export default function StudentSetupDrawer({
                             color="text.secondary"
                             sx={{ flexShrink: 0 }}
                           >
-                            {event.occurredAt}
+                            {Number.isNaN(Date.parse(event.occurredAt))
+                              ? event.occurredAt
+                              : fDateTime(event.occurredAt)}
                           </Typography>
                         </Stack>
                       ))}

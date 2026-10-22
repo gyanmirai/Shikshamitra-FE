@@ -2,19 +2,16 @@
 
 import type { StudentOnboardingServiceHandoffStatus } from 'src/redux/student/onboarding/student-onboarding-types';
 
-import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetUsersQuery } from 'src/redux/user/userApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Alert,
   Stack,
   Button,
-  MenuItem,
   Skeleton,
   Accordion,
   TextField,
@@ -26,7 +23,6 @@ import {
 import {
   useCancelStudentOnboardingMutation,
   useSetStudentOnboardingRouteMutation,
-  useAssignStudentOnboardingOwnerMutation,
   useGetStudentOnboardingServiceHandoffsQuery,
   useRetryStudentOnboardingServiceHandoffMutation,
   useConfirmStudentOnboardingServiceConsentMutation,
@@ -86,15 +82,12 @@ export default function StudentOnboardingCaseOperations({
   const { settings } = useOnboardingSettings();
   const [setRoute, routeState] = useSetStudentOnboardingRouteMutation();
   const [route, setRouteDraft] = useState(student.admissionRoute);
-  const usersQuery = useGetUsersQuery(undefined, { skip: !canManage || isClosed });
   const handoffsQuery = useGetStudentOnboardingServiceHandoffsQuery(student.id, {
     skip: student.source !== 'onboarding-case',
   });
-  const [assignOwner, assignOwnerState] = useAssignStudentOnboardingOwnerMutation();
   const [cancelOnboarding, cancelState] = useCancelStudentOnboardingMutation();
   const [retryHandoff, retryState] = useRetryStudentOnboardingServiceHandoffMutation();
   const [confirmConsent, consentState] = useConfirmStudentOnboardingServiceConsentMutation();
-  const [ownerId, setOwnerId] = useState(student.assignedToUserId ?? '');
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
   const [consentOpen, setConsentOpen] = useState(false);
@@ -104,21 +97,6 @@ export default function StudentOnboardingCaseOperations({
     Boolean(student.studentEnrollmentId) &&
     student.backendStatus !== 4 &&
     student.backendStatus !== 5;
-  const userResponse = usersQuery.data as
-    { items?: UserOption[]; data?: { items?: UserOption[] } } | undefined;
-  const users = useMemo(() => {
-    const available = userResponse?.items ?? userResponse?.data?.items ?? [];
-    const persistedOwnerId = student.assignedToUserId;
-    if (!persistedOwnerId || available.some((user) => user.id === persistedOwnerId))
-      return available;
-    return [
-      ...available,
-      {
-        id: persistedOwnerId,
-        name: student.ownerName === 'Not assigned' ? 'Current owner' : student.ownerName,
-      },
-    ];
-  }, [userResponse, student.assignedToUserId, student.ownerName]);
   const routeOptions = useMemo(
     () =>
       Array.from(
@@ -145,29 +123,11 @@ export default function StudentOnboardingCaseOperations({
 
   useEffect(() => {
     setRouteDraft(student.admissionRoute);
-    setOwnerId(student.assignedToUserId ?? '');
     setCancelOpen(false);
     setCancellationReason('');
     setConsentOpen(false);
     setConsentReference('');
-  }, [student.assignedToUserId, student.admissionRoute, student.id]);
-
-  const saveOwner = async () => {
-    try {
-      await assignOwner({
-        id: student.id,
-        concurrencyStamp: student.concurrencyStamp,
-        userId: ownerId || null,
-      }).unwrap();
-      shikshaMitraToast.success({
-        message: ownerId ? 'Onboarding owner assigned.' : 'Onboarding owner cleared.',
-      });
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The onboarding owner could not be changed. Refresh the case and retry.',
-      });
-    }
-  };
+  }, [student.admissionRoute, student.id]);
 
   const cancelCase = async () => {
     if (!cancellationReason.trim()) return;
@@ -258,52 +218,6 @@ export default function StudentOnboardingCaseOperations({
                   Save route
                 </Button>
               </Stack>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1}
-                alignItems={{ sm: 'flex-start' }}
-              >
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label="Case owner"
-                  value={ownerId}
-                  onChange={(event) => setOwnerId(event.target.value)}
-                  disabled={!canManage || isClosed || usersQuery.isFetching}
-                >
-                  <MenuItem value="">Unassigned</MenuItem>
-                  {users.map((user) => {
-                    const fullName = [user.name, user.surname].filter(Boolean).join(' ');
-                    return (
-                      <MenuItem key={user.id} value={user.id}>
-                        {fullName || user.userName || user.email || user.id}
-                      </MenuItem>
-                    );
-                  })}
-                </TextField>
-                <LoadingButton
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:account-check-outline" width={18} />}
-                  disabled={
-                    !canManage ||
-                    isClosed ||
-                    assignOwnerState.isLoading ||
-                    ownerId === (student.assignedToUserId ?? '')
-                  }
-                  loading={assignOwnerState.isLoading}
-                  onClick={saveOwner}
-                >
-                  Save owner
-                </LoadingButton>
-              </Stack>
-
-              {usersQuery.isError ? (
-                <Alert severity="warning" variant="outlined">
-                  Staff options could not be loaded. The current owner is unchanged.
-                </Alert>
-              ) : null}
 
               {canCancel && !isClosed && (
                 <Stack direction="row" justifyContent="flex-end">

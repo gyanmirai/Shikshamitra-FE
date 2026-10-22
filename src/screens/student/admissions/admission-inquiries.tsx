@@ -9,8 +9,9 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Stack, Button, DialogActions, LinearProgress } from '@mui/material';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
   type AdmissionInquiry,
@@ -21,6 +22,7 @@ import {
 import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
+import { InquiryTimeline } from './inquiry-management/inquiry-timeline';
 import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { InquiryFollowUpDialog } from './inquiry-management/inquiry-follow-up-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
@@ -51,6 +53,7 @@ export default function AdmissionInquiriesScreen() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
+  const [historyInquiry, setHistoryInquiry] = useState<AdmissionInquiry | null>(null);
   const [dismissedInquiryId, setDismissedInquiryId] = useState('');
   const [scopeLoading, setScopeLoading] = useState(true);
   const [sorts, setSorts] = useState<
@@ -142,6 +145,7 @@ export default function AdmissionInquiriesScreen() {
       ...rowOptions,
       onManage: openInquiry,
       onFollowUp: setFollowUpInquiry,
+      onHistory: setHistoryInquiry,
       onMove: handoff.move,
     }).map((column) => ({
       ...column,
@@ -331,6 +335,32 @@ export default function AdmissionInquiriesScreen() {
         </Box>
       )}
       <InquiryFollowUpDialog inquiry={followUpInquiry} onClose={() => setFollowUpInquiry(null)} />
+      {historyInquiry && (
+        <CustomDialog
+          open
+          fullWidth
+          maxWidth="md"
+          hasForm={false}
+          guardUnsavedChanges={false}
+          title={`Handling history: ${historyInquiry.applicantName}`}
+          handleClose={() => setHistoryInquiry(null)}
+        >
+          <DialogScrollContent>
+            <InquiryTimeline inquiryId={historyInquiry.id} />
+          </DialogScrollContent>
+          <DialogActions>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="mdi:close" />}
+              onClick={() => setHistoryInquiry(null)}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </CustomDialog>
+      )}
     </Box>
   );
 }

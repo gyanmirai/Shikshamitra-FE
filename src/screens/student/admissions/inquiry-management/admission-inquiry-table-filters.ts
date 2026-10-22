@@ -5,8 +5,6 @@ import type {
   AdmissionInquiryListInput,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { MY_INQUIRIES_FILTER, UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
-
 type TableFilter = IParams['filters'][number];
 
 export const ADMISSION_INQUIRY_FILTER_QUERY_PARAMS: Record<string, string> = {
@@ -15,7 +13,6 @@ export const ADMISSION_INQUIRY_FILTER_QUERY_PARAMS: Record<string, string> = {
   admissionOfferingId: 'offering',
   normalizedPhone: 'phone',
   email: 'email',
-  assignedCounsellorId: 'owner',
   source: 'source',
   status: 'status',
 };
@@ -26,12 +23,11 @@ const FILTER_LABELS: Record<string, string> = {
   admissionOfferingId: 'Admission interest',
   normalizedPhone: 'Phone',
   email: 'Email',
-  assignedCounsellorId: 'Counsellor',
   source: 'Source',
   status: 'Status',
 };
 
-const ENUM_FILTER_COLUMNS = ['admissionOfferingId', 'assignedCounsellorId', 'source', 'status'];
+const ENUM_FILTER_COLUMNS = ['admissionOfferingId', 'source', 'status'];
 
 export const createInitialAdmissionInquiryTableFilters = (searchParams: {
   get: (name: string) => string | null;
@@ -85,14 +81,13 @@ export function normalizeAdmissionInquiryTableFilters(
 export function buildAdmissionInquiryListFilters(
   filters: IParams['filters'],
   search: string,
-  currentUserId?: string,
+  _currentUserId?: string,
   options: { excludePostApplication?: boolean } = {}
 ): AdmissionInquiryListInput {
   const inquiryNumber = readTextFilter(filters, 'inquiryNumber');
   const applicantName = readTextFilter(filters, 'applicantName');
   const phone = readTextFilter(filters, 'normalizedPhone');
   const email = readTextFilter(filters, 'email');
-  const owner = findLatest(filters, 'assignedCounsellorId')?.value;
   const status = readNumberFilter(filters, 'status');
   const source = readNumberFilter(filters, 'source');
   const admissionOfferingId = String(
@@ -118,13 +113,6 @@ export function buildAdmissionInquiryListFilters(
       source !== undefined && source >= 0 && source <= 12
         ? (source as AdmissionInquirySource)
         : undefined,
-    assignedCounsellorId:
-      owner === MY_INQUIRIES_FILTER
-        ? currentUserId
-        : owner && owner !== UNASSIGNED_INQUIRIES_FILTER
-          ? String(owner)
-          : undefined,
-    isAssigned: owner === UNASSIGNED_INQUIRIES_FILTER ? false : undefined,
     excludePostApplication: options.excludePostApplication ?? true,
   };
 }

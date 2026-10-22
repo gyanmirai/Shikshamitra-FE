@@ -21,9 +21,8 @@ export function readAdmissionPipelineState(params: Params) {
     search: params.get('search') ?? '',
     page: Number.isSafeInteger(page) && page > 0 ? page - 1 : 0,
     rowsPerPage: [10, 25, 100].includes(size) ? size : 25,
-    myCases:
-      params.get('queue') === 'my' ? true : params.get('queue') === 'all' ? false : undefined,
-    assignedCounsellorId: params.get('counsellor') || undefined,
+    myCases: false,
+    assignedCounsellorId: undefined,
     currentStageCode: params.get('stage') || undefined,
     status:
       status !== null &&

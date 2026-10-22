@@ -64,6 +64,15 @@ export type AdmissionApplicantNote = {
   lastEditedAt?: string | null;
   creatorId?: string | null;
 };
+
+export type AdmissionJourneyActivity = {
+  id: string;
+  activityType: string;
+  description: string;
+  occurredAt: string;
+  creatorId?: string | null;
+  actorName?: string | null;
+};
 type Result<T> = { data?: T };
 const unwrap = <T>(response: Result<T> | T): T =>
   response && typeof response === 'object' && 'data' in response && response.data !== undefined
@@ -71,6 +80,17 @@ const unwrap = <T>(response: Result<T> | T): T =>
     : (response as T);
 export const admissionApplicantsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAdmissionJourneyActivities: builder.query<AdmissionJourneyActivity[], string>({
+      query: (id) => `/student/enrollment/admissions/activities/applicant/${id}`,
+      transformResponse: (
+        response: Result<AdmissionJourneyActivity[]> | AdmissionJourneyActivity[]
+      ) => unwrap(response),
+      providesTags: [
+        studentAdmissionsCrmType.admissionInquiry,
+        studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionApplication,
+      ],
+    }),
     getAdmissionApplicant360: builder.query<AdmissionApplicant360, string>({
       query: (id) => `/student/enrollment/admissions/applicants/${id}`,
       transformResponse: (response: Result<AdmissionApplicant360> | AdmissionApplicant360) =>

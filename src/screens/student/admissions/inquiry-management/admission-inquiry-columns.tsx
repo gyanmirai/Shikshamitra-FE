@@ -6,11 +6,10 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Stack, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { inquiryHandoffBlocker } from './use-inquiry-handoff';
 import { formatAdmissionReference } from '../admission-reference';
-import { UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
 import {
   inquirySourceLabel,
   inquiryStatusLabel,
@@ -31,6 +30,7 @@ type Options = {
   offeringOptions: { label: string; value: string }[];
   onManage: (inquiry: AdmissionInquiry) => void;
   onFollowUp?: (inquiry: AdmissionInquiry) => void;
+  onHistory?: (inquiry: AdmissionInquiry) => void;
   onMove: (inquiry: AdmissionInquiry) => void;
 };
 
@@ -107,6 +107,14 @@ export function getAdmissionInquiryActions(
         : inquiryHandoffBlocker(inquiry),
       onClick: () => options.onMove(inquiry),
     });
+  if (options.onHistory)
+    actions.push({
+      id: 'history',
+      label: `Handling history for ${reference}`,
+      icon: 'mdi:history',
+      disabled: options.isMoving,
+      onClick: () => options.onHistory?.(inquiry),
+    });
   return actions;
 }
 
@@ -153,22 +161,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       filterType: 'string',
       render: (value) => (value ? String(value) : '—'),
     },
-    {
-      id: 'assignedCounsellorId',
-      label: 'Counsellor',
-      minWidth: 180,
-      filterType: 'enum',
-      enumOptions: [
-        { label: 'Unassigned', value: UNASSIGNED_INQUIRIES_FILTER },
-        ...options.counsellorOptions,
-      ],
-      render: (value, row) => {
-        const inquiry = row as AdmissionInquiry;
-        return value
-          ? inquiry.assignedCounsellorName || options.counsellorNames[String(value)] || 'Assigned'
-          : 'Unassigned';
-      },
-    },
+
     {
       id: 'source',
       label: 'Source',
@@ -219,8 +212,9 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       render: (_, row) => {
         const inquiry = row as AdmissionInquiry;
         return (
-          <ThreeDotsActions
-            showThreeDots={false}
+          <AdaptiveThreeDotsActions
+            mobileDirectActionLimit={0}
+            moreLabel={`Actions for ${inquiry.applicantName}`}
             sx={{
               gap: 0,
               justifyContent: 'flex-start',
@@ -229,7 +223,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
                 height: { xs: 44, sm: 30 },
               },
             }}
-            directActions={getAdmissionInquiryActions(inquiry, options)}
+            actions={getAdmissionInquiryActions(inquiry, options)}
           />
         );
       },

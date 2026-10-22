@@ -138,12 +138,12 @@ function AdmissionOfferingLegacyDialog({
           <Typography id="admission-offering-drawer-title" variant="h6" component="div">
             <AdmissionDialogTitle
               title={mode === 'clone' ? 'Clone Admission Offering' : 'Add Admission Offering'}
-              helpText="An offering connects a class to its admission workflow and intake setup."
+              helpText="An offering connects a class to its published admission workflow and forms."
               helpLabel="Admission offering information"
             />
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure the class, published workflow, and intake setup.
+            Configure the class, published workflow, and forms.
           </Typography>
         </Box>
         <IconButton
@@ -176,7 +176,7 @@ function AdmissionOfferingLegacyDialog({
               });
               form.clearReadiness();
             }}
-            helperText="Choose the cycle that should receive the cloned intake."
+            helperText="Choose the cycle that should receive the cloned offering."
           />
         )}
         <AdmissionOfferingCycleContext cycle={targetCycle} />

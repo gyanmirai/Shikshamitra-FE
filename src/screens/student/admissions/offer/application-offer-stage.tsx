@@ -45,7 +45,10 @@ export function ApplicationOfferStage({
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canView = hasGrantedPermission(permissions, 'Students.Admissions.Offers.View');
-  const query = useGetAdmissionOfferStageQuery({ applicationId, stageId: stage.id }, { skip: !canView });
+  const query = useGetAdmissionOfferStageQuery(
+    { applicationId, stageId: stage.id },
+    { skip: !canView }
+  );
   const feeEditor = useFeeSelectionEditorState(onFeeSelectionStateChange);
   const state = query.data;
   const actions = useApplicationOffer(
@@ -141,11 +144,6 @@ export function ApplicationOfferStage({
           </Stack>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
             {state.policy?.message}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Journey counsellor:{' '}
-            {state.assignedCounsellorName ||
-              (state.assignedCounsellorId ? 'Assigned' : 'Not assigned')}
           </Typography>
           {state.policy?.conditions && (
             <Alert severity="info">

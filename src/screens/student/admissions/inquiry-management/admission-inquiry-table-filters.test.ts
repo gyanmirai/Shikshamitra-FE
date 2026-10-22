@@ -47,7 +47,6 @@ describe('Admission Inquiry shared-table filters', () => {
       admissionOfferingId: 'offering-1',
       source: 2,
       status: 2,
-      assignedCounsellorId: 'counsellor-1',
       excludePostApplication: true,
     });
   });

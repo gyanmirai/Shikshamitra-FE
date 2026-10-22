@@ -1,5 +1,6 @@
-import AdmissionIntakeAssignmentScreen from 'src/screens/student/admissions/admission-intake-assignment';
+import { redirect } from 'next/navigation';
+import { studentPaths } from 'src/constants/student-menu';
 
 export default function Page() {
-  return <AdmissionIntakeAssignmentScreen />;
+  redirect(studentPaths.enrollment.settings.publicInquiryLinks);
 }

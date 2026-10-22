@@ -16,7 +16,7 @@ export function AdmissionOfferingReadiness({ result, onClose }: Props) {
             'Duplicate Offering scope',
             'Dates inside the selected cycle',
             'Published workflow and forms needed by the entry mode',
-            'Intake profiles, counsellor scope, and reviewer compatibility',
+            'Workflow, forms, and reviewer compatibility',
           ].map((message) => (
             <ListItem key={message} disableGutters>
               <ListItemIcon sx={{ minWidth: 28 }}>

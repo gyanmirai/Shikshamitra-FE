@@ -22,22 +22,22 @@ The settings page contains only student leave types. Former `task`, `view`, and 
 
 ## Admissions route map
 
-| Area                                        | Route                                             | Screen                                                            | Frontend permission                                                        |
-| ------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Admissions → Settings → Admission Periods   | `/student/admissions/settings/cycles`             | `src/screens/student/admissions/admission-cycles.tsx`             | `Students.Admissions.View`; commands use only `Add` or `Delete`            |
-| Admissions → Settings → Admission Form      | `/student/admissions/settings/forms`              | `src/screens/student/admissions/admission-forms.tsx`              | `Students.Admissions.Forms`; Inquiry and Registration forms only           |
-| Admissions → Settings → Admission Stage     | `/student/admissions/settings/workflows`          | `src/screens/student/admissions/admission-workflows.tsx`          | `Students.Admissions.Workflows`                                            |
-| Workflow definition builder                 | `/student/admissions/settings/workflows/[id]`     | `src/screens/student/admissions/admission-workflow-builder.tsx`   | granular Workflow View, Edit, Validate, and Publish permissions            |
-| Form preview                                | `/student/admissions/settings/forms/[id]/preview` | `src/screens/student/admissions/admission-form-preview.tsx`       | inherited from Forms                                                       |
-| Admissions → Settings → Intake & Assignment | `/student/admissions/settings/intake-assignment`  | `src/screens/student/admissions/admission-intake-assignment.tsx`  | `Students.Admissions.Offerings.View`                                       |
-| Admissions → Settings → Admission Offering  | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `View`; additive commands use `Add`, destructive commands use `Delete`     |
-| Admissions → Inquiries                      | `/student/admissions/inquiries`                   | `src/screens/student/admissions/admission-inquiries.tsx`          | `Students.Admissions.Inquiries`                                            |
-| Admissions → Pipeline                       | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Applications.View`                                    |
-| Legacy applicant bookmark                   | `/student/admissions/applicants/[id]`             | `src/screens/student/admissions/admission-applicant-360.tsx`      | `Students.Admissions.Applicants.View`; application access remains separate |
-| Admissions → Assessments                    | `/student/admissions/assessments`                 | `src/screens/student/admissions/admission-assessments.tsx`        | `Students.Admissions.Assessments.View`                                     |
-| Admissions → Applications                   | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                         |
-| Admissions → Applicant 360                  | `/student/admissions/pipeline/applications/[id]`  | `src/screens/student/admissions/admission-application-detail.tsx` | `Students.Admissions.Applications.View`                                    |
-| Admissions → Decision Applicant 360         | `/student/admissions/applications/[id]`           | `src/screens/student/admissions/admission-application-detail.tsx` | `Students.Admissions.Applications.View`                                    |
+| Area                                         | Route                                               | Screen                                                                     | Frontend permission                                                        |
+| -------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Admissions → Settings → Admission Periods    | `/student/admissions/settings/cycles`               | `src/screens/student/admissions/admission-cycles.tsx`                      | `Students.Admissions.View`; commands use only `Add` or `Delete`            |
+| Admissions → Settings → Admission Form       | `/student/admissions/settings/forms`                | `src/screens/student/admissions/admission-forms.tsx`                       | `Students.Admissions.Forms`; Inquiry and Registration forms only           |
+| Admissions → Settings → Admission Stage      | `/student/admissions/settings/workflows`            | `src/screens/student/admissions/admission-workflows.tsx`                   | `Students.Admissions.Workflows`                                            |
+| Workflow definition builder                  | `/student/admissions/settings/workflows/[id]`       | `src/screens/student/admissions/admission-workflow-builder.tsx`            | granular Workflow View, Edit, Validate, and Publish permissions            |
+| Form preview                                 | `/student/admissions/settings/forms/[id]/preview`   | `src/screens/student/admissions/admission-form-preview.tsx`                | inherited from Forms                                                       |
+| Admissions → Settings → Public Inquiry Links | `/student/admissions/settings/public-inquiry-links` | `src/screens/student/admissions/admission-public-inquiry-links-screen.tsx` | `Students.Admissions.Offerings.View`                                       |
+| Admissions → Settings → Admission Offering   | `/student/admissions/settings/offerings`            | `src/screens/student/admissions/admission-offerings.tsx`                   | `View`; additive commands use `Add`, destructive commands use `Delete`     |
+| Admissions → Inquiries                       | `/student/admissions/inquiries`                     | `src/screens/student/admissions/admission-inquiries.tsx`                   | `Students.Admissions.Inquiries`                                            |
+| Admissions → Pipeline                        | `/student/admissions/pipeline`                      | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`            | `Students.Admissions.Applications.View`                                    |
+| Legacy applicant bookmark                    | `/student/admissions/applicants/[id]`               | `src/screens/student/admissions/admission-applicant-360.tsx`               | `Students.Admissions.Applicants.View`; application access remains separate |
+| Admissions → Assessments                     | `/student/admissions/assessments`                   | `src/screens/student/admissions/admission-assessments.tsx`                 | `Students.Admissions.Assessments.View`                                     |
+| Admissions → Applications                    | `/student/admissions/applications`                  | `src/screens/student/admissions/admission-applications.tsx`                | `Students.Admissions.Applications`                                         |
+| Admissions → Applicant 360                   | `/student/admissions/pipeline/applications/[id]`    | `src/screens/student/admissions/admission-application-detail.tsx`          | `Students.Admissions.Applications.View`                                    |
+| Admissions → Decision Applicant 360          | `/student/admissions/applications/[id]`             | `src/screens/student/admissions/admission-application-detail.tsx`          | `Students.Admissions.Applications.View`                                    |
 
 ## Onboarding route map
 
@@ -58,7 +58,7 @@ The settings page contains only student leave types. Former `task`, `view`, and 
 Student Setup reads the durable onboarding worklist, with `view` selecting a tab and `case` opening that case's task drawer.
 Readiness's `today=true` filter selects cases that entered Onboarding today; a pending-task link keeps academic filters, opens the destination tab and case, and removes readiness-only filters.
 An off-page focused case is fetched with the current academic scope; an already loaded row is reused.
-Placement, separate GR/Roll preparation, identifier locks, fee-structure confirmation, documents, readiness refresh, ownership, activation and supported handoff rechecks use live commands.
+Placement, separate GR/Roll preparation, identifier locks, fee-structure confirmation, documents, readiness refresh, activation and supported handoff rechecks use live commands.
 Cancellation additionally requires `Students.Onboarding.Delete`; identifier unlock uses the existing Repair capability and server authorization.
 Onboarding Settings persists account choices and numbering through `/api/student/onboarding/settings/configurations`; the selected header year opens its override or inherited school settings.
 Legacy readiness-access, accounts-access, operational-policies and rules routes redirect to Portal Access; numbering-placement and gr-number redirect to GR Number, and roll-number redirects to Roll Number.
@@ -117,7 +117,7 @@ The former `/student/admissions/reviews` App Router entry and Application Review
 The Admissions menu and route constants are defined in `src/constants/student-menu.ts`.
 The Admissions menu exposes Inquiries, Pipeline, Assessments, Applications, and Settings. Settings follows the school setup order: Admission Periods, Admission Form, Admission Stage, Intake & Assignment, and Admission Offering. There are no numbered labels, and the Admissions root redirects to Inquiries.
 Pipeline keeps its existing name and Applications View access.
-It lists active inquiry-linked cases and started special registrations before Admission Decision with server paging and scoped owner/stage filters.
+It lists active inquiry-linked cases and started special registrations before Admission Decision with server paging and scoped stage/status filters.
 Board, Medium and Class remain visible; the adjacent Filters button opens Cases, Counsellor, Current step and Status without changing the route or server-filter contract.
 Page-scoped selection and Assign / change counsellor additionally require exact `Students.Admissions.Applications.Add` access; no bulk stage, status, fee or finalization action is added.
 Applications requests decision-workspace cases and archived Withdrawn cases and uses the same View authority; its list and detail routes are guarded.
@@ -151,3 +151,5 @@ The existing `/student/profile?student={id}` entry resolves the protected record
 
 Do not describe an Admissions page as visible navigation unless its route and permission are present in `src/constants/student-menu.ts`.
 The Applicant 360 and application detail pages are deep-linked detail surfaces and should be reached from the corresponding Applicant or Application list.
+
+The legacy `/student/admissions/settings/intake-assignment` route redirects to Public Inquiry Links. Intake setup editors, assignment controls and Onboarding Case owner are no longer mounted by active routes.

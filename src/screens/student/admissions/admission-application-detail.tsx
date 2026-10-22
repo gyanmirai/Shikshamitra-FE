@@ -43,6 +43,7 @@ import { ApplicationRuntimeForm } from './application-detail/application-runtime
 import { ApplicationStageJourney } from './application-detail/application-stage-journey';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
+import { ApplicationJourneyHistory } from './application-detail/application-journey-history';
 import { ApplicationActivityDrawer } from './application-detail/application-activity-drawer';
 import { ApplicationFormDocuments } from './document-verification/application-form-documents';
 import { ApplicationWorkspaceActions } from './application-detail/application-workspace-actions';
@@ -420,6 +421,7 @@ export default function AdmissionApplicationDetailScreen({
               Current Step
             </Button>
           </Stack>
+          <ApplicationJourneyHistory applicantId={application.applicantId} />
           {detail.formHistoryQuery.isLoading ? (
             <Skeleton variant="rounded" height={160} aria-label="Loading application history" />
           ) : detail.formHistoryQuery.isError ? (
@@ -479,6 +481,11 @@ export default function AdmissionApplicationDetailScreen({
             : undefined
         }
       >
+        {selectedStage?.completedAt && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Handled by: {selectedStage.completedByName || 'Staff name not recorded'}
+          </Typography>
+        )}
         {historical && selectedStage && !isFormStage(selectedStage) && (
           <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
             <Label color={getStageStatusColor(selectedStage.status)}>

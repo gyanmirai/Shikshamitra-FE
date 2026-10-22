@@ -110,7 +110,7 @@ export function AdmissionUnmatchedInquiryDrawer({
         <Box sx={{ flex: 1 }}>
           <Typography variant="h6">Capture inquiry before offering is known</Typography>
           <Typography variant="body2" color="text.secondary">
-            Record the lead now. A counsellor can confirm the class offering later.
+            Record the lead now. Staff can confirm the class offering later.
           </Typography>
         </Box>
         <IconButton aria-label="Close" disabled={createState.isLoading} onClick={onClose}>

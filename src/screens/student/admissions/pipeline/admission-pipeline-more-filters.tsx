@@ -39,8 +39,6 @@ type Props = {
 };
 
 type FilterDraft = {
-  queue: '' | 'my' | 'all';
-  counsellor: string;
   stage: string;
   status: string;
 };
@@ -54,8 +52,6 @@ const EMPTY_FILTERS: AdmissionPipelineFilterChanges = {
 };
 
 const getDraft = (values: AdmissionPipelineFilterValues): FilterDraft => ({
-  queue: values.myCases === undefined ? '' : values.myCases ? 'my' : 'all',
-  counsellor: values.assignedCounsellorId ?? '',
   stage: values.currentStageCode ?? '',
   status: values.status === undefined ? '' : String(values.status),
 });
@@ -73,13 +69,7 @@ export function AdmissionPipelineMoreFilters({
   const dialogId = useId();
   const titleId = `${dialogId}-title`;
   const [draft, setDraft] = useState(() => getDraft(values));
-  const activeCount = [
-    options && values.myCases !== undefined && values.myCases !== options.defaultMyCases,
-    values.assignedCounsellorId,
-    values.currentStageCode,
-    values.status !== undefined,
-  ].filter(Boolean).length;
-  const myCases = draft.queue ? draft.queue === 'my' : options?.defaultMyCases;
+  const activeCount = [values.currentStageCode, values.status !== undefined].filter(Boolean).length;
   const unavailable = disabled || !options || isError;
   const updateDraft = (changes: Partial<FilterDraft>) =>
     setDraft((current) => ({ ...current, ...changes }));
@@ -166,39 +156,7 @@ export function AdmissionPipelineMoreFilters({
                 {isLoading ? 'Loading filter options...' : 'Filter options are not available yet.'}
               </Typography>
             ) : null}
-            <CustomSelect
-              fullWidth
-              label="Cases"
-              value={draft.queue || (myCases === undefined ? '' : myCases ? 'my' : 'all')}
-              options={[
-                { label: 'My active cases', value: 'my' },
-                { label: 'All authorized active cases', value: 'all' },
-              ]}
-              isLoading={isLoading && !options && !isError}
-              disabled={unavailable}
-              onChange={(value) =>
-                updateDraft({
-                  queue: value === 'my' ? 'my' : 'all',
-                  ...(value === 'my' ? { counsellor: '' } : {}),
-                })
-              }
-            />
-            <CustomSelect
-              fullWidth
-              label="Counsellor"
-              value={draft.counsellor || ALL}
-              options={[
-                { label: 'All counsellors', value: ALL },
-                ...(options?.counsellors ?? []).map((item) => ({
-                  label: item.name,
-                  value: item.id,
-                })),
-              ]}
-              isSearch
-              disabled={unavailable || myCases !== false}
-              helperText={myCases ? 'My cases shows only applications assigned to you.' : undefined}
-              onChange={(value) => updateDraft({ counsellor: value === ALL ? '' : String(value) })}
-            />
+
             <CustomSelect
               fullWidth
               label="Current step"
@@ -250,8 +208,8 @@ export function AdmissionPipelineMoreFilters({
             sx={{ bgcolor: 'text.primary', color: 'background.paper' }}
             onClick={() => {
               onApply({
-                queue: draft.queue || undefined,
-                counsellor: myCases ? undefined : draft.counsellor || undefined,
+                queue: undefined,
+                counsellor: undefined,
                 stage: draft.stage || undefined,
                 status: draft.status || undefined,
               });

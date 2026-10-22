@@ -121,9 +121,11 @@ export type AdmissionApplicationStage = {
   enteredAt?: string | null;
   completedAt?: string | null;
   completedBy?: string | null;
+  completedByName?: string | null;
   completionReason?: string | null;
 };
 export type AdmissionWorkflowTransitionHistory = {
+  actorName?: string | null;
   id: string;
   fromStageInstanceId: string;
   toStageInstanceId?: string | null;

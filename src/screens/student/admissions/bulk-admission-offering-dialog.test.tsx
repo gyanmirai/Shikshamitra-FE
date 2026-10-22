@@ -291,8 +291,8 @@ describe('Bulk offering step navigation', () => {
       'School inquiry · v2'
     );
     expect(
-      screen.getByRole('combobox', { name: 'Intake & assignment setup (optional)' })
-    ).toHaveTextContent('No setup — manual assignment');
+      screen.queryByRole('combobox', { name: 'Intake & assignment setup (optional)' })
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Preview offerings' }));
     await waitFor(() => expect(mocks.preview).toHaveBeenCalledTimes(2));
     expect(mocks.preview).toHaveBeenLastCalledWith(

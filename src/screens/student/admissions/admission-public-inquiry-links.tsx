@@ -45,7 +45,6 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import {
-  useGetAdmissionIntakeSetupsQuery,
   useGetAdmissionPublicInquiryLinksQuery,
   useCreateAdmissionPublicInquiryLinkMutation,
   useRevokeAdmissionPublicInquiryLinkMutation,
@@ -80,7 +79,6 @@ type LinkRow = AdmissionPublicInquiryLink & {
 
 type LinkValues = {
   cycleId: string;
-  setupId: string;
   formId: string;
   name: string;
   source: number;
@@ -90,7 +88,6 @@ type LinkValues = {
 
 const linkSchema = Yup.object({
   cycleId: Yup.string().required('Choose a published admission period.'),
-  setupId: Yup.string().optional(),
   formId: Yup.string().required('Choose a published inquiry form.'),
   name: Yup.string().trim().required('Enter a link name.').max(128),
   source: Yup.number().integer().required(),
@@ -119,14 +116,8 @@ export function AdmissionPublicInquiryLinks({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const nameInputRef = useRef<HTMLInputElement>(null);
   const cycleInputRef = useRef<HTMLInputElement>(null);
-  const setupInputRef = useRef<HTMLInputElement>(null);
-  const appliedInitialSetup = useRef<string | null>(null);
   const formInputRef = useRef<HTMLInputElement>(null);
   const cycles = useGetAdmissionCyclesQuery({ maxResultCount: 100, skipCount: 0 });
-  const setups = useGetAdmissionIntakeSetupsQuery(undefined, {
-    skip: !createOpen,
-    refetchOnMountOrArgChange: true,
-  });
   const forms = useGetAdmissionFormsQuery({ status: 1, purpose: 0, maxResultCount: 100 });
   const links = useGetAdmissionPublicInquiryLinksQuery();
   const [create, createState] = useCreateAdmissionPublicInquiryLinkMutation();
@@ -151,12 +142,9 @@ export function AdmissionPublicInquiryLinks({
   const publishedForms = (forms.data?.items ?? []).filter(
     (form) => form.status === 1 && form.purpose === 0
   );
-  const allSetups = setups.data ?? [];
-  const setupsLoading = setups.isLoading || setups.isFetching;
   const formik = useFormik<LinkValues>({
     initialValues: {
       cycleId: '',
-      setupId: '',
       formId: '',
       name: '',
       source: 0,
@@ -167,30 +155,18 @@ export function AdmissionPublicInquiryLinks({
     onSubmit: async (values) => {
       setError('');
       try {
-        const setup = (setups.data ?? []).find((item) => item.id === values.setupId);
-        if (values.setupId && !setup) {
-          setError(
-            'The selected admission intake setup is no longer available. Choose another setup.'
-          );
-          return;
-        }
         if (
           !routingReady ||
-          !linkOptions.some(
-            (option) =>
-              option.counsellorAssignmentProfileId ===
-                (setup?.counsellorAssignmentProfileId ?? null) &&
-              option.inquiryFormDefinitionId === values.formId
-          )
+          !linkOptions.some((option) => option.inquiryFormDefinitionId === values.formId)
         ) {
           setError(
-            'Choose an inquiry form linked to an active Inquiry or Both Offering in this period. A selected setup must belong to the same Offering. Refresh offerings after updating the configuration.'
+            'Choose an inquiry form linked to an active Inquiry or Both Offering in this period. Refresh offerings after updating the configuration.'
           );
           return;
         }
         const result = await create({
           admissionCycleId: values.cycleId,
-          counsellorAssignmentProfileId: setup?.counsellorAssignmentProfileId ?? null,
+          counsellorAssignmentProfileId: null,
           inquiryFormDefinitionId: values.formId,
           name: values.name.trim(),
           source: values.source,
@@ -200,7 +176,6 @@ export function AdmissionPublicInquiryLinks({
         setCreatedLinks((current) => ({ ...current, [result.id]: result }));
         setCreatedTableContext({ page: 0, searchTerm: '', filters: [], sorts: [] });
         formik.resetForm();
-        appliedInitialSetup.current = null;
         onCreateClose();
         shikshaMitraToast.success({
           message: 'Inquiry link created. Copy it from the row actions before leaving this page.',
@@ -208,15 +183,10 @@ export function AdmissionPublicInquiryLinks({
       } catch (problem) {
         const parsed = parseApiProblemDetail(problem);
         setError(
-          parsed.errorCode === 'Admissions.InquiryCounsellorInvalid'
-            ? 'The selected admission period needs an active offering that accepts inquiries, with access for at least one counsellor and the fallback manager in this setup. Activate/configure the offering or choose another period, then retry.'
-            : parsed.errorCode === 'Admissions.PublicInquiry.OfferingRequired'
-              ? parsed.detail && parsed.detail !== 'One or more business rules were violated.'
-                ? parsed.detail
-                : values.setupId
-                  ? 'No active Inquiry or Both Offering in this period matches the selected setup and form. Attach both to the same Offering, activate it, then refresh offerings and retry.'
-                  : 'No active Inquiry or Both Offering in this period uses the selected inquiry form. Attach the form to an Offering, activate it, then refresh offerings and retry.'
-              : parsed.detail || 'Unable to create the inquiry link.'
+          parsed.errorCode === 'Admissions.PublicInquiry.OfferingRequired' &&
+            (!parsed.detail || parsed.detail === 'One or more business rules were violated.')
+            ? 'Attach the inquiry form to an Offering, activate it, and refresh offerings before trying again.'
+            : parsed.detail || 'Unable to create the inquiry link.'
         );
         if (parsed.errorCode === 'Admissions.PublicInquiry.OfferingRequired')
           routingOptions.refetch();
@@ -239,22 +209,6 @@ export function AdmissionPublicInquiryLinks({
   const availableForms = publishedForms.filter((form) =>
     linkOptions.some((option) => option.inquiryFormDefinitionId === form.id)
   );
-  const availableSetups = !formik.values.cycleId
-    ? allSetups
-    : allSetups.filter((setup) =>
-        linkOptions.some(
-          (option) =>
-            option.counsellorAssignmentProfileId === setup.counsellorAssignmentProfileId &&
-            (!formik.values.formId || option.inquiryFormDefinitionId === formik.values.formId)
-        )
-      );
-  const setupPlaceholder = setupsLoading
-    ? 'Loading intake setups…'
-    : setups.isError
-      ? 'Unable to load intake setups'
-      : routingLoading && formik.values.cycleId
-        ? 'Loading compatible setups…'
-        : 'No setup — manual assignment';
   const { dirty } = formik;
   const formEditor = useFormik({
     initialValues: { formId: '' },
@@ -302,22 +256,9 @@ export function AdmissionPublicInquiryLinks({
     }
   }, [createOpen, isMobile]);
 
-  useEffect(() => {
-    if (
-      createOpen &&
-      initialSetupId &&
-      appliedInitialSetup.current !== initialSetupId &&
-      (setups.data ?? []).some((setup) => setup.id === initialSetupId)
-    ) {
-      formik.setFieldValue('setupId', initialSetupId, false);
-      appliedInitialSetup.current = initialSetupId;
-    }
-  }, [createOpen, initialSetupId, setups.data, formik]);
-
   const discardAndClose = () => {
     setDiscardOpen(false);
     formik.resetForm();
-    appliedInitialSetup.current = null;
     setError('');
     onCreateClose();
   };
@@ -334,7 +275,6 @@ export function AdmissionPublicInquiryLinks({
     const errors = await formik.validateForm();
     formik.setTouched({
       cycleId: true,
-      setupId: true,
       formId: true,
       name: true,
       source: true,
@@ -344,7 +284,6 @@ export function AdmissionPublicInquiryLinks({
     if (errors.name) nameInputRef.current?.focus();
     else if (errors.cycleId) cycleInputRef.current?.focus();
     else if (errors.formId) formInputRef.current?.focus();
-    else if (errors.setupId) setupInputRef.current?.focus();
     if (Object.keys(errors).length === 0) await formik.submitForm();
   };
 
@@ -779,7 +718,11 @@ export function AdmissionPublicInquiryLinks({
               </TextField>
             </Grid>
           </SectionCard>
-          <SectionCard title="Routing" paperProps={sectionProps} gridProps={{ spacing: 2 }}>
+          <SectionCard
+            title="Admission period and form"
+            paperProps={sectionProps}
+            gridProps={{ spacing: 2 }}
+          >
             <Grid size={12}>
               <TextField
                 select
@@ -796,7 +739,6 @@ export function AdmissionPublicInquiryLinks({
                     ...formik.values,
                     cycleId: event.target.value,
                     formId: '',
-                    setupId: '',
                   });
                 }}
                 onBlur={formik.handleBlur}
@@ -848,17 +790,9 @@ export function AdmissionPublicInquiryLinks({
                   }}
                   onChange={(event) => {
                     const formId = event.target.value;
-                    const setup = allSetups.find((item) => item.id === formik.values.setupId);
-                    const keepSetup = linkOptions.some(
-                      (option) =>
-                        option.inquiryFormDefinitionId === formId &&
-                        option.counsellorAssignmentProfileId ===
-                          (setup?.counsellorAssignmentProfileId ?? null)
-                    );
                     formik.setValues({
                       ...formik.values,
                       formId,
-                      setupId: keepSetup ? formik.values.setupId : '',
                     });
                   }}
                   onBlur={formik.handleBlur}
@@ -874,34 +808,8 @@ export function AdmissionPublicInquiryLinks({
                 </TextField>
               )}
             </Grid>
-            <Grid size={12}>
-              <TextField
-                select
-                inputRef={setupInputRef}
-                fullWidth
-                size="small"
-                label="Admission intake setup (optional)"
-                name="setupId"
-                value={formik.values.setupId}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={
-                  setupsLoading || setups.isError || routingLoading || routingOptions.isError
-                }
-                InputLabelProps={{ shrink: true }}
-                SelectProps={{ displayEmpty: true }}
-                error={Boolean(formik.touched.setupId && formik.errors.setupId)}
-                helperText={formik.touched.setupId ? formik.errors.setupId : undefined}
-              >
-                <MenuItem value="">{setupPlaceholder}</MenuItem>
-                {availableSetups.map((setup) => (
-                  <MenuItem key={setup.id} value={setup.id}>
-                    {setup.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            {(cycles.isError || setups.isError || forms.isError || routingOptions.isError) && (
+
+            {(cycles.isError || forms.isError || routingOptions.isError) && (
               <Grid size={12}>
                 <Alert
                   severity="error"
@@ -910,7 +818,6 @@ export function AdmissionPublicInquiryLinks({
                       size="small"
                       onClick={() => {
                         if (cycles.isError) cycles.refetch();
-                        if (setups.isError) setups.refetch();
                         if (forms.isError) forms.refetch();
                         if (routingOptions.isError) routingOptions.refetch();
                       }}
@@ -919,7 +826,7 @@ export function AdmissionPublicInquiryLinks({
                     </Button>
                   }
                 >
-                  Unable to load routing options.
+                  Unable to load admission periods and forms.
                 </Alert>
               </Grid>
             )}
@@ -931,23 +838,12 @@ export function AdmissionPublicInquiryLinks({
               </Grid>
             )}
             {!cycles.isError &&
-              !setups.isError &&
               !forms.isError &&
               !cycles.isLoading &&
-              !setupsLoading &&
               !forms.isLoading &&
               publishedCycles.length === 0 && (
                 <Grid size={12}>
-                  <AdmissionIntakeNotice
-                    severity="info"
-                    action={
-                      allSetups.length === 0 ? (
-                        <Button size="small" onClick={() => setups.refetch()}>
-                          Refresh setups
-                        </Button>
-                      ) : undefined
-                    }
-                  >
+                  <AdmissionIntakeNotice severity="info">
                     Publish an admission period before creating a link.
                   </AdmissionIntakeNotice>
                 </Grid>
@@ -1034,10 +930,7 @@ export function AdmissionPublicInquiryLinks({
             disabled={
               inquiryFormsLoading ||
               (Boolean(formik.values.cycleId) &&
-                (!routingReady ||
-                  linkOptions.length === 0 ||
-                  (Boolean(formik.values.setupId) && setups.isError) ||
-                  forms.isError))
+                (!routingReady || linkOptions.length === 0 || forms.isError))
             }
             onClick={createLink}
           >

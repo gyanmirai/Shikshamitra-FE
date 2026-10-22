@@ -75,8 +75,8 @@ export const getOfferingInitialValues = (
   workflowDefinitionId: offering?.workflowDefinitionId ?? null,
   inquiryFormDefinitionId: offering?.inquiryFormDefinitionId ?? null,
   applicationFormDefinitionId: offering?.applicationFormDefinitionId ?? null,
-  inquiryIntakeProfileId: offering?.inquiryIntakeProfileId ?? null,
-  counsellorAssignmentProfileId: offering?.counsellorAssignmentProfileId ?? null,
+  inquiryIntakeProfileId: null,
+  counsellorAssignmentProfileId: null,
   isActive: offering?.isActive ?? false,
 });
 
@@ -131,7 +131,7 @@ export const getAdmissionApiError = (error: unknown, fallback: string): string =
     'Admissions.Offering.HasApplications':
       'This offering has applications and cannot be deleted. Deactivate it instead.',
     'Admissions.Offering.ConfigurationIncomplete':
-      'Complete the required workflow, forms, intake profiles, and dates before activation.',
+      'Complete the required workflow, forms, and dates before activation.',
     'Admissions.Offering.HierarchyOutOfScope':
       'You do not have access to configure the selected academic hierarchy.',
     'Admissions.Offering.StateCommandRequired':

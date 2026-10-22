@@ -5,7 +5,6 @@ export const APPLICATION_SORT_COLUMNS = [
   'applicationNumber',
   'standardName',
   'contactPhone',
-  'assignedCounsellorName',
   'decisionEnteredAt',
   'lastSavedAt',
   'status',

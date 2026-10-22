@@ -163,12 +163,7 @@ export default function AdmissionOfferingsScreen() {
         />
       )}
       {screen.cycle && screen.bulkOpen && (
-        <BulkAdmissionOfferingDialog
-          open
-          cycle={screen.cycle}
-          initialIntakeSetupId={screen.initialIntakeSetupId}
-          onClose={screen.closeBulk}
-        />
+        <BulkAdmissionOfferingDialog open cycle={screen.cycle} onClose={screen.closeBulk} />
       )}
       <AdmissionOfferingDetailsDrawer
         open={screen.detailsOpen}

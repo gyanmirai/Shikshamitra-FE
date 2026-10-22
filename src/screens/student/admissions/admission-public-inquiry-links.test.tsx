@@ -179,8 +179,6 @@ const fillLink = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole('option', { name: 'Regular admission' }));
   await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
   await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
-  await user.click(screen.getByRole('combobox', { name: /Admission intake setup/ }));
-  await user.click(screen.getByRole('option', { name: 'School intake' }));
 };
 
 describe('create public inquiry link', () => {
@@ -206,78 +204,6 @@ describe('create public inquiry link', () => {
     hooks.create.mockReturnValue({
       unwrap: () => Promise.resolve({ ...activeLink, name: 'School fair', token: 'fixture-token' }),
     });
-  });
-
-  it('requests fresh setup options each time the drawer opens', () => {
-    const { rerender } = render(
-      <AdmissionPublicInquiryLinks canEdit createOpen={false} onCreateClose={hooks.close} />
-    );
-    expect(hooks.setupQuery).toHaveBeenLastCalledWith(undefined, {
-      skip: true,
-      refetchOnMountOrArgChange: true,
-    });
-    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    expect(hooks.setupQuery).toHaveBeenLastCalledWith(undefined, {
-      skip: false,
-      refetchOnMountOrArgChange: true,
-    });
-  });
-
-  it('loads compatible pairs for the selected period and clears routing when the period changes', async () => {
-    hooks.setups.data = [activeSetup];
-    renderDrawer();
-    const user = userEvent.setup();
-    await fillLink(user);
-    expect(hooks.optionsQuery).toHaveBeenLastCalledWith('cycle-1', {
-      skip: false,
-      refetchOnMountOrArgChange: true,
-    });
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
-    await user.click(screen.getByRole('option', { name: 'Choose period' }));
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).not.toHaveTextContent(
-      'School intake'
-    );
-    expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).not.toHaveTextContent(
-      'Inquiry form · v1'
-    );
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-    expect(hooks.create).not.toHaveBeenCalled();
-  });
-
-  it('excludes setups without a matching Offering and prevents creation when no compatible pairs exist', async () => {
-    hooks.setups.data = [
-      activeSetup,
-      {
-        ...activeSetup,
-        id: 'setup-2',
-        name: 'Unlinked setup',
-        counsellorAssignmentProfileId: 'routing-profile-2',
-      },
-    ];
-    const { rerender } = renderDrawer();
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
-    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-    await user.click(screen.getByRole('combobox', { name: /Admission intake setup/ }));
-    expect(screen.getByRole('option', { name: 'School intake' })).toBeVisible();
-    expect(screen.queryByRole('option', { name: 'Unlinked setup' })).not.toBeInTheDocument();
-    await user.keyboard('{Escape}');
-    hooks.options.currentData = [];
-    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    expect(
-      screen.queryByText(/No compatible inquiry Offering is available/)
-    ).not.toBeInTheDocument();
-    expect(hooks.infoToast).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
-    expect(hooks.infoToast).toHaveBeenCalledWith({
-      message:
-        'First create or attach a published Inquiry form to an active Admission Offering with Inquiry or Both entry mode in this period.',
-    });
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create link' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Refresh offerings' }));
-    expect(hooks.options.refetch).toHaveBeenCalledOnce();
-    expect(hooks.create).not.toHaveBeenCalled();
   });
 
   it('supports keyboard prerequisite feedback and opens options after offerings are refreshed', async () => {
@@ -358,9 +284,6 @@ describe('create public inquiry link', () => {
       expect(screen.getByRole('combobox', { name: 'Published inquiry form' })).toHaveTextContent(
         'Inquiry form · v1'
       );
-      expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
-        'School intake'
-      );
       expect(screen.getByRole('button', { name: 'Create link' })).toBeEnabled();
       expect(hooks.create).not.toHaveBeenCalled();
     }
@@ -376,7 +299,7 @@ describe('create public inquiry link', () => {
     expect(
       screen.queryByRole('status', { name: 'Loading published inquiry forms' })
     ).not.toBeInTheDocument();
-    expect(screen.getByText('Unable to load routing options.')).toBeVisible();
+    expect(screen.getByText('Unable to load admission periods and forms.')).toBeVisible();
     expect(
       screen.queryByText('Publish an Inquiry form before creating a link.')
     ).not.toBeInTheDocument();
@@ -399,79 +322,15 @@ describe('create public inquiry link', () => {
     const user = userEvent.setup();
     await fillLink(user);
     await user.click(screen.getByRole('button', { name: 'Create link' }));
-    expect(await screen.findByText(/Attach both to the same Offering, activate it/)).toBeVisible();
+    expect(
+      await screen.findByText(/Attach the inquiry form to an Offering, activate it/)
+    ).toBeVisible();
     expect(hooks.options.refetch).toHaveBeenCalledOnce();
     expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
     expect(hooks.close).not.toHaveBeenCalled();
   });
 
-  it('can retry optional setup lookup without losing entered details', async () => {
-    hooks.setups.isError = true;
-    const user = userEvent.setup();
-    const { rerender } = renderDrawer();
-    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'School fair');
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(hooks.setups.refetch).toHaveBeenCalledOnce();
-
-    hooks.setups.isFetching = true;
-    hooks.setups.isError = false;
-    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    expect(screen.getByText('Loading intake setups…')).toBeVisible();
-    expect(screen.queryByText('No active intake setups')).not.toBeInTheDocument();
-
-    hooks.setups.isFetching = false;
-    hooks.setups.data = [activeSetup];
-    rerender(<AdmissionPublicInquiryLinks canEdit createOpen onCreateClose={hooks.close} />);
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).not.toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    await user.click(screen.getByRole('combobox', { name: /Admission intake setup/ }));
-    await user.click(screen.getByRole('option', { name: 'School intake' }));
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-  });
-
-  it('allows manual assignment when no optional setup exists', () => {
-    renderDrawer();
-
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).not.toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    expect(screen.getByText('No setup — manual assignment')).toBeVisible();
-    expect(screen.queryByText(/Inquiries from this link stay Unassigned/)).not.toBeInTheDocument();
-    expect(hooks.create).not.toHaveBeenCalled();
-  });
-
-  it('does not describe a loading query as missing configuration', () => {
-    hooks.setups.data = undefined;
-    hooks.setups.isLoading = true;
-    renderDrawer();
-
-    expect(screen.getByText('Loading intake setups…')).toBeVisible();
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    expect(
-      screen.queryByText(/Create one in the Admission intake setups tab/)
-    ).not.toBeInTheDocument();
-  });
-
-  it('keeps failed queries distinct from empty results and allows retry', async () => {
-    hooks.setups.isError = true;
-    renderDrawer();
-
-    expect(screen.getByText('Unable to load intake setups')).toBeVisible();
-    expect(screen.getByText('Unable to load routing options.')).toBeVisible();
-    expect(
-      screen.queryByText(/Create one in the Admission intake setups tab/)
-    ).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(hooks.setups.refetch).toHaveBeenCalledOnce();
-  });
-
-  it('selects a saved setup and submits its routing profile without changing the API payload', async () => {
+  it('creates a link with its published form without a staff assignment', async () => {
     hooks.setups.data = [activeSetup];
     renderDrawer();
     const user = userEvent.setup();
@@ -482,7 +341,7 @@ describe('create public inquiry link', () => {
     await waitFor(() =>
       expect(hooks.create).toHaveBeenCalledWith({
         admissionCycleId: 'cycle-1',
-        counsellorAssignmentProfileId: 'routing-profile-1',
+        counsellorAssignmentProfileId: null,
         inquiryFormDefinitionId: 'form-1',
         name: 'School fair',
         source: 0,
@@ -600,32 +459,6 @@ describe('create public inquiry link', () => {
     expect(hooks.successToast).toHaveBeenCalledWith({ message: 'Inquiry link copied.' });
   });
 
-  it('explains counsellor eligibility failures and preserves the form for correction', async () => {
-    hooks.setups.data = [activeSetup];
-    hooks.create.mockReturnValue({
-      unwrap: vi.fn().mockRejectedValue({
-        status: 400,
-        data: {
-          errorCode: 'Admissions.InquiryCounsellorInvalid',
-          detail: 'One or more business rules were violated.',
-        },
-      }),
-    });
-    renderDrawer();
-    const user = userEvent.setup();
-    await fillLink(user);
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
-
-    expect(
-      await screen.findByText(/Activate\/configure the offering or choose another period/)
-    ).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-    expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
-      'School intake'
-    );
-    expect(hooks.close).not.toHaveBeenCalled();
-  });
-
   it.each([
     [
       'Admissions.PublicInquiry.OfferingRequired',
@@ -654,9 +487,6 @@ describe('create public inquiry link', () => {
 
       expect(await screen.findByText(detail)).toBeVisible();
       expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
-      expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
-        'School intake'
-      );
       expect(hooks.close).not.toHaveBeenCalled();
       await user.click(screen.getByRole('button', { name: 'Create link' }));
       await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
@@ -680,17 +510,6 @@ describe('create public inquiry link', () => {
 
     expect(await screen.findByText('The inquiry form was archived.')).toBeVisible();
     expect(hooks.close).not.toHaveBeenCalled();
-  });
-
-  it('retains setup preselection when opening from a setup row', async () => {
-    hooks.setups.data = [activeSetup];
-    renderDrawer(activeSetup.id);
-
-    await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
-        'School intake'
-      )
-    );
   });
 
   it('uses the blue heading tooltip and removes hints without removing validation', async () => {
@@ -748,23 +567,12 @@ describe('create public inquiry link', () => {
         )
       );
       expect(hooks.close).toHaveBeenCalledOnce();
+      expect(hooks.setupQuery).not.toHaveBeenCalled();
+      expect(
+        screen.queryByRole('combobox', { name: /Admission intake setup/ })
+      ).not.toBeInTheDocument();
     }
   );
-
-  it('blocks a manual link when its form has no compatible manual-routing option', async () => {
-    renderDrawer();
-    const user = userEvent.setup();
-    await user.type(screen.getByRole('textbox', { name: 'Link name' }), 'Manual inquiry link');
-    await user.click(screen.getByRole('combobox', { name: 'Admission period' }));
-    await user.click(screen.getByRole('option', { name: 'Regular admission' }));
-    await user.click(screen.getByRole('combobox', { name: 'Published inquiry form' }));
-    await user.click(screen.getByRole('option', { name: 'Inquiry form · v1' }));
-    await user.click(screen.getByRole('button', { name: 'Create link' }));
-    expect(
-      await screen.findByText(/Choose an inquiry form linked to an active Inquiry or Both Offering/)
-    ).toBeVisible();
-    expect(hooks.create).not.toHaveBeenCalled();
-  });
 });
 
 const activeLink: AdmissionPublicInquiryLink = {
@@ -848,10 +656,7 @@ describe('public inquiry link details and actions', () => {
     hooks.revokeLoading = true;
     renderList();
     expect(screen.getByTestId('table-action-form')).toBeDisabled();
-    await userEvent.click(
-      screen.getByRole('button', { name: `More actions for ${activeLink.name}` })
-    );
-    expect(screen.getByTestId('menu-action-revoke')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByTestId('table-action-revoke')).toBeDisabled();
   });
 
   it('keeps revoked links viewable while hiding unavailable actions', async () => {
