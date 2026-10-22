@@ -143,11 +143,11 @@ it('keeps edited allocations until changes are explicitly discarded', async () =
   const { onClose, onSave } = setup();
   const allocation = screen.getByRole('textbox', { name: 'Jun 2026 allocation percentage' });
   fireEvent.change(allocation, { target: { value: '20' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(onClose).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
   expect(allocation).toHaveValue('20%');
-  fireEvent.click(await screen.findByRole('button', { name: 'Cancel', exact: true }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
   expect(onClose).toHaveBeenCalledOnce();
   expect(onSave).not.toHaveBeenCalled();

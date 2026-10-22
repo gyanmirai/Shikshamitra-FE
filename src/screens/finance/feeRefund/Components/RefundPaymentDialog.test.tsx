@@ -107,7 +107,7 @@ it('locks fields, submission, and dismissal while a payment is being recorded', 
   fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
   expect(evidence).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Cancel', exact: true })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   expect(screen.getByRole('status', { name: 'Recording payment…' })).toBeTruthy();
   fireEvent.submit(evidence.closest('form')!);
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
@@ -137,10 +137,10 @@ it('requires explicit discard before closing edited payment evidence', async () 
   const { onClose, onSubmit } = setup();
   const evidence = screen.getByRole('textbox', { name: /Signed handover receipt/ });
   fireEvent.change(evidence, { target: { value: 'receipt-123' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(onClose).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep Editing' }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Cancel', exact: true }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
   fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
   expect(onClose).toHaveBeenCalledOnce();
   expect(onSubmit).not.toHaveBeenCalled();
