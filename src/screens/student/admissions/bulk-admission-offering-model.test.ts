@@ -191,7 +191,7 @@ describe('bulk offering class selection', () => {
         entryMode: 1,
         inquiryFormDefinitionId: null,
         inquiryIntakeProfileId: null,
-        counsellorAssignmentProfileId: 'assignment',
+        counsellorAssignmentProfileId: null,
       });
       const codes = input.items.map((item) => item.code);
       expect(new Set(codes).size).toBe(4);

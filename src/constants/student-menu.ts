@@ -25,14 +25,14 @@ export const studentPaths = {
     applicantWorkspace: (id: string) =>
       `/student/admissions/pipeline/applications/${encodeURIComponent(id)}`,
     applications: '/student/admissions/applications',
-    decisionWorkspace: (id: string) =>
-      `/student/admissions/applications/${encodeURIComponent(id)}`,
+    decisionWorkspace: (id: string) => `/student/admissions/applications/${encodeURIComponent(id)}`,
     assessments: '/student/admissions/assessments',
     settings: {
       root: '/student/admissions/settings/cycles',
       cycles: '/student/admissions/settings/cycles',
       offerings: '/student/admissions/settings/offerings',
-      intakeAssignment: '/student/admissions/settings/intake-assignment',
+      publicInquiryLinks: '/student/admissions/settings/public-inquiry-links',
+      intakeAssignment: '/student/admissions/settings/public-inquiry-links',
       workflows: '/student/admissions/settings/workflows',
       forms: '/student/admissions/settings/forms',
     },
@@ -120,9 +120,7 @@ export const studentPermissions = {
     },
   },
   onboarding: {
-    root: [
-      `${defaultStudentPermissionName}Onboarding.View`,
-    ],
+    root: [`${defaultStudentPermissionName}Onboarding.View`],
     setup: `${defaultStudentPermissionName}Onboarding.View`,
     settings: `${defaultStudentPermissionName}Onboarding.View`,
     configure: `${defaultStudentPermissionName}Onboarding.Add`,
@@ -209,8 +207,14 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-admissions-crm-pipeline',
               permissionName: studentPermissions.enrollment.applications,
               permissionChildren: [
-                { title: 'Applications', permissionName: studentPermissions.enrollment.applications },
-                { title: 'Applicant profiles', permissionName: studentPermissions.enrollment.applicants },
+                {
+                  title: 'Applications',
+                  permissionName: studentPermissions.enrollment.applications,
+                },
+                {
+                  title: 'Applicant profiles',
+                  permissionName: studentPermissions.enrollment.applicants,
+                },
                 { title: 'Payment workflow', permissionName: 'Students.Admissions.Payments.View' },
                 { title: 'Offers', permissionName: 'Students.Admissions.Offers.View' },
                 { title: 'Seats', permissionName: 'Students.Admissions.Seats.View' },
@@ -263,7 +267,7 @@ const studentModule = (isDdvs: boolean) => ({
                   icon: menuIconView('mdi:graph-outline'),
                 },
                 {
-                  title: 'Intake & Assignment',
+                  title: 'Public Inquiry Links',
                   path: studentPaths.enrollment.settings.intakeAssignment,
                   _action: 'student-admissions-settings-intake-assignment',
                   permissionName: studentPermissions.enrollment.settings.intakeAssignment,

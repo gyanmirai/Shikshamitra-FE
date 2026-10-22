@@ -71,6 +71,10 @@ export function withStandardInquiryBehavior<
     requireGuardianEmail: false,
     requireApplicantDateOfBirth: false,
     requireSourceDetailFor: [],
+    assignmentMode: 0,
+    defaultCounsellorId: null,
+    counsellorPoolUserIds: [],
+    restrictActionsToAssignedCounsellor: false,
   };
 }
 

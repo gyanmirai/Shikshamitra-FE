@@ -23,6 +23,7 @@ export type OnboardingCheckStatus =
   'passed' | 'pending' | 'failed' | 'not-required' | 'not-connected';
 
 export type OnboardingChecklistItem = {
+  handledByName?: string | null;
   key: string;
   label: string;
   detail: string;
@@ -32,6 +33,7 @@ export type OnboardingChecklistItem = {
 };
 
 export type OnboardingActivityItem = {
+  actorName?: string | null;
   id: string;
   title: string;
   detail: string;
@@ -426,7 +428,8 @@ export const mapOnboardingCaseToItem = (
           status: onboardingStepStatus[step.status],
           blocking:
             step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
-          owner: onboardingCase.assignedToUserName || 'Onboarding',
+          owner: 'Onboarding',
+          handledByName: step.completedByName,
         };
         if (!step.key.includes('identifiers')) return [check];
         return [
@@ -450,12 +453,7 @@ export const mapOnboardingCaseToItem = (
         }));
       }),
     ],
-    activity: onboardingCase.events.map((event) => ({
-      id: event.id,
-      title: event.eventType,
-      detail: event.description,
-      occurredAt: event.occurredAt,
-    })),
+    activity: onboardingCase.events.map(mapOnboardingEventToActivity),
     updatedAt:
       onboardingCase.lastModificationTime ||
       onboardingCase.creationTime ||
@@ -471,3 +469,13 @@ export const mapOnboardingCaseToItem = (
     studentEnrollmentId: onboardingCase.studentEnrollmentId,
   };
 };
+
+export const mapOnboardingEventToActivity = (
+  event: StudentOnboardingCase['events'][number]
+): OnboardingActivityItem => ({
+  actorName: event.actorName,
+  id: event.id,
+  title: event.eventType,
+  detail: event.description,
+  occurredAt: event.occurredAt,
+});

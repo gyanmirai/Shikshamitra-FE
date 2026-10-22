@@ -14,7 +14,6 @@ import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { Box, Alert, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
-import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 import { useGetAdmissionOfferingClassIdentitiesQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
@@ -36,7 +35,6 @@ import type { BulkOfferingValues } from './bulk-admission-offering-model';
 type Props = {
   open: boolean;
   cycle: AdmissionCycle;
-  initialIntakeSetupId?: string | null;
   onClose: () => void;
 };
 
@@ -46,7 +44,7 @@ const NO_STANDARDS: Standards[] = [];
 const cycleLabel = (cycle: AdmissionCycle) =>
   `${cycle.name} · ${cycle.academicYearName} · ${formatDateOnly(cycle.startDate, 'DD MMM YYYY')} – ${formatDateOnly(cycle.endDate, 'DD MMM YYYY')}`;
 
-export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId, onClose }: Props) {
+export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [classesReady, setClassesReady] = useState(true);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
@@ -79,16 +77,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
     },
     [loadCycles, cycle.academicYearId]
   );
-  const setups = useGetAdmissionIntakeSetupsQuery(undefined, { skip: !initialIntakeSetupId });
-  const initialSetup = (setups.data ?? []).find((setup) => setup.id === initialIntakeSetupId);
-  const initialValues = useMemo<BulkOfferingValues>(
-    () => ({
-      ...bulkOfferingInitialValues,
-      inquiryIntakeProfileId: initialSetup?.inquiryIntakeProfileId ?? '',
-      counsellorAssignmentProfileId: initialSetup?.counsellorAssignmentProfileId ?? '',
-    }),
-    [initialSetup]
-  );
+  const initialValues = bulkOfferingInitialValues;
   const selectedCount = bulk.preview?.items.length ?? 0;
 
   const requestClose = () => {
@@ -168,7 +157,7 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomStepperWithFormik
-          key={`${cycle.id}-${initialSetup?.id ?? 'default'}`}
+          key={cycle.id}
           steps={STEPS}
           activeStep={activeStep}
           initialValues={initialValues}
@@ -194,27 +183,6 @@ export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId,
             formikRef.current = formik;
             return (
               <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
-                {initialIntakeSetupId && setups.isError && (
-                  <Alert
-                    severity="error"
-                    action={
-                      <Button size="small" onClick={() => setups.refetch()}>
-                        Retry
-                      </Button>
-                    }
-                  >
-                    The selected admission intake setup could not be loaded.
-                  </Alert>
-                )}
-                {initialSetup &&
-                  formik.values.inquiryIntakeProfileId === initialSetup.inquiryIntakeProfileId &&
-                  formik.values.counsellorAssignmentProfileId ===
-                    initialSetup.counsellorAssignmentProfileId && (
-                    <Alert severity="success">
-                      <strong>{initialSetup.name}</strong> is selected. It will provide inquiry
-                      handling and counsellor routing for these Offerings.
-                    </Alert>
-                  )}
                 {formik.values.admissionCycle && (
                   <AdmissionOfferingCycleContext
                     cycle={formik.values.admissionCycle}
@@ -507,10 +475,10 @@ function BulkAdmissionOfferingStep({
             title="Configure offerings"
             descriptionTooltip={
               formik.values.track === 1
-                ? 'RTE starts with Registration. Choose a published workflow that starts with a Registration Form and has no Inquiry or Entrance Assessment stage. Intake & assignment is optional.'
+                ? 'RTE starts with Registration. Choose a published workflow that starts with a Registration Form and has no Inquiry or Entrance Assessment stage.'
                 : formik.values.entryMode === 1
-                  ? 'Choose a published workflow that starts with a Registration Form and has no Inquiry stage. Intake & assignment is optional.'
-                  : 'Workflow and Inquiry form are required before activation. Inactive preparation is allowed without them. Intake & assignment is optional; select No setup — manual assignment to assign counsellors yourself.'
+                  ? 'Choose a published workflow that starts with a Registration Form and has no Inquiry stage.'
+                  : 'Workflow and Inquiry form are required before activation. Inactive preparation is allowed without them.'
             }
             titleTypographyProps={{
               sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },

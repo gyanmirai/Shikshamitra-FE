@@ -50,8 +50,8 @@ describe('Pipeline operational filters', () => {
     const { props } = renderFilters();
     await openFilters(user);
 
-    await user.click(screen.getByRole('combobox', { name: 'Counsellor' }));
-    await user.click(screen.getByRole('option', { name: 'Jay Dalia' }));
+    expect(screen.queryByRole('combobox', { name: 'Counsellor' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Cases' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Current step' }));
     await user.click(screen.getByRole('option', { name: 'Entrance assessment' }));
     await user.click(screen.getByRole('combobox', { name: 'Status' }));
@@ -62,51 +62,9 @@ describe('Pipeline operational filters', () => {
     expect(props.onApply).toHaveBeenCalledOnce();
     expect(props.onApply).toHaveBeenCalledWith({
       queue: undefined,
-      counsellor: 'counsellor-1',
+      counsellor: undefined,
       stage: 'ASSESSMENT',
       status: '0',
-    });
-  });
-
-  it('keeps an implicit server default queue and prevents a counsellor filter for My cases', async () => {
-    const user = userEvent.setup();
-    const { props } = renderFilters({ options: { ...options, defaultMyCases: true } });
-    await openFilters(user);
-
-    expect(screen.getByRole('combobox', { name: 'Cases' })).toHaveTextContent('My active cases');
-    expect(screen.getByRole('combobox', { name: 'Counsellor' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
-    expect(props.onApply).toHaveBeenCalledWith({
-      queue: undefined,
-      counsellor: undefined,
-      stage: undefined,
-      status: undefined,
-    });
-  });
-
-  it('clears the selected counsellor when switching to My cases', async () => {
-    const user = userEvent.setup();
-    const { props } = renderFilters({
-      values: { myCases: false, assignedCounsellorId: 'counsellor-1' },
-    });
-    await openFilters(user);
-
-    await user.click(screen.getByRole('combobox', { name: 'Cases' }));
-    await user.click(screen.getByRole('option', { name: 'My active cases' }));
-    expect(screen.getByRole('combobox', { name: 'Counsellor' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    expect(props.onApply).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
-    expect(props.onApply).toHaveBeenCalledWith({
-      queue: 'my',
-      counsellor: undefined,
-      stage: undefined,
-      status: undefined,
     });
   });
 
@@ -135,29 +93,12 @@ describe('Pipeline operational filters', () => {
         status: 0,
       },
     });
-    expect(within(screen.getByRole('button', { name: /^Filters/ })).getByText('3')).toBeVisible();
+    expect(within(screen.getByRole('button', { name: /^Filters/ })).getByText('2')).toBeVisible();
     await openFilters(user);
     await user.click(screen.getByRole('button', { name: 'Clear' }));
 
     expect(props.onApply).toHaveBeenCalledOnce();
     expect(props.onApply).toHaveBeenCalledWith({
-      queue: undefined,
-      counsellor: undefined,
-      stage: undefined,
-      status: undefined,
-    });
-  });
-
-  it('waits for initial options and adopts their default without creating an explicit queue', async () => {
-    const user = userEvent.setup();
-    const result = renderFilters({ options: undefined, isLoading: true });
-    await openFilters(user);
-    expect(screen.getByText('Loading filter options...')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Apply Filters' })).toBeDisabled();
-    result.rerenderFilters({ options: { ...options, defaultMyCases: true }, isLoading: false });
-    expect(screen.getByRole('combobox', { name: 'Cases' })).toHaveTextContent('My active cases');
-    await user.click(screen.getByRole('button', { name: 'Apply Filters' }));
-    expect(result.props.onApply).toHaveBeenCalledWith({
       queue: undefined,
       counsellor: undefined,
       stage: undefined,
@@ -184,7 +125,7 @@ describe('Pipeline operational filters', () => {
     await openFilters(user);
     result.rerenderFilters({ disabled: true });
 
-    ['Cases', 'Counsellor', 'Current step', 'Status'].forEach((name) => {
+    ['Current step', 'Status'].forEach((name) => {
       expect(screen.getByRole('combobox', { name })).toHaveAttribute('aria-disabled', 'true');
     });
     expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();

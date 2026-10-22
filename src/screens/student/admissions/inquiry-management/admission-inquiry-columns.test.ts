@@ -176,3 +176,22 @@ describe('admission inquiry columns', () => {
     expect(columnOptions.onManage).toHaveBeenCalledWith(row);
   });
 });
+
+it('keeps full handling history available to viewers without exposing edit or assignment', () => {
+  const onHistory = vi.fn();
+  const row = inquiry();
+  const actions = getAdmissionInquiryActions(row, {
+    ...columnOptions,
+    canManage: false,
+    canMove: false,
+    onHistory,
+  });
+  expect(actions.map((action) => action.id)).toEqual(['history']);
+  actions[0].onClick?.();
+  expect(onHistory).toHaveBeenCalledWith(row);
+  expect(
+    buildAdmissionInquiryColumns(columnOptions).some(
+      (column) => column.id === 'assignedCounsellorId'
+    )
+  ).toBe(false);
+});

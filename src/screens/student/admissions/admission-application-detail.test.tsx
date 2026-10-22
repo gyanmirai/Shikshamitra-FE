@@ -23,6 +23,11 @@ vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) => selector({ auth: { permissions } }),
 }));
 
+vi.mock('./application-detail/application-journey-history', () => ({
+  ApplicationJourneyHistory: ({ applicantId }: { applicantId: string }) => (
+    <div data-testid="journey-history">Handling history for {applicantId}</div>
+  ),
+}));
 vi.mock('./application-detail/application-activity-drawer', () => ({
   ApplicationActivityDrawer: ({ open, onClose, onBusyChange }: any) =>
     open

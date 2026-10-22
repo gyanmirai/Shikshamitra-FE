@@ -29,7 +29,7 @@ describe('Pipeline navigation state', () => {
       )
     ).toEqual({
       search: 'Jay',
-      myCases: true,
+      myCases: false,
       assignedCounsellorId: undefined,
       currentStageCode: 'ASSESSMENT',
       status: 4,
@@ -48,7 +48,7 @@ describe('Pipeline navigation state', () => {
       page: 0,
       rowsPerPage: 25,
       sorts: [],
-      myCases: undefined,
+      myCases: false,
     });
     expect(readAdmissionPipelineState(new URLSearchParams('status='))).toMatchObject({
       status: undefined,

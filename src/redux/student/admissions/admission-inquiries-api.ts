@@ -209,6 +209,7 @@ export type AdmissionInquiryTimelineItem = {
   description: string;
   occurredAt: string;
   creatorId?: string | null;
+  actorName?: string | null;
   metadataJson?: string | null;
 };
 export type BulkAdmissionInquiryResult = {

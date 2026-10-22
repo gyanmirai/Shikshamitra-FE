@@ -16,6 +16,15 @@ const mocks = vi.hoisted(() => ({
     lastError: null as string | null,
     studentEnrollmentId: null as string | null,
   },
+  caseEvents: null as
+    | null
+    | {
+        id: string;
+        eventType: string;
+        description: string;
+        occurredAt: string;
+        actorName: string;
+      }[],
   activationPreviewFetching: false,
   activationPreviewError: false,
   capturedFields: [
@@ -47,6 +56,9 @@ vi.mock('react-redux', () => ({
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => ({
+    currentData: mocks.caseEvents
+      ? { id: 'case-1', applicantId: 'applicant-1', events: mocks.caseEvents }
+      : undefined,
     data: mocks.capturedFieldsAvailable
       ? { capturedStudentFields: mocks.capturedFields }
       : undefined,
@@ -83,6 +95,7 @@ const student = studentOnboardingTestData[0];
 describe('Student Setup drawer readiness UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.caseEvents = null;
     mocks.activationPreview = {
       status: 2,
       primaryBlocker: 'Final readiness and activation',
@@ -217,6 +230,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(onAssignRollNumber).toHaveBeenCalledOnce();
 
     expect(screen.getByRole('heading', { name: 'Readiness & Activation' })).toBeInTheDocument();
+    expect(screen.queryByText(/Owner:/)).not.toBeInTheDocument();
     expect(screen.queryByText('Admission approved')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Show 3 passed checks' }));
     expect(screen.getByText('Admission approved')).toBeInTheDocument();
@@ -466,7 +480,11 @@ describe('Student Setup drawer readiness UI', () => {
   });
 
   it('locks the activation dialog against competing close actions while activation is pending', () => {
-    const liveStudent = { ...student, source: 'onboarding-case' as const, backendStatus: 2 as const };
+    const liveStudent = {
+      ...student,
+      source: 'onboarding-case' as const,
+      backendStatus: 2 as const,
+    };
     const props = {
       open: true,
       canManage: true,
@@ -686,4 +704,83 @@ describe('Student Setup drawer readiness UI', () => {
     );
     expect(screen.getByRole('heading', { name: 'Approve Onboarding' })).toBeInTheDocument();
   });
+});
+
+it('loads full event history even when the paged worklist has no events', () => {
+  mocks.caseEvents = [
+    {
+      id: 'event-1',
+      eventType: 'ReadinessRefreshed',
+      description: 'Prepared without an owner',
+      occurredAt: '2026-10-22T09:00:00Z',
+      actorName: 'Asha Sharma',
+    },
+  ];
+  render(
+    <StudentSetupDrawer
+      open
+      student={{ ...student, id: 'case-1', source: 'onboarding-case', activity: [] }}
+      onClose={vi.fn()}
+    />
+  );
+  fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+  expect(screen.getByText(/Handled by: Asha Sharma/)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Activity & Audit' })).toBeInTheDocument();
+});
+
+it('shows a pending history read instead of treating the paged worklist as empty history', () => {
+  mocks.caseEvents = null;
+  mocks.capturedFieldsLoading = true;
+  mocks.capturedFieldsError = false;
+  render(
+    <StudentSetupDrawer
+      open
+      student={{ ...student, id: 'case-1', source: 'onboarding-case', activity: [] }}
+      onClose={vi.fn()}
+    />
+  );
+  fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+  expect(screen.getByLabelText('Loading handling history')).toBeVisible();
+  expect(screen.queryByText('No onboarding activity recorded yet.')).not.toBeInTheDocument();
+});
+
+it('offers a history retry and withholds stale events when the full case read fails', () => {
+  mocks.caseEvents = null;
+  mocks.capturedFieldsLoading = false;
+  mocks.capturedFieldsError = true;
+  mocks.refetchCapturedFields.mockClear();
+  render(
+    <StudentSetupDrawer
+      open
+      student={{ ...student, id: 'case-1', source: 'onboarding-case', activity: [] }}
+      onClose={vi.fn()}
+    />
+  );
+  fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+  expect(screen.getByText('Handling history could not be loaded.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+});
+
+it('does not show the previous student actor when the current case changes', () => {
+  mocks.caseEvents = [
+    {
+      id: 'old-event',
+      eventType: 'ReadinessRefreshed',
+      description: 'Old case action',
+      occurredAt: '2026-10-22T09:00:00Z',
+      actorName: 'Previous Student Staff',
+    },
+  ];
+  mocks.capturedFieldsLoading = false;
+  mocks.capturedFieldsError = false;
+  render(
+    <StudentSetupDrawer
+      open
+      student={{ ...student, id: 'case-2', source: 'onboarding-case', activity: [] }}
+      onClose={vi.fn()}
+    />
+  );
+  fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+  expect(screen.queryByText(/Previous Student Staff/)).not.toBeInTheDocument();
 });

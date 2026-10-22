@@ -19,9 +19,7 @@ import {
 } from 'src/redux/student/admissions/admission-pipeline-api';
 
 import { AdmissionQueryError } from './admission-query-error';
-import { BulkPipelineCounsellor } from './pipeline/bulk-pipeline-counsellor';
 import AdmissionApplicationDetailScreen from './admission-application-detail';
-import { useBulkPipelineCounsellor } from './pipeline/use-bulk-pipeline-counsellor';
 import { buildAdmissionPipelineColumns } from './pipeline/admission-pipeline-columns';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
 import { AdmissionPipelineMoreFilters } from './pipeline/admission-pipeline-more-filters';
@@ -50,8 +48,6 @@ export default function AdmissionInquiryPipelineScreen() {
   const tenantId = useSelector((value: RootState) => value.auth.sessionContext?.tenantId);
   const userId = useSelector((value: RootState) => value.auth.user?.sub);
   const canView = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.view);
-  const canAssign =
-    canView && hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const interactionLocked = useRef(false);
   const update = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
@@ -78,8 +74,8 @@ export default function AdmissionInquiryPipelineScreen() {
   const listQuery = useGetAdmissionPipelineQuery(
     {
       ...academicInput,
-      myCases: state.myCases,
-      assignedCounsellorId: state.assignedCounsellorId,
+      myCases: false,
+
       currentStageCode: state.currentStageCode,
       status: state.status,
       search: state.search || undefined,
@@ -110,7 +106,7 @@ export default function AdmissionInquiryPipelineScreen() {
     return () => cancelAnimationFrame(frame);
   }, [applicationId, listQuery.isFetching, scopeLoading, data]);
   const options = optionsQuery.currentData;
-  const myCases = state.myCases ?? options?.defaultMyCases;
+  const myCases = false;
   const queryBusy =
     skip ||
     listQuery.isFetching ||
@@ -119,13 +115,6 @@ export default function AdmissionInquiryPipelineScreen() {
     optionsQuery.isError ||
     !data ||
     !options;
-  const bulk = useBulkPipelineCounsellor({
-    rows: data?.items ?? EMPTY_PIPELINE_ROWS,
-    scopeKey: JSON.stringify([tenantId, userId, academicInput, params.toString(), myCases]),
-    canAssign: canAssign && !applicationId,
-    disabled: queryBusy,
-  });
-  interactionLocked.current = bulk.busy;
   const updateInteractive = useCallback(
     (changes: Record<string, string | undefined>, resetPage = true) => {
       if (!interactionLocked.current) update(changes, resetPage);
@@ -150,31 +139,8 @@ export default function AdmissionInquiryPipelineScreen() {
     [canView, applicationUrl, router]
   );
   const columns = useMemo(
-    () =>
-      buildAdmissionPipelineColumns(
-        applicationUrl,
-        openWorkspace,
-        canAssign
-          ? {
-              selectedIds: bulk.selectedIds,
-              eligibleIds: bulk.eligibleIds,
-              disabled: queryBusy || bulk.busy,
-              onToggle: bulk.toggleSelection,
-              onToggleAll: bulk.toggleAll,
-            }
-          : undefined
-      ),
-    [
-      applicationUrl,
-      openWorkspace,
-      canAssign,
-      bulk.selectedIds,
-      bulk.eligibleIds,
-      bulk.busy,
-      bulk.toggleSelection,
-      bulk.toggleAll,
-      queryBusy,
-    ]
+    () => buildAdmissionPipelineColumns(applicationUrl, openWorkspace),
+    [applicationUrl, openWorkspace]
   );
   useEffect(() => {
     if (applicationId) return;
@@ -243,7 +209,7 @@ export default function AdmissionInquiryPipelineScreen() {
               size="small"
               component={Link}
               href={studentPaths.enrollment.applications}
-              disabled={bulk.busy}
+
               variant="outlined"
             >
               Open Applications
@@ -263,7 +229,7 @@ export default function AdmissionInquiryPipelineScreen() {
             mediumId={academic.mediumId}
             standardId={academic.standardId}
             onChange={updateAcademic}
-            disabled={bulk.busy}
+
             filterAction={
               <AdmissionPipelineMoreFilters
                 key={JSON.stringify([tenantId, userId, academicInput])}
@@ -271,7 +237,7 @@ export default function AdmissionInquiryPipelineScreen() {
                 options={options}
                 isLoading={optionsQuery.isFetching}
                 isError={optionsQuery.isError}
-                disabled={bulk.busy || skip}
+                disabled={skip}
                 onRetry={() => {
                   if (!skip && !interactionLocked.current) optionsQuery.refetch();
                 }}
@@ -279,7 +245,6 @@ export default function AdmissionInquiryPipelineScreen() {
               />
             }
           />
-          <BulkPipelineCounsellor assignment={bulk} disabled={queryBusy || !canAssign} />
           {listQuery.isError || optionsQuery.isError ? (
             <AdmissionQueryError
               onRetry={() => {
@@ -291,7 +256,6 @@ export default function AdmissionInquiryPipelineScreen() {
             />
           ) : (
             <Box
-              inert={bulk.busy || undefined}
               sx={{
                 flex: 1,
                 minHeight: 0,

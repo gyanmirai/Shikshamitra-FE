@@ -97,15 +97,7 @@ export function buildAdmissionApplicationsColumns({
         </Stack>
       ),
     },
-    {
-      id: 'assignedCounsellorName',
-      label: 'Journey counsellor',
-      minWidth: 170,
-      isSort: true,
-      render: (_, row) =>
-        row.assignedCounsellorName ||
-        (row.assignedCounsellorId ? 'Assigned counsellor unavailable' : 'Unassigned'),
-    },
+
     {
       id: 'decisionEnteredAt',
       label: 'Decision phase entered',

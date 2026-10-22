@@ -10,6 +10,16 @@ audience: humans-and-agents
 
 # Validate Student Enrollment Admissions changes
 
+## Retired intake and staff ownership
+
+Focused regressions cover public-link creation/copy/form selection/retry, retained follow-ups, removed ownership controls, legacy URL filters, actual handler names, complete history disclosure, loading/error recovery and Onboarding mapping. Run the handling-history, journey-history, public-links, Pipeline filters, application detail and Student Setup suites with one worker. Scoped lint/type checks exclude unrelated concurrent numbering work. Browser acceptance requires current backend binaries and real persisted API responses; local unit tests alone do not prove deployment.
+
+Local browser/API verification created `QA Staff Handling 22 Oct`, persisted an owner-free inquiry and follow-up, and displayed **Handled by: Admin Operations** for both actions in the Inquiry history dialog. Latest local Host binaries were used; schema migrations, seeding and delivery workers were disabled. Full Onboarding activation is covered by isolated application tests, not a new live activation. The module docs check passes; repository-wide docs validation still reports unrelated testing/Finance documentation issues.
+
+## Application numbering validation
+
+Run `admission-numbering-model.test.ts`, `admission-numbering-dialog.test.tsx`, `admission-numbering-preview.test.tsx` and `admission-cycle-dialog.test.tsx` for optional fields, invalid resets/start values, server-derived next-number previews, debounce/stale-response protection, missing-year/invalid-draft suppression, preview Retry/Refresh, save retry, duplicate-submit/close locks, view-only mode, dirty-close confirmation and load-error recovery. The backend Student test gate owns persisted allocations, default-to-custom carry-forward, non-consuming preview, legacy-number preservation, tenant/year isolation and PostgreSQL concurrency/rollback. Browser smoke inspects Admission Periods and the actual shared dialog at desktop/mobile widths; a preview alone does not prove allocation.
+
 ## Lowercase email and View-owned document decisions (2026-10-22)
 
 The focused email suites passed 78 frontend assertions covering entry/paste, metadata-configured email fields, staff/public Inquiry payloads, direct Registration, Registration save, read-only/repeated answers and non-email case preservation.
@@ -48,10 +58,10 @@ Live validation also exposed the browser's native required-field popup targeting
 
 Both actual saved QA applicants completed all five stages and Student finalization through the normal UI.
 
-| Case | Source and assessment | Document path | Finance handoff | Final result |
-|---|---|---|---|---|
-| `APP-2026-000006` | Staff inquiry; failed first attempt, whole-exam retake passed at 40/100 | Clearly marked synthetic PDF uploaded, downloaded with matching SHA256, accepted and linked to Student | No matching published Class 5 structure; explicit setup/collection deferral reason | Student and Onboarding case created; required document step Completed |
-| `APP-2026-000007` | Public inquiry link; overall-rule pass at 16/40 | Existing Admissions-to-Onboarding deferral; required Birth certificate remains Pending | Existing published Class 1 structure confirmed; explicit collection deferral reason | Student and Onboarding case created; required document remains a readiness blocker |
+| Case              | Source and assessment                                                   | Document path                                                                                          | Finance handoff                                                                     | Final result                                                                       |
+| ----------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `APP-2026-000006` | Staff inquiry; failed first attempt, whole-exam retake passed at 40/100 | Clearly marked synthetic PDF uploaded, downloaded with matching SHA256, accepted and linked to Student | No matching published Class 5 structure; explicit setup/collection deferral reason  | Student and Onboarding case created; required document step Completed              |
+| `APP-2026-000007` | Public inquiry link; overall-rule pass at 16/40                         | Existing Admissions-to-Onboarding deferral; required Birth certificate remains Pending                 | Existing published Class 1 structure confirmed; explicit collection deferral reason | Student and Onboarding case created; required document remains a readiness blocker |
 
 Screenshots are retained under `.artifacts/assessment-subjects-ui/`, including `class5-retake-passed-applicant360.jpg`, `class1-admission-finalized.jpg`, `class5-admission-finalized.jpg` and `bulk-incomplete-retake-validation.jpg`.
 The existing native PDF preview rendered blank in this in-app browser; inline PDF rendering is not certified, while upload, downloaded-byte equality and acceptance are verified.

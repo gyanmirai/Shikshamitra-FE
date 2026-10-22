@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { AdmissionOfferingListInput } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useSelector } from 'react-redux';
-import { useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
@@ -37,8 +36,6 @@ const toListInput = (
 });
 
 export function useAdmissionOfferingsScreen() {
-  const searchParams = useSearchParams();
-  const initialIntakeSetupId = searchParams.get('intakeSetupId');
   const filterState = useAdmissionOfferingFilters();
   const cyclesQuery = useGetAdmissionCyclesQuery({ maxResultCount: 100, skipCount: 0 });
   const cycles = (cyclesQuery.data?.items ?? []).filter((cycle) => cycle.status !== 3);
@@ -48,7 +45,7 @@ export function useAdmissionOfferingsScreen() {
     toListInput(cycle?.id, filterState.filters),
     { skip: !cycle || !filterState.filters.boardId || !filterState.filters.mediumId }
   );
-  const actions = useAdmissionOfferingActions(cycle, Boolean(initialIntakeSetupId));
+  const actions = useAdmissionOfferingActions(cycle);
   const tenantId = useSelector((state: RootState) => state.auth.sessionContext?.tenantId);
   const userId = useSelector((state: RootState) => state.auth.user?.sub);
   const bulkActivationDisabled = Boolean(
@@ -82,7 +79,6 @@ export function useAdmissionOfferingsScreen() {
     cycles,
     cycle,
     offeringsQuery,
-    initialIntakeSetupId,
     ...actions,
     bulkActivation,
     bulkActivationDisabled,

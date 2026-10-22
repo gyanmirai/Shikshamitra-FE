@@ -61,19 +61,16 @@ it('serializes the selected local calendar day as an ISO instant and round-trips
   expect(dayjs(actual).format('YYYY-MM-DD')).toBe(selected.format('YYYY-MM-DD'));
 });
 
-it('allows only the assigned counsellor when the intake policy restricts actions', () => {
-  expect(inquiryFollowUpReadOnlyReason(inquiry, management, true, 'counsellor-1')).toBeNull();
-  expect(inquiryFollowUpReadOnlyReason(inquiry, management, true, 'other-user')).toContain(
-    'assigned counsellor'
-  );
+it('allows permitted staff to follow up despite historical assigned-only settings', () => {
+  expect(inquiryFollowUpReadOnlyReason(inquiry, management, true, 'other-user')).toBeNull();
   expect(
     inquiryFollowUpReadOnlyReason(
       { ...inquiry, assignedCounsellorId: null },
       management,
       true,
-      'counsellor-1'
+      'other-user'
     )
-  ).toContain('assigned counsellor');
+  ).toBeNull();
 });
 
 it('keeps transferred inquiry history and users without manage permission read-only', () => {

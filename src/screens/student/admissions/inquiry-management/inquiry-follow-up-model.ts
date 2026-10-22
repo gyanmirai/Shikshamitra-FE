@@ -44,12 +44,5 @@ export function inquiryFollowUpReadOnlyReason(
   if (inquiry.isTransferred || inquiry.applicationId || management.isLocked)
     return 'This inquiry is read-only because its application has already started.';
   if (!canManage) return 'You do not have permission to add follow-up notes.';
-  if (
-    management.policy?.restrictActionsToAssignedCounsellor &&
-    (!currentUserId ||
-      !inquiry.assignedCounsellorId ||
-      inquiry.assignedCounsellorId !== currentUserId)
-  )
-    return 'Only the assigned counsellor can add follow-up notes.';
   return null;
 }

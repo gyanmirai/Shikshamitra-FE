@@ -608,22 +608,7 @@ export default function StudentSetupTable({
           </Stack>
         ),
       },
-      {
-        id: 'ownerName',
-        label: 'Owner',
-        minWidth: 150,
-        filterType: 'string',
-        render: (value: string) =>
-          value === 'Not assigned' ? (
-            <Label variant="soft" color="default">
-              Not assigned
-            </Label>
-          ) : (
-            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-              {value}
-            </Typography>
-          ),
-      },
+
       {
         id: 'assignmentStatus',
         label: 'Status',
@@ -715,7 +700,6 @@ export default function StudentSetupTable({
         'pendingWork',
         'identifiers',
         'accounts',
-        'ownerName',
         'statusLabel',
         'actions',
       ],
@@ -724,7 +708,6 @@ export default function StudentSetupTable({
         'studentName',
         'placement',
         'grNumberTask',
-        'ownerName',
         'assignmentStatus',
         'statusLabel',
       ],
@@ -733,7 +716,6 @@ export default function StudentSetupTable({
         'studentName',
         'placement',
         'rollNumberTask',
-        'ownerName',
         'assignmentStatus',
         'statusLabel',
       ],
@@ -742,31 +724,14 @@ export default function StudentSetupTable({
         'studentName',
         'divisionTask',
         'rollNumberTask',
-        'ownerName',
         'assignmentStatus',
         'statusLabel',
       ],
-      fees: [
-        'selection',
-        'studentName',
-        'placement',
-        'feesTask',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
-      credentials: [
-        'selection',
-        'studentName',
-        'placement',
-        'accounts',
-        'ownerName',
-        'statusLabel',
-        'actions',
-      ],
+      fees: ['selection', 'studentName', 'placement', 'feesTask', 'statusLabel', 'actions'],
+      credentials: ['selection', 'studentName', 'placement', 'accounts', 'statusLabel', 'actions'],
     };
 
-    const filterableColumns = new Set(['studentName', 'ownerName', 'statusLabel']);
+    const filterableColumns = new Set(['studentName', 'statusLabel']);
     if (taskScope === 'all') filterableColumns.add('rollNumberTask');
     if (placementOptions.length > 0 && (view !== 'division' || taskScope === 'all')) {
       filterableColumns.add('placement');
@@ -783,8 +748,8 @@ export default function StudentSetupTable({
         ...column,
         defaultHidden:
           (view === 'readiness' &&
-            ['admissionRoute', 'identifiers', 'accounts', 'ownerName'].includes(column.id)) ||
-          (assignmentView && ['ownerName', 'statusLabel'].includes(column.id)) ||
+            ['admissionRoute', 'identifiers', 'accounts'].includes(column.id)) ||
+          (assignmentView && ['statusLabel'].includes(column.id)) ||
           (view === 'division' && column.id === 'rollNumberTask'),
         isSort:
           column.id in studentSetupSortFields &&

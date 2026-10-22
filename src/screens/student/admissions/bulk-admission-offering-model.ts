@@ -157,7 +157,7 @@ export const toBulkOfferingInput = (
   inquiryFormDefinitionId: values.entryMode === 1 ? null : values.inquiryFormDefinitionId || null,
   applicationFormDefinitionId: null,
   inquiryIntakeProfileId: values.entryMode === 1 ? null : values.inquiryIntakeProfileId || null,
-  counsellorAssignmentProfileId: values.counsellorAssignmentProfileId || null,
+  counsellorAssignmentProfileId: null,
   isActive: values.isActive,
   previewOnly,
   items: bulkOfferingItems(values.standardIds, standards, values.track),

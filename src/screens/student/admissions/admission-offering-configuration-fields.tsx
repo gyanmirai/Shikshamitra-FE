@@ -1,9 +1,8 @@
 import type { FormikProps } from 'formik';
 
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Grid, Alert, MenuItem, TextField, Typography } from '@mui/material';
+import { Grid, Alert, TextField, Typography } from '@mui/material';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
-import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { AdmissionDefinitionSelect } from './admission-definition-select';
 import { AdmissionOfferingRoutingFields } from './admission-offering-routing-fields';
@@ -11,11 +10,6 @@ import {
   type AdmissionOfferingFormValues,
   isAdmissionOfferingConfigurationIncomplete,
 } from './admission-offering-model';
-import {
-  getIntakeSetupSelection,
-  findSelectedIntakeSetup,
-  hasLegacyIntakeSelection,
-} from './admission-intake-setup-selection';
 
 import type {
   AdmissionDefinitionOption,
@@ -55,20 +49,6 @@ export function AdmissionOfferingConfigurationFields({
   const inquiryForm = useGetAdmissionFormQuery(formik.values.inquiryFormDefinitionId ?? '', {
     skip: !formik.values.inquiryFormDefinitionId,
   });
-  const setups = useGetAdmissionIntakeSetupsQuery();
-  const selectedSetup = findSelectedIntakeSetup(
-    setups.data ?? [],
-    formik.values.inquiryIntakeProfileId,
-    formik.values.counsellorAssignmentProfileId,
-    startsWithInquiry
-  );
-  const legacySelection = hasLegacyIntakeSelection(
-    selectedSetup,
-    formik.values.inquiryIntakeProfileId,
-    formik.values.counsellorAssignmentProfileId,
-    startsWithInquiry
-  );
-
   return (
     <Grid container spacing={compact ? 1 : 1.5}>
       {!compact && (
@@ -183,56 +163,12 @@ export function AdmissionOfferingConfigurationFields({
           />
         </Grid>
       )}
-      <Grid size={configurationFieldSize}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Intake & assignment setup (optional)"
-          value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
-          onChange={(event) => {
-            if (event.target.value === '__legacy__') return;
-            if (!event.target.value) {
-              formik.setFieldValue('inquiryIntakeProfileId', null);
-              formik.setFieldValue('counsellorAssignmentProfileId', null);
-              return;
-            }
-            const setup = (setups.data ?? []).find((item) => item.id === event.target.value);
-            if (!setup) return;
-            const selection = getIntakeSetupSelection(setup, startsWithInquiry);
-            formik.setFieldValue('inquiryIntakeProfileId', selection.inquiryIntakeProfileId);
-            formik.setFieldValue(
-              'counsellorAssignmentProfileId',
-              selection.counsellorAssignmentProfileId
-            );
-          }}
-          error={setups.isError}
-          helperText={
-            setups.isError
-              ? 'Unable to load admission intake setups.'
-              : legacySelection
-                ? 'Legacy profiles are preserved. Choose a combined setup only when you want to replace them.'
-                : compact
-                  ? undefined
-                  : startsWithInquiry
-                    ? 'Optional. Choose a setup for inquiry handling and automatic counsellor routing. Leave empty for manual assignment.'
-                    : 'Optional. Choose a setup for automatic routing, or assign the counsellor during registration.'
-          }
-        >
-          <MenuItem value="">No setup — manual assignment</MenuItem>
-          {legacySelection && <MenuItem value="__legacy__">Legacy profile selection</MenuItem>}
-          {(setups.data ?? []).map((setup) => (
-            <MenuItem key={setup.id} value={setup.id}>
-              {setup.name}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Grid>
+
       {!compact && (
         <Grid size={12}>
           <Typography variant="caption" color="text.secondary">
             Save incomplete preparation as inactive. Activation requires a published cycle, the
-            forms linked to its workflow and valid dates. Intake & assignment is optional.
+            forms linked to its workflow and valid dates.
           </Typography>
         </Grid>
       )}

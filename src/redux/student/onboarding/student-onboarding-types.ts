@@ -68,6 +68,7 @@ export type StudentOnboardingStep = {
   status: StudentOnboardingStepStatus;
   detail?: string | null;
   completedByUserId?: string | null;
+  completedByName?: string | null;
   completedAt?: string | null;
   waiverReason?: string | null;
 };
@@ -78,6 +79,7 @@ export type StudentOnboardingEvent = {
   description: string;
   metadataJson?: string | null;
   actorUserId?: string | null;
+  actorName?: string | null;
   occurredAt: string;
 };
 
