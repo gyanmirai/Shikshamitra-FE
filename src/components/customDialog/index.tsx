@@ -4,14 +4,13 @@ import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material'
 import { CONFIG } from 'src/config-global';
 import Close from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Button, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
+import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
-import { ConfirmDialog } from '../confirm-dialog';
 import CustomTooltip from '../custom-tooltip';
 import { shouldBlockCustomDialogClose } from './close-guard';
 
@@ -54,12 +53,6 @@ const CustomDialog = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const isDirty = hasUnsavedChanges ?? isChanges;
-  const [pendingClose, setPendingClose] = useState<{ event: {}; reason: 'escapeKeyDown' } | null>(
-    null
-  );
-  useEffect(() => {
-    if (!open) setPendingClose(null);
-  }, [open]);
 
   useEffect(() => {
     if (!open || !guardUnsavedChanges || !isDirty) return undefined;
@@ -75,133 +68,106 @@ const CustomDialog = ({
       handleClose(e, reason);
       return;
     }
-    if (isDirty) {
-      setPendingClose({ event: e, reason });
-    } else {
+    if (isDirty && window.confirm('Are you sure you want to leave this page?')) {
+      handleClose(e, reason);
+      if (hasUnsavedChanges === undefined) dispatch(setIsChanges(false));
+    } else if (!isDirty) {
       handleClose(e, reason);
     }
   };
 
   const FormComponent = hasForm ? 'form' : 'div';
   return (
-    <>
-      <Dialog
-        aria-labelledby={titleId}
-        open={open}
-        onClose={handleCloseDialog}
-        fullWidth
-        maxWidth={maxWidth}
-        transitionDuration={{
-          enter: theme.transitions.duration.shortest,
-          exit: 0,
-        }}
-        PaperProps={{
-          sx: {
+    <Dialog
+      aria-labelledby={titleId}
+      open={open}
+      onClose={handleCloseDialog}
+      fullWidth
+      maxWidth={maxWidth}
+      transitionDuration={{
+        enter: theme.transitions.duration.shortest,
+        exit: 0,
+      }}
+      PaperProps={{
+        sx: {
+          display: 'flex',
+          overflow: 'hidden',
+          flexDirection: 'column',
+          borderRadius: '16px', // Modern rounded corners
+          boxShadow: theme.customShadows?.dialog || theme.shadows[24], // Premium shadow
+          backgroundRepeat: 'no-repeat',
+          // borderTop: `5px solid ${theme.palette.primary.main}`,
+          backgroundImage: `url(${CONFIG.site.basePath}/assets/red-blur.png)`,
+          backgroundPosition: 'bottom left',
+          '& form, & #dialog-form': {
+            minHeight: 0,
             display: 'flex',
-            overflow: 'hidden',
+            flex: '1 1 auto',
             flexDirection: 'column',
-            borderRadius: '16px', // Modern rounded corners
-            boxShadow: theme.customShadows?.dialog || theme.shadows[24], // Premium shadow
-            backgroundRepeat: 'no-repeat',
-            // borderTop: `5px solid ${theme.palette.primary.main}`,
-            backgroundImage: `url(${CONFIG.site.basePath}/assets/red-blur.png)`,
-            backgroundPosition: 'bottom left',
-            '& form, & #dialog-form': {
-              minHeight: 0,
-              display: 'flex',
-              flex: '1 1 auto',
-              flexDirection: 'column',
-            },
-            ...(sx || {}),
           },
-          ...paper,
+          ...(sx || {}),
+        },
+        ...paper,
+      }}
+      {...props}
+      disableEscapeKeyDown={disableClose || props.disableEscapeKeyDown}
+    >
+      <FormComponent
+        id="dialog-form"
+        style={{ height: '100%' }}
+        onSubmit={(e: React.FormEvent) => {
+          e.preventDefault();
         }}
-        {...props}
-        disableEscapeKeyDown={disableClose || props.disableEscapeKeyDown}
+        {...(hasForm ? formProps : {})}
       >
-        <FormComponent
-          id="dialog-form"
-          style={{ height: '100%' }}
-          onSubmit={(e: React.FormEvent) => {
-            e.preventDefault();
-          }}
-          {...(hasForm ? formProps : {})}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{
+            py: 2.1,
+            px: 2,
+            boxShadow: 'var(--shadows-3)',
+          }} // Increased padding for header
         >
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{
-              py: 2.1,
-              px: 2,
-              boxShadow: 'var(--shadows-3)',
-            }} // Increased padding for header
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
-              <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
-                {title}
-              </Typography>
-              {titleInfo && (
-                <CustomTooltip arrow placement="bottom" title={titleInfo}>
-                  <IconButton
-                    size="small"
-                    aria-label={
-                      typeof title === 'string' ? `${title} information` : 'Dialog information'
-                    }
-                    sx={{ color: 'info.main', flexShrink: 0 }}
-                  >
-                    <InfoOutlined sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </CustomTooltip>
-              )}
-            </Box>
-            <IconButton
-              aria-label="close"
-              disabled={disableClose}
-              onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
-              sx={{
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                  transform: 'scale(1.1)',
-                },
-              }}
-            >
-              <Close sx={{ fontSize: 20 }} />
-            </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+            <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
+              {title}
+            </Typography>
+            {titleInfo && (
+              <CustomTooltip arrow placement="bottom" title={titleInfo}>
+                <IconButton
+                  size="small"
+                  aria-label={typeof title === 'string' ? `${title} information` : 'Dialog information'}
+                  sx={{ color: 'info.main', flexShrink: 0 }}
+                >
+                  <InfoOutlined sx={{ fontSize: 18 }} />
+                </IconButton>
+              </CustomTooltip>
+            )}
           </Box>
-
-          {/* Subtle separator using border instead of full Divider for cleaner look */}
-          <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%' }} />
-
-          {children}
-        </FormComponent>
-      </Dialog>
-      <ConfirmDialog
-        open={Boolean(pendingClose) && open}
-        title="Discard unsaved changes?"
-        content="Your entered data will be lost. Keep editing or discard your changes."
-        cancelText="Keep editing"
-        disableCancel={disableClose}
-        onClose={() => setPendingClose(null)}
-        action={
-          <Button
-            variant="contained"
-            color="error"
+          <IconButton
+            aria-label="close"
             disabled={disableClose}
-            onClick={() => {
-              if (!pendingClose || disableClose) return;
-              const pending = pendingClose;
-              setPendingClose(null);
-              if (hasUnsavedChanges === undefined) dispatch(setIsChanges(false));
-              handleClose(pending.event, pending.reason);
+            onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
+            sx={{
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+                transform: 'scale(1.1)',
+              },
             }}
           >
-            Discard changes
-          </Button>
-        }
-      />
-    </>
+            <Close sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Box>
+
+        {/* Subtle separator using border instead of full Divider for cleaner look */}
+        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%' }} />
+
+        {children}
+      </FormComponent>
+    </Dialog>
   );
 };
 export default CustomDialog;

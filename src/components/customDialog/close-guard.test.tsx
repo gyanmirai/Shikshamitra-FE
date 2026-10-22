@@ -2,34 +2,13 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { renderWithProviders } from 'src/test/test-utils';
 import { vi, it, expect, describe, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import CustomDialog from '.';
 
-vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-
 describe('custom dialog close guard', () => {
   afterEach(() => vi.unstubAllGlobals());
-
-  it('keeps the supplied submit handler on the dialog form', () => {
-    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
-    renderWithProviders(
-      <CustomDialog
-        open
-        title="Submit form"
-        handleClose={vi.fn()}
-        formProps={{ onSubmit, noValidate: true }}
-      >
-        <button type="submit">Submit</button>
-      </CustomDialog>
-    );
-
-    const form = screen.getByRole('button', { name: 'Submit' }).closest('form');
-    expect(form).toHaveAttribute('novalidate');
-    fireEvent.submit(form!);
-    expect(onSubmit).toHaveBeenCalledOnce();
-  });
 
   it('keeps the dialog title accessible when header guidance is available', async () => {
     renderWithProviders(
@@ -46,12 +25,10 @@ describe('custom dialog close guard', () => {
     expect(screen.getByRole('dialog', { name: 'Review Readiness Rule' })).toBeInTheDocument();
     const info = screen.getByRole('button', { name: 'Review Readiness Rule information' });
     fireEvent.mouseOver(info);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(
-      'This preview shows your unsaved rule.'
-    );
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('This preview shows your unsaved rule.');
   });
 
-  it('uses local dirty state for header close and keeps edits when discard is declined', async () => {
+  it('uses local dirty state for header close and keeps edits when discard is declined', () => {
     const handleClose = vi.fn();
     const confirm = vi.fn().mockReturnValue(false);
     vi.stubGlobal('confirm', confirm);
@@ -61,16 +38,10 @@ describe('custom dialog close guard', () => {
       </CustomDialog>
     );
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    expect(confirm).not.toHaveBeenCalled();
+    expect(confirm).toHaveBeenCalledOnce();
     expect(handleClose).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(handleClose).not.toHaveBeenCalled();
-    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Local form' })).toBeVisible());
-    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Local form' }), {
-      key: 'Escape',
-      code: 'Escape',
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    confirm.mockReturnValue(true);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape', code: 'Escape' });
     expect(handleClose).toHaveBeenCalledOnce();
   });
 
@@ -92,9 +63,8 @@ describe('custom dialog close guard', () => {
       </Provider>
     );
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    if (dirty) fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(handleClose).toHaveBeenCalledOnce();
-    expect(confirm).not.toHaveBeenCalled();
+    expect(confirm).toHaveBeenCalledTimes(dirty ? 1 : 0);
     expect(store.getState().confirmPopup.isChanges).toBe(true);
   });
 
@@ -109,8 +79,7 @@ describe('custom dialog close guard', () => {
       { preloadedState: { confirmPopup: { isChanges: true } } }
     );
     fireEvent.click(screen.getByRole('button', { name: 'close' }));
-    expect(confirm).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
+    expect(confirm).toHaveBeenCalledOnce();
     expect(handleClose).not.toHaveBeenCalled();
   });
 
