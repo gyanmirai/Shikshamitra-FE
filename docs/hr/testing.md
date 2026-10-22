@@ -775,6 +775,21 @@ Check effective boundaries and gaps, archived selection, external reasons, load/
 Run typecheck, changed-file lint, docs validation and a fresh production build.
 Use authenticated Codex browser checks for policy create/version/archive, salary preview refresh/save/reopen, keyboard operation and narrow-width containment.
 
+## Reporting navigation acceptance
+
+Run reporting-workspace.test.tsx and reporting-navigation.test.tsx for template management, published-only selection, URL state, permission combinations, and route-specific reads.
+Run the HR menu and navigation-path tests for mutually exclusive Reports/Templates selection, including nested pages.
+Run the shared table controlled-state tests when changing pagination callbacks.
+Use e2e/hr/hr-reporting-workspace.guest.spec.ts against the local acceptance frontend and API for saved-template reuse, generation, exports, responsive layouts, and history.
+Finish with a signed-in Codex in-app browser check of Reports, Templates, both generation steps, and a captured result.
+
+### Reporting table tools acceptance
+
+Run `report-table-query.test.ts`, the shared table controlled-state tests and `use-hr-table-export.test.tsx`.
+Verify numeric, date, boolean and enum filters, sort direction, column visibility, reload and browser Back/Forward.
+Check complete filtered Excel/PDF exports against rows on later pages.
+Repeat on desktop and mobile, then finish in the signed-in Codex browser.
+
 ## Leave Center card layout
 
 Run `leave-center-overview.test.tsx`, `leave-request.utils.test.ts`, and `leave-status.utils.test.ts` for loading, allocation, per-type pending days, fractional/negative balances, unlimited entitlement, read-error retry, and balance details.

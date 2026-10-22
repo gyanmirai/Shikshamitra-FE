@@ -586,3 +586,22 @@ If Save reports `HR:Payroll:CompensationPreviewStale`, preserve the draft and re
 Show gross, estimated deductions, estimated take-home and monthly school cost, then separate earnings, employee deductions and school contributions.
 Show PF/ESIC status and actionable target differences without repeated yearly totals.
 Failed catalogue requests offer Retry and preserve the draft; missing effective versions require policy setup.
+
+## Reporting navigation
+
+Open Reporting > Reports to generate a report or reopen captured results.
+Choose Generate report, select a published template, then choose the reporting period and applicable staff filters.
+Generation opens the fixed captured result, where downloads, cancellation, retry, and Generate again retain their existing behavior.
+Back from report options restores the template chooser's filters.
+
+Open Reporting > Templates to create, customize, edit, publish, or archive templates according to current grants and ownership.
+The management library shows editable drafts and lifecycle status; the generation chooser reads published definitions only.
+Archiving a template preserves captured results.
+
+### Reporting table tools
+
+Templates and the template chooser provide shared table search, column filters, sorting, column visibility, Excel/PDF export, density and fullscreen controls.
+Reports and captured results apply search, typed column filters and sorting before server pagination.
+Exports contain every authorized matching row in the selected column order.
+Captured totals and charts describe the original report; filtered exports omit original totals.
+Designer preview controls refine the first 50 sampled rows, while preview exports apply the same criteria to the complete captured output.

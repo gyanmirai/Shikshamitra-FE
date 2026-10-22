@@ -41,6 +41,7 @@ export type NavItemBaseProps = {
   path?: string;
   exactMatch?: boolean;
   preserveQueryParams?: string[];
+  excludeActivePaths?: string[];
   shortcutKeyName?: string;
   title: string;
   _action?: string;

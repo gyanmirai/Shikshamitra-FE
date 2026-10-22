@@ -123,3 +123,15 @@ export const displayReportValue = (value: unknown, type: string, timezone = 'Asi
     return value === true || value === 'true' ? 'Yes' : 'No';
   return String(value);
 };
+
+export function reportListPagination(query: Pick<URLSearchParams, 'get'>) {
+  const requestedPage = Number(query.get('page') || 0);
+  const requestedSize = Number(query.get('pageSize') || 50);
+  return {
+    page:
+      Number.isSafeInteger(requestedPage) && requestedPage >= 0 && requestedPage <= 1000000
+        ? requestedPage
+        : 0,
+    pageSize: [10, 25, 50, 100].includes(requestedSize) ? requestedSize : 50,
+  };
+}

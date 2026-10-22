@@ -71,8 +71,22 @@ Holiday Impact is not a visible workspace tab; holiday services and backend perm
 
 ## Reporting views
 
-`/hr/reports` opens the template library.
-The `tab=generated`, `mode=generate&template=`, `mode=design&template=`, and `mode=result&run=` queries provide separate workspaces within that route.
+Reporting has two nested destinations: Reports and Templates.
+
+| Destination | Route |
+| --- | --- |
+| Reports, the default landing page | `/hr/reports` |
+| Template management | `/hr/reports/templates` |
+| Generate, step 1: choose a published template | `/hr/reports/generate` |
+| Generate, step 2: reporting options | `/hr/reports/generate/[templateId]` |
+| Captured result | `/hr/reports/runs/[runId]` |
+| Create or customize a template | `/hr/reports/templates/new`, with optional `copyFrom` |
+| Edit an owned or managed template | `/hr/reports/templates/[templateId]/edit` |
+
+The former tab/mode query URLs are replaced without redirects.
+Template category, library, search, page, and pageSize stay in the URL.
+Report history uses URL-backed page and pageSize.
+Generation carries chooser filters into the options URL and restores them on Back.
 A built-in definition opens the designer only through Customize a copy.
 Personal design requires Build; school management requires ManageTemplates; preview additionally requires Build.
 

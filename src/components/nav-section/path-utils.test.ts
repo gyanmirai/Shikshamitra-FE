@@ -51,3 +51,21 @@ describe('isNavigationPathActive', () => {
     );
   });
 });
+
+it('keeps HR reporting destinations mutually exclusive for nested routes', () => {
+  const root = '/hr/reports';
+  const templates = `${root}/templates`;
+  [templates, `${templates}/new`, `${templates}/school/edit`].forEach((current) => {
+    expect(isNavigationPathActive(current, root, true, [templates])).toBe(false);
+    expect(isNavigationPathActive(current, templates, true)).toBe(true);
+  });
+  [
+    root,
+    `${root}/generate`,
+    `${root}/generate/builtin%3Aattendance`,
+    `${root}/runs/run-id`,
+  ].forEach((current) => {
+    expect(isNavigationPathActive(current, root, true, [templates])).toBe(true);
+    expect(isNavigationPathActive(current, templates, true)).toBe(false);
+  });
+});

@@ -1,70 +1,117 @@
-import { useRouter } from 'src/routes/hooks';
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
+import { RouterLink } from 'src/routes/components';
 import { useMemo, useState, useEffect } from 'react';
 import { hrReportPaths } from 'src/constants/hr-report-paths';
-import { Box, Chip, Alert, Stack, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Stack, Button, LinearProgress } from '@mui/material';
 import { useHrTableExport } from 'src/screens/hr/hooks/use-hr-table-export';
 import { useGetReportingRunsQuery } from 'src/redux/hr/hrReportingWorkspaceApi';
 
-import { reportError, displayReportValue } from '../reporting-workspace-utils';
+import { useReportTableState } from '../hooks/useReportTableState';
+import { displayReportValue, reportListPagination } from '../reporting-workspace-utils';
 
 export function ReportHistory() {
-  const router = useRouter();
-  const [skip, setSkip] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const tableState = useReportTableState();
+  const { query, updateQuery } = tableState;
+  const { page, pageSize } = reportListPagination(query);
+  const skip = page * pageSize;
   const exportTable = useHrTableExport('hr-generated-report-history', {});
   const [active, setActive] = useState(true);
   const {
-    data: history,
+    currentData: history,
     error,
     isFetching,
+    refetch,
   } = useGetReportingRunsQuery(
-    { skip, take: pageSize },
+    { skip, take: pageSize, criteria: tableState.criteria },
     { pollingInterval: active ? 5000 : 0, skipPollingIfUnfocused: true }
   );
   const data = useMemo(() => history?.items || [], [history?.items]);
   useEffect(() => {
     setActive(data.some((run) => ['Queued', 'Running'].includes(run.status)));
   }, [data]);
-  const columns = useMemo(
+  const columns = useMemo<IColumn[]>(
     () => [
-      { id: 'name', label: 'Report', minWidth: '220px', sticky: true },
+      {
+        filterType: 'string',
+        id: 'name',
+        label: 'Report',
+        minWidth: '220px',
+        sticky: true,
+        stickyOnMobile: false,
+        render: (value, row) => (
+          <Box
+            component={RouterLink}
+            href={hrReportPaths.result(row.id)}
+            sx={{
+              color: 'inherit',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            {value}
+          </Box>
+        ),
+      },
       {
         id: 'status',
+        filterType: 'enum',
+        enumOptions: ['Queued', 'Running', 'Completed', 'Failed', 'Cancelled', 'Expired'].map(
+          (value) => ({ label: value, value })
+        ),
         label: 'Status',
         minWidth: '120px',
         render: (_: unknown, row: any) => (
           <Chip size="small" variant="outlined" label={row.isExpired ? 'Expired' : row.status} />
         ),
       },
-      { id: 'period', label: 'Reporting period', minWidth: '210px' },
+      { filterType: 'string', id: 'period', label: 'Reporting period', minWidth: '210px' },
       {
         id: 'capturedAt',
+        filterType: 'dateTime',
+        valueType: 'datetime',
         label: 'Generated',
         minWidth: '180px',
         render: (v: string, row: any) => displayReportValue(v, 'datetime', row.parameters.timeZone),
       },
-      { id: 'rowCount', label: 'Rows', minWidth: '80px' },
+      {
+        id: 'rowCount',
+        label: 'Rows',
+        minWidth: '100px',
+        filterType: 'number',
+        valueType: 'number',
+        align: 'right',
+      },
       {
         id: 'action',
+        isSort: false,
+        isFilter: false,
         label: 'Action',
-        minWidth: '100px',
+        minWidth: '130px',
+        sticky: true,
+        stickyPosition: 'right' as const,
+        stickyOnMobile: false,
+        excludeFromExport: true,
         render: (_: unknown, row: any) => (
           <Button
             size="small"
+            sx={{ whiteSpace: 'nowrap' }}
             variant="outlined"
-            onClick={() => router.push(hrReportPaths.result(row.id))}
+            component={RouterLink}
+            href={hrReportPaths.result(row.id)}
+            aria-label={`Open report ${row.name}`}
           >
             Open report
           </Button>
         ),
       },
     ],
-    [router]
+    []
   );
-  if (error) return <Alert severity="error">{reportError(error)}</Alert>;
   return (
     <Stack spacing={1} sx={{ height: 1, minHeight: 0 }}>
+      {isFetching && data.length > 0 && <LinearProgress aria-label="Refreshing reports" />}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           showColumns
@@ -72,9 +119,11 @@ export function ReportHistory() {
           showFullScreen
           exportScope="all"
           tableId="hr-generated-report-history"
-          tableTitle="Generated reports"
+          tableTitle="Reports"
+          error={error}
+          onRetry={() => refetch()}
           onExport={exportTable}
-          columns={columns.map((column) => ({ ...column, isSort: false, isFilter: false }))}
+          columns={columns}
           data={data.map((run) => ({
             ...run,
             period: run.parameters.fromDate
@@ -85,19 +134,41 @@ export function ReportHistory() {
           serverSidePagination
           paginationMode="unknown"
           hasNextPage={history?.hasMore ?? false}
-          page={Math.floor(skip / pageSize)}
+          page={page}
           rowsPerPage={pageSize}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          onServerPagination={(page, size) => {
-            setPageSize(size);
-            setSkip((page - 1) * size);
+          onServerPagination={(nextPage, size) => {
+            updateQuery({ page: String(nextPage - 1), pageSize: String(size) });
           }}
-          isSearch={false}
-          isFilter={false}
+          {...tableState}
+          serverSideSearch
+          serverSideSort
+          serverSideFilter
+          searchFieldProps={{
+            placeholder: 'Search reports',
+            inputProps: { 'aria-label': 'Search reports' },
+          }}
           noDataText={
-            history?.hasMore || skip > 0
-              ? 'No reports available on this page with your current access.'
-              : 'No generated reports available. Choose a template to generate a report.'
+            tableState.searchTerm || tableState.filters.length ? (
+              'No reports match your search and filters.'
+            ) : history?.hasMore || skip > 0 ? (
+              'No reports available on this page with your current access.'
+            ) : (
+              <>
+                <Box component="span" sx={{ display: 'block' }}>
+                  No reports generated yet
+                </Box>
+                <Button
+                  component={RouterLink}
+                  href={hrReportPaths.choose}
+                  size="small"
+                  variant="contained"
+                  sx={{ mt: 1 }}
+                >
+                  Generate report
+                </Button>
+              </>
+            )
           }
           wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
           tableContainerProps={{ sx: { height: 1 } }}
