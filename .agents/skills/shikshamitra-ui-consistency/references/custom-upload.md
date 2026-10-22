@@ -56,11 +56,11 @@ do not leave an old form value behind. Multiple-file removal emits the remaining
   attempt can mark the field touched and show its rejection immediately. Mirror the same
   actual error in the uploader's string `error` prop and the visible feedback.
 
-The built-in error text renders only in the empty, visible dropzone. For invalid nonempty lists
-or hidden dropzones, provide an associated field error below the list. Avoid displaying that
-same message twice when the built-in copy is already visible. The current wrapper does not
-offer a dedicated helper/error ID API; inspect the composition and extend it centrally if needed
-for complete label/error association rather than inventing props.
+The built-in error renders once below the file list for empty selections, selected files, and
+hidden dropzones. It exposes `role="alert"`; the visible dropzone and native picker reference its
+stable ID when present. Existing `dragProps` descriptions are preserved. Do not add a duplicate
+field error outside the uploader. Continue associating persistent labels and help through the
+supported composition props; there is no dedicated label/helper ID prop.
 
 ## File types, size, and validation
 
@@ -108,7 +108,7 @@ a toast alone does not replace required/form-level validation.
   release busy state, and allow a supported retry without duplicate uploads. After success,
   update file metadata/baseline according to the real workflow; do not show success on selection.
 - Include file additions/removals in dirty-state comparison. Dirty cancellation uses the single
-  [Keep Editing / Discard Changes](confirmations.md) flow. If immediate uploads already occurred,
+  [Keep editing / Discard changes](confirmations.md) flow. If immediate uploads already occurred,
   use the established cleanup contract; discarding the form must not invent a server delete.
 
 ## Preview, download, remove, and view details
@@ -139,10 +139,15 @@ a toast alone does not replace required/form-level validation.
 
 ## References and verification
 
-No supplied image depicts a complete upload field. The Syllabus screenshot establishes its
-Attachments section context only; the new Staff member image belongs to
-[searchable dropdowns](searchable-dropdowns.md), not uploads. Upload visual matching remains
-Unverified until an appropriate reference and runtime comparison exist.
+![Local Syllabus upload field and empty attachment list](../assets/local-upload-empty.jpg)
+
+The local [ChapterAttachmentsSection](../../../../src/screens/academic/course-management/syllabusManagement/components/ChapterAttachmentsSection.tsx)
+shows the directory-default uploader inside a separate Upload files panel beside View attachments.
+It establishes the idle empty-field state, accepted-format/size guidance, and section placement;
+it does not prove selection, progress, saved files, preview, rejection, or failure behavior.
+The shown two-panel composition is specific to this chapter workflow, not mandatory for every
+upload. Its legacy Add Chapter footer does not replace the shared Submit rule. See
+[capture metadata](image-references.md#local-app-captures-22-october-2026).
 
 Source references: [bulk subject import](../../../../src/screens/academic/curriculum-management/setting/subjectCreation/bulkImport/BulkSubjectImportDialog.tsx)
 uses the directory default with a scoped spreadsheet workflow; it does not establish standard

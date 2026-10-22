@@ -107,8 +107,8 @@ touched/errors on step changes, so revisit/final validation must recompute the c
 | Back | Previous step, outlined neutral, left-arrow icon; disabled at step zero when no `onCancel` is supplied |
 | Cancel at step zero | Supply `onCancel` when appropriate; outlined neutral with GlobalIcons.cancel, guarded workflow close |
 | Next | Advance after valid current input; contained neutral, right-arrow end icon, at right |
-| Save & Next | Use only when the callback actually saves before advancing; do not label local-only navigation as saved |
-| Save Draft | Separate outlined secondary action with `GlobalIcons.draftIcon` or appropriate save icon; only when the backend supports it; use `saveButtonLabel` |
+| Save & next | Use only when the callback actually saves before advancing; do not label local-only navigation as saved |
+| Save draft | Separate outlined secondary action with `GlobalIcons.draftIcon` or appropriate save icon; only when the backend supports it; use `saveButtonLabel` |
 | Final ordinary form action | `Submit`, contained inherit/neutral with `GlobalIcons.submit` |
 | Final lifecycle action | Specific outcome such as `Publish Rubric`, with appropriate shared icon and permission/state checks; not a generic Submit hiding a distinct outcome |
 
@@ -129,7 +129,7 @@ form-submit path so Enter and clicking Next cannot duplicate the mutation.
 - Next may be local validation/advance; it does not imply persistence. Independent per-step save
   and resume exist only when supported by the actual draft/API contract. Do not invent endpoints,
   storage, Save buttons, or a “saved” state to satisfy an older generic stepper example.
-- The rubric reference exposes Save Draft/Publish on its final stage. Keep their existing
+- The rubric reference exposes Save draft/Publish on its final stage. Keep their existing
   validation/persistence behavior. A draft may still require complete data; do not weaken its
   schema because the action says Draft.
 - Preview presents the current values in the same meaningful sections, preserving units,
@@ -137,7 +137,7 @@ form-submit path so Enter and clicking Next cannot duplicate the mutation.
   do not present unsaved preview data as an already published record.
 - Use one dirty-close guard for the complete workflow across all steps. Moving between preserved
   steps is not a discard. Leaving with unsaved changes uses
-  [Keep Editing / Discard Changes](confirmations.md); Keep Editing preserves the active step,
+  [Keep editing / Discard changes](confirmations.md); Keep editing preserves the active step,
   all values, and context; Discard resets only this workflow after explicit confirmation.
 - Actual async callbacks own request state and supplied loading-setter cleanup in `finally`.
   Advance/close only after success. On failure retain the step and inputs, release the lock,
@@ -183,7 +183,7 @@ deliberately rather than assuming `viewMode="vertical"` alone adapts to containe
   nextButtonLabel="Next"
   finalButtonLabel="Publish Rubric"
   showSaveButton={activeStep === 2}
-  saveButtonLabel="Save Draft"
+  saveButtonLabel="Save draft"
   handleBack={() => setActiveStep((step) => Math.max(step - 1, 0))}
   handleNext={advanceOrPublish}
   onSave={saveSupportedDraft}
@@ -213,7 +213,7 @@ Formik provider. Do not hardcode a fixed height just because an optional scrollb
 
 Check stage/section order, breadcrumb/back distinctions, page/drawer parity, no duplicate forms,
 required shake/error/focus, invalid Next and forward clicks, back/return value retention,
-cross-step final validation, completion after edits, actual Save Draft/Publish results,
+cross-step final validation, completion after edits, actual Save draft/Publish results,
 busy/keyboard/header locks, one footer, preview values, dirty exit choices, narrow panels, long
 labels/collections, and both themes. Documentation checks links/assets, skill structure, and
 whitespace; runtime changes also need focused checks and the required in-app browser smoke test.
@@ -222,7 +222,7 @@ Confirmed source differences: RubricBasicInformation's required controls lack Sh
 the local RubricFormSection uses subtitle2/700 and its own radius/spacing instead of the shared
 section standard. Several icons are literals. The rubric screen's header Back directly closes
 the form; it needs the complete dirty-close integration before claiming safe cancellation.
-Its Save Draft text is passed as button-prop children while the shared footer uses
+Its Save draft text is passed as button-prop children while the shared footer uses
 `saveButtonLabel`; use the actual label prop. Its reached-step tracking is not a guarantee
 of persisted or still-valid completion. Runtime navigation, draft resume, loading locks, drawer
 adaptation, keyboard focus, preview accuracy, and visual matching remain Unverified. This guide

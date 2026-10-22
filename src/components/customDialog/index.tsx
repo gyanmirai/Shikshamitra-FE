@@ -4,9 +4,9 @@ import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material'
 import { CONFIG } from 'src/config-global';
 import Close from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
 
@@ -23,6 +23,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   children: React.ReactNode;
   paperProps?: PaperProps;
   hasForm?: boolean;
+  formProps?: { noValidate?: boolean; onSubmit?: (event: React.FormEvent) => void };
   disableClose?: boolean;
   /** Local form state, when supplied, must not consume or clear a parent form's dirty state. */
   hasUnsavedChanges?: boolean;
@@ -38,6 +39,7 @@ const CustomDialog = ({
   children,
   paperProps,
   hasForm = true,
+  formProps,
   disableClose = false,
   hasUnsavedChanges,
   guardUnsavedChanges = true,
@@ -74,7 +76,7 @@ const CustomDialog = ({
     }
   };
 
-  const FormComponent = hasForm ? 'form' : Box;
+  const FormComponent = hasForm ? 'form' : 'div';
   return (
     <Dialog
       aria-labelledby={titleId}
@@ -116,6 +118,7 @@ const CustomDialog = ({
         onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
         }}
+        {...(hasForm ? formProps : {})}
       >
         <Box
           display="flex"

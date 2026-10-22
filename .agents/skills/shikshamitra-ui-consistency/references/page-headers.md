@@ -11,9 +11,12 @@ reference, selected styling, tab/action-row spacing, and URL/unsaved-navigation 
 
 ## Reference image
 
-Image pending: `assets/page-header.png`. See [image references](image-references.md).
-Expected callouts: 1 title/description, 2 breadcrumb hierarchy, 3 primary action, 4 context/filter row.
-An image will establish a reference for its module family, not silently change every module.
+![Local Subject Creation header, global academic context, breadcrumbs, and page actions](../assets/local-subject-workspace.jpg)
+
+Captured from the local Academic module; see [metadata](image-references.md#local-app-captures-22-october-2026).
+Use its title/help, breadcrumb, context, and page-action placement for this module family.
+The image is unannotated and does not establish a new header layout for every module or approve
+all legacy action labels, icon counts, and status styles in the rest of the screen.
 
 ## How to build
 

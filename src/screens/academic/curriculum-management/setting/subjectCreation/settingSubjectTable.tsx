@@ -21,6 +21,7 @@ import {
 import SubjectNameCell from './subjectNameCell';
 import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
 import { getSettingSubjectTableActions } from './settingSubjectTableActions';
+import { getSubjectTableRows, getSubjectNameSearchValue } from './subjectTableData';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
@@ -54,7 +55,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
     },
   });
 
-  const subjects = useMemo(() => subjectData || [], [subjectData]);
+  // Keep normalized rows stable for the table and summary dependencies between query updates.
+  const subjects = useMemo(() => getSubjectTableRows(subjectData || []), [subjectData]);
 
   const summary = useMemo(
     () => ({
@@ -113,6 +115,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
       {
         id: 'name',
         label: 'Subject',
+        searchValue: getSubjectNameSearchValue,
         align: 'left',
         width: 300,
         minWidth: 300,
@@ -240,8 +243,10 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           return (
             <AdaptiveThreeDotsActions
               actions={actions}
+              directActionLimit={2}
               placement="right-top"
-              moreLabel="More subject actions"
+              moreLabel={`More actions for ${subject.name}`}
+              sx={{ justifyContent: 'flex-end' }}
             />
           );
         },

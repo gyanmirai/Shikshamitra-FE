@@ -22,7 +22,12 @@ export function SubjectUsageLabelsSection({
   if (!labels.length) return null;
 
   return (
-    <FormSectionCard icon={icon} title={`${title} (${labels.length})`} description={description}>
+    <FormSectionCard
+      icon={icon}
+      title={`${title} (${labels.length})`}
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip={description}
+    >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
         {visibleLabels.map((label) => (
           <Chip key={label} size="small" label={label} variant="outlined" />

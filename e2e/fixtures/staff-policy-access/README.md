@@ -1,7 +1,7 @@
 # Staff policy access browser regression
 
-This local fixture renders the production Add Staff personal-information form, policy access hook,
-shared dialog and stepper, and RTK API clients. Authentication and HTTP responses are synthetic.
+This local fixture renders the production Add Staff personal-information form,
+shared stepper, and RTK API clients. Authentication and HTTP responses are synthetic.
 Later wizard steps that these tests do not visit are stubbed to keep the dependency build focused.
 The server rejects writes; the submit tests intercept their specific request in Playwright.
 No real school service or data is used.
@@ -19,11 +19,10 @@ node --require ./src/test/patch-vite-windows-net-use.cjs node_modules/vite/bin/v
 ```
 
 Open `http://127.0.0.1:4197/?scenario=missing-permission`. Other scenarios are `ready`, `forbidden`,
-`transient`, `missing-default`, `multiple-default`, and `edit`. Add a unique `run` query value to reset
-the first-request failure in the transient scenario. Permission refresh returns all required grants.
-The `forbidden` scenario continues returning 403 to represent a server-side denial despite cached grants.
+`transient`, `missing-default`, `multiple-default`, `no-year`, and `edit`.
+The `forbidden` scenario returns 403 for policy requests despite cached grants; creation must send none.
 
-Browser evidence covers prerequisite messages, unauthorized request suppression, default policy
-loading, permission refresh, retry, draft retention after submit denial, edit behavior, focus return,
+Browser evidence covers creation without policy reads or override payloads,
+retry, draft retention after save failure, edit behavior, keyboard focus,
 and desktop/mobile/tablet-dark layouts. Backend tests own actual permission enforcement, tenant
 isolation, transaction boundaries, and persistence.

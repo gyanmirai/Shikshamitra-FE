@@ -183,6 +183,7 @@ const FileUploader = <T extends boolean = true>({
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const errorId = React.useId();
 
   /**
    * Memoization Justification:
@@ -457,6 +458,11 @@ const FileUploader = <T extends boolean = true>({
             }
           }}
           {...dragRemainingProps}
+          aria-describedby={
+            [dragRemainingProps['aria-describedby'], error ? errorId : undefined]
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
         >
           {isUploading ? (
             <>
@@ -493,11 +499,6 @@ const FileUploader = <T extends boolean = true>({
                       {propertyPr}
                     </Typography>
                   )}
-                  {error && (
-                    <Typography color="error" variant="caption">
-                      {error}
-                    </Typography>
-                  )}
                 </Stack>
               )}
             </>
@@ -506,6 +507,8 @@ const FileUploader = <T extends boolean = true>({
           <input
             ref={fileInputRef}
             type="file"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             accept={accept || allowedTypes.join(',')}
             multiple={multiple}
             hidden
@@ -526,6 +529,18 @@ const FileUploader = <T extends boolean = true>({
           )}
           {!Array.isArray(normalizedValue) && normalizedValue && renderFileCard(normalizedValue, 0)}
         </Stack>
+      )}
+
+      {error && (
+        <Typography
+          id={errorId}
+          role="alert"
+          color="error"
+          variant="caption"
+          sx={{ mt: 1, display: 'block' }}
+        >
+          {error}
+        </Typography>
       )}
 
       <Dialog open={!!previewFile} onClose={() => setPreviewFile(null)} maxWidth="md" fullWidth>

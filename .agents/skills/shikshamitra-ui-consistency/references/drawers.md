@@ -161,14 +161,14 @@ all values to the original baseline should remove dirty state; loading initial d
 | --- | --- |
 | Clean form: Cancel, header X, Escape, backdrop, supported leave/navigation | Close once; clean up the session; restore launching focus |
 | Dirty form: any of those paths | Keep drawer and values mounted; show the existing unsaved-changes confirmation |
-| Confirmation `Keep Editing` or safe dismissal | Close only confirmation; preserve all input and return focus to form |
-| Confirmation `Discard Changes` | Explicitly reset draft/edit identity, close confirmation/drawer, and restore focus; do not save |
+| Confirmation `Keep editing` or safe dismissal | Close only confirmation; preserve all input and return focus to form |
+| Confirmation `Discard changes` | Explicitly reset draft/edit identity, close confirmation/drawer, and restore focus; do not save |
 | Blocking save/submit | Lock inputs, Submit, Cancel, X, Escape, backdrop, and conflicting navigation; show progress; no duplicate request or discard race |
 | Failed save | Keep drawer/values and accurate errors; release busy lock; retry or guarded cancellation remains available |
 | Successful save | Reset baseline/session and close or transition per the existing workflow; do not immediately trigger a discard popup |
 
 Use `ConfirmDialog` with a focused `Discard Unsaved Changes?` title and concise consequence.
-The safe action is `Keep Editing`, the explicit destructive action is `Discard Changes`; never
+The safe action is `Keep editing`, the explicit destructive action is `Discard changes`; never
 use generic Yes/No. Keep the confirmation's backdrop from discarding anything. Do not add a
 second competing browser/native confirmation if the form already owns this guard.
 Only the confirmed discard branch resets values. Do not clear the form before showing the popup.
@@ -195,7 +195,7 @@ drawer component that the project does not contain.
 
 Check title/status/help/X order; focus and labels; single body scroll; consistent section style
 in form/view; required markers; helpful field info; footer alignment/icons/variants; clean versus
-dirty Cancel/X/Escape/backdrop; Keep Editing versus Discard; save failure/success; opening another
+dirty Cancel/X/Escape/backdrop; Keep editing versus Discard; save failure/success; opening another
 record; mobile keyboard; long labels; both themes; no extra advice/summary cards. For runtime
 changes run focused checks and the required in-app browser smoke test; documentation-only work
 checks links/assets, skill structure, and whitespace.

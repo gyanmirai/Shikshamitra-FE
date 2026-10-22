@@ -2,8 +2,8 @@ import type { FormikProps } from 'formik';
 
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Grid, MenuItem, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, MenuItem, TextField, IconButton } from '@mui/material';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
 import { SUBJECT_ICONS as subjectIcons, SUBJECT_CATEGORIES as subjectCategories } from '../type';
@@ -21,7 +21,8 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
         <ShakingTextField error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}>
           <LanguageInputField
             fullWidth
-            label="Subject Name *"
+            label="Subject Name"
+            required
             name="subjectName"
             size="small"
             value={formik.values.subjectName}
@@ -56,37 +57,50 @@ export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField
-          select
-          fullWidth
-          label={
-            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-              Subject Category *
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title="Grouping only. Academic rules are configured later."
-              >
-                <Box component="span" sx={{ display: 'inline-flex' }}>
-                  <Iconify icon="lucide:info" width={14} height={14} color="info.main" />
-                </Box>
-              </CustomTooltip>
-            </Box>
-          }
-          name="category"
-          size="small"
-          value={formik.values.category}
-          onChange={formik.handleChange}
-          error={formik.touched.category && Boolean(formik.errors.category)}
-          helperText={formik.touched.category && formik.errors.category}
-        >
-          {subjectCategories.map((category) => (
-            <MenuItem key={category} value={category}>
-              {category}
-            </MenuItem>
-          ))}
-        </TextField>
+        <ShakingTextField error={Boolean(formik.touched.category && formik.errors.category)}>
+          <TextField
+            select
+            fullWidth
+            required
+            label={
+              <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                Subject Category
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Grouping only. Academic rules are configured later."
+                >
+                  <IconButton
+                    component="span"
+                    tabIndex={0}
+                    aria-label="Subject Category information"
+                    size="small"
+                    color="info"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                  >
+                    <Iconify icon="lucide:info" width={14} height={14} color="info.main" />
+                  </IconButton>
+                </CustomTooltip>
+              </Box>
+            }
+            name="category"
+            size="small"
+            value={formik.values.category}
+            onChange={formik.handleChange}
+            error={formik.touched.category && Boolean(formik.errors.category)}
+            helperText={formik.touched.category && formik.errors.category}
+          >
+            {subjectCategories.map((category) => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+          </TextField>
+        </ShakingTextField>
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6 }}>

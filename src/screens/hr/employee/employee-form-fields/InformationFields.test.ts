@@ -22,9 +22,9 @@ describe('InformationFields email editing', () => {
 
 describe('InformationFields staff creation policy overview', () => {
   it('uses system-policy wording instead of the old leave-only assignment label', () => {
-    expect(EMPLOYEE_CREATION_POLICY_SECTION_TITLE).toBe('Assigned System Policies');
+    expect(EMPLOYEE_CREATION_POLICY_SECTION_TITLE).toBe('System Policies');
     expect(EMPLOYEE_CREATION_POLICY_SECTION_TITLE).not.toBe('Leave Policy Assignment');
-    expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).toBe('Default assignment');
+    expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).toContain('school policies automatically');
     expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).not.toBe('Staff creation policy assignment');
   });
 });

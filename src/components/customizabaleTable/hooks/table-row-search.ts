@@ -21,12 +21,14 @@ export const matchesTableRowSearch = (
     : columns.some((column) => {
         if (!columnVisibility[column.id]) return false;
 
+        const rawVal = _.get(row, column.id);
+        if (column.searchValue?.(rawVal, row).toLowerCase().includes(lowerSearchTerm)) return true;
+
         // Match against the rendered cell text first (what the user actually sees),
         // then fall back to raw-value/date-formatted matching for coverage.
         const displayText = getColumnDisplayText(row, column).toLowerCase();
         if (displayText.includes(lowerSearchTerm)) return true;
 
-        const rawVal = _.get(row, column.id);
         if (rawVal === undefined || rawVal === null) return false;
 
         const rawValStr = rawVal.toString().toLowerCase();

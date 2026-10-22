@@ -1,7 +1,11 @@
+import { addIcon } from '@iconify/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { useSubjectForm } from './useSubjectForm';
+
+addIcon('basil:cross-solid', { body: '<path />' });
+addIcon('hugeicons:tick-01', { body: '<path />' });
 
 const mocks = vi.hoisted(() => ({
   addSubject: vi.fn(),

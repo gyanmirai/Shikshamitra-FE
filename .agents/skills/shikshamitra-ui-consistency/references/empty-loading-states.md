@@ -161,7 +161,7 @@ import { FormBusyRegion } from 'src/components/form-busy-region';
   cancellation. On success update the baseline and transition according to the owning workflow.
   FormBusyRegion does not clear values, close the shell, or display success automatically.
 - Dirty leave requests outside the blocking phase follow the existing single
-  [Keep Editing / Discard Changes](confirmations.md) owner; never reset the form before confirmation.
+  [Keep editing / Discard changes](confirmations.md) owner; never reset the form before confirmation.
 
 ## Accessibility and verification
 

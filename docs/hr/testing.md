@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-22
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -48,12 +48,12 @@ TL;DR: run the docs check for HR docs changes, then choose focused unit, contrac
 
 ## Staff policy permission contract
 
-`src/constants/hr-policy-permissions.ts` owns the exact policy action IDs shared by HR navigation and staff creation.
+`src/constants/hr-policy-permissions.ts` owns the exact policy action IDs used by HR navigation and explicit policy assignment.
 `src/constants/hr-policy-permissions.contract.test.ts` locks independent expectations from the backend `ShikshaMitraSubmodulePermissions.HR.Policies` and `LeaveManagement_SettingLeavePolicy` catalogue definitions.
 Check those backend definitions when changing this contract; the unit test does not fetch a deployed catalogue.
 Keep browser fixture grants and contract expectations independent of the implementation constants.
-Run the contract, HR menu, employee policy-access and policy-access-hook suites together.
-Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for allowed access, denied reads, refresh recovery and draft preservation at desktop, mobile and dark-tablet sizes.
+Run the contract, HR menu, employee form-state and payroll-edit suites together.
+Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for creation without policy reads or overrides, failure/retry draft preservation, and desktop/mobile/dark-tablet layouts.
 Finish with the Codex in-app browser against the local fixture; synthetic responses do not prove deployed account access.
 
 ## Required docs check
@@ -66,11 +66,11 @@ npm run docs:hr:check
 
 ## Focused test commands
 
-For Staff Directory policy access, run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/hr/employee/employee-policy-access.test.ts src/screens/hr/employee/use-employee-policy-access.test.tsx src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx --pool=threads --maxWorkers=1`.
-The tests cover exact effective permissions, failed reads, policy-specific submission denial, stale-session refresh protection, and the employee-specific role lookup.
+For Staff Directory creation, run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/hr/employee/employee-form-state.test.ts src/screens/hr/employee/employee-form.payroll.test.tsx src/screens/hr/employee/employee-form-fields/RenderRole.test.tsx --pool=threads --maxWorkers=1`.
+The tests cover saved identity continuity, existing payroll edits, and the employee-specific role lookup.
 Run `node node_modules/@playwright/test/cli.js test --config e2e/hr/staff-policy-access.config.ts` for the production Personal Information form with synthetic authentication and API responses.
 The isolated fixture stubs only unvisited later wizard steps and uses no school data.
-It covers access guidance, safe retries, default configuration failures, editing, and desktop/mobile/tablet layouts; deployed acceptance still requires a real delegated account.
+It covers delegated creation, no initial policy reads for any permission/setup state, failure/retry, return navigation and editing; deployed acceptance still requires a real delegated account.
 
 The ESIC browser regression uses an authenticated, disposable local FullDemo environment.
 Set `ESI_LOCAL_E2E=1` and `E2E_BASE_URL=http://localhost:3100`, then run `npx playwright test e2e/hr/esi-configuration.guest.spec.ts --project=chromium-guest --workers=1`.

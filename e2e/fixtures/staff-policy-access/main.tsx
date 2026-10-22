@@ -33,7 +33,7 @@ const policyPermissions = [
   'HR.Policies.PreviewImpact',
 ];
 const permissions = (
-  scenario === 'missing-permission' || scenario === 'edit'
+  scenario === 'missing-permission' || scenario === 'edit' || scenario === 'no-year'
     ? staffPermissions
     : [...staffPermissions, ...policyPermissions]
 ).map((name) => ({ name, isGranted: true }));
@@ -41,7 +41,9 @@ const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
     auth: authReducer,
-    globalState: () => ({ currentYear: { id: 'synthetic-year', name: '2026-2027' } }),
+    globalState: () => ({
+      currentYear: scenario === 'no-year' ? {} : { id: 'synthetic-year', name: '2026-2027' },
+    }),
     confirmPopup: confirmPopupReducer,
   },
   preloadedState: {

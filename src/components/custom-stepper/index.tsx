@@ -529,6 +529,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               },
             }
           : {
+              overflowX: 'auto',
+              flexShrink: 0,
               p: isMobile ? 1 : 0,
               pt: 1,
               '& .MuiStepLabel-label': {

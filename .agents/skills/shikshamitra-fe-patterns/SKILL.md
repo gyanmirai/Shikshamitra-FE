@@ -1,6 +1,6 @@
 ---
 name: shikshamitra-fe-patterns
-description: Build or update ShikshaMitra frontend screens using the project's established components and UI rulebooks. Use for FE pages, tables, forms, dialogs, drawers, detail views, steppers, calendars, scheduling, reports, exports, or audit views; do not use for backend-only work.
+description: Build or update ShikshaMitra frontend screens using the project's established components and UI rulebooks. Use for FE pages, tables, forms, navigation, dashboards, dialogs, drawers, detail views, steppers, calendars, scheduling, reports, exports, or audit views; do not use for backend-only work.
 ---
 
 # ShikshaMitra frontend patterns
@@ -32,6 +32,9 @@ invent behavior: preserve the governing contract and report the conflict.
 | Surface or task                                                                                           | Read                                                                                                  |
 | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Any implementation using shared FE components, Formik, RTK Query, toast, or common hooks                  | [implementation-patterns.md](references/implementation-patterns.md)                                   |
+| Shared controls, statuses, feedback, rich text, academic scope, contact fields, and component-specific visual consistency | [UI consistency routing](../shikshamitra-ui-consistency/SKILL.md#pattern-routing) |
+| Dashboard templates, metric/widget cards, chart states, safe drilldowns | [Dashboard and chart guide](../shikshamitra-ui-consistency/references/dashboards-charts.md) and [dashboard docs](../../../docs/dashboard/README.md) |
+| Application shell, mobile sidebar, durable settings destinations | [Navigation and settings](../shikshamitra-ui-consistency/references/navigation-settings.md) |
 | Page title, breadcrumb, summary metrics, filters, tabs, or page-level actions                             | [page-headers.md](references/page-headers.md)                                                         |
 | Record table, toolbar, search, filters, columns, row actions, sticky columns, pagination, or table states | [tables.md](references/tables.md)                                                                     |
 | Create, edit, configure, or update form                                                                   | [forms.md](references/forms.md)                                                                       |

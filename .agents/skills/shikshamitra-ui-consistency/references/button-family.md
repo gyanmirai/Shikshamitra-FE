@@ -17,6 +17,7 @@ loading, disabled, keyboard, mobile, or dark-theme behavior.
 | Drawer | [Create Concession Policy](../assets/drawer.png) | Bottom-right outlined Cancel, neutral dark Submit, leading icons |
 | Dialog | [Add Subject](../assets/form-dialog.png) | Compact outlined Cancel and contained Submit in stationary DialogActions |
 | Page | [Syllabus chapter form](../assets/page-form-syllabus.png) | Stable footer, Cancel before primary action; ordinary forms use Submit rather than the legacy Add Chapter label |
+| Local phone form, dark theme | [Add Subject](../assets/local-form-mobile-dark.jpg) | Reachable compact Cancel/Submit footer; current capture metadata is in [image references](image-references.md#local-app-captures-22-october-2026) |
 
 ![Drawer form with compact Cancel and Submit actions](../assets/drawer.png)
 
@@ -45,11 +46,12 @@ implementation task, rather than inventing props or creating a feature-local but
 | Ordinary create/edit submission | `SubmitButton`, contained neutral, label `Submit`, `type="submit"` | `GlobalIcons.submit` in create and edit; loading tracks the actual submission |
 | Cancel form | `CancelButton` when its API fits; shared LoadingButton/MUI Button when direct disabled control is needed. Outlined neutral, Cancel, button type | `GlobalIcons.cancel`; call the owning dirty-close guard |
 | Close read-only view | `CancelButton` with `buttonText="Close"`, outlined neutral | `GlobalIcons.cancel`; no dirty prompt for a purely read-only view |
-| Create/open task from page header | Small contained neutral supported button, specific label such as `Create Template` | `GlobalIcons.addIcon`; button type unless it really submits a form |
+| Create/open task from page header | Small contained neutral supported button, specific label such as `Create template` | `GlobalIcons.addIcon`; button type unless it really submits a form |
 | Secondary action | Small outlined neutral supported button, specific action label | Existing semantic GlobalIcons key; type button |
 | Publish, archive, discard, or other consequential decision | Follow the owning workflow and confirmation guide; use the actual outcome label | Existing semantic GlobalIcons key and appropriate semantic treatment; do not invent an operation |
 
-- Use Title Case for multiword action labels, such as `Keep Editing` and `Discard Changes`.
+- Use sentence case for action labels, such as `Keep editing`, `Discard changes`, and `Save draft`,
+  following `DESIGN.md`. Title Case belongs to task/section titles, not a universal button rule.
   Keep one clear primary action per ordinary form footer. Required-field asterisks never belong
   on buttons; a start icon is a leading action icon, not a decorative star.
 - Render icons through [Iconify](../../../../src/components/iconify/iconify.tsx) and
@@ -120,8 +122,8 @@ Table row actions still follow [AdaptiveThreeDotsActions](adaptive-three-dots-ac
 - Lock header X, Escape, backdrop, Back, and other conflicting leave paths through the shell's
   supported API and the same owner. A callback returning early is useful defense but does not
   replace a visibly disabled button. Ordinary read-only fetching need not lock Close.
-- Dirty Cancel uses one [Keep Editing / Discard Changes](confirmations.md) flow. Never clear
-  values before confirmation. Keep Editing preserves them; Discard Changes explicitly resets
+- Dirty Cancel uses one [Keep editing / Discard changes](confirmations.md) flow. Never clear
+  values before confirmation. Keep editing preserves them; Discard changes explicitly resets
   and leaves. Keep the shell-specific close rules from the linked guides.
 - Bind the primary action to one real form submit path. Cancel, Close, Add Details, and other
   non-submit actions are button type. Do not call the same mutation from both onClick and

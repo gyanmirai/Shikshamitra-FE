@@ -4,6 +4,19 @@ Adapted from [DESIGN.md](../../../../DESIGN.md) and
 [FE implementation patterns](../../shikshamitra-fe-patterns/references/implementation-patterns.md).
 Read the applicable design-contract section when a rule requires additional detail.
 
+## Copy and rule precedence
+
+- Follow explicit user requirements, repository security/backend contracts, and `DESIGN.md`.
+  Skill examples and captured legacy UI cannot override those authorities.
+- Use Title Case for task/dialog/drawer/section titles, preserving entered record names and
+  acronyms. Use sentence case for fields, helpers, messages, and button actions: `Keep editing`,
+  `Discard changes`, `Save draft`, `View record`. Ordinary form submission remains `Submit`.
+- This resolves the former blanket Title Case action rule. Old images and source literals may
+  retain different casing; record that difference rather than copying it into new work.
+  Preserve an explicit user-required label as a scoped exception, not a global capitalization rule.
+- Component source defines available props; the guide defines intended UI behavior. Report API
+  gaps and visible mismatches instead of claiming a screenshot or broad type proves compliance.
+
 ## Build with the current components
 
 | Concern | Existing source to inspect |
@@ -23,6 +36,7 @@ Read the applicable design-contract section when a rule requires additional deta
 | Cancel action | `src/components/cancel-button/index.tsx`, `inerface.ts` |
 | Button sizes/icons/states and loading alias | [Button family](button-family.md); `src/components/loading-button/index.ts`, `src/components/form-busy-region/index.tsx` |
 | Notifications | `src/components/toast/` |
+| New component/workspace families | [Main routing table](../SKILL.md#pattern-routing): status labels, feedback, help/popovers, multi-selects, choices, editor, accordion, academic scope, contact fields, navigation, dashboards, notifications, trees, operational workspaces |
 | Colors and typography | `src/theme/core/palette.ts`, `typography.ts`, `components/button.tsx` |
 
 - Reuse or extend the appropriate shared component before creating a local primitive. Use MUI

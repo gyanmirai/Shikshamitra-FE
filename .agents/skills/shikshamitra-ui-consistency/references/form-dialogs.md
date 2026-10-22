@@ -39,6 +39,12 @@ Use the screenshot for composition, not permission or validation rules. Its `Sub
 section title is superseded by the user's confirmed Title Case: `Subject Details`. Apply the
 shared section typography and sentence-case field terminology rather than copying older casing.
 
+![Local Add Subject form at phone width in dark theme](../assets/local-form-mobile-dark.jpg)
+
+The local 22 October capture adds a blank 390 x 844 dark-theme state with Subject Details help,
+body scrolling, and a reachable Cancel/Submit footer. It does not establish busy/validation states
+or justify copying every field's requiredness. See [capture metadata](image-references.md#local-app-captures-22-october-2026).
+
 ## Anatomy and component choice
 
 ```text
@@ -141,14 +147,14 @@ or touched flag alone is not a change. Never reset values before asking whether 
 | --- | --- |
 | Clean Cancel/X/Escape | Close once and clean up the session; no unnecessary discard prompt |
 | Dirty Cancel/X/Escape | Keep dialog/values mounted; open one `Discard Unsaved Changes?` confirmation |
-| `Keep Editing` or safe confirmation dismissal | Close only confirmation, retain values, return focus to the form |
-| `Discard Changes` | Reset the draft, selected edit identity, and local dirty baseline; close both surfaces; do not save |
+| `Keep editing` or safe confirmation dismissal | Close only confirmation, retain values, return focus to the form |
+| `Discard changes` | Reset the draft, selected edit identity, and local dirty baseline; close both surfaces; do not save |
 | Backdrop click | Current `CustomDialog` ignores it, even while clean; preserve this default. If explicitly enabled later, route it through the same close guard |
 | Blocking load/save | Lock affected inputs, Submit, Cancel, X, Escape, and conflicting navigation; prevent duplicate submit and close/discard races |
 | Failed submit | Keep values/errors and context; release lock; allow retry or guarded cancellation |
 | Successful submit | Reset baseline/session and close according to the workflow; do not show an immediate discard prompt |
 
-Use the existing `ConfirmDialog` with safe `Keep Editing` and explicit `Discard Changes` actions,
+Use the existing `ConfirmDialog` with safe `Keep editing` and explicit `Discard changes` actions,
 following [confirmations.md](confirmations.md). Keep its backdrop from discarding values. Do not
 stack a browser confirmation and custom confirmation for the same attempt.
 
@@ -166,16 +172,16 @@ dirty state isolated from a parent form. Do not clear global parent dirty state 
 | Shell | `open`, `handleClose`, `title`, optional `titleInfo`, `maxWidth`, `paperProps`, and MUI dialog props |
 | Close protection | `disableClose`, `hasUnsavedChanges`, `guardUnsavedChanges`; no `onDiscard` or `onConfirmClose` prop |
 | Body | Named `DialogScrollContent` export; put `DialogActions` outside it |
-| Form element | `hasForm` defaults true; the shell renders a form whose current submit handler only prevents default |
+| Form element | `hasForm` defaults true; `formProps` supports `onSubmit` and `noValidate` on the shell form. Without a supplied handler its default only prevents default |
 | Owned form | For a single feature-owned `<form onSubmit={formik.handleSubmit}>`, use `hasForm={false}` so the shell is non-form; never nest forms |
 | Keyboard submission | Wire one actual form-submit path; do not pair the same `submitForm()` click handler with a second native handler that duplicates the mutation |
 | Shortcut | `DialogScrollContent.onSubmit` adds Ctrl/Cmd+Enter handling; do not supply it for ordinary forms or advertise a shortcut |
 | Confirmation | `ConfirmDialog` takes `open`, `onClose`, `cancelText`, `action`, and dismissal locks; action callbacks belong to the owner |
 
-For a feature-owned form, keep that form a flex column around the scroll body and footer, and
-let its native submit event reach Formik once. Default `hasForm={true}` alone is not proof of
-Enter-key submission. Extend/reuse a supported shared submission pattern if the feature needs
-one; do not invent a Formik-specific shell prop or silently sacrifice keyboard submission.
+Use either the shell form with `formProps={{ onSubmit: formik.handleSubmit, noValidate: true }}`
+or one feature-owned form with `hasForm={false}`. Keep the scroll body and footer inside that
+same form and let native submission reach Formik once; never nest forms or add a second
+click-to-submit path. Default `hasForm={true}` alone is not proof of Enter-key submission.
 
 ## Component relationships
 
@@ -195,15 +201,14 @@ one; do not invent a Formik-specific shell prop or silently sacrifice keyboard s
 Verify compact-dialog versus drawer choice; Title Case title/section; header and section help;
 required markers; useful field help/errors; shared spacing; outlined Cancel/dark Submit with
 leading icons and small size; body-only scroll; one submit path; dirty versus clean Cancel/X/Escape;
-Keep Editing/Discard; busy locks; save failure/success; focus return; both themes and narrow widths.
+Keep editing/Discard; busy locks; save failure/success; focus return; both themes and narrow widths.
 For documentation changes check links/assets, skill structure, and whitespace. UI changes also
 need focused checks and the required in-app browser smoke test.
 
-Confirmed source differences: the Subject section uses `Subject details` and default `subtitle2`
-instead of the shared Title Case/`subtitle1` section standard; edit uses `Update` with an Edit icon
-rather than ordinary `Submit` with the submit icon. Subject and shell paths currently use native
-browser confirmations rather than the shared discard popup. The shell's default native submit
-handler only prevents default, and some title/section/field icons do not use `GlobalIcons`.
-Those are implementation gaps to resolve when changing the UI; documentation does not fix them.
-Runtime dirty-close behavior, keyboard submission, loading locks, focus, color-choice accessibility,
-both-theme styling, and viewport matching remain Unverified until tested in the running application.
+Historical source/image differences included `Subject details`/`subtitle2`, Update/Edit styling,
+and a native Subject discard prompt. The local dark-phone capture now shows Subject Details,
+Submit, and the shared discard warning. Do not retain obsolete claims that every Subject path
+uses the older implementation. Inspect the current owner and supported `formProps` API.
+The shell still has a native fallback close guard, a default prevent-only submit handler, and
+some literal icon identifiers. Documentation does not fix any application behavior. Runtime
+submission, busy locks, full focus/keyboard behavior, and uncaptured states remain Unverified.
