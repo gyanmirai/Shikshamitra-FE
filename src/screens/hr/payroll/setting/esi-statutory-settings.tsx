@@ -53,7 +53,8 @@ import {
 
 // One contained workspace owns the scroll body and its stable action footer.
 const settingsWorkspaceSx = {
-  flex: 1,
+  flex: '0 1 auto',
+  maxHeight: '100%',
   minHeight: 0,
   minWidth: 0,
   display: 'flex',
