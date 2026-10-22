@@ -54,6 +54,10 @@ Stable form footer:                                         Cancel | Submit
 - Section spacing remains `2`; fields/helpers align and stack on narrow widths. The content has
   one clear scroll owner. Footer must not cover the last field/error; add only its actual layout
   allowance, not arbitrary screen-height spacers or a table-workspace height rule.
+- For a contained settings workspace, keep the scroll body and footer inside one paper surface with a shared border and rounded outer boundary.
+  The footer spans that container, uses its horizontal inset, and separates from the body with a quiet top divider.
+  Keep the footer outside the scrolling body so actions remain reachable without covering content.
+  Use the same boundary and insets while loading; do not let footer backgrounds extend into the surrounding page.
 - Keep Cancel before the neutral dark contained Submit, small size with relevant GlobalIcons
   leading icons. Follow the existing common form rule for ordinary submissions; the image's
   `Add Chapter` is a legacy label, not a new universal button convention.

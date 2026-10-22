@@ -38,6 +38,7 @@ export default function StatutorySchemesPage() {
       {canView ? (
         <>
           <CustomTabs
+            density="compact"
             value={view}
             guardUnsavedChanges={false}
             aria-label="ESIC settings areas"

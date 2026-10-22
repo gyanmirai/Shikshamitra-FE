@@ -13,6 +13,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 // ----------------------------------------------------------------------
 
 export type CustomTabsProps = TabsProps & {
+  /** Compact settings rows; touch pointers retain a 44 px tab target. */
+  density?: 'standard' | 'compact';
   /** Disable only when tabs share one preserved form and its parent owns the leave guard. */
   guardUnsavedChanges?: boolean;
   slotProps?: TabsProps['slotProps'] & {
@@ -31,6 +33,7 @@ export function CustomTabs({
   sx,
   onChange,
   orientation = 'horizontal',
+  density = 'standard',
   guardUnsavedChanges = true,
   ...other
 }: CustomTabsProps) {
@@ -39,6 +42,7 @@ export function CustomTabs({
   const dispatch = useDispatch();
 
   const isVertical = orientation === 'vertical';
+  const isCompact = density === 'compact';
 
   return (
     <Tabs
@@ -50,7 +54,8 @@ export function CustomTabs({
         backgroundColor: theme.vars.palette.background.paper,
         alignItems: isVertical ? 'flex-start' : 'center',
         [`& .${tabsClasses.scroller}`]: {
-          p: 1,
+          px: 1,
+          py: isCompact ? 0.5 : 1,
           ...slotProps?.scroller,
         },
         [`& .${tabsClasses.flexContainer}`]: {
@@ -65,13 +70,13 @@ export function CustomTabs({
         [`& .${tabsClasses.indicator}`]: {
           ...(isVertical
             ? {
-                px: 1,
+                px: isCompact ? 0.5 : 1,
                 width: 1,
                 left: 0,
                 right: 'auto',
               }
             : {
-                py: 1,
+                py: isCompact ? 0.5 : 1,
                 height: 1,
               }),
           bgcolor: 'transparent',
@@ -87,10 +92,13 @@ export function CustomTabs({
           },
         },
         [`& .${tabClasses.root}`]: {
-          py: 1,
-          px: 2,
+          py: isCompact ? 0.5 : 1,
+          px: isCompact ? 1.5 : 2,
           zIndex: 1,
-          minHeight: 44,
+          minHeight: isCompact ? 36 : 44,
+          ...(isCompact && {
+            '@media (any-pointer: coarse)': { minHeight: 44 },
+          }),
           ...(isVertical && {
             width: 1,
             alignItems: 'flex-start',

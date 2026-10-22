@@ -222,6 +222,8 @@ Tabs represent peer content areas within one stable context.
 Use a pure shared tab primitive and preserve the page header and tab row while the active panel changes.
 Use the compact icon-tab treatment for primary workspace tabs: place the tab list in one full-width contained surface, use a short leading icon that reinforces each label, and make the selected state immediately distinguishable through color and contrast.
 Keep the control visually compact while preserving a minimum 44 px touch target, visible keyboard focus, readable labels, and contained horizontal scrolling on narrow screens.
+For short peer settings tabs, use the shared `density="compact"` variant documented in the [CustomTabs guide](.agents/skills/shikshamitra-ui-consistency/references/custom-tabs.md#compact-settings-variant).
+It uses a 36 px minimum tab height on fine-pointer devices and retains 44 px whenever a coarse pointer is available.
 Do not use icons without text for primary workspace navigation, and do not choose decorative or ambiguous icons.
 Tabs that change meaningful page content must use normal link semantics and URL-backed state.
 Report views, board or list modes, paging, sorting, meaningful filters, the selected admission year, and other shareable state must survive reload and browser navigation.

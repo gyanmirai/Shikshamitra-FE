@@ -60,8 +60,9 @@ Use existing theme/component values (spacing unit currently 8 px), not screensho
 | Row separation | Compact 1-unit separation between workspace/filter/table surfaces, owned once by the parent composition |
 | Labeled actions | Small outlined neutral insights, then small contained inherit create; theme height 30 px, leading GlobalIcons, content-width |
 
-Tabs have at least a 44 px target; the adjacent labeled buttons retain the 30 px compact theme
-height. Center them vertically rather than stretching buttons to tab height. Use normal theme
+Standard tabs have at least a 44 px target; compact tabs retain it on touch devices.
+The adjacent labeled buttons retain the 30 px compact theme height.
+Center them vertically rather than stretching buttons to tab height. Use normal theme
 font settings and visible focus; avoid a wildcard font-size rule or `!important` overrides.
 The screenshot screen's fixed 160 px create-button width is a local implementation detail,
 not a universal requirement. Do not force equal-width tabs unless intentional `fullWidth` is needed.
@@ -69,6 +70,24 @@ not a universal requirement. Do not force equal-width tabs unless intentional `f
 On narrow screens allow contained horizontal tab scrolling with the shared scroll controls.
 Keep text labels. Move/wrap the action group onto its own right-aligned row when needed, followed
 by filters and content; do not hide the primary action or introduce document-level overflow.
+
+### Compact settings variant
+
+Use `density="compact"` for short peer settings tabs, as in Statutory Schemes.
+The shared component owns the density instead of feature-level tab height overrides.
+Standard density remains the default for other workspaces.
+
+| Element | Compact value |
+| --- | --- |
+| Tab target | 36 px minimum on fine-pointer devices; 44 px when any pointer is coarse |
+| Scroller inset | `px: 1`, `py: 0.5` |
+| Tab padding | `px: 1.5`, `py: 0.5` |
+| Filled indicator inset | `py: 0.5` horizontally; `px: 0.5` vertically |
+
+Keep visible labels, leading icons, selected contrast, keyboard focus, panel relationships, and contained scrolling.
+Use minimum heights so enlarged text and long labels can grow naturally.
+The supplied ESIC screenshot identifies excessive spacing to correct, not a target to reproduce.
+The Learning Tasks image establishes the standard variant; compact screenshot matching remains unverified until browser review.
 
 ## Definitions, selected state, and navigation
 
@@ -111,6 +130,7 @@ Block conflicting switches while a mutation cannot safely be interrupted.
 | --- | --- |
 | `value`, `onChange(event, value)`, children | Controlled selected state; the wrapper renders MUI Tabs, caller renders Tab children and panels |
 | `orientation` | Horizontal by default; vertical aligns items left using shared styles |
+| `density` | `standard` by default; `compact` reduces settings-row padding and fine-pointer tab height while preserving touch targets |
 | `variant`, scroll props | Inherited MUI Tabs props; theme defaults scrollable with mobile scroll buttons allowed |
 | `slotProps` | This wrapper's named style objects: `scroller`, `indicator`, `tab`, `selected`, `scrollButtons`, `flexContainer`; inspect before assuming standard MUI slot component props |
 | `guardUnsavedChanges` | True by default; disable only under the complete owning-form guard described above |
