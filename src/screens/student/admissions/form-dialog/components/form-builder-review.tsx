@@ -3,10 +3,12 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { useRef, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { Box, Card, Stack, Typography } from '@mui/material';
 
 import { FormReviewSection } from './form-review-section';
+import { getAdmissionLanguageLabel } from '../form-languages';
 import { FormValidationPanel } from '../form-validation-panel';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { AdmissionDialogTitle } from '../../admission-dialog-title';
@@ -17,6 +19,10 @@ type Props = { formik: FormikProps<CreateUpdateAdmissionForm> };
 
 export function FormBuilderReview({ formik }: Props) {
   const form = formik.values;
+  const [language, setLanguage] = useState(form.defaultLanguage ?? 'en');
+  const supportedLanguages = form.supportedLanguages?.length
+    ? form.supportedLanguages
+    : [form.defaultLanguage ?? 'en'];
   const desktop = useResponsive('up', 'md');
   const steps = getAdmissionFormStepGroups(form.sections);
   const [activeStepId, setActiveStepId] = useState<string | null>(null);
@@ -74,8 +80,18 @@ export function FormBuilderReview({ formik }: Props) {
         overflow: 'hidden',
       }}
     >
-      <Box sx={{ minWidth: 0, flexShrink: 0 }}>
-        <Typography component="h2" variant="h6" tabIndex={-1} sx={{ overflowWrap: 'anywhere' }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        justifyContent="space-between"
+        sx={{ minWidth: 0, flexShrink: 0 }}
+      >
+        <Typography
+          component="h2"
+          variant="h6"
+          tabIndex={-1}
+          sx={{ minWidth: 0, flex: 1, overflowWrap: 'anywhere' }}
+        >
           {form.description ? (
             <AdmissionDialogTitle
               title={form.name || 'Untitled form'}
@@ -86,7 +102,21 @@ export function FormBuilderReview({ formik }: Props) {
             form.name || 'Untitled form'
           )}
         </Typography>
-      </Box>
+        {supportedLanguages.length > 1 && (
+          <CustomSelect
+            size="small"
+            label="Form language"
+            value={language}
+            disabled={formik.isSubmitting}
+            options={supportedLanguages.map((code) => ({
+              value: code,
+              label: getAdmissionLanguageLabel(code),
+            }))}
+            onChange={(value) => setLanguage(String(value))}
+            formControlProps={{ sx: { width: { xs: 1, sm: 220 }, flexShrink: 0 } }}
+          />
+        )}
+      </Stack>
       <FormValidationPanel form={form} />
       <Stack
         direction={{ xs: 'column', md: 'row' }}
@@ -139,6 +169,7 @@ export function FormBuilderReview({ formik }: Props) {
                 key={section.id}
                 formik={formik}
                 sectionIndex={sectionIndex}
+                language={language}
                 answers={previewAnswers}
                 onChangeAnswer={changeAnswer}
               />

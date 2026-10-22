@@ -44,7 +44,10 @@ const ALL_INQUIRY_SOURCES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export function useAdmissionInquiryDialog(onClose: () => void) {
   const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
-  const previousForm = useRef<{ fields: AdmissionFormField[]; values: Record<string, string> } | null>(null);
+  const previousForm = useRef<{
+    fields: AdmissionFormField[];
+    values: Record<string, string>;
+  } | null>(null);
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [duplicateOverrideReason, setDuplicateOverrideReason] = useState('');
@@ -123,14 +126,33 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     : '';
 
   useEffect(() => {
-    if (!canCreateInquiry || readingPhoto || runtimeLoading || runtimeError || offeringDetail?.id !== formik.values.offeringId) return;
+    if (
+      !canCreateInquiry ||
+      readingPhoto ||
+      runtimeLoading ||
+      runtimeError ||
+      offeringDetail?.id !== formik.values.offeringId
+    )
+      return;
     let next = formik.values.fields;
     if (!Object.keys(next).length) {
-      next = preserveCompatibleInquiryAnswers(previousForm.current?.fields ?? [], fields, previousForm.current?.values ?? {});
+      next = preserveCompatibleInquiryAnswers(
+        previousForm.current?.fields ?? [],
+        fields,
+        previousForm.current?.values ?? {}
+      );
       if (Object.keys(next).length) formik.setFieldValue('fields', next, false);
     }
     previousForm.current = { fields, values: next };
-  }, [canCreateInquiry, fields, formik, offeringDetail, readingPhoto, runtimeError, runtimeLoading]);
+  }, [
+    canCreateInquiry,
+    fields,
+    formik,
+    offeringDetail,
+    readingPhoto,
+    runtimeError,
+    runtimeLoading,
+  ]);
 
   useAdmissionUnsavedChanges(true, formik.dirty);
 
@@ -210,6 +232,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   return {
     formik,
+    ageContext: !runtimeLoading && !runtimeError ? runtime.currentData : undefined,
+    form,
     sections,
     fields,
     matches,
@@ -267,7 +291,11 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     allowedSources,
     canAutoAcknowledge,
     onPhotoReading,
-    busy: readingPhoto || createState.isLoading || duplicateState.isLoading || communicationState.isLoading,
+    busy:
+      readingPhoto ||
+      createState.isLoading ||
+      duplicateState.isLoading ||
+      communicationState.isLoading,
     useExistingFamily: async (familyId: string) => {
       if (
         !matches.some(

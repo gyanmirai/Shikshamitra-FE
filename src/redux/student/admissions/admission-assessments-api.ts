@@ -6,6 +6,7 @@ import { ASSESSMENTS_URL, unwrapAssessment } from './admission-assessment-types'
 import type {
   AssessmentStageKey,
   ApplicationAssessment,
+  AssessmentResultInput,
   AssessmentAttemptAction,
 } from './admission-assessment-types';
 
@@ -43,12 +44,18 @@ export const admissionAssessmentsApi = api.injectEndpoints({
       transformResponse: unwrapAssessment<ApplicationAssessment>,
       invalidatesTags: assessmentTags,
     }),
-    recordAssessmentResult: builder.mutation<
-      ApplicationAssessment,
-      AssessmentAttemptAction & { marks?: number; outcome?: 'passed' | 'failed' }
-    >({
+    recordAssessmentResult: builder.mutation<ApplicationAssessment, AssessmentResultInput>({
       query: ({ attemptId, ...body }) => ({
         url: `${ASSESSMENTS_URL}/attempts/${attemptId}/result`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: unwrapAssessment<ApplicationAssessment>,
+      invalidatesTags: assessmentTags,
+    }),
+    saveAssessmentResultDraft: builder.mutation<ApplicationAssessment, AssessmentResultInput>({
+      query: ({ attemptId, ...body }) => ({
+        url: `${ASSESSMENTS_URL}/attempts/${attemptId}/result-draft`,
         method: 'PUT',
         body,
       }),
@@ -93,6 +100,7 @@ export const {
   useBookAssessmentAttemptMutation,
   useRecordAssessmentAttendanceMutation,
   useRecordAssessmentResultMutation,
+  useSaveAssessmentResultDraftMutation,
   useAllowAssessmentRetakeMutation,
   useCancelAssessmentAttemptMutation,
   useWaiveApplicationAssessmentMutation,

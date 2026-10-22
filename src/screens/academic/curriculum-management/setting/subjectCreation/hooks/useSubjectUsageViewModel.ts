@@ -63,6 +63,7 @@ export function useSubjectUsageViewModel(usageData?: SubjectUsageData | null) {
     lessonPlans: usage?.lessonPlansCount ?? 0,
     homework: usage?.homeworkCount ?? 0,
     teachers: usage?.teacherMappingsCount ?? 0,
+    admissionAssessments: usage?.admissionAssessmentsCount ?? 0,
   };
 
   const metrics: SubjectDependencyMetric[] = [
@@ -74,6 +75,7 @@ export function useSubjectUsageViewModel(usageData?: SubjectUsageData | null) {
     { label: 'Lesson plans', value: counts.lessonPlans },
     { label: 'Homework records', value: counts.homework },
     { label: 'Assigned teachers', value: counts.teachers },
+    { label: 'Admission assessments', value: counts.admissionAssessments },
   ];
   const dependentModuleCount = metrics.filter((metric) => metric.value > 0).length;
 

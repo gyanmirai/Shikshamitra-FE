@@ -3,12 +3,80 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-18
+updated_on: 2026-10-22
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Lowercase email and View-owned document decisions (2026-10-22)
+
+The focused email suites passed 78 frontend assertions covering entry/paste, metadata-configured email fields, staff/public Inquiry payloads, direct Registration, Registration save, read-only/repeated answers and non-email case preservation.
+The backend focused suite passed 13 cases, including persisted Inquiry create/edit and Registration insert/update normalization; see `.artifacts/email-normalization/test-run.log` in the backend checkout.
+No migration, identity/account change or deployment is part of this change.
+
+All 49 document regressions pass across ten suites, including View-only row actions, actual protected preview/download, independent review, historical/permission guards, required rejection reasons, pinned evidence/stamps, error recovery and pending submission locks.
+The final report is `.artifacts/email-document-ui/document-all-final-tests.json`; the earlier failed worker-start runs are superseded.
+The review dialog uses the current MUI Button loading API and the extracted preview title has a valid UTF-8 separator.
+The full frontend typecheck and scoped ESLint pass; the two formatting warnings were corrected and their files relinted.
+
+Before the interruption, authenticated localhost review of the existing completed `APP-2026-000001` document stage confirmed icon-only View rows, actual PNG preview, desktop side-by-side review and mobile stacking at 390 x 844 without document overflow.
+That case was read-only, so it does not establish browser approval/rejection acceptance on an active case.
+The final in-app browser pass used an isolated localhost QA fixture with the real shared runtime email field, email save normalizer, ApplicationDocumentsPanel, View dialog, RTK Query commands, project theme and global styles.
+Its API responses and persistence are simulated; it does not establish live school-API mutation acceptance.
+The inspected live Class 1 QA Inquiry forms have no configured Email field, and the inspected existing document case is completed/read-only, so those records were not changed to manufacture editable-state coverage.
+Desktop 1440 x 900 and mobile 390 x 844 verified mixed-case typing/paste, lowercase save/reload, actual PNG preview, Approve, reason-required Reject, retained reasons after simulated failure, successful retry and pending Close/Cancel/input locks.
+Desktop, tablet 768 x 1024 and mobile passed light/dark review layout checks without document-level horizontal overflow; footer actions remained reachable.
+Keyboard focus exposes the View tooltip, Enter opens the dialog, and Escape restores focus to View.
+Evidence and the fixture command payloads are in `.artifacts/email-document-ui/screenshots/` and `.artifacts/email-document-ui/browser-qa/recorded-results.json`.
+No school applicant, permission, real email delivery, credential, enrollment or Finance record was changed by these browser checks.
+
+## Class-wise combined assessment subjects (2026-10-21)
+
+The focused runtime run passes 100 tests across 11 suites for subject fields, partial drafts, final results, bulk profile grouping, retries/concurrency and frozen attempt history. The focused configuration/policy/decimal/scalar-editor run passes 66 tests; the subsequent loading-state configuration suite passes all 7 cases, including retained edits after catalog failure/retry. Scoped ESLint and Prettier checks pass. The final scoped TypeScript run reports zero diagnostics in 40 feature files and 280 transitive diagnostics in other dependencies/generated development files; this is not a full-repository build or typecheck pass.
+
+The existing Assessment stage drawer now uses class profiles with Board, Medium, classes, school/custom subjects, marks and pass rules. First catalog load shows a skeleton; lookup failures retain saved profile values and entered marks without falsely labelling them unavailable. Existing scalar/manual setup remains covered by the focused editor/policy tests.
+
+Authenticated localhost QA has saved/reloaded school-linked English plus custom subjects, retained two distinct class profiles, published `QA Subject Admission 21Oct` and verified the workflow-table redirect. The separate `QA Subject Assessment 21 Oct` admission period contains Open/Ready Class 1 and Class 5 Offerings. Local setup proof is `.artifacts/assessment-subjects-ui/qa-offerings-open.jpg`.
+
+Persisted localhost browser QA created synthetic `APP-2026-000006` through staff Offering selection and `APP-2026-000007` through the actual public inquiry link. Both were booked into `QA Combined Subjects 21 Oct`, with their different frozen class profiles, and both attendance entries saved as Present. A Class 5 draft retained Mathematics `0` and null Science/English after reload; incomplete final submission was rejected. Bulk submission correctly passed Class 1 at `0 + 16 = 16/40` under the overall rule and failed Class 5 at `45 + 15 + 11 = 71/100` because English was below its per-subject minimum. Applicant 360 displays the saved subject breakdown and pass result. Evidence includes `.artifacts/assessment-subjects-ui/class1-subject-pass-applicant360.jpg`; read-only database inspection independently confirms the nullable draft and final scores.
+
+The Class 5 retake request saved successfully. An overlapping retake preview returned no eligible applicants and direct booking rejected the occupied appointment window, consistently preserving existing scheduling rules. A non-overlapping second session booked successfully with fresh Pending subject scores and retained first-attempt history. Attendance and result entry stayed unavailable until its scheduled start. After Present attendance, Applicant 360 saved a partial `20 + 8 + blank` draft; the final `20 + 8 + 12 = 40/100` passed both overall and per-subject boundaries. Normal Continue then advanced to the prepared Form stage. Future Form drafts could be saved, but Submit remained disabled until that stage became current. A duplicate background test Host was stopped to free debugger ports; testing finished on the user's debugger instance without another API restart.
+
+Live validation also exposed the browser's native required-field popup targeting untouched bulk rows. The feature-local Submit action now uses `type="button"`, matching existing controlled-dialog patterns; required field markers and controlled validation remain intact. The three-case bulk UI suite, scoped ESLint and Prettier pass, including a native-form regression for untouched applicants, zero marks, partial drafts and final submission. The live retry confirmed `type="button"`, the controlled missing-English error and no stage advancement.
+
+Both actual saved QA applicants completed all five stages and Student finalization through the normal UI.
+
+| Case | Source and assessment | Document path | Finance handoff | Final result |
+|---|---|---|---|---|
+| `APP-2026-000006` | Staff inquiry; failed first attempt, whole-exam retake passed at 40/100 | Clearly marked synthetic PDF uploaded, downloaded with matching SHA256, accepted and linked to Student | No matching published Class 5 structure; explicit setup/collection deferral reason | Student and Onboarding case created; required document step Completed |
+| `APP-2026-000007` | Public inquiry link; overall-rule pass at 16/40 | Existing Admissions-to-Onboarding deferral; required Birth certificate remains Pending | Existing published Class 1 structure confirmed; explicit collection deferral reason | Student and Onboarding case created; required document remains a readiness blocker |
+
+Screenshots are retained under `.artifacts/assessment-subjects-ui/`, including `class5-retake-passed-applicant360.jpg`, `class1-admission-finalized.jpg`, `class5-admission-finalized.jpg` and `bulk-incomplete-retake-validation.jpg`.
+The existing native PDF preview rendered blank in this in-app browser; inline PDF rendering is not certified, while upload, downloaded-byte equality and acceptance are verified.
+No payment posting, enrollment activation, account activation or credential delivery was performed.
+See [backend testing](../../../Shikshamitra-BE/docs/modules/student/testing.md) for persistence, migration and PostgreSQL evidence.
+
+## Pipeline applicant drawer (2026-10-21)
+
+Pipeline opens its existing applicant workspace in a wide right drawer using the `application` query parameter. The worklist stays mounted with its filters, sort and pagination; legacy Pipeline-origin detail links forward to that same drawer. Assessment-origin standalone returns and the server-authoritative Decision/Withdrawn handoff to Applications remain intact. The header replaces counsellor assignment and More with permission-aware Notes & Follow-ups, Application History, Admission journey, Focus mode and Close icons, using `CustomTooltip`. Existing review/current-step/authorized skip/override actions remain in the journey popover. List-level counsellor assignment is unchanged. Focus mode resizes the same mounted workspace, preserving form state; dismissal retains the existing busy/dirty guard and restores keyboard focus to the applicant row, with search as a fallback.
+
+The focused nine-suite regression passed 113 cases covering applicant detail/phase routing, icon tooltips and keyboard actions, Pipeline list/query/deep links, runtime form navigation, the existing activity drawer, return URL validation and unsaved navigation. The final focus-restoration worklist rerun passed 14 overlapping cases. Changed-source ESLint passed with zero warnings after import ordering, affected-source TypeScript passed, and formatting/documentation/whitespace checks are separate gates. The scoped configuration and test reports are under `.artifacts/applicant-drawer-20261021/`; this is not a full-repository build or production acceptance.
+
+Authenticated local checks on the existing `APP-2026-000001` covered 1440×900, 768×1024 and 390×844. The normal desktop drawer measured 84% viewport width; Focus mode reached full width and retained the selected Family step. Tablet/mobile drawers filled their viewport, document widths matched viewport widths, mobile icons measured 44×44, and the mobile journey popover stayed within bounds. At 390×600, the form body scrolled while the header, form navigation and journey footer remained reachable. Notes/Follow-ups and Application History opened through their existing reads, and the shared tooltip used the theme's white surface in light mode. Screenshots use `desktop-`, `tablet-` and `mobile-` names in the artifact directory. No live form, follow-up, payment or admission mutation was submitted for these checks. Backend and Finance behavior were unchanged.
+
+During final browser work, the local frontend served a malformed development response and its session endpoint timed out, while the generated file passed JavaScript syntax checking and the API still responded. The identified webpack development process was restarted with its cache retained; this local runtime recovery is separate from source/test evidence.
+
+After recovery, the authenticated draft `APP-2026-000003` retained a temporary unsaved Middle name through Focus mode and Exit focus mode. Close opened the existing discard confirmation; Keep editing retained that value, and Discard changes restored the original blank field before returning to the same filtered Pipeline. Keyboard focus returned to that applicant's Continue link. The temporary value was never saved.
+
+## Unified Student Setup regression coverage
+
+The `student-quick-setup-*` suites exercise sequential dependent saves, published assignment modes, preserved existing identifiers, partial retry, current activation-preview stamps and post-activation access-pending results. `student-onboarding-fees.ui.test.tsx` covers parent-coordinated confirmation, fresh stamps, draft retention, duplicate saves, completed Admissions evidence and collection-dialog locking. `student-setup-screen.ui.test.tsx` covers full-page entry with the worklist hidden but mounted, retained filters and pagination, breadcrumb Back with the existing dirty/busy guard, deep-link loading/error recovery, draft retention behind Details & History and retention after a row leaves the pending list. `student-quick-setup-page.ui.test.tsx` covers non-modal page semantics, the Class & Numbers/App Login top row with separate Fees and Documents rows, footer actions, no explicit automatic credential sending, server blockers, read-only access and academic-year changes.
+
+Run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/onboarding/student-setup --pool=threads --maxWorkers=2`. Component tests use isolated service mocks and do not prove real payment or email transport. Browser checks must not activate an unrelated live student or send credentials merely to validate layout.
+
+The compact Fees tests cover right-aligned saved status, chevron expansion, retained receipt content and busy locks. Document workspace tests cover name-only rows, icon alignment, unchanged status/permission/write guards, secure image/PDF dialog previews, loading/retry, URL cleanup, mobile Escape and focus return. Routine metadata remains accessible through the existing evidence History dialog.
 
 ## Fee-selection and collection cache synchronization (2026-10-18)
 
@@ -94,13 +162,13 @@ The QA runtime used a working-tree source copy taken at test setup; later parall
 The three action roles had View only, View plus Add/Update, or View plus Delete; the fourth had module visibility but no Student feature grants.
 These checks used real frontend/backend calls, and all saved changes stayed in the disposable database.
 
-| Role or boundary | Verified browser result |
-| --- | --- |
-| View only | Forms loaded with Add disabled and no Edit, Publish or Delete controls; history remained available. Onboarding Settings showed its read-only notice with Save and the student-access switch disabled. House Settings loaded an empty selected context with Add disabled. Attendance showed no active assignment and disabled Save/Submit. |
-| Add/Update | Created `QA Browser AddUpdate 16Oct2026`, renamed it to `QA Browser AddUpdate Updated 16Oct2026`, and verified the saved name after reload; Delete was absent. Published the isolated `QA Student Publish 5a305b9d5c` workflow and verified Published after reload. |
-| Attendance browser/write checks | The Add/Update user saved a draft, submitted and locked attendance for three students in assigned Class 3-A; the lock persisted after reload. A direct Class 3-B bookmark showed the scope warning with Save, Submit and Lock disabled. This verifies browser controls and the tested writes, not API read isolation. |
-| Delete | Add was disabled, Edit/Publish were absent and Delete was enabled. Deleted only `QA Student Browser Delete 5a305b9d5c` through confirmation; reload showed no matching row while the separately created form remained. |
-| No feature View | Direct navigation to the Forms URL showed No permission, no form table and no feature entries in the sidebar. |
+| Role or boundary                | Verified browser result                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| View only                       | Forms loaded with Add disabled and no Edit, Publish or Delete controls; history remained available. Onboarding Settings showed its read-only notice with Save and the student-access switch disabled. House Settings loaded an empty selected context with Add disabled. Attendance showed no active assignment and disabled Save/Submit. |
+| Add/Update                      | Created `QA Browser AddUpdate 16Oct2026`, renamed it to `QA Browser AddUpdate Updated 16Oct2026`, and verified the saved name after reload; Delete was absent. Published the isolated `QA Student Publish 5a305b9d5c` workflow and verified Published after reload.                                                                       |
+| Attendance browser/write checks | The Add/Update user saved a draft, submitted and locked attendance for three students in assigned Class 3-A; the lock persisted after reload. A direct Class 3-B bookmark showed the scope warning with Save, Submit and Lock disabled. This verifies browser controls and the tested writes, not API read isolation.                     |
+| Delete                          | Add was disabled, Edit/Publish were absent and Delete was enabled. Deleted only `QA Student Browser Delete 5a305b9d5c` through confirmation; reload showed no matching row while the separately created form remained.                                                                                                                    |
+| No feature View                 | Direct navigation to the Forms URL showed No permission, no form table and no feature entries in the sidebar.                                                                                                                                                                                                                             |
 
 Account identity was checked for each persona, and the backend independently verified the exact role grants.
 The browser result ledger and seven screenshots are retained under `.artifacts/student-role-browser-evidence/`; the ledger is `.artifacts/student-role-browser-evidence/browser-results.json`.
@@ -1225,3 +1293,11 @@ The checkbox investigation confirmed that inactive assessment stages are deliber
 The final eleven focused suites pass 130 tests. Coverage includes existing-session booking, one drawer switching between booking/Add Slot, small action buttons, fixed class/stage mapping, shared room fields, common-date serialization, exactly one current-applicant confirmation, unavailable/approval-required guards, uncertain-response replay after booking capability changes, fresh preview after concurrency rejection, retained form errors, unsaved-back protection, permission restrictions, owner-specific Pipeline/Applications headings and existing session/Continue/API regressions. Drawer tests exercise real Formik, Drawer and booking controls with mocked service hooks; API regression suites separately verify request/cache behavior. Fifteen affected source/test files pass focused TypeScript and repository-rule lint, and Student documentation validation passes. Evidence: `D:/CodexArtifacts/assessments-v2-fe/pipeline-drawer-tests-final.log`, `pipeline-types-final.log` and `pipeline-lint-final.log`.
 
 The existing browser tabs show connection-refused pages, so this revision has no new authenticated visual, save/reload or staging acceptance. No test server was started or real applicant modified for this change. Earlier local screenshots are not evidence for the new drawer.
+
+## Inquiry age advisory verification (21 October 2026)
+
+- 57 focused frontend tests pass across inquiry age calculation, advisory-toast behavior, legacy DOB bindings, inquiry model, create and edit screens. Coverage includes academic-year cutoff changes, exact birthdays, leap/month boundaries, invalid or optional DOB, unconfigured minimum age, warning deduplication, existing form help and underage saves.
+- Focused lint and Student documentation validation pass. The initial age audit found two `resultDraft` action-map errors in `assessments/assessment-applicant-table.tsx`; the follow-up fix makes its labels exhaustive with `Record<AssessmentAction | 'continue', string>` and reuses the existing Save draft label. Full `npm run ts` now passes with zero errors. All 13 existing Assessment applicant-table and workbench-model tests and focused table lint pass. Evidence: `.artifacts/assessment-table-types-full.log`, `.artifacts/assessment-table-types-tests.log`, `.artifacts/assessment-table-types-lint.log`.
+- Local authenticated browser QA created synthetic `INQ-2026-000009` with acknowledgement disabled. Existing Class 1 settings resolve minimum age 6 and academic-year start 1 June 2026. Underage create, warning toast, edit/save/reload, DOB persistence and exact-minimum birthday (6 years 0 months, warning cleared) were verified.
+- Mobile verification at 390 x 844 showed wrapping helper text and no document horizontal overflow (390px content/viewport); the temporary viewport was reset. Screenshots: `.artifacts/inquiry-age-create.png`, `.artifacts/inquiry-age-edit.png`, `.artifacts/inquiry-age-mobile.png`.
+- This is local verification. Stage/live require both frontend and backend deployment; no production payment, account activation or acknowledgement was sent.

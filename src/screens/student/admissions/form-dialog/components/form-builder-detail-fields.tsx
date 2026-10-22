@@ -4,7 +4,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Grid, MenuItem, TextField, Autocomplete } from '@mui/material';
 
-import { ADMISSION_FORM_LANGUAGES } from '../form-languages';
+import { ADMISSION_FORM_LANGUAGES, AVAILABLE_ADMISSION_FORM_LANGUAGES } from '../form-languages';
 
 export function FormBuilderDetailFields({
   formik,
@@ -59,7 +59,7 @@ export function FormBuilderDetailFields({
               sx: { bgcolor: 'action.selected', color: 'text.primary' },
             },
           }}
-          options={ADMISSION_FORM_LANGUAGES}
+          options={AVAILABLE_ADMISSION_FORM_LANGUAGES}
           value={ADMISSION_FORM_LANGUAGES.filter((option) =>
             formik.values.supportedLanguages.includes(option.value)
           )}

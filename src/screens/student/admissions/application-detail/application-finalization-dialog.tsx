@@ -99,7 +99,6 @@ function FinalizationSurface({
               </IconButton>
             </CustomTooltip>
           </Stack>
-          
         </Stack>
         {children}
       </Stack>
@@ -129,7 +128,7 @@ function OpenApplicationFinalizationDialog({
   presentation = 'dialog',
   applicantId,
   application,
-  busy,
+  busy: externalBusy,
   preview,
   loading,
   hasError,
@@ -137,6 +136,9 @@ function OpenApplicationFinalizationDialog({
   onClose,
   onSubmit,
 }: OpenProps) {
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const busy = externalBusy || submitting;
   const [identityChoice, setIdentityChoice] = useState('');
   const [guardianVerified, setGuardianVerified] = useState(false);
   const [reviewedIdentity, setReviewedIdentity] = useState<string | null>(null);
@@ -226,7 +228,6 @@ function OpenApplicationFinalizationDialog({
                     </Stack>
                   </>
                 )}
-                
               </Box>
             )}
             <Box
@@ -410,24 +411,33 @@ function OpenApplicationFinalizationDialog({
             color="inherit"
             size="small"
             loading={busy}
+            loadingPosition="start"
             disabled={cannotSubmit}
             startIcon={<Iconify icon="mdi:check-decagram-outline" />}
             onClick={async () => {
-              const success = await onSubmit({
-                existingStudentId: selectedIdentity !== 'new' ? selectedIdentity : undefined,
-                confirmCreateNew: selectedIdentity === 'new',
-                confirmGuardianContactVerified: guardianVerified,
-                ...(existingStudent && capturedFields.length
-                  ? {
-                      applyStudentProfileFields:
-                        canReviewProfileFields && reviewedIdentity === selectedIdentity,
-                    }
-                  : {}),
-              });
-              if (success) onClose();
+              if (submittingRef.current || cannotSubmit) return;
+              submittingRef.current = true;
+              setSubmitting(true);
+              try {
+                const success = await onSubmit({
+                  existingStudentId: selectedIdentity !== 'new' ? selectedIdentity : undefined,
+                  confirmCreateNew: selectedIdentity === 'new',
+                  confirmGuardianContactVerified: guardianVerified,
+                  ...(existingStudent && capturedFields.length
+                    ? {
+                        applyStudentProfileFields:
+                          canReviewProfileFields && reviewedIdentity === selectedIdentity,
+                      }
+                    : {}),
+                });
+                if (success) onClose();
+              } finally {
+                submittingRef.current = false;
+                setSubmitting(false);
+              }
             }}
           >
-            Finalize admission
+            {busy ? 'Finalizing admission…' : 'Finalize admission'}
           </LoadingButton>
         </DialogActions>
       </FinalizationSurface>

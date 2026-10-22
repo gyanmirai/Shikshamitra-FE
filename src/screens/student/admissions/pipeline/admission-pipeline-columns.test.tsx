@@ -1,9 +1,10 @@
-import { fDateTime } from 'src/utils/format-time';
-import { render, screen } from '@testing-library/react';
 import { vi, it, expect, describe, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { getCellValueForExport } from 'src/components/customizabaleTable/table-export';
 
 import { buildAdmissionPipelineColumns } from './admission-pipeline-columns';
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
 const columns = buildAdmissionPipelineColumns((id) => `/application/${id}`);
 const renderCell = (id: string, row: Record<string, unknown>) =>
@@ -39,25 +40,25 @@ describe('Pipeline missing-source recovery', () => {
   });
   it('shows honest fallback labels despite the shared table dash placeholder', () => {
     renderCell('currentStageName', { currentStageName: null });
-    renderCell('assignedCounsellorName', { assignedCounsellorName: null });
     renderCell('standardName', { standardName: null, offeringCode: null });
     expect(screen.getByText('No current step')).toBeInTheDocument();
-    expect(screen.getByText('Unassigned')).toBeInTheDocument();
     expect(screen.getByText('Class unavailable')).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
-  it('does not describe an unresolved assigned owner as unassigned', () => {
-    renderCell('assignedCounsellorName', {
-      assignedCounsellorId: 'archived-user',
-      assignedCounsellorName: null,
-    });
-    expect(screen.getByText('Assigned counsellor unavailable')).toBeInTheDocument();
-    expect(screen.queryByText('Unassigned')).not.toBeInTheDocument();
+  it('keeps only the approved compact visible columns and excludes actions from export', () => {
+    expect(columns.filter((column) => !column.defaultHidden).map((column) => column.label)).toEqual(
+      ['Student Name', 'Class', 'Current step', 'Follow-ups', 'Status', 'Actions']
+    );
+    expect(
+      columns.some((column) =>
+        ['nextRequiredAction', 'enteredAt', 'assignedCounsellorName'].includes(column.id)
+      )
+    ).toBe(false);
+    expect(columns.find((column) => column.id === 'actions')?.excludeFromExport).toBe(true);
   });
   it('does not turn missing dates into invalid dates or artificial deadlines', () => {
     renderCell('nextFollowUpAt', { nextFollowUpAt: null, openFollowUpCount: 0 });
-    renderCell('enteredAt', { enteredAt: null, dueAt: null });
     expect(screen.getByText('No open follow-ups')).toBeInTheDocument();
-    expect(screen.getByText('Not recorded')).toBeInTheDocument();
     expect(screen.queryByText(/Invalid|deadline passed|Due /)).not.toBeInTheDocument();
   });
   it('keeps current application navigation available when its inquiry is missing', () => {
@@ -91,32 +92,125 @@ describe('Pipeline exported conditional content', () => {
         openFollowUpCount: 1,
         hasOverdueFollowUp: false,
       })
-    ).toBe(`1 open ${fDateTime(nextFollowUpAt)}`);
+    ).toBe('1 open Follow up with family');
   });
 
-  it('exports a future step deadline without a hidden boolean warning', () => {
-    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-07T10:00:00Z'));
-    const enteredAt = '2026-10-06T10:00:00Z';
-    const dueAt = '2026-10-10T10:00:00Z';
-    expect(exportCell('enteredAt', { enteredAt, dueAt })).toBe(
-      `${fDateTime(enteredAt)} Due ${fDateTime(dueAt)}`
-    );
-  });
-
-  it('retains actual overdue warnings in export', () => {
-    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-07T10:00:00Z'));
+  it('exports the actual overdue count and saved purpose without dates or a false count', () => {
     expect(
       exportCell('nextFollowUpAt', {
-        openFollowUpCount: 1,
+        openFollowUpCount: 3,
+        overdueFollowUpCount: 1,
+        nextFollowUpPurpose: 'Confirm document visit',
         nextFollowUpAt: '2026-10-06T10:00:00Z',
         hasOverdueFollowUp: true,
       })
-    ).toContain('Follow-up overdue');
-    expect(
-      exportCell('enteredAt', {
-        enteredAt: '2026-10-05T10:00:00Z',
-        dueAt: '2026-10-06T10:00:00Z',
-      })
-    ).toContain('Step deadline passed');
+    ).toBe('1 overdue Confirm document visit');
+    expect(exportCell('nextFollowUpAt', { openFollowUpCount: 3, hasOverdueFollowUp: true })).toBe(
+      'Overdue Follow up with family'
+    );
+  });
+});
+
+describe('Pipeline runtime progress and contextual actions', () => {
+  const progress = [
+    { id: 'form', name: 'Admission form', status: 2 },
+    { id: 'exam', name: 'Assessment', status: 3 },
+    { id: 'payment', name: 'Payment', status: 1 },
+    { id: 'review', name: 'Review', status: 0 },
+  ];
+  it('uses the configured position and actual statuses, including a skipped earlier stage', () => {
+    const row = {
+      currentStageName: 'Payment',
+      currentStageInstanceId: 'payment',
+      stageProgress: progress,
+    };
+    renderCell('currentStageName', row);
+    const indicator = screen.getByRole('progressbar', { name: 'Admission journey' });
+    expect(indicator).toHaveAttribute('aria-valuenow', '3');
+    expect(indicator).toHaveAttribute('aria-valuemax', '4');
+    expect(indicator).toHaveAttribute('aria-valuetext', 'Step 3 of 4: Payment');
+    expect(screen.getByRole('img', { name: 'Assessment: Skipped' })).toBeInTheDocument();
+    expect(exportCell('currentStageName', row)).toBe('Payment 3 of 4');
+  });
+  it('does not fabricate progress for older servers or an unknown current stage', () => {
+    const view = renderCell('currentStageName', { currentStageName: 'Assessment' });
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    view.unmount();
+    renderCell('currentStageName', {
+      currentStageName: 'Assessment',
+      currentStageInstanceId: 'missing',
+      stageProgress: progress,
+    });
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+  it.each([
+    [2, 'Book assessment'],
+    [4, 'Collect fees'],
+    [1, 'Complete form'],
+    [5, 'Verify documents'],
+  ])(
+    'opens the existing workspace for stage %s without executing its mutation',
+    (stageType, label) => {
+      const onOpen = vi.fn();
+      const actions = buildAdmissionPipelineColumns(
+        (id) => `/application/${id}?returnTo=pipeline`,
+        onOpen
+      ).find((column) => column.id === 'actions')!;
+      render(<>{actions.render!('', { id: 'app-1', applicationNumber: 'APP-1', stageType })}</>);
+      const action = screen.getByRole('link', { name: `${label} APP-1` });
+      expect(action).toHaveAttribute('href', '/application/app-1?returnTo=pipeline');
+      fireEvent.click(action);
+      expect(onOpen).toHaveBeenCalledExactlyOnceWith('app-1');
+    }
+  );
+  it.each(progress)('shows the custom tooltip for $name on hover', async (stage) => {
+    renderCell('currentStageName', {
+      currentStageName: 'Payment',
+      currentStageInstanceId: 'payment',
+      stageProgress: progress,
+    });
+    const segment = screen.getByRole('img', { name: new RegExp(`^${stage.name}:`) });
+    fireEvent.mouseOver(segment);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(stage.name);
+    expect(segment).not.toHaveAttribute('title');
+  });
+  it('shows stage names on keyboard focus without navigating or advancing', async () => {
+    const onOpen = vi.fn();
+    render(
+      <div role="row" tabIndex={0} onKeyDown={onOpen}>
+        {columns.find((column) => column.id === 'currentStageName')!.render!('', {
+          currentStageName: 'Payment',
+          currentStageInstanceId: 'payment',
+          stageProgress: progress,
+        })}
+      </div>
+    );
+    const segment = screen.getByRole('img', { name: 'Assessment: Skipped' });
+    segment.focus();
+    expect(segment).toHaveFocus();
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Assessment');
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+  it('preserves modified-link navigation and exposes only the plain workspace action', () => {
+    const onOpen = vi.fn();
+    const actions = buildAdmissionPipelineColumns((id) => `/application/${id}`, onOpen).find(
+      (column) => column.id === 'actions'
+    )!;
+    const rowClick = vi.fn();
+    render(
+      <div role="row" tabIndex={0} onClick={rowClick} onKeyDown={rowClick}>
+        {actions.render!('', { id: 'app-1', applicationNumber: 'APP-1', stageType: 4 })}
+      </div>
+    );
+    const modifiedLink = screen.getByRole('link', { name: 'Collect fees APP-1' });
+    // Keep Happy DOM from following a real URL; the production handler still receives Ctrl.
+    modifiedLink.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    fireEvent.click(modifiedLink, { ctrlKey: true });
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /More actions/ })).not.toBeInTheDocument();
+    expect(modifiedLink.querySelector('.MuiButton-endIcon')).toBeNull();
+    expect(rowClick).not.toHaveBeenCalled();
+    fireEvent.click(modifiedLink);
+    expect(onOpen).toHaveBeenCalledExactlyOnceWith('app-1');
   });
 });

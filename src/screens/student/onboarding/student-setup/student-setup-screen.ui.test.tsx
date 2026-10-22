@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
   casesAvailable: true,
   casesFetching: false,
   casesError: false,
+  focusedCaseFetching: false,
+  focusedCaseError: false,
+  refetchCase: vi.fn(),
   permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }],
   cancel: vi.fn(),
   clearResults: vi.fn(),
@@ -67,7 +70,24 @@ vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
 }));
 vi.mock('src/components/custom-breadcrumbs', () => ({
-  CustomBreadcrumbs: ({ heading }: { heading: string }) => <h1>{heading}</h1>,
+  CustomBreadcrumbs: ({
+    heading,
+    isBack,
+    onBack,
+  }: {
+    heading: string;
+    isBack?: boolean;
+    onBack?: () => void;
+  }) => (
+    <header>
+      {isBack && (
+        <button type="button" onClick={onBack}>
+          Back
+        </button>
+      )}
+      <h1>{heading}</h1>
+    </header>
+  ),
 }));
 vi.mock('../onboarding-settings-context', () => ({
   useOnboardingSettings: () => ({ settings: { grNumber: { assignmentMode: 'both' } } }),
@@ -85,7 +105,12 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
       refetch: vi.fn(),
     };
   },
-  useGetStudentOnboardingCaseQuery: () => ({ currentData: undefined }),
+  useGetStudentOnboardingCaseQuery: () => ({
+    currentData: undefined,
+    isFetching: mocks.focusedCaseFetching,
+    isError: mocks.focusedCaseError,
+    refetch: mocks.refetchCase,
+  }),
   useGetStudentOnboardingFilterOptionsQuery: () => ({
     currentData: mocks.options,
     isLoading: false,
@@ -129,8 +154,58 @@ vi.mock('./use-student-setup-assignment', () => ({
   })),
 }));
 vi.mock('./student-setup-drawer', () => ({
-  default: ({ canCancel }: { canCancel: boolean }) => (
-    <output data-testid="cancel-onboarding-permission">{String(canCancel)}</output>
+  default: ({
+    canCancel,
+    open,
+    onClose,
+  }: {
+    canCancel: boolean;
+    open: boolean;
+    onClose: () => void;
+  }) => (
+    <>
+      <output data-testid="cancel-onboarding-permission">{String(canCancel)}</output>
+      {open && (
+        <section role="dialog" aria-label="Details & History">
+          <button type="button" onClick={onClose}>
+            Close history
+          </button>
+        </section>
+      )}
+    </>
+  ),
+}));
+vi.mock('./student-quick-setup-page', () => ({
+  default: ({
+    student,
+    initialSection,
+    onClose,
+    onStateChange,
+    onShowDetails,
+  }: {
+    student: { id: string };
+    initialSection?: string;
+    onClose: () => void;
+    onStateChange: (state: { dirty: boolean; busy: boolean }) => void;
+    onShowDetails: () => void;
+  }) => (
+    <section aria-label="Quick student setup">
+      <output data-testid="quick-case">{student.id}</output>
+      <output data-testid="quick-section">{initialSection}</output>
+      <input aria-label="Quick setup draft" defaultValue="" />
+      <button type="button" onClick={onClose}>
+        Close quick setup
+      </button>
+      <button type="button" onClick={() => onStateChange({ dirty: true, busy: false })}>
+        Edit quick setup
+      </button>
+      <button type="button" onClick={() => onStateChange({ dirty: false, busy: true })}>
+        Start quick save
+      </button>
+      <button type="button" onClick={onShowDetails}>
+        Details & History
+      </button>
+    </section>
   ),
 }));
 vi.mock('./student-onboarding-operation-dialog', () => ({ default: () => null }));
@@ -156,6 +231,8 @@ vi.mock('./student-setup-table', () => ({
     onColumnFilterChange,
     columnFilters,
     isLoading,
+    onOpen,
+    onOpenTask,
   }: ComponentProps<typeof StudentSetupTable>) => (
     <section
       data-testid="worklist"
@@ -163,8 +240,19 @@ vi.mock('./student-setup-table', () => ({
       data-page={page}
       data-loading={String(isLoading)}
     >
+      <input aria-label="Search table" />
       <output data-testid="selected-students">{selectedStudentIds.join(',')}</output>
       <output data-testid="column-filters">{JSON.stringify(columnFilters)}</output>
+      {rows.map((row) => (
+        <span key={`open-${row.id}`}>
+          <button type="button" onClick={() => onOpen(row.id)}>
+            Open setup {row.id}
+          </button>
+          <button type="button" onClick={() => onOpenTask(row.id, 'fees')}>
+            Open fees {row.id}
+          </button>
+        </span>
+      ))}
       <button
         type="button"
         onClick={() =>
@@ -221,6 +309,8 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.casesAvailable = true;
     mocks.casesFetching = false;
     mocks.casesError = false;
+    mocks.focusedCaseFetching = false;
+    mocks.focusedCaseError = false;
     mocks.rows = [
       {
         ...studentOnboardingTestData[0],
@@ -254,15 +344,152 @@ describe('Student Setup workspace selection wiring', () => {
     expect(mocks.params.get('class')).toBe('grade-6');
   });
 
+  it('opens a pending task in the full-page workspace without changing the worklist tab', () => {
+    setRoute('readiness');
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Open fees case-1' }));
+    expect(mocks.params.get('view')).toBe('readiness');
+    expect(mocks.params.get('case')).toBe('case-1');
+    expect(screen.getByTestId('quick-section')).toHaveTextContent('fees');
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+  });
+
+  it('keeps the hidden worklist mounted and returns to its page and filters through Breadcrumb Back', () => {
+    mocks.params.set('search', 'Aarav');
+    render(element);
+    const worklist = screen.getByTestId('worklist');
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    expect(worklist).toHaveAttribute('data-page', '2');
+    fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+    expect(screen.getByTestId('worklist')).toBe(worklist);
+    expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Next page' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByTestId('student-setup-worklist')).toBeVisible();
+    expect(screen.getByTestId('worklist')).toBe(worklist);
+    expect(worklist).toHaveAttribute('data-page', '2');
+    expect(mocks.params.get('case')).toBeNull();
+    expect(mocks.params.get('search')).toBe('Aarav');
+    expect(mocks.params.get('view')).toBe('division');
+    expect(mocks.params.get('class')).toBe('grade-6');
+  });
+
+  it('guards Breadcrumb Back for unsaved work and disables it during a save', () => {
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit quick setup' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Start quick save' }));
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
+  });
+
+  it('keeps the full-page draft mounted behind Details & History without asking to discard it', () => {
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+    const draft = screen.getByRole('textbox', { name: 'Quick setup draft' });
+    fireEvent.change(draft, { target: { value: 'Unsaved GR change' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit quick setup' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Details & History' }));
+    expect(screen.getByRole('dialog', { name: 'Details & History' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Discard unsaved changes?' })
+    ).not.toBeInTheDocument();
+    expect(draft).toBeInTheDocument();
+    expect(draft).toHaveValue('Unsaved GR change');
+    expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Close history' }));
+    expect(screen.getByRole('textbox', { name: 'Quick setup draft' })).toBe(draft);
+    expect(draft).toHaveValue('Unsaved GR change');
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+  });
+
+  it('keeps a deep-linked loading case in full-page mode with a usable Back action', () => {
+    mocks.params.set('case', 'outside-current-page');
+    mocks.focusedCaseFetching = true;
+    render(element);
+    expect(
+      screen.getByRole('progressbar', { name: 'Loading selected onboarding student' })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(mocks.params.get('case')).toBeNull();
+    expect(screen.getByTestId('student-setup-worklist')).toBeVisible();
+  });
+
+  it('keeps a failed deep link separate from the worklist and offers Retry and Back', () => {
+    mocks.params.set('case', 'outside-current-page');
+    mocks.focusedCaseError = true;
+    render(element);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'selected onboarding case could not be loaded'
+    );
+    expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetchCase).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(mocks.params.get('case')).toBeNull();
+  });
+
+  it('restores focus after the retained worklist becomes visible on a deep-link return', async () => {
+    mocks.params.set('case', 'outside-current-page');
+    mocks.focusedCaseError = true;
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Search table' })).toHaveFocus()
+    );
+  });
+
+  it('retains the open case when assignment removes it from the pending worklist', () => {
+    setRoute('fees');
+    const { rerender } = render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+    mocks.rows = [];
+    rerender(
+      <ThemeProvider theme={theme}>
+        <StudentSetupScreen />
+      </ThemeProvider>
+    );
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Close quick setup' }));
+    expect(screen.queryByTestId('quick-case')).not.toBeInTheDocument();
+    expect(mocks.params.get('case')).toBeNull();
+  });
+
+  it('protects quick-setup drafts and blocks dismissal while saving', () => {
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Open setup case-1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit quick setup' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close quick setup' }));
+    expect(screen.getByRole('heading', { name: 'Discard unsaved changes?' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Start quick save' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close quick setup' }));
+    expect(
+      screen.queryByRole('heading', { name: 'Discard unsaved changes?' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('quick-case')).toHaveTextContent('case-1');
+  });
+
   it.each([
     { action: 'Add', canCancel: true },
     { action: 'Delete', canCancel: false },
     { action: 'View', canCancel: false },
-  ])('requires Add/Update for Onboarding cancellation with $action access', ({ action, canCancel }) => {
-    mocks.permissions = [{ name: `Students.Onboarding.${action}`, isGranted: true }];
-    render(element);
-    expect(screen.getByTestId('cancel-onboarding-permission')).toHaveTextContent(String(canCancel));
-  });
+  ])(
+    'requires Add/Update for Onboarding cancellation with $action access',
+    ({ action, canCancel }) => {
+      mocks.permissions = [{ name: `Students.Onboarding.${action}`, isGranted: true }];
+      render(element);
+      expect(screen.getByTestId('cancel-onboarding-permission')).toHaveTextContent(
+        String(canCancel)
+      );
+    }
+  );
 
   it.each([
     ['readiness', 'Setup pending'],

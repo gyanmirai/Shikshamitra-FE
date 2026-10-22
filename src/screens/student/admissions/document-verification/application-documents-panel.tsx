@@ -10,6 +10,7 @@ import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/ad
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { DocumentActionDialog } from './document-action-dialog';
+import { DocumentReviewDialog } from './document-review-dialog';
 import { useDocumentPermissions } from './use-document-permissions';
 import { DocumentChecklistContent } from './document-checklist-content';
 import { useApplicationStageReadiness } from '../application-detail/application-stage-readiness';
@@ -46,11 +47,25 @@ export function ApplicationDocumentsPanel({
     { skip: !permissions.view }
   );
   const [selected, setSelected] = useState<{
-    action: DocumentAction;
+    action: DocumentAction | 'view';
     requirement: AdmissionDocumentRequirement;
     summary: ApplicationDocumentVerification;
+    readOnly?: boolean;
   } | null>(null);
   const summary = query.currentData;
+  const readOnly =
+    historical ||
+    !(
+      summary?.isActive ||
+      summary?.canCollectDuringForm ||
+      summary?.requirements.some(
+        (requirement) =>
+          requirement.canUpload ||
+          requirement.canRecordOriginal ||
+          requirement.canReview ||
+          requirement.canWaive
+      )
+    );
   useApplicationStageReadiness(onReadinessChange, {
     stageId: stage.id,
     canComplete: Boolean(!historical && permissions.view && summary?.canComplete && !query.isError),
@@ -104,28 +119,20 @@ export function ApplicationDocumentsPanel({
               summary={summary}
               permissions={permissions}
               disabled={disabled || query.isFetching || advancing}
-              readOnly={
-                historical ||
-                !(
-                  summary.isActive ||
-                  summary.canCollectDuringForm ||
-                  summary.requirements.some(
-                    (requirement) =>
-                      requirement.canUpload ||
-                      requirement.canRecordOriginal ||
-                      requirement.canReview ||
-                      requirement.canWaive
-                  )
-                )
-              }
+              readOnly={readOnly}
               onAction={(action, requirement) => setSelected({ action, requirement, summary })}
+              onView={(requirement) =>
+                setSelected({ action: 'view', requirement, summary, readOnly })
+              }
             />
             {showCompletionAction && !historical && summary.isActive && canAdvance && (
               <Stack direction="row">
                 <Button
                   size="small"
                   variant="contained"
-                  disabled={!summary.canComplete || query.isFetching || advancing}
+                  disabled={
+                    !summary.canComplete || query.isFetching || advancing || Boolean(selected)
+                  }
                   onClick={() => onComplete?.()}
                 >
                   {advancing ? 'Continuing…' : 'Continue admission'}
@@ -134,9 +141,25 @@ export function ApplicationDocumentsPanel({
             )}
           </>
         )}
-        {selected && permissions.view && (
-          <DocumentActionDialog {...selected} onClose={() => setSelected(null)} />
-        )}
+        {selected &&
+          permissions.view &&
+          (selected.action === 'view' ? (
+            <DocumentReviewDialog
+              summary={selected.summary}
+              requirement={selected.requirement}
+              readOnly={historical || selected.readOnly === true}
+              disabled={disabled || query.isFetching || advancing}
+              permissions={permissions}
+              onClose={() => setSelected(null)}
+            />
+          ) : (
+            <DocumentActionDialog
+              action={selected.action}
+              summary={selected.summary}
+              requirement={selected.requirement}
+              onClose={() => setSelected(null)}
+            />
+          ))}
       </Stack>
     </Card>
   );

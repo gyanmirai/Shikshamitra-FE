@@ -67,6 +67,30 @@ const form = {
 } as AdmissionForm;
 
 describe('dynamic admission form validation', () => {
+  it('keeps configured metadata email validation and optional empty values consistent', () => {
+    const emailForm = {
+      sections: [
+        {
+          fields: [
+            {
+              code: 'EMAIL',
+              label: 'Email',
+              fieldType: 0,
+              required: false,
+              validationJson: '{"format":"email"}',
+            },
+          ],
+        },
+      ],
+    };
+    expect(getDynamicAdmissionValidationErrors(emailForm, { EMAIL: '' })).toEqual({});
+    expect(getDynamicAdmissionValidationErrors(emailForm, { EMAIL: 'parent@example.com' })).toEqual(
+      {}
+    );
+    expect(
+      getDynamicAdmissionValidationErrors(emailForm, { EMAIL: 'invalid-address' })
+    ).toHaveProperty('EMAIL');
+  });
   it('validates field rules and ignores hidden required fields', () => {
     expect(
       getDynamicAdmissionValidationErrors(form, { studentName: 'A', hasPreviousSchool: 'false' })

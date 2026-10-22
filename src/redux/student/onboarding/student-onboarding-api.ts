@@ -885,6 +885,7 @@ export const {
   useAllocateStudentOnboardingIdentifierMutation,
   usePreviewStudentOnboardingRollMutation,
   usePreviewStudentOnboardingActivationQuery,
+  useLazyPreviewStudentOnboardingActivationQuery,
   useActivateStudentOnboardingMutation,
   useCancelStudentOnboardingMutation,
   useGetStudentOnboardingServiceHandoffsQuery,

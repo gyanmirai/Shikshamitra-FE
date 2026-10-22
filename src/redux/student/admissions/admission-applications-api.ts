@@ -562,6 +562,21 @@ export const admissionApplicationsApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionFinalizationResult> | AdmissionFinalizationResult
       ) => unwrap(response),
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          // Render the committed outcome immediately, even when tag refetches are delayed.
+          dispatch(
+            admissionApplicationsApi.util.updateQueryData(
+              'getAdmissionApplication',
+              id,
+              () => data.application
+            )
+          );
+        } catch {
+          // Keep the saved application and editable finalization form on failure.
+        }
+      },
       invalidatesTags: (result, error, { input }) =>
         error
           ? []

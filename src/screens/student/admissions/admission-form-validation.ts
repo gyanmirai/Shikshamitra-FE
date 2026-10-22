@@ -127,7 +127,10 @@ function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: st
         message: fieldError(field, config, 'max', `must be at most ${config.max}.`),
       });
     }
-    if (field.fieldType === 3 && !Yup.string().email().isValidSync(text)) {
+    if (
+      (field.fieldType === 3 || config.format === 'email') &&
+      !Yup.string().email().isValidSync(text)
+    ) {
       return this.createError({ message: `${field.label} must be a valid email address.` });
     }
     if (field.fieldType === 4 && !/^\+?[0-9 ()-]{7,20}$/.test(text)) {

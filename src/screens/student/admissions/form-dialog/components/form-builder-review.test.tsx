@@ -5,8 +5,8 @@ import { it, vi, expect } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import { FormBuilderReview } from './form-builder-review';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
@@ -80,6 +80,32 @@ function mountReview(values = reviewForm()) {
 function definition(): CreateUpdateAdmissionForm {
   return JSON.parse(screen.getByTestId('form-json').textContent ?? '{}');
 }
+
+it('switches review field translations independently of headings without modifying the draft or answers', async () => {
+  const user = userEvent.setup();
+  const values = reviewForm();
+  values.supportedLanguages = ['en', 'gu', 'hi'];
+  values.sections[0].fields[0].translations = {
+    gu: { label: 'વિદ્યાર્થીનું નામ', placeholder: 'નામ લખો' },
+    hi: { label: 'विद्यार्थी का नाम', placeholder: 'नाम लिखें' },
+  };
+  mountReview(values);
+  await user.type(screen.getByRole('textbox', { name: 'Student name' }), 'QA student');
+  const checkLanguage = async (language: string, label: string, placeholder: string) => {
+    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', { name: language }));
+    expect(screen.getByRole('textbox', { name: label })).toHaveValue('QA student');
+    expect(screen.getByRole('textbox', { name: label })).toHaveAttribute(
+      'placeholder',
+      placeholder
+    );
+    expect(screen.getByRole('checkbox', { name: 'Parent consent' })).not.toBeChecked();
+    expect(screen.getByText('Parent consent')).toBeVisible();
+  };
+  await checkLanguage('Gujarati', 'વિદ્યાર્થીનું નામ', 'નામ લખો');
+  await checkLanguage('Hindi', 'विद्यार्थी का नाम', 'नाम लिखें');
+  expect(definition()).toEqual(values);
+});
 
 it('renders actual controls and keeps preview answers separate from the saved definition', async () => {
   const user = userEvent.setup({ delay: null });

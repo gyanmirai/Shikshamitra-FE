@@ -34,6 +34,11 @@ export const ADMISSION_FORM_LANGUAGES = [
   { value: 'ur', label: 'Urdu' },
 ] as const;
 
+// Retain labels for saved languages while restricting new Step 1 selections.
+export const AVAILABLE_ADMISSION_FORM_LANGUAGES = ADMISSION_FORM_LANGUAGES.filter(
+  ({ value }) => value === 'en' || value === 'gu' || value === 'hi'
+);
+
 export function getAdmissionLanguageLabel(code: string) {
   return ADMISSION_FORM_LANGUAGES.find((language) => language.value === code)?.label ?? code;
 }
@@ -43,11 +48,10 @@ export function localizeAdmissionSection<
   TSection extends LocalizableSection<TField>,
 >(section: TSection, language: string): TSection {
   const translation = section.translations?.[language];
-  if (!translation) return section;
   return {
     ...section,
-    name: translation.label || section.name,
-    entryLabel: translation.helpText || section.entryLabel,
+    name: translation?.label || section.name,
+    entryLabel: translation?.helpText || section.entryLabel,
     fields: section.fields.map((field) => localizeAdmissionField(field, language)),
   } as TSection;
 }

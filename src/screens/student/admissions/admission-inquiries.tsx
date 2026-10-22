@@ -5,11 +5,11 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { Box, Stack, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import {
@@ -52,6 +52,7 @@ export default function AdmissionInquiriesScreen() {
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [followUpInquiry, setFollowUpInquiry] = useState<AdmissionInquiry | null>(null);
   const [dismissedInquiryId, setDismissedInquiryId] = useState('');
+  const [scopeLoading, setScopeLoading] = useState(true);
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   >([]);
@@ -86,6 +87,9 @@ export default function AdmissionInquiriesScreen() {
   const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId, {
     excludePostApplication: !dashboardFollowUps,
   });
+  const skipList =
+    !academic.academicYearId ||
+    (!academic.dashboardScope && (!academic.boardId || !academic.mediumId));
   const {
     currentData: data,
     isLoading,
@@ -107,9 +111,7 @@ export default function AdmissionInquiriesScreen() {
       sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
     },
     {
-      skip:
-        !academic.academicYearId ||
-        (!academic.dashboardScope && (!academic.boardId || !academic.mediumId)),
+      skip: skipList,
     }
   );
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
@@ -223,6 +225,7 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionAcademicFilters
+        onLoadingChange={setScopeLoading}
         boardId={academic.boardId}
         mediumId={academic.mediumId}
         standardId={academic.standardId}
@@ -239,15 +242,31 @@ export default function AdmissionInquiriesScreen() {
           }}
         />
       ) : (
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {data && isFetching && !scopeLoading && !skipList && !handoff.moving && (
+            <LinearProgress aria-label="Refreshing admission inquiries" />
+          )}
+          {handoff.moving && <LinearProgress aria-label="Moving inquiry to the next stage" />}
           <CustomizableTable
             tableId="admission-inquiries"
             tableTitle="Admission inquiries"
             wrapperProps={{ sx: { height: 1 } }}
             tableContainerProps={{ sx: { height: 1 } }}
             columns={columns}
-            data={data?.items ?? []}
-            isLoading={isLoading || (!data && isFetching)}
+            data={skipList || scopeLoading ? [] : (data?.items ?? [])}
+            isLoading={
+              scopeLoading ||
+              (handoff.moving && !data?.items.length) ||
+              (!skipList && (isLoading || !data))
+            }
             serverSidePagination
             serverSideSearch
             serverSideSort
@@ -300,11 +319,13 @@ export default function AdmissionInquiriesScreen() {
               inputProps: { 'aria-label': 'Search admission inquiries' },
             }}
             noDataText={
-              search || tableFilters.length
-                ? 'No inquiries match the selected search or filters'
-                : dashboardFollowUps
-                  ? 'No inquiry follow-ups are due in this scope'
-                  : 'No inquiries awaiting admission handoff'
+              skipList
+                ? 'Select an available academic year, Board and Medium to view inquiries'
+                : search || tableFilters.length
+                  ? 'No inquiries match the selected search or filters'
+                  : dashboardFollowUps
+                    ? 'No inquiry follow-ups are due in this scope'
+                    : 'No inquiries awaiting admission handoff'
             }
           />
         </Box>

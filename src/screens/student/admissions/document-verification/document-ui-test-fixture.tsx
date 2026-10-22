@@ -66,6 +66,7 @@ vi.mock('@mui/icons-material', async () => {
   'mdi:download',
   'mdi:upload',
   'mdi:eye-outline',
+  'carbon:view-filled',
   'mdi:check',
   'mdi:undo-variant',
   'mdi:file-check-outline',

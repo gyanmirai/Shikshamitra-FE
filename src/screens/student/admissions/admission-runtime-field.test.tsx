@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { it, vi, expect } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -25,7 +27,7 @@ it.each(['Guardian.Email', 'Father.Email', 'Mother.Email', 'Applicant.Email'])(
     const input = screen.getByRole('textbox', { name: bindingKey });
     expect(input).toHaveAttribute('type', 'email');
     expect(input).toBeRequired();
-    fireEvent.change(input, { target: { value: 'parent@example.test' } });
+    fireEvent.change(input, { target: { value: 'Parent@Example.TEST' } });
     expect(onChange).toHaveBeenCalledWith('parent@example.test');
     view.rerender(
       <AdmissionRuntimeField
@@ -39,6 +41,56 @@ it.each(['Guardian.Email', 'Father.Email', 'Mother.Email', 'Applicant.Email'])(
     expect(screen.getByRole('textbox', { name: bindingKey })).toHaveValue('parent@example.test');
   }
 );
+
+it.each([3, 0])('normalizes typed and pasted emails for field type %i', async (fieldType) => {
+  const user = userEvent.setup();
+  function EmailEntry() {
+    const [value, setValue] = useState('Existing@Example.TEST');
+    return (
+      <AdmissionRuntimeField
+        field={{
+          code: 'EMAIL',
+          label: 'Email',
+          fieldType,
+          required: false,
+          readOnly: false,
+          validationJson: '{"format":"email"}',
+        }}
+        value={value}
+        onChange={setValue}
+        disabled={false}
+      />
+    );
+  }
+  render(<EmailEntry />);
+  const input = screen.getByRole('textbox', { name: 'Email' });
+  expect(input).toHaveValue('existing@example.test');
+  expect(input).toHaveAttribute('type', 'email');
+  expect(input).toHaveAttribute('autocapitalize', 'none');
+  expect(input).toHaveAttribute('spellcheck', 'false');
+  await user.clear(input);
+  await user.type(input, 'Parent@Example.TEST');
+  expect(input).toHaveValue('parent@example.test');
+  await user.clear(input);
+  await user.paste('PASTED+TAG@Example.TEST');
+  expect(input).toHaveValue('pasted+tag@example.test');
+});
+
+it('preserves the case of non-email text', () => {
+  const onChange = vi.fn();
+  render(
+    <AdmissionRuntimeField
+      field={{ code: 'NAME', label: 'Name', fieldType: 0, required: false, readOnly: false }}
+      value="Aanya Patel"
+      onChange={onChange}
+      disabled={false}
+    />
+  );
+  const input = screen.getByRole('textbox', { name: 'Name' });
+  expect(input).toHaveValue('Aanya Patel');
+  fireEvent.change(input, { target: { value: 'Aanya PATEL' } });
+  expect(onChange).toHaveBeenCalledWith('Aanya PATEL');
+});
 
 it.each([6, 7, 8])('shows the required indicator for choice field type %i', (fieldType) => {
   renderChoice(fieldType, true);

@@ -6,7 +6,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, Tooltip, Checkbox, Typography } from '@mui/material';
 
-import { latestAssessmentAttempt } from './assessment-action-model';
+import { assessmentActionLabels, latestAssessmentAttempt } from './assessment-action-model';
 import { useAssessmentPermissions } from './use-assessment-permissions';
 import { getPrimaryAssessmentAction } from './assessment-workbench-model';
 
@@ -206,10 +206,11 @@ export function AssessmentApplicantTable({
       render: (_, data) => {
         const row = data as AssessmentRosterItem;
         const action = getPrimaryAssessmentAction(row, permissions, canAdvance);
-        const labels = {
+        const labels: Record<AssessmentAction | 'continue', string> = {
           book: row.assessment.policy?.schedulingEnabled ? 'Book' : 'Start',
           attendance: 'Attendance',
           result: 'Result',
+          resultDraft: assessmentActionLabels.resultDraft,
           retake: 'Retake',
           cancel: 'Cancel',
           waive: 'Waive',

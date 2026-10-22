@@ -5,6 +5,7 @@ import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
 
 import { normalizeAssessmentDateTime } from './assessment-date-time';
+import { AssessmentSubjectScoreHistory } from './assessment-subject-score-history';
 
 export function AssessmentAttemptHistory({
   attempts,
@@ -49,6 +50,7 @@ export function AssessmentAttemptHistory({
             {attempt.marks != null ? ` · Marks: ${attempt.marks}` : ''}
             {` · Created ${dayjs(attempt.createdAt).format('DD MMM YYYY, h:mm A')}`}
           </Typography>
+          {attempt.effectiveProfile && <AssessmentSubjectScoreHistory attempt={attempt} />}
           {attempt.sessionStartsAt && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               Scheduled:{' '}

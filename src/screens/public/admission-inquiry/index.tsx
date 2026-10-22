@@ -8,6 +8,7 @@ import { useRef, useState, useEffect } from 'react';
 import AdmissionRuntimeField from 'src/screens/student/admissions/admission-runtime-field';
 import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admission-photo-reads';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
+import { normalizeAdmissionEmailValue } from 'src/screens/student/admissions/admission-email-values';
 import { buildDynamicAdmissionYupSchema } from 'src/screens/student/admissions/admission-form-validation';
 import { preserveCompatibleInquiryAnswers } from 'src/screens/student/admissions/admission-inquiry-model';
 import {
@@ -86,7 +87,7 @@ const serializeValue = (field: PublicField, value: string) => {
       /* Store as a JSON string. */
     }
   }
-  return JSON.stringify(value);
+  return JSON.stringify(normalizeAdmissionEmailValue(field, value));
 };
 
 export default function PublicAdmissionInquiryScreen({ token }: { token: string }) {

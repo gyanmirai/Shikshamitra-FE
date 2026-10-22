@@ -86,7 +86,9 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     const id = '10101010-1010-e010-b010-101010101010';
     mswServer.use(
       http.get('*/api/student/enrollment/admissions/document-verification/classes', () =>
-        HttpResponse.json([{ id, name: 'Class 10', context: 'CBSE / English / Secondary' }])
+        HttpResponse.json([
+          { id, name: 'Class 10', context: '2026-2027 / CBSE / English / Secondary' },
+        ])
       )
     );
     const { user, onSave } = await setupDocumentEditor(json());
@@ -97,9 +99,17 @@ describe('compact document requirement editor', { timeout: 15000 }, () => {
     expect(
       await dialog.findByText('Select at least one class, or choose all classes')
     ).toBeInTheDocument();
-    await user.click(await dialog.findByRole('combobox', { name: 'Classes' }));
-    await user.click(await screen.findByRole('option', { name: /Class 10/ }));
-    await user.keyboard('{Escape}');
+    await user.click(await dialog.findByRole('combobox', { name: 'Board' }));
+    await user.click(await screen.findByRole('option', { name: 'CBSE' }));
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
+    await user.click(dialog.getByRole('combobox', { name: 'Classes' }));
+    const picker = within(await screen.findByRole('dialog', { name: 'Select classes' }));
+    await user.type(picker.getByRole('textbox', { name: 'Search classes' }), 'Class 10');
+    await user.click(picker.getByRole('checkbox', { name: /Class 10/ }));
+    await user.click(picker.getByRole('button', { name: 'Done' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Select classes' })).not.toBeInTheDocument()
+    );
     await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
     await waitFor(() =>
       expect(

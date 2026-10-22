@@ -18,6 +18,7 @@ export function DocumentChecklistContent({
   disabled,
   readOnly,
   onAction,
+  onView,
   layout = 'cards',
 }: {
   summary: ApplicationDocumentVerification;
@@ -25,6 +26,7 @@ export function DocumentChecklistContent({
   disabled: boolean;
   readOnly: boolean;
   onAction: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
+  onView?: (requirement: AdmissionDocumentRequirement) => void;
   layout?: 'cards' | 'table';
 }) {
   const [showNotApplicable, setShowNotApplicable] = useState(false);
@@ -84,9 +86,7 @@ export function DocumentChecklistContent({
           summary={summary}
           requirements={visible}
           permissions={permissions}
-          disabled={disabled}
-          readOnly={readOnly}
-          onAction={onAction}
+          onView={onView}
         />
       ) : (
         visible.map((requirement) => (

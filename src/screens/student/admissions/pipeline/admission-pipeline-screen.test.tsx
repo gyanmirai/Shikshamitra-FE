@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionInquiryPipelineScreen from '../admission-inquiry-pipeline';
 
@@ -22,7 +23,21 @@ const context = vi.hoisted(() => ({
   },
   error: false,
   fetching: false,
+  scopeLoading: false,
+  board: 'board-1',
+  medium: 'medium-1',
+  initialLoading: false,
   table: {} as Record<string, any>,
+}));
+vi.mock('../admission-application-detail', () => ({
+  default: ({ applicationId, presentation, onClose }: any) => (
+    <div role="dialog" aria-label="Applicant workspace" data-presentation={presentation}>
+      <span>{applicationId}</span>
+      <button type="button" onClick={onClose}>
+        Close applicant
+      </button>
+    </div>
+  ),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: context.replace, push: context.push }),
@@ -44,20 +59,30 @@ vi.mock('react-redux', () => ({
 vi.mock('../admission-academic-filters', () => ({
   useAdmissionAcademicFilters: () => ({
     academicYearId: context.year,
-    boardId: 'board-1',
-    mediumId: 'medium-1',
+    boardId: context.board,
+    mediumId: context.medium,
     standardId: '',
     update: context.academicUpdate,
     clear: vi.fn(),
   }),
-  AdmissionAcademicFilters: ({ filterAction, onChange, disabled }: any) => (
-    <div data-testid="academic-filter-row">
-      <button type="button" disabled={disabled} onClick={() => onChange('board', 'board-2')}>
-        Change board
-      </button>
-      {filterAction}
-    </div>
-  ),
+  AdmissionAcademicFilters: function Filters({
+    filterAction,
+    onChange,
+    disabled,
+    onLoadingChange,
+  }: any) {
+    useEffect(() => {
+      onLoadingChange?.(context.scopeLoading);
+    }, [onLoadingChange]);
+    return (
+      <div data-testid="academic-filter-row">
+        <button type="button" disabled={disabled} onClick={() => onChange('board', 'board-2')}>
+          Change board
+        </button>
+        {filterAction}
+      </div>
+    );
+  },
 }));
 vi.mock('./use-bulk-pipeline-counsellor', () => ({
   useBulkPipelineCounsellor: (input: any) => {
@@ -97,7 +122,11 @@ vi.mock('src/components/customizabaleTable', () => ({
     context.table = props;
     return (
       <div>
-        <button type="button" onClick={() => props.handleRowClick(props.data[0])}>
+        <button
+          type="button"
+          data-application-id={props.data[0]?.id}
+          onClick={() => props.handleRowClick(props.data[0])}
+        >
           Open row
         </button>
         <span>{props.noDataText}</span>
@@ -109,7 +138,7 @@ vi.mock('src/redux/student/admissions/admission-pipeline-api', () => ({
   useGetAdmissionPipelineQuery: (input: unknown, options: unknown) => {
     context.list(input, options);
     return {
-      currentData: context.data,
+      currentData: context.initialLoading ? undefined : context.data,
       isLoading: false,
       isFetching: context.fetching,
       isError: context.error,
@@ -128,6 +157,30 @@ vi.mock('src/redux/student/admissions/admission-pipeline-api', () => ({
 }));
 
 describe('Pipeline worklist', () => {
+  it('keeps the scoped worklist mounted below the drawer and closes without losing list filters', async () => {
+    context.params = new URLSearchParams(
+      'board=board-1&medium=medium-1&page=2&search=Jay&application=app-1'
+    );
+    const view = render(<AdmissionInquiryPipelineScreen />);
+    expect(screen.getByRole('dialog', { name: 'Applicant workspace' })).toHaveAttribute(
+      'data-presentation',
+      'drawer'
+    );
+    expect(context.table.data).toEqual(context.data.items);
+    expect(context.list).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ skip: false })
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Close applicant' }));
+    expect(context.replace).toHaveBeenCalledWith(
+      '/student/admissions/pipeline?board=board-1&medium=medium-1&page=2&search=Jay',
+      { scroll: false }
+    );
+    context.params.delete('application');
+    view.rerender(<AdmissionInquiryPipelineScreen />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Open row' })).toHaveFocus());
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     context.params = new URLSearchParams();
@@ -137,6 +190,10 @@ describe('Pipeline worklist', () => {
     context.bulkBusy = false;
     context.error = false;
     context.fetching = false;
+    context.scopeLoading = false;
+    context.board = 'board-1';
+    context.medium = 'medium-1';
+    context.initialLoading = false;
     context.data = {
       items: [
         { id: 'app-1', applicationNumber: 'APP-1', applicantName: 'QA Applicant', status: 0 },
@@ -162,9 +219,33 @@ describe('Pipeline worklist', () => {
     expect(context.table.exportLabel).toBe('Export current page');
     expect(context.table.isFilter).toBe(true);
     fireEvent.click(screen.getByText('Open row'));
-    expect(
-      new URL(context.push.mock.calls[0][0], 'https://school.test').searchParams.get('returnTo')
-    ).toBe('/student/admissions/pipeline?page=2&size=10&search=Jay&sort=enteredAt&direction=desc');
+    expect(context.push).toHaveBeenCalledWith(
+      '/student/admissions/pipeline?page=2&size=10&search=Jay&sort=enteredAt&direction=desc&application=app-1',
+      { scroll: false }
+    );
+  });
+  it('shows skeletons while the default scope is restored, rather than a false empty result', () => {
+    context.scopeLoading = true;
+    context.board = '';
+    context.medium = '';
+    render(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.isLoading).toBe(true);
+    expect(context.table.data).toEqual([]);
+    expect(context.list).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ skip: true })
+    );
+  });
+  it('keeps skeletons for the first scoped response and preserves safe rows on refetch', () => {
+    context.initialLoading = true;
+    const view = render(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.isLoading).toBe(true);
+    context.initialLoading = false;
+    context.fetching = true;
+    view.rerender(<AdmissionInquiryPipelineScreen />);
+    expect(context.table.isLoading).toBe(false);
+    expect(context.table.data).toEqual(context.data.items);
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Pipeline' })).toBeInTheDocument();
   });
   it('skips both reads and hides case navigation without Application View', () => {
     context.canView = false;
@@ -202,7 +283,7 @@ describe('Pipeline worklist', () => {
       scroll: false,
     });
   });
-  it('withholds stale rows on query failure and marks refresh busy', () => {
+  it('withholds rows on failure and labels background refresh without hiding safe rows', () => {
     context.error = true;
     const rendered = render(<AdmissionInquiryPipelineScreen />);
     expect(screen.getByText('Query failed')).toBeInTheDocument();
@@ -210,7 +291,8 @@ describe('Pipeline worklist', () => {
     context.error = false;
     context.fetching = true;
     rendered.rerender(<AdmissionInquiryPipelineScreen />);
-    expect(context.table.isLoading).toBe(true);
+    expect(context.table.isLoading).toBe(false);
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Pipeline' })).toBeInTheDocument();
   });
   it('waits for refreshed totals before changing a retained page', () => {
     context.params = new URLSearchParams('page=4&size=10');

@@ -346,6 +346,10 @@ describe('Special direct-registration entry', () => {
     await waitFor(() => expect(screen.getAllByLabelText(/First name/)[0]).toHaveFocus());
     expect(state.start).not.toHaveBeenCalled();
     fillApplicant();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), {
+      target: { value: 'Parent+Direct@Example.COM' },
+    });
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('parent+direct@example.com');
     fireEvent.click(screen.getByRole('button', { name: 'Start registration' }));
     await screen.findByText(/Check existing families using this guardian mobile/);
     expect(state.start).not.toHaveBeenCalled();
@@ -360,6 +364,7 @@ describe('Special direct-registration entry', () => {
         applicantFirstName: 'Riya',
         guardianFirstName: 'Aarti',
         guardianMobile: '9876543210',
+        guardianEmail: 'parent+direct@example.com',
         existingFamilyId: null,
         createSeparateFamily: false,
       })

@@ -14,7 +14,7 @@ import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readOnboardingDashboardQueue } from 'src/utils/student-dashboard-drilldown';
-import { Box, Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import {
   readAcademicFilterIds,
   academicClassFilterInput,
@@ -41,8 +41,8 @@ import StudentOnboardingOperationDialog from './student-onboarding-operation-dia
 import StudentSetupAutoAssignmentDialog from './student-setup-auto-assignment-dialog';
 import { mapOnboardingCaseToItem, type StudentOnboardingItem } from './student-onboarding-model';
 import { studentSetupSortFields, studentSetupStatusOptions } from './student-setup-worklist-config';
+import StudentQuickSetupPage, { type StudentQuickSetupPageState } from './student-quick-setup-page';
 import {
-  studentSetupTaskHref,
   type StudentSetupView,
   parseStudentSetupView,
   type StudentSetupTaskScope,
@@ -125,6 +125,14 @@ const assignmentViewMeta: Record<
 
 export default function StudentSetupScreen() {
   const [drawerTaskView, setDrawerTaskView] = useState<StudentSetupView | null>(null);
+  const [reviewingCaseDetails, setReviewingCaseDetails] = useState(false);
+  const [quickSetupState, setQuickSetupState] = useState<StudentQuickSetupPageState>({
+    dirty: false,
+    busy: false,
+  });
+  const selectedSnapshot = useRef<StudentOnboardingItem | null>(null);
+  const setupReturnFocus = useRef<HTMLElement | null>(null);
+  const setupWasOpen = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -614,14 +622,17 @@ export default function StudentSetupScreen() {
   const rollContext = useGetRollNumberBatchContextQuery(rollScope!, {
     skip: activeView !== 'roll-number' || !rollScope,
   });
-  const interactionBusy = assignment.busy || lockInteraction;
-  const { requestNavigation, confirmation } = useUnsavedNavigation(assignment.form.dirty, {
-    blockNavigation: interactionBusy || Boolean(autoAssignment) || Boolean(rollWorkspace),
-    push: (href) => {
-      assignment.cancel();
-      router.push(href);
-    },
-  });
+  const interactionBusy = assignment.busy || lockInteraction || quickSetupState.busy;
+  const { requestNavigation, confirmation } = useUnsavedNavigation(
+    assignment.form.dirty || quickSetupState.dirty,
+    {
+      blockNavigation: interactionBusy || Boolean(autoAssignment) || Boolean(rollWorkspace),
+      push: (href) => {
+        assignment.cancel();
+        router.push(href);
+      },
+    }
+  );
   navigationRef.current = (action) =>
     requestNavigation(() => {
       assignment.cancel();
@@ -672,6 +683,7 @@ export default function StudentSetupScreen() {
               : undefined
           : undefined;
   const selectedRow = sourceRows.find((student) => student.id === selectedStudentId);
+  if (selectedRow) selectedSnapshot.current = selectedRow;
   const focusedCaseQuery = useGetStudentOnboardingCaseQuery(focusedCaseId ?? '', {
     skip: !focusedCaseId || Boolean(sourceRows.find((student) => student.id === focusedCaseId)),
   });
@@ -681,7 +693,9 @@ export default function StudentSetupScreen() {
     focusedCaseQuery.currentData.id === focusedCaseId &&
     focusedCaseId === selectedStudentId
       ? mapOnboardingCaseToItem(focusedCaseQuery.currentData)
-      : null);
+      : selectedSnapshot.current?.id === selectedStudentId
+        ? selectedSnapshot.current
+        : null);
   const assignmentStudents = useMemo(
     () =>
       assignmentRequest
@@ -706,17 +720,45 @@ export default function StudentSetupScreen() {
     setSelectedStudentIds((current) =>
       current.filter((id) => sourceRows.some((student) => student.id === id))
     );
-    setSelectedStudentId((current) =>
-      current && (current === focusedCaseId || sourceRows.some((student) => student.id === current))
-        ? current
-        : null
-    );
+    // A completed assignment/activation can remove a row from the pending list.
+    // Keep its open workspace until staff explicitly closes it or chooses another case.
   }, [sourceRows, focusedCaseId]);
 
   useEffect(() => {
     setSelectedStudentIds([]);
     setSelectedStudentId(focusedCaseId);
+    setReviewingCaseDetails(false);
+    if (!focusedCaseId) selectedSnapshot.current = null;
   }, [activeTaskScope, activeView, focusedCaseId]);
+
+  const openStudentSetup = (id: string, section: StudentSetupView | null = null) => {
+    if (!selectedStudentId && document.activeElement instanceof HTMLElement) {
+      setupReturnFocus.current = document.activeElement;
+    }
+    setDrawerTaskView(section);
+    setReviewingCaseDetails(false);
+    setSelectedStudentId(id);
+    const next = new URLSearchParams(searchParams.toString());
+    next.set('case', id);
+    // Keep the worklist, filters and task tab in place while opening the unified drawer.
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
+
+  const closeStudentSetup = () =>
+    navigate(() => {
+      setSelectedStudentId(null);
+      setReviewingCaseDetails(false);
+      selectedSnapshot.current = null;
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete('case');
+      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    });
+  const nextSetupStudent = sourceRows.find(
+    (row) =>
+      row.source === 'onboarding-case' &&
+      row.id !== selectedStudentId &&
+      ![4, 5].includes(row.backendStatus ?? -1)
+  );
 
   const getViewHref = (view: StudentSetupView) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -837,24 +879,78 @@ export default function StudentSetupScreen() {
     }
   };
 
-  return (
-    <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: { xs: 'auto', md: '100%' } }}>
-      <CustomBreadcrumbs
-        heading="Student Setup"
-        description=" "
-        tooltipProps={{ title: studentSetupTooltip, sx: { textAlign: 'left' } } as TooltipProps}
-        links={[
-          { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Onboarding' },
-          { name: 'Student Setup' },
-        ]}
-      />
+  const singleStudentMode =
+    selectedStudent?.source === 'onboarding-case' ||
+    Boolean(focusedCaseId && selectedStudentId && !selectedStudent);
 
-      <StudentSetupTaskNavigation activeView={activeView} getViewHref={getViewHref} />
-      {focusedCaseId && !selectedRow && focusedCaseQuery.isFetching && (
+  useEffect(() => {
+    if (singleStudentMode) {
+      setupWasOpen.current = true;
+      return undefined;
+    }
+    if (!setupWasOpen.current) return undefined;
+    setupWasOpen.current = false;
+    // The ?case transition can outlive the page unmount. Restore focus only after
+    // the retained worklist is visible again, including returns from deep links.
+    const frame = window.requestAnimationFrame(() => {
+      const opener = setupReturnFocus.current;
+      const target =
+        opener?.isConnected && !opener.matches(':disabled') && opener.getClientRects().length
+          ? opener
+          : document.querySelector<HTMLElement>('input[aria-label="Search table"]');
+      target?.focus({ preventScroll: true });
+      setupReturnFocus.current = null;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [singleStudentMode]);
+
+  return (
+    <Stack
+      spacing={1}
+      sx={{
+        minWidth: 0,
+        minHeight: 0,
+        height: singleStudentMode ? '100%' : { xs: 'auto', md: '100%' },
+      }}
+    >
+      <Box
+        component="fieldset"
+        disabled={singleStudentMode && interactionBusy}
+        inert={singleStudentMode && interactionBusy}
+        sx={{ border: 0, p: 0, m: 0, minWidth: 0, flexShrink: 0 }}
+      >
+        <CustomBreadcrumbs
+          heading="Student Setup"
+          description="Assign class details, confirm fees and prepare app login."
+          tooltipProps={
+            {
+              title: singleStudentMode
+                ? 'Complete the student setup, then send credentials manually from App Login.'
+                : studentSetupTooltip,
+              sx: { textAlign: 'left' },
+            } as TooltipProps
+          }
+          isBack={singleStudentMode}
+          onBack={closeStudentSetup}
+          links={[
+            { name: 'Student', href: studentPaths.dashboard },
+            { name: 'Onboarding' },
+            { name: 'Student Setup' },
+          ]}
+        />
+      </Box>
+
+      {singleStudentMode && focusedCaseId && !selectedRow && focusedCaseQuery.isFetching && (
         <LinearProgress aria-label="Loading selected onboarding student" />
       )}
-      {focusedCaseId && !selectedRow && focusedCaseQuery.isError && (
+      {singleStudentMode && !selectedStudent && !focusedCaseQuery.isError && (
+        <Stack spacing={1.5} role="status" aria-label="Loading student setup">
+          <Skeleton variant="rounded" height={64} />
+          <Skeleton variant="rounded" height={220} />
+          <Skeleton variant="rounded" height={240} />
+        </Stack>
+      )}
+      {singleStudentMode && focusedCaseId && !selectedRow && focusedCaseQuery.isError && (
         <Alert
           severity="error"
           action={
@@ -867,359 +963,384 @@ export default function StudentSetupScreen() {
         </Alert>
       )}
       <Box
-        role="tabpanel"
-        id={`student-setup-${activeView}-panel`}
-        aria-labelledby={`student-setup-${activeView}-tab`}
+        data-testid="student-setup-worklist"
         sx={{
+          display: singleStudentMode ? 'none' : 'flex',
+          flexDirection: 'column',
+          gap: 1,
           minWidth: 0,
           minHeight: 0,
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
         }}
       >
-        {dashboardQueue && (
-          <Alert severity="info">
-            Dashboard worklist: {dashboardQueue.replaceAll('-', ' ')}. Counts follow the selected
-            academic scope.
-          </Alert>
-        )}
-        <StudentSetupFilters
-          allowAllScope={Boolean(dashboardQueue)}
-          options={filterOptionsQuery.currentData}
-          isLoading={filterOptionsQuery.isFetching}
-          disabled={!academicYearId || filterOptionsQuery.isError || interactionBusy}
-          todayOnly={searchParams.get('today') === 'true'}
-          onTodayChange={
-            activeView === 'readiness'
-              ? (checked) =>
-                  navigate(() => {
-                    const next = new URLSearchParams(searchParams.toString());
-                    if (checked) next.set('today', 'true');
-                    else next.delete('today');
-                    setTablePage(1);
-                    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-                  })
-              : undefined
-          }
-          selectedBoardId={selectedBoardId}
-          selectedMediumId={selectedMediumId}
-          selectedStandardId={selectedStandardId}
-          selectedDivisionId={selectedDivisionId}
-          onBoardChange={(value) => changeAcademicFilter('board', value)}
-          onMediumChange={(value) => changeAcademicFilter('medium', value)}
-          onStandardChange={(value) => changeAcademicFilter('class', value)}
-          onDivisionChange={(value) => changeAcademicFilter('division', value)}
-        />
-
-        {filterOptionsQuery.isError && (
-          <Alert
-            severity="error"
-            action={
-              <Button size="small" onClick={() => filterOptionsQuery.refetch()}>
-                Retry
-              </Button>
+        <StudentSetupTaskNavigation activeView={activeView} getViewHref={getViewHref} />
+        <Box
+          role="tabpanel"
+          id={`student-setup-${activeView}-panel`}
+          aria-labelledby={`student-setup-${activeView}-tab`}
+          sx={{
+            minWidth: 0,
+            minHeight: 0,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
+          {dashboardQueue && (
+            <Alert severity="info">
+              Dashboard worklist: {dashboardQueue.replaceAll('-', ' ')}. Counts follow the selected
+              academic scope.
+            </Alert>
+          )}
+          <StudentSetupFilters
+            allowAllScope={Boolean(dashboardQueue)}
+            options={filterOptionsQuery.currentData}
+            isLoading={filterOptionsQuery.isFetching}
+            disabled={!academicYearId || filterOptionsQuery.isError || interactionBusy}
+            todayOnly={searchParams.get('today') === 'true'}
+            onTodayChange={
+              activeView === 'readiness'
+                ? (checked) =>
+                    navigate(() => {
+                      const next = new URLSearchParams(searchParams.toString());
+                      if (checked) next.set('today', 'true');
+                      else next.delete('today');
+                      setTablePage(1);
+                      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+                    })
+                : undefined
             }
-          >
-            Could not load academic filter options.
-          </Alert>
-        )}
+            selectedBoardId={selectedBoardId}
+            selectedMediumId={selectedMediumId}
+            selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
+            onBoardChange={(value) => changeAcademicFilter('board', value)}
+            onMediumChange={(value) => changeAcademicFilter('medium', value)}
+            onStandardChange={(value) => changeAcademicFilter('class', value)}
+            onDivisionChange={(value) => changeAcademicFilter('division', value)}
+          />
 
-        {!academicYearId && showFilterAlert ? (
-          <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
-            Select an academic year to load onboarding cases.
-          </Alert>
-        ) : null}
-        {assignment.contextChanged && (
-          <Alert
-            severity="warning"
-            action={
-              <Button size="small" disabled={interactionBusy} onClick={() => navigate(() => {})}>
-                Cancel editing
-              </Button>
-            }
-          >
-            The academic scope or task changed. Your previous edits are kept for review, but cannot
-            be saved here. Cancel editing to load the current worklist.
-          </Alert>
-        )}
+          {filterOptionsQuery.isError && (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={() => filterOptionsQuery.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not load academic filter options.
+            </Alert>
+          )}
 
-        <Box sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}>
-          <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, flex: 1 }}>
-            {activeView !== 'readiness' && (
-              <StudentSetupAssignmentToolbar
-                view={activeView}
-                title={assignmentViewMeta[activeView].title}
-                scope={activeTaskScope}
-                pendingCount={
-                  assignmentType &&
-                  (activeTaskScope === 'pending'
-                    ? onboardingQuery.isError
-                    : pendingCountQuery.isError)
-                    ? undefined
-                    : pendingCount
-                }
-                pendingLoading={Boolean(
-                  assignmentType &&
-                  (assignmentScopeLoading ||
+          {!academicYearId && showFilterAlert ? (
+            <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
+              Select an academic year to load onboarding cases.
+            </Alert>
+          ) : null}
+          {assignment.contextChanged && (
+            <Alert
+              severity="warning"
+              action={
+                <Button size="small" disabled={interactionBusy} onClick={() => navigate(() => {})}>
+                  Cancel editing
+                </Button>
+              }
+            >
+              The academic scope or task changed. Your previous edits are kept for review, but
+              cannot be saved here. Cancel editing to load the current worklist.
+            </Alert>
+          )}
+
+          <Box sx={{ minWidth: 0, minHeight: 0, flex: 1, display: 'flex' }}>
+            <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, flex: 1 }}>
+              {activeView !== 'readiness' && (
+                <StudentSetupAssignmentToolbar
+                  view={activeView}
+                  title={assignmentViewMeta[activeView].title}
+                  scope={activeTaskScope}
+                  pendingCount={
+                    assignmentType &&
                     (activeTaskScope === 'pending'
-                      ? onboardingQuery.isFetching && !onboardingQuery.currentData
-                      : pendingCountQuery.isFetching && !pendingCountQuery.currentData))
-                )}
-                selectedCount={showDivisionSelection ? selectedStudentIds.length : 0}
-                onClearSelection={() => setSelectedStudentIds([])}
-                automaticDisabledReason={automaticDisabledReason}
-                onScopeChange={(scope) =>
-                  navigate(() => {
-                    setTablePage(1);
-                    setSelectedStudentIds([]);
-                    router.replace(getScopeHref(scope), { scroll: false });
-                  })
-                }
-                busy={interactionBusy}
-                unavailable={
-                  onboardingQuery.isFetching ||
-                  onboardingQuery.isError ||
-                  !onboardingQuery.currentData
-                }
-                automaticCount={
-                  activeView === 'roll-number'
-                    ? rollContext.currentData?.canAssignMissing &&
-                      !rollContext.isFetching &&
-                      !rollContext.isError
-                      ? rollContext.currentData.unassignedCount
-                      : 0
-                    : activeView === 'division' && !showDivisionSelection
-                      ? 0
-                      : automaticTargets.length
-                }
-                manualCount={manualTargets.length}
-                manualEditing={assignment.manualEditing}
-                changedCount={
-                  assignment.contextChanged || !canManageOnboarding ? 0 : assignment.changedCount
-                }
-                onAuto={() => {
-                  if (activeView === 'roll-number' && rollScope) {
-                    navigate(() => setRollWorkspace('assign-missing'));
-                    return;
+                      ? onboardingQuery.isError
+                      : pendingCountQuery.isError)
+                      ? undefined
+                      : pendingCount
                   }
-                  if (assignmentType && automaticTargets.length) {
-                    assignment.clearResults();
-                    setAutoAssignment({ type: assignmentType, students: automaticTargets });
+                  pendingLoading={Boolean(
+                    assignmentType &&
+                    (assignmentScopeLoading ||
+                      (activeTaskScope === 'pending'
+                        ? onboardingQuery.isFetching && !onboardingQuery.currentData
+                        : pendingCountQuery.isFetching && !pendingCountQuery.currentData))
+                  )}
+                  selectedCount={showDivisionSelection ? selectedStudentIds.length : 0}
+                  onClearSelection={() => setSelectedStudentIds([])}
+                  automaticDisabledReason={automaticDisabledReason}
+                  onScopeChange={(scope) =>
+                    navigate(() => {
+                      setTablePage(1);
+                      setSelectedStudentIds([]);
+                      router.replace(getScopeHref(scope), { scroll: false });
+                    })
                   }
-                }}
-                onManual={() => assignment.startManual(assignmentTargets)}
-                onSave={() => assignment.form.submitForm()}
-                onCancel={() => navigate(() => {})}
-                needsReason={assignment.needsReason}
-                reason={assignment.form.values.reason}
-                reasonError={
-                  assignment.form.touched.reason || assignment.form.submitCount > 0
-                    ? assignment.form.errors.reason
-                    : undefined
-                }
-                onReasonChange={(reason) => assignment.form.setFieldValue('reason', reason)}
-                onReasonBlur={() => assignment.form.setFieldTouched('reason')}
-                locks={
-                  activeView === 'gr-number' || activeView === 'roll-number' ? (
-                    <>
-                      {activeView === 'roll-number' && (
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="inherit"
-                          title={
-                            rollScope
-                              ? 'Review division roll numbering and approval batches'
-                              : 'Choose one Class and one Division first'
+                  busy={interactionBusy}
+                  unavailable={
+                    onboardingQuery.isFetching ||
+                    onboardingQuery.isError ||
+                    !onboardingQuery.currentData
+                  }
+                  automaticCount={
+                    activeView === 'roll-number'
+                      ? rollContext.currentData?.canAssignMissing &&
+                        !rollContext.isFetching &&
+                        !rollContext.isError
+                        ? rollContext.currentData.unassignedCount
+                        : 0
+                      : activeView === 'division' && !showDivisionSelection
+                        ? 0
+                        : automaticTargets.length
+                  }
+                  manualCount={manualTargets.length}
+                  manualEditing={assignment.manualEditing}
+                  changedCount={
+                    assignment.contextChanged || !canManageOnboarding ? 0 : assignment.changedCount
+                  }
+                  onAuto={() => {
+                    if (activeView === 'roll-number' && rollScope) {
+                      navigate(() => setRollWorkspace('assign-missing'));
+                      return;
+                    }
+                    if (assignmentType && automaticTargets.length) {
+                      assignment.clearResults();
+                      setAutoAssignment({ type: assignmentType, students: automaticTargets });
+                    }
+                  }}
+                  onManual={() => assignment.startManual(assignmentTargets)}
+                  onSave={() => assignment.form.submitForm()}
+                  onCancel={() => navigate(() => {})}
+                  needsReason={assignment.needsReason}
+                  reason={assignment.form.values.reason}
+                  reasonError={
+                    assignment.form.touched.reason || assignment.form.submitCount > 0
+                      ? assignment.form.errors.reason
+                      : undefined
+                  }
+                  onReasonChange={(reason) => assignment.form.setFieldValue('reason', reason)}
+                  onReasonBlur={() => assignment.form.setFieldTouched('reason')}
+                  locks={
+                    activeView === 'gr-number' || activeView === 'roll-number' ? (
+                      <>
+                        {activeView === 'roll-number' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="inherit"
+                            title={
+                              rollScope
+                                ? 'Review division roll numbering and approval batches'
+                                : 'Choose one Class and one Division first'
+                            }
+                            disabled={!rollScope || interactionBusy || assignment.manualEditing}
+                            onClick={() => navigate(() => setRollWorkspace('manage'))}
+                          >
+                            Manage Roll Numbers
+                          </Button>
+                        )}
+                        <StudentIdentifierLockControls
+                          academicYearId={academicYearId}
+                          divisionId={
+                            readAcademicFilterIds(selectedDivisionId).length === 1
+                              ? readAcademicFilterIds(selectedDivisionId)[0]
+                              : undefined
                           }
-                          disabled={!rollScope || interactionBusy || assignment.manualEditing}
-                          onClick={() => navigate(() => setRollWorkspace('manage'))}
-                        >
-                          Manage Roll Numbers
-                        </Button>
-                      )}
-                      <StudentIdentifierLockControls
-                        academicYearId={academicYearId}
-                        divisionId={
-                          readAcademicFilterIds(selectedDivisionId).length === 1
-                            ? readAcademicFilterIds(selectedDivisionId)[0]
-                            : undefined
-                        }
-                        identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
-                        canLock={canManageOnboarding}
-                        canUnlock={
-                          canManageOnboarding &&
-                          !filterOptionsQuery.isError &&
-                          filterOptionsQuery.currentData?.canUnlockIdentifiers === true
-                        }
-                        disabled={
-                          assignment.manualEditing || assignment.busy || onboardingQuery.isFetching
-                        }
-                        onInteractionChange={setLockInteraction}
-                      />
-                    </>
-                  ) : undefined
+                          identifierType={activeView === 'gr-number' ? 'gr' : 'roll'}
+                          canLock={canManageOnboarding}
+                          canUnlock={
+                            canManageOnboarding &&
+                            !filterOptionsQuery.isError &&
+                            filterOptionsQuery.currentData?.canUnlockIdentifiers === true
+                          }
+                          disabled={
+                            assignment.manualEditing ||
+                            assignment.busy ||
+                            onboardingQuery.isFetching
+                          }
+                          onInteractionChange={setLockInteraction}
+                        />
+                      </>
+                    ) : undefined
+                  }
+                />
+              )}
+              {activeView === 'roll-number' && rollScope && rollContext.isError && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button
+                      size="small"
+                      disabled={interactionBusy}
+                      onClick={() => rollContext.refetch()}
+                    >
+                      Retry
+                    </Button>
+                  }
+                >
+                  Could not load roll numbering.
+                </Alert>
+              )}
+              <StudentSetupTable
+                rows={displayedRows}
+                showSelection={showDivisionSelection && canManageOnboarding}
+                manualEditing={assignment.manualEditing}
+                editableIds={assignment.editableIds}
+                manualValues={assignment.form.values.values}
+                manualErrors={assignment.manualErrors}
+                manualBlockers={assignment.manualBlockers}
+                assignmentMessages={assignment.messages}
+                assignmentBusy={interactionBusy}
+                onManualChange={(id, value) => assignment.form.setFieldValue(`values.${id}`, value)}
+                onManualBlur={(id) => assignment.form.setFieldTouched(`values.${id}`)}
+                isLoading={
+                  assignmentScopeLoading ||
+                  onboardingQuery.isLoading ||
+                  (onboardingQuery.isFetching &&
+                    !onboardingQuery.currentData &&
+                    !assignment.manualEditing)
                 }
-              />
-            )}
-            {activeView === 'roll-number' && rollScope && rollContext.isError && (
-              <Alert
-                severity="error"
-                action={
-                  <Button
-                    size="small"
-                    disabled={interactionBusy}
-                    onClick={() => rollContext.refetch()}
-                  >
-                    Retry
-                  </Button>
+                isError={onboardingQuery.isError}
+                onRetry={() => onboardingQuery.refetch()}
+                view={activeView}
+                taskScope={activeTaskScope}
+                tableId={`student-onboarding-${activeView}-worklist`}
+                tableTitle={
+                  activeView === 'readiness'
+                    ? 'Student setup status'
+                    : assignmentViewMeta[activeView].title
                 }
-              >
-                Could not load roll numbering.
-              </Alert>
-            )}
-            <StudentSetupTable
-              rows={displayedRows}
-              showSelection={showDivisionSelection && canManageOnboarding}
-              manualEditing={assignment.manualEditing}
-              editableIds={assignment.editableIds}
-              manualValues={assignment.form.values.values}
-              manualErrors={assignment.manualErrors}
-              manualBlockers={assignment.manualBlockers}
-              assignmentMessages={assignment.messages}
-              assignmentBusy={interactionBusy}
-              onManualChange={(id, value) => assignment.form.setFieldValue(`values.${id}`, value)}
-              onManualBlur={(id) => assignment.form.setFieldTouched(`values.${id}`)}
-              isLoading={
-                assignmentScopeLoading ||
-                onboardingQuery.isLoading ||
-                (onboardingQuery.isFetching &&
-                  !onboardingQuery.currentData &&
-                  !assignment.manualEditing)
-              }
-              isError={onboardingQuery.isError}
-              onRetry={() => onboardingQuery.refetch()}
-              view={activeView}
-              taskScope={activeTaskScope}
-              tableId={`student-onboarding-${activeView}-worklist`}
-              tableTitle={
-                activeView === 'readiness'
-                  ? 'Student setup status'
-                  : assignmentViewMeta[activeView].title
-              }
-              noDataText={
-                !academicYearId
-                  ? 'Select an academic year to view onboarding students.'
-                  : activeView === 'readiness'
-                    ? hasWorklistFilters
-                      ? 'No students match the selected filters.'
-                      : 'No students are in onboarding for this academic year.'
-                    : activeTaskScope === 'pending'
-                      ? assignmentViewMeta[activeView].pendingEmptyText
-                      : hasWorklistFilters
+                noDataText={
+                  !academicYearId
+                    ? 'Select an academic year to view onboarding students.'
+                    : activeView === 'readiness'
+                      ? hasWorklistFilters
                         ? 'No students match the selected filters.'
                         : 'No students are in onboarding for this academic year.'
-              }
-              noDataDescription={
-                academicYearId && !hasWorklistFilters && activeView === 'readiness'
-                  ? 'Students appear here after an admission is accepted.'
-                  : undefined
-              }
-              onViewAllStudents={
-                assignmentType && activeTaskScope === 'pending'
-                  ? () =>
-                      navigate(() => {
-                        setTablePage(1);
-                        setSelectedStudentIds([]);
-                        router.replace(getScopeHref('all'), { scroll: false });
-                      })
-                  : undefined
-              }
-              onClearWorklistFilters={
-                hasWorklistFilters && academicYearId ? clearWorklistFilters : undefined
-              }
-              onOpen={(id) =>
-                navigate(() => {
-                  setDrawerTaskView(null);
-                  setSelectedStudentId(id);
-                })
-              }
-              onOpenTask={(id, view) =>
-                navigate(() => {
-                  setDrawerTaskView(null);
-                  setSelectedStudentId(id);
-                  router.replace(
-                    studentSetupTaskHref(pathname, searchParams.toString(), id, view),
-                    {
-                      scroll: false,
-                    }
-                  );
-                })
-              }
-              selectedStudentIds={selectedStudentIds}
-              onToggleSelection={toggleStudent}
-              allStudentsSelected={allStudentsSelected}
-              someStudentsSelected={someStudentsSelected}
-              onToggleAll={toggleAll}
-              totalCount={
-                assignment.displayedTotalCount ?? onboardingQuery.currentData?.totalCount ?? 0
-              }
-              page={tablePage}
-              rowsPerPage={rowsPerPage}
-              searchTerm={searchTerm}
-              onPaginationChange={(page, nextRowsPerPage) =>
-                navigate(() => {
-                  setTablePage(page);
-                  setRowsPerPage(nextRowsPerPage);
-                  setSelectedStudentIds([]);
-                })
-              }
-              onSearchChange={(value) =>
-                navigate(() => {
-                  const next = new URLSearchParams(searchParams.toString());
-                  if (value.trim()) next.set('search', value.trim());
-                  else next.delete('search');
-                  setTablePage(1);
-                  const query = next.toString();
-                  router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-                  setSelectedStudentIds([]);
-                })
-              }
-              columnFilters={columnFilters}
-              onColumnFilterChange={handleColumnFilterChange}
-              sorts={sorts}
-              onSortChange={handleSortChange}
-              placementOptions={placementOptions}
-              isServerBacked
-            />
-          </Stack>
+                      : activeTaskScope === 'pending'
+                        ? assignmentViewMeta[activeView].pendingEmptyText
+                        : hasWorklistFilters
+                          ? 'No students match the selected filters.'
+                          : 'No students are in onboarding for this academic year.'
+                }
+                noDataDescription={
+                  academicYearId && !hasWorklistFilters && activeView === 'readiness'
+                    ? 'Students appear here after an admission is accepted.'
+                    : undefined
+                }
+                onViewAllStudents={
+                  assignmentType && activeTaskScope === 'pending'
+                    ? () =>
+                        navigate(() => {
+                          setTablePage(1);
+                          setSelectedStudentIds([]);
+                          router.replace(getScopeHref('all'), { scroll: false });
+                        })
+                    : undefined
+                }
+                onClearWorklistFilters={
+                  hasWorklistFilters && academicYearId ? clearWorklistFilters : undefined
+                }
+                onOpen={(id) => navigate(() => openStudentSetup(id))}
+                onOpenTask={(id, view) => navigate(() => openStudentSetup(id, view))}
+                selectedStudentIds={selectedStudentIds}
+                onToggleSelection={toggleStudent}
+                allStudentsSelected={allStudentsSelected}
+                someStudentsSelected={someStudentsSelected}
+                onToggleAll={toggleAll}
+                totalCount={
+                  assignment.displayedTotalCount ?? onboardingQuery.currentData?.totalCount ?? 0
+                }
+                page={tablePage}
+                rowsPerPage={rowsPerPage}
+                searchTerm={searchTerm}
+                onPaginationChange={(page, nextRowsPerPage) =>
+                  navigate(() => {
+                    setTablePage(page);
+                    setRowsPerPage(nextRowsPerPage);
+                    setSelectedStudentIds([]);
+                  })
+                }
+                onSearchChange={(value) =>
+                  navigate(() => {
+                    const next = new URLSearchParams(searchParams.toString());
+                    if (value.trim()) next.set('search', value.trim());
+                    else next.delete('search');
+                    setTablePage(1);
+                    const query = next.toString();
+                    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+                    setSelectedStudentIds([]);
+                  })
+                }
+                columnFilters={columnFilters}
+                onColumnFilterChange={handleColumnFilterChange}
+                sorts={sorts}
+                onSortChange={handleSortChange}
+                placementOptions={placementOptions}
+                isServerBacked
+              />
+            </Stack>
+          </Box>
         </Box>
       </Box>
 
-      <StudentSetupDrawer
-        taskView={drawerTaskView ?? activeView}
-        open={Boolean(selectedStudent)}
-        student={selectedStudent}
-        onClose={() => {
-          setSelectedStudentId(null);
-          const next = new URLSearchParams(searchParams.toString());
-          next.delete('case');
-          router.replace(`${pathname}?${next.toString()}`, { scroll: false });
-        }}
-        onAssignDivision={() => selectedStudent && openAssignment('division', [selectedStudent.id])}
-        onAssignGrNumber={() =>
-          selectedStudent && openAssignment('gr-number', [selectedStudent.id])
-        }
-        onAssignRollNumber={() =>
-          selectedStudent && openAssignment('roll-number', [selectedStudent.id])
-        }
-        onPrimaryAction={runPrimaryCaseAction}
-        primaryActionLoading={refreshReadinessState.isLoading || activateOnboardingState.isLoading}
-        canManage={canManageOnboarding}
-        canCancel={canCancelOnboarding}
-      />
+      {selectedStudent?.source === 'onboarding-case' && (
+        <Box
+          inert={reviewingCaseDetails}
+          sx={{ display: 'flex', flex: 1, minWidth: 0, minHeight: 0 }}
+        >
+          <StudentQuickSetupPage
+            key={selectedStudent.id}
+            student={selectedStudent}
+            academicYearId={academicYearId}
+            initialSection={drawerTaskView ?? activeView}
+            canManage={canManageOnboarding}
+            onClose={closeStudentSetup}
+            onShowDetails={() => {
+              if (!interactionBusy) setReviewingCaseDetails(true);
+            }}
+            onNext={
+              nextSetupStudent
+                ? () => navigate(() => openStudentSetup(nextSetupStudent.id))
+                : undefined
+            }
+            onStateChange={setQuickSetupState}
+          />
+        </Box>
+      )}
+      {(selectedStudent?.source !== 'onboarding-case' || reviewingCaseDetails) && (
+        <StudentSetupDrawer
+          initialView={reviewingCaseDetails ? 'details' : undefined}
+          taskView={reviewingCaseDetails ? 'readiness' : (drawerTaskView ?? activeView)}
+          open={Boolean(selectedStudent)}
+          student={selectedStudent}
+          onClose={reviewingCaseDetails ? () => setReviewingCaseDetails(false) : closeStudentSetup}
+          onAssignDivision={() =>
+            selectedStudent && openAssignment('division', [selectedStudent.id])
+          }
+          onAssignGrNumber={() =>
+            selectedStudent && openAssignment('gr-number', [selectedStudent.id])
+          }
+          onAssignRollNumber={() =>
+            selectedStudent && openAssignment('roll-number', [selectedStudent.id])
+          }
+          onPrimaryAction={runPrimaryCaseAction}
+          primaryActionLoading={
+            refreshReadinessState.isLoading || activateOnboardingState.isLoading
+          }
+          canManage={canManageOnboarding}
+          canCancel={canCancelOnboarding}
+        />
+      )}
       {operationalAssignmentStudent ? (
         <StudentOnboardingOperationDialog
           assignmentType={assignmentRequest?.type ?? null}

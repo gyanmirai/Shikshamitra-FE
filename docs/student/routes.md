@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-13
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -121,11 +121,11 @@ It lists active inquiry-linked cases and started special registrations before Ad
 Board, Medium and Class remain visible; the adjacent Filters button opens Cases, Counsellor, Current step and Status without changing the route or server-filter contract.
 Page-scoped selection and Assign / change counsellor additionally require exact `Students.Admissions.Applications.Add` access; no bulk stage, status, fee or finalization action is added.
 Applications requests decision-workspace cases and archived Withdrawn cases and uses the same View authority; its list and detail routes are guarded.
-Continue opens the shared Applicant 360 under Pipeline before Decision and under Applications after Decision.
+Continue opens the shared Applicant 360 in a wide right drawer at `/student/admissions/pipeline?...&application=<id>` before Decision and in the Applications workspace after Decision. The underlying Pipeline worklist stays mounted with its scoped search, filters, sort and page.
 The server's `hasReachedDecision` flag drives canonical navigation; Withdrawn cases also route to Applications history without changing decision-entry evidence. After either handoff, Pipeline-only return filters are removed and Back returns to Applications.
 Assessment return context and same-phase list filters remain intact, and canonical navigation waits for settled queries, matching stage data and no busy/unsaved editor.
-Application reference and applicant-name links share that full-page destination, including modifier-click/new-tab behavior. Legacy `?application=<id>`, `/applications/[id]` and `/applicants/[id]` bookmarks recover into the authoritative phase without losing safe compatible list context. Multiple applicant applications still require explicit selection; no-application cases recover through Inquiries. `editIdentity=1` retains the existing identity editor.
-Applicant 360 shows a clickable shared vertical journey stepper, a horizontal form stepper, header counsellor assignment and adjacent compact End journey/Continue admission actions. Future stages can be prepared through server-authorized actions; navigation never advances the workflow. Completed evidence stays read-only. Identity editing requires exact Applicants View/Add access and remains locked after finalization.
+Application reference and applicant-name links share that URL-backed drawer destination, including modifier-click/new-tab behavior. Pipeline-origin `/pipeline/applications/[id]` bookmarks forward to the drawer while preserving compatible list filters. Assessment-origin standalone returns remain intact. Other legacy `/applications/[id]` and `/applicants/[id]` bookmarks recover into the authoritative phase without losing safe compatible list context. Multiple applicant applications still require explicit selection; no-application cases recover through Inquiries. `editIdentity=1` retains the existing identity editor.
+Applicant 360 uses icon-only Notes & Follow-ups, Application History, Admission journey and Close actions with shared custom tooltips. The drawer also has an in-place full-width Focus mode toggle. The shared vertical journey stepper and existing review/current-step/authorized override/skip commands open in the journey popover; there is no permanent journey sidebar, counsellor control or More menu. The horizontal form stepper and adjacent compact End journey/Continue admission actions remain. Future stages can be prepared through server-authorized actions; navigation never advances the workflow. Completed evidence stays read-only. Identity editing requires exact Applicants View/Add access and remains locked after finalization.
 
 The Admission Cycle screen uses exactly three assignable permissions.
 `View` enables the list, details, impact, and history; `Add` enables create, draft edit, publish, reopen, clone, window revision, and scheduling; `Delete` enables close, archive, and unused-Draft deletion.

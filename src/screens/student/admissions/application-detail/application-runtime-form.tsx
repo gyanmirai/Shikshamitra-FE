@@ -608,6 +608,7 @@ export function ApplicationRuntimeForm({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:content-save-outline" width={16} />}
                 loading={saving && !savingStep && !submitting}
+                loadingPosition="start"
                 disabled={interactionLocked}
                 onClick={onSave}
               >
@@ -620,6 +621,7 @@ export function ApplicationRuntimeForm({
                 variant={canEditForm ? 'contained' : 'outlined'}
                 endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
                 loading={savingStep}
+                loadingPosition="end"
                 disabled={interactionLocked}
                 onClick={canEditForm && showSaveDraft ? saveAndContinue : () => moveToNextStep()}
               >
@@ -632,6 +634,7 @@ export function ApplicationRuntimeForm({
                 variant="contained"
                 startIcon={<Iconify icon="mdi:send-outline" width={16} />}
                 loading={submitting}
+                loadingPosition="start"
                 disabled={interactionLocked || !canSubmitForm}
                 onClick={onSubmit}
               >
@@ -644,6 +647,7 @@ export function ApplicationRuntimeForm({
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:lock-open-outline" width={16} />}
                 loading={reopening}
+                loadingPosition="start"
                 disabled={interactionLocked}
                 onClick={onReopen}
               >

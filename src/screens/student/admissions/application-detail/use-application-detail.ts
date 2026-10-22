@@ -25,6 +25,7 @@ import {
 
 import { readAdmissionFormValue } from '../admission-visibility-rules';
 import { canRequestNormalStageAdvance } from './application-progress-model';
+import { normalizeAdmissionFormEmailValues } from '../admission-email-values';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import {
   buildDynamicAdmissionYupSchema,
@@ -132,7 +133,10 @@ export function useApplicationDetail(
       });
       return false;
     }
-    const changedValues = Object.entries(formik.values).filter(
+    const normalizedValues = formQuery.data
+      ? normalizeAdmissionFormEmailValues(formQuery.data.definition, formik.values)
+      : formik.values;
+    const changedValues = Object.entries(normalizedValues).filter(
       ([fieldCode, value]) => value !== formik.initialValues[fieldCode]
     );
     if (!changedValues.length) return true;
@@ -148,7 +152,7 @@ export function useApplicationDetail(
           valueJson: JSON.stringify(value),
         })),
       }).unwrap();
-      formik.resetForm({ values: formik.values });
+      formik.resetForm({ values: normalizedValues });
       if (showSuccessMessage) shikshaMitraToast.success({ message: 'Application saved' });
       return true;
     } catch (error) {
@@ -160,7 +164,10 @@ export function useApplicationDetail(
   };
   const save = () => persistChanges(true);
   const [advancing, setAdvancing] = useState(false);
+  const advancingRef = useRef(false);
   const advance = async (options?: AdvanceOptions) => {
+    if (advancingRef.current || advanceState.isLoading) return false;
+    advancingRef.current = true;
     setAdvancing(true);
     try {
       let application = applicationQuery.data;
@@ -213,6 +220,12 @@ export function useApplicationDetail(
           concurrencyStamp: application.concurrencyStamp,
         }).unwrap();
         setRuntimeAction(null);
+        // Keep Continue pending until both records describe the saved destination stage.
+        // A failed refresh uses the existing query error/retry state, never retries the write.
+        await Promise.allSettled([
+          applicationQuery.refetch().unwrap(),
+          workflowQuery.refetch().unwrap(),
+        ]);
         shikshaMitraToast.success({
           message: options?.deferFeeCollection
             ? 'Fee collection deferred to Onboarding. The application moved to the next stage.'
@@ -230,31 +243,41 @@ export function useApplicationDetail(
         return false;
       }
     } finally {
+      advancingRef.current = false;
       setAdvancing(false);
     }
   };
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const submitApplication = async () => {
-    if (formQuery.data) {
-      const clientErrors = await formik.validateForm();
-      const normalizedErrors = Object.fromEntries(
-        Object.entries(clientErrors).filter(([, error]) => typeof error === 'string')
-      ) as Record<string, string>;
-      await formik.setTouched(
-        Object.fromEntries(Object.keys(formik.values).map((fieldCode) => [fieldCode, true]))
-      );
-      if (Object.keys(normalizedErrors).length) {
-        setFieldErrors(normalizedErrors);
-        setErrors(['Complete the highlighted fields before submitting.']);
-        return;
-      }
-    }
-    const saved = await persistChanges(false);
-    if (!saved) return;
+    if (submittingRef.current || submitState.isLoading) return;
+    submittingRef.current = true;
+    setSubmitting(true);
     try {
+      if (formQuery.data) {
+        const clientErrors = await formik.validateForm();
+        const normalizedErrors = Object.fromEntries(
+          Object.entries(clientErrors).filter(([, error]) => typeof error === 'string')
+        ) as Record<string, string>;
+        await formik.setTouched(
+          Object.fromEntries(Object.keys(formik.values).map((fieldCode) => [fieldCode, true]))
+        );
+        if (Object.keys(normalizedErrors).length) {
+          setFieldErrors(normalizedErrors);
+          setErrors(['Complete the highlighted fields before submitting.']);
+          return;
+        }
+      }
+      const saved = await persistChanges(false);
+      if (!saved) return;
       const result = await submit(id).unwrap();
       setErrors(result.validationErrors ?? []);
       setFieldErrors(result.fieldErrors ?? {});
       if (!result.validationErrors?.length) {
+        await Promise.allSettled([
+          applicationQuery.refetch().unwrap(),
+          workflowQuery.refetch().unwrap(),
+        ]);
         shikshaMitraToast.success({
           message:
             applicationQuery.data?.status === 1
@@ -266,6 +289,9 @@ export function useApplicationDetail(
       shikshaMitraToast.error({
         message: parseApiProblemDetail(error).detail || 'Unable to submit application',
       });
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
   const validateStep = (sectionId: string) => {
@@ -335,7 +361,7 @@ export function useApplicationDetail(
     runtimeAction,
     setRuntimeAction,
     updateState,
-    submitState,
+    submitState: { ...submitState, isLoading: submitState.isLoading || submitting },
     advanceState: { ...advanceState, isLoading: advanceState.isLoading || advancing },
     save,
     advance,

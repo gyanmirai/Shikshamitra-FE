@@ -12,6 +12,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { normalizeEmail } from 'src/utils/input-format';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
@@ -187,7 +188,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           guardianFirstName: values.guardianFirstName.trim(),
           guardianLastName: values.guardianLastName.trim() || null,
           guardianMobile: values.guardianMobile,
-          guardianEmail: values.guardianEmail.trim() || null,
+          guardianEmail: normalizeEmail(values.guardianEmail) || null,
           guardianRelationship: values.guardianRelationship,
         }).unwrap();
         if (!application.id)
@@ -341,10 +342,20 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
         fullWidth
         size="small"
         name={name}
+        type={name === 'guardianEmail' ? 'email' : 'text'}
         label={label}
         required={required}
         value={formik.values[name]}
-        onChange={formik.handleChange}
+        onChange={
+          name === 'guardianEmail'
+            ? (event) => formik.setFieldValue(name, normalizeEmail(event.target.value))
+            : formik.handleChange
+        }
+        inputProps={
+          name === 'guardianEmail'
+            ? { autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }
+            : undefined
+        }
         onBlur={formik.handleBlur}
         error={Boolean(formik.touched[name] && formik.errors[name])}
         helperText={

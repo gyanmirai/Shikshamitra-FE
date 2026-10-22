@@ -79,6 +79,36 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('normalizes existing mixed-case guardian and custom email answers at the save boundary', () => {
+    const emailFields = [
+      ...fields,
+      field('GUARDIAN_EMAIL', 'Guardian.Email', 3),
+      field('OTHER_EMAIL', undefined, 3),
+    ];
+    const payload = buildAdmissionInquiryPayload(
+      {
+        ...values,
+        fields: {
+          ...values.fields,
+          GUARDIAN_EMAIL: ' Parent+Tag@Example.COM ',
+          OTHER_EMAIL: 'OTHER@Example.COM',
+        },
+      },
+      emailFields,
+      offering
+    );
+    expect(payload.email).toBe('parent+tag@example.com');
+    expect(payload.guardianEmail).toBe('parent+tag@example.com');
+    expect(payload.formValues).toContainEqual({
+      fieldCode: 'GUARDIAN_EMAIL',
+      valueJson: '"parent+tag@example.com"',
+    });
+    expect(payload.formValues).toContainEqual({
+      fieldCode: 'OTHER_EMAIL',
+      valueJson: '"other@example.com"',
+    });
+    expect(buildAdmissionInquiryPayload(values, emailFields, offering).guardianEmail).toBeNull();
+  });
   it('rejects an incomplete guardian mobile number before duplicate checking', () => {
     const errors = validateAdmissionInquiry(
       {
@@ -189,33 +219,36 @@ describe('admission inquiry model', () => {
     ['applicant', fields.filter((item) => item.bindingKey !== 'Applicant.FirstName')],
     ['guardian', fields.filter((item) => !item.bindingKey?.startsWith('Guardian.'))],
     ['all identity', [fields[5]]],
-  ])('keeps generated %s identity fields out of published form answers', (_name, publishedFields) => {
-    const form = { sections: [{ fields: publishedFields }] } as AdmissionForm;
-    const runtimeFields = getAdmissionInquiryFields(form);
-    const payload = buildAdmissionInquiryPayload(
-      {
-        ...values,
-        fields: {
-          ...values.fields,
-          applicantFirstName: 'Aanya',
-          guardianFirstName: 'Meera',
-          guardianPhone: '9876543210',
+  ])(
+    'keeps generated %s identity fields out of published form answers',
+    (_name, publishedFields) => {
+      const form = { sections: [{ fields: publishedFields }] } as AdmissionForm;
+      const runtimeFields = getAdmissionInquiryFields(form);
+      const payload = buildAdmissionInquiryPayload(
+        {
+          ...values,
+          fields: {
+            ...values.fields,
+            applicantFirstName: 'Aanya',
+            guardianFirstName: 'Meera',
+            guardianPhone: '9876543210',
+          },
         },
-      },
-      runtimeFields,
-      offering
-    );
+        runtimeFields,
+        offering
+      );
 
-    expect(payload).toMatchObject({
-      applicantFirstName: 'Aanya',
-      guardianFirstName: 'Meera',
-      guardianPhone: '9876543210',
-      phone: '9876543210',
-    });
-    expect(payload.formValues?.map((item) => item.fieldCode)).toEqual(
-      publishedFields.map((item) => item.code)
-    );
-  });
+      expect(payload).toMatchObject({
+        applicantFirstName: 'Aanya',
+        guardianFirstName: 'Meera',
+        guardianPhone: '9876543210',
+        phone: '9876543210',
+      });
+      expect(payload.formValues?.map((item) => item.fieldCode)).toEqual(
+        publishedFields.map((item) => item.code)
+      );
+    }
+  );
 
   it('keeps published identity fields even when their codes match generated fallback codes', () => {
     const publishedFields = [
@@ -408,9 +441,15 @@ describe('persisted inquiry form answers', () => {
 });
 
 it('preserves compatible bindings when changing an offering and drops incompatible answers', () => {
-  expect(preserveCompatibleInquiryAnswers(
-    [field('oldName', 'Applicant.FirstName'), field('shared', undefined, 0)],
-    [field('newName', 'Applicant.FirstName'), field('shared', undefined, 3), field('fresh', undefined, 0)],
-    { oldName: 'Riya', shared: 'text' }
-  )).toEqual({ newName: 'Riya', shared: '', fresh: '' });
+  expect(
+    preserveCompatibleInquiryAnswers(
+      [field('oldName', 'Applicant.FirstName'), field('shared', undefined, 0)],
+      [
+        field('newName', 'Applicant.FirstName'),
+        field('shared', undefined, 3),
+        field('fresh', undefined, 0),
+      ],
+      { oldName: 'Riya', shared: 'text' }
+    )
+  ).toEqual({ newName: 'Riya', shared: '', fresh: '' });
 });

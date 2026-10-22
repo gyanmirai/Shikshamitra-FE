@@ -2,8 +2,11 @@ import type { AdmissionFormField } from 'src/redux/student/admissions/admission-
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useFormik } from 'formik';
+import userEvent from '@testing-library/user-event';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdmissionInquiryFormPage from './admission-inquiry-form-page';
@@ -161,10 +164,132 @@ function useValidationController() {
   return { ...fixture, formik } as unknown as ReturnType<typeof useAdmissionInquiryDialog>;
 }
 
+function useMultilingualController() {
+  const fixture = controller();
+  const fields = fixture.sections[0].fields.map((field, index) =>
+    index === 0
+      ? {
+          ...field,
+          translations: {
+            gu: {
+              label: 'વિદ્યાર્થીનું નામ',
+              placeholder: 'નામ લખો',
+              helpText: 'પૂર્ણ નામ લખો',
+              validationMessage: 'નામ જરૂરી છે',
+            },
+            hi: { label: 'विद्यार्थी का नाम', placeholder: 'नाम लिखें' },
+          },
+        }
+      : field
+  );
+  const formik = useFormik({
+    initialValues: fixture.formik.values,
+    initialErrors: { fields: { FIRST_NAME: 'Applicant first name is required' } },
+    initialTouched: { fields: { FIRST_NAME: true } },
+    onSubmit: vi.fn(),
+  });
+  return {
+    ...fixture,
+    formik,
+    fields,
+    form: {
+      id: 'form-1',
+      version: 1,
+      defaultLanguage: 'gu',
+      supportedLanguages: ['en', 'gu', 'hi'],
+    },
+    sections: [
+      { ...fixture.sections[0], translations: { gu: { label: 'વિદ્યાર્થીની વિગતો' } }, fields },
+    ],
+  } as unknown as ReturnType<typeof useAdmissionInquiryDialog>;
+}
+
 describe('New inquiry form', () => {
+  it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {
+    const fixture = controller();
+    const offering = { ...fixture.selectedOffering, boardId: 'board-1', mediumId: 'medium-1', standardId: 'standard-1' } as AdmissionOfferingListItem;
+    const dob = {
+      id: 'dob',
+      code: 'DOB',
+      label: 'Date of birth',
+      bindingKey: 'Applicant.DateOfBirth',
+      fieldType: 5,
+      required: false,
+      readOnly: false,
+      helpText: 'Birth certificate date.',
+    };
+    const fields = [...fixture.fields, dob];
+    fixture.formik.values.fields = {
+      FIRST_NAME: 'QA child',
+      GUARDIAN_MOBILE: '9876543210',
+      PREFERRED_CLASS: 'Class 1',
+      DOB: '2022-01-01',
+    } as typeof fixture.formik.values.fields;
+    fixture.formik.errors = { fields: {} } as typeof fixture.formik.errors;
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({
+        ...fixture,
+      selectedOffering: offering,
+        fields,
+        sections: [{ ...fixture.sections[0], fields }],
+        ageContext: {
+          offering: { id: 'offering-1' },
+          academicYearStartDate: '2026-04-01',
+          minimumAgeYears: 5,
+        },
+      }) as unknown as ReturnType<typeof useAdmissionInquiryDialog>
+    );
+    render(
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AdmissionInquiryFormPage />
+      </LocalizationProvider>
+    );
+    expect(
+      screen.getByText(/Birth certificate date. Age at academic year start.*4 years 3 months/)
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(shikshaMitraToast.warning).toHaveBeenCalledWith({
+        message: expect.stringContaining('below the minimum age of 5 years'),
+      })
+    );
+    const submit = screen.getByRole('button', { name: 'Create inquiry' });
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+    expect(fixture.formik.handleSubmit).toHaveBeenCalled();
+    expect(
+      validateAdmissionInquiry(
+        fixture.formik.values as AdmissionInquiryFormValues,
+        fields as AdmissionFormField[],
+        null,
+        offering
+      )
+    ).toEqual({});
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it('starts with the form default and switches translated copy without clearing entered answers', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useAdmissionInquiryDialog).mockImplementation(useMultilingualController);
+    render(<AdmissionInquiryFormPage />);
+    expect(screen.getByRole('combobox', { name: 'Form language' })).toHaveTextContent('Gujarati');
+    expect(screen.getByRole('heading', { name: 'વિદ્યાર્થીની વિગતો' })).toBeVisible();
+    expect(screen.getByText('નામ જરૂરી છે')).toBeVisible();
+    await user.type(screen.getByRole('textbox', { name: 'વિદ્યાર્થીનું નામ' }), 'QA student');
+    expect(screen.getByText('પૂર્ણ નામ લખો')).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('option', { name: 'Hindi' }));
+    expect(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' })).toHaveValue('QA student');
+    expect(screen.getByRole('textbox', { name: 'विद्यार्थी का नाम' })).toHaveAttribute(
+      'placeholder',
+      'नाम लिखें'
+    );
+    expect(screen.getByRole('heading', { name: 'Student details' })).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Form language' }));
+    await user.click(screen.getByRole('option', { name: 'English' }));
+    expect(screen.getByRole('textbox', { name: 'Applicant first name' })).toHaveValue('QA student');
   });
 
   it('uses form validation and shows every required field error', async () => {

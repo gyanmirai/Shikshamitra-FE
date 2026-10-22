@@ -3,6 +3,8 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentOnboardingFees from './student-onboarding-fees';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+
 vi.mock('../../admissions/fee-selection/admission-fee-collection-panel', async () => {
   const { useState } = await import('react');
   return {
@@ -126,6 +128,9 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
 beforeEach(() => {
   mocks.confirm.mockReset();
   mocks.refetch.mockReset();
+  mocks.refetch.mockReturnValue({
+    unwrap: () => Promise.resolve({ concurrencyStamp: 'case-stamp', status: 1 }),
+  });
   mocks.candidatesRefetch.mockReset();
   mocks.candidatesQuery.mockReset();
   mocks.confirm.mockReturnValue({ unwrap: () => Promise.resolve() });
@@ -169,6 +174,45 @@ it('shows the fully paid Admission choice as complete and read-only without anot
   fireEvent.click(screen.getByRole('button', { name: 'Show saved receipt' }));
   expect(screen.getByText('Saved receipt preview')).toBeInTheDocument();
   fireEvent.submit(screen.getByLabelText('Embedded fee collection').closest('form')!);
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('right-aligns the completed status and keeps compact fee disclosures accessible and read-only', () => {
+  mocks.selected = true;
+  mocks.locked = true;
+  mocks.automaticallyConfirmed = true;
+  render(<StudentOnboardingFees caseId="case-1" canManage compact />);
+  expect(screen.getByText('Completed in Admissions')).toHaveStyle({ alignSelf: 'flex-end' });
+  const feeDetails = screen.getByRole('button', { name: 'Fee Details' });
+  const payments = screen.getByRole('button', { name: 'Payments & Receipts' });
+  expect(feeDetails).toHaveAttribute('aria-expanded', 'false');
+  expect(payments).toHaveAttribute('aria-expanded', 'false');
+  expect(document.getElementById(feeDetails.getAttribute('aria-controls')!)).toBeInTheDocument();
+  expect(document.getElementById(payments.getAttribute('aria-controls')!)).toBeInTheDocument();
+  fireEvent.click(feeDetails);
+  expect(feeDetails).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByText('Tuition')).toBeVisible();
+  fireEvent.click(payments);
+  expect(payments).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Show saved receipt' }));
+  const receipt = screen.getByText('Saved receipt preview');
+  fireEvent.click(payments);
+  expect(payments).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(payments);
+  expect(screen.getByText('Saved receipt preview')).toBe(receipt);
+  expect(mocks.confirm).not.toHaveBeenCalled();
+});
+
+it('preserves compact disclosure locks while the parent is saving', () => {
+  mocks.selected = true;
+  render(<StudentOnboardingFees caseId="case-1" canManage compact disabled />);
+  const feeDetails = screen.getByRole('button', { name: 'Fee Details' });
+  const payments = screen.getByRole('button', { name: 'Payments & Receipts' });
+  fireEvent.click(feeDetails);
+  fireEvent.click(payments);
+  expect(feeDetails).toHaveAttribute('aria-expanded', 'false');
+  expect(payments).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByLabelText('Embedded fee collection')).toHaveAttribute('data-disabled', 'true');
   expect(mocks.confirm).not.toHaveBeenCalled();
 });
 

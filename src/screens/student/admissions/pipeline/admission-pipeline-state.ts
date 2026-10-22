@@ -2,8 +2,6 @@ import type { AdmissionApplicationStatus } from 'src/redux/student/admissions/ad
 
 import { studentPaths } from 'src/constants/student-menu';
 
-import { getApplicationWorkspaceUrl } from '../application-detail/application-return-url';
-
 export const PIPELINE_ACTIVE_STATUSES: AdmissionApplicationStatus[] = [0, 1, 4, 5, 6, 7, 8];
 export const PIPELINE_SORT_COLUMNS = [
   'applicationNumber',
@@ -61,8 +59,5 @@ export function admissionPipelineUrl(
 }
 
 export function admissionPipelineApplicationUrl(id: string, params: URLSearchParams) {
-  return getApplicationWorkspaceUrl(
-    id,
-    admissionPipelineUrl(params, { application: undefined }, false)
-  );
+  return admissionPipelineUrl(params, { application: id }, false);
 }
