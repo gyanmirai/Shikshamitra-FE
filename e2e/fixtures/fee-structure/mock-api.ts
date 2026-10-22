@@ -1,4 +1,6 @@
 // Browser fixture only. These responses never enter the Next.js application.
+import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
+
 import { useState } from 'react';
 
 export const useGetStructureContextQuery = 'context';
@@ -153,14 +155,14 @@ export const readyFixture = {
       installmentOverrides: [],
     },
   ],
-};
+} satisfies StructureRecord;
 export const pinnedPolicyFixture = {
   ...readyFixture,
   collectionPolicyId: 'collection-alternate',
   collectionPolicyVersionId: 'collection-alternate-v2',
   refundPolicyId: null,
   refundPolicyVersionId: null,
-};
+} satisfies StructureRecord;
 export const fixtureClassRecords: Record<string, any[]> = {
   class: [readyFixture, { ...readyFixture, id: 'second', name: 'Class 5 Activity Fees' }],
   other: [{ ...readyFixture, id: 'class-six-fees', name: 'Class 6 Annual Fees' }],
@@ -173,7 +175,7 @@ export const incompleteHeadsFixture = {
       amount: null,
       paymentTermId: null,
       paymentTermVersionId: null,
-      paymentTermName: null,
+      paymentTermName: undefined,
     },
     {
       ...readyFixture.feeHeads[0],
@@ -183,10 +185,10 @@ export const incompleteHeadsFixture = {
       amount: 2500,
       paymentTermId: null,
       paymentTermVersionId: null,
-      paymentTermName: null,
+      paymentTermName: undefined,
     },
   ],
-};
+} satisfies StructureRecord;
 let saved: any = readyFixture;
 const preview = (candidate: any) => {
   const errors = [

@@ -53,6 +53,7 @@
     "node_modules",
     ".artifacts",
     "artifacts",
+    "tmp",
     "**/route.ts",
     "**/overview/page.ts",
     "dist",
