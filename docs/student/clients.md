@@ -12,6 +12,12 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## Application numbering settings
+
+`admission-numbering-api.ts` owns school-wide settings through `GET`/`PUT /api/student/enrollment/admissions/application-numbering`. Admission Periods mounts the query only while its Numbering settings dialog is open. Successful saves invalidate the specific `APPLICATION_NUMBERING` cycle-cache tag; failed saves preserve entered values and the expected settings version. No application-number input or client-side allocation exists. The lazy `POST .../application-numbering/preview` query sends the valid draft and selected academic-year ID after a 350 ms debounce; responses show the actual next available number without reserving it. Stale draft responses are ignored, missing academic context prevents the request, and Retry/Refresh explicitly fetch a fresh counter value.
+
+See [backend Student API](../../../Shikshamitra-BE/docs/modules/student/api.md) for permissions, immutable revisions, allocation and migration requirements.
+
 ## Admission email and document review controls
 
 `admission-email-values.ts` recognizes Email fields and `format: email` metadata, and normalizes editable scalar/repeated email answers through the shared `normalizeEmail` utility.

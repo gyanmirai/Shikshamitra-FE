@@ -8,6 +8,10 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Configure automatic application numbering
+
+Open Admissions → Settings → Admission Periods → Numbering settings. The shared dialog edits school-wide format and sequence rules without a new route or sidebar menu. Number Preview reads the actual next available number from the server for the draft format and page/global academic year; actual registration uses the selected offering's Admission Period. Preview never reserves a number and Refresh checks it again. Default-to-custom numbering automatically carries the existing sequence forward; Starting number is a minimum, not an instruction to restart. Existing numbers are never edited. Starting number and reset policy become read-only after custom numbering is first used. Format changes apply to future registrations. View-only callers can inspect and preview the rule; `Students.Admissions.Add` is required to submit. Closing dirty work uses the shared discard confirmation; save failures retain the draft.
+
 ## Staff academic scope
 
 Student browser tasks are staff tasks. The staff member's existing Academic assignments determine which Student records are available. Keep the global year selection and use local Board/Medium selectors for authorized placement contexts. Attendance drafts retain their unsaved-navigation flow; failed authorization or a revoked placement clears inaccessible roster data.

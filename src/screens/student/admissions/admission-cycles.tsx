@@ -51,6 +51,7 @@ import {
 import { AdmissionTableText } from './admission-table-text';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
+import { AdmissionNumberingDialog } from './admission-numbering-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
 import { AdmissionCycleConfigurationDialog } from './admission-cycle-configuration-dialog';
@@ -85,6 +86,7 @@ const getErrorMessage = (error: unknown): string =>
 
 export default function AdmissionCyclesScreen() {
   const editDialog = useBoolean();
+  const numberingDialog = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
   const [actionCycle, setActionCycle] = useState<AdmissionCycle | null>(null);
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
@@ -488,19 +490,29 @@ export default function AdmissionCyclesScreen() {
           breadcrumbs: {},
         }}
         action={
-          <Button
-            size="small"
-            variant="contained"
-            disabled={!canAdd}
-            startIcon={<Iconify icon="mdi:plus" />}
-            sx={{ minWidth: 140 }}
-            onClick={() => {
-              setEditingCycle(null);
-              editDialog.onTrue();
-            }}
-          >
-            Add Cycle
-          </Button>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:cog-outline" />}
+              onClick={numberingDialog.onTrue}
+            >
+              Numbering settings
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              disabled={!canAdd}
+              startIcon={<Iconify icon="mdi:plus" />}
+              sx={{ minWidth: 140 }}
+              onClick={() => {
+                setEditingCycle(null);
+                editDialog.onTrue();
+              }}
+            >
+              Add Cycle
+            </Button>
+          </Stack>
         }
       />
 
@@ -623,6 +635,15 @@ export default function AdmissionCyclesScreen() {
         />
       </Box>
 
+      {numberingDialog.value && (
+        <AdmissionNumberingDialog
+          onClose={numberingDialog.onFalse}
+          canEdit={canAdd}
+          academicYear={academicYears.find(
+            (year) => year.id === (filters.academicYearId || currentYear?.id)
+          )}
+        />
+      )}
       <AdmissionCycleDialog
         open={editDialog.value}
         onClose={editDialog.onFalse}

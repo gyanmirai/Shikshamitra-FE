@@ -16,6 +16,10 @@ Focused regressions cover public-link creation/copy/form selection/retry, retain
 
 Local browser/API verification created `QA Staff Handling 22 Oct`, persisted an owner-free inquiry and follow-up, and displayed **Handled by: Admin Operations** for both actions in the Inquiry history dialog. Latest local Host binaries were used; schema migrations, seeding and delivery workers were disabled. Full Onboarding activation is covered by isolated application tests, not a new live activation. The module docs check passes; repository-wide docs validation still reports unrelated testing/Finance documentation issues.
 
+## Application numbering validation
+
+Run `admission-numbering-model.test.ts`, `admission-numbering-dialog.test.tsx`, `admission-numbering-preview.test.tsx` and `admission-cycle-dialog.test.tsx` for optional fields, invalid resets/start values, server-derived next-number previews, debounce/stale-response protection, missing-year/invalid-draft suppression, preview Retry/Refresh, save retry, duplicate-submit/close locks, view-only mode, dirty-close confirmation and load-error recovery. The backend Student test gate owns persisted allocations, default-to-custom carry-forward, non-consuming preview, legacy-number preservation, tenant/year isolation and PostgreSQL concurrency/rollback. Browser smoke inspects Admission Periods and the actual shared dialog at desktop/mobile widths; a preview alone does not prove allocation.
+
 ## Lowercase email and View-owned document decisions (2026-10-22)
 
 The focused email suites passed 78 frontend assertions covering entry/paste, metadata-configured email fields, staff/public Inquiry payloads, direct Registration, Registration save, read-only/repeated answers and non-email case preservation.

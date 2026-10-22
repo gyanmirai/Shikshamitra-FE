@@ -189,7 +189,6 @@ export function WorkflowStageList({
             <EmptyContent
               filled
               title="Build the admission journey"
-              description="Start with the first step an applicant enters. Before publishing, the journey must also include a final stage."
               action={
                 !readOnly ? (
                   <Button
@@ -205,7 +204,7 @@ export function WorkflowStageList({
                       '&:hover': { bgcolor: 'text.secondary' },
                     }}
                   >
-                    Add first stage
+                    Add stage
                   </Button>
                 ) : undefined
               }
