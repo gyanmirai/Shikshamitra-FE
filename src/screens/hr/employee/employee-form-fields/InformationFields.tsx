@@ -28,8 +28,6 @@ import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'inpu
 import {
   Box,
   Grid,
-  Chip,
-  Alert,
   Radio,
   Paper,
   Select,
@@ -51,7 +49,6 @@ import {
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
-import { PolicySetupAlert } from '../../policies/components/PolicySetupAlert';
 
 import type { FieldsType } from './types';
 
@@ -346,22 +343,16 @@ export const CardActions = ({
   );
 };
 
-const getPolicyName = (item: any) => item?.name || item?.policyTitle || item?.title || '-';
-
-export const EMPLOYEE_CREATION_POLICY_SECTION_TITLE = 'Assigned System Policies';
-export const EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL = 'Default assignment';
+export const EMPLOYEE_CREATION_POLICY_SECTION_TITLE = 'System Policies';
+export const EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL =
+  'Staff use the applicable school policies automatically. An authorized administrator can assign individual policies later.';
 
 export const shouldDisableEmployeeEmailField = (
   isContactDetailsEditable: boolean,
   editData?: { id?: string | null } | null
 ) => !isContactDetailsEditable || Boolean(editData?.id);
 
-const InformationAllFields = ({
-  formik,
-  isMainForm,
-  editData = null,
-  defaultPolicyAssignment,
-}: any) => {
+const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isBasicDetailsEditable = useBoolean(!!isMainForm);
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isIdentificationEditable = useBoolean(!!isMainForm);
@@ -991,59 +982,9 @@ const InformationAllFields = ({
       {!editData?.id && !formik.values.employeeId ? (
         <SectionCard title={EMPLOYEE_CREATION_POLICY_SECTION_TITLE}>
           <Grid size={{ xs: 12 }}>
-            {defaultPolicyAssignment?.missingMessage ? (
-              <>
-                {defaultPolicyAssignment.setupStates &&
-                Object.values(defaultPolicyAssignment.setupStates).some(
-                  (state) => state === 'missing' || state === 'multiple'
-                ) ? (
-                  (['leave', 'attendance', 'payroll'] as const).map((policy) => (
-                    <PolicySetupAlert
-                      key={policy}
-                      policy={policy}
-                      state={defaultPolicyAssignment.setupStates[policy]}
-                      canOpen={defaultPolicyAssignment.canOpen[policy]}
-                      onOpen={() => defaultPolicyAssignment.onOpen(policy)}
-                    />
-                  ))
-                ) : (
-                  <Alert severity="warning">{defaultPolicyAssignment.missingMessage}</Alert>
-                )}
-              </>
-            ) : (
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1,
-                  border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                  bgcolor: (theme) => theme.vars.palette.background.neutral,
-                }}
-              >
-                <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>
-                  {EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL}
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  <Chip
-                    size="small"
-                    label={`Payroll: ${getPolicyName(defaultPolicyAssignment?.payrollPolicy)}`}
-                    variant="outlined"
-                  />
-                  <Chip
-                    size="small"
-                    label={`Attendance: ${getPolicyName(defaultPolicyAssignment?.attendancePolicy)}`}
-                    variant="outlined"
-                    color="success"
-                  />
-                  <Chip
-                    size="small"
-                    label={`Leave: ${getPolicyName(defaultPolicyAssignment?.leavePolicy)}`}
-                    variant="outlined"
-                    color="primary"
-                  />
-                </Box>
-              </Paper>
-            )}
+            <Typography variant="body2" color="text.secondary">
+              {EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL}
+            </Typography>
           </Grid>
         </SectionCard>
       ) : null}

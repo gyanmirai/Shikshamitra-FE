@@ -27,6 +27,7 @@ export interface IColumn {
   headerSx?: SxProps<Theme>;
   cellSx?: SxProps<Theme>;
   render?: (value: any, row: IData) => React.ReactNode;
+  searchValue?: (value: unknown, row: IData) => string;
   renderColumn?: (col: IColumn) => React.ReactNode; // header specific custom render
   children?: (row: IData) => React.ReactNode;
   onSort?: (a: any, b: any) => any[];

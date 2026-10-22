@@ -4,6 +4,13 @@ Use for one date or timestamp; for two endpoints read [date-range-picker.md](dat
 Use the same [field/section rules](sections.md) in drawers, dialogs, [page forms](page-forms.md),
 and views. Date fields are picker controls, not CustomSelect option lists or native date inputs.
 
+![Local AcademicDatePicker open in the calendar marker form](../assets/local-single-date-open.jpg)
+
+The local Calendar Management capture establishes a single-date popup with selected day,
+month/year navigation, and its labeled field. It is distinct from the range picker reference;
+date-time, blocked-day, invalid-input, and touch/mobile states remain unpictured. See
+[capture metadata](image-references.md#local-app-captures-22-october-2026).
+
 ## Components, labels, and appearance
 
 - Use the existing MUI X DatePicker/TimePicker/DateTimePicker with Dayjs and the application's
@@ -80,12 +87,12 @@ Inspect [Academic picker](../../../../src/components/academic-date-picker/Academ
 [types](../../../../src/components/academic-date-picker/types.ts),
 [calendar rules](../../../../src/components/academic-date-picker/useAcademicDatePickerRules.ts),
 and [date-time wrapper](../../../../src/components/academic-date-picker/AcademicDateTimePicker.tsx).
-The supplied [range reference](../assets/date-range-picker-open.png) illustrates date selection
-composition, not a verified single-date popup; a dedicated single-date screenshot is still absent.
+The supplied [range reference](../assets/date-range-picker-open.png) is distinct from the local
+[single-date popup](../assets/local-single-date-open.jpg). Neither establishes date-time behavior.
 
 Current source formats academic helper text as an absolutely positioned error-styled bubble,
 even for some guidance; it can conflict with the shared below-field helper standard. Correct
 shared presentation when implementing rather than duplicating local overrides. Validate empty,
 invalid typed dates/leap days, inclusive boundaries, past/future rules, blocked days, changed
 context, keyboard entry/selection, error spacing, both themes, and all shells. Runtime behavior
-and single-date visual matching remain Unverified; this guide changes no application code.
+outside the captured idle single-date state remain Unverified; this guide changes no application code.

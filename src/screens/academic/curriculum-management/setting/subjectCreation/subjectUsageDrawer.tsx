@@ -42,11 +42,13 @@ export default function SubjectUsageDrawer({
       open={open}
       handleClose={onClose}
       hasForm={false}
+      guardUnsavedChanges={false}
+      titleInfo="Review where this subject is used and the restrictions on editing, archiving, or deleting it."
       maxWidth="md"
       title={
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Typography component="span" variant="subtitle1">
-            {selectedSubject?.name || 'Subject usage & details'}
+            {selectedSubject?.name || 'Subject Usage & Details'}
           </Typography>
           <Label color="default" variant="soft">
             {statusLabel}
@@ -78,13 +80,13 @@ export default function SubjectUsageDrawer({
             />
             <SubjectUsageLabelsSection
               icon="solar:buildings-3-linear"
-              title="Allocated classes"
+              title="Allocated Classes"
               description="Classes currently using this subject."
               labels={viewModel.allocationLabels}
             />
             <SubjectUsageLabelsSection
               icon="solar:layers-linear"
-              title="Mapped elective groups"
+              title="Mapped Elective Groups"
               description="Elective groups currently linked to this subject."
               labels={viewModel.electiveGroupLabels}
             />

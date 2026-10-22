@@ -1,16 +1,50 @@
 # ConfirmDialog: confirmation pop-up UI consistency
 
 Use the shared `ConfirmDialog` for one consequential decision, including discarding an unsaved
-form, deleting, archiving, or publishing when the workflow requires confirmation. Use
+form, deleting, archiving, or publishing when the workflow requires confirmation. Reuse this
+same shell for warning, information, success, and error pop-ups when a modal is warranted. Use
 [CustomDialog](form-dialogs.md) or a [drawer](drawers.md) for substantial data entry. This replaces
 the previous compact confirmation guide and is the shared decision pattern for both form shells.
 
-## Reference status
+## Visual reference and shared-shell rule
 
-No confirmation screenshot has been supplied. `assets/confirmation.png` remains a pending slot
-in [image references](image-references.md); do not create a broken embed or claim visual matching.
-The rules below are based on the current shared component/theme and the user's confirmed naming,
-icon, sizing, and unsaved-form requirements. Do not infer a confirmation design from a form image.
+![Delete board confirmation with leading status icon, concise message, divider, and right-aligned actions](../assets/confirmation.png)
+
+The user supplied this reference on 22 October 2026. It shows the idle, light-theme `Delete board`
+confirmation over an Academic board list: a rounded surface above a dimmed page, a compact leading
+status icon beside the title, a short left-aligned message naming **CBSE**, a subtle footer divider,
+and right-aligned outlined Cancel before the contained destructive action. The image is 620 x 265 px;
+the route, CSS viewport, and scale are unknown. Record text is illustrative, not application copy.
+
+**Use this same confirmation-modal anatomy for every warning, information, success, error, and
+other focused decision pop-up.** Keep the shell, spacing, typography, content alignment, footer
+divider, and action placement consistent. Change the semantic icon/color, title, message, and
+available actions to match the actual state; do not create a separate layout for each severity.
+Use inline feedback or the established toast when the message does not require interruption.
+
+| Meaning | Header treatment | Actions |
+| --- | --- | --- |
+| Destructive confirmation / error | Error icon and `error.main` | Delete/Discard uses a contained error action; a failed request offers the real recovery action, such as Retry, when available |
+| Warning | Warning icon and `warning.main` | Safe action first, then the named outcome; use error styling only when that outcome is destructive |
+| Information | Info icon and `info.main` | Close for acknowledgement, or a safe action followed by a specific next step when a decision is required |
+| Success | Success icon and `success.main` | Close or an available next step such as View record; preserve the established action palette rather than making every button green |
+
+Color reinforces the visible message. Keep the surface theme-neutral; do not tint the whole modal
+by severity. A feedback-only modal needs one Close action, not a fabricated Cancel/Confirm pair.
+The current component always renders a safe button and requires `action`; inspect its API before
+implementing a single-action variant rather than inventing props or duplicating the shell.
+
+The reference uses sentence case for `Delete board` and omits the primary button icon. Retain the
+repository's Title Case title and required footer action icons when implementing this layout.
+Theme tokens and shared small-button sizing govern dimensions; do not copy screenshot pixels.
+
+![Local unsaved Subject warning above its mounted draft at phone width in dark theme](../assets/local-discard-warning-mobile-dark.jpg)
+
+This local capture adds a warning-header state at 390 x 844 in dark theme. The temporary draft
+was discarded without saving. Its existing `Keep Editing` / `Discard Changes` button casing is
+historical evidence; the corrected shared copy rule uses `Keep editing` / `Discard changes`.
+See [capture metadata](image-references.md#local-app-captures-22-october-2026). Information, success,
+non-destructive error feedback, loading, and keyboard/focus behavior are not established by these images.
 
 ## Anatomy, title, and content
 
@@ -19,7 +53,7 @@ icon, sizing, and unsaved-form requirements. Do not infer a confirmation design 
 
 Your changes to this form will be lost if you discard them.
 
-                         [X Keep Editing] [Discard icon Discard Changes]
+                         [X Keep editing] [Discard icon Discard changes]
 ```
 
 - Use a clear Title Case action/object title, such as `Discard Unsaved Changes?`, `Delete Subject?`,
@@ -41,7 +75,7 @@ Your changes to this form will be lost if you discard them.
 ## Spacing and button sizes
 
 Use existing theme units (currently 8 px), palette, typography, and dialog margins. These values
-come from the inspected implementation; they are not measurements from an unattached image.
+come from the inspected implementation; they are not pixel measurements from the reference image.
 
 | Element | Standard / current owner |
 | --- | --- |
@@ -62,7 +96,7 @@ without clipping, and keep both actions reachable; use body scrolling if content
 
 | Decision | Safe action | Outcome action |
 | --- | --- | --- |
-| Unsaved form | `Keep Editing`: outlined, inherit/neutral, `GlobalIcons.cancel` | `Discard Changes`: contained, error, `GlobalIcons.delete`; discards only the local draft |
+| Unsaved form | `Keep editing`: outlined, inherit/neutral, `GlobalIcons.cancel` | `Discard changes`: contained, error, `GlobalIcons.delete`; discards only the local draft |
 | Delete | `Cancel`: outlined, inherit/neutral, cancel icon | Specific `Delete` label: contained, error, delete icon |
 | Archive | `Cancel`: outlined, inherit/neutral | `Archive`: contained neutral with archive icon; warnings belong to an actual restriction |
 | Other lifecycle decision | Safe `Cancel` or workflow-specific wording | Explicit outcome such as `Publish`; existing semantic styling and matching icon |
@@ -81,10 +115,10 @@ and collections; focusing or touching an unchanged field is not an unsaved chang
 | --- | --- |
 | Cancel/X/Escape on a clean form | Close once without a discard confirmation; clean up the session |
 | Cancel/X/Escape on a dirty form | Leave the form and all values mounted; show `Discard Unsaved Changes?` |
-| `Keep Editing` | Close only the confirmation; preserve values, errors, selection, and form context; return focus to the form |
-| `Discard Changes` | Reset the local draft/baseline and edit identity, then close confirmation/form; do not save or issue a record-delete request |
+| `Keep editing` | Close only the confirmation; preserve values, errors, selection, and form context; return focus to the form |
+| `Discard changes` | Reset the local draft/baseline and edit identity, then close confirmation/form; do not save or issue a record-delete request |
 | Confirmation backdrop | Keep confirmation open; never discard implicitly |
-| Confirmation Escape while idle | Safe dismissal only, equivalent to Keep Editing; no draft reset |
+| Confirmation Escape while idle | Safe dismissal only, equivalent to Keep editing; no draft reset |
 | Form backdrop / navigation | Follow its shell's dismissal policy; every supported leave path must use the same dirty guard |
 | Blocking form save or confirmed async action | Prevent duplicate/conflicting decisions; lock outcome, safe action, reason inputs, Escape, and any close/backdrop path |
 
@@ -110,8 +144,8 @@ Inspect [ConfirmDialog](../../../../src/components/confirm-dialog/confirm-dialog
 | --- | --- |
 | `open`, `title`, `action`, `onClose` | Required; `action` is the caller's outcome button; `onClose` handles the built-in safe button and allowed dismissal |
 | `content` | Optional ReactNode for consequence or required-reason content |
-| `cancelText` | Safe button label; set exactly `Keep Editing` for unsaved work |
-| `icon` | ReactNode or a supported semantic string; default is error, so choose an explicit meaning; pass an Iconify node to use `GlobalIcons` |
+| `cancelText` | Safe button label; set exactly `Keep editing` for unsaved work |
+| `icon` | ReactNode or a supported semantic string (`warning`, `info`, `success`, `error`); default is error, so choose an explicit meaning; pass an Iconify node to use `GlobalIcons` |
 | `disableBackdropClick` | Defaults false; set true for focused confirmations |
 | `disableCancel` | Disables only the safe button, not Escape or every dismissal path |
 | MUI dialog props | Support `disableEscapeKeyDown`, accessible title/message relationships, etc.; still guard `onClose` while busy |
@@ -133,7 +167,7 @@ belong to the single close owner; `busy` comes from actual blocking request/subm
   aria-labelledby="discard-title"
   aria-describedby="discard-message"
   icon={<Iconify icon={GlobalIcons.alertIcon} width={24} color="warning.main" />}
-  cancelText="Keep Editing"
+  cancelText="Keep editing"
   onClose={() => { if (!busy) keepEditing(); }}
   disableBackdropClick
   disableCancel={busy}
@@ -148,7 +182,7 @@ belong to the single close owner; `busy` comes from actual blocking request/subm
       startIcon={<Iconify icon={GlobalIcons.delete} width={18} />}
       onClick={discardChanges}
     >
-      Discard Changes
+      Discard changes
     </Button>
   }
 />
@@ -156,7 +190,7 @@ belong to the single close owner; `busy` comes from actual blocking request/subm
 
 Use unique accessible IDs per mounted instance, for example from React `useId`; literal IDs above
 illustrate one instance. The built-in safe button already uses `GlobalIcons.cancel` and small
-size; do not add a duplicate Keep Editing button inside `action`. ConfirmDialog also forces a
+size; do not add a duplicate Keep editing button inside `action`. ConfirmDialog also forces a
 valid outcome element to small size. For an async operation, supply a loading-capable outcome
 button; retain content and request-specific retry errors until success. Confirm only an operation
 the backend and feature actually allow. The discard example itself is a local decision.
@@ -174,7 +208,7 @@ the backend and feature actually allow. The discard example itself is a local de
 ## Verification and inconsistencies
 
 Check Title Case and visible consequence; correct semantic/GlobalIcons glyphs; one padding owner;
-30 px small buttons; safe/outcome order; exact Keep Editing/Discard Changes labels; clean versus
+30 px small buttons; safe/outcome order; exact Keep editing/Discard changes labels; clean versus
 dirty cancellation; no reset on safe dismissal; no duplicate/native prompt; backdrop/Escape;
 focus trap, safe initial focus and focus return; busy locks; errors/retry; narrow screens and
 both themes. Documentation changes validate links, skill structure, and whitespace; UI changes
@@ -183,6 +217,7 @@ also need focused checks and the required in-app browser smoke test.
 Current implementation differences: the default header icon map uses MUI icons rather than
 GlobalIcons; caller-supplied Iconify nodes support the requested convention. The shared component
 does not create an unsaved-change guard or explicit accessible message IDs for the caller, and
-`disableCancel` alone does not block all dismissal paths. A confirmation image, runtime focus,
-keyboard, mobile, loading, and visual matching remain Unverified. No application behavior is
+`disableCancel` alone does not block all dismissal paths. The supplied deletion image and local
+dark-phone discard warning establish their depicted anatomy. Other semantic variants, loading,
+focus/keyboard, and uncaptured responsive/theme states remain Unverified. No application behavior is
 changed by updating this guide.

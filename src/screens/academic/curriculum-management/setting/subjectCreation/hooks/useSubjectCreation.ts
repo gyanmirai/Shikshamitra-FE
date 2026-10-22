@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -37,31 +37,14 @@ export const useSubjectCreation = () => {
   });
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
   const dispatch = useDispatch();
 
-  const handleClose = useCallback(
-    (_e: any, isSubmit?: boolean) => {
-      const resetState = () => {
-        setTimeout(() => {
-          setSelectedSubject(null);
-          dispatch(setIsChanges(false));
-        }, 200);
-      };
-
-      if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-        addSubjectDialog.onFalse();
-        resetState();
-      } else if (!isChanges) {
-        addSubjectDialog.onFalse();
-        setTimeout(() => {
-          setSelectedSubject(null);
-        }, 200);
-      }
-    },
-    [isChanges, dispatch, addSubjectDialog]
-  );
+  const handleClose = () => {
+    addSubjectDialog.onFalse();
+    setSelectedSubject(null);
+    dispatch(setIsChanges(false));
+  };
 
   return {
     deleteSubjectDialog,

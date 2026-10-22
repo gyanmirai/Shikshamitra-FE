@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-22
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,13 +53,12 @@ The staff-profile leave tab retains its existing employee-specific history.
 
 ## Employee onboarding behavior
 
-Staff Directory's Add Staff form checks policy prerequisites before loading the three default-policy lists.
-Missing effective permissions or a policy lookup 403 opens Policy Access Required with the unavailable capabilities and administrator guidance.
-Check access again refreshes the signed-in user's effective permissions and retries lookups without clearing entered details; it does not grant permissions.
-Temporary lookup failures offer Retry and remain distinct from missing or duplicate defaults.
+Staff Directory's Add Staff form opens Personal Information without fetching policy lists or requiring policy-management grants.
+Saving a basic profile omits `policyOverride`; it uses backend effective-policy inheritance rather than creating an employee-specific assignment.
+Missing policy setup does not block profile entry. Payroll/activation readiness and explicit assignment remain separate authorized workflows.
+Creation failures keep entered details and allow retry on the same step.
 The Role field uses the employee-specific assignable-role lookup, so Staff Add/Edit does not require access to security role administration.
-Existing staff edits skip creation-policy prerequisites.
-The prerequisite dialog does not send an access request because the product has no access-request service.
+Existing staff edits retain their independent save flow.
 Backend authorization and error contracts remain owned by the [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
 
 An invitation remains at Invitation sent until the candidate submits the public application, and only that unsubmitted state offers link regeneration.
@@ -423,7 +422,7 @@ Change assignment offers organization policies or employee-specific selectors, f
 Lookup failures display retry states rather than organization defaults.
 The staff profile edits bank details, statutory identifiers, and attendance integration in a drawer that submits only changed groups.
 Both drawers retain failed edits and protect unsaved changes; mobile drawers fill the viewport width.
-Employee creation still assigns default policies and checks activation readiness through its existing flow.
+Employee creation inherits effective school policies; activation readiness remains enforced by the backend.
 
 In Update Staff, those same details are inline fields with their own saved baseline.
 Save persists changed groups without advancing; Save & Next advances only after a successful save, or immediately without a write when nothing changed.

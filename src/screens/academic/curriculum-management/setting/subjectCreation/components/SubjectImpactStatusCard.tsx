@@ -11,6 +11,12 @@ export function SubjectImpactStatusCard({ isInUse }: SubjectImpactStatusCardProp
     <FormSectionCard
       icon={isInUse ? 'solar:shield-warning-linear' : 'solar:shield-check-linear'}
       title={isInUse ? 'Impact & System Restrictions' : 'Safe to Modify or Delete'}
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip={
+        isInUse
+          ? 'Existing academic references prevent deletion. Archiving keeps those records available.'
+          : 'No active academic references were found for this subject.'
+      }
       description={
         isInUse
           ? 'Review the current restrictions before changing or removing this subject.'

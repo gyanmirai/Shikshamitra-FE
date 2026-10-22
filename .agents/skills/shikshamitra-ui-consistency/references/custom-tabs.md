@@ -95,11 +95,11 @@ by filters and content; do not hide the primary action or introduce document-lev
 
 The current wrapper checks global `isChanges` and uses `window.confirm` before calling `onChange`;
 it clears global dirty state after accepted navigation. This is not the custom
-[Keep Editing / Discard Changes popup](confirmations.md). Do not show both prompts.
+[Keep editing / Discard changes popup](confirmations.md). Do not show both prompts.
 
 If the owning workspace already preserves one shared form and owns its complete leave guard,
 use `guardUnsavedChanges={false}` and let that owner decide whether switching preserves the draft
-or requires the shared confirmation. Keep Editing stays on the original tab with all values;
+or requires the shared confirmation. Keep editing stays on the original tab with all values;
 confirmed Discard resets only the correct draft, then commits the pending tab/navigation once.
 Do not clear a parent form's dirty state from another tab or commit a URL before the decision.
 Real tab links and other navigation paths need the same leave protection, not just `onChange`.
@@ -173,7 +173,7 @@ if the exact product glyph is needed. It does not authorize changing records or 
 
 Verify each valid/default/unknown value; selected style and panel relationships; contextual actions
 and permissions; counts/filter/table scope; URL reload/back/forward/modifier-click when applicable;
-dirty switch Keep Editing/Discard; busy locks; keyboard/focus; narrow scrolling; both themes;
+dirty switch Keep editing/Discard; busy locks; keyboard/focus; narrow scrolling; both themes;
 and loading/empty/error states. Documentation checks links/assets and whitespace; UI changes
 also need focused checks and the required in-app browser smoke test.
 

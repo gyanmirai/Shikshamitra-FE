@@ -15,7 +15,9 @@ export function SubjectUsageMetricsSection({
   return (
     <FormSectionCard
       icon="solar:chart-2-linear"
-      title="Dependencies & usage"
+      title="Dependencies & Usage"
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip="Counts show the academic records currently linked to this subject in each module."
       description={`${dependentModuleCount} active module${dependentModuleCount === 1 ? '' : 's'} currently reference this subject.`}
     >
       <Grid container spacing={1}>

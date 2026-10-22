@@ -33,8 +33,9 @@ export function SubjectDependencyActions({
   return (
     <FormSectionCard
       icon="solar:link-round-linear"
-      title="Dependency actions"
-      description="Open the related academic records for this subject."
+      title="Dependency Actions"
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip="Open the academic modules that currently reference this subject."
     >
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {actions.map((action) => (

@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -11,8 +10,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
-import { hasNavigationPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -48,8 +45,6 @@ import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
 import { PayrollProfileWorkspace } from './payroll-profile-workspace';
 import { buildWorkExperiencePayload } from './work-experience-payload';
-import { useEmployeePolicyAccess } from './use-employee-policy-access';
-import { EmployeePolicyAccessNotice } from './employee-policy-access-notice';
 import { applyEmployeeCreateResponseToFormValues } from './employee-form-state';
 import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import {
@@ -62,11 +57,6 @@ import {
   reportingManagerValidationSchema,
   getPersonalInformationValidationSchema,
 } from './employee-form-validation';
-import {
-  getEmployeeCreationDefaultPolicyMessage,
-  EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE,
-  EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE,
-} from './employee-default-policy-utils';
 
 import type { StatutoryProfileEditHandle } from './statutory-profile-editor';
 import type {
@@ -77,9 +67,6 @@ import type {
   IReportingInformationResponse,
   IAdditionalInformationResponse,
 } from './types';
-
-const EMPLOYEE_CREATION_DEFAULT_POLICY_CONFIRMATION_TOKEN =
-  '__employee_onboarding_default_policy_assignment__';
 
 export const toRawMobile = (value: string | null | undefined) => {
   if (!value) return '';
@@ -372,18 +359,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const router = useRouter();
-  const [pendingPolicyRoute, setPendingPolicyRoute] = useState<string | null>(null);
-  const [createdEmployeeId, setCreatedEmployeeId] = useState<string | null>(null);
-  const policyAccess = useEmployeePolicyAccess(
-    currentYear?.id,
-    !editData?.id && !createdEmployeeId
-  );
-  const [formOpened, setFormOpened] = useState(false);
-  useEffect(() => {
-    if (!policyAccess.blocked) setFormOpened(true);
-  }, [policyAccess.blocked]);
   const [activeStep, setActiveStep] = useState(editData && initialStep === 5 ? 5 : 0);
   const payrollEditRef = React.useRef<PayrollEditHandle>(null);
   const statutoryEditRef = React.useRef<StatutoryProfileEditHandle>(null);
@@ -433,45 +408,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
     isThrowError: true,
     popupConfig: { error: false },
   });
-  const {
-    payrollPolicy: defaultPayrollPolicy,
-    attendancePolicy: defaultAttendancePolicy,
-    leavePolicy: defaultLeavePolicy,
-    loading: defaultPolicyLookupLoading,
-    hasMultipleDefaults: hasMultipleDefaultPolicies,
-    setupStates,
-  } = policyAccess.defaults;
-  const defaultPolicyAssignment = {
-    payrollPolicy: defaultPayrollPolicy,
-    attendancePolicy: defaultAttendancePolicy,
-    leavePolicy: defaultLeavePolicy,
-    setupStates,
-    canOpen: {
-      leave: hasNavigationPermission(permissions, hrPermissions.policies.leavePolicies),
-      attendance: hasNavigationPermission(permissions, hrPermissions.policies.attendance),
-      payroll: hasNavigationPermission(permissions, hrPermissions.policies.payroll),
-    },
-    onOpen: (policy: 'leave' | 'attendance' | 'payroll') => {
-      const href = policy === 'leave' ? hrPaths.policies.leavePolicies : hrPaths.policies[policy];
-      if (isChanges) setPendingPolicyRoute(href);
-      else {
-        handleClose();
-        router.push(href);
-      }
-    },
-    missingMessage: policyAccess.blocked
-      ? 'Policy access is required to add staff'
-      : getEmployeeCreationDefaultPolicyMessage({
-          currentYearId: currentYear?.id,
-          isLoading: defaultPolicyLookupLoading,
-          hasMultipleDefaults: hasMultipleDefaultPolicies,
-          payrollPolicyId: defaultPayrollPolicy?.id,
-          attendancePolicyId: defaultAttendancePolicy?.id,
-          leavePolicyId: defaultLeavePolicy?.id,
-          setupStates,
-        }),
-  };
-
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeMutation,
@@ -543,25 +479,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
-        if (defaultPolicyAssignment.missingMessage) {
-          throw new Error(defaultPolicyAssignment.missingMessage);
-        }
-        if (!currentYear?.id) {
-          throw new Error('Select an academic year');
-        }
-        if (defaultPolicyLookupLoading) {
-          throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE);
-        }
-        if (hasMultipleDefaultPolicies) {
-          throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE);
-        }
-        if (!defaultPayrollPolicy?.id || !defaultAttendancePolicy?.id || !defaultLeavePolicy?.id) {
-          throw new Error('Default policies could not be verified');
-        }
-
-        const policyEffectiveFrom = values.dateOfJoining
-          ? dayjs(values.dateOfJoining).format('YYYY-MM-DD')
-          : dayjs().format('YYYY-MM-DD');
         const body: Record<string, any> = {
           lastName: values.lastName,
           firstName: values.firstName,
@@ -589,15 +506,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
           shiftId: values.shift,
           adharNo: values.adharNo || '',
           panNo: (values.panNo || '').toUpperCase(),
-          policyOverride: {
-            academicYearId: currentYear.id,
-            payrollPolicyId: defaultPayrollPolicy.id,
-            attendancePolicyId: defaultAttendancePolicy.id,
-            leavePolicyId: defaultLeavePolicy.id,
-            effectiveFrom: policyEffectiveFrom,
-            assignmentReason: 'Staff creation policy assignment',
-            confirmationToken: EMPLOYEE_CREATION_DEFAULT_POLICY_CONFIRMATION_TOKEN,
-          },
         };
 
         if (values.secondaryMobileNo) {
@@ -615,24 +523,13 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
 
         const resp = await addEmployee({ body: formData }).unwrap();
         const nextValues = applyEmployeeCreateResponseToFormValues(formik.values, resp);
-        setCreatedEmployeeId(nextValues.employeeId);
         formik.setFieldValue('employeeId', nextValues.employeeId);
         formik.setFieldValue('userId', nextValues.userId);
         return getResolvedEmployeeIdentity(nextValues, editData);
       }
       return getResolvedEmployeeIdentity(values, editData);
     },
-    [
-      addEmployee,
-      currentYear?.id,
-      defaultAttendancePolicy?.id,
-      defaultLeavePolicy?.id,
-      defaultPayrollPolicy?.id,
-      defaultPolicyLookupLoading,
-      editData,
-      defaultPolicyAssignment.missingMessage,
-      hasMultipleDefaultPolicies,
-    ]
+    [addEmployee, editData]
   );
 
   const handleFamilyInformation = useCallback(
@@ -826,10 +723,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
         }
         return;
       }
-      if (!editData?.id && !values.employeeId && policyAccess.blocked) {
-        setIsLoading(false);
-        return;
-      }
       let saveSucceeded = false;
       let resolvedEmployeeId = values.employeeId;
       let resolvedUserId = getEmployeeUserId(values, editData);
@@ -921,10 +814,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
           setActiveStep(activeStep + 1);
         }
       } catch (error) {
-        if (!editData?.id && !values.employeeId && policyAccess.handleSubmitError(error)) {
-          setIsLoading(false);
-          return;
-        }
         const parsedError = parseApiProblemDetail(error);
         shikshaMitraToast.error({
           message: parsedError.detail || 'Failed to save staff details',
@@ -960,7 +849,6 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
       handleWorkExperience,
       handleReportingManager,
       handleAcademicPermission,
-      policyAccess,
       resetCurrentStepRef,
     ]
   );
@@ -994,128 +882,94 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
 
   return (
     <>
-      <EmployeePolicyAccessNotice access={policyAccess} />
-      {(formOpened || !policyAccess.blocked) && (
-        <CustomStepperWithFormik
-          showSaveButton={inlinePayroll ? payrollDirty : isChanges}
-          saveButtonProps={{ disabled: policyAccess.blocked }}
-          saveAndNextButtonProps={
-            inlinePayroll
-              ? { disabled: !payrollState.ready, loading: payrollBusy || payrollSubmitting }
-              : {
-                  disabled:
-                    policyAccess.blocked ||
-                    (!editData?.id &&
-                      !createdEmployeeId &&
-                      Boolean(defaultPolicyAssignment.missingMessage)),
-                }
-          }
-          disableSubmit={disableStepperSubmit || policyAccess.blocked}
-          key={editData?.id || 'new'}
-          initialValues={initialValues}
-          steps={steps}
-          viewMode="vertical"
-          activeStep={activeStep}
-          completedSteps={!editData ? completedSteps : undefined}
-          isStepClickable={canNavigateToStep}
-          handleBack={() => {
-            if (inlinePayroll && payrollDirty) setPendingStep(activeStep - 1);
-            else setActiveStep(activeStep - 1);
-          }}
-          validationSchema={employeeValidations[activeStep]}
-          onStepClick={(step) => {
-            if (step === activeStep || !canNavigateToStep(step)) {
-              return;
-            }
-            if (isChanges) {
-              setPendingStep(step);
-            } else {
-              setActiveStep(step);
-            }
-          }}
-          isDisabledLabel={!editData}
-          validateOnChange
-          handleNext={(
-            isLastStep: boolean,
-            value: any,
-            formik: any,
-            setIsLoading: (val: boolean) => void
-          ) => handleSave(isLastStep, value, formik, setIsLoading)}
-          onSave={(
-            isLastStep: boolean,
-            value: any,
-            formik: any,
-            setIsLoading: (val: boolean) => void
-          ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-          renderItem={({ activeStep: step, formik }: any) => {
-            formikRef.current = formik;
-            return (
-              <>
-                <SyncReduxDirty
-                  formik={formik}
-                  dirtyOverride={inlinePayroll ? payrollDirty : undefined}
-                />
-                {inlinePayroll ? (
-                  <Box sx={{ p: { xs: 1, sm: 2 }, minWidth: 0 }}>
-                    <PayrollProfileWorkspace
-                      employeeId={editData.id}
-                      employeeName={editData.fullName}
-                      origin="staff-edit"
-                      actionsDisabled={payrollState.busy}
-                      statutoryEditorRef={statutoryEditRef}
-                      onStatutoryStateChange={setStatutoryState}
-                      detailsContent={(values, canEdit) => (
-                        <PayrollEditDetails
-                          ref={payrollEditRef}
-                          key={editData.id}
-                          employeeId={editData.id}
-                          initialValues={values}
-                          canEdit={canEdit}
-                          onStateChange={setPayrollState}
-                        />
-                      )}
-                    />
-                  </Box>
-                ) : (
-                  !isSubmitted && (
-                    <FormSlider
-                      step={step}
-                      formik={formik}
-                      editData={editData}
-                      defaultPolicyAssignment={defaultPolicyAssignment}
-                      resetCurrentStepRef={resetCurrentStepRef}
-                      isSubmitted={isSubmitted}
-                      onAcademicPermissionReadyChange={setAcademicPermissionSubmitReady}
-                    />
-                  )
-                )}
-              </>
-            );
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        open={pendingPolicyRoute !== null}
-        onClose={() => setPendingPolicyRoute(null)}
-        title="Discard changes?"
-        content="Unsaved staff changes will be lost."
-        action={
-          <Button
-            size="small"
-            color="warning"
-            onClick={() => {
-              const href = pendingPolicyRoute;
-              if (!href) return;
-              dispatch(setIsChanges(false));
-              setPendingPolicyRoute(null);
-              handleClose();
-              router.push(href);
-            }}
-          >
-            Discard and open policies
-          </Button>
+      <CustomStepperWithFormik
+        showSaveButton={inlinePayroll ? payrollDirty : isChanges}
+        saveAndNextButtonProps={
+          inlinePayroll
+            ? { disabled: !payrollState.ready, loading: payrollBusy || payrollSubmitting }
+            : undefined
         }
+        disableSubmit={disableStepperSubmit}
+        key={editData?.id || 'new'}
+        initialValues={initialValues}
+        steps={steps}
+        viewMode="vertical"
+        activeStep={activeStep}
+        completedSteps={!editData ? completedSteps : undefined}
+        isStepClickable={canNavigateToStep}
+        handleBack={() => {
+          if (inlinePayroll && payrollDirty) setPendingStep(activeStep - 1);
+          else setActiveStep(activeStep - 1);
+        }}
+        validationSchema={employeeValidations[activeStep]}
+        onStepClick={(step) => {
+          if (step === activeStep || !canNavigateToStep(step)) {
+            return;
+          }
+          if (isChanges) {
+            setPendingStep(step);
+          } else {
+            setActiveStep(step);
+          }
+        }}
+        isDisabledLabel={!editData}
+        validateOnChange
+        handleNext={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading)}
+        onSave={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
+        renderItem={({ activeStep: step, formik }: any) => {
+          formikRef.current = formik;
+          return (
+            <>
+              <SyncReduxDirty
+                formik={formik}
+                dirtyOverride={inlinePayroll ? payrollDirty : undefined}
+              />
+              {inlinePayroll ? (
+                <Box sx={{ p: { xs: 1, sm: 2 }, minWidth: 0 }}>
+                  <PayrollProfileWorkspace
+                    employeeId={editData.id}
+                    employeeName={editData.fullName}
+                    origin="staff-edit"
+                    actionsDisabled={payrollState.busy}
+                    statutoryEditorRef={statutoryEditRef}
+                    onStatutoryStateChange={setStatutoryState}
+                    detailsContent={(values, canEdit) => (
+                      <PayrollEditDetails
+                        ref={payrollEditRef}
+                        key={editData.id}
+                        employeeId={editData.id}
+                        initialValues={values}
+                        canEdit={canEdit}
+                        onStateChange={setPayrollState}
+                      />
+                    )}
+                  />
+                </Box>
+              ) : (
+                !isSubmitted && (
+                  <FormSlider
+                    step={step}
+                    formik={formik}
+                    editData={editData}
+                    resetCurrentStepRef={resetCurrentStepRef}
+                    isSubmitted={isSubmitted}
+                    onAcademicPermissionReadyChange={setAcademicPermissionSubmitReady}
+                  />
+                )
+              )}
+            </>
+          );
+        }}
       />
 
       <ConfirmDialog
@@ -1164,7 +1018,6 @@ const FormSlider = ({
   step,
   formik,
   editData,
-  defaultPolicyAssignment,
   resetCurrentStepRef,
   isSubmitted,
   onAcademicPermissionReadyChange,
@@ -1464,7 +1317,6 @@ const FormSlider = ({
                                   field,
                                   isMainForm: true,
                                   editData,
-                                  defaultPolicyAssignment,
                                   allBoards: step === 7 ? allBoardsForYear : undefined,
                                   isLoading:
                                     step === 7 && (accessControlFetching || boardsFetching),

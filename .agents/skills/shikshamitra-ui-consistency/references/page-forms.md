@@ -58,7 +58,7 @@ Stable form footer:                                         Cancel | Submit
   leading icons. Follow the existing common form rule for ordinary submissions; the image's
   `Add Chapter` is a legacy label, not a new universal button convention.
 - Back, Cancel, navigation, and other supported leave paths share the existing dirty-state owner
-  and [Keep Editing / Discard Changes confirmation](confirmations.md). A picker Cancel closes
+  and [Keep editing / Discard changes confirmation](confirmations.md). A picker Cancel closes
   only its own popup; it does not discard the page. Lock conflicting navigation during saving,
   prevent duplicate submission, preserve errors/values after failure, and reset baseline on success.
 

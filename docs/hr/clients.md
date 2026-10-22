@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-21
+updated_on: 2026-10-22
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -18,9 +18,9 @@ Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shiksham
 Salary-template and compensation clients carry PF enrollment declarations and backend eligibility decisions.
 
 `employeeApi.ts` supplies `getEmployeeAssignableRoles` at `/employees/assignable-roles` for the Add/Edit Staff Role field, with role-cache invalidation.
-The form's `use-employee-policy-access.ts` coordinates effective-permission checks and `use-employee-default-policies.ts` owns the three default-policy queries and retries.
-Policy denial is handled by `employee-policy-access-notice.tsx`, including the backend's policy-specific submission error, while other save errors retain the existing form handler.
-The access-refresh action reads the current user's permission catalogue; it never calls a permission-update endpoint.
+The Add Staff form submits personal information through `addBasicInformation` without `policyOverride` or policy-list requests.
+Policy inheritance is owned by the [backend policy resolver](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/policy-architecture.md).
+Explicit policy assignments use their existing authorized policy/profile clients separately. Creation errors retain entered values.
 
 Staff Directory uses the paged `getEmployee` query only while the directory is visible and reuses responses less than 30 seconds old.
 Employee mutations retain their existing cache invalidation.
