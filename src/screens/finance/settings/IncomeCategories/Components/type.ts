@@ -12,6 +12,7 @@ export interface IIncomeCategory {
   version: number;
   canDelete: boolean;
   isUsedInDownstream: boolean;
+  deletionBlockedReason?: string | null;
   isActive: boolean;
   deactivationReason?: string | null;
 }

@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-17
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -58,6 +58,8 @@ maker/checker permissions, refund behavior, allocation rules and API commands re
 Payment Terms display usage across all versions with a class, Fee Structure, Fee Head and version breakdown. Create, Edit and Duplicate show the current-to-new default and current-default usage when Default is on; saving a replacement requires Confirm/Cancel. The server impact is refreshed before confirmation. Existing structure assignments retain their saved versions. Archived Fee Category mapped-head status switches are disabled with a restore-category explanation.
 
 The Fee Category table applies category name and description text filters, fee-head-count numeric filters, status options, and single-column sorting on the server before pagination. Current and Archived tabs set the status scope; the Status filter offers Active and Archived within that scope. Clicking a category row, or pressing Enter or Space on a focused row, opens its detail view; View is not an Actions-column item. The fee-head drawer loads the full category detail, so its search, filters, and sorting cover every mapped head even if the parent table page changes. Its status switch sits in the Actions column and is disabled while the category is archived.
+Export retrieves every page matching the current query and visible column order; cancellation or incomplete results do not produce a partial file.
+Category details keep one income-category value per fee head, labeled concession badges, wrapping text, and responsive cards inside the shared scrollable dialog.
 
 Charge authoring keeps academic scope and selected students in the form. Search and quick filters narrow results without removing selections; Select All applies to matching results, and All students in scope remains the complete eligible academic scope. Failed reloads preserve selections and offer retry. Invalid selections are removed only after an authoritative scope load and a visible notice. The persistent footer checks the canonical Add/Update grant, required values and audience. Successful creation returns to the list as Pending; Cancel and back use the unsaved-changes guard. Fee Structure Policies validate Collection before Next/Review while retaining optional Refund and incomplete draft saves.
 
@@ -79,6 +81,7 @@ and bank-account forms use the same section cards as Academic Subject forms.
 | Mobile tables        | Keep the identifying Name/Bank Name column on the left; disable right-side status/action pinning below the small breakpoint so it cannot cover names                                                 |
 | Status accessibility | Each switch names its action and selected record                                                                                                                                                     |
 | Bank deletion        | Confirmation identifies bank, branch and masked account number; the primary action reads Delete                                                                                                      |
+| Income deletion      | Unused active categories can be deleted after confirmation; dependency restrictions use the server's `canDelete`. Failed deletes keep the dialog and error visible; pending deletes lock its actions. |
 | Exports              | Feature-specific filenames; Hindi/Gujarati exports use shaped embedded-font text; Actions remain excluded                                                                                            |
 
 The [backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#category-and-bank-settings-data) owns validation, masking and history persistence.

@@ -148,7 +148,8 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions directActionLimit={2}
+            <AdaptiveThreeDotsActions
+              directActionLimit={2}
               actions={[
                 {
                   id: 'view',
@@ -173,9 +174,14 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                     onDelete(row as IIncomeCategory);
                   },
                   disabled: !access.canDelete || !(row as IIncomeCategory).canDelete,
-                  tooltip: (row as IIncomeCategory).isActive
-                    ? 'Deactivate this record before deleting it.'
-                    : 'This record is referenced by other Finance records and cannot be deleted.',
+                  tooltip: !access.canDelete
+                    ? 'You do not have permission to delete income categories.'
+                    : (row as IIncomeCategory).isUsedInDownstream
+                      ? (row as IIncomeCategory).deletionBlockedReason ||
+                        'This income category is referenced by other Finance records and cannot be deleted.'
+                      : (row as IIncomeCategory).canDelete
+                        ? `Delete ${(row as IIncomeCategory).name}`
+                        : 'Deletion is unavailable for this income category. Refresh and try again.',
                   color: 'error.main',
                 },
               ]}

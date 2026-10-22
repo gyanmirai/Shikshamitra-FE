@@ -88,7 +88,7 @@ export default function ProrationPolicyWorkspace() {
               disabled={!academicYearId}
               sx={{ px: 2 }}
             >
-              Create Policy
+              Policy
             </Button>
           )}
         </Stack>

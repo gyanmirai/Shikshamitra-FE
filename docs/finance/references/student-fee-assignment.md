@@ -3,7 +3,7 @@ module: finance
 domain: student-fee-assignment
 content_type: Reference
 status: canonical
-updated_on: 2026-10-15
+updated_on: 2026-10-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -39,6 +39,14 @@ Manual service dates use general MUI `DatePicker` controls in `DD/MM/YYYY` forma
 Assignment sections reuse the Policies View `DetailSection` and `DetailField` components for compact neutral icons, subtitle headings, uppercase field labels and body-sized values. Redundant help icons, policy-source tooltips and repeated structure context are omitted. Review places server-returned totals above the fee breakdown. Fee-head evidence uses an embedded three-column `CustomizableTable`; payment-term versions, policy names/versions and override reasons remain visible. Consequential warnings remain visible. The compact installment table groups existing server lines only when installment label, sequence, demand date and due date match, summing their recorded obligations and balances without repricing or rounding. The plain eye-and-text View all action opens every original installment, share and balance in a shared read-only `CustomDialog`. Preview uses a compact medium-width dialog; saved balances retain the wider layout. Shared, keyboard-focusable info icons explain installment shares, demand dates, due dates, obligations and recorded row calculations; repeated row explanation text is omitted. Closing this dialog preserves the parent form dirty state. Legacy assignments omit unknown configured amounts and label unknown shares. Bulk review shows ready or confirmed totals separately for each currency. The final step shows canonical outcomes; bulk students can be selected to inspect their committed evidence. The student table uses shared status labels and `ThreeDotsActions`, an indeterminate page-selection checkbox and a clear-selection action; sorting unavailable in the server contract is disabled.
 
 Changing any input invalidates the previous preview. Late preview responses are discarded. Failed commits retain an actionable error; identical network retries use the backend's saved result. Results offers Review remaining students after partial success and Close when all students succeed. The drawer blocks closing during requests and uses the shared `ConfirmDialog` before discarding unassigned changes. Successful assignments remain intact.
+
+Preview and confirmation use the shared stepper's accessible busy overlay with the number of students being processed.
+The bulk endpoint returns results together, so the client does not invent a completed-student count while waiting.
+The local operation state keeps the drawer and navigation locked for the entire request.
+Server-provided `previewExpiresAt` disables confirmation when any remaining preview expires and offers Review and refresh without losing inputs or successful results.
+Older responses without this optional field continue to rely on server validation.
+Each student has one canonical outcome; successful evidence replaces stale error labels.
+An interrupted confirmation is labelled unconfirmed and can safely be retried with its original token, including after expiry, so the server can retrieve saved evidence.
 
 ## Source and client ownership
 

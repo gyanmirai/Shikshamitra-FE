@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 
@@ -12,14 +13,18 @@ import { useLoginForm } from '../hooks/use-login-form';
 import { AuthSubmitButton } from './auth-submit-button';
 
 export function LoginForm() {
-  const { formik, tenantInactive, errorMessage } = useLoginForm();
+  const { formik, tenantInactive, errorMessage, hostLogin, toggleHostLogin } = useLoginForm();
 
   return (
     <Box sx={{ width: 1, maxWidth: 440, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
       <AuthCard
         headingId="login-heading"
         title="Enter your workspace"
-        description="Sign in to continue to your school workspace."
+        description={
+          hostLogin
+            ? 'Sign in with your platform administrator account. No school code is needed.'
+            : 'Sign in to continue to your school workspace.'
+        }
       >
         <Box
           component="form"
@@ -34,7 +39,7 @@ export function LoginForm() {
               </Alert>
             )}
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-            <LoginCredentials formik={formik} />
+            <LoginCredentials formik={formik} hostLogin={hostLogin} />
             <Link
               component={RouterLink}
               href="/forgot-password"
@@ -62,6 +67,14 @@ export function LoginForm() {
             >
               {formik.isSubmitting ? 'Signing in...' : 'Sign in'}
             </AuthSubmitButton>
+            <Button
+              type="button"
+              variant="text"
+              onClick={toggleHostLogin}
+              disabled={formik.isSubmitting}
+            >
+              {hostLogin ? 'Sign in to a school' : 'Platform administrator sign in'}
+            </Button>
           </Stack>
         </Box>
       </AuthCard>

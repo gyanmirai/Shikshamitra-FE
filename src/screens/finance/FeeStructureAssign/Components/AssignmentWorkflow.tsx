@@ -34,6 +34,7 @@ import {
 } from '@mui/material';
 import {
   assignmentError,
+  assignmentErrorCode,
   useAssignmentDetailsQuery,
   useAssignmentCommitMutation,
   useAssignmentCandidatesQuery,
@@ -134,6 +135,9 @@ export default function AssignmentWorkflow({
   const [error, setError] = useState('');
   const [invalidAmounts, setInvalidAmounts] = useState(false);
   const [showInputErrors, setShowInputErrors] = useState(false);
+  const [operationPhase, setOperationPhase] = useState<'preview' | 'commit'>();
+  const [previewClock, setPreviewClock] = useState(Date.now);
+  const [retryingConfirmation, setRetryingConfirmation] = useState(false);
   const generation = useRef(0);
   const operation = useRef(false);
   const [previewBulk, previewState] = useAssignmentBulkPreviewMutation();
@@ -141,6 +145,7 @@ export default function AssignmentWorkflow({
   const [previewOne, previewOneState] = useAssignmentPreviewMutation();
   const [commitOne, commitOneState] = useAssignmentCommitMutation();
   const busy =
+    !!operationPhase ||
     previewState.isLoading ||
     commitState.isLoading ||
     previewOneState.isLoading ||
@@ -159,6 +164,22 @@ export default function AssignmentWorkflow({
   const complete = committedIds.size === students.length;
   const selectedPreviewItems =
     preview?.results.filter((r) => r.preview && !committedIds.has(r.studentId)) ?? [];
+  const expiredAt = Math.min(
+    ...selectedPreviewItems.flatMap((item) => {
+      const expires = Date.parse(item.preview?.previewExpiresAt ?? '');
+      return Number.isFinite(expires) ? [expires] : [];
+    })
+  );
+  const previewExpired = expiredAt <= previewClock;
+  useEffect(() => {
+    setPreviewClock(Date.now());
+    if (!Number.isFinite(expiredAt)) return undefined;
+    const timer = window.setTimeout(
+      () => setPreviewClock(Date.now()),
+      Math.max(0, expiredAt - Date.now())
+    );
+    return () => window.clearTimeout(timer);
+  }, [expiredAt]);
   const batchTotals = assignmentCurrencyTotals(
     showResults
       ? (outcomes?.results.flatMap((item) => (item.result ? [item.result.assignment] : [])) ?? [])
@@ -169,6 +190,7 @@ export default function AssignmentWorkflow({
     setPreview(undefined);
     setShowResults(false);
     setError('');
+    setRetryingConfirmation(false);
   };
 
   const runPreview = async (values: AssignmentValues) => {
@@ -221,6 +243,12 @@ export default function AssignmentWorkflow({
 
   const runCommit = async (values: AssignmentValues) => {
     setError('');
+    // A lost response may already have committed. Let the server resolve an
+    // identical retry even after expiry; never block retrieval of saved evidence.
+    if (!retryingConfirmation && expiredAt <= Date.now()) {
+      setPreviewClock(Date.now());
+      return;
+    }
     const items = selectedPreviewItems.map((r) => ({
       ...values.requests.find((request) => request.studentId === r.studentId)!,
       previewToken: r.preview!.previewToken,
@@ -242,15 +270,47 @@ export default function AssignmentWorkflow({
               };
             })()
           : await commitBulk({ items }).unwrap();
-      setOutcomes((previous) => ({
-        ...result,
-        results: [...(previous?.results.filter((r) => r.result) ?? []), ...result.results],
-      }));
+      setOutcomes((previous) => {
+        // One canonical result per student. Preserve committed results across retries,
+        // including a response containing an older failure for the same student.
+        const byStudent = new Map(
+          result.results.map((item) => [
+            item.studentId,
+            item.result
+              ? { studentId: item.studentId, outcome: item.result.outcome, result: item.result }
+              : item,
+          ])
+        );
+        previous?.results
+          .filter((item) => item.result)
+          .forEach((item) => {
+            if (!byStudent.get(item.studentId)?.result) byStudent.set(item.studentId, item);
+          });
+        const results = [...byStudent.values()];
+        return {
+          results,
+          successCount: results.filter((item) => item.result?.outcome === 'Assigned').length,
+          alreadyAssignedCount: results.filter((item) => item.result?.outcome === 'AlreadyAssigned')
+            .length,
+          skippedCount: results.filter((item) => !item.result && item.outcome === 'Skipped').length,
+          failedCount: results.filter((item) => !item.result && item.outcome !== 'Skipped').length,
+        };
+      });
       setPreview(undefined);
+      setRetryingConfirmation(false);
       setShowResults(true);
       setActiveStep(2);
     } catch (e) {
-      setError(assignmentError(e));
+      const status = (e as { status?: number | string })?.status;
+      const unconfirmed =
+        !assignmentErrorCode(e) &&
+        (status === undefined || typeof status === 'string' || status >= 500);
+      setRetryingConfirmation(unconfirmed);
+      setError(
+        unconfirmed
+          ? 'Assignment status could not be confirmed. Retry this review to safely retrieve any saved assignments.'
+          : assignmentError(e)
+      );
     }
   };
 
@@ -338,6 +398,11 @@ export default function AssignmentWorkflow({
         steps={steps}
         activeStep={activeStep}
         validationSchema={validationSchema}
+        loadingLabel={
+          operationPhase === 'commit'
+            ? `Assigning ${selectedPreviewItems.length} student${selectedPreviewItems.length === 1 ? '' : 's'}…`
+            : `Previewing ${students.length - committedIds.size} student${students.length - committedIds.size === 1 ? '' : 's'}…`
+        }
         showSaveButton={false}
         onCancel={onClose}
         isStepClickable={(index) => !busy && !complete && !showResults && index < activeStep}
@@ -366,6 +431,7 @@ export default function AssignmentWorkflow({
             busy ||
             (activeStep === 0 && (candidates.isLoading || candidates.isError)) ||
             (activeStep === 1 && invalidAmounts) ||
+            (activeStep === 2 && !showResults && !retryingConfirmation && previewExpired) ||
             (activeStep === 2 && !showResults && selectedPreviewItems.length === 0),
           startIcon: (
             <Iconify
@@ -426,6 +492,7 @@ export default function AssignmentWorkflow({
             return;
           }
           operation.current = true;
+          setOperationPhase(activeStep === 1 ? 'preview' : 'commit');
           setLoading(true);
           try {
             if (activeStep === 1) {
@@ -477,6 +544,7 @@ export default function AssignmentWorkflow({
             } else await runCommit(values);
           } finally {
             operation.current = false;
+            setOperationPhase(undefined);
             setLoading(false);
           }
         }}
@@ -486,6 +554,29 @@ export default function AssignmentWorkflow({
           const candidate = candidates.data?.find((c) => c.id === values.structureId);
           return (
             <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
+              {activeStep === 2 &&
+                !showResults &&
+                !busy &&
+                !retryingConfirmation &&
+                previewExpired && (
+                  <Alert
+                    severity="warning"
+                    action={
+                      <Button
+                        size="small"
+                        startIcon={<Iconify icon="mdi:refresh" />}
+                        onClick={() => {
+                          invalidate();
+                          setActiveStep(1);
+                        }}
+                      >
+                        Review and refresh
+                      </Button>
+                    }
+                  >
+                    This preview has expired. Preview again before assigning fees.
+                  </Alert>
+                )}
               <AssignmentDirtyState
                 dirty={values.requests.some((r) => !committedIds.has(r.studentId))}
               />

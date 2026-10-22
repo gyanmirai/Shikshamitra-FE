@@ -62,6 +62,7 @@ export interface AssignmentPreview {
   reductionTotal: number;
   overrideReason?: string;
   previewToken: string;
+  previewExpiresAt?: string | null;
   heads: AssignmentHead[];
   lines: AssignmentLine[];
   warnings: string[];
@@ -170,11 +171,15 @@ export interface AssignmentBulkResult {
   }[];
 }
 
-export function assignmentError(error: unknown): string {
+export function assignmentErrorCode(error: unknown): string {
   const data = (
     error as { data?: { error?: { code?: string }; code?: string; errorCode?: string } }
   )?.data;
-  const code = data?.error?.code ?? data?.errorCode ?? data?.code ?? '';
+  return data?.error?.code ?? data?.errorCode ?? data?.code ?? '';
+}
+
+export function assignmentError(error: unknown): string {
+  const code = assignmentErrorCode(error);
   if (code.endsWith('VariableAmountRequired'))
     return 'Enter an amount for every included variable fee head.';
   if (code.endsWith('StalePreview'))

@@ -13,6 +13,7 @@ type Props<T extends Record<string, string>> = {
   type?: string;
   autoComplete: string;
   endAdornment?: ReactNode;
+  required?: boolean;
 };
 
 export function LoginField<T extends Record<string, string>>({
@@ -20,6 +21,7 @@ export function LoginField<T extends Record<string, string>>({
   label,
   formik,
   endAdornment,
+  required = false,
   ...props
 }: Props<T>) {
   const error = formik.touched[name] ? formik.errors[name] : undefined;
@@ -33,10 +35,17 @@ export function LoginField<T extends Record<string, string>>({
         sx={{ display: 'block', mb: 1, fontWeight: 600, color: 'text.primary' }}
       >
         {label}
+        {required && (
+          <Box component="span" aria-hidden="true">
+            {' '}
+            *
+          </Box>
+        )}
       </Typography>
       <TextField
         {...props}
         fullWidth
+        required={required}
         id={name}
         name={name}
         value={formik.values[name]}
@@ -46,6 +55,7 @@ export function LoginField<T extends Record<string, string>>({
         error={Boolean(error)}
         helperText={typeof error === 'string' ? error : undefined}
         slotProps={{
+          htmlInput: { 'aria-label': label },
           input: {
             endAdornment,
           },

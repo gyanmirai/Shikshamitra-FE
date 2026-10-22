@@ -148,9 +148,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     onBlur={formik.handleBlur}
                     error={formik.touched.bankName && Boolean(formik.errors.bankName)}
                     helperText={
-                      (formik.touched.bankName && formik.errors.bankName
+                      formik.touched.bankName && formik.errors.bankName
                         ? formik.errors.bankName
-                        : undefined) || undefined
+                        : `${formik.values.bankName.length}/100 characters`
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -204,9 +204,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     onBlur={formik.handleBlur}
                     error={formik.touched.branchName && Boolean(formik.errors.branchName)}
                     helperText={
-                      (formik.touched.branchName && formik.errors.branchName
+                      formik.touched.branchName && formik.errors.branchName
                         ? formik.errors.branchName
-                        : undefined) || undefined
+                        : `${formik.values.branchName.length}/100 characters`
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -255,9 +255,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                       formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
                     }
                     helperText={
-                      (formik.touched.accountHolderName && formik.errors.accountHolderName
+                      formik.touched.accountHolderName && formik.errors.accountHolderName
                         ? formik.errors.accountHolderName
-                        : undefined) || undefined
+                        : `${formik.values.accountHolderName.length}/100 characters`
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -333,9 +333,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   onBlur={formik.handleBlur}
                   error={Boolean(formik.touched.purpose && formik.errors.purpose)}
                   helperText={
-                    (formik.touched.purpose && formik.errors.purpose
+                    formik.touched.purpose && formik.errors.purpose
                       ? formik.errors.purpose
-                      : undefined) || undefined
+                      : `${formik.values.purpose?.length ?? 0}/500`
                   }
                   FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />

@@ -162,8 +162,9 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={
-                    (formik.touched.name && formik.errors.name ? formik.errors.name : undefined) ||
-                    undefined
+                    formik.touched.name && formik.errors.name
+                      ? formik.errors.name
+                      : `${formik.values.name.length}/128 characters`
                   }
                   inputProps={{ maxLength: 128 }}
                 />
@@ -218,7 +219,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   helperText={
                     (formik.touched.tags && typeof formik.errors.tags === 'string'
                       ? formik.errors.tags
-                      : undefined) || undefined
+                      : 'Press Enter to add a tag. Remaining text is included on submit.') ||
+                    undefined
                   }
                 />
               </ShakingTextField>

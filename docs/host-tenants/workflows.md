@@ -14,7 +14,8 @@ TL;DR: find schools, enter basic details and confirm access changes from one tab
 
 ## Login
 
-Leave School code empty for the host account.
+Select **Platform administrator sign in** on the sign-in card for the host account.
+This explicit mode omits School code and preserves host authentication; ordinary school sign-in requires School code before submitting credentials.
 The login guard waits for the backend account context and opens Tenant directly.
 School academic selectors, onboarding, notifications and school profile shortcuts are omitted for the host workspace.
 

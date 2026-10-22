@@ -5,9 +5,13 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 
 import { refreshAccessToken } from './auth-token';
 import { runAuthRequestOnce } from './auth-request';
+import { AUTH_ERROR_CODE } from './constants/auth-errors';
 
-class InactiveTenantSignIn extends CredentialsSignin {
-  code = 'tenant-inactive';
+class SchoolSignInError extends CredentialsSignin {
+  constructor(code: string) {
+    super();
+    this.code = code;
+  }
 }
 
 async function signInFn({
@@ -56,22 +60,28 @@ async function requestPasswordToken({
       ...(organizationName?.trim() ? { __tenant: organizationName.trim() } : {}),
     },
     body,
+  }).catch(() => {
+    throw new SchoolSignInError(AUTH_ERROR_CODE.authenticationUnavailable);
   });
 
   if (!resp.ok) {
     let apiError: string | undefined;
     try {
       const errorData = await resp.json();
-      if (errorData?.errorCode === 'TENANT_INACTIVE') throw new InactiveTenantSignIn();
+      if (errorData?.errorCode === 'TENANT_INACTIVE')
+        throw new SchoolSignInError('tenant-inactive');
+      if (errorData?.errorCode === 'TENANT_NOT_FOUND') {
+        throw new SchoolSignInError(AUTH_ERROR_CODE.invalidSchoolCode);
+      }
       apiError = errorData?.error;
     } catch (error) {
-      if (error instanceof InactiveTenantSignIn) throw error;
+      if (error instanceof CredentialsSignin) throw error;
       // ignore parse errors
     }
-    if (apiError === 'invalid_grant') {
-      throw new Error('INVALID_CREDENTIALS');
+    if (resp.status === 400 && apiError === 'invalid_grant') {
+      throw new SchoolSignInError(AUTH_ERROR_CODE.invalidCredentials);
     }
-    throw new Error('AUTH_FAILED');
+    throw new SchoolSignInError(AUTH_ERROR_CODE.authenticationUnavailable);
   }
 
   const data = await resp.json();

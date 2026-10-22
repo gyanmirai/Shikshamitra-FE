@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn, IParams } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -647,7 +647,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                   </Box>
                 </CustomTooltip>
               ),
-              render: (value: string[], row: IFinancePolicyRow) => {
+              render: (value: string[], row: IData) => {
                 const methods = Array.isArray(value)
                   ? value.map(
                       (method) =>

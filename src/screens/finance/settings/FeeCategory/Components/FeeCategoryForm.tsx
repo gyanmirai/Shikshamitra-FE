@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -16,8 +15,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { shikshaMitraToast } from 'src/components/toast';
-import { LoadingScreen } from 'src/components/loading-screen';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -27,32 +27,32 @@ import FeeHeadDependencies, {
 } from '../../components/FeeHeadDependencies';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
+  useGetFeeCategoriesQuery,
+  useAddFeeCategoryMutation,
+  useGetFeeCategoryByIdQuery,
+  useUpdateFeeCategoryMutation,
+} from 'src/redux/feeCategory/feeCategoryApi';
+import {
   Box,
+  Paper,
+  Stack,
   Drawer,
   Button,
   Switch,
   Divider,
-  Paper,
-  Stack,
   Tooltip,
+  Skeleton,
   TextField,
   Typography,
   IconButton,
   Autocomplete,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetFeeCategoriesQuery,
-  useAddFeeCategoryMutation,
-  useGetFeeCategoryByIdQuery,
-  useUpdateFeeCategoryMutation,
-} from 'src/redux/feeCategory/feeCategoryApi';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 
 import type { IFeeCategoryFormProps } from './type';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const FormInfoIcon = ({ label, title }: { label: string; title: string }) => (
   <CustomTooltip arrow placement="right" title={title}>
@@ -330,7 +330,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
         >
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
+              px: 2,
               py: 2,
               display: 'flex',
               alignItems: 'center',
@@ -338,20 +338,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
               flexShrink: 0,
             }}
           >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.5,
-                bgcolor: 'primary.lighter',
-                color: 'primary.main',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon="solar:tag-bold-duotone" width={22} />
-            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1, minWidth: 0 }}>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {editData ? 'Update Fee Category' : 'Add Fee Category'}
@@ -372,16 +358,24 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
           </Box>
           <Divider />
           {isLoadingDetails ? (
-            <LoadingScreen />
+            <Stack
+              spacing={2}
+              sx={{ p: 2, flex: 1, minHeight: 0, overflow: 'hidden' }}
+              role="status"
+              aria-label="Loading fee category editor"
+            >
+              <Skeleton variant="rounded" height={180} />
+              <Skeleton variant="rounded" height={260} />
+            </Stack>
           ) : (
             <Scrollbar sx={{ flex: 1, minHeight: 0, bgcolor: 'background.neutral' }}>
-              <Box sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ p: 2 }}>
                 <Stack spacing={2} sx={{ minWidth: 0 }}>
                   <Paper
                     component="section"
                     aria-labelledby="category-details-heading"
                     variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
+                    sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 }}
                   >
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                       <Iconify
@@ -450,9 +444,16 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                     component="section"
                     aria-labelledby="fee-heads-heading"
                     variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, minWidth: 0 }}
+                    sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, minWidth: 0 }}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      useFlexGap
+                      flexWrap="wrap"
+                      sx={{ mb: 2 }}
+                    >
                       <Iconify
                         icon="solar:layers-linear"
                         width={20}
@@ -544,8 +545,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                 borderLeft: '4px solid',
                                 borderLeftColor: 'primary.main',
                                 display: 'grid',
-                                gridTemplateColumns: '38px minmax(0, 1fr) 44px',
-                                columnGap: 1.5,
+                                gridTemplateColumns: 'minmax(0, 1fr) 44px',
+                                columnGap: 1,
+                                rowGap: 1.5,
                               }}
                             >
                               {removalBlocked && (
@@ -585,8 +587,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
 
                               <Box
                                 sx={{
-                                  gridColumn: 2,
-                                  gridRow: 1,
+                                  gridColumn: '1 / -1',
+                                  gridRow: 2,
                                   display: 'grid',
                                   gridTemplateColumns: {
                                     xs: 'minmax(0, 1fr)',
@@ -750,11 +752,20 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                                   <FormControlLabel
                                     sx={{
                                       m: 0,
-                                      gap: 0.5,
+                                      width: '100%',
+                                      justifyContent: 'space-between',
+                                      gap: 1,
                                     }}
+                                    labelPlacement="start"
                                     control={
                                       <Switch
                                         checked={fh.isConcessionApplied}
+                                        slotProps={{
+                                          input: {
+                                            role: 'switch',
+                                            'aria-label': `Enable concessions for ${fh.name.trim() || `fee head ${idx + 1}`}`,
+                                          },
+                                        }}
                                         onChange={(e) => {
                                           formik.setFieldValue(
                                             `feeHeads.${idx}.isConcessionApplied`,
@@ -796,7 +807,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
                               </Box>
                               <Box
                                 sx={{
-                                  gridColumn: 3,
+                                  gridColumn: 2,
                                   gridRow: 1,
                                   justifySelf: 'end',
                                   alignSelf: 'start',
@@ -848,7 +859,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({
 
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
+              px: 2,
               py: 1.75,
               display: 'flex',
               justifyContent: 'flex-end',

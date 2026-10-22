@@ -15,6 +15,7 @@ export interface IFeeCategoryTableProps {
   archived: boolean;
   onAddFeeCategory: any;
   setEditData: (value: IFeeCategory | null) => void;
+  onView?: (value: IFeeCategory) => void;
 }
 
 export interface IFeeCategoryFormProps {

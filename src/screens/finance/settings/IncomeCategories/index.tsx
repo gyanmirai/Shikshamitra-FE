@@ -5,20 +5,20 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Alert, Stack, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
-  incomeCategoryApi,
   useGetIncomeCategoriesQuery,
   useDeleteIncomeCategoryMutation,
 } from 'src/redux/finance/incomeCategory';
@@ -47,7 +47,6 @@ const FinanceIncomeCategoriesScreen = () => {
     data: incomeCategoryData,
     isLoading: incomeCategoryLoading,
     isFetching: incomeCategoryFetching,
-    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
@@ -58,6 +57,7 @@ const FinanceIncomeCategoriesScreen = () => {
   const [deleteIncomeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteIncomeCategoryMutation,
+    popupConfig: { error: false },
   });
 
   // Dialog control states
@@ -69,7 +69,7 @@ const FinanceIncomeCategoriesScreen = () => {
   const [selectedIncomeCategory, setSelectedIncomeCategory] = useState<IIncomeCategory | null>(
     null
   );
-  const { confirmWithUndo } = useConfirmWithUndo();
+  const [deleteError, setDeleteError] = useState('');
   const dispatch = useDispatch();
 
   /**
@@ -116,6 +116,8 @@ const FinanceIncomeCategoriesScreen = () => {
 
       <IncomeCategoryTable
         onDelete={(data) => {
+          if (!access.canDelete || !data.canDelete || data.isUsedInDownstream) return;
+          setDeleteError('');
           setSelectedIncomeCategory(data);
           deleteIncomeCategoryDialog.onTrue();
         }}
@@ -156,15 +158,22 @@ const FinanceIncomeCategoriesScreen = () => {
       <ConfirmDialog
         open={deleteIncomeCategoryDialog.value}
         onClose={() => {
+          if (isDeleting) return;
           setSelectedIncomeCategory(null);
+          setDeleteError('');
           deleteIncomeCategoryDialog.onFalse();
         }}
-        title="Delete"
+        disableBackdropClick
+        disableEscapeKeyDown={isDeleting}
+        disableCancel={isDeleting}
+        title="Delete Income Category"
         content={
-          <>
-            Are you sure you want to delete income category{' '}
-            <strong>{selectedIncomeCategory?.name}</strong>?
-          </>
+          <Stack spacing={2}>
+            <Box>
+              Delete income category <strong>{selectedIncomeCategory?.name}</strong>?
+            </Box>
+            {deleteError && <Alert severity="error">{deleteError}</Alert>}
+          </Stack>
         }
         action={
           <LoadingButton
@@ -173,37 +182,34 @@ const FinanceIncomeCategoriesScreen = () => {
             color="error"
             size="small"
             loading={isDeleting}
-            disabled={isDeleting}
-            onClick={() => {
-              if (!selectedIncomeCategory?.id) return;
-
-              confirmWithUndo({
-                message: 'Deletion pending',
-                item: selectedIncomeCategory,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    incomeCategoryApi.util.updateQueryData(
-                      'getIncomeCategories',
-                      { academicYearId: currentYear?.id, ...queryParams },
-                      (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.items || [];
-                        const index = list.findIndex(
-                          (c: any) => c.id === (selectedIncomeCategory as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          list.splice(index, 1);
-                          if (typeof draft?.totalCount === 'number')
-                            draft.totalCount = Math.max(0, draft.totalCount - 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () => deleteIncomeCategory(selectedIncomeCategory.id),
-              });
-              deleteIncomeCategoryDialog.onFalse();
-              setSelectedIncomeCategory(null);
+            disabled={
+              isDeleting ||
+              !access.canDelete ||
+              !selectedIncomeCategory?.canDelete ||
+              selectedIncomeCategory.isUsedInDownstream
+            }
+            onClick={async () => {
+              if (
+                isDeleting ||
+                !access.canDelete ||
+                !selectedIncomeCategory?.canDelete ||
+                selectedIncomeCategory.isUsedInDownstream
+              )
+                return;
+              setDeleteError('');
+              try {
+                await deleteIncomeCategory(selectedIncomeCategory.id).unwrap();
+                deleteIncomeCategoryDialog.onFalse();
+                setSelectedIncomeCategory(null);
+                shikshaMitraToast.success({ message: 'Income category deleted successfully' });
+              } catch (error) {
+                const problem = parseApiProblemDetail(error);
+                setDeleteError(
+                  problem.errorCode === 'Finance:Accounts:Settings:CategoryInUse'
+                    ? 'This income category is now referenced by other Finance records and cannot be deleted.'
+                    : problem.detail
+                );
+              }
             }}
           >
             Delete

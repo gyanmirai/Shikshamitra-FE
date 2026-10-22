@@ -94,7 +94,7 @@ export default function CollectionPolicyWorkspace() {
                 disabled={!academicYearId}
                 sx={{ px: 2 }}
               >
-                Create Policy
+                Policy
               </Button>
             )}
           </Box>

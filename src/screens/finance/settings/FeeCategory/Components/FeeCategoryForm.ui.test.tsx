@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import FeeCategoryForm from './FeeCategoryForm';
 
@@ -9,6 +9,15 @@ vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
   useFinancePermissions: () => ({ canView: true, canAdd: true }),
 }));
 
+vi.mock('src/redux/feeCategory/feeCategoryApi', () => ({
+  useGetFeeCategoriesQuery: vi.fn(),
+  useAddFeeCategoryMutation: vi.fn(),
+  useGetFeeCategoryByIdQuery: vi.fn(),
+  useUpdateFeeCategoryMutation: vi.fn(),
+}));
+vi.mock('src/redux/finance/financeRoutingApi', () => ({
+  useGetFinanceRoutingOptionsQuery: vi.fn(),
+}));
 vi.mock('react-redux', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-redux')>()),
   useSelector: (selector: (state: unknown) => unknown) =>
@@ -133,5 +142,21 @@ describe('Fee category editor', () => {
       expect(screen.getByRole('textbox', { name: 'Category name *' })).toHaveFocus()
     );
     expect(screen.getByText('Category Name is required')).toBeInTheDocument();
+  });
+
+  it('keeps each concession switch associated with its fee head and preserves removal guards', () => {
+    renderForm();
+    expect(screen.getByRole('button', { name: 'Remove fee head 1' })).toBeDisabled();
+    const firstToggle = screen.getByRole('switch', { name: 'Enable concessions for fee head 1' });
+    expect(firstToggle).not.toBeChecked();
+    fireEvent.click(firstToggle);
+    expect(firstToggle).toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
+    expect(screen.getAllByRole('switch', { name: /Enable concessions for fee head/ })).toHaveLength(
+      2
+    );
+    expect(screen.getByRole('button', { name: 'Remove fee head 1' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Remove fee head 2' })).toBeEnabled();
   });
 });
