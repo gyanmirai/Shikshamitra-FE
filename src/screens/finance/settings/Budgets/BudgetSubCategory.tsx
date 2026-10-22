@@ -2,14 +2,14 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -23,6 +23,7 @@ import {
   useGetBudgetCategoryQuery,
   useGetBudgetSubCategoryQuery,
 } from 'src/redux/finance/budgetsCategory';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const FinanceBudgetSubCategorySettings = () => {
   const addDialog = useBoolean();
@@ -115,8 +116,9 @@ const FinanceBudgetSubCategorySettings = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Budget Sub Category"
         description="This screen displays all the created budget subcategories and provides an option to create a new budget subcategory."
+        heading="Budget Sub Category"
+
         links={[
           { name: 'Finance', href: '/finance' },
           { name: 'Setting', href: '/finance/setting' },
@@ -180,6 +182,8 @@ const FinanceBudgetSubCategorySettings = () => {
             align: 'left',
           },
           {
+            stickyPosition: 'right',
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             minWidth: '90px',
@@ -190,6 +194,7 @@ const FinanceBudgetSubCategorySettings = () => {
             render(value, row: any) {
               return (
                 <AdaptiveThreeDotsActions
+                  directActionLimit={2}
                   actions={[
                     {
                       id: 'edit',
@@ -374,10 +379,10 @@ const BudgetSubCategoryDialog = ({
                   }}
                   error={formik.touched.subCategoryName && Boolean(formik.errors.subCategoryName)}
                   helperText={
-                    formik.touched.subCategoryName &&
+                    (formik.touched.subCategoryName &&
                     typeof formik.errors.subCategoryName === 'string'
                       ? formik.errors.subCategoryName
-                      : undefined
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>
@@ -400,9 +405,9 @@ const BudgetSubCategoryDialog = ({
                   onBlur={() => formik.setFieldTouched('category', true)}
                   error={!!(formik.touched.category && formik.errors.category) || false}
                   helperText={
-                    formik.touched.category && typeof formik.errors.category === 'string'
+                    (formik.touched.category && typeof formik.errors.category === 'string'
                       ? formik.errors.category
-                      : ''
+                      : undefined) || undefined
                   }
                   formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />

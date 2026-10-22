@@ -43,6 +43,10 @@ export interface IFeeHeadStatusUpdateBody {
 
 export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getFeeHeadById: builder.query<IFeeHeadResponse, string>({
+      query: (id) => ({ url: `/fee-heads/${id}`, method: 'GET' }),
+      providesTags: [financeModuleType.feeHead],
+    }),
     // Get fee head list
     getFeeHeads: builder.query<IFeeHeadListResponse, Record<string, unknown>>({
       query: (params) => ({
@@ -79,6 +83,9 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
 
@@ -96,6 +103,9 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
 
@@ -109,6 +119,9 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
     patchFeeHead: builder.mutation<
@@ -124,6 +137,9 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeHead,
         financeModuleType.feeCategory,
         financeModuleType.incomeCategoryData,
+        financeModuleType.feeDetails,
+        financeModuleType.feeStructure,
+        financeModuleType.feeCollection,
       ],
     }),
   }),
@@ -131,6 +147,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
 
 export const {
   useGetFeeHeadsQuery,
+  useGetFeeHeadByIdQuery,
   useLazyGetFeeHeadsQuery,
   useGetActiveFeeHeadsQuery,
   useAddFeeHeadMutation,

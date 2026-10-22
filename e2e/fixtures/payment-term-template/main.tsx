@@ -10,6 +10,9 @@ import { Toaster } from 'sonner';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import PaymentTermForm from 'src/screens/finance/settings/PaymentTerm/Components/PaymentTermForm';
+import PaymentTermDetailsDrawer from 'src/screens/finance/settings/PaymentTerm/Components/PaymentTermDetailsDrawer';
+import PaymentTermScreen from 'src/screens/finance/settings/PaymentTerm';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -18,8 +21,22 @@ import 'simplebar-react/dist/simplebar.min.css';
 const store = configureStore({
   reducer: {
     confirmPopup: confirmPopupReducer,
-    globalState: (state = { currentYear: { id: 'year' } }) => state,
-    auth: (state = { permissions: [] }) => state,
+    globalState: (
+      state = {
+        currentYear: { id: 'year', name: '2026-2027' },
+        academicYears: [
+          { id: 'year', name: '2026-2027' },
+          { id: 'previous-year', name: '2025-2026' },
+        ],
+      }
+    ) => state,
+    auth: (
+      state = {
+        permissions: Object.values(financePermissions.fees.settings.paymentTermActions).map(
+          (name) => ({ name, isGranted: true })
+        ),
+      }
+    ) => state,
   },
 });
 class DiagnosticBoundary extends React.Component<
@@ -42,6 +59,8 @@ function Fixture() {
   const [open, setOpen] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [mode, setMode] = React.useState<'create' | 'edit' | 'duplicate'>('edit');
+  const [detailsTab, setDetailsTab] = React.useState<'details' | 'versions' | null>(null);
+  const [showList, setShowList] = React.useState(false);
   const editData = {
     id: 'monthly',
     paymentTermName: 'monthly',
@@ -58,6 +77,26 @@ function Fixture() {
             <CssBaseline />
             <Box sx={{ p: 3, height: '100dvh', display: 'flex', flexDirection: 'column' }}>
               <Typography variant="h5">Payment Terms · synthetic verification data</Typography>
+              <Button onClick={() => setDetailsTab('details')}>View Payment Term Details</Button>
+              <Button onClick={() => setDetailsTab('versions')}>
+                View Payment Term Version History
+              </Button>
+              <Button onClick={() => setShowList((shown) => !shown)}>
+                {showList
+                  ? 'Hide Payment Terms List'
+                  : 'Open Payment Terms List and Clone Previous Year'}
+              </Button>
+              {showList && (
+                <Box sx={{ flex: 1, minHeight: 0 }}>
+                  <PaymentTermScreen />
+                </Box>
+              )}
+              <PaymentTermDetailsDrawer
+                open={detailsTab !== null}
+                paymentTermId={detailsTab ? 'monthly' : null}
+                initialTab={detailsTab ?? 'details'}
+                onClose={() => setDetailsTab(null)}
+              />
               <Button
                 onClick={() => {
                   setMode('create');

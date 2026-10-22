@@ -3,21 +3,17 @@
 import type { FormikProps } from 'formik';
 import type { RefundPolicyImpactResponse } from 'src/redux/finance/refundPolicy';
 
-import React from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { capitalizeWords } from 'src/utils/input-format';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Select,
   MenuItem,
-  Skeleton,
   TextField,
   InputLabel,
   Typography,
@@ -29,6 +25,8 @@ import { SectionCard } from './RefundCommon';
 import DefaultPolicyToggle from '../DefaultPolicyToggle';
 
 import type { IRefundPolicyFormValues } from '../../types/finance-policy.types';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 interface RefundGeneralSectionProps {
   formik: FormikProps<IRefundPolicyFormValues>;
@@ -37,12 +35,7 @@ interface RefundGeneralSectionProps {
   isImpactLoading?: boolean;
 }
 
-export default function RefundGeneralSection({
-  formik,
-  activeEdit,
-  impact,
-  isImpactLoading,
-}: RefundGeneralSectionProps) {
+export default function RefundGeneralSection({ formik, activeEdit }: RefundGeneralSectionProps) {
   const { values, errors, touched, handleChange, handleBlur } = formik;
 
   const isFieldInvalid = (name: keyof IRefundPolicyFormValues) =>
@@ -53,24 +46,11 @@ export default function RefundGeneralSection({
 
   return (
     <SectionCard
-      title="General Information"
       subtitle="Give the policy a clear name and choose whether it is ready to use."
+      title="General Information"
+
       icon={GlobalIcons.notebook}
     >
-      {activeEdit && (
-        <Alert
-          severity="info"
-          icon={<Iconify icon="solar:info-circle-bold" />}
-          sx={{ mb: 2.5, borderRadius: 1.25 }}
-        >
-          {isImpactLoading ? (
-            <Skeleton width="100%" height={24} aria-label="Loading policy impact" />
-          ) : (
-            `This Active policy is currently attached to ${impact?.attachedFeeStructureCount ?? 0} fee structure(s) and referenced by ${impact?.studentAssignmentCount ?? 0} student assignment(s). Modifying this policy will create a new version snapshot.`
-          )}
-        </Alert>
-      )}
-
       <Grid container spacing={2}>
         {/* Policy Name */}
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -188,10 +168,7 @@ export default function RefundGeneralSection({
               onChange={handleChange}
               onBlur={handleBlur}
               error={isFieldInvalid('changeReason')}
-              helperText={
-                getHelperText('changeReason') ||
-                'Mandatory audit log record explaining this revision in version history.'
-              }
+              helperText={getHelperText('changeReason')}
               slotProps={{
                 input: {
                   endAdornment: (

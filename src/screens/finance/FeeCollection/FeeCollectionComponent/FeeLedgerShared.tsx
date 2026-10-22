@@ -153,7 +153,6 @@ export interface FeeRowProps {
 
 export const FeeRow = ({
   name,
-  subtitle,
   total,
   scheduledTotal,
   prorationPolicyName,
@@ -231,11 +230,6 @@ export const FeeRow = ({
           <Typography variant="body2" noWrap sx={{ fontWeight: 500 }}>
             {name}
           </Typography>
-          {subtitle && (
-            <Typography variant="caption" color="text.secondary" noWrap display="block">
-              {subtitle}
-            </Typography>
-          )}
         </Box>
         {allowWaivers && chargeId && (
           <FeeWaiverToggle

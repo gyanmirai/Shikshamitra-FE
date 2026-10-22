@@ -152,6 +152,7 @@ const ViewIncomeData = ({
                 noDataText="No transaction data found for this income entry."
                 columns={[
                   {
+                    stickyPosition: 'left',
                     id: 'incomeName',
                     label: 'Source / Name',
                     align: 'left',
@@ -176,9 +177,10 @@ const ViewIncomeData = ({
                     ),
                   },
                   {
+                    cellSx: { textAlign: 'center' as const },
                     id: 'paymentMethod',
                     label: 'Method',
-                    align: 'center',
+                    align: 'left',
                     minWidth: '140px',
                     render: (value: any) => (
                       <Box
@@ -199,9 +201,10 @@ const ViewIncomeData = ({
                     ),
                   },
                   {
+                    cellSx: { textAlign: 'right' as const },
                     id: 'amount',
                     label: 'Amount (₹)',
-                    align: 'right',
+                    align: 'left',
                     minWidth: '140px',
                     filterType: 'number',
                     render: (value: any) => (

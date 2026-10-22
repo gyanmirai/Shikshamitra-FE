@@ -3,8 +3,8 @@
 import React from 'react';
 import { Label } from 'src/components/label';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Checkbox, Typography } from '@mui/material';
-import { formatCurrency } from 'src/utils/cureencyFormater';
+import { Box, Tooltip, Checkbox, Typography } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   FeeCollectionStatusType,
@@ -17,6 +17,7 @@ export interface RefundMonthRowProps {
   item: IMonthItem;
   isSelected: boolean;
   isDisabled: boolean;
+  disabledReason?: string;
   refundValue: number | string;
   showInputError: boolean;
   mode?: 'refund' | 'adjustment';
@@ -30,6 +31,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
   item,
   isSelected,
   isDisabled,
+  disabledReason,
   refundValue,
   showInputError,
   mode = 'refund',
@@ -39,7 +41,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
 }): React.ReactElement => {
   const theme = useTheme();
   const isAdj = mode === 'adjustment';
-  const refundable = isAdj ? item.refundable : Math.max(0, item.paid - item.refunded);
+  const refundable = Math.max(0, item.refundable);
   const isFullyRefunded = refundable === 0;
 
   // Disable row if not selectable (only check refundable for both modes)
@@ -66,20 +68,25 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
       onClick={!effectivelyDisabled ? onToggle : undefined}
     >
       {/* Animated checkbox */}
-      <Checkbox
-        size="small"
-        checked={isSelected}
-        disabled={effectivelyDisabled}
-        onChange={onToggle}
-        onClick={(e) => e.stopPropagation()}
-        sx={{
-          p: 0.5,
-          borderRadius: '5px',
-          transition: 'transform 0.15s',
-          '&.Mui-checked': { color: 'primary.main' },
-          '&:hover': !effectivelyDisabled ? { transform: 'scale(1.12)' } : {},
-        }}
-      />
+      <Tooltip title={disabledReason || ''}>
+        <span>
+          <Checkbox
+            size="small"
+            checked={isSelected}
+            disabled={effectivelyDisabled}
+            inputProps={{ 'aria-label': `Select ${item.month}` }}
+            onChange={onToggle}
+            onClick={(e) => e.stopPropagation()}
+            sx={{
+              p: 0.5,
+              borderRadius: '5px',
+              transition: 'transform 0.15s',
+              '&.Mui-checked': { color: 'primary.main' },
+              '&:hover': !effectivelyDisabled ? { transform: 'scale(1.12)' } : {},
+            }}
+          />
+        </span>
+      </Tooltip>
 
       {/* Month name */}
       <Typography
@@ -97,7 +104,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         variant="body2"
         sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
-        {formatCurrency(item.total)}
+        {formatNumber(item.total, 'INR')}
       </Typography>
 
       {/* Paid */}
@@ -105,7 +112,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         variant="body2"
         sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
-        {formatCurrency(item.paid)}
+        {formatNumber(item.paid, 'INR')}
       </Typography>
 
       {/* Refunded/Adjusted */}
@@ -115,7 +122,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         color={item.refunded > 0 ? 'warning.dark' : 'text.secondary'}
         sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
-        {formatCurrency(item.refunded)}
+        {formatNumber(item.refunded, 'INR')}
       </Typography>
 
       {/* Adjustable/Refundable amount */}
@@ -125,7 +132,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         color={refundable > 0 ? (isAdj ? 'info.main' : 'success.main') : 'text.disabled'}
         sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
-        {formatCurrency(refundable)}
+        {formatNumber(refundable, 'INR')}
       </Typography>
 
       {/* Refund/Adjustment amount input or placeholder */}
@@ -133,8 +140,13 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
         {isSelected ? (
           <NumericFormatCustom
             size="small"
+            name={`refund-${item.sourceAllocationId || item.dueFeeId}`}
+            roundToWholeRupees={false}
+            decimalScale={2}
             value={refundValue}
-            onValueChange={(vals) => onAmountChange(vals.value)}
+            onValueChange={(vals, source) => {
+              if (source.source === 'event') onAmountChange(vals.value);
+            }}
             onClick={(e) => e.stopPropagation()}
             isAllowed={
               ({ floatValue }) => floatValue === undefined || floatValue <= refundable // Limit to refundable/adjustable for both modes
@@ -144,11 +156,12 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
             helperText={
               showInputError
                 ? Number(refundValue) > refundable
-                  ? `Max ${formatCurrency(refundable)}`
+                  ? `Max ${formatNumber(refundable, 'INR')}`
                   : 'Required'
                 : undefined
             }
             inputProps={{
+              'aria-label': `${isAdj ? 'Adjustment' : 'Refund'} amount for ${item.month}`,
               // min: 0,
               style: {
                 textAlign: 'right',

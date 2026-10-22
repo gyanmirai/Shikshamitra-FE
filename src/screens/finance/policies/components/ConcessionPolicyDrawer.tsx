@@ -1,8 +1,5 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
@@ -19,6 +16,8 @@ import ConcessionCalculationSection from './concession/ConcessionCalculationSect
 import ConcessionApplicationSection from './concession/ConcessionApplicationSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
+import { useSelector } from 'react-redux';
+import type { RootState } from 'src/redux/store';
 
 interface ConcessionPolicyDrawerProps {
   open: boolean;
@@ -41,6 +40,7 @@ function ConcessionPolicyDrawerSession({
   academicYearId = '',
 }: ConcessionPolicyDrawerProps) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const {
     formik,
     isSaving,
@@ -93,19 +93,15 @@ function ConcessionPolicyDrawerSession({
           aria-busy={busy}
         >
           <FinancePolicyDrawerHeader
+            description={`Configure calculation rules and limits · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
             title={editData ? 'Edit Concession Policy' : 'Create Concession Policy'}
             titleId="concession-policy-title"
-            description={`Configure calculation rules and limits · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
+
             descriptionDisplay="tooltip"
             onClose={close}
             disabled={busy}
             badges={
-              <>
-                <Label color={formik.values.status === 'Active' ? 'success' : 'warning'}>
-                  {formik.values.status}
-                </Label>
-                {editData?.version && <Label color="default">v{editData.version}</Label>}
-              </>
+              editData?.version ? <Label color="default">v{editData.version}</Label> : undefined
             }
           />
           <Box
@@ -122,7 +118,7 @@ function ConcessionPolicyDrawerSession({
                 component="fieldset"
                 disabled={busy}
                 inert={busy}
-                sx={{ border: 0, m: 0, p: { xs: 2, sm: 3 }, minWidth: 0 }}
+                sx={{ border: 0, m: 0, p: 2, minWidth: 0 }}
               >
                 <Stack spacing={2} sx={{ minWidth: 0 }}>
                   <ConcessionGeneralSection

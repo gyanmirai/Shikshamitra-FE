@@ -1,7 +1,8 @@
 import React from 'react';
+
+import { Box, Paper, Stack, Typography, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Paper, Stack, IconButton, Typography } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // SectionCard — labelled card wrapper used throughout PaymentTermForm sections
@@ -20,7 +21,7 @@ export function SectionCard({ title, subtitle, info, action, children }: Section
     <Paper
       variant="outlined"
       sx={{
-        p: { xs: 2, sm: 2.5 },
+        p: 1.5,
         borderRadius: 2,
         minWidth: 0,
       }}
@@ -29,7 +30,7 @@ export function SectionCard({ title, subtitle, info, action, children }: Section
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
         sx={{
-          mb: 2.5,
+          mb: 1.5,
           alignItems: { xs: 'stretch', sm: 'center' },
           justifyContent: 'space-between',
         }}

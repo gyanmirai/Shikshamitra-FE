@@ -7,13 +7,14 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Link, Stack, Alert, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { DetailGrid, DetailField, DetailSection } from 'src/components/detail-view';
-import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { DetailField, DetailSection } from 'src/components/detail-view';
+
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 import { groupAssignmentInstallments } from './assignmentReviewPresentation';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 // Embedded evidence tables: the drawer body owns vertical scrolling, while each
 // shared table contains horizontal overflow at narrow widths.
@@ -41,15 +42,25 @@ export default function AssignmentReview({
   const money = (value: number) => formatNumber(value, data.currency);
   const summary = (
     <DetailSection
+      helpText="Totals are calculated by the server. Service reduction is the difference between the full scheduled amount and the amount assigned for the selected service dates."
       icon="mdi:cash-multiple"
       title="Assignment total"
-      helpText="Totals are calculated by the server. Service reduction is the difference between the full scheduled amount and the amount assigned for the selected service dates."
     >
       <DetailField
         label="Fee Structure"
         value={`${data.structureName} · ${data.revisionNumber ? `r${data.revisionNumber}` : 'Historical'}`}
       />
-      <DetailGrid>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 1.5,
+          bgcolor: 'background.neutral',
+          p: 1.5,
+          borderRadius: 1,
+          '& .MuiTypography-root': { fontVariantNumeric: 'tabular-nums' },
+        }}
+      >
         {[
           { label: committed ? 'Assigned amount' : 'Total to assign', value: data.proratedTotal },
           ...(!legacy
@@ -61,7 +72,7 @@ export default function AssignmentReview({
         ].map((metric) => (
           <DetailField key={metric.label} label={metric.label} value={money(metric.value)} />
         ))}
-      </DetailGrid>
+      </Box>
 
       {data.overrideReason && (
         <DetailField label="Amount override reason" value={data.overrideReason} />
@@ -74,12 +85,6 @@ export default function AssignmentReview({
   return (
     <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
       <Stack spacing={1.5}>
-        {data.warnings.map((warning) => (
-          <Alert key={warning} severity="warning">
-            {warning}
-          </Alert>
-        ))}
-
         <Box
           sx={{
             display: 'grid',
@@ -103,7 +108,7 @@ export default function AssignmentReview({
                     id: 'feeHeadName',
                     label: 'Fee Head',
                     minWidth: 180,
-                    width: '25%',
+                    width: '40%',
                     isSort: false,
                     isFilter: false,
                     render: (_value, head) => (
@@ -151,7 +156,8 @@ export default function AssignmentReview({
                     id: 'obligation',
                     label: legacy ? 'Recorded Amount' : 'Assigned Amount',
                     minWidth: 130,
-                    align: 'right',
+                    align: 'left',
+                    cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                     isSort: false,
                     isFilter: false,
                     render: (value, head) => (
@@ -264,7 +270,8 @@ export default function AssignmentReview({
                     id: 'obligation',
                     label: 'Assigned Amount',
                     minWidth: 110,
-                    align: 'right',
+                    align: 'left',
+                    cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                     isSort: false,
                     isFilter: false,
                     render: (value) => money(value),
@@ -275,7 +282,11 @@ export default function AssignmentReview({
                           id: 'paid',
                           label: 'Paid',
                           minWidth: 100,
-                          align: 'right' as const,
+                          align: 'left' as const,
+                          cellSx: {
+                            textAlign: 'right' as const,
+                            fontVariantNumeric: 'tabular-nums',
+                          },
                           isSort: false,
                           isFilter: false,
                           render: (value: number) => money(value),
@@ -284,7 +295,11 @@ export default function AssignmentReview({
                           id: 'outstanding',
                           label: 'Outstanding',
                           minWidth: 110,
-                          align: 'right' as const,
+                          align: 'left' as const,
+                          cellSx: {
+                            textAlign: 'right' as const,
+                            fontVariantNumeric: 'tabular-nums',
+                          },
                           isSort: false,
                           isFilter: false,
                           render: (value: number) => money(value),
@@ -355,9 +370,17 @@ export default function AssignmentReview({
               tableContainerProps={{
                 sx: {
                   height: 'auto',
+                  maxHeight: '65vh',
+                  overflow: 'auto',
                   flex: 'none',
+                  '& .MuiTableCell-head': {
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 2,
+                    bgcolor: 'background.paper',
+                    whiteSpace: 'nowrap',
+                  },
                   '& .MuiTableCell-root': { py: 1, px: 1.5 },
-                  '& .MuiTableCell-head': { whiteSpace: 'nowrap' },
                 },
               }}
               tableId={`${tableId}-installments`}
@@ -404,7 +427,8 @@ export default function AssignmentReview({
                     />
                   ),
                   minWidth: 80,
-                  align: 'right',
+                  align: 'left',
+                  cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                   isSort: false,
                   isFilter: false,
                   render: (value) => (legacy ? 'Unknown' : `${value}%`),
@@ -447,11 +471,11 @@ export default function AssignmentReview({
                     />
                   ),
                   minWidth: 125,
-                  align: 'right',
+                  align: 'left',
+                  cellSx: { textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
                   isSort: false,
                   isFilter: false,
                   render: (value) => money(value),
-                  cellSx: { fontVariantNumeric: 'tabular-nums' },
                 },
                 ...(committed
                   ? [
@@ -459,7 +483,8 @@ export default function AssignmentReview({
                         id: 'paidAmount',
                         label: 'Paid',
                         minWidth: 120,
-                        align: 'right' as const,
+                        align: 'left' as const,
+                        cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                         isSort: false,
                         isFilter: false,
                         render: (value: number) => money(value),
@@ -468,7 +493,8 @@ export default function AssignmentReview({
                         id: 'outstandingAmount',
                         label: 'Outstanding',
                         minWidth: 140,
-                        align: 'right' as const,
+                        align: 'left' as const,
+                        cellSx: { textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' },
                         isSort: false,
                         isFilter: false,
                         render: (value: number) => money(value),

@@ -3,7 +3,29 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import DefaultPolicyToggle from './DefaultPolicyToggle';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 describe('DefaultPolicyToggle', () => {
+  it('uses one concise label and information control in compact forms', () => {
+    render(
+      <DefaultPolicyToggle
+        policyLabel="Concession"
+        status="Draft"
+        checked={false}
+        onChange={vi.fn()}
+        compact
+        descriptionDisplay="tooltip"
+      />
+    );
+    expect(screen.getByText('Set as default')).toBeVisible();
+    expect(screen.queryByText('Default Concession Policy')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Activate this policy to make it the default.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Default concession policy information' })
+    ).toBeVisible();
+  });
   it('disables default selection for a Draft policy', () => {
     const onChange = vi.fn();
 
@@ -55,7 +77,7 @@ describe('DefaultPolicyToggle', () => {
       expect(screen.getByRole('switch')).toBeChecked();
       fireEvent.click(screen.getByText(`Default ${policyLabel} Policy`));
       expect(onChange).not.toHaveBeenCalled();
-      expect(screen.getByText(/Designate another Active policy/)).toBeVisible();
+      expect(screen.queryByText(/Designate another Active policy/)).not.toBeInTheDocument();
     }
   );
 

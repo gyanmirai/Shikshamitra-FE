@@ -3,7 +3,7 @@ import { it, vi, expect, afterEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, within, cleanup, fireEvent } from '@testing-library/react';
 
 import ClassAccordionPanel from './ClassAccordionPanel';
 
@@ -96,6 +96,51 @@ it('keeps edits and updates the structure list name when switching between struc
   fireEvent.click(screen.getByRole('button', { name: /Annual school fees/ }));
   expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Annual school fees');
   expect(screen.queryByRole('combobox', { name: 'Fee structure' })).toBeNull();
+});
+
+it('shows an unsaved dot on the changed structure across navigation and clears it after saving', () => {
+  setup();
+  const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
+  expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Updated general fees' },
+  });
+  expect(
+    within(navigation.getByRole('button', { name: /Updated general fees/ })).getByRole('img', {
+      name: 'Unsaved changes',
+    })
+  ).toBeVisible();
+  expect(navigation.queryByText('Unsaved changes')).toBeNull();
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  expect(navigation.getByRole('img', { name: 'Unsaved changes' })).toBeVisible();
+  fireEvent.click(navigation.getByRole('button', { name: /Updated general fees/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  expect(navigation.queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
+});
+
+it('filters structures without losing edits and clears the filter when adding a new structure', () => {
+  setup();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Draft name' }), {
+    target: { value: 'Updated general fees' },
+  });
+  const search = screen.getByRole('textbox', { name: 'Search structures' });
+  fireEvent.change(search, { target: { value: 'ACTIVITY' } });
+  const navigation = within(screen.getByRole('list', { name: 'Fee structures' }));
+  expect(navigation.queryByRole('button', { name: /Updated general fees/ })).toBeNull();
+  fireEvent.click(navigation.getByRole('button', { name: 'Activity fees' }));
+  fireEvent.change(search, { target: { value: '' } });
+  fireEvent.click(navigation.getByRole('button', { name: /Updated general fees/ }));
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('Updated general fees');
+  fireEvent.change(search, { target: { value: 'no matching structure' } });
+  expect(screen.getByText('No structures match your search.')).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Add structure' }));
+  expect(search).toHaveValue('');
+  const newStructure = navigation.getByRole('button', { name: /New fee structure/ });
+  expect(newStructure).toHaveAttribute('aria-current', 'true');
+  expect(within(newStructure).getByRole('img', { name: 'Unsaved changes' })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Draft name' })).toHaveValue('');
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  expect(within(newStructure).queryByRole('img', { name: 'Unsaved changes' })).toBeNull();
 });
 
 it('selects a new local draft and preserves its name after visiting a saved structure', () => {

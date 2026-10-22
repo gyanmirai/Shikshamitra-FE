@@ -1,19 +1,18 @@
-import { useId } from 'react';
+import Box from '@mui/material/Box';
+
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 
 import type { PolicyImpactRow } from '../policyImpactModel';
 
 interface Props {
   title: string;
   policyLabel: string;
-  description: string;
-  summary: string;
   rows?: PolicyImpactRow[];
   loading: boolean;
   error: boolean;
@@ -25,8 +24,6 @@ interface Props {
 export default function PolicyImpactDialog({
   title,
   policyLabel,
-  description,
-  summary,
   rows,
   loading,
   error,
@@ -34,16 +31,11 @@ export default function PolicyImpactDialog({
   saved,
   onClose,
 }: Props) {
-  const descriptionId = useId();
-  const titleId = useId();
   return (
     <CustomDialog
       open
-      title={`${title} impact`}
-      aria-labelledby={titleId}
-      aria-describedby={descriptionId}
+      title={policyLabel}
       handleClose={onClose}
-      titleInfo="Review how this policy affects each fee head. Student eligibility and transactions are checked in their own workflows."
       maxWidth="md"
       hasForm={false}
       guardUnsavedChanges={false}
@@ -51,21 +43,13 @@ export default function PolicyImpactDialog({
     >
       <DialogScrollContent>
         <Stack spacing={2} sx={{ minWidth: 0 }}>
+          {saved && <Label sx={{ alignSelf: 'flex-start' }}>Saved publication review</Label>}
           <Stack spacing={1}>
-            <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
-              {policyLabel}
-            </Typography>
-            {saved && (
-              <Box>
-                <Label>Saved publication review</Label>
-              </Box>
-            )}
-            <Typography id={descriptionId} variant="body2" color="text.secondary">
-              {description}
-            </Typography>
-          </Stack>
-          <Stack spacing={1}>
-            <FormSectionHeader title="Fee head coverage" icon={GlobalIcons.assigned} />
+            <FormSectionHeader
+              title="Fee Head Coverage"
+              icon={GlobalIcons.assigned}
+              titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            />
             {rows ? (
               rows.length ? (
                 <CustomizableTable
@@ -109,7 +93,7 @@ export default function PolicyImpactDialog({
                   ]}
                 />
               ) : (
-                <Alert severity="info">No fee heads have been added to this structure.</Alert>
+                <Box>No fee heads have been added to this structure.</Box>
               )
             ) : loading ? (
               <Stack aria-label="Loading fee head impact" role="status" spacing={1}>
@@ -117,24 +101,14 @@ export default function PolicyImpactDialog({
                 <Skeleton height={40} />
               </Stack>
             ) : (
-              <Alert severity={error ? 'warning' : 'info'}>
+              <Box>
                 {!canRead
                   ? 'Policy details are unavailable with your current access.'
                   : error
-                    ? 'Policy details could not be loaded. Close this dialog and refresh the policy list.'
-                    : 'Fee head details for this selected version are not available here. The selected version is unchanged; use the configuration review to check its coverage.'}
-              </Alert>
+                    ? 'Policy details could not be loaded. Close this dialog and retry.'
+                    : 'Fee head details for this selected version are not available here.'}
+              </Box>
             )}
-          </Stack>
-          <Stack spacing={0.75} sx={{ p: 1.5, bgcolor: 'background.neutral', borderRadius: 1 }}>
-            <Typography variant="subtitle2">What this policy changes</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {summary}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              This shows configuration only. Student eligibility and transactions are checked in
-              their own workflows.
-            </Typography>
           </Stack>
         </Stack>
       </DialogScrollContent>

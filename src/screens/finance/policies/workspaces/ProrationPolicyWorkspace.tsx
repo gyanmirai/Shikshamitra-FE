@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -55,8 +55,9 @@ export default function ProrationPolicyWorkspace() {
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Proration Policy"
         description="Define reusable per-fee-head proration rules for mid-session admissions, exits, and service changes. Assign one policy to each Fee Structure."
+        heading="Proration Policy"
+
         links={[
           { name: 'Finance', href: financePaths.dashboard },
           { name: 'Policies & Rules', href: financePaths.policies.root },
@@ -87,7 +88,7 @@ export default function ProrationPolicyWorkspace() {
               disabled={!academicYearId}
               sx={{ px: 2 }}
             >
-              Create policy
+              Create Policy
             </Button>
           )}
         </Stack>

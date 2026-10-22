@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
@@ -14,10 +14,11 @@ import { Box, Alert, Stack, Button, Drawer, Typography, CircularProgress } from 
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import { FormFooter } from './FormFooter';
+import { ALLOCATION_TOTAL_ERROR } from '../allocationValidation';
 import { usePaymentTermForm } from '../hooks/usePaymentTermForm';
 import { GeneralInfoSection } from './sections/GeneralInfoSection';
 import { InstallmentSection } from './sections/InstallmentSection';
-import { PaymentTermUsageSummary, PaymentTermDefaultSummary } from './PaymentTermUsage';
+import { PaymentTermDefaultSummary } from './PaymentTermUsage';
 
 import type { IPaymentTermFormProps } from '../type';
 
@@ -28,6 +29,7 @@ export default function PaymentTermForm(props: IPaymentTermFormProps) {
 
 function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormProps) {
   const dispatch = useDispatch();
+  const formBodyRef = useRef<HTMLFieldSetElement>(null);
   const discardDialog = useBoolean();
   useEffect(
     () => () => {
@@ -38,7 +40,6 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
   const {
     confirmationImpact,
     cancelDefaultConfirmation,
-    termUsage,
     impactError,
     formik,
     boards,
@@ -82,11 +83,13 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
           <FinancePolicyDrawerHeader
+            description="Configure a reusable installment and invoice schedule."
+            helpText="Payment terms set installment and invoice dates. Drafts remain editable; active terms are available to fee structures."
             title={editData ? 'Edit Payment Term' : 'Create Payment Term'}
             titleId="payment-term-title"
-            description="Configure a reusable installment and invoice schedule."
+
             descriptionDisplay="tooltip"
-            helpText="Payment terms set installment and invoice dates. Drafts remain editable; active terms are available to fee structures."
+
             badges={
               <Label color={formik.values.status === 'Active' ? 'success' : 'warning'}>
                 {formik.values.status === 'Active' ? 'Active' : 'Draft'}
@@ -108,23 +111,17 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
             <Scrollbar sx={{ height: 1 }}>
               <Box
                 component="fieldset"
+                ref={formBodyRef}
                 disabled={busy}
-                sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
+                sx={{ border: 0, m: 0, minWidth: 0, p: 1.5 }}
               >
-                <Stack spacing={2} sx={{ minWidth: 0 }}>
-                  {(editData?.isUsedInDownstream || editData?.canDirectEdit === false) && (
-                    <Alert severity="warning">
-                      This term is mapped to fee structures. Saving creates a revision and preserves
-                      existing assignments.
-                    </Alert>
-                  )}
+                <Stack spacing={1.5} sx={{ minWidth: 0 }}>
                   <GeneralInfoSection formik={formik} boards={boards} />
                   {formik.values.isDefaultTerm && impactError && (
                     <Alert severity="error">
                       Unable to load default impact. Retry before saving.
                     </Alert>
                   )}
-                  {termUsage && <PaymentTermUsageSummary usage={termUsage} />}
                   <InstallmentSection
                     formik={formik}
                     board={boards.find((board) => board.id === formik.values.boardId)}
@@ -169,15 +166,26 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
             disabledReason={
               isLoadingDetail
                 ? 'Loading payment term details'
-                : checks.validationMessage ||
-                  (!checks.isReadyToPublish
-                    ? 'Complete the required schedule fields before submitting.'
-                    : !formik.dirty
-                      ? 'Make a change before submitting'
-                      : 'Checking payment term validation')
+                : checks.validationMessage === ALLOCATION_TOTAL_ERROR
+                  ? ''
+                  : checks.validationMessage ||
+                    (!checks.isReadyToPublish
+                      ? 'Complete the required schedule fields before submitting.'
+                      : !formik.dirty
+                        ? 'Make a change before submitting'
+                        : 'Checking payment term validation')
             }
             onCancel={requestClose}
-            onSubmit={() => handleSubmit()}
+            onSubmit={async () => {
+              await handleSubmit();
+              requestAnimationFrame(() => {
+                const firstInvalid = formBodyRef.current?.querySelector<HTMLElement>(
+                  'input[aria-invalid="true"], [role="group"][aria-invalid="true"], [aria-invalid="true"] input'
+                );
+                firstInvalid?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+                firstInvalid?.focus({ preventScroll: true });
+              });
+            }}
           />
           <ConfirmDialog
             open={Boolean(confirmationImpact)}

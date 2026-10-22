@@ -1,7 +1,7 @@
 'use client';
 
 import { Add } from '@mui/icons-material';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Tab, Box, Card, Button } from '@mui/material';
@@ -60,8 +60,9 @@ const InvoiceAndReceipt = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Receipts"
         description="View and manage all generated student receipts, with options to preview, download, and share with parents."
+        heading="Receipts"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/invoice-receipt' },

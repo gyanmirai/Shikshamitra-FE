@@ -132,6 +132,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         },
       },
       {
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         minWidth: 60,
@@ -143,7 +144,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={[
                 {
                   id: 'view',

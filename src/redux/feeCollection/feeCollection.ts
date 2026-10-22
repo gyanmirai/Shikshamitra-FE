@@ -105,6 +105,7 @@ export interface FeeSummary {
 }
 
 export interface FeeLedgerLine {
+  installmentId?: string | null;
   dueFeeId: string;
   feeHeadId: string;
   feeHeadName: string;
@@ -174,7 +175,15 @@ export interface FeeCollectFormDto {
   charges: ChargeDetail[];
   /** Resolved from the student's Collection Policy — true (default) when no policy resolves. */
   allowOnlineCollection: boolean;
+  allocationBasis?: CollectionAllocationBasis;
+  collectionPolicyId?: string | null;
+  collectionPolicyName?: string | null;
+  collectionPolicyVersion?: number | null;
+  allocationDueFeeOrder?: string[];
+  allocationRevision?: string | null;
 }
+
+export type CollectionAllocationBasis = 'Legacy' | 'Installment' | 'FeeHead';
 
 // ─── Fee-details types ────────────────────────────────────────────────────────
 
@@ -271,6 +280,7 @@ export interface FeePayment {
 }
 
 export interface CollectFeeInput {
+  automaticAllocation?: { revision: string; dueFeeIds: string[]; chargeIds: string[] };
   idempotencyKey: string;
   studentId: string;
   academicYearId: string;

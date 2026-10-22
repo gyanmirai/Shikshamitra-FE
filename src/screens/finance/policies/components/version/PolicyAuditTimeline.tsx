@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   Box,
@@ -289,15 +290,17 @@ export default function PolicyAuditTimeline({
                                     : 'No changes recorded'}
                                 </Typography>
                               </Box>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                noWrap
-                                title={policyName}
-                                sx={{ maxWidth: 120, display: { xs: 'none', sm: 'block' } }}
-                              >
-                                {policyName}
-                              </Typography>
+                              <CustomTooltip title={policyName} placement="left" arrow>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  noWrap
+                                  tabIndex={0}
+                                  sx={{ maxWidth: 120, display: { xs: 'none', sm: 'block' } }}
+                                >
+                                  {policyName}
+                                </Typography>
+                              </CustomTooltip>
                             </Stack>
                           </AccordionSummary>
                           <AccordionDetails

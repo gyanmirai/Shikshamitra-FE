@@ -48,10 +48,6 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
         <Divider />
 
         <Box>
-          <Typography variant="subtitle1" fontWeight={600} mb={2}>
-            Mapped Fee Heads ({feeHeads.length})
-          </Typography>
-
           {feeHeads.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               No Fee Heads mapped to this category.

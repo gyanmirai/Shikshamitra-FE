@@ -49,6 +49,60 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useConcessionPolicyForm submission validation', () => {
+  it('sends a normalized policy name and rejects excessive percentage precision', async () => {
+    const { result } = renderHook(() => useConcessionPolicyForm({ open: true, onClose: vi.fn() }));
+    await act(async () => {
+      await result.current.formik.setValues({
+        ...result.current.formik.values,
+        policyName: '  Sibling   Tuition\u00a0 Assistance  ',
+        maximumPercentage: 0.1111257547,
+      });
+    });
+    await act(async () => {
+      await result.current.handleCustomSubmit();
+    });
+    expect(result.current.formik.errors.maximumPercentage).toBe('Use up to 2 decimal places');
+    expect(mocks.createPolicy).not.toHaveBeenCalled();
+    await act(async () => {
+      await result.current.formik.setFieldValue('maximumPercentage', '0.11');
+    });
+    expect(result.current.formik.values.maximumPercentage).toBe('0.11');
+    await act(async () => {
+      await result.current.handleCustomSubmit();
+    });
+    expect(mocks.createPolicy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        policyName: 'Sibling Tuition Assistance',
+        maximumPercentage: 0.11,
+      })
+    );
+  });
+
+  it('keeps server name conflicts inline, preserves the form and emits no duplicate toast', async () => {
+    const onClose = vi.fn();
+    mocks.createPolicy.mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue({
+        data: { errorCode: 'Finance:ConcessionPolicy:010005', detail: 'Business rule violated' },
+      }),
+    });
+    const { result } = renderHook(() => useConcessionPolicyForm({ open: true, onClose }));
+    await act(async () => {
+      await result.current.formik.setValues({
+        ...result.current.formik.values,
+        policyName: 'Sibling Assistance',
+        maximumPercentage: 25,
+      });
+    });
+    await act(async () => {
+      await result.current.handleCustomSubmit();
+    });
+    expect(result.current.formik.touched.policyName).toBe(true);
+    expect(result.current.formik.errors.policyName).toContain('Current or Archived');
+    expect(result.current.formik.values.maximumPercentage).toBe(25);
+    expect(mocks.toastError).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('preserves the paid refund entitlement when automatic request creation is off', async () => {
     const { result } = renderHook(() => useConcessionPolicyForm({ open: true, onClose: vi.fn() }));
     await act(async () => {

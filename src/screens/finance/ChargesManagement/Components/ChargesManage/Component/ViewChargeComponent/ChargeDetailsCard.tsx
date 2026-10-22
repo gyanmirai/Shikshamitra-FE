@@ -12,9 +12,10 @@ export default function ChargeViewDetailsCard({ charge }: { charge: IChargeDetai
   );
   return (
     <DetailSection
+      helpText="The charge amount, category and dates recorded for this request."
       title="Charge Details"
       icon="mdi:information-outline"
-      helpText="The charge amount, category and dates recorded for this request."
+
       action={<Label color={workflow?.color ?? 'default'}>{workflow?.label ?? 'Unknown'}</Label>}
     >
       <DetailGrid>

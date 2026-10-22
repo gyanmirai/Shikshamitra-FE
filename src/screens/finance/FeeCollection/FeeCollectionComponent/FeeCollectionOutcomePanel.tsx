@@ -60,15 +60,17 @@ export default function FeeCollectionOutcomePanel({
             { id: 'feeHeadName', label: 'Fee head' },
             { id: 'installmentLabel', label: 'Period' },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'amountPaid',
               label: 'Paid',
-              align: 'right',
+              align: 'left',
               render: (value: number) => formatNumber(value, 'INR'),
             },
             {
+              cellSx: { textAlign: 'right' as const },
               id: 'pendingAfter',
               label: 'Pending after',
-              align: 'right',
+              align: 'left',
               render: (value: number) => formatNumber(value, 'INR'),
             },
           ]}

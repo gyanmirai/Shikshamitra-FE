@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
@@ -7,14 +8,14 @@ import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   expenseCategoryApi,
@@ -65,7 +66,6 @@ const FinanceExpenseCategoriesScreen = () => {
   const [open, setOpen] = useState(false);
 
   // State management
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedExpenseCategory, setSelectedExpenseCategory] = useState<IExpenseCategory | null>(
     null
   );
@@ -75,24 +75,13 @@ const FinanceExpenseCategoriesScreen = () => {
   /**
    * Handles closing of the expense category form dialog
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedExpenseCategory(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addExpenseCategoryDialog.value,
+    () => {
       addExpenseCategoryDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addExpenseCategoryDialog.onFalse();
-      setTimeout(() => {
-        setSelectedExpenseCategory(null);
-      }, 200);
+      setSelectedExpenseCategory(null);
     }
-  };
+  );
 
   if (expenseCategoryLoading && !expenseCategoryFetching) {
     return <Box>Loading...</Box>;
@@ -100,9 +89,11 @@ const FinanceExpenseCategoriesScreen = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Expense Category"
         description="This screen displays all the created expense categories with an option to create a new expense category."
+        heading="Expense Category"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Accounts', href: '/finance/reconciliation' },
@@ -145,22 +136,21 @@ const FinanceExpenseCategoriesScreen = () => {
       />
 
       <CustomDialog
-        open={addExpenseCategoryDialog.value}
-        handleClose={() => {
-          addExpenseCategoryDialog.onFalse();
-          setTimeout(() => {
-            setSelectedExpenseCategory(null);
-          }, 200);
-        }}
-        title={selectedExpenseCategory ? 'Edit Expense Category' : 'Add Expense Category'}
         titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        open={addExpenseCategoryDialog.value}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
+        title={selectedExpenseCategory ? 'Edit Expense Category' : 'Add Expense Category'}
+
         maxWidth="sm"
       >
-        <ExpenseCategoryForm
-          open={addExpenseCategoryDialog}
-          onClose={handleClose}
-          editData={selectedExpenseCategory}
-        />
+        {addExpenseCategoryDialog.value && (
+          <ExpenseCategoryForm
+            open={addExpenseCategoryDialog}
+            onClose={handleClose}
+            editData={selectedExpenseCategory}
+          />
+        )}
       </CustomDialog>
 
       <ConfirmDialog

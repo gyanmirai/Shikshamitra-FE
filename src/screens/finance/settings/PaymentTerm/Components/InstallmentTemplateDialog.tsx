@@ -272,10 +272,11 @@ function InstallmentTemplateDialogSession({
 
   return (
     <CustomDialog
+      titleInfo="Configure payment due dates and invoice dates, then preview the schedule before applying it."
       open={open}
       handleClose={requestClose}
       title="Generate Installment Schedule"
-      titleInfo="Configure payment due dates and invoice dates, then preview the schedule before applying it."
+
       maxWidth="md"
       disableClose={busy}
       guardUnsavedChanges={false}
@@ -291,10 +292,10 @@ function InstallmentTemplateDialogSession({
       >
         <DialogScrollContent>
           {existingInstallmentCount > 0 && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2 }}>
               Applying this template will replace the existing {existingInstallmentCount}{' '}
               installment(s).
-            </Alert>
+            </Box>
           )}
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -318,10 +319,10 @@ function InstallmentTemplateDialogSession({
             label={loadingGeometry ? 'Loading schedule…' : 'Generating preview…'}
           >
             <FormSectionCard
+              descriptionTooltip="Choose the installment pattern and the payment and invoice date rules for the selected board period."
               icon={GlobalIcons.calendar}
               title="Schedule Configuration"
               titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-              descriptionTooltip="Choose the installment pattern and the payment and invoice date rules for the selected board period."
             >
               <Box
                 sx={{
@@ -511,16 +512,12 @@ function InstallmentTemplateDialogSession({
             </FormSectionCard>
             {preview && (
               <FormSectionCard
+                descriptionTooltip="Review each installment's dates and allocation before applying the schedule."
                 sx={{ mt: 2 }}
                 icon={GlobalIcons.eye}
                 title="Schedule Preview"
                 titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                descriptionTooltip="Review each installment's dates and allocation before applying the schedule."
               >
-                <Alert severity="success">
-                  {preview.installmentCount} installments generated with valid invoice dates and a
-                  total allocation of 100%.
-                </Alert>
                 <CustomizableTable
                   tableId="payment-term-template-preview"
                   isPagination={false}
@@ -559,11 +556,12 @@ function InstallmentTemplateDialogSession({
                       render: (value) => formatDateOnly(value),
                     },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'allocationPercentage',
                       label: 'Allocation %',
                       isSort: false,
                       isFilter: false,
-                      align: 'right',
+                      align: 'left',
                       render: (value) => Number(value).toFixed(2) + '%',
                     },
                   ]}

@@ -9,9 +9,13 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import FeeHeadDependencies from '../../components/FeeHeadDependencies';
+import {
+  useGetFeeHeadByIdQuery,
+  usePatchFeeHeadMutation,
+} from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import { useFinancePermissions } from '../../../hooks/useFinancePermissions';
 
@@ -37,6 +41,12 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   const statusConfirm = useBoolean();
   const [statusData, setStatusData] = useState<null | IFeeHead>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
+  const dependencyCheck = useGetFeeHeadByIdQuery(statusData?.id ?? '', {
+    skip: !statusConfirm.value || !statusData?.isActive,
+    refetchOnMountOrArgChange: true,
+  });
+  const dependencies = dependencyCheck.currentData?.dependencies;
+  const blocked = dependencies?.isBlocked || dependencyCheck.currentData?.isUsedInDownstream;
 
   const handleOpenStatusConfirm = (row: IFeeHead) => {
     if (!access.canAdd) return;
@@ -50,6 +60,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'name',
         label: 'Name',
         align: 'left',
@@ -97,6 +108,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         ),
       },
       {
+        stickyPosition: 'right',
         id: 'isActive',
         label: 'Status',
         minWidth: 140,
@@ -123,6 +135,8 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         },
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Action',
         minWidth: 60,
@@ -133,6 +147,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         render(value, row) {
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               actions={[
                 {
                   id: 'edit',
@@ -203,7 +218,11 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       />
       <ConfirmDialog
         open={statusConfirm.value}
+        disableCancel={isStatusLoading}
+        disableEscapeKeyDown={isStatusLoading}
+        disableBackdropClick={isStatusLoading}
         onClose={() => {
+          if (isStatusLoading) return;
           statusConfirm.onFalse();
           setStatusData(null);
           setDeactivationReason('');
@@ -218,7 +237,29 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
               </Box>
               ?
             </Typography>
-            {!nextStatus && (
+            {!nextStatus && dependencyCheck.isFetching && (
+              <Typography role="status">Checking fee head dependencies…</Typography>
+            )}
+            {!nextStatus && dependencyCheck.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button size="small" onClick={() => dependencyCheck.refetch()}>
+                    Retry
+                  </Button>
+                }
+              >
+                Could not verify dependencies. Retry before deactivating.
+              </Alert>
+            )}
+            {!nextStatus && blocked && (
+              <FeeHeadDependencies
+                name={statusData?.name ?? 'Fee head'}
+                feeHeadId={statusData?.id}
+                dependencies={dependencies}
+              />
+            )}
+            {!nextStatus && !blocked && (
               <TextField
                 fullWidth
                 multiline
@@ -245,7 +286,15 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
-            disabled={!access.canAdd || (!nextStatus && !deactivationReason.trim())}
+            disabled={
+              !access.canAdd ||
+              (!nextStatus &&
+                (!deactivationReason.trim() ||
+                  dependencyCheck.isFetching ||
+                  dependencyCheck.isError ||
+                  !dependencyCheck.currentData ||
+                  Boolean(blocked)))
+            }
             onClick={async () => {
               if (!access.canAdd || !statusData) return;
               try {

@@ -2,13 +2,13 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -19,6 +19,7 @@ import { useGetBudgetCategoryQuery } from 'src/redux/finance/budgetsCategory';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const FinanceBudgetCategorySettings = () => {
   const addDialog = useBoolean();
@@ -106,8 +107,9 @@ const FinanceBudgetCategorySettings = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Budget Category"
         description="This screen displays all the budget categories created in the system and provides an option to add new budget categories."
+        heading="Budget Category"
+
         links={[
           { name: 'Finance', href: '/finance' },
           { name: 'Setting', href: '/finance/setting' },
@@ -163,6 +165,8 @@ const FinanceBudgetCategorySettings = () => {
             align: 'left',
           },
           {
+            stickyPosition: 'right',
+            excludeFromExport: true,
             id: 'actions',
             label: 'Actions',
             minWidth: '90px',
@@ -173,6 +177,7 @@ const FinanceBudgetCategorySettings = () => {
             render(value, row: any) {
               return (
                 <AdaptiveThreeDotsActions
+                  directActionLimit={2}
                   actions={[
                     {
                       id: 'edit',
@@ -344,9 +349,9 @@ const BudgetCategoryDialog = ({ open, onClose, editData, onSave }: BudgetCategor
                   }}
                   error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
                   helperText={
-                    formik.touched.categoryName && typeof formik.errors.categoryName === 'string'
+                    (formik.touched.categoryName && typeof formik.errors.categoryName === 'string'
                       ? formik.errors.categoryName
-                      : undefined
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>

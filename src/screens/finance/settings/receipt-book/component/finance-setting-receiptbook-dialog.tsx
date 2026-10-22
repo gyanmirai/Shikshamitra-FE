@@ -505,9 +505,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               const field = 'name';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
               const helperText =
-                formik.touched[field] && formik.errors[field]
-                  ? formik.errors[field]
-                  : `${formik.values[field].length}/40 Maximum characters allowed`;
+                formik.touched[field] && formik.errors[field] ? formik.errors[field] : undefined;
               return (
                 <ShakingTextField error={error}>
                   <TextField

@@ -71,9 +71,10 @@ export default function UnifiedReceiptDisplay({
                   columns={[
                     { id: 'name', label: isFee ? 'Fee head' : 'Charge name' },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'amount',
                       label: 'Amount',
-                      align: 'right',
+                      align: 'left',
                       render: (value: number) => formatNumber(value, 'INR'),
                     },
                   ]}
@@ -103,6 +104,7 @@ export default function UnifiedReceiptDisplay({
                         render: (value) => value || '—',
                       },
                       ...['pendingBefore', 'amountPaid', 'pendingAfter'].map((id) => ({
+                        cellSx: { textAlign: 'right' as const },
                         id,
                         label:
                           id === 'pendingBefore'
@@ -110,7 +112,7 @@ export default function UnifiedReceiptDisplay({
                             : id === 'amountPaid'
                               ? 'Paid'
                               : 'Pending after',
-                        align: 'right' as const,
+                        align: 'left' as const,
                         render: (value: number) => formatNumber(value, 'INR'),
                       })),
                     ]}

@@ -46,6 +46,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   disabledLabel?: string;
   /** Optional guidance for menu options and the selected value. */
   optionDescriptionKey?: T;
+  /** Group contiguous options under non-selectable headings (for example, class → structure). */
+  groupKey?: T;
 };
 
 const CustomSelect = <T extends string, J extends boolean>({
@@ -70,6 +72,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   disabledValues = [],
   disabledLabel = 'Already configured',
   optionDescriptionKey,
+  groupKey,
   inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
@@ -80,6 +83,7 @@ const CustomSelect = <T extends string, J extends boolean>({
       !isSearch ||
       !normalizedSearch ||
       String(option[labelKey]).toLocaleLowerCase().includes(normalizedSearch) ||
+      (groupKey && String(option[groupKey]).toLocaleLowerCase().includes(normalizedSearch)) ||
       (Array.isArray(value)
         ? value.includes(option[valueKey] as never)
         : option[valueKey] === value)
@@ -240,9 +244,17 @@ const CustomSelect = <T extends string, J extends boolean>({
                 {normalizedSearch ? 'No matching options' : noOptionsMessage}
               </MenuItem>
             ) : (
-              filteredOptions.map((option) => {
+              filteredOptions.flatMap((option, index) => {
                 const isDisabled = disabledValues.includes(option[valueKey] as string | number);
-                return (
+                const heading =
+                  groupKey &&
+                  (index === 0 || filteredOptions[index - 1][groupKey] !== option[groupKey]) ? (
+                    <ListSubheader key={`group-${option[valueKey]}`}>
+                      {option[groupKey]}
+                    </ListSubheader>
+                  ) : null;
+                return [
+                  heading,
                   <MenuItem
                     key={option[valueKey]}
                     value={option[valueKey]}
@@ -263,8 +275,8 @@ const CustomSelect = <T extends string, J extends boolean>({
                     {optionDescriptionKey && option[optionDescriptionKey]
                       ? optionInfo(option[optionDescriptionKey], option[labelKey])
                       : null}
-                  </MenuItem>
-                );
+                  </MenuItem>,
+                ];
               })
             )}
           </Select>

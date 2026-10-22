@@ -4,9 +4,10 @@ import type { LabelColor } from 'src/components/label';
 import type {
   PaymentTermVersionResponse,
   PaymentTermVersionHistoryItem,
-  PaymentTermInstallmentResponse,
 } from 'src/redux/finance/paymentTerm';
 
+import CustomizableTable from 'src/components/customizabaleTable';
+import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
@@ -16,7 +17,7 @@ import { alpha } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { fDate, fDateTime } from 'src/utils/format-time';
-import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+
 import {
   useGetPaymentTermByIdQuery,
   useGetPaymentTermVersionHistoryQuery,
@@ -31,6 +32,7 @@ import {
   Button,
   Drawer,
   Divider,
+  Tooltip,
   Typography,
   ListItemText,
   ListItemButton,
@@ -70,84 +72,21 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography variant="body2" component="div" sx={{ fontWeight: 500 }}>
+      <Typography
+        variant="body2"
+        component="div"
+        sx={{
+          fontWeight: 500,
+          minHeight: 24,
+          display: 'flex',
+          alignItems: 'center',
+          overflowWrap: 'anywhere',
+          minWidth: 0,
+        }}
+      >
         {value}
       </Typography>
     </Stack>
-  );
-}
-
-function InstallmentCard({ installment }: { installment: PaymentTermInstallmentResponse }) {
-  return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
-      <Stack spacing={1.5}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-                display: 'grid',
-                borderRadius: '50%',
-                placeItems: 'center',
-                color: 'primary.main',
-                bgcolor: (theme) =>
-                  alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.12),
-              }}
-            >
-              <Typography variant="subtitle2">{installment.sequence}</Typography>
-            </Box>
-            <Typography variant="subtitle2" noWrap>
-              {installment.name}
-            </Typography>
-          </Stack>
-          <Label color="primary" variant="soft">
-            {fPercent(installment.allocationPercentage)}
-          </Label>
-        </Stack>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: '1.5fr 1fr 1fr' },
-            gap: 1.5,
-          }}
-        >
-          <DetailItem
-            label="Installment start–end date"
-            value={`${formatDate(installment.coverageStartDate)} – ${formatDate(
-              installment.coverageEndDate
-            )}`}
-          />
-          <DetailItem label="Invoice date" value={formatDate(installment.demandDate)} />
-          <DetailItem label="Due date" value={formatDate(installment.dueDate)} />
-        </Box>
-
-        <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
-          <Label color={installment.demandEnabled ? 'success' : 'default'} variant="outlined">
-            {installment.demandEnabled ? 'Invoice creation enabled' : 'Invoice creation disabled'}
-          </Label>
-          {installment.reminderEnabled ? (
-            <Label color="info" variant="outlined">
-              Reminder {formatDate(installment.reminderDate)}
-            </Label>
-          ) : null}
-          {installment.allowPartialOverride !== null &&
-          installment.allowPartialOverride !== undefined ? (
-            <Label color="default" variant="outlined">
-              Partial payment {installment.allowPartialOverride ? 'allowed' : 'not allowed'}
-            </Label>
-          ) : null}
-          {installment.gracePeriodDaysOverride !== null &&
-          installment.gracePeriodDaysOverride !== undefined ? (
-            <Label color="default" variant="outlined">
-              {installment.gracePeriodDaysOverride}-day grace period
-            </Label>
-          ) : null}
-        </Stack>
-      </Stack>
-    </Paper>
   );
 }
 
@@ -168,11 +107,69 @@ function InstallmentSchedule({ version }: { version: PaymentTermVersionResponse 
         </Typography>
       </Stack>
       {version.installments.length ? (
-        version.installments.map((installment) => (
-          <InstallmentCard key={installment.id} installment={installment} />
-        ))
+        <CustomizableTable
+          key={version.id}
+          tableId={`payment-term-schedule-${version.id}`}
+          variant="embedded"
+          showToolbar={false}
+          isShowedDense={false}
+          isPagination={version.installments.length > 10}
+          defaultRowsPerPage={10}
+          data={version.installments}
+          columns={[
+            {
+              id: 'name',
+              label: 'Installment',
+              minWidth: 150,
+              render: (value, row) => (
+                <Stack spacing={0.5}>
+                  <Typography variant="body2">
+                    {row.sequence}. {value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {row.demandEnabled ? 'Invoice creation enabled' : 'Invoice creation disabled'}
+                    {row.reminderEnabled ? ` · Reminder ${formatDate(row.reminderDate)}` : ''}
+                    {row.allowPartialOverride != null
+                      ? ` · Partial payment ${row.allowPartialOverride ? 'allowed' : 'not allowed'}`
+                      : ''}
+                    {row.gracePeriodDaysOverride != null
+                      ? ` · ${row.gracePeriodDaysOverride}-day grace period`
+                      : ''}
+                  </Typography>
+                </Stack>
+              ),
+            },
+            {
+              id: 'coverageStartDate',
+              label: 'Installment start–end date',
+              minWidth: 190,
+              render: (value, row) => `${formatDate(value)} – ${formatDate(row.coverageEndDate)}`,
+            },
+            {
+              id: 'demandDate',
+              label: 'Invoice date',
+              minWidth: 110,
+              render: (value) => formatDate(value),
+            },
+            {
+              id: 'dueDate',
+              label: 'Due date',
+              minWidth: 110,
+              render: (value) => formatDate(value),
+            },
+            {
+              cellSx: { textAlign: 'right' as const },
+              id: 'allocationPercentage',
+              label: 'Allocation',
+              minWidth: 90,
+              align: 'left',
+              render: (value) => fPercent(value),
+            },
+          ]}
+          wrapperProps={{ sx: { minWidth: 0, maxHeight: 480 } }}
+        />
       ) : (
-        <Alert severity="info">No installments are available for this version.</Alert>
+        <Box>No installments are available for this version.</Box>
       )}
     </Stack>
   );
@@ -194,7 +191,9 @@ function VersionList({
       component="nav"
       aria-label="Payment term versions"
       sx={{
-        width: { xs: 1, sm: 220 },
+        width: 1,
+        p: 2,
+        minWidth: 0,
         flexShrink: 0,
         borderRight: { sm: 1 },
         borderBottom: { xs: 1, sm: 0 },
@@ -202,20 +201,16 @@ function VersionList({
         bgcolor: 'background.neutral',
       }}
     >
-      <Typography
-        variant="overline"
-        color="text.secondary"
-        sx={{ px: 2, pt: 1.5, display: 'block' }}
-      >
+      <Typography variant="overline" color="text.secondary" sx={{ mb: 1.5, display: 'block' }}>
         Versions
       </Typography>
       <List
         disablePadding
         sx={{
-          p: 1,
-          display: { xs: 'flex', sm: 'block' },
+          p: 0,
+          display: 'flex',
           gap: 0.75,
-          overflowX: { xs: 'auto', sm: 'visible' },
+          overflowX: 'auto',
         }}
       >
         {versions.map((version) => {
@@ -226,11 +221,13 @@ function VersionList({
             <ListItemButton
               key={version.id}
               selected={selected}
+              aria-pressed={selected}
               aria-label={`View version ${version.versionNumber}`}
               onClick={() => onSelect(version.id)}
               sx={{
                 mb: { sm: 0.75 },
-                minWidth: { xs: 180, sm: 0 },
+                minWidth: 180,
+                flexShrink: 0,
                 border: 1,
                 borderRadius: 1,
                 alignItems: 'flex-start',
@@ -238,7 +235,7 @@ function VersionList({
                 bgcolor: (theme) =>
                   selected
                     ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.12)
-                    : theme.palette.background.paper,
+                    : (theme.vars || theme).palette.background.paper,
                 '&.Mui-selected, &.Mui-selected:hover': {
                   bgcolor: (theme) =>
                     alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.12),
@@ -291,7 +288,7 @@ function VersionSnapshot({
   current: boolean;
 }) {
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 2, sm: 2.5 }, minWidth: 0 }}>
+    <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
       <Stack spacing={1}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -316,9 +313,6 @@ function VersionSnapshot({
             </Box>
             <Box>
               <Typography variant="h6">Version {version.versionNumber}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                Immutable payment-term snapshot
-              </Typography>
             </Box>
           </Stack>
           <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
@@ -328,12 +322,12 @@ function VersionSnapshot({
         </Stack>
 
         {version.changeReason ? (
-          <Alert severity="info" icon={<Iconify icon="solar:notes-outline" />}>
+          <Box>
             <Typography variant="caption" color="text.secondary" component="div">
               Change reason
             </Typography>
             {version.changeReason}
-          </Alert>
+          </Box>
         ) : null}
       </Stack>
 
@@ -342,7 +336,7 @@ function VersionSnapshot({
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
+            gap: 1.5,
           }}
         >
           <DetailItem
@@ -454,10 +448,18 @@ export default function PaymentTermDetailsDrawer({
       onClose={onClose}
       PaperProps={{ sx: { width: { xs: '100%', md: 860 }, maxWidth: '100%' } }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <DrawerHeader
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+        <FinancePolicyDrawerHeader
+          description="Review payment-term details and immutable version history."
+          titleId="payment-term-detail-title"
           title={data?.name ?? 'Payment Term'}
-          subtitle="Review payment-term details and immutable version history."
+
+          descriptionDisplay="tooltip"
+          badges={
+            data ? (
+              <Label color={data.status === 'Active' ? 'success' : 'default'}>{data.status}</Label>
+            ) : undefined
+          }
           onClose={onClose}
         />
         <CustomTabs
@@ -466,7 +468,7 @@ export default function PaymentTermDetailsDrawer({
           aria-label="Payment term details"
           variant="scrollable"
           scrollButtons="auto"
-          sx={{ px: 1 }}
+          sx={{ px: 2, pt: 1, flexShrink: 0 }}
         >
           <Tab
             id="payment-term-details-tab"
@@ -481,6 +483,27 @@ export default function PaymentTermDetailsDrawer({
             label="Version History"
           />
         </CustomTabs>
+        {data && (
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ px: 2, py: 1, bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider' }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {data.academicYearName ?? 'Academic year unavailable'} ·{' '}
+              {data.boardName ?? 'Board unavailable'}
+            </Typography>
+            {(tab === 'versions' ? selectedVersion : displayedVersion) && (
+              <Typography variant="caption">
+                Version {(tab === 'versions' ? selectedVersion : displayedVersion)?.versionNumber} ·{' '}
+                {(tab === 'versions' ? selectedVersion : displayedVersion)?.status}
+              </Typography>
+            )}
+          </Stack>
+        )}
         <Divider />
         {isFetching || versionHistoryFetching ? (
           <LinearProgress aria-label="Loading payment term details" />
@@ -507,19 +530,28 @@ export default function PaymentTermDetailsDrawer({
                 id="payment-term-details-panel"
                 role="tabpanel"
                 aria-labelledby="payment-term-details-tab"
-                spacing={3}
-                sx={{ p: { xs: 2, sm: 3 } }}
+                spacing={1.5}
+                sx={{ p: 2 }}
               >
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Box
                     sx={{
                       display: 'grid',
                       gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                      gap: 2,
+                      gap: 1.5,
                     }}
                   >
                     <DetailItem label="Name" value={data.name} />
-                    <DetailItem label="Code" value={data.code} />
+                    <DetailItem
+                      label="Code"
+                      value={
+                        <Tooltip title={data.code}>
+                          <Box component="span" tabIndex={0} sx={{ overflowWrap: 'anywhere' }}>
+                            {data.code}
+                          </Box>
+                        </Tooltip>
+                      }
+                    />
                     <DetailItem label="Academic year" value={data.academicYearName ?? '—'} />
                     <DetailItem label="Board" value={data.boardName ?? '—'} />
                     <DetailItem
@@ -593,7 +625,7 @@ export default function PaymentTermDetailsDrawer({
                     <InstallmentSchedule version={displayedVersion} />
                   </Stack>
                 ) : (
-                  <Alert severity="info">No installment schedule is available.</Alert>
+                  <Box>No installment schedule is available.</Box>
                 )}
               </Stack>
             ) : (
@@ -602,7 +634,7 @@ export default function PaymentTermDetailsDrawer({
                 role="tabpanel"
                 aria-labelledby="payment-term-versions-tab"
                 spacing={2}
-                sx={{ p: { xs: 2, sm: 2.5 } }}
+                sx={{ p: 2, minWidth: 0 }}
               >
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
@@ -610,21 +642,21 @@ export default function PaymentTermDetailsDrawer({
                   alignItems={{ sm: 'baseline' }}
                   spacing={0.5}
                 >
-                  <Box>
+                  <Box sx={{ minWidth: 0 }}>
                     <Typography variant="subtitle1">Version history</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Select a version to review the exact rules and installment schedule used at
-                      that time.
-                    </Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+                  >
                     {versions.length} {versions.length === 1 ? 'version' : 'versions'}
                   </Typography>
                 </Stack>
 
                 {versionHistoryError ? (
                   <Alert
-                    severity="warning"
+                    severity="error"
                     action={
                       <Button color="inherit" size="small" onClick={() => refetchVersionHistory()}>
                         Retry
@@ -641,8 +673,8 @@ export default function PaymentTermDetailsDrawer({
                     variant="outlined"
                     sx={{
                       display: 'flex',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      minHeight: 420,
+                      flexDirection: 'column',
+                      minWidth: 0,
                       overflow: 'hidden',
                     }}
                   >
@@ -652,7 +684,7 @@ export default function PaymentTermDetailsDrawer({
                       currentVersionId={data.currentVersionId}
                       onSelect={setSelectedVersionId}
                     />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ flex: 1, minWidth: 0, bgcolor: 'background.paper' }}>
                       <VersionSnapshot
                         version={selectedVersion}
                         audit={selectedVersionAudit}
@@ -661,12 +693,32 @@ export default function PaymentTermDetailsDrawer({
                     </Box>
                   </Paper>
                 ) : (
-                  <Alert severity="info">No payment-term versions are available.</Alert>
+                  <Box>No payment-term versions are available.</Box>
                 )}
               </Stack>
             )}
           </Scrollbar>
         ) : null}
+        <Box
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 1.75,
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={onClose}
+            startIcon={<Iconify icon="mdi:close" />}
+          >
+            Close
+          </Button>
+        </Box>
       </Box>
     </Drawer>
   );

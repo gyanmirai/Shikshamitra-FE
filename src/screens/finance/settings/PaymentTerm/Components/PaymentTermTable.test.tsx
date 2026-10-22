@@ -14,10 +14,21 @@ vi.mock('src/components/three-dots-actions', () => ({
   default: ({
     showThreeDots,
     actions,
+    directActions = [],
   }: {
     showThreeDots?: boolean;
     actions?: (params: { popover: { onClose: () => void } }) => ReactNode;
-  }) => (showThreeDots && actions ? <>{actions({ popover: { onClose: vi.fn() } })}</> : null),
+    directActions?: { id: string; label: string; disabled?: boolean; onClick?: () => void }[];
+  }) => (
+    <>
+      {directActions.map((action) => (
+        <button key={action.id} disabled={action.disabled} onClick={action.onClick}>
+          {action.label}
+        </button>
+      ))}
+      {showThreeDots && actions ? actions({ popover: { onClose: vi.fn() } }) : null}
+    </>
+  ),
 }));
 
 vi.mock('src/components/iconify', () => ({
@@ -95,12 +106,12 @@ describe('PaymentTermTable', () => {
     Object.values(callbacks).forEach((callback) => callback.mockClear());
   });
 
-  it('renders Name, Status, Version, and Actions in the required order', () => {
+  it('renders Status immediately before Actions', () => {
     render(<PaymentTermTable {...baseProps} />);
 
     expect(screen.getByTestId('payment-term-table')).toHaveAttribute(
       'data-columns',
-      'name,status,currentVersionNumber,actions'
+      'name,currentVersionNumber,usage,status,actions'
     );
   });
 
@@ -172,12 +183,26 @@ describe('PaymentTermTable', () => {
   });
 
   it('opens the usage breakdown with the assigned class, structure, head and version', () => {
-    const term = createTerm({ usage: {
-      paymentTermId: 'term-draft', feeHeadCount: 1, feeStructureCount: 1, classCount: 1,
-      assignments: [{ classId: 'class3', className: 'Class 3', feeStructureId: 'fs1',
-        feeStructureName: 'Class 3 Fees', feeHeadId: 'head1', feeHeadName: 'School Fees',
-        versionId: 'version1', versionNumber: 1 }],
-    } });
+    const term = createTerm({
+      usage: {
+        paymentTermId: 'term-draft',
+        feeHeadCount: 1,
+        feeStructureCount: 1,
+        classCount: 1,
+        assignments: [
+          {
+            classId: 'class3',
+            className: 'Class 3',
+            feeStructureId: 'fs1',
+            feeStructureName: 'Class 3 Fees',
+            feeHeadId: 'head1',
+            feeHeadName: 'School Fees',
+            versionId: 'version1',
+            versionNumber: 1,
+          },
+        ],
+      },
+    });
     render(<PaymentTermTable {...baseProps} data={[term]} totalCount={1} />);
     fireEvent.click(screen.getByRole('button', { name: '1 fee heads · 1 classes' }));
     expect(screen.getByText('Quarterly Payment Term — Used In')).toBeInTheDocument();

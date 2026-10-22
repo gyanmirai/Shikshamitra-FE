@@ -4,7 +4,6 @@ import type {
   StructureLine,
   StructureRecord,
   StructurePreview,
-  StructureSettings,
   StructureCandidate,
 } from 'src/redux/finance/feeStructureWorkspace';
 
@@ -14,6 +13,7 @@ import { uuidv4 } from 'src/utils/uuidv4';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -44,10 +44,8 @@ import {
   defaultPolicy,
   structureError,
   paymentTermError,
-  defaultPaymentTerm,
   structureCandidate,
   buildStructureChanges,
-  withDefaultPaymentTerm,
 } from '../feeStructureModel';
 
 import type { IClassWiseFeeStructureCard } from '../type';
@@ -142,14 +140,11 @@ export default function FeeStructureWorkspaceCard({
     'publish' | 'delete' | 'discard' | 'revision' | null
   >(null);
   const [scheduleHead, setScheduleHead] = useState<string>();
-  const [pendingTerm, setPendingTerm] = useState<{
-    headId: string;
-    term: StructureSettings['terms'][number] | null;
-  }>();
+  const [editingSchedule, setEditingSchedule] = useState(false);
+  const addHeadDialog = useBoolean();
   const generation = useRef(0);
   const [requestId] = useState(uuidv4);
   const locked = record?.status === FeeStructureLockStatusType.Locked;
-  const pendingTermDefaults = useRef(new Set<string>());
   const dirty =
     JSON.stringify(candidate) !== baseline ||
     candidate.feeHeads.some(
@@ -169,7 +164,7 @@ export default function FeeStructureWorkspaceCard({
   const scheduleLine = candidate.feeHeads.find((line) => line.feeHeadId === scheduleHead);
   const { settings, context, heads, terms, catalogs, scheduleTerm, termDetail } =
     useFeeStructureLookups(scope, !record || tab === 'policies', scheduleLine, locked);
-  const { isLoading, isFetching, isError, refetch } = context;
+  const { isLoading, isError, refetch } = context;
   const collectionItems = catalogs.collection.items;
   const refundItems = catalogs.refund.items;
   const impacts = useMemo(
@@ -200,7 +195,6 @@ export default function FeeStructureWorkspaceCard({
             (selected
               ? `${selected.name} · v${selected.versionNumber}${selected.isDefault ? ' · Default' : ''}`
               : record?.policyLabels?.[family.key] || 'Selected policy version'),
-          policyDescription: (!locked && raw?.description) || family.description,
           rows: settings
             ? policyImpactRows(family.key, candidate, settings, raw, evidence, locked)
             : undefined,
@@ -224,7 +218,9 @@ export default function FeeStructureWorkspaceCard({
   const patchRequest = useRef<{ fingerprint: string; id: string } | undefined>(undefined);
   const nameError = !candidate.name.trim()
     ? 'Enter a name for this Fee Structure.'
-    : serverNameError;
+    : candidate.name.trim().length > 256
+      ? 'Use at most 256 characters.'
+      : serverNameError;
   const touch = (field: string) => {
     const term = field.startsWith('term:');
     const position = candidate.feeHeads.findIndex(
@@ -303,7 +299,9 @@ export default function FeeStructureWorkspaceCard({
   useEffect(() => {
     if (!focusErrorPending.current) return;
     focusErrorPending.current = false;
-    contentRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    contentRef.current
+      ?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')
+      ?.focus();
   }, [tab, submitted, error]);
   const publishBlockReason = dirty
     ? 'Save draft before publishing.'
@@ -318,23 +316,6 @@ export default function FeeStructureWorkspaceCard({
     !locked &&
     !navigationBusy &&
     !!settings?.permissions[record ? 'edit' : 'add'];
-  useEffect(() => {
-    if (!writable || !terms.ready || terms.error || !settings?.permissions.termsRead) return;
-    const pending = new Set(pendingTermDefaults.current);
-    if (!pending.size) return;
-    pendingTermDefaults.current.clear();
-    const term = defaultPaymentTerm(settings.terms);
-    if (!term) return;
-    setError('');
-    setCandidate((old) => ({
-      ...old,
-      feeHeads: old.feeHeads.map((line) =>
-        pending.has(line.feeHeadId) ? withDefaultPaymentTerm(line, term) : line
-      ),
-    }));
-    generation.current += 1;
-    setPreview(undefined);
-  }, [writable, terms.ready, terms.error, settings, candidate.feeHeads, setCandidate]);
   const dirtyCallback = useRef(onDirtyChange);
   dirtyCallback.current = onDirtyChange;
   useEffect(() => {
@@ -351,7 +332,6 @@ export default function FeeStructureWorkspaceCard({
       );
       const next = structureCandidate(initialData.record);
       setAmountInputs({});
-      pendingTermDefaults.current.clear();
       setRecord(initialData.record);
       setCandidate(next);
       setBaseline(JSON.stringify(next));
@@ -389,7 +369,6 @@ export default function FeeStructureWorkspaceCard({
     setServerNameError('');
     formik.setTouched({});
     setAmountInputs({});
-    pendingTermDefaults.current.clear();
     patchRequest.current = undefined;
     setPreview(
       saved.status === FeeStructureLockStatusType.Locked ? saved.publicationReview : undefined
@@ -500,7 +479,6 @@ export default function FeeStructureWorkspaceCard({
       setSubmitted(false);
       formik.setTouched({});
       setAmountInputs({});
-      pendingTermDefaults.current.clear();
       const next = structureCandidate(record);
       change(next);
       setBaseline(JSON.stringify(next));
@@ -607,7 +585,6 @@ export default function FeeStructureWorkspaceCard({
             <Typography variant="subtitle1" sx={{ overflowWrap: 'anywhere' }}>
               {candidate.name || 'New fee structure'}
             </Typography>
-            <Label color={locked ? 'success' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
             <Typography variant="caption" color="text.secondary">
               v{record?.revisionNumber ?? 1}
             </Typography>
@@ -620,15 +597,21 @@ export default function FeeStructureWorkspaceCard({
               flexWrap="wrap"
               sx={{ ml: 'auto' }}
             >
-              {!viewOnly && !locked && !editing && settings?.permissions.edit && (
+              {writable && tab === 'heads' && (
                 <Button
+                  aria-label="Add fee head"
                   size="small"
-                  variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.edit} />}
-                  disabled={navigationBusy}
-                  onClick={() => setEditing(true)}
+                  variant="contained"
+                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                  disabled={
+                    navigationBusy ||
+                    heads.isFetching ||
+                    heads.isError ||
+                    !settings?.permissions.headsRead
+                  }
+                  onClick={addHeadDialog.onTrue}
                 >
-                  Edit draft
+                  Fee Head
                 </Button>
               )}
               {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
@@ -644,20 +627,20 @@ export default function FeeStructureWorkspaceCard({
                 </LoadingButton>
               )}
               <AdaptiveThreeDotsActions
+                directActionLimit={2}
                 moreLabel="More structure actions"
-                directActionLimit={0}
                 actions={[
-                  {
-                    id: 'refresh',
-                    label: 'Refresh Context',
-                    icon: 'mdi:refresh',
-                    disabled: navigationBusy || isFetching,
-                    onClick: () => {
-                      generation.current += 1;
-                      setPreview(undefined);
-                      refetch();
-                    },
-                  },
+                  ...(!viewOnly && !locked && !editing && settings?.permissions.edit
+                    ? [
+                        {
+                          id: 'edit',
+                          label: 'Edit draft',
+                          icon: GlobalIcons.edit,
+                          disabled: navigationBusy,
+                          onClick: () => setEditing(true),
+                        },
+                      ]
+                    : []),
                   ...(!viewOnly && editing && dirty
                     ? [
                         {
@@ -683,6 +666,7 @@ export default function FeeStructureWorkspaceCard({
                     : []),
                 ]}
               />
+              <Label color={locked ? 'success' : 'warning'}>{locked ? 'Published' : 'Draft'}</Label>
             </Stack>
           </Stack>
         </Stack>
@@ -694,8 +678,16 @@ export default function FeeStructureWorkspaceCard({
         </Stack>
       )}
       {isError && (
-        <Alert severity="error" sx={{ m: 2 }}>
-          Class context could not be loaded. Refresh context to retry.
+        <Alert
+          severity="error"
+          sx={{ m: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Class context could not be loaded.
         </Alert>
       )}
       {error && (
@@ -754,7 +746,9 @@ export default function FeeStructureWorkspaceCard({
               }}
               showSaveButton={writable}
               saveButtonLabel="Save draft"
-              nextButtonLabel={writable ? 'Save & continue' : 'Next'}
+              nextButtonLabel={
+                writable ? (tab === 'policies' ? 'Review & continue' : 'Save & continue') : 'Next'
+              }
               finalButtonLabel="Publish structure"
               disableSubmit={!canPublish || !!publishBlockReason}
               saveButtonProps={{
@@ -765,6 +759,7 @@ export default function FeeStructureWorkspaceCard({
               backButtonProps={{ disabled: navigationBusy }}
               saveAndNextButtonProps={{
                 loading: saving || publishing,
+                title: activeStep === 2 ? publishBlockReason || undefined : undefined,
                 disabled:
                   navigationBusy ||
                   (!locked && activeStep === 1 && !candidate.collectionPolicyVersionId) ||
@@ -783,6 +778,8 @@ export default function FeeStructureWorkspaceCard({
                 >
                   {tab === 'heads' && (
                     <FeeStructureHeadsStep
+                      adding={addHeadDialog.value}
+                      onCloseAdd={addHeadDialog.onFalse}
                       formik={formik}
                       settings={settings}
                       tableId={`structure-heads-${record?.id ?? `${initialData.classId}-${index}`}`}
@@ -802,36 +799,27 @@ export default function FeeStructureWorkspaceCard({
                       onRetryTerms={terms.retry}
                       onTouch={touch}
                       onChange={change}
-                      onAdd={(id) => {
-                        const head = settings.heads.find((item) => item.id === id);
-                        if (!head || candidate.feeHeads.some((line) => line.feeHeadId === id))
-                          return;
-                        pendingTermDefaults.current.add(head.id);
-                        setAmountInputs((previous) => ({ ...previous, [head.id]: '' }));
+                      onSaveLine={(line, previousId) => {
+                        setAmountInputs((previous) => {
+                          const next = { ...previous };
+                          delete next[line.feeHeadId];
+                          if (previousId) delete next[previousId];
+                          return next;
+                        });
                         change({
                           ...candidate,
-                          feeHeads: [
-                            ...candidate.feeHeads,
-                            {
-                              feeHeadId: head.id,
-                              feeHeadName: head.name,
-                              categoryName: head.categoryName,
-                              amount: null,
-                              isVariable: false,
-                              isOneTime: false,
-                              isOptional: false,
-                              payableMonth: 0,
-                              payableYear: 0,
-                              paymentTermId: null,
-                              paymentTermVersionId: null,
-                              scheduleMode: 'Inherited',
-                              installmentOverrides: [],
-                            },
-                          ],
+                          feeHeads: previousId
+                            ? candidate.feeHeads.map((entry) =>
+                                entry.feeHeadId === previousId ? line : entry
+                              )
+                            : [...candidate.feeHeads, line],
+                          concessionApplicableFeeHeadIds:
+                            candidate.concessionApplicableFeeHeadIds.filter(
+                              (id) => id !== previousId || previousId === line.feeHeadId
+                            ),
                         });
                       }}
                       onRemove={(id) => {
-                        pendingTermDefaults.current.delete(id);
                         setAmountInputs((previous) => {
                           const next = { ...previous };
                           delete next[id];
@@ -840,38 +828,16 @@ export default function FeeStructureWorkspaceCard({
                         change({
                           ...candidate,
                           feeHeads: candidate.feeHeads.filter((line) => line.feeHeadId !== id),
+                          concessionApplicableFeeHeadIds:
+                            candidate.concessionApplicableFeeHeadIds.filter(
+                              (headId) => headId !== id
+                            ),
                         });
                       }}
-                      onVariable={(id, variable) => {
-                        setAmountInputs((previous) => {
-                          const next = { ...previous };
-                          delete next[id];
-                          return next;
-                        });
-                        changeLine(id, { isVariable: variable, amount: null });
+                      onSchedule={(id) => {
+                        setEditingSchedule(false);
+                        setScheduleHead(id);
                       }}
-                      onAmount={(id, raw, amount) => {
-                        setAmountInputs((previous) => ({ ...previous, [id]: raw }));
-                        changeLine(id, { amount });
-                      }}
-                      onLineChange={changeLine}
-                      onTerm={(line, term) => {
-                        pendingTermDefaults.current.delete(line.feeHeadId);
-                        touch(`term:${line.feeHeadId}`);
-                        if (line.scheduleMode === 'Customized') {
-                          setPendingTerm({ headId: line.feeHeadId, term });
-                          return;
-                        }
-                        changeLine(line.feeHeadId, {
-                          paymentTermId: term?.id ?? null,
-                          paymentTermVersionId: term?.versionId ?? null,
-                          paymentTermName: term?.name,
-                          paymentTermVersionNumber: term?.versionNumber,
-                          scheduleMode: 'Inherited',
-                          installmentOverrides: [],
-                        });
-                      }}
-                      onSchedule={setScheduleHead}
                     />
                   )}
                   {tab === 'policies' && (
@@ -929,34 +895,12 @@ export default function FeeStructureWorkspaceCard({
               )}
             />
           </Box>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            aria-live="polite"
-            sx={{ px: 2, pb: 1, flexShrink: 0 }}
-          >
-            {activeStep === 2 &&
-            !locked &&
-            !viewOnly &&
-            settings.permissions.publish &&
-            publishBlockReason
-              ? publishBlockReason
-              : locked
-                ? 'Published configuration · changes require a revision'
-                : dirty
-                  ? 'Unsaved changes'
-                  : record
-                    ? 'All changes saved'
-                    : 'Draft not saved yet'}
-          </Typography>
         </Box>
       )}
       {selectedImpact && settings && (
         <PolicyImpactDialog
           title={selectedImpact.label}
           policyLabel={selectedImpact.policyLabel}
-          description={selectedImpact.policyDescription}
-          summary={selectedImpact.description}
           rows={selectedImpact.rows}
           loading={catalogs[selectedImpact.key].loading || heads.isFetching}
           error={catalogs[selectedImpact.key].error || heads.isError}
@@ -1029,43 +973,12 @@ export default function FeeStructureWorkspaceCard({
           </LoadingButton>
         }
       />
-      <ConfirmDialog
-        open={!!pendingTerm}
-        onClose={() => setPendingTerm(undefined)}
-        title="Replace customized schedule?"
-        content={
-          pendingTerm?.term
-            ? `Selecting ${pendingTerm.term.name} v${pendingTerm.term.versionNumber} will replace this head's custom schedule with the published term schedule. Review its dates and total fee before saving.`
-            : 'Remove this Payment Term and its customized schedule? A published term must be selected again before saving this structure.'
-        }
-        action={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.refresh} />}
-            onClick={() => {
-              if (!pendingTerm) return;
-              const { headId, term } = pendingTerm;
-              changeLine(headId, {
-                paymentTermId: term?.id ?? null,
-                paymentTermVersionId: term?.versionId ?? null,
-                paymentTermName: term?.name,
-                paymentTermVersionNumber: term?.versionNumber,
-                scheduleMode: 'Inherited',
-                installmentOverrides: [],
-              });
-              setPendingTerm(undefined);
-            }}
-          >
-            Replace schedule
-          </Button>
-        }
-      />
       {scheduleLine && !scheduleTerm && (
-        <Alert
-          severity={termDetail.isError || !termDetail.isFetching ? 'warning' : 'info'}
-          sx={{ m: 2 }}
-          action={
+        <Box sx={{ m: 2 }}>
+          {termDetail.isFetching
+            ? 'Loading the selected Payment Term version…'
+            : 'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'}
+          {
             <Button
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -1074,18 +987,15 @@ export default function FeeStructureWorkspaceCard({
               Close
             </Button>
           }
-        >
-          {termDetail.isFetching
-            ? 'Loading the selected Payment Term version…'
-            : 'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'}
-        </Alert>
+        </Box>
       )}
       {scheduleLine && scheduleTerm && (
         <StructureScheduleDialog
           key={`${scheduleLine.feeHeadId}-${scheduleTerm.versionId}`}
           line={scheduleLine}
           term={scheduleTerm}
-          readOnly={!writable}
+          readOnly={!writable || !editingSchedule}
+          onEdit={writable ? () => setEditingSchedule(true) : undefined}
           onClose={() => setScheduleHead(undefined)}
           onSave={(rows, customized) => {
             changeLine(scheduleLine.feeHeadId, {

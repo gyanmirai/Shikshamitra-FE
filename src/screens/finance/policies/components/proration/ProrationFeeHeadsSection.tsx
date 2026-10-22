@@ -10,7 +10,7 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { SearchNotFound } from 'src/components/search-not-found';
-import React, { useId, useRef, useState, useLayoutEffect } from 'react';
+import { useId, useRef, useState, useLayoutEffect } from 'react';
 import {
   Box,
   Stack,
@@ -129,11 +129,6 @@ function EventSettings({
             />
           }
         />
-        {!enabled && (
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.75 }}>
-            {description}
-          </Typography>
-        )}
       </Box>
       {enabled && (
         <>
@@ -215,7 +210,7 @@ function EventSettings({
                   }
                   onBlur={formik.handleBlur}
                   error={Boolean(minimumError)}
-                  helperText={minimumError || 'Optional · Whole number from 0 to 366'}
+                  helperText={minimumError}
                   inputProps={{ min: 0, max: 366, step: 1 }}
                 />
               </ShakingTextField>
@@ -286,7 +281,7 @@ function EventSettings({
                     }
                     onBlur={formik.handleBlur}
                     error={Boolean(cutoffError)}
-                    helperText={cutoffError || 'Whole number from 1 to 31'}
+                    helperText={cutoffError}
                     inputProps={{ min: 1, max: 31, step: 1 }}
                   />
                 </ShakingTextField>
@@ -369,8 +364,9 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
 
   return (
     <SectionCard
-      title="Fee Head Configuration"
       subtitle="Choose when each recurring fee should be prorated."
+      title="Fee Head Configuration"
+
       icon="solar:widget-bold-duotone"
       action={
         <Label color="default">

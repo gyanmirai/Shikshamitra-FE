@@ -3,8 +3,8 @@
 import type { ReactNode } from 'react';
 
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Stack, Typography, IconButton } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 export default function FinancePolicyDrawerHeader({
   title,
@@ -17,7 +17,7 @@ export default function FinancePolicyDrawerHeader({
   titleId,
 }: {
   title: string;
-  description: ReactNode;
+  description?: ReactNode;
   descriptionDisplay?: 'inline' | 'tooltip';
   helpText?: ReactNode;
   badges?: ReactNode;
@@ -28,34 +28,36 @@ export default function FinancePolicyDrawerHeader({
   return (
     <Stack
       direction="row"
-      alignItems="flex-start"
+      alignItems="center"
       spacing={1.5}
-      sx={{ px: { xs: 2, sm: 3 }, py: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}
+      sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Typography id={titleId} variant="h6" component="h2" sx={{ overflowWrap: 'anywhere' }}>
             {title}
           </Typography>
-          {badges}
           {(descriptionDisplay === 'tooltip' || helpText) && (
-            <CustomTooltip arrow placement="bottom" title={helpText || description}>
+            <CustomTooltip arrow placement="right" title={helpText || description}>
               <IconButton size="small" aria-label={`${title} information`} disabled={disabled}>
                 <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
               </IconButton>
             </CustomTooltip>
           )}
         </Stack>
-        {descriptionDisplay === 'inline' && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 0.5, overflowWrap: 'anywhere' }}
-          >
-            {description}
-          </Typography>
-        )}
       </Box>
+      {badges && (
+        <Stack
+          direction="row"
+          spacing={0.75}
+          alignItems="center"
+          useFlexGap
+          flexWrap="wrap"
+          sx={{ justifyContent: 'flex-end', maxWidth: '40%' }}
+        >
+          {badges}
+        </Stack>
+      )}
       <IconButton size="small" aria-label={`Close ${title}`} disabled={disabled} onClick={onClose}>
         <Iconify icon="mingcute:close-line" width={20} />
       </IconButton>

@@ -136,6 +136,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         },
       },
       {
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         minWidth: 60,
@@ -147,7 +148,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={[
                 {
                   id: 'view',

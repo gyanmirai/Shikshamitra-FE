@@ -201,6 +201,7 @@ const tags = [
   financeModuleType.feeCollection,
   financeModuleType.feeDetails,
 ];
+const assignmentMutationTags = [...tags, financeModuleType.feeHead, financeModuleType.feeCategory];
 export const studentFeeAssignmentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     assignmentPolicyOptions: builder.query<
@@ -240,6 +241,7 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
       {
         academicYearId: string;
         standardId?: string;
+        feeHeadId?: string;
         divisionId?: string;
         boardId?: string;
         educationMediumId?: string;
@@ -285,11 +287,12 @@ export const studentFeeAssignmentApi = api.injectEndpoints({
     }),
     assignmentCommit: builder.mutation<AssignmentCommit, AssignmentRequest>({
       query: (body) => ({ url: '/student-fee-structure/assign', method: 'POST', body }),
-      invalidatesTags: (result) => (result ? tags : []),
+      invalidatesTags: (result) => (result ? assignmentMutationTags : []),
     }),
     assignmentBulkCommit: builder.mutation<AssignmentBulkResult, { items: AssignmentRequest[] }>({
       query: (body) => ({ url: '/student-fee-structure/assign-bulk', method: 'POST', body }),
-      invalidatesTags: (result) => (result?.results.some((r) => r.result) ? tags : []),
+      invalidatesTags: (result) =>
+        result?.results.some((r) => r.result) ? assignmentMutationTags : [],
     }),
   }),
 });

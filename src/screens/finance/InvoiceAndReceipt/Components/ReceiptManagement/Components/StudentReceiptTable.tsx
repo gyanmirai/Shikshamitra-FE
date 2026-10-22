@@ -1,8 +1,7 @@
-import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Alert, Divider, Skeleton, Typography } from '@mui/material';
+import { Box, Divider, Skeleton, Typography } from '@mui/material';
 import { useGetStudentReceiptDataQuery } from 'src/redux/invoiceAndReceipt/studentReceiptApi';
 
 import type { IReceipt, IFeeReceipt } from '../type';
@@ -241,16 +240,6 @@ export default function StudentTableView({
         </Box>
 
         {/* Immutability Notice */}
-        <Alert
-          severity="warning"
-          variant="outlined"
-          sx={{ py: 0.5, borderRadius: 2 }}
-          icon={<Iconify icon="mdi:lock-outline" width={18} />}
-        >
-          <Typography variant="caption">
-            Receipts are immutable and cannot be edited or deleted after creation.
-          </Typography>
-        </Alert>
 
         {/* Payment History */}
         {receipts.length > 0 && (

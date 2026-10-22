@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { capitalizeWords } from 'src/utils/input-format';
@@ -24,8 +23,9 @@ export default function CollectionGeneralSection({
 }: CollectionGeneralSectionProps) {
   return (
     <SectionCard
-      title="General Information"
       subtitle="Configure policy identity, status, description, and academic year defaults."
+      title="General Information"
+
       icon={GlobalIcons.notebook}
     >
       <Grid container spacing={2}>
@@ -43,7 +43,9 @@ export default function CollectionGeneralSection({
               }}
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}
-              helperText={formik.touched.policyName && (formik.errors.policyName as string)}
+              helperText={
+                (formik.touched.policyName && (formik.errors.policyName as string)) || undefined
+              }
               inputProps={{ maxLength: 100 }}
             />
           </ShakingTextField>
@@ -52,6 +54,7 @@ export default function CollectionGeneralSection({
         <Grid size={{ xs: 12, sm: 5 }}>
           <ShakingTextField error={formik.touched.status && Boolean(formik.errors.status)}>
             <CustomSelect<'label' | 'value' | 'caption', false>
+              optionDescriptionKey="caption"
               fullWidth
               size="small"
               label="Status *"
@@ -66,7 +69,7 @@ export default function CollectionGeneralSection({
                 },
                 { value: 'Active', label: 'Active', caption: 'Available for fee structures.' },
               ]}
-              optionDescriptionKey="caption"
+
               value={formik.values.status}
               onChange={(value) => {
                 formik.setFieldValue('status', value);
@@ -79,7 +82,7 @@ export default function CollectionGeneralSection({
                 <Label color={value === 'Active' ? 'success' : 'warning'}>{String(value)}</Label>
               )}
               error={Boolean(formik.touched.status && formik.errors.status)}
-              helperText={(formik.touched.status && formik.errors.status) || ''}
+              helperText={(formik.touched.status && formik.errors.status) || undefined}
             />
           </ShakingTextField>
         </Grid>
@@ -100,7 +103,9 @@ export default function CollectionGeneralSection({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && (formik.errors.description as string)}
+              helperText={
+                (formik.touched.description && (formik.errors.description as string)) || undefined
+              }
               inputProps={{ maxLength: 500 }}
             />
           </ShakingTextField>
@@ -116,6 +121,7 @@ export default function CollectionGeneralSection({
             currentDefault={Boolean(formik.initialValues.isDefault)}
             onChange={(checked) => formik.setFieldValue('isDefault', checked)}
             otherDefaultPolicyName={otherDefaultPolicyName}
+            showReplacementNotice={false}
           />
         </Grid>
 
@@ -134,7 +140,10 @@ export default function CollectionGeneralSection({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.changeReason && Boolean(formik.errors.changeReason)}
-                helperText={formik.touched.changeReason && (formik.errors.changeReason as string)}
+                helperText={
+                  (formik.touched.changeReason && (formik.errors.changeReason as string)) ||
+                  undefined
+                }
                 slotProps={{
                   input: {
                     endAdornment: (

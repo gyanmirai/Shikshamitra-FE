@@ -205,7 +205,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                 onBlur={formik.handleBlur}
                 size="small"
                 error={!!(formik.touched.name && formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={(formik.touched.name && formik.errors.name) || undefined}
               />
             </ShakingTextField>
           </Grid>
@@ -295,7 +295,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                 )
                               }
                               helperText={
-                                Array.isArray(formik?.touched?.documents) &&
+                                (Array.isArray(formik?.touched?.documents) &&
                                 formik?.touched?.documents?.[idx]?.documentName &&
                                 Array.isArray(formik?.errors?.documents) &&
                                 typeof formik?.errors?.documents?.[idx] === 'object' &&
@@ -306,7 +306,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                         idx
                                       ] as FormikErrors<IConcessionDocument>
                                     )?.documentName
-                                  : ''
+                                  : undefined) || undefined
                               }
                             />
                           </ShakingTextField>
@@ -362,7 +362,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                 )
                               }
                               helperText={
-                                Array.isArray(formik?.touched?.documents) &&
+                                (Array.isArray(formik?.touched?.documents) &&
                                 formik?.touched?.documents?.[idx]?.maxFileSizeMb &&
                                 Array.isArray(formik?.errors?.documents) &&
                                 typeof formik?.errors?.documents?.[idx] === 'object' &&
@@ -373,7 +373,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                         idx
                                       ] as FormikErrors<IConcessionDocument>
                                     )?.maxFileSizeMb
-                                  : ''
+                                  : undefined) || undefined
                               }
                               inputProps={{
                                 min: 0.01,
@@ -459,7 +459,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                     )
                                   }
                                   helperText={
-                                    Array.isArray(formik?.touched?.documents) &&
+                                    (Array.isArray(formik?.touched?.documents) &&
                                     formik?.touched?.documents?.[idx]?.acceptedFormats &&
                                     Array.isArray(formik?.errors?.documents) &&
                                     typeof formik?.errors?.documents?.[idx] === 'object' &&
@@ -473,7 +473,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                             idx
                                           ] as FormikErrors<IConcessionDocument>
                                         )?.acceptedFormats
-                                      : ''
+                                      : undefined) || undefined
                                   }
                                 />
                               )}

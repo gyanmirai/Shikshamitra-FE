@@ -9,9 +9,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 export default function PaymentHistory({ payments }: { payments?: PaymentHistoryItem[] }) {
   return (
     <DetailSection
+      helpText="Receipts, payment dates and methods recorded for this student."
       title="Payment History"
       icon="mdi:history"
-      helpText="Receipts, payment dates and methods recorded for this student."
     >
       <CustomizableTable
         tableId="student-receipt-details"
@@ -32,9 +32,10 @@ export default function PaymentHistory({ payments }: { payments?: PaymentHistory
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '—'),
           },
           {
+            cellSx: { textAlign: 'right' as const },
             id: 'amount',
             label: 'Amount',
-            align: 'right',
+            align: 'left',
             render: (value: number) => formatNumber(value, 'INR'),
           },
           {

@@ -16,6 +16,22 @@ type TableExportArgs = {
   context?: string[];
 };
 
+export function formatExportTimestamp(date = new Date()): string {
+  const dateLabel = date.toLocaleDateString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+  const timeLabel = date.toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return `${dateLabel}, ${timeLabel} IST`;
+}
+
 export function formatCellValue(value: unknown): string {
   if (value === null || value === undefined) return '-';
   const text = String(value);
@@ -124,8 +140,8 @@ export async function exportTable({
   const body = rows.map((row) => exportColumns.map((column) => getCellValueForExport(row, column)));
   const details = [
     ...context,
-    `Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} Asia/Kolkata`,
-    `${rows.length} rows`,
+    `Generated: ${formatExportTimestamp()}`,
+    `${rows.length} ${rows.length === 1 ? 'row' : 'rows'}`,
   ];
 
   if (format === 'pdf') {

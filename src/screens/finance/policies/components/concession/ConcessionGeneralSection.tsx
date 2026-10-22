@@ -6,13 +6,13 @@
  */
 
 import React from 'react';
-import { alpha } from '@mui/material/styles';
+
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, Chip, Alert, Stack, Skeleton, TextField, Typography } from '@mui/material';
+import { Grid, TextField } from '@mui/material';
 
 import DefaultPolicyToggle from '../DefaultPolicyToggle';
 import { ConcessionSectionCard } from './ConcessionCommon';
@@ -49,13 +49,12 @@ export default function ConcessionGeneralSection({
   formik,
   onNameChange,
   activeEdit = false,
-  impact,
-  isImpactLoading = false,
 }: ConcessionGeneralSectionProps) {
   return (
     <ConcessionSectionCard
-      title="General Information"
       subtitle="Name the policy and choose when it is available."
+      title="General Information"
+
       icon={GlobalIcons.notebook}
     >
       <Grid container spacing={2}>
@@ -73,8 +72,7 @@ export default function ConcessionGeneralSection({
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}
               helperText={
-                (formik.touched.policyName && (formik.errors.policyName as string)) ||
-                `${(formik.values.policyName || '').length}/128 characters`
+                (formik.touched.policyName && (formik.errors.policyName as string)) || undefined
               }
               inputProps={{ maxLength: 128 }}
             />
@@ -84,12 +82,13 @@ export default function ConcessionGeneralSection({
         <Grid size={{ xs: 12, sm: 5 }}>
           <ShakingTextField error={Boolean(formik.touched.status && formik.errors.status)}>
             <CustomSelect
+              optionDescriptionKey="caption"
               fullWidth
               size="small"
               label="Status *"
               name="status"
               options={STATUS_OPTIONS}
-              optionDescriptionKey="caption"
+
               value={formik.values.status}
               onChange={(value) => {
                 formik.setFieldValue('status', value);
@@ -102,7 +101,7 @@ export default function ConcessionGeneralSection({
                 <Label color={value === 'Active' ? 'success' : 'warning'}>{String(value)}</Label>
               )}
               error={Boolean(formik.touched.status && formik.errors.status)}
-              helperText={(formik.touched.status && formik.errors.status) || ''}
+              helperText={(formik.touched.status && formik.errors.status) || undefined}
             />
           </ShakingTextField>
         </Grid>
@@ -121,7 +120,9 @@ export default function ConcessionGeneralSection({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && (formik.errors.description as string)}
+              helperText={
+                (formik.touched.description && (formik.errors.description as string)) || undefined
+              }
               inputProps={{ maxLength: 500 }}
               placeholder="Describe who this policy supports and when to use it."
             />
@@ -141,53 +142,6 @@ export default function ConcessionGeneralSection({
         </Grid>
 
         {/* Active Policy Edit Impact Preview Banner */}
-        {activeEdit && (
-          <Grid size={{ xs: 12 }}>
-            <Alert
-              severity="warning"
-              variant="outlined"
-              icon={<Iconify icon={GlobalIcons.alertIcon} width={22} height={22} />}
-              sx={{
-                borderRadius: 1.5,
-                bgcolor: (theme) => alpha(theme.palette.warning.main, 0.04),
-                borderColor: (theme) => alpha(theme.palette.warning.main, 0.3),
-              }}
-            >
-              <Typography variant="subtitle2" fontWeight={700} color="warning.dark">
-                Updating an active policy
-              </Typography>
-              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                Modifications to this active policy will generate a new revision version. Historical
-                request snapshots remain immutable.
-              </Typography>
-
-              {isImpactLoading || !impact ? (
-                <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                  <Skeleton variant="rounded" width={80} height={26} />
-                  <Skeleton variant="rounded" width={120} height={26} />
-                  <Skeleton variant="rounded" width={110} height={26} />
-                  <Skeleton variant="rounded" width={90} height={26} />
-                </Stack>
-              ) : (
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1.5 }}>
-                  <Chip
-                    size="small"
-                    color="primary"
-                    variant="soft"
-                    icon={<Iconify icon={GlobalIcons.newversion} width={14} height={14} />}
-                    label={`Current: Version ${impact.currentVersion}`}
-                    sx={{ fontWeight: 600 }}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${impact.concessionRequestCount} Concession Requests`}
-                  />
-                </Stack>
-              )}
-            </Alert>
-          </Grid>
-        )}
 
         {/* Change Reason Input (Mandatory when editing Active policy) */}
         {activeEdit && (
@@ -205,7 +159,7 @@ export default function ConcessionGeneralSection({
                 error={formik.touched.changeReason && Boolean(formik.errors.changeReason)}
                 helperText={
                   (formik.touched.changeReason && (formik.errors.changeReason as string)) ||
-                  `${(formik.values.changeReason || '').length}/500 — Audit trail compliance requirement`
+                  undefined
                 }
                 inputProps={{ maxLength: 500 }}
               />

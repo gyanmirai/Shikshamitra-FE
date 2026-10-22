@@ -22,6 +22,12 @@ import {
   useSimulateRefundPolicyMutation,
 } from 'src/redux/finance/refundPolicy';
 
+import {
+  normalizePolicyName,
+  isDuplicatePolicyNameError,
+  DUPLICATE_POLICY_NAME_MESSAGE,
+} from '../utils/policy-name';
+
 import type {
   IFinancePolicyRow,
   RefundPayoutMethod,
@@ -297,7 +303,7 @@ export function useRefundPolicyForm({
 
       const body = {
         academicYearId: values.academicYearId || activeAcademicYearId,
-        policyName: values.policyName.trim(),
+        policyName: normalizePolicyName(values.policyName),
         policyCode: values.policyCode?.trim() || null,
         description: values.description?.trim() || '',
         status: values.status,
@@ -343,6 +349,11 @@ export function useRefundPolicyForm({
         onClose();
       } catch (error) {
         const parsed = parseApiProblemDetail(error);
+        if (isDuplicatePolicyNameError(parsed.errorCode)) {
+          await formik.setFieldTouched('policyName', true, false);
+          formik.setFieldError('policyName', DUPLICATE_POLICY_NAME_MESSAGE);
+          return;
+        }
         shikshaMitraToast.error({
           message: POLICY_ERROR_MESSAGES[parsed.errorCode ?? ''] || parsed.detail,
         });

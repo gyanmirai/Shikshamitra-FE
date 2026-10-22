@@ -261,14 +261,6 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
             </Box>
           ) : (
             <>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: 'block', mb: 1.5 }}
-              >
-                Each fee head inherits this Collection Policy&apos;s late fee rule by default. Set
-                an override to exempt a fee head from late fees, or give it its own rule.
-              </Typography>
               <TableContainer sx={{ maxHeight: 360 }}>
                 <Table size="small" stickyHeader>
                   <TableHead>
@@ -319,7 +311,7 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
 
               <Divider sx={{ my: 2 }} />
               <Stack direction="row" justifyContent="flex-end" gap={1}>
-                <Button startIcon={<Iconify icon="mdi:close" />} size="small" onClick={onClose} >
+                <Button startIcon={<Iconify icon="mdi:close" />} size="small" onClick={onClose}>
                   Cancel
                 </Button>
                 <LoadingButton
@@ -456,8 +448,6 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
                 formControlProps={{ sx: { width: '100%' } }}
               />
             )}
-
-
 
             <TextField
               fullWidth

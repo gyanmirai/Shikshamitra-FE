@@ -23,6 +23,7 @@ const ReceiptTable = ({
       noDataText={<>No Fees Data Found</>}
       columns={[
         {
+          stickyPosition: 'left',
           id: 'student',
           label: 'Student Name',
           align: 'left',
@@ -60,6 +61,7 @@ const ReceiptTable = ({
           filterType: 'date',
         },
         {
+          stickyPosition: 'right',
           id: 'status',
           label: 'Status',
           align: 'left',
@@ -74,6 +76,8 @@ const ReceiptTable = ({
           },
         },
         {
+          stickyPosition: 'right',
+          excludeFromExport: true,
           id: 'actions',
           label: 'Actions',
           isFilter: false,
@@ -83,7 +87,7 @@ const ReceiptTable = ({
           sticky: true,
           render(value, row) {
             return (
-              <AdaptiveThreeDotsActions
+              <AdaptiveThreeDotsActions directActionLimit={2}
                 actions={[
                   {
                     id: 'view',

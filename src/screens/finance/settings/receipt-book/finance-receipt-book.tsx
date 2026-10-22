@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -9,18 +10,18 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 // import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 import {
@@ -52,8 +53,6 @@ const FinanceReceiptBookSetting = () => {
 
   // State to store all receipt book entries for the table
   // const [tableData] = useState(initialData);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
 
   // Dialog state for delete confirmation
   const deleteDialog = useBoolean();
@@ -94,25 +93,15 @@ const FinanceReceiptBookSetting = () => {
     currentQueryAndMutation: usePatchReceiptBookMutation,
   });
 
-  const handleClose = (_e?: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedEntry(null);
-        setIsEdit(false);
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust delay to match your dialog animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    receiptBookDialog.value || activeDialog.value,
+    () => {
       activeDialog.onFalse();
       receiptBookDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      activeDialog.onFalse();
-      receiptBookDialog.onFalse();
-      resetState();
+      setSelectedEntry(null);
+      setIsEdit(false);
     }
-  };
+  );
 
   const { refetch } = useQueryAndMutation({
     type: 'query',
@@ -122,7 +111,7 @@ const FinanceReceiptBookSetting = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'name', label: 'Name', align: 'left', sticky: true },
+      { stickyPosition: 'left', id: 'name', label: 'Name', align: 'left', sticky: true },
       { id: 'prefix', label: 'Prefix', align: 'left' },
       { id: 'suffix', label: 'Suffix', align: 'left' },
       {
@@ -142,7 +131,7 @@ const FinanceReceiptBookSetting = () => {
         id: 'description',
         label: 'Description',
         align: 'left',
-        render: (value, row) => (
+        render: (value) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
               variant="caption"
@@ -161,6 +150,7 @@ const FinanceReceiptBookSetting = () => {
         ),
       },
       {
+        stickyPosition: 'right',
         id: 'isActive',
         label: 'Active',
         isFilter: false,
@@ -209,6 +199,8 @@ const FinanceReceiptBookSetting = () => {
         },
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Action',
         isFilter: false,
@@ -218,6 +210,7 @@ const FinanceReceiptBookSetting = () => {
         minWidth: 40,
         render: (value, row: any) => (
           <AdaptiveThreeDotsActions
+            directActionLimit={2}
             actions={[
               {
                 id: 'edit',
@@ -250,7 +243,9 @@ const FinanceReceiptBookSetting = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {discardConfirmation}
       <CustomBreadcrumbs
+        description="Manage your receipt books - create, edit and control active status of receipt books for financial transactions"
         heading="Receipt Book"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
@@ -272,7 +267,6 @@ const FinanceReceiptBookSetting = () => {
             Receipt Book
           </Button>
         }
-        description="Manage your receipt books - create, edit and control active status of receipt books for financial transactions"
       />
 
       <CustomizableTable
@@ -312,13 +306,8 @@ const FinanceReceiptBookSetting = () => {
 
       {receiptBookDialog.value && (
         <CustomDialog
-          handleClose={() => {
-            receiptBookDialog.onFalse();
-            setTimeout(() => {
-              setSelectedEntry(null);
-              setIsEdit(false);
-            }, 200); // 200ms delay – adjust if needed
-          }}
+          guardUnsavedChanges={false}
+          handleClose={() => handleClose()}
           open={receiptBookDialog.value}
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -353,13 +342,7 @@ const FinanceReceiptBookSetting = () => {
 
       <ConfirmDialog
         open={activeDialog.value}
-        onClose={() => {
-          setTimeout(() => {
-            setSelectedEntry(null);
-            setIsEdit(false);
-          }, 200); // Adjust delay (in ms) as needed
-          activeDialog.onFalse();
-        }}
+        onClose={() => handleClose()}
         title={selectedEntry?.isActive === true ? 'Deactive' : 'Active'}
         content={
           selectedEntry && Array.isArray(selectedEntry.name) ? (

@@ -5,6 +5,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import FeeCategoryForm from './FeeCategoryForm';
 
+vi.mock('src/screens/finance/hooks/useFinancePermissions', () => ({
+  useFinancePermissions: () => ({ canView: true, canAdd: true }),
+}));
+
 vi.mock('react-redux', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-redux')>()),
   useSelector: (selector: (state: unknown) => unknown) =>
@@ -45,16 +49,63 @@ const renderForm = () =>
   render(<FeeCategoryForm open={{ value: true } as never} onClose={vi.fn()} editData={null} />);
 
 describe('Fee category editor', () => {
+  it('blocks removal of an assigned fee head and explains the exact dependencies', () => {
+    const head = {
+      id: 'assigned-head',
+      name: 'FH3',
+      incomeCategoryId: 'income-1',
+      isConcessionApplied: false,
+      isUsedInDownstream: true,
+      dependencies: {
+        studentCount: 1,
+        assignmentCount: 1,
+        feeStructureCount: 1,
+        paymentTermCount: 1,
+        isBlocked: true,
+      },
+    };
+    render(
+      <FeeCategoryForm
+        open={{ value: true } as never}
+        onClose={vi.fn()}
+        editData={
+          {
+            id: 'category-1',
+            name: '8th Fee Category',
+            feeHeads: [
+              head,
+              {
+                ...head,
+                id: 'unused-head',
+                name: 'Unused',
+                isUsedInDownstream: false,
+                dependencies: undefined,
+              },
+            ],
+          } as never
+        }
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Remove FH3' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Remove Unused' })).toBeEnabled();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'FH3 is used by 1 student, 1 assignment, 1 fee structure, and 1 payment term'
+    );
+    expect(screen.getByRole('link', { name: 'Review Fee Assignments' })).toHaveAttribute(
+      'href',
+      '/finance/fee-structure-assign?feeHeadId=assigned-head'
+    );
+  });
+
   it('groups category fields and keeps both descriptions visible', () => {
     renderForm();
 
     expect(screen.getByRole('heading', { name: 'Add Fee Category' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'About fee categories' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'About category details' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'About fee heads' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'About fee categories' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'About category details' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'About fee heads' })).toBeVisible();
     expect(screen.getByRole('region', { name: 'Category Details' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Fee Heads' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Add Fee Head' }));
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Category name *' }), {
       target: { value: 'school transport' },

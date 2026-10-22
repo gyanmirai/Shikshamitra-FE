@@ -22,9 +22,9 @@ export default function ConcessionImpactSummary({
 
   return (
     <FormSectionCard
+      descriptionTooltip="Review the server-calculated fee impact before submitting the request."
       icon="mdi:eye-outline"
       title="Concession review"
-      descriptionTooltip="Review the server-calculated fee impact before submitting the request."
     >
       <Stack spacing={1.5} aria-busy={loading}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={0.5}>

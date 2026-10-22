@@ -64,8 +64,9 @@ const AuditTrail = () => {
       }}
     >
       <CustomBreadcrumbs
-        heading="Audit Trail"
         description="Comprehensive log of all finance-related activities, changes, and approvals."
+        heading="Audit Trail"
+
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Audit Trail' }]}
       />
 

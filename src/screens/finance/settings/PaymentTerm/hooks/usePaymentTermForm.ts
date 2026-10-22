@@ -1,5 +1,6 @@
 'use client';
 
+import { getAllocationSummary } from '../allocationValidation';
 import type { FormikTouched } from 'formik';
 import type { RootState } from 'src/redux/store';
 
@@ -7,6 +8,7 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { toDateOnly } from 'src/utils/date-only';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { shikshaMitraToast } from 'src/components/toast';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -209,14 +211,17 @@ export function usePaymentTermForm(
   const [createTerm] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreatePaymentTermMutation,
+    popupConfig: { error: false },
   });
   const [updateDraft] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatePaymentTermDraftMutation,
+    popupConfig: { error: false },
   });
   const [createRevision] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateRevisionMutation,
+    popupConfig: { error: false },
   });
   const [getPaymentTermDetail, { isFetching: isLoadingDetail }] = useLazyGetPaymentTermByIdQuery();
 
@@ -426,8 +431,21 @@ export function usePaymentTermForm(
         }
         setConfirmationImpact(null);
         await submitToAPI();
-      } catch {
-        shikshaMitraToast.error({ message: 'Failed to submit.' });
+      } catch (error) {
+        const problem = parseApiProblemDetail(error);
+        if (problem.errorCode === 'Finance:PaymentTerm:000023') {
+          formik.setStatus({
+            nameConflict: {
+              name: formik.values.paymentTermName,
+              message: `A payment term already uses the code generated from “${formik.values.paymentTermName.trim()}” in this academic year. Use a different name.`,
+            },
+          });
+          formik.setFieldTouched('paymentTermName', true, false);
+        } else {
+          shikshaMitraToast.error({
+            message: problem.detail || 'Unable to save the payment term. Please try again.',
+          });
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -508,7 +526,9 @@ export function usePaymentTermForm(
   const checks = useMemo<IPaymentTermChecks>(() => {
     const v = formik.values;
     const boardValid = Boolean(v.boardId);
-    const nameValid = v.paymentTermName.trim().length >= 3;
+    const nameConflict = formik.status?.nameConflict;
+    const hasNameConflict = nameConflict?.name === v.paymentTermName;
+    const nameValid = v.paymentTermName.trim().length >= 3 && !hasNameConflict;
     const codeValid = /^[A-Z0-9-]{3,24}$/.test(v.paymentTermCode.trim());
     const hasInstallments = v.installments.length >= 1;
     const allDueDates =
@@ -517,13 +537,9 @@ export function usePaymentTermForm(
     const allNames = v.installments.every((i) => i.installmentName.trim().length > 0);
     const nameSet = new Set(v.installments.map((i) => i.installmentName.toLowerCase().trim()));
     const uniqueNames = v.installments.length === nameSet.size;
-    const allocationTotal = v.installments.reduce(
-      (total, item) => total + Number(item.allocationPercentage || 0),
-      0
-    );
     const allocationValid =
       v.installments.every((item) => Number(item.allocationPercentage) > 0) &&
-      Math.abs(allocationTotal - 100) <= 0.01;
+      getAllocationSummary(v.installments).valid;
     const periodsValid =
       hasInstallments &&
       v.installments.every((item) => {
@@ -594,6 +610,7 @@ export function usePaymentTermForm(
       validationMessage =
         error instanceof Error ? error.message : 'Fix all validation errors before submitting.';
     }
+    if (hasNameConflict) validationMessage = nameConflict.message;
     const isReadyToPublish =
       boardValid &&
       nameValid &&
@@ -629,7 +646,7 @@ export function usePaymentTermForm(
       isReadyToPublish: isReadyToPublish && specificDatesValid && !validationMessage,
       validationMessage,
     };
-  }, [boards, formik.values, validationSchema]);
+  }, [boards, formik.values, formik.status, validationSchema]);
 
   // ── Demand label for the summary sidebar ──────────────────────────────────
   /**

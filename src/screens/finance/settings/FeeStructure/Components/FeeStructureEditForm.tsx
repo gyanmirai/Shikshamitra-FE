@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { Iconify } from 'src/components/iconify';
+import { tabsClasses } from '@mui/material/Tabs';
 import { useDispatch, useSelector } from 'react-redux';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -85,8 +86,27 @@ export default function FeeStructureEditForm({
           scrollButtons="auto"
           allowScrollButtonsMobile
           aria-label="Classes"
-          sx={{ flex: 1, minWidth: 0 }}
-          slotProps={{ tab: { px: 1.25, minWidth: 56 }, scroller: { p: 0.5 } }}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            [`& .${tabsClasses.indicator}`]: {
+              height: 2,
+              py: 0,
+              bgcolor: 'text.primary',
+              '& > span': { display: 'none' },
+            },
+          }}
+          slotProps={{
+            tab: {
+              px: 1.5,
+              minWidth: 56,
+              minHeight: 64,
+              typography: 'body1',
+              color: 'text.primary',
+            },
+            selected: { fontWeight: 'fontWeightBold' },
+            scroller: { p: 0 },
+          }}
         >
           {classes.map((item) => (
             <Tab
@@ -126,6 +146,7 @@ export default function FeeStructureEditForm({
             <ClassAccordionPanel
               key={selectedClassId}
               classId={selectedClassId}
+              classes={classes}
               feeStructureMetaDataId={editData.id}
               viewOnly={viewOnly}
               canAdd={canAdd}

@@ -18,6 +18,12 @@ import {
   useUpdateConcessionPolicyMutation,
 } from 'src/redux/finance/concessionPolicy';
 
+import {
+  normalizePolicyName,
+  isDuplicatePolicyNameError,
+  DUPLICATE_POLICY_NAME_MESSAGE,
+} from '../utils/policy-name';
+
 import type { IFinancePolicyRow, IConcessionPolicyFormValues } from '../types/finance-policy.types';
 
 const POLICY_ERROR_MESSAGES: Record<string, string> = {
@@ -34,6 +40,9 @@ const POLICY_ERROR_MESSAGES: Record<string, string> = {
     'This policy changed in another session. Refresh and try again.',
   'Finance:ConcessionPolicy:010021': 'A change reason is required when editing an Active policy.',
 };
+
+const percentagePayload = (value: number | string | null) =>
+  value === '' || value === null ? null : Number(value);
 
 const emptyStringToNull = (value: number, originalValue: unknown) =>
   originalValue === '' ? null : value;
@@ -103,7 +112,12 @@ const validationSchema = Yup.object().shape({
           .typeError('Percentage must be a number')
           .required('Percentage value is required')
           .min(0.01, 'Percentage must be greater than 0%')
-          .max(100, 'Cannot exceed 100%'),
+          .max(100, 'Cannot exceed 100%')
+          .test(
+            'precision',
+            'Use up to 2 decimal places',
+            (value) => value == null || Math.abs(value * 100 - Math.round(value * 100)) < 1e-8
+          ),
     }),
   fixedAmount: Yup.number()
     .nullable()
@@ -130,7 +144,12 @@ const validationSchema = Yup.object().shape({
           .typeError('Maximum percentage must be a number')
           .required('Maximum percentage is required')
           .min(0.01, 'Maximum percentage must be greater than 0%')
-          .max(100, 'Cannot exceed 100%'),
+          .max(100, 'Cannot exceed 100%')
+          .test(
+            'precision',
+            'Use up to 2 decimal places',
+            (value) => value == null || Math.abs(value * 100 - Math.round(value * 100)) < 1e-8
+          ),
     }),
   maximumFixedAmount: Yup.number()
     .nullable()
@@ -197,16 +216,17 @@ export function useConcessionPolicyForm({
       try {
         const payload = {
           academicYearId: values.academicYearId,
-          policyName: values.policyName,
+          policyName: normalizePolicyName(values.policyName),
           policyCode: values.policyCode || null,
           description: values.description,
           status: values.status,
           isDefault: values.status === 'Active' ? Boolean(values.isDefault) : false,
           valueSource: values.valueSource,
           calculationMethod: values.calculationMethod,
-          percentageValue: values.valueSource === 'PolicyFixed' ? values.percentageValue : null,
+          percentageValue:
+            values.valueSource === 'PolicyFixed' ? percentagePayload(values.percentageValue) : null,
           fixedAmount: values.valueSource === 'PolicyFixed' ? values.fixedAmount : null,
-          maximumPercentage: values.maximumPercentage,
+          maximumPercentage: percentagePayload(values.maximumPercentage),
           maximumFixedAmount: values.maximumFixedAmount,
           applyOn: values.applyOn,
           autoCreateRefund: values.applyOn === 'AllFees' && Boolean(values.autoCreateRefund),
@@ -225,6 +245,11 @@ export function useConcessionPolicyForm({
         onClose();
       } catch (error: any) {
         const parsed = parseApiProblemDetail(error);
+        if (isDuplicatePolicyNameError(parsed.errorCode)) {
+          await formik.setFieldTouched('policyName', true, false);
+          formik.setFieldError('policyName', DUPLICATE_POLICY_NAME_MESSAGE);
+          return;
+        }
         shikshaMitraToast.error({
           message: POLICY_ERROR_MESSAGES[parsed.errorCode ?? ''] || parsed.detail,
         });
@@ -238,6 +263,7 @@ export function useConcessionPolicyForm({
 
   // ─── Close Handler ─────────────────────────────────────────────────────────
   const handleCloseAttempt = () => {
+    if (isSaving || formik.isSubmitting) return;
     if (formik.dirty) {
       unsavedChangesDialog.onTrue();
     } else {
@@ -296,12 +322,13 @@ export function useConcessionPolicyForm({
       !errors.maximumPercentage &&
       !errors.maximumFixedAmount &&
       (values.valueSource === 'RequestEnteredWithinLimits'
-        ? (values.calculationMethod === 'Percentage' && (values.maximumPercentage ?? 0) > 0) ||
+        ? (values.calculationMethod === 'Percentage' &&
+            Number(values.maximumPercentage ?? 0) > 0) ||
           (values.calculationMethod === 'FixedAmount' && (values.maximumFixedAmount ?? 0) > 0)
         : values.calculationMethod === 'FullWaiver' ||
           (values.calculationMethod === 'Percentage' &&
             values.percentageValue !== null &&
-            values.percentageValue > 0) ||
+            Number(values.percentageValue) > 0) ||
           (values.calculationMethod === 'FixedAmount' &&
             values.fixedAmount !== null &&
             values.fixedAmount > 0));
@@ -334,9 +361,9 @@ export function useConcessionPolicyForm({
           ? values.maximumPercentage
           : values.maximumFixedAmount;
     if (values.calculationMethod === 'Percentage' && simulatedValue) {
-      concessionAmount = (eligibleBase * simulatedValue) / 100;
+      concessionAmount = (eligibleBase * Number(simulatedValue)) / 100;
     } else if (values.calculationMethod === 'FixedAmount' && simulatedValue) {
-      concessionAmount = simulatedValue;
+      concessionAmount = Number(simulatedValue);
     } else if (values.calculationMethod === 'FullWaiver') {
       concessionAmount = eligibleBase;
     }

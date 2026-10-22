@@ -1,22 +1,23 @@
 'use client';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetBudgetDataQuery } from 'src/redux/budgetApi/budgetApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 // import budgetTableData from 'src/json/budget/budgetTableData.json'; // <-- your budget data JSON
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 // import budgetTableData from 'src/json/budget/budgetTableData.json'; // <-- your budget data JSON
 
 import BudgetTable from './Components/BudgetTable';
@@ -24,6 +25,7 @@ import NewBudgetForm from './Components/BudgetForm';
 import BudgetDetailsCard from './Components/BudgetView';
 import BudgetApproval from './Components/BudgetReviewDetails';
 import ReasonApprovalForm from '../Concession/Components/ConcessionRequestApprove';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 // import NewBudgetForm from './components/budgetFormComponent';
 // import ViewBudgetComp from './components/viewBudgetComp';
@@ -68,34 +70,31 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
   /**
    * Handles closing the budget form with confirmation if there are unsaved changes
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      setOpen(false);
-      dispatch(setIsChanges(false));
-      onConfirmDialg.onFalse();
-      reviewDialog.onFalse();
-      setSelectedMode('');
-      setSelectedBudget(null);
-    } else if (!isChanges) {
+  const { handleClose: handleClose, confirmation: handleCloseConfirmation } = useFinanceFormClose(
+    open || onConfirmDialg.value || reviewDialog.value,
+    () => {
       setOpen(false);
       onConfirmDialg.onFalse();
       reviewDialog.onFalse();
       setSelectedMode('');
       setSelectedBudget(null);
-    }
-  };
+    },
+    false
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {handleCloseConfirmation}
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading={selectedBudget?.budgetName ? 'Update Budget' : 'Add Budget'}
             description={
               selectedBudget?.budgetName
                 ? 'Update existing budget details including category, amount, and allocations.'
                 : 'Create a new budget by entering category, amount, and allocations.'
             }
+            heading={selectedBudget?.budgetName ? 'Update Budget' : 'Add Budget'}
+
             links={[
               { name: 'Finance', href: '/finance/dashboard' },
               { name: 'Budget', href: '/finance/budgeting', onClick: () => setOpen(false) },
@@ -110,8 +109,9 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
           />
         ) : (
           <CustomBreadcrumbs
-            heading="Budgeting"
             description="Manage all budgets with complete details—categories, allocations, and amounts. Add, edit, or delete budgets as required."
+            heading="Budgeting"
+
             links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
             sx={{ px: 1 }}
             action={
@@ -319,14 +319,11 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             </CustomTooltip>
           </Box>
         }
-        handleClose={() => {
-          onConfirmDialg.onFalse();
-          setSelectedMode('');
-          setSelectedBudget(null);
-        }}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
         maxWidth="xs"
       >
-        <ReasonApprovalForm onClose={handleClose} mode={selectedMode} />
+        {onConfirmDialg.value && <ReasonApprovalForm onClose={handleClose} mode={selectedMode} />}
       </CustomDialog>
     </Box>
   );

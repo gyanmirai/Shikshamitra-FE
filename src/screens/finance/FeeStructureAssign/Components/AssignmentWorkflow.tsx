@@ -179,14 +179,25 @@ export default function AssignmentWorkflow({
     const items = values.requests.filter((r) => !committedIds.has(r.studentId));
     if (!items.length) return;
     const candidate = candidates.data?.find((item) => item.id === values.structureId);
-    const dateProblem =
+    const invalidRequest =
       candidate &&
-      items
-        .map((request) => assignmentServiceDateError(candidate, request, yearBounds))
-        .find(Boolean);
-    if (dateProblem) {
+      items.find(
+        (request) =>
+          variableAssignmentError(candidate, request) ||
+          assignmentServiceDateError(candidate, request, yearBounds)
+      );
+    if (invalidRequest && candidate) {
+      setSelectedStudentId(invalidRequest.studentId);
       setShowInputErrors(true);
-      setError(dateProblem);
+      const studentName =
+        students.find((student) => student.studentId === invalidRequest.studentId)?.studentName ||
+        'Student';
+      setError(
+        studentName +
+          ': ' +
+          (variableAssignmentError(candidate, invalidRequest) ||
+            assignmentServiceDateError(candidate, invalidRequest, yearBounds))
+      );
       setActiveStep(1);
       return;
     }
@@ -271,11 +282,7 @@ export default function AssignmentWorkflow({
                   {assignmentError(assigned.error)}
                 </Alert>
               )}
-              {assigned.data?.warnings.map((warning) => (
-                <Alert key={warning} severity="warning">
-                  {warning}
-                </Alert>
-              ))}
+
               {assigned.data?.assignment && !editingPolicies && (
                 <AssignmentReview data={assigned.data.assignment} committed />
               )}
@@ -304,7 +311,7 @@ export default function AssignmentWorkflow({
                 ))}
             </>
           ) : (
-            <Alert severity="info">Your current access allows viewing assignments only.</Alert>
+            <Box>Your current access allows viewing assignments only.</Box>
           )}
         </Stack>
         <Stack
@@ -395,7 +402,10 @@ export default function AssignmentWorkflow({
             if (missingReason) {
               setSelectedStudentId(missingReason.studentId);
               setActiveStep(0);
-              setError('Enter a policy override reason for each student whose policies changed.');
+              setError(
+                (students.find((student) => student.studentId === missingReason.studentId)
+                  ?.studentName || 'Student') + ': Enter a policy override reason.'
+              );
               return;
             }
 
@@ -491,22 +501,12 @@ export default function AssignmentWorkflow({
                 />
               )}
               {showResults && (
-                <Alert severity={complete ? 'success' : 'warning'}>
+                <Box>
                   {committedIds.size} assigned
                   {!complete ? ` · ${students.length - committedIds.size} need attention` : ''}.
-                </Alert>
+                </Box>
               )}
-              {activeStep === 2 &&
-                !showResults &&
-                preview?.results.some(
-                  (item) => !item.preview && !committedIds.has(item.studentId)
-                ) && (
-                  <Alert severity="warning">
-                    {selectedPreviewItems.length} student
-                    {selectedPreviewItems.length === 1 ? '' : 's'} ready to assign. Select students
-                    marked Needs attention to review their errors.
-                  </Alert>
-                )}
+
               {activeStep === 0 && (
                 <DetailSection title="Fee structure" icon="mdi:file-document-outline">
                   {candidates.isError && (
@@ -562,7 +562,6 @@ export default function AssignmentWorkflow({
                     <Stack
                       direction="row"
                       spacing={1}
-                      justifyContent="space-between"
                       alignItems="center"
                       useFlexGap
                       flexWrap="wrap"
@@ -610,7 +609,7 @@ export default function AssignmentWorkflow({
                         display: 'grid',
                         gridTemplateColumns: {
                           xs: 'minmax(0, 1fr)',
-                          md: isBulk ? '240px minmax(0, 1fr)' : 'minmax(0, 1fr)',
+                          md: isBulk ? '260px minmax(0, 1fr)' : 'minmax(0, 1fr)',
                         },
                         gap: 2,
                         alignItems: 'start',
@@ -708,6 +707,15 @@ export default function AssignmentWorkflow({
                                             ? 'Ready to assign'
                                             : 'Configure'}
                                     </Label>
+                                    {needsAttention && (
+                                      <Typography
+                                        variant="caption"
+                                        color="error.main"
+                                        sx={{ overflowWrap: 'anywhere' }}
+                                      >
+                                        {needsInput || saved?.errorMessage || checked?.errorMessage}
+                                      </Typography>
+                                    )}
                                     {checked?.preview && !saved?.result && (
                                       <Typography variant="caption">
                                         {formatNumber(checked.preview.proratedTotal, 'INR')}
@@ -792,16 +800,20 @@ export default function AssignmentWorkflow({
                               </DetailSection>
                             )}
                             {outcome?.errorMessage && !studentPreview?.preview && (
-                              <Alert severity="error">{outcome.errorMessage}</Alert>
+                              <Alert severity="error">
+                                {student.studentName || 'Student'}: {outcome.errorMessage}
+                              </Alert>
                             )}
                             {studentPreview?.errorMessage && (
-                              <Alert severity="error">{studentPreview.errorMessage}</Alert>
+                              <Alert severity="error">
+                                {student.studentName || 'Student'}: {studentPreview.errorMessage}
+                              </Alert>
                             )}
                             {activeStep === 2 && !showResults && studentPreview?.preview && (
                               <AssignmentReview data={studentPreview.preview} />
                             )}
                             {showResults && !outcome && (
-                              <Alert severity="warning">
+                              <Alert severity="error">
                                 Not assigned. Review this student and preview again.
                               </Alert>
                             )}

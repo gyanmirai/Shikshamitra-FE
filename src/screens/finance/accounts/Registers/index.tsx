@@ -15,7 +15,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Stack, Alert, Button } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -47,12 +47,13 @@ export default function AccountsRegister({ direction }: { direction: 'income' | 
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       {(!canView || !currentYear?.id) && (
         <CustomBreadcrumbs
-          heading={heading}
           description={
             direction === 'income'
               ? 'View received student payments and other school income.'
               : 'View school expenses and automatically linked student refunds. Awaiting payouts are excluded from paid expenses.'
           }
+          heading={heading}
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Accounts' },
@@ -63,7 +64,7 @@ export default function AccountsRegister({ direction }: { direction: 'income' | 
       {!canView ? (
         <Alert severity="error">You do not have permission to view {heading.toLowerCase()}.</Alert>
       ) : !currentYear?.id ? (
-        <Alert severity="info">Select an academic year to view {heading.toLowerCase()}.</Alert>
+        <Box>Select an academic year to view {heading.toLowerCase()}.</Box>
       ) : (
         <RegisterContent
           key={`${direction}:${currentYear.id}:${currentYear.startDate}:${currentYear.endDate}`}
@@ -173,10 +174,11 @@ function RegisterContent({
         render: (value: string) => value || '—',
       },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
         filterType: 'number',
-        align: 'right',
+        align: 'left',
         minWidth: 140,
         render: (value: number) => formatNumber(value, 'INR'),
       },
@@ -210,21 +212,27 @@ function RegisterContent({
         ),
       },
       {
+        isFilter: false,
+        isSort: false,
         id: 'actions',
         label: 'Actions',
         sticky: true,
         stickyPosition: 'right',
-        align: 'right',
+        align: 'left',
         minWidth: 140,
         excludeFromExport: true,
         render: (_, row) => (
-          <ThreeDotsActions
-            showViewIcon
-            showThreeDots={false}
-            viewIcon={GlobalIcons.eye}
-            sx={{ justifyContent: 'flex-end' }}
-            viewLabel={`View details for ${row.reference}`}
-            handleViewClick={() => setSelected(row as AccountsActivityRow)}
+          <AdaptiveThreeDotsActions
+            directActionLimit={2}
+            actions={[
+              {
+                id: 'view',
+                label: `View details for ${row.reference}`,
+                icon: GlobalIcons.eye,
+                onClick: () => setSelected(row as AccountsActivityRow),
+              },
+            ]}
+            sx={{ justifyContent: 'flex-start' }}
           />
         ),
       },
@@ -297,12 +305,13 @@ function RegisterContent({
         }}
       >
         <CustomBreadcrumbs
-          heading={income ? 'Income' : 'Expenses'}
           description={
             income
               ? 'View received student payments and other school income.'
               : 'View school expenses and linked student refunds. Awaiting payouts are excluded from paid expenses.'
           }
+          heading={income ? 'Income' : 'Expenses'}
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Accounts' },
@@ -325,7 +334,7 @@ function RegisterContent({
           }
         />
         {months.length === 0 && (
-          <Alert severity="warning">
+          <Alert severity="error">
             This academic year has no valid start/end dates. Update the academic year before
             recording transactions.
           </Alert>
@@ -361,13 +370,13 @@ function RegisterContent({
                 { value: 'all', label: 'All sources' },
                 ...(income
                   ? [
-                    { value: 'collection', label: 'Student payments' },
-                    { value: 'income', label: 'Other income' },
-                  ]
+                      { value: 'collection', label: 'Student payments' },
+                      { value: 'income', label: 'Other income' },
+                    ]
                   : [
-                    { value: 'expense', label: 'School expenses' },
-                    { value: 'refund', label: 'Student refunds' },
-                  ]),
+                      { value: 'expense', label: 'School expenses' },
+                      { value: 'refund', label: 'Student refunds' },
+                    ]),
               ]}
               onChange={(value) => {
                 setSource(String(value));

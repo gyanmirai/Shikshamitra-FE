@@ -1,6 +1,8 @@
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { fNumber, fPercent, fCurrency } from 'src/utils/format-number';
 
+import { CONCESSION_SCOPES } from '../concession/concessionPresentation';
+
 export type VersionValueKind = 'boolean' | 'empty' | 'status' | 'text';
 
 export type FormattedVersionValue = {
@@ -43,6 +45,7 @@ export const formatVersionTimestamp = (value: string) =>
   fDateTime(value, 'DD-MM-YYYY hh:mm A') || '—';
 
 const FIELD_LABELS: Record<string, string> = {
+  allocationbasis: 'Allocate Payment By',
   policyid: 'Policy',
   academicyearid: 'Academic Year',
   applicablefeeheadids: 'Applicable Fee Heads',
@@ -113,11 +116,12 @@ const ENUM_LABELS: Record<string, Record<string, string>> = {
     banktransfer: 'Bank transfer',
     upi: 'UPI',
   },
-  applyon: {
-    '0': 'All Outstanding Fees',
-    '1': 'Current Installment',
-    '2': 'Future Installments',
-  },
+  applyon: Object.fromEntries(
+    CONCESSION_SCOPES.flatMap((option, index) => [
+      [String(index), option.label],
+      [option.value.toLowerCase(), option.label],
+    ])
+  ),
   roundingmethod: {
     '0': 'None',
     '1': 'Round Up',
@@ -306,4 +310,15 @@ export const formatFinancePolicyVersionValue = (
   if (isGuid(value)) return { kind: 'text', text: unavailableReferenceLabel(fieldKey) };
 
   return { kind: 'text', text: String(value) };
+};
+
+/** Numeric snapshots and API enum names describe the same recorded selection. */
+export const policyVersionValuesEqual = (field: string, before: unknown, after: unknown) => {
+  if (normalizeFieldKey(field) === 'applyon') {
+    return (
+      formatFinancePolicyVersionValue(field, before).text ===
+      formatFinancePolicyVersionValue(field, after).text
+    );
+  }
+  return JSON.stringify(before) === JSON.stringify(after);
 };

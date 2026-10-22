@@ -5,10 +5,11 @@ import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { GlobalIcons } from 'src/utils/icons';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import { useAssignmentStudentsQuery } from 'src/redux/finance/studentFeeAssignment';
@@ -25,7 +26,8 @@ import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 export default function FeeStructureAssignTable({
   onAssignStructure,
   onBulkAssign,
-}: IFeeStructureTableProps) {
+  feeHeadId,
+}: IFeeStructureTableProps & { feeHeadId?: string }) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
   const canView = hasGrantedPermission(
@@ -53,6 +55,7 @@ export default function FeeStructureAssignTable({
       : context.selectedDivisionId || undefined;
   const scope = JSON.stringify([
     currentYear?.id,
+    feeHeadId,
     standardId,
     divisionId,
     context.selectedBoard,
@@ -65,6 +68,7 @@ export default function FeeStructureAssignTable({
   const query = useAssignmentStudentsQuery(
     {
       academicYearId: currentYear?.id ?? '',
+      feeHeadId,
       standardId,
       divisionId,
       boardId: context.selectedBoard,
@@ -101,8 +105,21 @@ export default function FeeStructureAssignTable({
   const eligible = rows.filter((r) => r.isActive && !r.isFeeStructureAssigned);
   return (
     <Stack sx={{ flex: 1, minHeight: 0, gap: 1 }}>
+      {feeHeadId && (
+        <Alert
+          severity="info"
+          action={
+            <Button size="small" href={financePaths.fees.structureAssign}>
+              Clear fee head filter
+            </Button>
+          }
+        >
+          Showing students assigned this fee head in the selected academic year and scope. Open an
+          assignment to review its fee breakdown.
+        </Alert>
+      )}
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1}>
           <FinanceAcademicContextFilter
             boards={context.boards}
             mediums={context.mediums}
@@ -110,10 +127,11 @@ export default function FeeStructureAssignTable({
             selectedMedium={context.selectedMedium}
             onBoardChange={context.setSelectedBoard}
             onMediumChange={context.setSelectedMedium}
-            selectSx={{ width: '100%', minWidth: 0 }}
+            selectSx={{ width: { xs: 'calc(50% - 4px)', sm: 180 }, minWidth: 0 }}
           />
           <CustomSelect
             label="Class"
+            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 160 }, minWidth: 0 } }}
             options={context.classOptions}
             value={context.selectedStandardId}
             onChange={(v) => context.setSelectedStandardId(String(v))}
@@ -123,6 +141,7 @@ export default function FeeStructureAssignTable({
           />
           <CustomSelect
             label="Division"
+            formControlProps={{ sx: { width: { xs: 'calc(50% - 4px)', sm: 140 }, minWidth: 0 } }}
             options={context.divisionOptions}
             value={context.selectedDivisionId}
             onChange={(v) => context.setSelectedDivisionId(String(v))}
@@ -172,7 +191,7 @@ export default function FeeStructureAssignTable({
         }
         wrapperProps={{ sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
         tableContainerProps={{
-          sx: { height: '100%' },
+          sx: { height: '100%', '& .MuiTableCell-body': { verticalAlign: 'middle' } },
           'aria-label': 'Student fee structure assignments',
         }}
         serverSidePagination
@@ -221,7 +240,7 @@ export default function FeeStructureAssignTable({
                       }}
                       checked={eligible.length > 0 && selected.length === eligible.length}
                       indeterminate={selected.length > 0 && selected.length < eligible.length}
-                      disabled={eligible.length === 0}
+                      disabled={query.isFetching || eligible.length === 0}
                       onChange={(_, checked) => setSelected(checked ? eligible : [])}
                     />
                   ),
@@ -231,7 +250,7 @@ export default function FeeStructureAssignTable({
                       <Checkbox
                         inputProps={{ 'aria-label': `Select ${row.studentName}` }}
                         checked={selected.some((s) => s.studentId === row.studentId)}
-                        disabled={!row.isActive || row.isFeeStructureAssigned}
+                        disabled={query.isFetching || !row.isActive || row.isFeeStructureAssigned}
                         onChange={(_, checked) =>
                           setSelected((previous) =>
                             checked
@@ -248,8 +267,8 @@ export default function FeeStructureAssignTable({
           {
             id: 'studentName',
             label: 'Student',
-            width: 240,
-            minWidth: 220,
+            width: 220,
+            minWidth: 180,
             align: 'left',
             sticky: true,
             stickyPosition: 'left',
@@ -272,8 +291,8 @@ export default function FeeStructureAssignTable({
           {
             id: 'standardDivision',
             label: 'Class/Division',
-            width: 180,
-            minWidth: 180,
+            width: 150,
+            minWidth: 140,
             align: 'left',
             isFilter: true,
             isSort: true,
@@ -285,7 +304,8 @@ export default function FeeStructureAssignTable({
             label: 'Roll No.',
             width: 130,
             minWidth: 120,
-            align: 'right',
+            align: 'left',
+            cellSx: { textAlign: 'right', verticalAlign: 'middle' },
             isFilter: true,
             isSort: true,
             filterType: 'number',
@@ -312,8 +332,8 @@ export default function FeeStructureAssignTable({
           {
             id: 'isActive',
             label: 'Enrollment',
-            width: 180,
-            minWidth: 180,
+            width: 150,
+            minWidth: 140,
             align: 'left',
             isSort: true,
             isFilter: true,
@@ -351,8 +371,10 @@ export default function FeeStructureAssignTable({
           {
             id: 'action',
             label: 'Actions',
-            width: 80,
-            align: 'right',
+            width: 180,
+            minWidth: 180,
+            align: 'left',
+            cellSx: { textAlign: 'left', verticalAlign: 'middle' },
             isSort: false,
             isFilter: false,
             excludeFromExport: true,
@@ -360,16 +382,34 @@ export default function FeeStructureAssignTable({
             stickyPosition: 'right',
             render: (_value: unknown, rawRow: IData) => {
               const row = rawRow as IFeeStructureData & { isActive?: boolean };
+              if (!row.isFeeStructureAssigned && canAssign)
+                return (
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                    aria-label={'Assign fee structure to ' + row.studentName}
+                    disabled={query.isFetching || !row.isActive}
+                    onClick={() => onAssignStructure(row)}
+                    sx={{ whiteSpace: 'nowrap' }}
+                  >
+                    Assign Fee Structure
+                  </Button>
+                );
               return row.isFeeStructureAssigned || canAssign ? (
-                <ThreeDotsActions
-                  showThreeDots={false}
-                  showViewIcon={row.isFeeStructureAssigned}
-                  viewIcon="mdi:eye-outline"
-                  viewLabel={`View assignment for ${row.studentName}`}
-                  handleViewClick={() => onAssignStructure(row)}
-                  directActions={
+                <AdaptiveThreeDotsActions
+                  directActionLimit={2}
+                  actions={
                     row.isFeeStructureAssigned
-                      ? []
+                      ? [
+                          {
+                            id: 'view',
+                            icon: 'mdi:eye-outline',
+                            label: `View assignment for ${row.studentName}`,
+                            onClick: () => onAssignStructure(row),
+                          },
+                        ]
                       : [
                           {
                             id: 'assign',
@@ -383,7 +423,7 @@ export default function FeeStructureAssignTable({
                           },
                         ]
                   }
-                  sx={{ justifyContent: 'flex-end' }}
+                  sx={{ justifyContent: 'flex-start' }}
                 />
               ) : null;
             },

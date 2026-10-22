@@ -12,22 +12,24 @@ export default function ConcessionApplicationSection({ formik }: { formik: any }
   const includesPaid = formik.values.applyOn === 'AllFees';
   return (
     <ConcessionSectionCard
-      title="Application Scope"
       subtitle={
         formik.values.applyOn === 'AllFees'
           ? 'Paid collections remain in history. The paid concession is refundable through an automatically or manually created refund request.'
           : 'Choose eligible installments. Only unpaid balances are recalculated; paid collections remain in history.'
       }
+      title="Application Scope"
+
       icon="solar:layers-linear"
     >
       <ShakingTextField error={error}>
         <CustomSelect
+          optionDescriptionKey="caption"
           fullWidth
           size="small"
           label="Apply concession on *"
           name="applyOn"
           options={CONCESSION_SCOPES}
-          optionDescriptionKey="caption"
+
           value={formik.values.applyOn}
           onChange={(value) => {
             formik.setFieldValue('applyOn', value);
@@ -35,7 +37,7 @@ export default function ConcessionApplicationSection({ formik }: { formik: any }
           }}
           onBlur={() => formik.setFieldTouched('applyOn', true)}
           error={error}
-          helperText={(formik.touched.applyOn && formik.errors.applyOn) || ''}
+          helperText={(formik.touched.applyOn && formik.errors.applyOn) || undefined}
         />
       </ShakingTextField>
       <Stack spacing={0.5} sx={{ mt: 2 }}>

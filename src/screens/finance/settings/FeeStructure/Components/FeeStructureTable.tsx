@@ -15,9 +15,9 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeStructuresQuery } from 'src/redux/finance/financeFeeStructure';
-import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   addFeeStructure,
@@ -90,6 +90,8 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         render: (value) => (value == null ? '-' : value),
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Action',
         align: 'left',
@@ -99,6 +101,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         minWidth: 50,
         render: (value, row) => (
           <AdaptiveThreeDotsActions
+            directActionLimit={2}
             actions={[
               {
                 id: 'view',
@@ -127,9 +130,6 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
 
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
-      {!currentYear?.id && (
-        <Alert severity="info">Select an academic year to manage Fee Structures.</Alert>
-      )}
       {isError && (
         <Alert
           severity="error"
@@ -148,9 +148,10 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
       )}
       <CustomizableTable
         tableId="fee-structure-table"
+        tableTitle="Fee structures"
+        exportLabel="Export current page"
         serverSidePagination
         serverSideSearch
-        isFilter={false}
         page={page}
         rowsPerPage={pageSize}
         totalCount={feeStructureData?.totalCount ?? 0}

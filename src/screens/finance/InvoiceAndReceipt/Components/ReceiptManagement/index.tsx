@@ -159,6 +159,7 @@ const ReceiptManagement = () => {
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'receiptNumber',
         label: 'Receipt No.',
         align: 'left',
@@ -168,6 +169,7 @@ const ReceiptManagement = () => {
         sticky: true,
       },
       {
+        stickyPosition: 'left',
         id: 'studentName',
         label: 'Name(Gr No.)',
         align: 'left',
@@ -178,6 +180,7 @@ const ReceiptManagement = () => {
         render: (value, row) => (row.grNo ? `${value} (${row.grNo})` : value),
       },
       {
+        stickyPosition: 'left',
         id: 'receiptKind',
         label: 'Receipt Type',
         align: 'left',
@@ -220,6 +223,9 @@ const ReceiptManagement = () => {
         },
       },
       {
+        align: 'left',
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'actions',
         label: 'Action',
         isFilter: false,
@@ -229,7 +235,7 @@ const ReceiptManagement = () => {
         minWidth: 64,
         render(_value: any, row: any) {
           return (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={[
                 {
                   id: 'view',

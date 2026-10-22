@@ -6,16 +6,7 @@ import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
-import {
-  Box,
-  Grid,
-  Paper,
-  Stack,
-  Alert,
-  TextField,
-  Typography,
-  InputAdornment,
-} from '@mui/material';
+import { Box, Grid, Paper, Stack, TextField, Typography, InputAdornment } from '@mui/material';
 
 import { SectionCard } from './RefundCommon';
 
@@ -63,8 +54,9 @@ export default function RefundSimulationSection({
 
   return (
     <SectionCard
-      title="Server Calculation Simulator"
       subtitle="Verify policy calculation rules against the backend calculation engine. These simulations run in sandbox mode and do not generate ledger entries."
+      title="Server Calculation Simulator"
+
       icon="solar:play-circle-bold-duotone"
       action={
         <LoadingButton
@@ -79,11 +71,7 @@ export default function RefundSimulationSection({
         </LoadingButton>
       }
     >
-      {!policyId ? (
-        <Alert severity="info" sx={{ borderRadius: 1.25 }}>
-          Save this policy first to test it with the backend server simulation service. In the meantime, the Live Summary panel on the right provides immediate client-side previews.
-        </Alert>
-      ) : (
+      {!policyId ? null : (
         <Stack spacing={2.5}>
           <Grid container spacing={2}>
             {/* Settled Paid Amount */}
@@ -101,7 +89,6 @@ export default function RefundSimulationSection({
                     inputProps: { min: 0 },
                   },
                 }}
-                helperText="Total verified money collected"
               />
             </Grid>
 
@@ -120,7 +107,6 @@ export default function RefundSimulationSection({
                     inputProps: { min: 0 },
                   },
                 }}
-                helperText="Already disbursed vouchers"
               />
             </Grid>
 
@@ -139,7 +125,6 @@ export default function RefundSimulationSection({
                     inputProps: { min: 0 },
                   },
                 }}
-                helperText="Approved/In-flight requests"
               />
             </Grid>
 
@@ -151,16 +136,13 @@ export default function RefundSimulationSection({
                 type="number"
                 label="Student/Year Used Amount"
                 value={simulationInput.studentYearRefundedOrReserved || ''}
-                onChange={(e) =>
-                  handleInputChange('studentYearRefundedOrReserved', e.target.value)
-                }
+                onChange={(e) => handleInputChange('studentYearRefundedOrReserved', e.target.value)}
                 slotProps={{
                   input: {
                     startAdornment: <InputAdornment position="start">₹</InputAdornment>,
                     inputProps: { min: 0 },
                   },
                 }}
-                helperText="Prior refunds in academic year"
               />
             </Grid>
 
@@ -180,7 +162,6 @@ export default function RefundSimulationSection({
                       inputProps: { min: 0.01 },
                     },
                   }}
-                  helperText="User-requested voucher value"
                 />
               </Grid>
             )}
@@ -198,7 +179,12 @@ export default function RefundSimulationSection({
               }}
             >
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                <Iconify icon="solar:check-circle-bold" color="success.main" width={20} height={20} />
+                <Iconify
+                  icon="solar:check-circle-bold"
+                  color="success.main"
+                  width={20}
+                  height={20}
+                />
                 <Typography variant="subtitle2" fontWeight={700} color="success.dark">
                   Server Calculation Result
                 </Typography>
@@ -237,7 +223,12 @@ export default function RefundSimulationSection({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="success.dark" display="block" fontWeight={600}>
+                    <Typography
+                      variant="caption"
+                      color="success.dark"
+                      display="block"
+                      fontWeight={600}
+                    >
                       Final Net Refund
                     </Typography>
                     <Typography variant="h6" fontWeight={800} color="success.main">

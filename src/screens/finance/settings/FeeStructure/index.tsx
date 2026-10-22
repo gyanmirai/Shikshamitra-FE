@@ -52,8 +52,9 @@ export default function FeeStructure() {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Fee Structure"
         description="Manage class fee configurations and protected revisions for the selected academic year."
+        heading="Fee Structure"
+
         links={[
           { name: 'Finance' },
           { name: 'Fees' },

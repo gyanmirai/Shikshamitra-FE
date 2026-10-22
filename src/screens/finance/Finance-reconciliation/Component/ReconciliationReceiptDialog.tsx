@@ -2,14 +2,13 @@
 
 import type { DialogProps } from '@mui/material';
 
-import React from 'react';
 import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import {
   Box,
   Card,
@@ -24,6 +23,7 @@ import {
   DialogContent,
   CircularProgress,
 } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 interface ReconciliationReceiptData {
   id: string;

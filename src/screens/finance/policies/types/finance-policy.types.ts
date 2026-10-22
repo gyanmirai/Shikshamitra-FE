@@ -1,5 +1,7 @@
 // ─── Enums & Union Types ───────────────────────────────────────────────────────
 
+import type { CollectionAllocationBasis } from 'src/redux/feeCollection/feeCollection';
+
 export type FinancePolicyKind = 'payment' | 'concession' | 'refund' | 'collection' | 'proration';
 
 export type FinancePolicyStatus = 'Active' | 'Inactive' | 'Draft' | 'Published' | 'Archived';
@@ -150,8 +152,18 @@ export interface IConcessionPolicy extends Omit<IFinancePolicyBase, 'status'> {
 
 export type IConcessionPolicyFormValues = Omit<
   IConcessionPolicy,
-  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
->;
+  | 'id'
+  | 'createdBy'
+  | 'updatedBy'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'academicYearName'
+  | 'percentageValue'
+  | 'maximumPercentage'
+> & {
+  percentageValue: number | string | null;
+  maximumPercentage: number | string | null;
+};
 
 // ─── Refund Policy ────────────────────────────────────────────────────────────
 
@@ -195,8 +207,16 @@ export interface IRefundPolicy extends Omit<
 
 export type IRefundPolicyFormValues = Omit<
   IRefundPolicy,
-  | 'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
-  | 'feeHeadNames' | 'feeHeadStatuses' | 'expenseCategoryName' | 'defaultPayingBankAccountName'
+  | 'id'
+  | 'createdBy'
+  | 'updatedBy'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'academicYearName'
+  | 'feeHeadNames'
+  | 'feeHeadStatuses'
+  | 'expenseCategoryName'
+  | 'defaultPayingBankAccountName'
 >;
 
 // ─── Table row (list view) ────────────────────────────────────────────────────
@@ -249,6 +269,7 @@ export interface ICollectionPolicy extends Omit<
   status: 'Draft' | 'Active' | 'Archived';
   enableLateFee: boolean;
   gracePeriodDays: number;
+  allocationBasis?: CollectionAllocationBasis;
   gracePeriodType: 'Calendar' | 'WorkingDay';
   lateFeeApplyOnFeeHeads: string[];
   lateFeeType: 'Flat' | 'Percentage' | 'PerDay' | 'PerWeek' | 'PerMonth' | 'Compound' | 'Slab';

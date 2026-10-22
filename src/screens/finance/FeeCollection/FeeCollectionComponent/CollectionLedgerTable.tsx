@@ -69,7 +69,14 @@ export default function CollectionLedgerTable({
   year = new Date().getFullYear(),
   hasActiveFilters,
   layout,
-}: FeeLedgerListProps & { layout: CollectionLayout; onPeriodFocus?: (period: string) => void }) {
+  allocationDueFeeOrder,
+  allocationBasis,
+}: FeeLedgerListProps & {
+  layout: CollectionLayout;
+  onPeriodFocus?: (period: string) => void;
+  allocationDueFeeOrder?: string[];
+  allocationBasis?: 'Installment' | 'FeeHead';
+}) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -85,7 +92,14 @@ export default function CollectionLedgerTable({
       };
     })
   );
-  if (activeTab === 'by-fee-head' && layout !== 'period')
+  if (allocationDueFeeOrder) {
+    const rank = new Map(allocationDueFeeOrder.map((id, index) => [id, index]));
+    rows.sort(
+      (a, b) =>
+        (rank.get(a.dueFeeId ?? '') ?? Number.MAX_SAFE_INTEGER) -
+        (rank.get(b.dueFeeId ?? '') ?? Number.MAX_SAFE_INTEGER)
+    );
+  } else if (activeTab === 'by-fee-head' && layout !== 'period')
     rows.sort(
       (a, b) => a.feeHeadName.localeCompare(b.feeHeadName) || a.period.localeCompare(b.period)
     );
@@ -165,12 +179,26 @@ export default function CollectionLedgerTable({
     rows.reduce<Record<string, { id: string; title: string; items: LedgerRow[] }>>(
       (result, row) => {
         const byPeriod = layout === 'period' || activeTab === 'by-month';
-        const id = row.charge ? 'additional-charges' : byPeriod ? row.period : row.feeHeadId;
+        const byInstallment = allocationBasis === 'Installment';
+        const installmentKey =
+          row.installmentId ??
+          Array.from(`${row.dueDate ?? row.period}|${row.installmentLabel ?? row.period}`)
+            .map((character) => character.codePointAt(0)!.toString(16))
+            .join('-');
+        const id = row.charge
+          ? 'additional-charges'
+          : byInstallment
+            ? `installment-${installmentKey}`
+            : byPeriod
+              ? row.period
+              : row.feeHeadId;
         const title = row.charge
           ? 'Additional Charges'
-          : byPeriod
-            ? row.periodLabel
-            : row.feeHeadName;
+          : byInstallment
+            ? row.installmentLabel || row.periodLabel
+            : byPeriod
+              ? row.periodLabel
+              : row.feeHeadName;
         result[id] ??= { id, title, items: [] };
         result[id].items.push(row);
         return result;
@@ -264,6 +292,7 @@ export default function CollectionLedgerTable({
       ),
     },
     {
+      align: 'left',
       id: 'action',
       label: 'Action',
       sticky: true,
@@ -275,8 +304,7 @@ export default function CollectionLedgerTable({
       render: (_value, row) => (
         <AdaptiveThreeDotsActions
           directActionLimit={2}
-          collapseOnOverflow={false}
-          sx={{ justifyContent: 'flex-end' }}
+          sx={{ justifyContent: 'flex-start' }}
           actions={[
             {
               id: 'view',
@@ -320,6 +348,7 @@ export default function CollectionLedgerTable({
             )
             .map((column) => ({
               ...column,
+              isSort: allocationDueFeeOrder ? false : column.isSort,
               ...(column.id === 'selection' && {
                 label: groupCheckbox(group.items, `Select all ${group.title}`),
               }),
@@ -452,6 +481,7 @@ export default function CollectionLedgerTable({
         </Typography>
       </Stack>
       <CustomDialog
+        titleInfo="Review the selected fee or charge, its due period, status, and recorded amounts."
         open={Boolean(detail)}
         handleClose={closeDetail}
         hasForm={false}
@@ -459,16 +489,16 @@ export default function CollectionLedgerTable({
         maxWidth="sm"
         paperProps={{ sx: { backgroundImage: 'none' } }}
         title={detail?.feeHeadName ?? 'Fee Details'}
-        titleInfo="Review the selected fee or charge, its due period, status, and recorded amounts."
       >
         {detail && (
           <DialogScrollContent>
             <Stack spacing={2}>
               <FormSectionCard
+                descriptionTooltip="The due period, installment, and current payment status of this entry."
                 title={detail.charge ? 'Charge Details' : 'Fee Details'}
                 icon={GlobalIcons.calendar}
                 titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                descriptionTooltip="The due period, installment, and current payment status of this entry."
+
                 sx={{ containerType: 'inline-size', boxShadow: 'none' }}
               >
                 <DetailGrid>
@@ -496,10 +526,11 @@ export default function CollectionLedgerTable({
                 </DetailGrid>
               </FormSectionCard>
               <FormSectionCard
+                descriptionTooltip="Recorded fee or charge amounts, payments, outstanding balance, and applicable concessions, waivers, refunds, or proration. All amounts are in INR."
                 title="Amount Breakdown"
                 icon={GlobalIcons.receiptIcon}
                 titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
-                descriptionTooltip="Recorded fee or charge amounts, payments, outstanding balance, and applicable concessions, waivers, refunds, or proration. All amounts are in INR."
+
                 sx={{
                   containerType: 'inline-size',
                   boxShadow: 'none',

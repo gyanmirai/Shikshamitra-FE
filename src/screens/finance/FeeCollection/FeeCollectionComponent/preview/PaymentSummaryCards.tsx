@@ -20,7 +20,7 @@ interface Props {
 
 // ─── Sub-component ────────────────────────────────────────────────────────────
 
-const SummaryCard = ({ label, value, icon, colorKey, helperText }: SummaryCardConfig) => (
+const SummaryCard = ({ label, value, icon, colorKey }: SummaryCardConfig) => (
   <Card
     variant="outlined"
     sx={{
@@ -53,9 +53,6 @@ const SummaryCard = ({ label, value, icon, colorKey, helperText }: SummaryCardCo
       </Typography>
       <Typography variant="subtitle2" fontWeight={700} color={`${colorKey}.main`}>
         ₹{formatNumber(value)}
-      </Typography>
-      <Typography variant="caption" color="text.disabled" display="block">
-        {helperText}
       </Typography>
     </Box>
   </Card>

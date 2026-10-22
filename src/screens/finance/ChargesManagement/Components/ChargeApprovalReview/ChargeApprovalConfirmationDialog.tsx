@@ -7,12 +7,13 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Alert, Button, Divider, TextField, Typography } from '@mui/material';
+import { Box, Grid, Button, Divider, TextField, Typography } from '@mui/material';
 
 import type { IChargeApprovalConfirmationDialogProps } from './types';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 /**
  * ChargeApprovalConfirmationDialog Component
@@ -82,22 +83,13 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <Box sx={{ p: 2 }}>
           {/* Confirmation Message */}
-          <Alert
-            severity={isRejectMode ? 'error' : 'success'}
-            sx={{ mb: 2 }}
-            icon={
-              <Iconify
-                icon={isRejectMode ? 'solar:info-circle-bold' : 'solar:info-circle-bold'}
-                sx={{ fontSize: 20 }}
-              />
-            }
-          >
+          <Box sx={{ mb: 2 }}>
             <Typography variant="body2">
               {isRejectMode
                 ? `You are about to reject the charge "${chargeName}" for ${selectedStudents} student${selectedStudents !== 1 ? 's' : ''}.`
                 : `You are about to approve the charge "${chargeName}" for ${selectedStudents} student${selectedStudents !== 1 ? 's' : ''}.`}
             </Typography>
-          </Alert>
+          </Box>
 
           {/* Student Count Info */}
           <Box
@@ -158,7 +150,7 @@ const ChargeApprovalConfirmationDialog: React.FC<IChargeApprovalConfirmationDial
                     formik.setFieldTouched('notes', true);
                   }}
                   error={formik.touched.notes && Boolean(formik.errors.notes)}
-                  helperText={formik.touched.notes && formik.errors.notes}
+                  helperText={(formik.touched.notes && formik.errors.notes) || undefined}
                 />
               </ShakingTextField>
             </Grid>

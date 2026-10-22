@@ -13,7 +13,6 @@ import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollec
 import {
   Box,
   Stack,
-  Alert,
   Button,
   Skeleton,
   Typography,
@@ -115,6 +114,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
 
   return (
     <CustomDialog
+      titleInfo="Review the saved receipt details and its PDF document."
       open
       handleClose={onClose}
       title={
@@ -132,7 +132,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
           {receiptKindMeta && <Label color={receiptKindMeta.color}>{receiptKindMeta.label}</Label>}
         </Stack>
       }
-      titleInfo="Review the saved receipt details and its PDF document."
+
       maxWidth="lg"
       hasForm={false}
       guardUnsavedChanges={false}
@@ -153,7 +153,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
             <Skeleton variant="rounded" height={350} />
           </Stack>
         ) : !receipt ? (
-          <Alert severity="info">Receipt not found.</Alert>
+          <Box>Receipt not found.</Box>
         ) : (
           <Stack spacing={2}>
             <DetailSection title="Receipt Details" icon="mdi:receipt-text-outline">
@@ -236,7 +236,7 @@ const ReceiptPreviewDialog: React.FC<ReceiptPreviewDialogProps> = ({ receiptId, 
                   }}
                 />
               ) : (
-                <Alert severity="info">Receipt preview is not available right now.</Alert>
+                <Box>Receipt preview is not available right now.</Box>
               )}
             </DetailSection>
           </Stack>

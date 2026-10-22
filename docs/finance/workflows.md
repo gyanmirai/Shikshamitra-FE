@@ -17,6 +17,14 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Finance help and feedback
+
+Finance screens, tables, forms, dialogs, and drawers retain their information icons and tooltip
+explanations. Omit informational banners, visible section/page explanations, character counters,
+and nonessential field hints. Keep field validation, API/load errors and
+retry actions, blocking restrictions, concise empty/loading states, saved record descriptions,
+and transaction confirmations. Financial calculations, permissions, and submission rules are unchanged.
+
 ## Shared read-only details
 
 Finance policy views, Accounts income/expense transaction dialogs, concessions, charges,
@@ -114,6 +122,20 @@ Fee-line status and overdue classification come from the backend; see the
 
 ## Fee Collection selection and receiving bank
 
+Collection Policy's **Payment Allocation** section selects **By installment** or **By fee head**.
+The collect form receives the assignment's pinned `allocationBasis`, policy identity/version,
+`allocationDueFeeOrder` and `allocationRevision`. Both ledger grouping and selected payment rows
+follow that returned order, including custom installments within the same month. Entering an
+amount updates Pay now and Remaining per selected row. No fee-head priority editor is introduced.
+Configured fee rows have numbered positions; table sorting and summary dragging cannot change
+the automatic allocation sequence. Charge ordering remains in its existing separate group.
+Review and collection submit every selected due ID, including unfunded rows, and the revision
+through `automaticAllocation`. A changed-policy/balance rejection refreshes the form and requires
+another review; an uncertain network outcome retains the original retry key.
+Policies and historical snapshots without the setting retain **Existing selection order**.
+Existing assignments continue using their pinned version until refreshed through the assignment workflow.
+Backend rules: [collection allocation contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#automatic-collection-allocation).
+
 Collect Fees shows the student identity, academic year and total outstanding above expandable
 fee-head cards and a payment summary. Each card has independent group selection, a selected
 amount/count badge, and an embedded shared table showing Due Period with installment label,
@@ -129,11 +151,11 @@ Amounts retain the ledger's existing values and shared INR display formatting.
 The record header and each section expose a keyboard-accessible information control, following
 the Policy view's section typography and help pattern.
 The group list owns vertical scrolling and each embedded table contains horizontal scrolling.
-Sorting never reorders the selected allocations.
+For legacy policies, sorting never reorders the selected allocations.
 
 Payment summary keeps its heading and outlined Clear All action above a scrollable
 payment-details body. Selected rows appear first with Fee item, Term and Amount columns,
-drag handles and trailing remove actions. Pointer, touch and keyboard dragging reorder fee rows
+drag handles and trailing remove actions for legacy policies. Pointer, touch and keyboard dragging reorder legacy fee rows
 or charge rows within their own allocation groups. Fees retain precedence over charges; the
 displayed order within each group is used by both payment review and the submitted allocations.
 The neutral dark Collect action, outlined Cancel and Collecting now amount stay in a stationary
@@ -185,6 +207,10 @@ The Pending concession table offers View, Approve, and Reject through the shared
 ### Concessions and Collections table controls
 
 Both workspaces use `CustomizableTable` with a contextual title, column filters, visible filter chips, server search/sorting/pagination, and sticky Status/Actions columns on the right.
+Finance table headings are left aligned; numeric body cells may keep comparison alignment through `cellSx`.
+The rightmost Actions column explicitly sets `align: 'left'`, `sticky: true`, and `stickyPosition: 'right'`, with no sorting, filtering, or export data.
+Its controls align to the left inside that cell. Use `AdaptiveThreeDotsActions` with two direct actions and the remaining permitted operations in the overflow menu.
+Payment terms and the legacy fee-structure list expose Columns, current-page Export, and Fullscreen. Their current list integrations support search and paging only; per-column filter/sort controls remain unavailable until the owning endpoint/query supports them.
 The table's controlled `page` is zero-based, but `onServerPagination` reports one-based server pages. Collections and Charges pass that callback page directly to their API state; Concessions and Refunds subtract one for their zero-based state. This keeps Next and Previous from skipping records.
 Student filters include the displayed GR number; Class/Division filters match the combined value, including division.
 Money columns use raw balances for numeric comparisons and ranges, while displaying the shared INR format.
@@ -365,11 +391,19 @@ filtering. Values use the same concession labels in the table, form fields and d
 missing or invalid dates display `—`, and amounts use the shared Indian currency formatter.
 Create/edit, details, audit and version drawers share a header and stable footer. The form body
 owns scrolling, stacks fields on narrow screens and locks interaction while saving. Section
-guidance uses accessible info tooltips, and header context appears in an info tooltip after
-the status badge. Policy name and Status share a row; Description and the default toggle
+guidance uses accessible info tooltips. The form presents status once in the Status field;
+read-only drawer status, version and Read Only metadata sit in a separate right-aligned header group.
+Policy name and Status share a row; Description and the concise Set as default toggle
 share the next row on wider screens. The create/edit form has a neutral Submit action, no
 submit shortcut, and no policy-summary, balance-preview or completion-checklist sidebar.
 Archive and restore use focused confirmations; restore returns a policy to Draft.
+
+All four policy editors trim names and collapse repeated internal whitespace at the payload
+boundary. Server duplicate-name rules appear inline under Policy name, retain entered values,
+and explain that conflicts may exist in Current or Archived for the academic year. Row clones
+omit a proposed name so the server can choose an available copy name across both lists.
+Concession percentage and maximum-percentage entry preserves raw decimal text while typing,
+allows up to two fractional digits, validates precision, and converts to numbers only on save.
 
 Status, value source, calculation method and application scope use option info tooltips in the
 menu and beside the selected value. Descriptive dropdown helper text is omitted; validation
@@ -385,6 +419,10 @@ Policy audit events are grouped by date, newest first, with expandable Before/Af
 comparisons. Version history uses keyboard-accessible snapshot selection and identifies the
 newest snapshot as Latest, independently of policy status. Both drawers use the same neutral
 diff table, resolve policy and academic-year references to names, and offer retry on failure.
+Apply On uses the form's exact labels for numeric, serialized and named snapshot values,
+including All installments, including paid. Equivalent numeric/name representations do not
+produce an Apply On change. Change/reason help opens beside its info control, and truncated
+activity policy names expose the full name on pointer hover or keyboard focus.
 
 Actual request eligibility and amounts remain server-owned. The offline
 [verification fixture](../../e2e/fixtures/concession-policy/README.md)
@@ -431,3 +469,23 @@ apply only to the owning Fee Structure; the published Payment Term is preserved.
 ## Income and Expenses workspaces
 
 See [the workspace contract](./references/income-expense-workspaces.md) for separate registers, academic-year months, selected-record details, manual creation and automatic refund visibility.
+
+## Finance form sessions and table actions
+
+Finance tables show the first three permitted actions directly; only additional actions use the
+more menu. Actions retain their disabled explanation when a required fee assignment is missing.
+Collections supports Status sorting through the server query, before pagination. Collect Fees
+and Fee Adjustment are unavailable for an unassigned student, while assignment and view flows
+remain reachable. The collection empty state fills and centres in the available content area.
+
+Finance editor Cancel, X and navigation share an in-app discard confirmation. Keeping changes
+preserves the current form; discarding, successful submission or closing ends the form session.
+Add starts with defaults, and Edit loads only the selected record. Saving locks navigation and
+confirmation controls. Browser unload protection exists only while an open form is dirty.
+Archive/delete confirmations ignore backdrop and Escape dismissal to preserve entered reasons.
+
+Fee Category names collapse repeated whitespace before validation and saving. Duplicate errors
+identify Current or Archived categories and explain restoration for archived conflicts. The API
+repeats normalization and uniqueness checks. Payment Term generated-code conflicts appear at the
+name field, preserve entered data, and use one error notification path. Payment Term codes are
+unique within the academic year; changing Board alone does not resolve a code conflict.

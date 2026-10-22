@@ -67,6 +67,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
         render: (value) => formatNumber(value, 'INR'),
       },
       {
+        stickyPosition: 'right',
         id: 'workflowStatus',
         label: 'Status',
         align: 'left',
@@ -77,6 +78,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
         },
       },
       {
+        stickyPosition: 'right',
         id: 'status',
         label: 'Approval',
         align: 'left',
@@ -154,9 +156,9 @@ const ChargeDetailsCard: React.FC<Props> = ({
             </DetailSection>
             {selectedCharge.students?.length > 0 && (
               <DetailSection
+                helpText="Students included in this charge, with collection and approval status."
                 title="Student List"
                 icon="mdi:account-group-outline"
-                helpText="Students included in this charge, with collection and approval status."
               >
                 <CustomizableTable
                   tableId="view-charge-student-list"
@@ -173,7 +175,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
             )}
           </Stack>
         ) : (
-          <Alert severity="info">Charge details are unavailable.</Alert>
+          <Box>Charge details are unavailable.</Box>
         )}
       </Scrollbar>
       <DialogActions sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>

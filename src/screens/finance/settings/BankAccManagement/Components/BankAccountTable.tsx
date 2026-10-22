@@ -213,6 +213,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         },
       },
       {
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         minWidth: 50,
@@ -224,7 +225,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={[
                 {
                   id: 'view',

@@ -65,9 +65,10 @@ export default function FeeStructureReviewStep({
   return (
     <Stack spacing={2}>
       <FormSectionCard
+        descriptionTooltip="Fixed fee total includes optional heads. Variable amounts are set during student assignment; this is not a student's amount due."
         icon="mdi:clipboard-check-outline"
         title="Structure summary"
-        descriptionTooltip="Fixed fee total includes optional heads. Variable amounts are set during student assignment; this is not a student's amount due."
+
         action={
           <Label color={locked ? 'info' : preview?.isReady ? 'success' : 'warning'}>
             {locked ? 'Published' : preview?.isReady ? 'Ready to publish' : 'Draft'}
@@ -152,14 +153,9 @@ export default function FeeStructureReviewStep({
           </FormSectionCard>
         ))}
       </Box>
-      {locked && (
-        <Alert severity={record?.publicationReview ? 'info' : 'warning'}>
-          {record?.publicationReview
-            ? 'This is the saved publication review. Later settings changes do not alter it.'
-            : 'This legacy structure has no saved publication review. These checks describe current settings, not historical calculations.'}
-        </Alert>
-      )}
+
       <FormSectionHeader
+        descriptionTooltip="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
         icon="mdi:clipboard-check-outline"
         title={
           locked
@@ -168,7 +164,7 @@ export default function FeeStructureReviewStep({
               ? `${preview.errors.length} issue${preview.errors.length === 1 ? ' blocks' : 's block'} publication`
               : 'Publish readiness'
         }
-        descriptionTooltip="These checks describe structure configuration. Student eligibility and transactions are calculated in their own workflows."
+
         action={
           <LoadingButton
             size="small"
@@ -181,22 +177,14 @@ export default function FeeStructureReviewStep({
           </LoadingButton>
         }
       />
-      {!preview && (
-        <Typography variant="body2" color="text.secondary" role="status">
-          {previewing
-            ? 'Checking policy coverage and installment schedules…'
-            : 'Check the current configuration to see readiness and coverage.'}
-        </Typography>
-      )}
+
       {preview && (
         <>
-          {!preview.errors.length && (
-            <Alert severity={preview.isReady ? 'success' : 'info'}>
+          {!preview.errors.length && !preview.isReady && (
+            <Alert severity="error">
               {locked && record?.publicationReview
                 ? 'Configuration checks saved at publication.'
-                : preview.isReady
-                  ? 'All configuration checks passed.'
-                  : 'This configuration is not ready to publish. Recheck configuration for details.'}
+                : 'This configuration is not ready to publish. Recheck configuration for details.'}
             </Alert>
           )}
           {!!preview.errors.length && (
@@ -412,10 +400,11 @@ export default function FeeStructureReviewStep({
                             render: (value: string) => date(value),
                           },
                           {
+                            cellSx: { textAlign: 'right' as const },
                             id: 'allocationPercentage',
                             label: 'Allocation (%)',
                             minWidth: 120,
-                            align: 'right' as const,
+                            align: 'left' as const,
                             isSort: false,
                             isFilter: false,
                           },
@@ -431,11 +420,12 @@ export default function FeeStructureReviewStep({
                       render: (value) => date(value),
                     },
                     {
+                      cellSx: { textAlign: 'right' as const },
                       id: 'calculatedAmount',
                       label: 'Amount (₹)',
                       width: '20%',
                       minWidth: 150,
-                      align: 'right',
+                      align: 'left',
                       isSort: false,
                       isFilter: false,
                       render: (_value, row) =>

@@ -31,9 +31,6 @@ const AdjustmentStudentCard: React.FC<{ adjustment: AdjustmentRequest }> = ({ ad
         <Typography variant="subtitle2" fontWeight={700}>
           Student Information
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Details of the selected student
-        </Typography>
       </Box>
     </Stack>
 

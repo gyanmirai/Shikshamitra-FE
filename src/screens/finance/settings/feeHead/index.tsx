@@ -1,22 +1,23 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import {
   useGetFeeHeadsQuery,
   FeeHeadManagementApi,
@@ -28,6 +29,7 @@ import FeeHeadTable from './Components/FeeHeadTable';
 import { useFinancePermissions } from '../../hooks/useFinancePermissions';
 
 import type { IFeeHead } from './Components/type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const FeeHeadCreation = () => {
   const access = useFinancePermissions(financePermissions.fees.settings.feeHead);
@@ -78,32 +80,21 @@ const FeeHeadCreation = () => {
    * @param _e - Event object (unused)
    * @param isSubmit - Boolean indicating if form was submitted
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset state after dialog closes
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedFeeHead(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    // Handle different closing scenarios
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addFeeHeadDialog.value,
+    () => {
       addFeeHeadDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addFeeHeadDialog.onFalse();
-      setTimeout(() => {
-        setSelectedFeeHead(null);
-      }, 200);
+      setSelectedFeeHead(null);
     }
-  };
+  );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Fee Head"
         description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click '+ Fee Head' to create a new one."
+        heading="Fee Head"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
@@ -148,12 +139,8 @@ const FeeHeadCreation = () => {
       {/* Add/Edit Fee Head Dialog */}
       <CustomDialog
         open={addFeeHeadDialog.value && access.canAdd}
-        handleClose={() => {
-          addFeeHeadDialog.onFalse();
-          setTimeout(() => {
-            setSelectedFeeHead(null);
-          }, 200);
-        }}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -174,7 +161,9 @@ const FeeHeadCreation = () => {
           </Box>
         }
       >
-        <FeeHeadForm open={addFeeHeadDialog} onClose={handleClose} editData={selectedFeeHead} />
+        {addFeeHeadDialog.value && (
+          <FeeHeadForm open={addFeeHeadDialog} onClose={handleClose} editData={selectedFeeHead} />
+        )}
       </CustomDialog>
 
       {/* Delete Confirmation Dialog */}

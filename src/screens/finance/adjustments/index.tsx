@@ -1,19 +1,20 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { Box, Card, Button, Typography } from '@mui/material';
 import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import { useAdjustment } from './hooks/useAdjustment';
@@ -27,6 +28,8 @@ import AdjustmentApproveRejectForm from './components/AdjustmentApproveRejectFor
 
 import type { AdjustmentRequest } from './types/adjustment.types';
 import type { IAdjustmentFullFormValues } from './types/adjustmentFormValues';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const Adjustments = () => {
   const access = useFinancePermissions(financePermissions.fees.adjustment);
@@ -42,7 +45,6 @@ const Adjustments = () => {
   // applyScreen replaces applyDialog — Approve now opens a full-page screen
   const applyScreen = useBoolean();
 
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
@@ -51,18 +53,16 @@ const Adjustments = () => {
 
   const { tabCounts, createAdjustment, rejectAdjustment, refetch } = useAdjustment(activeTab);
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addDialog.value || viewDialog.value,
+    () => {
       addDialog.onFalse();
       viewDialog.onFalse();
       setSelectedAdjustment(null);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      addDialog.onFalse();
-      viewDialog.onFalse();
-      setSelectedAdjustment(null);
-    }
-  };
+    },
+    false,
+    addDialog.value ? undefined : false
+  );
 
   const handleConfirmClose = async (_e: any, isSubmit?: boolean, notes?: string) => {
     if (isSubmit && selectedAdjustment && access.canAdd) {
@@ -124,8 +124,9 @@ const Adjustments = () => {
     if (addDialog.value) {
       return (
         <CustomBreadcrumbs
-          heading="Create Adjustment"
           description="Fill in the adjustment details against the student's paid fee records."
+          heading="Create Adjustment"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
@@ -147,8 +148,9 @@ const Adjustments = () => {
     if (applyScreen.value && selectedAdjustment) {
       return (
         <CustomBreadcrumbs
-          heading="Apply Adjustment"
           description="Distribute approved adjustment amount across the student's pending fees."
+          heading="Apply Adjustment"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
@@ -178,8 +180,9 @@ const Adjustments = () => {
     if (viewDialog.value) {
       return (
         <CustomBreadcrumbs
-          heading="View Adjustment"
           description="Review the adjustment request details and take an approval action."
+          heading="View Adjustment"
+
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
@@ -203,8 +206,9 @@ const Adjustments = () => {
 
     return (
       <CustomBreadcrumbs
-        heading="Adjustments"
         description="Manage fee adjustment requests — create, review, and approve or reject adjustments against paid student fees."
+        heading="Adjustments"
+
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Adjustments' }]}
         action={
           <Button
@@ -226,6 +230,7 @@ const Adjustments = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {discardConfirmation}
       {renderBreadcrumbs()}
 
       {!addDialog.value && !viewDialog.value && !applyScreen.value && (
@@ -233,7 +238,9 @@ const Adjustments = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabCounts={tabCounts}
-          onCreateAdjustment={() => { if (access.canAdd) addDialog.onTrue(); }}
+          onCreateAdjustment={() => {
+            if (access.canAdd) addDialog.onTrue();
+          }}
           onView={handleView}
           onApprove={(row) => {
             if (!access.canAdd) return;

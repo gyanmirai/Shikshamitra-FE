@@ -3,6 +3,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { arrayBufferToBase64 } from './pdf-export';
 import {
   exportTable,
+  formatExportTimestamp,
   formatCellValue,
   getCellValueForExport,
   getTypedCellValueForExport,
@@ -11,6 +12,14 @@ import {
 import type { IData, IColumn } from './types';
 
 describe('table export', () => {
+  it('labels generated timestamps in IST with a consistent date and minute precision', () => {
+    expect(formatExportTimestamp(new Date('2026-10-21T09:16:37Z'))).toBe(
+      '21 Oct 2026, 2:46 PM IST'
+    );
+    expect(formatExportTimestamp(new Date('2026-10-21T20:45:00Z'))).toBe(
+      '22 Oct 2026, 2:15 AM IST'
+    );
+  });
   it('writes complete typed Excel rows with frozen identifiers and filters, excluding hidden controls', async () => {
     const XLSX = await import('xlsx');
     let output: Blob | undefined;

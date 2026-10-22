@@ -2,6 +2,10 @@ import type { FinanceAuditLog } from 'src/screens/finance/AuditTrail/types/finan
 
 import type { PolicyVersion } from '../hooks/useFinancePolicyVersion';
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
+import {
+  formatFinancePolicyVersionValue,
+  policyVersionValuesEqual,
+} from '../components/version/finance-policy-version-formatters';
 
 const ACTION_MAP: Record<string, string> = {
   created: 'CREATE',
@@ -41,6 +45,20 @@ export const mapPolicyVersionsToAuditLogs = (
     const afterData: Record<string, unknown> = {};
 
     version.changedFields.forEach((change) => {
+      if (change.field.replace(/[\s_-]/g, '').toLowerCase() === 'applyon') {
+        if (policyVersionValuesEqual(change.field, change.oldValue, change.newValue)) return;
+        if (action !== 'CREATE' && change.oldValue !== undefined)
+          beforeData[change.field] = formatFinancePolicyVersionValue(
+            change.field,
+            change.oldValue
+          ).text;
+        if (change.newValue !== undefined)
+          afterData[change.field] = formatFinancePolicyVersionValue(
+            change.field,
+            change.newValue
+          ).text;
+        return;
+      }
       if (action !== 'CREATE' && change.oldValue !== undefined) {
         beforeData[change.field] = change.oldValue;
       }

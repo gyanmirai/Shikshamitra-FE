@@ -1,7 +1,7 @@
 'use client';
 
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Chip, Alert, Stack, Divider, Typography } from '@mui/material';
+import { Box, Chip, Stack, Divider, Typography } from '@mui/material';
 
 import { SummaryRow } from '../ui/SummaryRow';
 import { TimelineItem } from '../ui/TimelineItem';
@@ -233,7 +233,10 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
             <ValidationCheck label="All due dates configured" valid={checks.allDueDates} />
             <ValidationCheck label="Unique installment names" valid={checks.uniqueNames} />
             <ValidationCheck label="Allocation totals 100%" valid={checks.allocationValid} />
-            <ValidationCheck label="Due dates are on or after installment starts" valid={checks.periodsValid} />
+            <ValidationCheck
+              label="Due dates are on or after installment starts"
+              valid={checks.periodsValid}
+            />
             <ValidationCheck
               label="Installment periods do not overlap"
               valid={checks.periodsNonOverlapping}
@@ -250,35 +253,14 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 valid={checks.demandOffsetValid}
               />
             )}
-            <ValidationCheck label="Invoice dates within start and due dates" valid={checks.specificDatesValid} />
+            <ValidationCheck
+              label="Invoice dates within start and due dates"
+              valid={checks.specificDatesValid}
+            />
             <ValidationCheck label="All required fields valid" valid={!checks.validationMessage} />
           </Stack>
 
-          {checks.isReadyToPublish ? (
-            <Alert
-              severity="success"
-              sx={{
-                mt: 1.5,
-                py: 0.5,
-                borderRadius: 1,
-                '& .MuiAlert-message': { fontSize: '0.7rem' },
-              }}
-            >
-              Ready to save as {values.status === 'Active' ? 'an active version' : 'a draft'}.
-            </Alert>
-          ) : (
-            <Alert
-              severity="info"
-              sx={{
-                mt: 1.5,
-                py: 0.5,
-                borderRadius: 1,
-                '& .MuiAlert-message': { fontSize: '0.7rem' },
-              }}
-            >
-              {checks.validationMessage || 'Complete the required fields before saving.'}
-            </Alert>
-          )}
+          {checks.isReadyToPublish ? null : null}
         </Box>
       </Scrollbar>
     </Box>

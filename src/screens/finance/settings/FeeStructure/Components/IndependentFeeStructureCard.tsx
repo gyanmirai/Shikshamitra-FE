@@ -15,7 +15,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -61,6 +61,7 @@ import type {
   IClassWiseFeeStructureCard,
   IFeeHeadPaymentTermOverride,
 } from '../type';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 // ---------------------------------------------------------------------------
 // Validation schema
@@ -575,7 +576,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   onKeyDown={(e) => e.stopPropagation()}
                   label="Fee Structure Name *"
                   error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
+                  helperText={(formik.touched.name && formik.errors.name) || undefined}
                   sx={{
                     width: '100%',
                     '& .MuiFormHelperText-root': { mr: 0, ml: 0 },
@@ -961,6 +962,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         Optional
                       </Typography>
                     </Box>
+
                     <Box sx={{ width: COL_WIDTHS.actions, flexShrink: 0 }} />
                   </Box>
 

@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
 import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
@@ -16,6 +17,12 @@ import {
   useCreateCollectionPolicyMutation,
   useUpdateCollectionPolicyMutation,
 } from 'src/redux/finance/collectionPolicy';
+
+import {
+  normalizePolicyName,
+  isDuplicatePolicyNameError,
+  DUPLICATE_POLICY_NAME_MESSAGE,
+} from '../utils/policy-name';
 
 import { computeSlabIssues } from '../components/collection/CollectionCommon';
 import { acceptsNumericDraft, validCollectionNumber } from '../collectionNumericLimits';
@@ -47,6 +54,8 @@ const getInitialValues = (
     isDefault: data?.isDefault || false,
     policyType: 'collection',
     changeReason: '',
+
+    allocationBasis: data?.allocationBasis ?? (data?.id ? 'Legacy' : 'Installment'),
 
     enableLateFee: data?.enableLateFee ?? false,
     gracePeriodDays: data?.gracePeriodDays ?? 0,
@@ -101,6 +110,9 @@ const boundedNumber = (kind: 'days' | 'amount' | 'percentage', minimum: number) 
 
 // Validation schema
 const validationSchema = Yup.object().shape({
+  allocationBasis: Yup.string()
+    .oneOf(['Legacy', 'Installment', 'FeeHead'])
+    .required('Choose an allocation basis'),
   policyName: Yup.string()
     .trim()
     .required('Collection Policy Name is required')
@@ -399,6 +411,7 @@ export function useCollectionPolicyForm({
     try {
       const payload = {
         ...formik.values,
+        policyName: normalizePolicyName(formik.values.policyName),
         status: overrideStatus,
         isDefault: overrideStatus === 'Active' ? formik.values.isDefault : false,
         policyCode: formik.values.policyCode || `CP-${Date.now()}`,
@@ -417,8 +430,14 @@ export function useCollectionPolicyForm({
       }
       formik.resetForm();
       onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to save collection policy.' });
+    } catch (error) {
+      const parsed = parseApiProblemDetail(error);
+      if (isDuplicatePolicyNameError(parsed.errorCode)) {
+        await formik.setFieldTouched('policyName', true, false);
+        formik.setFieldError('policyName', DUPLICATE_POLICY_NAME_MESSAGE);
+        return;
+      }
+      shikshaMitraToast.error({ message: parsed.detail });
     }
   };
 

@@ -1,9 +1,8 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from 'src/redux/store';
 import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
@@ -17,6 +16,7 @@ import { useCollectionPolicyForm } from '../hooks/useCollectionPolicyForm';
 import CollectionFooterActions from './collection/CollectionFooterActions';
 import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
+import CollectionAllocationSection from './collection/CollectionAllocationSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -40,6 +40,8 @@ function CollectionPolicyDrawerSession({
   editData,
   academicYearId = '',
 }: CollectionPolicyDrawerProps) {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const {
     formik,
     checks,
@@ -57,7 +59,7 @@ function CollectionPolicyDrawerSession({
     editData,
     academicYearId,
   });
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const busy = isSaving || formik.isSubmitting;
   const close = () => {
     if (!busy) handleCloseAttempt();
@@ -117,9 +119,10 @@ function CollectionPolicyDrawerSession({
         }}
       >
         <FinancePolicyDrawerHeader
+          description={`Configure grace periods and late fees · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
           title={editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
           titleId="collection-policy-title"
-          description={`Configure grace periods and late fees · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
+
           descriptionDisplay="tooltip"
           onClose={close}
           disabled={busy}
@@ -156,6 +159,7 @@ function CollectionPolicyDrawerSession({
                   otherDefaultPolicyName={otherDefaultPolicyName}
                   activeEdit={isAlreadyActive}
                 />
+                <CollectionAllocationSection formik={formik} />
                 <CollectionLateFeeSection
                   formik={formik}
                   feeHeads={feeHeads}

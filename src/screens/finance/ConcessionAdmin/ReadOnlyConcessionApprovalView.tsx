@@ -35,8 +35,8 @@ export default function ReadOnlyConcessionApprovalView({
   const [previewApproval, { isLoading: isPreviewing }] = usePreviewConcessionApprovalMutation();
   const [approve, { isLoading: isApproving }] = useApproveConcessionRequestMutation();
   const [previewTotal, setPreviewTotal] = useState<number | null>(null);
-  const [previewRefund, setPreviewRefund] = useState(0);
-  const [autoCreateRefund, setAutoCreateRefund] = useState(true);
+  const [, setPreviewRefund] = useState(0);
+  const [, setAutoCreateRefund] = useState(true);
   const [message, setMessage] = useState('');
   const commandKey = useRef('');
   const changed = (context?.feeHeadGroups ?? []).some((group) => group.hasChangedSinceSubmission);
@@ -151,7 +151,7 @@ export default function ReadOnlyConcessionApprovalView({
               </Stack>
             </FormSectionCard>
             {changed && (
-              <Alert severity="warning">
+              <Alert severity="error">
                 The live fee balance or policy calculation has changed since submission. Refresh or
                 create a new request; approval cannot reduce the submitted amount.
               </Alert>
@@ -217,15 +217,7 @@ export default function ReadOnlyConcessionApprovalView({
                   ))}
               </FormSectionCard>
             ))}
-            {previewTotal !== null && (
-              <Alert severity="info">
-                Approval will apply {money(previewTotal)}.
-                {previewRefund > 0 &&
-                  (autoCreateRefund
-                    ? ` The paid concession of ${money(previewRefund)} will create linked refund requests for separate review and payout.`
-                    : ` The paid concession of ${money(previewRefund)} is refundable. Create its linked refund requests manually after approval.`)}
-              </Alert>
-            )}
+
             <TextField
               size="small"
               fullWidth

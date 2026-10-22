@@ -27,7 +27,6 @@ export function SummaryRow({ label, value }: { label: string; value: React.React
 export function ValidationCheckItem({
   label,
   valid,
-  description,
 }: {
   label: string;
   valid: boolean;
@@ -45,11 +44,6 @@ export function ValidationCheckItem({
           {valid ? 'Complete: ' : 'Pending: '}
           {label}
         </Typography>
-        {description && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {description}
-          </Typography>
-        )}
       </Box>
     </Stack>
   );

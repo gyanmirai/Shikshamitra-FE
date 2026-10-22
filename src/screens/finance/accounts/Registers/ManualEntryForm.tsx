@@ -48,7 +48,9 @@ export default function ManualEntryForm({
   onClose: () => void;
 }) {
   const income = direction === 'income';
-  const access = useFinancePermissions(income ? financePermissions.accounts.income : financePermissions.accounts.expense);
+  const access = useFinancePermissions(
+    income ? financePermissions.accounts.income : financePermissions.accounts.expense
+  );
   const [create, { isLoading }] = useCreateAccountsManualEntryMutation();
   const [failure, setFailure] = useState('');
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -174,8 +176,9 @@ export default function ManualEntryForm({
     <>
       <Box inert={blocking} sx={{ flexShrink: 0 }}>
         <CustomBreadcrumbs
-          heading={income ? 'Add income' : 'Add expense'}
           description="Record a school transaction with its category and payment details."
+          heading={income ? 'Add income' : 'Add expense'}
+
           isBack
           onBack={requestClose}
           links={[
@@ -234,9 +237,9 @@ export default function ManualEntryForm({
             >
               <Stack spacing={1.5}>
                 <FormSectionCard
+                  descriptionTooltip="Enter the transaction name, category and payer or payee for this school entry."
                   icon="mdi:receipt-text-outline"
                   title={income ? 'Income details' : 'Expense details'}
-                  descriptionTooltip="Enter the transaction name, category and payer or payee for this school entry."
                 >
                   <Grid container spacing={1.5}>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -265,9 +268,9 @@ export default function ManualEntryForm({
                   </Grid>
                 </FormSectionCard>
                 <FormSectionCard
+                  descriptionTooltip="Cash entries do not require a bank account. For other payment methods, select an eligible school bank account."
                   icon="mdi:bank-transfer"
                   title="Payment details"
-                  descriptionTooltip="Cash entries do not require a bank account. For other payment methods, select an eligible school bank account."
                 >
                   <Grid container spacing={1.5}>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -365,9 +368,9 @@ export default function ManualEntryForm({
                   </Grid>
                 </FormSectionCard>
                 <FormSectionCard
+                  descriptionTooltip="Add any supporting context for this transaction. Notes are optional."
                   icon="mdi:text-box-outline"
                   title="Additional notes"
-                  descriptionTooltip="Add any supporting context for this transaction. Notes are optional."
                 >
                   <Grid container spacing={1.5}>
                     <Grid size={12}>{text('notes', 'Notes (optional)')}</Grid>
@@ -410,9 +413,6 @@ export default function ManualEntryForm({
             flexShrink: 0,
           }}
         >
-          <Typography variant="caption" color="text.secondary" sx={{ mr: 'auto' }}>
-            Required fields are marked with *
-          </Typography>
           <Button
             size="small"
             variant="outlined"

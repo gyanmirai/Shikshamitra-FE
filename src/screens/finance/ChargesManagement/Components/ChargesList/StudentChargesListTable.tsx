@@ -89,6 +89,7 @@ const ViewStudentAllCharges = ({ data }: { data: IStudentChargeData }) => {
         noDataText="No charges found"
         columns={[
           {
+            stickyPosition: 'left',
             id: 'categoryName',
             label: 'Category',
             align: 'left',
@@ -143,6 +144,7 @@ const ViewStudentAllCharges = ({ data }: { data: IStudentChargeData }) => {
             ),
           },
           {
+            stickyPosition: 'right',
             id: 'status',
             label: 'Status',
             align: 'left',

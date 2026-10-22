@@ -49,6 +49,14 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 }));
 
 describe('useCollectionPolicyForm submission validation', () => {
+  it('defaults new policies to installments and retains historical selection order on edit', () => {
+    const created = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), academicYearId: 'year' }));
+    expect(created.result.current.formik.values.allocationBasis).toBe('Installment');
+    const legacy = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), editData: { id: 'old-policy' } as never }));
+    expect(legacy.result.current.formik.values.allocationBasis).toBe('Legacy');
+    const configured = renderHook(() => useCollectionPolicyForm({ open: true, onClose: vi.fn(), editData: { id: 'saved-policy', allocationBasis: 'FeeHead' } as never }));
+    expect(configured.result.current.formik.values.allocationBasis).toBe('FeeHead');
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.createPolicy.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });

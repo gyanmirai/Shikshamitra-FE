@@ -111,14 +111,15 @@ const allocateFeeItem = (
   feeHeadMap: Record<string, string>
 ): AllocationWallet => {
   const lateFeeAmount = item.lateFeeAmount ?? 0;
-  const roundedPrincipal = item.dueAmount ? roundUpToRupee(item.dueAmount) : roundUpToRupee(item.originalDueAmount ?? 0);
+  const roundedPrincipal = roundUpToRupee(item.dueAmount ?? item.originalDueAmount ?? 0);
   const originalAmount = roundedPrincipal + lateFeeAmount;
-  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, originalAmount) : 0;
+  const paidAmount =
+    Math.min(toPaise(Math.max(0, wallet.remaining)), toPaise(originalAmount)) / 100;
   const principalPaidAmount = Math.min(paidAmount, roundedPrincipal);
-  const lateFeePaidAmount = Math.max(0, paidAmount - principalPaidAmount);
+  const lateFeePaidAmount = Math.max(0, toPaise(paidAmount) - toPaise(principalPaidAmount)) / 100;
 
   return {
-    remaining: wallet.remaining - paidAmount,
+    remaining: (toPaise(wallet.remaining) - toPaise(paidAmount)) / 100,
     rows: [
       ...wallet.rows,
       {
@@ -133,7 +134,7 @@ const allocateFeeItem = (
         paidAmount,
         principalPaidAmount,
         lateFeePaidAmount,
-        remainingAmount: originalAmount - paidAmount,
+        remainingAmount: (toPaise(originalAmount) - toPaise(paidAmount)) / 100,
         status: resolveAllocationStatus(paidAmount, originalAmount),
       } satisfies AllocatedFeeRow,
     ],
@@ -145,10 +146,10 @@ const allocateFeeItem = (
  * Returns the updated wallet. All charges are included (even with ₹0 allocation).
  */
 const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): AllocationWallet => {
-  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, charge.amount) : 0;
+  const paidAmount = Math.min(toPaise(Math.max(0, wallet.remaining)), toPaise(charge.amount)) / 100;
 
   return {
-    remaining: wallet.remaining - paidAmount,
+    remaining: (toPaise(wallet.remaining) - toPaise(paidAmount)) / 100,
     rows: [
       ...wallet.rows,
       {
@@ -159,7 +160,7 @@ const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): Allocatio
         chargeName: charge.chargeName,
         originalAmount: charge.amount,
         paidAmount,
-        remainingAmount: charge.amount - paidAmount,
+        remainingAmount: (toPaise(charge.amount) - toPaise(paidAmount)) / 100,
         status: resolveAllocationStatus(paidAmount, charge.amount),
       } satisfies AllocatedChargeRow,
     ],
@@ -169,7 +170,10 @@ const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): Allocatio
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 /** Keep the cashier's charge order consistent in the summary, review and request. */
-export const selectedChargesInOrder = (charges: IFeeCharge[], selectedIds: string[]): IFeeCharge[] => {
+export const selectedChargesInOrder = (
+  charges: IFeeCharge[],
+  selectedIds: string[]
+): IFeeCharge[] => {
   const byId = new Map(charges.map((charge) => [charge.chargeId, charge]));
   return selectedIds.flatMap((id) => {
     const charge = byId.get(id);
@@ -200,7 +204,8 @@ export const allocatePayment = (
   feeHeadMap: Record<string, string>,
   paymentAmount: number
 ): PaymentAllocationResult => {
-  const initialWallet: AllocationWallet = { remaining: paymentAmount, rows: [] };
+  const safeAmount = Number.isFinite(paymentAmount) ? Math.max(0, paymentAmount) : 0;
+  const initialWallet: AllocationWallet = { remaining: safeAmount, rows: [] };
 
   // Phase 1: distribute across fee items
   const afterItems = selectedItems.reduce(
@@ -214,12 +219,13 @@ export const allocatePayment = (
     afterItems
   );
 
-  const allocatedAmount = afterCharges.rows.reduce((sum, r) => sum + r.paidAmount, 0);
+  const allocatedAmount =
+    afterCharges.rows.reduce((sum, r) => sum + toPaise(r.paidAmount), 0) / 100;
 
   return {
     allocatedRows: afterCharges.rows,
     allocatedAmount,
-    unallocatedAmount: Math.max(0, paymentAmount - allocatedAmount),
+    unallocatedAmount: Math.max(0, toPaise(safeAmount) - toPaise(allocatedAmount)) / 100,
   };
 };
 

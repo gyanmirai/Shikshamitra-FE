@@ -104,7 +104,8 @@ describe('Fee assignment student table', () => {
     });
     expect(state.table.columns.find((column: any) => column.id === 'rollNumber')).toMatchObject({
       filterType: 'number',
-      align: 'right',
+      align: 'left',
+      cellSx: { textAlign: 'right', verticalAlign: 'middle' },
     });
     ['isActive', 'isFeeStructureAssigned'].forEach((id) => {
       expect(state.table.columns.find((column: any) => column.id === id)).toMatchObject({
@@ -125,5 +126,16 @@ describe('Fee assignment student table', () => {
       serverSideSort: true,
       serverSideSortMode: 'single',
     });
+  });
+
+  it('scopes dependency-review links to the requested fee head and exposes a clear action', () => {
+    const view = render(
+      <FeeStructureAssignTable onAssignStructure={vi.fn()} feeHeadId="tuition" />
+    );
+    expect(state.query.feeHeadId).toBe('tuition');
+    expect(view.getByRole('link', { name: 'Clear fee head filter' })).toHaveAttribute(
+      'href',
+      '/finance/fee-structure-assign'
+    );
   });
 });

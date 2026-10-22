@@ -101,8 +101,9 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
 
   return (
     <SectionCard
-      title="Calculation Simulator"
       subtitle="Preview the calculation using the last saved policy version. Unsaved changes are not included."
+      title="Calculation Simulator"
+
       icon="solar:calculator-bold-duotone"
       action={
         <Label color="info" sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}>
@@ -148,7 +149,6 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
             label="Target Fee Head"
             value={input.feeHeadId}
             onChange={(event) => setInput((value) => ({ ...value, feeHeadId: event.target.value }))}
-            helperText="Choose an active fee head configured with proration"
           >
             {enabledRules.map((rule) => (
               <MenuItem key={rule.feeHeadId} value={rule.feeHeadId} sx={{ fontSize: '0.8rem' }}>
@@ -173,7 +173,6 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
               startAdornment: <InputAdornment position="start">₹</InputAdornment>,
             }}
             inputProps={{ min: 0, step: 100 }}
-            helperText="Full installment base price before proration"
           />
         </Grid>
 

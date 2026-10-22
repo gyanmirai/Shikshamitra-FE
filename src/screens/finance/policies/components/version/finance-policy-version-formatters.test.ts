@@ -2,6 +2,7 @@ import { it, expect, describe } from 'vitest';
 
 import {
   deserializeVersionValue,
+  policyVersionValuesEqual,
   contextFromRefundSnapshot,
   formatFinancePolicyVersionField,
   formatVersionTimestamp,
@@ -9,6 +10,25 @@ import {
 } from './finance-policy-version-formatters';
 
 describe('finance policy version formatters', () => {
+  it.each([
+    [0, 'AllOutstanding', 'All outstanding installments'],
+    [1, 'CurrentInstallment', 'Current unpaid installment'],
+    [2, 'FutureInstallments', 'Future installments'],
+    [3, 'AllFees', 'All installments, including paid'],
+  ])('uses the form label for every Apply On representation: %s', (number, name, label) => {
+    for (const value of [number, String(number), name, JSON.stringify(name)]) {
+      expect(formatFinancePolicyVersionValue('ApplyOn', value).text).toBe(label);
+    }
+    expect(policyVersionValuesEqual('ApplyOn', number, name)).toBe(true);
+    expect(policyVersionValuesEqual('applyOn', JSON.stringify(name), String(number))).toBe(true);
+  });
+
+  it('retains real Apply On changes and ordinary field changes', () => {
+    expect(policyVersionValuesEqual('ApplyOn', 1, 'AllFees')).toBe(false);
+    expect(policyVersionValuesEqual('PolicyName', 'One', 'Two')).toBe(false);
+    expect(policyVersionValuesEqual('ApplyOn', null, 0)).toBe(false);
+  });
+
   it('deserializes snapshot strings without leaving JSON quotes in the UI', () => {
     expect(deserializeVersionValue('"concession policy 1"')).toBe('concession policy 1');
     expect(formatFinancePolicyVersionValue('PolicyName', '"concession policy 1"')).toEqual({
@@ -22,7 +42,7 @@ describe('finance policy version formatters', () => {
     ['ValueSource', 1, 'Request Entered Within Limits', 'text'],
     ['CalculationMethod', 0, 'Percentage', 'text'],
     ['FeeHeadScope', 0, 'Entire Fee Structure', 'text'],
-    ['ApplyOn', 0, 'All Outstanding Fees', 'text'],
+    ['ApplyOn', 0, 'All outstanding installments', 'text'],
     ['RoundingMethod', 0, 'None', 'text'],
   ])('formats the numeric %s enum', (field, value, text, kind) => {
     expect(formatFinancePolicyVersionValue(field, value)).toEqual({ kind, text });
@@ -117,15 +137,29 @@ describe('finance policy version formatters', () => {
     });
 
     expect(formatFinancePolicyVersionField('ExpenseCategoryId')).toBe('Expense Category');
-    expect(formatFinancePolicyVersionField('DefaultPayingBankAccountId')).toBe('Default Paying Bank Account');
-    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId], context).text).toBe('Transport Fee at the time');
-    expect(formatFinancePolicyVersionValue('ExpenseCategoryId', categoryId, context).text).toBe('Refund expense at the time');
-    expect(formatFinancePolicyVersionValue('DefaultPayingBankAccountId', accountId, context).text).toBe('Main bank at the time');
-    expect(formatFinancePolicyVersionValue('AllowedPayoutMethods', '[0,1,2,3,4]').text).toBe('Cash, Cheque, Demand draft, Bank transfer, UPI');
+    expect(formatFinancePolicyVersionField('DefaultPayingBankAccountId')).toBe(
+      'Default Paying Bank Account'
+    );
+    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId], context).text).toBe(
+      'Transport Fee at the time'
+    );
+    expect(formatFinancePolicyVersionValue('ExpenseCategoryId', categoryId, context).text).toBe(
+      'Refund expense at the time'
+    );
+    expect(
+      formatFinancePolicyVersionValue('DefaultPayingBankAccountId', accountId, context).text
+    ).toBe('Main bank at the time');
+    expect(formatFinancePolicyVersionValue('AllowedPayoutMethods', '[0,1,2,3,4]').text).toBe(
+      'Cash, Cheque, Demand draft, Bank transfer, UPI'
+    );
     expect(formatFinancePolicyVersionValue('DeductionType', 0).text).toBe('No deduction');
     expect(formatFinancePolicyVersionValue('AmountMode', 1).text).toBe('Up to eligible amount');
     expect(formatFinancePolicyVersionValue('AmountMode', 1).text).not.toContain('₹');
-    expect(formatFinancePolicyVersionValue('FeeHeadScope', 0, { policyType: 'refund' }).text).toBe('All fee heads');
-    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId]).text).toBe('Fee head name not recorded');
+    expect(formatFinancePolicyVersionValue('FeeHeadScope', 0, { policyType: 'refund' }).text).toBe(
+      'All fee heads'
+    );
+    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId]).text).toBe(
+      'Fee head name not recorded'
+    );
   });
 });

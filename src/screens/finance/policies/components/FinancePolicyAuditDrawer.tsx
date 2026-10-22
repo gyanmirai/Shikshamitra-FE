@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -79,9 +79,9 @@ export default function FinancePolicyAuditDrawer({
         }}
       >
         <FinancePolicyDrawerHeader
+          description="This read-only history shows who changed the policy and when. Expand an event to compare its recorded values."
           title="Policy Audit Trail"
           titleId="policy-audit-title"
-          description="This read-only history shows who changed the policy and when. Expand an event to compare its recorded values."
           descriptionDisplay="tooltip"
           badges={<Label color="default">Read Only</Label>}
           onClose={onClose}
@@ -89,17 +89,14 @@ export default function FinancePolicyAuditDrawer({
 
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
+            px: 1,
+            py: 1,
             bgcolor: 'background.paper',
             borderBottom: 1,
             borderColor: 'divider',
             flexShrink: 0,
           }}
         >
-          <Typography variant="caption" color="text.secondary" display="block">
-            Policy
-          </Typography>
           <Typography variant="subtitle1" sx={{ mt: 0.25, overflowWrap: 'anywhere' }}>
             {policy.policyName}
           </Typography>
@@ -110,7 +107,7 @@ export default function FinancePolicyAuditDrawer({
 
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
+            px: 2,
             py: 1.5,
             borderBottom: '1px solid',
             borderColor: 'divider',
@@ -135,12 +132,12 @@ export default function FinancePolicyAuditDrawer({
 
         {/* Scrollable Timeline */}
         <Scrollbar sx={{ flex: 1, minHeight: 0 }} aria-busy={isLoading}>
-          <Box sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ p: 2 }}>
             {isLoading ? (
               <FinancePolicySkeleton label="Loading policy activity" />
             ) : isError ? (
               <Alert
-                severity="warning"
+                severity="error"
                 sx={{ borderRadius: 1.5 }}
                 action={
                   <Button size="small" onClick={() => refetch()}>
@@ -192,7 +189,7 @@ export default function FinancePolicyAuditDrawer({
         {/* Footer */}
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
+            px: 2,
             py: 1.5,
             bgcolor: 'background.paper',
             borderTop: '1px solid',

@@ -48,6 +48,7 @@ function ProrationPolicyDrawerSession({
   academicYearId = '',
 }: ProrationPolicyDrawerProps) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canActivate = hasGrantedPermission(
     permissions,
@@ -126,9 +127,10 @@ function ProrationPolicyDrawerSession({
         }}
       >
         <FinancePolicyDrawerHeader
+          description={`Configure admission and early withdrawal rules per fee head · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}. Existing recorded dues and receipts keep their amounts.`}
           title={editData ? 'Edit Proration Policy' : 'Create Proration Policy'}
           titleId="proration-policy-title"
-          description={`Configure admission and early withdrawal rules per fee head · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}. Existing recorded dues and receipts keep their amounts.`}
+
           descriptionDisplay="tooltip"
           onClose={close}
           disabled={busy}

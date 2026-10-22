@@ -10,6 +10,13 @@ audience: humans-and-agents
 
 # Find Finance frontend clients
 
+Collection Policy create/update/clone/read/version responses carry `allocationBasis`; no priority
+list is sent. `src/redux/feeCollection/feeCollection.ts` types the collect form's resolved basis,
+policy identity/version, ordered due IDs and opaque revision. Student and Admission collection
+share `automaticAllocation: { revision, dueFeeIds, chargeIds }`, including unfunded selected dues.
+The server recalculates money and rejects stale or altered allocations. See the
+[backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#automatic-collection-allocation).
+
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.
 

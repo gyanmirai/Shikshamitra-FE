@@ -148,9 +148,9 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           </Alert>
         )}
         <FormSectionCard
+          descriptionTooltip="Name this category and add tags to organize your income records."
           icon="solar:wallet-money-bold-duotone"
           title="Income category details"
-          descriptionTooltip="Name this category and add tags to organize your income records."
         >
           <Grid container spacing={1.5}>
             {/* Income Category Name */}
@@ -166,9 +166,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={
-                    formik.touched.name && formik.errors.name
-                      ? formik.errors.name
-                      : `${formik.values.name.length}/40 characters`
+                    (formik.touched.name && formik.errors.name ? formik.errors.name : undefined) ||
+                    undefined
                   }
                   inputProps={{ maxLength: 40 }}
                 />
@@ -227,7 +226,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                     tagError ||
                     (formik.touched.tags && typeof formik.errors.tags === 'string'
                       ? formik.errors.tags
-                      : `Press Enter to add a tag. Remaining text is included on submit.`)
+                      : `Press Enter to add a tag. Remaining text is included on submit.`) ||
+                    undefined
                   }
                 />
               </ShakingTextField>

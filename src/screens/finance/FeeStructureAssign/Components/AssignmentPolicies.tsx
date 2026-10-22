@@ -7,6 +7,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DetailField, DetailSection } from 'src/components/detail-view';
 import {
@@ -51,6 +52,7 @@ export default function AssignmentPolicies({
   flat?: boolean;
 }) {
   const editMode = useBoolean();
+  const restoreConfirmation = useBoolean();
   const options = useAssignmentPolicyOptionsQuery(
     { studentId, academicYearId },
     { skip: !canOverride }
@@ -106,11 +108,7 @@ export default function AssignmentPolicies({
                     label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? ' · default' : ''}`,
                   })),
                 ]}
-                helperText={
-                  overridden
-                    ? `Override for this student · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
-                    : undefined
-                }
+
                 onChange={(next) => {
                   const nextVersionId = String(next) || null;
                   const nextSelections = [
@@ -145,8 +143,15 @@ export default function AssignmentPolicies({
         })}
       </Box>
       {!editing && selections.length > 0 && (
-        <Button size="small" disabled={disabled} onClick={() => onChange([], '')}>
-          Restore defaults
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          sx={{ alignSelf: 'flex-start' }}
+          disabled={disabled}
+          onClick={restoreConfirmation.onTrue}
+        >
+          Restore Defaults
         </Button>
       )}
       {changed && (
@@ -169,6 +174,25 @@ export default function AssignmentPolicies({
   );
   const policyContent = (
     <Stack spacing={2}>
+      <ConfirmDialog
+        open={restoreConfirmation.value}
+        onClose={restoreConfirmation.onFalse}
+        title="Restore Default Policies?"
+        icon="warning"
+        content="This will replace this student's policy selections with the fee structure defaults and clear the policy override reason. Fee amounts and service dates will stay as entered."
+        action={
+          <Button
+            variant="contained"
+            disabled={disabled}
+            onClick={() => {
+              onChange([], '');
+              restoreConfirmation.onFalse();
+            }}
+          >
+            Restore Defaults
+          </Button>
+        }
+      />
       {!editing && (!canOverride || !flat || !editMode.value) && (
         <Box
           sx={{

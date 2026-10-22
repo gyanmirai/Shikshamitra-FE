@@ -2,7 +2,6 @@
 
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React from 'react';
 import { Box } from '@mui/material';
 import CommonReport from 'src/components/common-report';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -287,8 +286,9 @@ const FinanceReports = ({ addReportDialog }: { addReportDialog: UseBooleanReturn
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Generate Reports"
         description="Generate and export various finance reports."
+        heading="Generate Reports"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Reports' },

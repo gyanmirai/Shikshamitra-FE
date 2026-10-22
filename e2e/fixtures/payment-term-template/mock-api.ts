@@ -1,6 +1,18 @@
 import { useCallback } from 'react';
 import dayjs from 'dayjs';
 
+export const useGetYearQuery = () => ({
+  data: { items: [
+    { id: 'year', name: '2026-2027' },
+    { id: 'previous-year', name: '2025-2026' },
+    { id: 'older-year', name: '2024-2025' },
+    { id: 'future-year', name: '2027-2028' },
+  ] },
+  isLoading: false,
+  isFetching: false,
+  isError: false,
+});
+
 export const usage = {
   paymentTermId: 'monthly',
   feeHeadCount: 2,
@@ -41,14 +53,20 @@ export const impact = {
 export const detail = {
   id: 'monthly',
   academicYearId: 'year',
+  academicYearName: '2026-2027',
   boardId: 'board',
+  boardName: 'CBSE',
   name: 'monthly',
-  code: 'PT-MONTHLY',
+  code: 'PT-MONTHLY-PAYMENT-2026',
+  description:
+    'A reusable annual schedule for monthly payment collections, with immutable revision history.',
+  versionCount: 2,
+  totalInstallments: 1,
   status: 'Active',
   isDefault: false,
   isUsedInFeeStructures: true,
   canDirectEdit: false,
-  currentVersionId: 'v1',
+  currentVersionId: 'v2',
   holidayShiftingMethod: 'None',
   demandGenerationRule: 'OnDueDate',
   initialDemandStatus: 'Published',
@@ -56,7 +74,11 @@ export const detail = {
     {
       id: 'v1',
       versionNumber: 1,
-      status: 'Published',
+      status: 'Superseded',
+      effectiveFrom: '2026-06-01',
+      effectiveTo: '2026-08-31',
+      publishedAt: '2026-05-20T10:30:00Z',
+      changeReason: 'Initial annual schedule',
       holidayShiftingMethod: 'None',
       demandGenerationRule: 'OnDueDate',
       installments: [
@@ -75,6 +97,70 @@ export const detail = {
     },
   ],
 };
+detail.versions.push({
+  ...detail.versions[0],
+  id: 'v2',
+  versionNumber: 2,
+  status: 'Published',
+  effectiveFrom: '2026-09-01',
+  effectiveTo: '',
+  publishedAt: '2026-08-25T10:30:00Z',
+  changeReason: 'Reviewed installment schedule for the academic year',
+});
+
+const list = {
+  items: [
+    {
+      id: detail.id,
+      name: detail.name,
+      code: detail.code,
+      academicYearId: detail.academicYearId,
+      boardId: detail.boardId,
+      status: detail.status,
+      isDefault: detail.isDefault,
+      currentVersionNumber: 2,
+      hasDraft: false,
+      hasPublishedVersion: true,
+      installmentCount: 1,
+      referencedStructureCount: 2,
+      canDirectEdit: false,
+      usage,
+    },
+  ],
+  totalCount: 1,
+};
+export const useGetPaymentTermByIdQuery = () => ({
+  data: detail,
+  currentData: detail,
+  isFetching: false,
+  isError: false,
+  refetch: () => undefined,
+});
+export const useGetPaymentTermVersionHistoryQuery = () => ({
+  data: {
+    items: detail.versions.map((version) => ({
+      id: version.id,
+      versionNumber: version.versionNumber,
+      changeAction: version.versionNumber === 1 ? 'Created' : 'RevisionPublished',
+      creationTime: version.publishedAt,
+      createdByName: 'Finance Administrator',
+    })),
+    totalCount: detail.versions.length,
+  },
+  isFetching: false,
+  isError: false,
+  refetch: () => undefined,
+});
+export const useGetPaymentTermsQuery = (params: any) => ({
+  data: params?.status === 'Archived' ? { items: list.items.map((item) => ({ ...item, id: 'archived-monthly', status: 'Archived' })), totalCount: list.items.length } : list,
+  isLoading: false,
+  isFetching: false,
+  isError: false,
+  refetch: () => undefined,
+});
+export const useLazyGetPaymentTermsQuery = () => [
+  useCallback(() => ({ unwrap: async () => list }), []),
+];
 const boardsResult = {
   data: {
     items: [
@@ -117,6 +203,11 @@ const mutation = () => [
 export const useCreateRevisionMutation = mutation;
 export const useCreatePaymentTermMutation = mutation;
 export const useUpdatePaymentTermDraftMutation = mutation;
+export const usePublishVersionMutation = mutation;
+export const useDeletePaymentTermMutation = mutation;
+export const useClonePaymentTermsMutation = mutation;
+export const useArchivePaymentTermMutation = mutation;
+export const useRestorePaymentTermMutation = mutation;
 export const usePreviewPaymentTermTemplateMutation = () => [
   useCallback(
     (input: any) => ({

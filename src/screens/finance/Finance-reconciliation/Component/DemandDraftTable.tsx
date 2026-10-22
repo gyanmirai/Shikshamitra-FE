@@ -15,8 +15,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
+
+import { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -35,6 +35,7 @@ import {
 } from 'src/redux/finance/reconciliation';
 
 import ReconciliationReceiptDialog from './ReconciliationReceiptDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 const DemandDraftTable = ({
   queryParams,
@@ -107,6 +108,7 @@ const DemandDraftTable = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'studentName',
         label: 'Name(Gr No.)',
 
@@ -224,6 +226,7 @@ const DemandDraftTable = ({
         filterType: 'string',
       },
       {
+        stickyPosition: 'right',
         id: 'status',
         sticky: true,
         label: 'Status',
@@ -240,6 +243,8 @@ const DemandDraftTable = ({
         },
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         isSort: false,
@@ -274,6 +279,7 @@ const DemandDraftTable = ({
 
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               actions={[
                 ...(row.status !== PaymentMethodsStatusType.Approved &&
                 row.status !== PaymentMethodsStatusType.Rejected &&
@@ -464,7 +470,7 @@ export const ApproveRejectForm = ({
           name="rejectionReason"
           value={values.rejectionReason}
           error={touched.rejectionReason && !!errors.rejectionReason}
-          helperText={touched.rejectionReason && errors.rejectionReason}
+          helperText={(touched.rejectionReason && errors.rejectionReason) || undefined}
           sx={{ mb: 2 }}
         />
       </DialogScrollContent>

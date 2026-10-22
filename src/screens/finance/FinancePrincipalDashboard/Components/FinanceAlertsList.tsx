@@ -1,7 +1,5 @@
 import type { CardProps } from '@mui/material';
 
-import React from 'react';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Stack, CardHeader, Typography } from '@mui/material';
 
@@ -37,19 +35,7 @@ export default function FinanceAlertsList({ title, subheader, list, ...other }: 
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}
-              >
-                <Iconify
-                  icon={
-                    item.severity === 'error'
-                      ? 'eva:alert-triangle-fill'
-                      : item.severity === 'warning'
-                        ? 'eva:alert-circle-fill'
-                        : 'eva:info-fill'
-                  }
-                  width={24}
-                  sx={{ color: (theme) => theme.palette[item.severity].main }}
-                />
-              </Box>
+              ></Box>
 
               <Box sx={{ flexGrow: 1 }}>
                 <Typography variant="subtitle2">{item.title}</Typography>

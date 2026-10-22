@@ -44,12 +44,20 @@ export default function FeeStructureWorkspaceDialog({
             {viewOnly ? 'View Fee Structure' : 'Manage Fee Structure'}
             <Box
               component="span"
-              sx={{ display: 'block', typography: 'caption', color: 'text.secondary', mt: 0.5 }}
+              sx={{
+                display: 'block',
+                typography: 'caption',
+                color: 'text.secondary',
+                mt: 0.5,
+                overflowWrap: 'anywhere',
+              }}
             >
               {editData.name}
               {editData.academicYearName &&
                 !editData.name.includes(editData.academicYearName) &&
                 ` · ${editData.academicYearName}`}
+              {editData.boardName && ` · Board: ${editData.boardName}`}
+              {editData.mediumName && ` · Medium: ${editData.mediumName}`}
             </Box>
           </Box>
         }

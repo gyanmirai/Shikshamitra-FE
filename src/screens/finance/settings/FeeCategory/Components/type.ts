@@ -15,11 +15,11 @@ export interface IFeeCategoryTableProps {
   archived: boolean;
   onAddFeeCategory: any;
   setEditData: (value: IFeeCategory | null) => void;
-  onView?: (data: IFeeCategory) => void;
 }
 
 export interface IFeeCategoryFormProps {
   open: any;
   onClose: (e: any, isSubmit?: boolean) => void;
   editData: IFeeCategory | null;
+  onBusyChange?: (busy: boolean) => void;
 }

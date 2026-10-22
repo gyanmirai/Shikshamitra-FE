@@ -35,6 +35,8 @@ const metadata = {
   id: 'metadata',
   name: 'Main fees',
   academicYearName: '2026–27',
+  boardName: 'CBSE',
+  mediumName: 'English',
   feeStructureClasses: {},
   classes: [
     { id: 'class-5', name: 'Class 5' },
@@ -68,6 +70,7 @@ afterEach(cleanup);
 
 it('opens the shared full-screen dialog with horizontal class tabs', () => {
   setup();
+  expect(screen.getByText('Main fees · 2026–27 · Board: CBSE · Medium: English')).toBeTruthy();
   expect(screen.getByRole('dialog', { name: /Manage Fee Structure/ })).toHaveClass(
     'MuiDialog-paperFullScreen'
   );

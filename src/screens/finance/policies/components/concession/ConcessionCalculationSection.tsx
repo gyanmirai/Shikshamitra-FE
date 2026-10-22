@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { Grid, TextField, InputAdornment } from '@mui/material';
+import { Grid } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -27,24 +26,26 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
 
   return (
     <ConcessionSectionCard
-      title="Calculation Rules"
       subtitle={
         isFullWaiver
           ? 'Full waiver covers 100% of the eligible balance. No value is required.'
           : 'Choose how the value is entered and set the concession or maximum limit.'
       }
+      title="Calculation Rules"
+
       icon="solar:calculator-linear"
     >
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={error('valueSource')}>
             <CustomSelect
+              optionDescriptionKey="caption"
               fullWidth
               size="small"
               label="Value source *"
               name="valueSource"
               options={CONCESSION_VALUE_SOURCES}
-              optionDescriptionKey="caption"
+
               value={formik.values.valueSource}
               onChange={(value) => {
                 formik.setFieldValue('valueSource', value);
@@ -61,12 +62,13 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
         <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField error={error('calculationMethod')}>
             <CustomSelect
+              optionDescriptionKey="caption"
               fullWidth
               size="small"
               label="Calculation method *"
               name="calculationMethod"
               options={CONCESSION_METHODS}
-              optionDescriptionKey="caption"
+
               value={method}
               onChange={(value) => formik.setFieldValue('calculationMethod', value)}
               onBlur={() => formik.setFieldTouched('calculationMethod', true)}
@@ -81,21 +83,23 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField error={error(valueField)}>
               {isPercentage ? (
-                <TextField
+                <NumericFormatCustom
                   fullWidth
                   size="small"
-                  type="number"
                   label={isRequestEntered ? 'Maximum percentage *' : 'Concession percentage *'}
                   name={valueField}
                   value={formik.values[valueField] ?? ''}
-                  onChange={formik.handleChange}
+                  onValueChange={({ value }, source) => {
+                    if (source.source === 'event') formik.setFieldValue(valueField, value);
+                  }}
                   onBlur={formik.handleBlur}
                   error={error(valueField)}
-                  helperText={helper(valueField, 'Enter a value from 0.01% to 100%.')}
-                  slotProps={{
-                    input: { endAdornment: <InputAdornment position="end">%</InputAdornment> },
-                    htmlInput: { min: 0.01, max: 100, step: 0.01 },
-                  }}
+                  helperText={helper(valueField, '')}
+                  prefix=""
+                  suffix="%"
+                  roundToWholeRupees={false}
+                  decimalScale={2}
+                  isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= 100}
                 />
               ) : (
                 <NumericFormatCustom
@@ -109,12 +113,7 @@ export default function ConcessionCalculationSection({ formik }: { formik: any }
                   }
                   onBlur={formik.handleBlur}
                   error={error(valueField)}
-                  helperText={helper(
-                    valueField,
-                    isRequestEntered
-                      ? 'Maximum rupee amount allowed for each request.'
-                      : 'Fixed rupee amount for each eligible request.'
-                  )}
+                  helperText={helper(valueField, '')}
                   decimalScale={0}
                 />
               )}

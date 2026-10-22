@@ -58,8 +58,9 @@ const ConcessionList = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Concession List"
         description="View and manage student concession requests."
+        heading="Concession List"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/concession' },

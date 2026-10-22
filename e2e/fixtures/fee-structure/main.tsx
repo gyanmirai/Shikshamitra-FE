@@ -13,7 +13,7 @@ import FeeStructureWorkspaceDialog from 'src/screens/finance/settings/FeeStructu
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { financePermissions } from 'src/constants/finance-menu';
 import 'simplebar-react/dist/simplebar.min.css';
-import { readyFixture, pinnedPolicyFixture } from './mock-api';
+import { readyFixture, pinnedPolicyFixture, incompleteHeadsFixture } from './mock-api';
 
 const store = configureStore({
   reducer: {
@@ -43,6 +43,7 @@ function ThemeControls() {
 function Fixture() {
   const [configured, setConfigured] = React.useState(false);
   const [pinned, setPinned] = React.useState(false);
+  const [incomplete, setIncomplete] = React.useState(false);
   const [workspace, setWorkspace] = React.useState(false);
   return (
     <Provider store={store}>
@@ -102,6 +103,7 @@ function Fixture() {
                     onClick={() => {
                       setConfigured(!configured);
                       setPinned(false);
+                      setIncomplete(false);
                     }}
                   >
                     {configured ? 'Load empty draft fixture' : 'Load configured draft fixture'}
@@ -111,9 +113,21 @@ function Fixture() {
                     onClick={() => {
                       setConfigured(true);
                       setPinned(true);
+                      setIncomplete(false);
                     }}
                   >
                     Load saved policy overrides fixture
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setConfigured(true);
+                      setPinned(false);
+                      setIncomplete(true);
+                      setWorkspace(false);
+                    }}
+                  >
+                    Load incomplete fee heads fixture
                   </Button>
                   <ThemeControls />
                   <Button size="small" onClick={() => setWorkspace(!workspace)}>
@@ -137,6 +151,8 @@ function Fixture() {
                       id: 'metadata',
                       name: 'Main fee structure',
                       academicYearName: '2026–27',
+                      boardName: 'CBSE',
+                      mediumName: 'English',
                       feeStructureClasses: {},
                       classes: [
                         { id: 'class', name: 'Class 5' },
@@ -151,7 +167,7 @@ function Fixture() {
                   />
                 ) : (
                   <FeeStructureWorkspaceCard
-                    key={`${configured}-${pinned}`}
+                    key={`${configured}-${pinned}-${incomplete}`}
                     index={0}
                     initialData={{
                       name: '',
@@ -160,9 +176,11 @@ function Fixture() {
                       feeHeads: [],
                       status: 1,
                       record: configured
-                        ? pinned
-                          ? pinnedPolicyFixture
-                          : readyFixture
+                        ? incomplete
+                          ? incompleteHeadsFixture
+                          : pinned
+                            ? pinnedPolicyFixture
+                            : readyFixture
                         : undefined,
                     }}
                   />

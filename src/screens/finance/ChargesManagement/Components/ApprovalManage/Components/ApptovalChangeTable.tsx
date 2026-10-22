@@ -160,6 +160,7 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
             isFilter: true,
           },
           {
+            stickyPosition: 'right',
             id: 'status',
             label: 'Status',
             align: 'left',
@@ -180,6 +181,8 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
             },
           },
           {
+            stickyPosition: 'right',
+            excludeFromExport: true,
             id: 'action',
             label: 'Action',
             minWidth: 80,
@@ -189,7 +192,7 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
             isFilter: false,
             render(value, row) {
               return (
-                <AdaptiveThreeDotsActions
+                <AdaptiveThreeDotsActions directActionLimit={2}
                   actions={[
                     {
                       id: 'view',

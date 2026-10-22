@@ -41,6 +41,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'categoryName',
         label: 'Expense Category',
         align: 'left',
@@ -96,6 +97,8 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       ...(onEdit || onDelete
         ? [
             {
+              stickyPosition: 'right',
+              excludeFromExport: true,
               id: 'actions',
               label: 'Actions',
               align: 'left',
@@ -104,7 +107,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
               sticky: true,
               minWidth: 100,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions
+                <AdaptiveThreeDotsActions directActionLimit={2}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

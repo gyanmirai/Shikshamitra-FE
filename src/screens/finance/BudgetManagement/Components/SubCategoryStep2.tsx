@@ -109,7 +109,7 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
                     ? typeof errors?.subCategories?.[index] === 'object'
                       ? errors?.subCategories?.[index]?.amount
                       : errors?.subCategories?.[index]
-                    : ''
+                    : undefined
                 }
                 sx={{ width: '100%', padding: 0, borderRadius: 1 }}
               />
@@ -148,7 +148,7 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
                     ? typeof errors?.subCategories?.[index] === 'object'
                       ? errors?.subCategories?.[index]?.notes
                       : errors?.subCategories?.[index]
-                    : ''
+                    : undefined
                 }
                 fullWidth
                 size="small"

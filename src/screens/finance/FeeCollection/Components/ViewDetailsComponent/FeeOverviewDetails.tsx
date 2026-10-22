@@ -18,9 +18,9 @@ export default function FeeOverview({
 }: FeeOverviewProps) {
   return (
     <DetailSection
+      helpText="Fee totals and outstanding amounts for the selected academic year."
       title="Fee Overview"
       icon="mdi:cash-multiple"
-      helpText="Fee totals and outstanding amounts for the selected academic year."
     >
       <DetailGrid>
         <DetailField label="Total fee" value={formatNumber(total, 'INR')} />

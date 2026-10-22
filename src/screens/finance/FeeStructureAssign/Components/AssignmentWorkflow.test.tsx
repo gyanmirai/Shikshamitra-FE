@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import AssignmentWorkflow from './AssignmentWorkflow';
 
@@ -410,9 +410,7 @@ describe('assignment review and commit boundaries', () => {
       target: { value: 'collection-version' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    await screen.findByText(
-      'Enter a policy override reason for each student whose policies changed.'
-    );
+    await screen.findByText('Aarav: Enter a policy override reason.');
     expect(mocks.preview).not.toHaveBeenCalled();
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
       target: { value: 'Approved student exception' },
@@ -563,5 +561,27 @@ describe('assignment review and commit boundaries', () => {
     await waitFor(() => expect(screen.getByRole('combobox')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Preview assignments' })).not.toBeInTheDocument();
     expect(mocks.preview).not.toHaveBeenCalled();
+  });
+
+  it('confirms before restoring student-specific policy defaults and clears the override only after confirmation', async () => {
+    mount(undefined, true);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Fee structure' }), {
+      target: { value: 'structure' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Collection policy' }), {
+      target: { value: 'collection-version' },
+    });
+    const select = screen.getByRole('combobox', { name: 'Collection policy' });
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Defaults' }));
+    expect(select).toHaveValue('collection-version');
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    expect(select).toHaveValue('collection-version');
+    fireEvent.click(screen.getByRole('button', { name: 'Restore Defaults' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Restore Defaults' })
+    );
+    expect(select).toHaveValue('default-version');
+    expect(screen.queryByRole('textbox', { name: /Policy override reason/ })).toBeNull();
   });
 });

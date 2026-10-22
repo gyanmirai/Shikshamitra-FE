@@ -2,9 +2,8 @@
 
 import type { FormikProps } from 'formik';
 
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import {
   Grid,
   Chip,
@@ -14,14 +13,16 @@ import {
   Skeleton,
   TextField,
   Typography,
-  IconButton,
   Autocomplete,
   FormControlLabel,
+  IconButton,
 } from '@mui/material';
 
 import { SectionCard } from './RefundCommon';
 
 import type { IRefundPolicyFormValues } from '../../types/finance-policy.types';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 interface FeeHeadOption {
   id: string;
@@ -44,12 +45,13 @@ export default function RefundEligibilitySection({
   isFeeHeadsLoading?: boolean;
 }) {
   const { values, errors, touched, setFieldValue } = formik;
-  const selectedOptions = values.applicableFeeHeadIds.map((id) =>
-    feeHeads.find((head) => head.id === id) || {
-      id,
-      name: selectedFeeHeadNames?.[id] || 'Fee head name unavailable',
-      status: selectedFeeHeadStatuses?.[id],
-    }
+  const selectedOptions = values.applicableFeeHeadIds.map(
+    (id) =>
+      feeHeads.find((head) => head.id === id) || {
+        id,
+        name: selectedFeeHeadNames?.[id] || 'Fee head name unavailable',
+        status: selectedFeeHeadStatuses?.[id],
+      }
   );
   const options = [
     ...feeHeads,
@@ -57,8 +59,9 @@ export default function RefundEligibilitySection({
   ];
   return (
     <SectionCard
-      title="Refund Eligibility"
       subtitle="Choose the paid fees and charges that staff may include in a refund."
+      title="Refund Eligibility"
+
       icon="solar:shield-check-linear"
     >
       <Stack spacing={2}>
@@ -90,8 +93,12 @@ export default function RefundEligibilitySection({
               multiple
               size="small"
               options={options}
-              getOptionLabel={(option) => `${option.name}${option.status && option.status !== 'Active' ? ` (${option.status})` : ''}`}
-              getOptionDisabled={(option) => option.status === 'Deleted' || option.status === 'Inactive'}
+              getOptionLabel={(option) =>
+                `${option.name}${option.status && option.status !== 'Active' ? ` (${option.status})` : ''}`
+              }
+              getOptionDisabled={(option) =>
+                option.status === 'Deleted' || option.status === 'Inactive'
+              }
               isOptionEqualToValue={(option, value) => option.id === value.id}
               value={selectedOptions}
               onChange={(_, selected) =>
@@ -109,9 +116,9 @@ export default function RefundEligibilitySection({
                   placeholder="Search fee heads…"
                   error={Boolean(touched.applicableFeeHeadIds && errors.applicableFeeHeadIds)}
                   helperText={
-                    touched.applicableFeeHeadIds && errors.applicableFeeHeadIds
+                    (touched.applicableFeeHeadIds && errors.applicableFeeHeadIds
                       ? String(errors.applicableFeeHeadIds)
-                      : 'Only paid amounts for these fee heads can be refunded.'
+                      : undefined) || undefined
                   }
                 />
               )}

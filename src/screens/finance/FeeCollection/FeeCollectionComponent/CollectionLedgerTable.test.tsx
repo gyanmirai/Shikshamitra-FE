@@ -12,6 +12,7 @@ import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type
 
 import CollectionLedgerTable from './CollectionLedgerTable';
 import { FeeCollectionWaiverContext } from './feeCollectionContext';
+import AllocationPreviewTable from './preview/AllocationPreviewTable';
 
 import type { FeeLedgerListProps } from './FeeLedgerList';
 
@@ -91,6 +92,96 @@ const ledgerProps = (): FeeLedgerListProps => ({
 });
 
 describe('collection ledger waiver capabilities', () => {
+  it('keeps the review in collection order across different installment months', () => {
+    const makeRow = (key: string, name: string, period: string) => ({
+      type: 'fee' as const,
+      key,
+      dueFeeId: key,
+      feeHeadId: name,
+      feeHeadName: name,
+      period,
+      originalAmount: 100,
+      paidAmount: 50,
+      principalPaidAmount: 50,
+      lateFeePaidAmount: 0,
+      remainingAmount: 50,
+      status: FeeCollectionStatusType.Partial,
+    });
+    render(
+      <LedgerTestProviders>
+        <AllocationPreviewTable
+          preserveOrder
+          allocatedRows={[
+            makeRow('transport-first', 'Transport first', 'Aug 2026'),
+            makeRow('transport-second', 'Transport second', 'Nov 2026'),
+            makeRow('tuition-first', 'Tuition first', 'Aug 2026'),
+          ]}
+        />
+      </LedgerTestProviders>
+    );
+    const rows = screen.getAllByRole('row');
+    expect(rows[1]).toHaveTextContent('Transport first');
+    expect(rows[2]).toHaveTextContent('Transport second');
+    expect(rows[3]).toHaveTextContent('Tuition first');
+  });
+  it('keeps two custom installments in one month separate and follows the supplied allocation order', () => {
+    const props = ledgerProps();
+    const first = props.data.monthWise[0].items[0];
+    props.data.monthWise[0].items = [
+      {
+        ...first,
+        installmentId: 'schedule-first',
+        installmentLabel: 'First installment',
+        dueDate: '2026-06-05',
+      },
+      {
+        ...first,
+        dueFeeId: 'due-two',
+        installmentId: 'schedule-second',
+        installmentLabel: 'Second installment',
+        dueDate: '2026-06-20',
+      },
+    ];
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable
+          {...props}
+          layout="ledger"
+          allocationBasis="Installment"
+          allocationDueFeeOrder={['due-two', 'due-one']}
+        />
+      </LedgerTestProviders>
+    );
+    const titles = screen
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent);
+    expect(titles.indexOf('Second installment')).toBeLessThan(titles.indexOf('First installment'));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Second installment' }));
+    expect(props.onSelectionChange).toHaveBeenCalledWith([
+      expect.objectContaining({ dueFeeId: 'due-two' }),
+    ]);
+  });
+
+  it('uses selector-safe identifiers for legacy installment labels containing spaces and punctuation', () => {
+    const props = ledgerProps();
+    Object.assign(props.data.monthWise[0].items[0], {
+      installmentLabel: 'Quarter 1 — Jun to Aug',
+      dueDate: '2026-06-05',
+    });
+    render(
+      <LedgerTestProviders>
+        <CollectionLedgerTable
+          {...props}
+          layout="ledger"
+          allocationBasis="Installment"
+          allocationDueFeeOrder={['due-one']}
+        />
+      </LedgerTestProviders>
+    );
+    const group = screen.getByRole('button', { name: /^Quarter 1 — Jun to Aug/ });
+    expect(group.id).toMatch(/^[a-zA-Z0-9_-]+$/);
+    expect(document.querySelector(`#${group.id}`)).toBe(group);
+  });
   it('provides keyboard-accessible header and section help with the standard Close action', async () => {
     const user = userEvent.setup();
     render(

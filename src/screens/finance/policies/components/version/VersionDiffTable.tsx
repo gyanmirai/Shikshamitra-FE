@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import {
   Box,
   Stack,
@@ -14,8 +13,8 @@ import {
   TableBody,
   TableCell,
   Typography,
-  IconButton,
   TableContainer,
+  IconButton,
 } from '@mui/material';
 
 import {
@@ -27,6 +26,8 @@ import {
 
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 import type { VersionValueContext } from './finance-policy-version-formatters';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 interface VersionDiffTableProps {
   selectedVersion: PolicyVersion;
@@ -96,6 +97,7 @@ function VersionDiffTable({
                 Change reason
               </Typography>
               <CustomTooltip
+                placement="right"
                 arrow
                 title="The reason recorded when this version was created. Older snapshots may have no recorded reason."
               >
@@ -123,6 +125,7 @@ function VersionDiffTable({
               Changes
             </Typography>
             <CustomTooltip
+              placement="right"
               arrow
               title="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
             >

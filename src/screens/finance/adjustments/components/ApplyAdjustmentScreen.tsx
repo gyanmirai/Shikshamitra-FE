@@ -158,9 +158,7 @@ const ApplyAdjustmentScreen = ({
           <Typography variant="h6" fontWeight={700} lineHeight={1.2} color="text.primary">
             Adjustment Preview
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={500}>
-            Review final pending fee impact before final submit
-          </Typography>
+
           <Divider sx={{ mt: 1.5 }} />
         </Box>
       )}
@@ -182,7 +180,7 @@ const ApplyAdjustmentScreen = ({
             {/* ── 1. Summary Cards ── */}
             <AdjustmentSummaryCards summary={summary} />
 
-            {errorText && <Alert severity="warning">{errorText}</Alert>}
+            {errorText && <Alert severity="error">{errorText}</Alert>}
 
             {/* ── 3. Apply / Preview mode content ── */}
             {!isPreviewMode && (

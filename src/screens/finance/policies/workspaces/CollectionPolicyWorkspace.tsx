@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -60,8 +60,9 @@ export default function CollectionPolicyWorkspace() {
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Collection Policy"
         description="Configure grace periods, late fee structures, waivers, and online payment options."
+        heading="Collection Policy"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Policies & Rules', href: '/finance/policies' },
@@ -93,7 +94,7 @@ export default function CollectionPolicyWorkspace() {
                 disabled={!academicYearId}
                 sx={{ px: 2 }}
               >
-                Create policy
+                Create Policy
               </Button>
             )}
           </Box>

@@ -1,6 +1,10 @@
 import type { FinanceAuditEvent } from 'src/redux/finance/audit/financeAuditApi';
 
 import { FinanceAuditAction, FinanceAuditSubModule } from 'src/enums/financeAudit.enum';
+import {
+  formatFinancePolicyVersionValue,
+  policyVersionValuesEqual,
+} from '../../policies/components/version/finance-policy-version-formatters';
 
 import type { FinanceAuditLog } from '../types/financeAudit.types';
 
@@ -38,6 +42,14 @@ function foldChangedFields(changedFields: FinanceAuditEvent['changedFields']): {
   const afterData: Record<string, unknown> = {};
   changedFields.forEach((f) => {
     const key = f.field;
+    if (key.replace(/[\s_-]/g, '').toLowerCase() === 'applyon') {
+      if (policyVersionValuesEqual(key, f.oldValue, f.newValue)) return;
+      if (f.oldValue != null && f.oldValue !== '')
+        beforeData[key] = formatFinancePolicyVersionValue(key, f.oldValue).text;
+      if (f.newValue != null && f.newValue !== '')
+        afterData[key] = formatFinancePolicyVersionValue(key, f.newValue).text;
+      return;
+    }
     if (f.oldValue != null && f.oldValue !== '') beforeData[key] = f.oldValue;
     if (f.newValue != null && f.newValue !== '') afterData[key] = f.newValue;
   });

@@ -128,9 +128,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         <Stack spacing={2}>
           {/* Section: Bank Details */}
           <FormSectionCard
+            descriptionTooltip="Identify the bank and branch that hold this account."
             icon="solar:bank-bold-duotone"
             title="Bank details"
-            descriptionTooltip="Identify the bank and branch that hold this account."
           >
             <Grid container spacing={1.5}>
               {/* Bank Name */}
@@ -148,9 +148,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     onBlur={formik.handleBlur}
                     error={formik.touched.bankName && Boolean(formik.errors.bankName)}
                     helperText={
-                      formik.touched.bankName && formik.errors.bankName
+                      (formik.touched.bankName && formik.errors.bankName
                         ? formik.errors.bankName
-                        : `${formik.values.bankName.length}/100 characters`
+                        : undefined) || undefined
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -167,7 +167,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   value={formik.values.effectiveFrom}
                   onChange={formik.handleChange}
                   error={Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}
-                  helperText={formik.touched.effectiveFrom && formik.errors.effectiveFrom}
+                  helperText={
+                    (formik.touched.effectiveFrom && formik.errors.effectiveFrom) || undefined
+                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -181,7 +183,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   value={formik.values.effectiveTo}
                   onChange={formik.handleChange}
                   error={Boolean(formik.touched.effectiveTo && formik.errors.effectiveTo)}
-                  helperText={formik.touched.effectiveTo && formik.errors.effectiveTo}
+                  helperText={
+                    (formik.touched.effectiveTo && formik.errors.effectiveTo) || undefined
+                  }
                 />
               </Grid>
 
@@ -200,9 +204,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     onBlur={formik.handleBlur}
                     error={formik.touched.branchName && Boolean(formik.errors.branchName)}
                     helperText={
-                      formik.touched.branchName && formik.errors.branchName
+                      (formik.touched.branchName && formik.errors.branchName
                         ? formik.errors.branchName
-                        : `${formik.values.branchName.length}/100 characters`
+                        : undefined) || undefined
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -227,9 +231,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
 
           {/* Section: Account Details */}
           <FormSectionCard
+            descriptionTooltip="Enter the account holder and account information used for Finance transactions."
             icon="solar:wallet-money-bold-duotone"
             title="Account details"
-            descriptionTooltip="Enter the account holder and account information used for Finance transactions."
           >
             <Grid container spacing={1.5}>
               {/* Account Name */}
@@ -251,9 +255,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                       formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
                     }
                     helperText={
-                      formik.touched.accountHolderName && formik.errors.accountHolderName
+                      (formik.touched.accountHolderName && formik.errors.accountHolderName
                         ? formik.errors.accountHolderName
-                        : `${formik.values.accountHolderName.length}/100 characters`
+                        : undefined) || undefined
                     }
                     inputProps={{ maxLength: 100 }}
                   />
@@ -275,7 +279,10 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     onChange={(val) => formik.setFieldValue('accountType', val)}
                     formControlProps={{ fullWidth: true, size: 'small' }}
                     error={formik.touched.accountType && Boolean(formik.errors.accountType)}
-                    helperText={(formik.touched.accountType && formik.errors.accountType) as string}
+                    helperText={
+                      ((formik.touched.accountType && formik.errors.accountType) as string) ||
+                      undefined
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -304,7 +311,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     }}
                     inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 18 }}
                     error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
-                    helperText={formik.touched.accountNumber && formik.errors.accountNumber}
+                    helperText={
+                      (formik.touched.accountNumber && formik.errors.accountNumber) || undefined
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -324,9 +333,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   onBlur={formik.handleBlur}
                   error={Boolean(formik.touched.purpose && formik.errors.purpose)}
                   helperText={
-                    formik.touched.purpose && formik.errors.purpose
+                    (formik.touched.purpose && formik.errors.purpose
                       ? formik.errors.purpose
-                      : `${formik.values.purpose?.length ?? 0}/500`
+                      : undefined) || undefined
                   }
                   FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />
@@ -336,9 +345,9 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
 
           {/* Section: Payment Info */}
           <FormSectionCard
+            descriptionTooltip="Add the routing codes used to identify this bank account for payments."
             icon="solar:card-bold-duotone"
             title="Payment information"
-            descriptionTooltip="Add the routing codes used to identify this bank account for payments."
           >
             <Grid container spacing={1.5}>
               {/* IFSC Code */}
@@ -360,7 +369,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                       formik.setFieldValue('ifscCode', value);
                     }}
                     error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
-                    helperText={formik.touched.ifscCode && formik.errors.ifscCode}
+                    helperText={(formik.touched.ifscCode && formik.errors.ifscCode) || undefined}
                   />
                 </ShakingTextField>
               </Grid>
@@ -382,7 +391,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                       formik.setFieldValue('upiId', value);
                     }}
                     error={formik.touched.upiId && Boolean(formik.errors.upiId)}
-                    helperText={formik.touched.upiId && formik.errors.upiId}
+                    helperText={(formik.touched.upiId && formik.errors.upiId) || undefined}
                   />
                 </ShakingTextField>
               </Grid>

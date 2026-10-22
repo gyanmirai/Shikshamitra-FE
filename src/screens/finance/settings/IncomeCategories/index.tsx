@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
@@ -7,14 +8,14 @@ import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import {
   incomeCategoryApi,
@@ -65,7 +66,6 @@ const FinanceIncomeCategoriesScreen = () => {
   const [open, setOpen] = useState(false);
 
   // State management
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedIncomeCategory, setSelectedIncomeCategory] = useState<IIncomeCategory | null>(
     null
   );
@@ -75,24 +75,13 @@ const FinanceIncomeCategoriesScreen = () => {
   /**
    * Handles closing of the income category form dialog
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedIncomeCategory(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addIncomeCategoryDialog.value,
+    () => {
       addIncomeCategoryDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addIncomeCategoryDialog.onFalse();
-      setTimeout(() => {
-        setSelectedIncomeCategory(null);
-      }, 200);
+      setSelectedIncomeCategory(null);
     }
-  };
+  );
 
   if (incomeCategoryLoading) {
     return <Box>Loading...</Box>;
@@ -100,9 +89,11 @@ const FinanceIncomeCategoriesScreen = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Income Category"
         description="This screen displays all the created income categories with an option to create a new income category."
+        heading="Income Category"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Accounts', href: '/finance/income-tracking' },
@@ -145,22 +136,21 @@ const FinanceIncomeCategoriesScreen = () => {
       />
 
       <CustomDialog
-        open={addIncomeCategoryDialog.value}
-        handleClose={() => {
-          addIncomeCategoryDialog.onFalse();
-          setTimeout(() => {
-            setSelectedIncomeCategory(null);
-          }, 200);
-        }}
-        title={selectedIncomeCategory ? 'Edit Income Category' : 'Add Income Category'}
         titleInfo="Maintain the category name, tags, and description used to organize Finance records."
+        open={addIncomeCategoryDialog.value}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
+        title={selectedIncomeCategory ? 'Edit Income Category' : 'Add Income Category'}
+
         maxWidth="sm"
       >
-        <IncomeCategoryForm
-          open={addIncomeCategoryDialog}
-          onClose={handleClose}
-          editData={selectedIncomeCategory}
-        />
+        {addIncomeCategoryDialog.value && (
+          <IncomeCategoryForm
+            open={addIncomeCategoryDialog}
+            onClose={handleClose}
+            editData={selectedIncomeCategory}
+          />
+        )}
       </CustomDialog>
 
       <ConfirmDialog

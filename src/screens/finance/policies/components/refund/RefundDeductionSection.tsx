@@ -2,27 +2,22 @@
 
 import type { FormikProps } from 'formik';
 
-import React from 'react';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import {
   Box,
   Grid,
   Chip,
-  Paper,
   Stack,
   Select,
   MenuItem,
   TextField,
   InputLabel,
   FormControl,
-  Autocomplete,
   Typography,
   FormHelperText,
   InputAdornment,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
 import { SectionCard } from './RefundCommon';
 import { PAYOUT_METHODS } from '../../hooks/useRefundPolicyForm';
@@ -58,8 +53,9 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
 
   return (
     <SectionCard
-      title="Deductions & Allowed Payouts"
       subtitle="Configure administrative processing deductions, mandatory audit justification, allowed disbursement channels, and operational SLA."
+      title="Deductions & Allowed Payouts"
+
       icon="solar:tag-price-bold-duotone"
     >
       <Grid container spacing={2}>
@@ -118,12 +114,7 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
                 }
                 onBlur={handleBlur}
                 error={isFieldInvalid('deductionValue')}
-                helperText={
-                  getHelperText('deductionValue') ||
-                  (values.deductionType === 'Percentage'
-                    ? 'Percentage deducted before disbursement'
-                    : 'Fixed fee deducted from gross refund')
-                }
+                helperText={getHelperText('deductionValue')}
                 slotProps={{
                   input: {
                     startAdornment:
@@ -158,10 +149,7 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
                 }
                 onBlur={handleBlur}
                 error={isFieldInvalid('maximumDeduction')}
-                helperText={
-                  getHelperText('maximumDeduction') ||
-                  'Optional upper limit on the total deduction amount.'
-                }
+                helperText={getHelperText('maximumDeduction')}
                 slotProps={{
                   input: {
                     startAdornment: <InputAdornment position="start">₹</InputAdornment>,
@@ -186,10 +174,7 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={isFieldInvalid('deductionExplanation')}
-                helperText={
-                  getHelperText('deductionExplanation') ||
-                  'Required reason displayed on student refund vouchers and ledger journal descriptions.'
-                }
+                helperText={getHelperText('deductionExplanation')}
               />
             </Grid>
           </>
@@ -198,7 +183,13 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
         {/* Allowed Payout Methods */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Box sx={{ mb: 0.5 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={600}
+              display="block"
+              sx={{ mb: 1 }}
+            >
               ALLOWED DISBURSEMENT METHODS *
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -253,10 +244,7 @@ export default function RefundDeductionSection({ formik }: RefundDeductionSectio
             }
             onBlur={handleBlur}
             error={isFieldInvalid('processingTargetDays')}
-            helperText={
-              getHelperText('processingTargetDays') ||
-              'Operational SLA target for finance desk turnaround.'
-            }
+            helperText={getHelperText('processingTargetDays')}
             slotProps={{
               input: {
                 endAdornment: <InputAdornment position="end">days</InputAdornment>,

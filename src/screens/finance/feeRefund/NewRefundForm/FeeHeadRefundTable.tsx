@@ -4,9 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import { isNaN } from 'lodash';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Alert, Button, Typography } from '@mui/material';
+import { Box, Alert, Button, Typography, FormHelperText } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
@@ -19,6 +19,7 @@ import OverallSummaryCard from './feeHeadRefundTable/OverallSummaryCard';
 import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
 
 import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
+import { Iconify } from 'src/components/iconify';
 
 // ─── Month name mapping (matches backend MonthEnum integer values) ─────────────
 
@@ -57,7 +58,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   const adjustmentEligibility = useGetAdjustmentEligibilityQuery(
     { studentId, academicYearId: currentYear?.id ?? '' },
-    { skip: skipEligibility || !isAdj }
+    { skip: skipEligibility || !isAdj, refetchOnMountOrArgChange: true }
   );
 
   const eligibility = isAdj ? adjustmentEligibility.currentData : refundEligibility.currentData;
@@ -65,12 +66,6 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
   const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
   const refetchEligibility = isAdj ? adjustmentEligibility.refetch : refundEligibility.refetch;
-
-  useEffect(() => {
-    if (studentId && currentYear?.id) {
-      refetchEligibility();
-    }
-  }, [studentId, currentYear?.id, refetchEligibility]);
 
   const [showValidation, setShowValidation] = useState(false);
 
@@ -224,6 +219,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       let updated;
       const fhInfo = feeHeads.find((f) => f.feeHeadId === feeHeadId);
       const itemInfo = fhInfo?.items.find((i) => i.month === month);
+      if (!isAdj && selectedReceiptId && itemInfo?.sourceReceiptId !== selectedReceiptId) return;
       const refundable = itemInfo ? Math.max(0, itemInfo.refundable) : 0;
       const initialAmount = formik.values.refundType === 'full' ? refundable : '';
 
@@ -269,7 +265,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       formik.setFieldValue('feeHeadRefunds', updated);
       formik.setFieldTouched('feeHeadRefunds', true, false);
     },
-    [formik, feeHeads]
+    [formik, feeHeads, isAdj, selectedReceiptId]
   );
 
   /**
@@ -279,9 +275,15 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
    */
   const toggleAll = useCallback(
     (feeHead: IFeeHeadPayment): void => {
-      const refundableItems = feeHead.items.filter(
+      const availableItems = feeHead.items.filter(
         (i) => Math.max(0, isAdj ? i.refundable : (i.refundable ?? i.paid - i.refunded)) > 0
       );
+      // Bulk selection follows the same one-receipt contract as an individual row.
+      const receiptId = selectedReceiptId || availableItems[0]?.sourceReceiptId;
+      const refundableItems = isAdj
+        ? availableItems
+        : availableItems.filter((item) => item.sourceReceiptId === receiptId);
+      if (refundableItems.length === 0) return;
       const refundableMonths = refundableItems.map((i) => i.month);
       const refunds = formik.values.feeHeadRefunds;
       const existing = refunds.find((fh) => fh.feeHeadId === feeHead.feeHeadId);
@@ -322,7 +324,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       formik.setFieldValue('feeHeadRefunds', updated);
       formik.setFieldTouched('feeHeadRefunds', true, false);
     },
-    [formik, isAdj]
+    [formik, isAdj, selectedReceiptId]
   );
 
   /**
@@ -424,18 +426,10 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   const feeHeadsWithPayments = useMemo(
     () =>
-      feeHeads
-        .map((fh) => ({
-          ...fh,
-          items:
-            selectedReceiptId && !isAdj
-              ? fh.items.filter((item) => item.sourceReceiptId === selectedReceiptId)
-              : fh.items,
-        }))
-        .filter((fh) =>
-          fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
-        ),
-    [feeHeads, selectedReceiptId, isAdj]
+      feeHeads.filter((fh) =>
+        fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
+      ),
+    [feeHeads, isAdj]
   );
 
   useEffect(() => {
@@ -456,7 +450,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         Select a student to load refundable fees.
       </Typography>
     );
-  if (isLoading || isFetching) return <RefundTableSkeleton />;
+  if (isLoading || isFetching) return <RefundTableSkeleton compact={compact} />;
   if (eligibilityError) {
     const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
     const message =
@@ -486,9 +480,13 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     );
   }
 
-  if (!isAdj && refundEligibility.currentData && refundEligibility.currentData.totalRefundable <= 0) {
+  if (
+    !isAdj &&
+    refundEligibility.currentData &&
+    refundEligibility.currentData.totalRefundable <= 0
+  ) {
     return (
-      <Alert severity="info" sx={{ borderRadius: 3 }}>
+      <Alert severity="error" sx={{ borderRadius: 3 }}>
         {refundEligibility.currentData.totalPaid <= 0
           ? 'No refund is possible. This student has not paid any fees yet.'
           : 'No refund is possible. No refundable paid balance remains for this student.'}
@@ -498,7 +496,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   if (feeHeadsWithPayments.length === 0) {
     return (
-      <Alert severity="info" sx={{ borderRadius: 3 }}>
+      <Alert severity="error" sx={{ borderRadius: 3 }}>
         {isAdj
           ? 'No adjustable fee records found for this student. Adjustments can only be raised for students with adjustable fees.'
           : eligibility && eligibility.totalPaid <= 0
@@ -510,12 +508,6 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   return (
     <Box>
-      {!isAdj && selectedReceiptId && (
-        <Alert severity="info" sx={{ mb: 1 }}>
-          This request is locked to one original receipt. Clear the selected lines to choose another
-          receipt.
-        </Alert>
-      )}
       {/* ── Overall Summary KPI Cards ── */}
       {!compact && (
         <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />
@@ -523,13 +515,13 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
       {/* ── Validation error ── */}
       {showError && errorMessage && (
-        <Alert severity="error" sx={{ mb: 2, borderRadius: 1 }}>
+        <FormHelperText error role="alert" sx={{ mb: 1 }}>
           {errorMessage}
-        </Alert>
+        </FormHelperText>
       )}
 
       {/* ── Guidance info banner ── */}
-      {!compact && totalSelectedMonthsCount === 0 && (
+      {isAdj && !compact && totalSelectedMonthsCount === 0 && (
         <Box
           display="flex"
           alignItems="flex-start"
@@ -563,11 +555,6 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           <Box>
             <Typography variant="body2" fontWeight={600} color="info.main" sx={{ lineHeight: 1.3 }}>
               {isAdj ? 'How to create an adjustment request' : 'How to create a refund request'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {isAdj
-                ? 'Select fee months below to calculate the adjustment automatically. Enter the adjustment amount for each selected month.'
-                : 'Select fee months below to calculate the refund request automatically. Enter the refund amount for each selected month.'}
             </Typography>
           </Box>
         </Box>
@@ -605,6 +592,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           formik={formik}
           showValidation={showValidation}
           mode={mode}
+          selectedReceiptId={isAdj ? undefined : selectedReceiptId}
           onToggleMonth={(month, dueFeeId) => toggleMonth(feeHead.feeHeadId, month, dueFeeId)}
           onToggleAll={() => toggleAll(feeHead)}
           applyInAllState={applyInAllState[feeHead.feeHeadId] ?? { isApplying: false, amount: '' }}

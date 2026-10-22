@@ -7,6 +7,8 @@ import { useGetConcessionPolicyVersionsQuery } from 'src/redux/finance/concessio
 import { useGetCollectionPolicyVersionsQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetFinanceEntityAuditEventsQuery } from 'src/redux/finance/audit/financeAuditApi';
 
+import { policyVersionValuesEqual } from '../components/version/finance-policy-version-formatters';
+
 export interface PolicyVersion {
   versionNumber: number;
   eventId: string;
@@ -127,12 +129,14 @@ export function useFinancePolicyVersion({
           };
           const current = parseSnapshot(item.snapshotJson);
           const previous = index ? parseSnapshot(items[index - 1].snapshotJson) : {};
-          const fields = Array.from(new Set([...Object.keys(previous), ...Object.keys(current)]))
-            .filter((field) => ![
-              'feeheadnames',
-              'expensecategoryname',
-              'defaultpayingbankaccountname',
-            ].includes(field.toLowerCase()));
+          const fields = Array.from(
+            new Set([...Object.keys(previous), ...Object.keys(current)])
+          ).filter(
+            (field) =>
+              !['feeheadnames', 'expensecategoryname', 'defaultpayingbankaccountname'].includes(
+                field.toLowerCase()
+              )
+          );
           return {
             versionNumber: item.versionNumber,
             eventId: item.id,
@@ -150,7 +154,7 @@ export function useFinancePolicyVersion({
             snapshotBefore: previous,
             snapshotAfter: current,
             changedFields: fields
-              .filter((field) => JSON.stringify(previous[field]) !== JSON.stringify(current[field]))
+              .filter((field) => !policyVersionValuesEqual(field, previous[field], current[field]))
               .map((field) => ({
                 field,
                 oldValue: index ? (previous[field] ?? null) : null,

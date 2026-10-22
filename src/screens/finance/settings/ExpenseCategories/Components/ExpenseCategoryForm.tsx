@@ -144,9 +144,9 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
           </Alert>
         )}
         <FormSectionCard
+          descriptionTooltip="Name this category and add tags to organize your expense records."
           icon="solar:wallet-money-bold-duotone"
           title="Expense category details"
-          descriptionTooltip="Name this category and add tags to organize your expense records."
         >
           <Grid container spacing={1.5}>
             {/* Expense Category Name */}
@@ -162,9 +162,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={
-                    formik.touched.name && formik.errors.name
-                      ? formik.errors.name
-                      : `${formik.values.name.length}/128 characters`
+                    (formik.touched.name && formik.errors.name ? formik.errors.name : undefined) ||
+                    undefined
                   }
                   inputProps={{ maxLength: 128 }}
                 />
@@ -217,9 +216,9 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                   }}
                   error={formik.touched.tags && Boolean(formik.errors.tags)}
                   helperText={
-                    formik.touched.tags && typeof formik.errors.tags === 'string'
+                    (formik.touched.tags && typeof formik.errors.tags === 'string'
                       ? formik.errors.tags
-                      : 'Press Enter to add a tag. Remaining text is included on submit.'
+                      : undefined) || undefined
                   }
                 />
               </ShakingTextField>

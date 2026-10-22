@@ -98,7 +98,13 @@ export default function FeeWaiverToggle({
         />
       </Tooltip>
 
-      <Dialog open={open} onClose={close} maxWidth="xs" fullWidth onClick={(e) => e.stopPropagation()}>
+      <Dialog
+        open={open}
+        onClose={close}
+        maxWidth="xs"
+        fullWidth
+        onClick={(e) => e.stopPropagation()}
+      >
         <DialogTitle>Waive {sourceType === 'LateFee' ? 'Late Fee' : 'Charge'}</DialogTitle>
         <DialogContent>
           <Box sx={{ mb: 2, p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
@@ -116,7 +122,7 @@ export default function FeeWaiverToggle({
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             inputProps={{ maxLength: 500 }}
-            helperText={`${reason.length}/500 · This immediately waives the full remaining amount.`}
+
             required
           />
         </DialogContent>
@@ -126,7 +132,9 @@ export default function FeeWaiverToggle({
             onClick={close}
             color="inherit"
             disabled={isLoading}
-          >Cancel</Button>
+          >
+            Cancel
+          </Button>
           <LoadingButton
             startIcon={<Iconify icon="mdi:cash-remove" />}
             variant="contained"

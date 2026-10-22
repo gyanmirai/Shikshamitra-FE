@@ -23,8 +23,9 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { shikshaMitraToast } from 'src/components/toast';
+
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { financePermissions } from 'src/constants/finance-menu';
@@ -66,6 +67,7 @@ import { normalizeLedgerStatus } from './feeLedgerStatus';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
 import CollectionLedgerTable from './CollectionLedgerTable';
 import SelectedCollectionItems from './SelectedCollectionItems';
+import { orderSelectedCollectionItems } from './collectionAllocationOrder';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { collectionPaymentDetails } from './collectionPaymentDetails';
@@ -275,6 +277,9 @@ const FeeCollectComponentForm = ({
   });
 
   const formData = collectionAdapter ? collectionAdapter.data : studentCollectFormData;
+  const allocationBasis = formData?.allocationBasis ?? 'Legacy';
+  const usesAutomaticAllocation =
+    allocationBasis === 'FeeHead' || allocationBasis === 'Installment';
   const collectFormLoading = collectionAdapter
     ? collectionAdapter.isLoading
     : studentCollectFormLoading;
@@ -312,7 +317,12 @@ const FeeCollectComponentForm = ({
   const collectLoading =
     submitting || (collectionAdapter ? collectionAdapter.isCollecting : studentCollectLoading);
   const adaptedOutcomeUnresolved = Boolean(collectionAdapter && collectionOutcomeUncertain);
-  const collectionReadBlocked = Boolean(!canCollect || collectFormError || collectFormFetching);
+  const collectionReadBlocked = Boolean(
+    !canCollect ||
+    collectFormError ||
+    collectFormFetching ||
+    (usesAutomaticAllocation && (!formData?.allocationRevision || !formData?.allocationDueFeeOrder))
+  );
 
   const submissionRef = useRef<{
     contextKey: string;
@@ -354,36 +364,36 @@ const FeeCollectComponentForm = ({
   const feeReceiptData =
     lastCollectResponse && receiptPreviewState.feeReceipt
       ? {
-        id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
-        receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
-        studentId: lastCollectResponse.studentId ?? '',
-        studentName: resolvedStudentName,
-        academicYearId: lastCollectResponse.academicYearId,
-        totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
-        collectedAt: lastCollectResponse.collectedAt,
-        collectedBy: lastCollectResponse.collectedBy,
-        paidFeeHeads: lastCollectResponse.paidFeeHeads,
-        auditSummary: lastCollectResponse.auditSummary,
-      }
+          id: lastCollectResponse.feeReceiptId ?? receiptPreviewState.feeReceipt.id,
+          receiptNumber: lastCollectResponse.feeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId ?? '',
+          studentName: resolvedStudentName,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount: lastCollectResponse.paidFeeHeads.reduce((sum, h) => sum + h.amountPaid, 0),
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidFeeHeads: lastCollectResponse.paidFeeHeads,
+          auditSummary: lastCollectResponse.auditSummary,
+        }
       : undefined;
 
   const chargeReceiptData =
     lastCollectResponse && receiptPreviewState.chargeReceipt
       ? {
-        id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
-        receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
-        studentId: lastCollectResponse.studentId ?? '',
-        studentName: resolvedStudentName,
-        academicYearId: lastCollectResponse.academicYearId,
-        totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
-          (sum, c) => sum + c.amountPaid,
-          0
-        ),
-        collectedAt: lastCollectResponse.collectedAt,
-        collectedBy: lastCollectResponse.collectedBy,
-        paidCharges: lastCollectResponse.paidCharges ?? [],
-        auditSummary: lastCollectResponse.auditSummary,
-      }
+          id: lastCollectResponse.chargeReceiptId ?? receiptPreviewState.chargeReceipt.id,
+          receiptNumber: lastCollectResponse.chargeReceiptNumber ?? '',
+          studentId: lastCollectResponse.studentId ?? '',
+          studentName: resolvedStudentName,
+          academicYearId: lastCollectResponse.academicYearId,
+          totalAmount: (lastCollectResponse.paidCharges ?? []).reduce(
+            (sum, c) => sum + c.amountPaid,
+            0
+          ),
+          collectedAt: lastCollectResponse.collectedAt,
+          collectedBy: lastCollectResponse.collectedBy,
+          paidCharges: lastCollectResponse.paidCharges ?? [],
+          auditSummary: lastCollectResponse.auditSummary,
+        }
       : undefined;
 
   const academicMonthsFromContext = useMemo(
@@ -422,6 +432,7 @@ const FeeCollectComponentForm = ({
           feeHeadId: item.feeHeadId,
           feeHeadName: item.feeHeadName,
           installmentLabel: item.installmentLabel,
+          installmentId: item.installmentId,
           dueDate: item.dueDate,
           total: item.total,
           scheduledTotal: item.scheduledTotal,
@@ -787,6 +798,38 @@ const FeeCollectComponentForm = ({
   }, [formik.values.selectedItems, formik.values.charges, chargesData]);
 
   const finalAmount = subtotal;
+  const orderedSelectedItems = useMemo(
+    () =>
+      usesAutomaticAllocation
+        ? orderSelectedCollectionItems(
+            formik.values.selectedItems,
+            formData?.allocationDueFeeOrder ?? []
+          )
+        : formik.values.selectedItems,
+    [usesAutomaticAllocation, formik.values.selectedItems, formData?.allocationDueFeeOrder]
+  );
+  const allocationFormValues = { ...formik.values, selectedItems: orderedSelectedItems };
+  const showLiveAllocation =
+    usesAutomaticAllocation &&
+    Number(formik.values.payment.amount) > 0 &&
+    Number(formik.values.payment.amount) <= finalAmount;
+  const previousAllocationRevision = useRef<string | null | undefined>(
+    formData?.allocationRevision
+  );
+  useEffect(() => {
+    const previous = previousAllocationRevision.current;
+    previousAllocationRevision.current = formData?.allocationRevision;
+    if (
+      previous &&
+      previous !== formData?.allocationRevision &&
+      !submissionInFlight.current &&
+      !collectionOutcomeUncertain
+    ) {
+      submissionRef.current = null;
+      setPreviewOpen(false);
+      setFinalReviewOpen(false);
+    }
+  }, [formData?.allocationRevision, collectionOutcomeUncertain]);
   const overallOutstanding =
     (formData?.summary?.pendingFee ?? 0) +
     (formData?.charges ?? []).reduce(
@@ -818,25 +861,6 @@ const FeeCollectComponentForm = ({
     formik.setFieldValue('payment.amount', subtotal > 0 ? String(subtotal) : '', false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtotal]);
-
-  const visibleFeeKeys = new Set(
-    filteredLedgerData.monthWise.flatMap((group) =>
-      group.items.map((item) =>
-        selectionItemKey({
-          dueFeeId: item.dueFeeId,
-          feeHeadId: item.feeHeadId,
-          period: toPeriod(
-            group.month,
-            group.year ?? currentYear?.year ?? new Date().getFullYear()
-          ),
-        })
-      )
-    )
-  );
-  const visibleChargeIds = new Set(filteredChargesData.map((charge) => charge.chargeId));
-  const hiddenSelectionCount =
-    formik.values.selectedItems.filter((item) => !visibleFeeKeys.has(selectionItemKey(item)))
-      .length + formik.values.charges.filter((id) => !visibleChargeIds.has(id)).length;
 
   const showOverAllocationWarning =
     balancePaise < 0 && (Boolean(formik.touched.payment?.amount) || formik.submitCount > 0);
@@ -960,7 +984,7 @@ const FeeCollectComponentForm = ({
       paymentMethodNum !== 0 && paymentMethodNum !== 1 && paymentMethodNum !== 2;
 
     const allocation = allocatePayment(
-      formik.values.selectedItems,
+      orderedSelectedItems,
       selectedChargesInOrder(chargesData, formik.values.charges),
       feeHeadMap,
       receivedAmount
@@ -1016,6 +1040,15 @@ const FeeCollectComponentForm = ({
       academicYearId: currentYear?.id ?? '',
       notes: formik.values.remarks ?? undefined,
       paymentConfirmed: isCashierDecided ? confirmNonCash : undefined,
+      ...(usesAutomaticAllocation
+        ? {
+            automaticAllocation: {
+              revision: formData?.allocationRevision ?? '',
+              dueFeeIds: orderedSelectedItems.map((item) => item.dueFeeId ?? ''),
+              chargeIds: formik.values.charges,
+            },
+          }
+        : {}),
       dueFeePayments,
       lateFeePayments,
       chargePayments,
@@ -1046,6 +1079,10 @@ const FeeCollectComponentForm = ({
         }
       }
     } catch (err) {
+      if (parseApiProblemDetail(err).errorCode === 'ShikshaMitra:FeeCollection:AllocationChanged') {
+        submissionRef.current = null;
+        await refetchCollectForm?.();
+      }
       const message =
         parseApiProblemDetail(err).detail || 'Failed to collect fee. Please try again.';
       setCollectionError(message);
@@ -1084,6 +1121,10 @@ const FeeCollectComponentForm = ({
         }
       }
     } catch (err) {
+      if (parseApiProblemDetail(err).errorCode === 'ShikshaMitra:FeeCollection:AllocationChanged') {
+        submissionRef.current = null;
+        await refetchCollectForm?.();
+      }
       const message =
         parseApiProblemDetail(err).detail || 'Failed to save payment. Please try again.';
       setCollectionError(message);
@@ -1280,6 +1321,28 @@ const FeeCollectComponentForm = ({
     [feeHeadMap]
   );
 
+  const liveAllocation = useMemo(
+    () =>
+      allocatePayment(
+        orderedSelectedItems,
+        selectedChargesInOrder(chargesData, formik.values.charges),
+        feeHeadMap,
+        Number(formik.values.payment.amount) || 0
+      ),
+    [
+      orderedSelectedItems,
+      chargesData,
+      formik.values.charges,
+      feeHeadMap,
+      formik.values.payment.amount,
+    ]
+  );
+  const feeAllocationById = new Map(
+    liveAllocation.allocatedRows
+      .filter((row): row is AllocatedFeeRow => row.type === 'fee')
+      .map((row) => [row.dueFeeId, row])
+  );
+
   useEffect(
     () => () => {
       if (feeReceiptBlobUrl) URL.revokeObjectURL(feeReceiptBlobUrl);
@@ -1312,7 +1375,7 @@ const FeeCollectComponentForm = ({
         >
           {collectFormError
             ? parseApiProblemDetail(collectFormError).detail ||
-            'Unable to load fees. Please try again.'
+              'Unable to load fees. Please try again.'
             : !currentYear?.id
               ? 'Academic year is required to collect fees.'
               : 'Fee collection details are unavailable. Please try again.'}
@@ -1343,15 +1406,15 @@ const FeeCollectComponentForm = ({
     setReceiptPreviewState({
       feeReceipt: hasFeeReceipt
         ? {
-          id: collectResponse.feeReceiptId!,
-          receiptNumber: collectResponse.feeReceiptNumber,
-        }
+            id: collectResponse.feeReceiptId!,
+            receiptNumber: collectResponse.feeReceiptNumber,
+          }
         : null,
       chargeReceipt: hasChargeReceipt
         ? {
-          id: collectResponse.chargeReceiptId!,
-          receiptNumber: collectResponse.chargeReceiptNumber,
-        }
+            id: collectResponse.chargeReceiptId!,
+            receiptNumber: collectResponse.chargeReceiptNumber,
+          }
         : null,
     });
 
@@ -1411,7 +1474,11 @@ const FeeCollectComponentForm = ({
           alignItems: 'center',
           justifyContent: 'center',
           flex: 1,
-          minHeight: 400,
+          width: 1,
+          height: 1,
+          minHeight: 0,
+          alignSelf: 'stretch',
+          py: 3,
           gap: 2,
           textAlign: 'center',
           px: 3,
@@ -1465,9 +1532,9 @@ const FeeCollectComponentForm = ({
               student={
                 formData?.student
                   ? ({
-                    studentId: formData.student.studentId,
-                    standardId: formData.student.standardId,
-                  } as any)
+                      studentId: formData.student.studentId,
+                      standardId: formData.student.standardId,
+                    } as any)
                   : null
               }
               handleClose={handleFeeStructureDialogClose}
@@ -1657,6 +1724,7 @@ const FeeCollectComponentForm = ({
               sx={{ minHeight: 0, minWidth: 0, m: 0, p: 0, border: 0 }}
             >
               <FeeLedgerFilterBar
+                allocationBasis={usesAutomaticAllocation ? allocationBasis : undefined}
                 filters={filters}
                 onFilterChange={handleFilterChange}
                 academicYearMonths={academicYearMonths}
@@ -1675,13 +1743,7 @@ const FeeCollectComponentForm = ({
                     Select at least one fee item or charge to collect
                   </Typography>
                 )}
-              {hiddenSelectionCount > 0 && (
-                <Alert severity="info">
-                  {hiddenSelectionCount} selected{' '}
-                  {hiddenSelectionCount === 1 ? 'item is' : 'items are'} outside the current
-                  filters.
-                </Alert>
-              )}
+
               <Box
                 sx={{
                   flex: 1,
@@ -1692,8 +1754,18 @@ const FeeCollectComponentForm = ({
               >
                 <FeeCollectionWaiverContext.Provider value={!collectionAdapter}>
                   <CollectionLedgerTable
+                    allocationBasis={usesAutomaticAllocation ? allocationBasis : undefined}
+                    allocationDueFeeOrder={
+                      usesAutomaticAllocation ? formData?.allocationDueFeeOrder : undefined
+                    }
                     data={filteredLedgerData}
-                    activeTab={filters.activeTab}
+                    activeTab={
+                      usesAutomaticAllocation
+                        ? allocationBasis === 'FeeHead'
+                          ? 'by-fee-head'
+                          : 'by-month'
+                        : filters.activeTab
+                    }
                     layout="ledger"
                     onPeriodFocus={(period) => {
                       const [periodYear, periodMonth] = period.split('-');
@@ -1727,6 +1799,7 @@ const FeeCollectComponentForm = ({
               }}
             >
               <FormSectionCard
+                descriptionTooltip="Select fees, choose a payment method, and record the collection."
                 title="Payment summary"
                 icon="solar:wallet-money-linear"
                 contentSpacing={1}
@@ -1749,7 +1822,7 @@ const FeeCollectComponentForm = ({
                     Clear All
                   </Button>
                 }
-                descriptionTooltip="Select fees, choose a payment method, and record the collection."
+
                 sx={{
                   p: { xs: 1.5, sm: 2 },
                   flex: 1,
@@ -1767,6 +1840,13 @@ const FeeCollectComponentForm = ({
                 }}
               >
                 <Divider sx={{ flexShrink: 0 }} />
+                {usesAutomaticAllocation && (
+                  <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+                    {formData?.collectionPolicyName} · v{formData?.collectionPolicyVersion} ·{' '}
+                    {allocationBasis === 'FeeHead' ? 'By fee head' : 'By installment'} · Top to
+                    bottom as shown in the ledger
+                  </Typography>
+                )}
                 <Scrollbar
                   role="region"
                   aria-label="Payment details"
@@ -1786,12 +1866,21 @@ const FeeCollectComponentForm = ({
                     sx={{ m: 0, px: 0.5, py: 1, border: 0, minWidth: 0 }}
                   >
                     <SelectedCollectionItems
+                      fixedFeeOrder={usesAutomaticAllocation}
+                      showAllocation={showLiveAllocation}
                       disabled={collectLoading || adaptedOutcomeUnresolved || collectionReadBlocked}
-                      fees={formik.values.selectedItems.map((item) => ({
+                      fees={orderedSelectedItems.map((item) => ({
                         id: selectionItemKey(item),
                         label: feeHeadMap[item.feeHeadId] ?? item.feeHeadId,
-                        term: dayjs(`${item.period}-01`).format('MMM YYYY'),
-                        amount: roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
+                        term:
+                          (usesAutomaticAllocation && item.installmentLabel) ||
+                          dayjs(`${item.period}-01`).format('MMM YYYY'),
+                        amount: showLiveAllocation
+                          ? (feeAllocationById.get(item.dueFeeId)?.paidAmount ?? 0)
+                          : roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0),
+                        remainingAmount: showLiveAllocation
+                          ? feeAllocationById.get(item.dueFeeId)?.remainingAmount
+                          : undefined,
                         onRemove: () =>
                           handleSelectionChange(
                             formik.values.selectedItems.filter(
@@ -1804,7 +1893,16 @@ const FeeCollectComponentForm = ({
                           id: charge.chargeId,
                           label: charge.chargeName,
                           term: charge.dueDate ? dayjs(charge.dueDate).format('MMM YYYY') : '—',
-                          amount: charge.amount,
+                          amount: showLiveAllocation
+                            ? (liveAllocation.allocatedRows.find(
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.paidAmount ?? 0)
+                            : charge.amount,
+                          remainingAmount: showLiveAllocation
+                            ? liveAllocation.allocatedRows.find(
+                                (row) => row.type === 'charge' && row.key === charge.chargeId
+                              )?.remainingAmount
+                            : undefined,
                           onRemove: () =>
                             handleChargesChange(
                               formik.values.charges.filter((id) => id !== charge.chargeId)
@@ -1875,7 +1973,7 @@ const FeeCollectComponentForm = ({
                               helperText={
                                 formik.touched.payment?.amount || formik.submitCount > 0
                                   ? (formik.errors.payment?.amount as string)
-                                  : ''
+                                  : undefined
                               }
                             />
                           </ShakingTextField>
@@ -1915,7 +2013,7 @@ const FeeCollectComponentForm = ({
                             helperText={
                               formik.touched.payment?.paymentMethod || formik.submitCount > 0
                                 ? (formik.errors.payment?.paymentMethod as string)
-                                : ''
+                                : undefined
                             }
                           />
                         </ShakingTextField>
@@ -1936,14 +2034,14 @@ const FeeCollectComponentForm = ({
                           error={
                             cashReceived !== null &&
                             toPaise(Number(cashReceived)) <
-                            toPaise(Number(formik.values.payment.amount))
+                              toPaise(Number(formik.values.payment.amount))
                           }
                           helperText={
-                            cashReceived !== null &&
-                              toPaise(Number(cashReceived)) <
+                            (cashReceived !== null &&
+                            toPaise(Number(cashReceived)) <
                               toPaise(Number(formik.values.payment.amount))
                               ? 'Cash received must cover the amount to collect.'
-                              : ''
+                              : undefined) || undefined
                           }
                         />
                       )}
@@ -1991,7 +2089,7 @@ const FeeCollectComponentForm = ({
                         {/* Extra payment details (cheque, upi, etc.) */}
                         {(
                           paymentMethodsConfig[
-                          formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+                            formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
                           ] ?? []
                         )
                           .filter((field: IPaymentFieldConfig) => field.name !== 'amount')
@@ -2036,7 +2134,7 @@ const FeeCollectComponentForm = ({
                                           ),
                                           helperText:
                                             (touched || formik.submitCount > 0) &&
-                                              typeof error === 'string'
+                                            typeof error === 'string'
                                               ? error
                                               : '',
                                         },
@@ -2056,14 +2154,14 @@ const FeeCollectComponentForm = ({
                                       size="small"
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        ((touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
                                           ? error
                                           : isBankAccountField && isBankAccountsBusy
                                             ? 'Loading bank accounts...'
                                             : isBankAccountField && selectOptions.length === 0
                                               ? 'No bank accounts available'
-                                              : ''
+                                              : '') || undefined
                                       }
                                     >
                                       {isBankAccountField && isBankAccountsBusy ? (
@@ -2111,10 +2209,10 @@ const FeeCollectComponentForm = ({
                                       }}
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        ((touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
                                           ? error
-                                          : ''
+                                          : undefined) || undefined
                                       }
                                     />
                                   ) : (
@@ -2122,10 +2220,10 @@ const FeeCollectComponentForm = ({
                                       fullWidth
                                       type={
                                         field.type === 'text' ||
-                                          field.type === 'numbers' ||
-                                          field.type === 'last4digits' ||
-                                          field.type === 'uppercase' ||
-                                          field.type === 'anytext'
+                                        field.type === 'numbers' ||
+                                        field.type === 'last4digits' ||
+                                        field.type === 'uppercase' ||
+                                        field.type === 'anytext'
                                           ? 'text'
                                           : field.type
                                       }
@@ -2182,10 +2280,10 @@ const FeeCollectComponentForm = ({
                                       }}
                                       error={Boolean((touched || formik.submitCount > 0) && error)}
                                       helperText={
-                                        (touched || formik.submitCount > 0) &&
-                                          typeof error === 'string'
+                                        ((touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
                                           ? error
-                                          : ''
+                                          : undefined) || undefined
                                       }
                                       inputProps={
                                         field.type === 'number'
@@ -2223,7 +2321,7 @@ const FeeCollectComponentForm = ({
                               0,
                               (toPaise(Number(cashReceived ?? formik.values.payment.amount)) -
                                 toPaise(Number(formik.values.payment.amount))) /
-                              100
+                                100
                             ),
                             'INR'
                           )}
@@ -2285,7 +2383,7 @@ const FeeCollectComponentForm = ({
                         (formik.values.payment.paymentMethod === 'Cash' &&
                           cashReceived !== null &&
                           toPaise(Number(cashReceived)) <
-                          toPaise(Number(formik.values.payment.amount))) ||
+                            toPaise(Number(formik.values.payment.amount))) ||
                         adaptedOutcomeUnresolved ||
                         collectionReadBlocked ||
                         (!formik.values.selectedItems.length && !formik.values.charges.length)
@@ -2432,11 +2530,12 @@ const FeeCollectComponentForm = ({
 
       {/* ── Fee Collection Preview Dialog ── */}
       <FeeCollectionPreviewDialog
+        preserveAllocationOrder={usesAutomaticAllocation}
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         onConfirm={handlePreviewConfirm}
         loading={false}
-        formValues={formik.values}
+        formValues={allocationFormValues}
         student={collectionDisplayStudent(formData) ?? student}
         chargesData={chargesData ?? []}
         feeHeadMap={feeHeadMap}
@@ -2453,7 +2552,7 @@ const FeeCollectComponentForm = ({
         onConfirmCollect={handleFinalCollect}
         onSavePending={handleSavePending}
         loading={collectLoading}
-        formValues={formik.values}
+        formValues={allocationFormValues}
         student={student}
         bankAccounts={bankAccountOptions}
       />

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { capitalizeWords } from 'src/utils/input-format';
@@ -36,8 +35,9 @@ export default function ProrationGeneralSection({
 }: ProrationGeneralSectionProps) {
   return (
     <SectionCard
-      title="General Information"
       subtitle="Name the policy and choose when it is available."
+      title="General Information"
+
       icon={GlobalIcons.notebook}
     >
       <Grid container spacing={2}>
@@ -57,8 +57,7 @@ export default function ProrationGeneralSection({
               onBlur={formik.handleBlur}
               error={formik.touched.policyName && Boolean(formik.errors.policyName)}
               helperText={
-                (formik.touched.policyName && (formik.errors.policyName as string)) ||
-                `${(formik.values.policyName || '').length}/128 characters`
+                (formik.touched.policyName && (formik.errors.policyName as string)) || undefined
               }
               inputProps={{ maxLength: 128 }}
             />
@@ -139,7 +138,9 @@ export default function ProrationGeneralSection({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && (formik.errors.description as string)}
+              helperText={
+                (formik.touched.description && (formik.errors.description as string)) || undefined
+              }
               inputProps={{ maxLength: 500 }}
             />
           </ShakingTextField>
@@ -179,7 +180,7 @@ export default function ProrationGeneralSection({
                 error={formik.touched.changeReason && Boolean(formik.errors.changeReason)}
                 helperText={
                   (formik.touched.changeReason && (formik.errors.changeReason as string)) ||
-                  `${(formik.values.changeReason || '').length}/500 — recorded in version history and audit trail`
+                  undefined
                 }
                 inputProps={{ maxLength: 500 }}
               />

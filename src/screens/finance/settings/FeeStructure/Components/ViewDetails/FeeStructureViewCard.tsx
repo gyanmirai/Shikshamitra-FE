@@ -57,9 +57,6 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
               <Typography variant="subtitle2" fontWeight={700}>
                 {feeStructure.name}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Fee heads assigned to this division
-              </Typography>
             </Box>
           </Stack>
           <Chip

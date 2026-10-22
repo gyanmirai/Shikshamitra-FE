@@ -14,12 +14,12 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
+
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
+
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useGetStudentsByScopeQuery } from 'src/redux/student';
@@ -42,7 +42,6 @@ import {
   Skeleton,
   TextField,
   Typography,
-  IconButton,
   Autocomplete,
   FormControlLabel,
 } from '@mui/material';
@@ -275,7 +274,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     permissions,
     `${financePermissions.fees.structureAssign}.View`
   );
-  const theme = useTheme();
+
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   // List filters may refresh while the request is being edited.
   const [openingScope] = useState(() => ({
@@ -940,9 +939,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {/* 1. Student Information */}
                 <Grid size={{ xs: 12 }}>
                   <FormSectionCard
+                    descriptionTooltip="Select the board, medium, class, division, and student for this request."
                     icon="solar:users-group-rounded-bold-duotone"
                     title="Student information"
-                    descriptionTooltip="Select the board, medium, class, division, and student for this request."
                   >
                     <Grid container spacing={1.5}>
                       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -971,7 +970,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               setFieldValue('selectedStudent', null);
                             }}
                             error={!!errors.boardId && touched.boardId}
-                            helperText={(touched.boardId && errors.boardId) as string}
+                            helperText={
+                              ((touched.boardId && errors.boardId) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -999,7 +1000,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               setFieldValue('selectedStudent', null);
                             }}
                             error={!!errors.mediumId && touched.mediumId}
-                            helperText={(touched.mediumId && errors.mediumId) as string}
+                            helperText={
+                              ((touched.mediumId && errors.mediumId) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -1026,7 +1029,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               setFieldValue('selectedStudent', null);
                             }}
                             error={!!errors.standardId && touched.standardId}
-                            helperText={(touched.standardId && errors.standardId) as string}
+                            helperText={
+                              ((touched.standardId && errors.standardId) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -1050,7 +1055,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               setFieldValue('selectedStudent', null);
                             }}
                             error={!!errors.divisionId && touched.divisionId}
-                            helperText={(touched.divisionId && errors.divisionId) as string}
+                            helperText={
+                              ((touched.divisionId && errors.divisionId) as string) || undefined
+                            }
                           />
                         </ShakingTextField>
                       </Grid>
@@ -1097,7 +1104,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 label="Student *"
                                 fullWidth
                                 error={!!errors.studentId && touched.studentId}
-                                helperText={(touched.studentId && errors.studentId) as string}
+                                helperText={
+                                  ((touched.studentId && errors.studentId) as string) || undefined
+                                }
                               />
                             )}
                           />
@@ -1109,15 +1118,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {requestContext?.assignmentSelectionRequired && (
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
+                      descriptionTooltip="Choose the fee assignment whose dues this concession will apply to."
                       icon="solar:bill-list-bold-duotone"
                       title="Fee assignment"
-                      descriptionTooltip="Choose the fee assignment whose dues this concession will apply to."
                     >
-                      <Alert severity="info">
-                        This student has more than one fee assignment. Select the assignment that
-                        owns the dues for this request. You will choose the concession policy in
-                        this request.
-                      </Alert>
                       <CustomSelect
                         size="small"
                         label="Fee assignment *"
@@ -1215,27 +1219,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   </Grid>
                 )}
 
-                {values.studentId && !feeStructureLoading && selectedPolicy && (
-                  <Grid size={{ xs: 12 }}>
-                    <Alert severity="info" variant="outlined">
-                      Policy: <strong>{selectedPolicy.policyName}</strong> (
-                      {selectedPolicy.policyCode}, version {selectedPolicy.version}). It applies to{' '}
-                      {selectedPolicy.applyOn === 'AllFees'
-                        ? ' all installments, including those already paid'
-                        : selectedPolicy.applyOn === 'AllOutstanding'
-                          ? ' all outstanding installments'
-                          : selectedPolicy.applyOn === 'CurrentInstallment'
-                            ? ' the earliest unpaid installment'
-                            : ' installments after the earliest unpaid installment'}
-                      .
-                      {selectedPolicy.applyOn === 'AllFees' &&
-                        (selectedPolicy.autoCreateRefund === false
-                          ? ' The paid concession is refundable; create its linked refund requests manually after approval.'
-                          : ' The paid concession automatically creates linked refund requests after approval.')}
-                    </Alert>
-                  </Grid>
-                )}
-
                 {previewIsError && previewReady && (
                   <Grid size={{ xs: 12 }}>
                     <Alert severity="error">
@@ -1250,9 +1233,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
+                      descriptionTooltip="Choose the concession policy and type, then add remarks for the request."
                       icon="solar:tag-price-bold-duotone"
                       title="Concession details"
-                      descriptionTooltip="Choose the concession policy and type, then add remarks for the request."
                     >
                       <Grid container spacing={1.5}>
                         <Grid size={{ xs: 12, md: 6 }}>
@@ -1288,7 +1271,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                   fullWidth
                                   error={!!errors.concessionPolicyId && touched.concessionPolicyId}
                                   helperText={
-                                    !values.studentId
+                                    (!values.studentId
                                       ? 'Choose a student to load policies.'
                                       : feeStructureIsError
                                         ? 'Could not load concession policies. Retry or check the student fee assignment.'
@@ -1299,7 +1282,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                             : concessionPoliciesList.length === 0
                                               ? 'No active concession policy for this academic year.'
                                               : ((touched.concessionPolicyId &&
-                                                  errors.concessionPolicyId) as string)
+                                                  errors.concessionPolicyId) as string)) ||
+                                    undefined
                                   }
                                 />
                               )}
@@ -1350,21 +1334,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                   }}
                                 >
                                   {option.name}
-                                  <Box sx={{ marginLeft: 'auto' }}>
-                                    <CustomTooltip
-                                      title={option.description || 'No description available'}
-                                      placement="right"
-                                    >
-                                      <IconButton
-                                        size="small"
-                                        sx={{
-                                          color: theme.vars.palette.info.main,
-                                        }}
-                                      >
-                                        <Iconify icon="mdi:information" width={20} />
-                                      </IconButton>
-                                    </CustomTooltip>
-                                  </Box>
                                 </Box>
                               )}
                               renderInput={(params) => (
@@ -1375,7 +1344,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                   fullWidth
                                   error={!!errors.concessionTypeId && touched.concessionTypeId}
                                   helperText={
-                                    (touched.concessionTypeId && errors.concessionTypeId) as string
+                                    ((touched.concessionTypeId &&
+                                      errors.concessionTypeId) as string) || undefined
                                   }
                                 />
                               )}
@@ -1402,9 +1372,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {values.studentId && !feeStructureLoading && !noFeeStructureError && (
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
+                      descriptionTooltip="Select fee heads; the selection applies to every eligible installment shown below."
                       icon="solar:bill-list-bold-duotone"
                       title="Fee heads"
-                      descriptionTooltip="Select fee heads; the selection applies to every eligible installment shown below."
                     >
                       {!values.concessionPolicyId ? (
                         <Typography color="text.secondary" textAlign="center" py={2}>
@@ -1437,7 +1407,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
                           if (displayFeeHeads.length === 0) {
                             return (
-                              <Alert severity="info">
+                              <Alert severity="error">
                                 {requestContext?.blockers?.[0] ||
                                   'No outstanding fee heads are eligible for this policy and fee assignment.'}
                               </Alert>
@@ -1579,9 +1549,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
+                      descriptionTooltip="Enter concession amounts per fee head and review the eligible installments."
                       icon="solar:calculator-bold-duotone"
                       title="Concession values"
-                      descriptionTooltip="Enter concession amounts per fee head and review the eligible installments."
                     >
                       <ValueEntryStep
                         formik={{
@@ -1615,9 +1585,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 {values.concessionTypeId && (
                   <Grid size={{ xs: 12 }}>
                     <FormSectionCard
+                      descriptionTooltip="Upload the required supporting documents for the selected concession type."
                       icon="solar:document-bold-duotone"
                       title="Documents"
-                      descriptionTooltip="Upload the required supporting documents for the selected concession type."
                     >
                       <ConcessionDocumentList
                         concessionId={values.concessionTypeId}
@@ -1628,12 +1598,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         canUpload={canUploadDocuments}
                         canView={canViewDocuments}
                       />
-                      {hasMissingRequiredDocuments && (
-                        <Alert severity="warning" sx={{ mt: 1.5 }}>
-                          Upload every document marked with * before submitting for approval. You
-                          can still save this request as a draft.
-                        </Alert>
-                      )}
                     </FormSectionCard>
                   </Grid>
                 )}
@@ -1654,7 +1618,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             }}
           >
             {isAdminCreator && !adminCanApprove && (
-              <Alert severity="warning" sx={{ mb: 1 }}>
+              <Alert severity="error" sx={{ mb: 1 }}>
                 Approve permission is required to submit an automatically approved concession.
               </Alert>
             )}

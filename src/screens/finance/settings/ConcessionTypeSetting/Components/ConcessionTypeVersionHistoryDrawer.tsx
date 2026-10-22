@@ -100,11 +100,7 @@ function VersionCard({ version }: { version: ConcessionTypeVersionHistoryItem })
                 <Typography variant="caption" color="text.secondary">
                   {formatFieldName(field.fieldName)}
                 </Typography>
-                {field.fieldName === 'DiscountType' ? (
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    This older setting is no longer editable in the concession type form.
-                  </Typography>
-                ) : null}
+                {field.fieldName === 'DiscountType' ? null : null}
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={0.75}
@@ -158,8 +154,9 @@ export default function ConcessionTypeVersionHistoryDrawer({
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <DrawerHeader
-          title={concessionTypeName || 'Concession Type'}
           subtitle="Review the version history and fields changed over time."
+          title={concessionTypeName || 'Concession Type'}
+
           onClose={onClose}
         />
         <Divider />
@@ -195,9 +192,7 @@ export default function ConcessionTypeVersionHistoryDrawer({
               {versions.length > 0 ? (
                 versions.map((version) => <VersionCard key={version.id} version={version} />)
               ) : (
-                <Alert severity="info">
-                  No version history is available for this concession type.
-                </Alert>
+                <Box>No version history is available for this concession type.</Box>
               )}
             </Stack>
           </Scrollbar>

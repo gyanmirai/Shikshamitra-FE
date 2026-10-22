@@ -349,9 +349,6 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
                 <Typography variant="subtitle2" fontWeight={700}>
                   Source Fee Lines
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Fee installments included in this adjustment request
-                </Typography>
               </Box>
             </Stack>
             <CustomizableTable
@@ -375,9 +372,6 @@ const AdjustmentView: React.FC<IAdjustmentViewProps> = ({
               <Box>
                 <Typography variant="subtitle2" fontWeight={700}>
                   Applied Allocations
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Fee dues relieved by this adjustment
                 </Typography>
               </Box>
             </Stack>

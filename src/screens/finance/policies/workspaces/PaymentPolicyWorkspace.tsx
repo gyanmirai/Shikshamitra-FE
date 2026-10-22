@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
@@ -34,8 +34,9 @@ export default function PaymentPolicyWorkspace() {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CustomBreadcrumbs
-        heading="Payment Policy"
         description="Manage fee payment schedules, partial payment logic, receipt rules, and payment gateway options."
+        heading="Payment Policy"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Policies & Rules', href: '/finance/policies' },

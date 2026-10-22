@@ -1,29 +1,32 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { CustomTabs } from 'src/components/custom-tabs';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Tab, Tooltip, Typography } from '@mui/material';
-import budgetData from 'src/json/finance/budget/budgetData.json';
+
+import { Box, Tab, Typography, Tooltip } from '@mui/material';
+
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import budgetExpenseData from 'src/json/finance/budget/budgetIncomeData.json';
 import budgetIncomeData from 'src/json/finance/budget/budgetExpenseData.json';
 
 import FinanceNewBudgetCreateDialog from './component/finance-new-budget-create-dialog';
 
 import type { IIncomeCategory, IExpenseCategory } from './interface/budgeting_interface';
+import CustomTooltip from 'src/components/custom-tooltip';
+
+import budgetData from 'src/json/finance/budget/budgetData.json';
 
 const TABS = [
   { value: 'income', label: 'Income', total: formatNumber(80000) },
@@ -47,7 +50,6 @@ const FinanceNewBudgetingScreen = () => {
     budgetDialog.onTrue();
   };
 
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
   const renderTabLabel = (tab: (typeof TABS)[0]) => (
@@ -93,7 +95,6 @@ const FinanceNewBudgetingScreen = () => {
             typography: 'subtitle2',
           }}
         >
-          {tab.label}
           <Tooltip
             title={
               <Box sx={{ whiteSpace: 'pre-line' }}>
@@ -106,42 +107,38 @@ const FinanceNewBudgetingScreen = () => {
           >
             <Iconify width={16} icon="eva:info-outline" sx={{ color: 'text.disabled' }} />
           </Tooltip>
+
+          {tab.label}
         </Box>
         <Box sx={{ typography: 'h4' }}>₹ {tab.total}</Box>
       </div>
     </Box>
   );
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedEntry(null);
-        setIsEdit(false);
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    budgetDialog.value,
+    () => {
       budgetDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      budgetDialog.onFalse();
-      resetState();
+      setSelectedEntry(null);
+      setIsEdit(false);
     }
-  };
+  );
 
   const renderTableColumns = (type: 'income' | 'expenses') => {
     const commonColumns = {
       name: { id: 'name', label: type === 'income' ? 'Income Category' : 'Expense Category' },
       action: {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Action',
         isFilter: false,
         isSort: false,
-        align: 'right' as const,
+        align: 'left',
         sticky: true,
         render: (_: any, row: any) => (
           <AdaptiveThreeDotsActions
+            directActionLimit={2}
             actions={[
               {
                 id: 'edit',
@@ -156,10 +153,11 @@ const FinanceNewBudgetingScreen = () => {
     };
 
     const formatColumn = (id: string, label: string) => ({
+      cellSx: { textAlign: 'right' as const },
       id,
       label,
       filterType: 'formattedNumber',
-      align: 'right',
+      align: 'left',
       render: (value: number) => (
         <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>
       ),
@@ -213,10 +211,11 @@ const FinanceNewBudgetingScreen = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {discardConfirmation}
       <CustomBreadcrumbs
+        description="The Budget screen provides an overview of income and expenses based on the selected tab. Easily track financial allocations and monitor spending for better financial planning."
         heading="Budgeting"
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
-        description="The Budget screen provides an overview of income and expenses based on the selected tab. Easily track financial allocations and monitor spending for better financial planning."
       />
 
       <CustomTabs
@@ -268,7 +267,8 @@ const FinanceNewBudgetingScreen = () => {
       />
 
       <CustomDialog
-        handleClose={budgetDialog.onFalse}
+        guardUnsavedChanges={false}
+        handleClose={() => handleClose()}
         open={budgetDialog.value}
         maxWidth="sm"
         title={
@@ -289,14 +289,16 @@ const FinanceNewBudgetingScreen = () => {
           </Box>
         }
       >
-        <FinanceNewBudgetCreateDialog
-          onSave={() => {}}
-          dialogValue={open}
-          onClose={handleClose}
-          data={selectedEntry}
-          edit={isEdit}
-          activeTab={tabs.value as string}
-        />
+        {budgetDialog.value && (
+          <FinanceNewBudgetCreateDialog
+            onSave={() => {}}
+            dialogValue={open}
+            onClose={handleClose}
+            data={selectedEntry}
+            edit={isEdit}
+            activeTab={tabs.value as string}
+          />
+        )}
       </CustomDialog>
     </Box>
   );

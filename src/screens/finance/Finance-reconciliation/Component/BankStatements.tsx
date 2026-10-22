@@ -34,6 +34,7 @@ const BankStatements = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
+        stickyPosition: 'left',
         id: 'studentName',
         label: 'Student Name',
         minWidth: '150px',
@@ -137,6 +138,7 @@ const BankStatements = ({
         filterType: 'string',
       },
       {
+        stickyPosition: 'right',
         id: 'status',
         sticky: true,
         label: 'Status',
@@ -151,6 +153,8 @@ const BankStatements = ({
         },
       },
       {
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'actions',
         label: 'Actions',
         isFilter: false,
@@ -160,7 +164,7 @@ const BankStatements = ({
         minWidth: '60px',
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions
+            <AdaptiveThreeDotsActions directActionLimit={2}
               actions={
                 PaymentMethodsStatusType[row.status] === 'Bounced'
                   ? [

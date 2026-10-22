@@ -1,5 +1,6 @@
 'use client';
 
+import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
@@ -14,7 +15,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
 import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
@@ -193,7 +194,6 @@ const FinanceReconciliation = () => {
 
   // Redux state for unsaved changes
   const dispatch = useDispatch();
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [, setSelectedEntry] = useState<any>(null);
 
   /**
@@ -201,26 +201,13 @@ const FinanceReconciliation = () => {
    * @param _e - Event object (unused)
    * @param isSubmit - Boolean indicating if form was submitted
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset state after dialog closes
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedEntry(null);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    // Handle different closing scenarios
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+  const { handleClose, confirmation: discardConfirmation } = useFinanceFormClose(
+    addDiscrepancyDialog.value,
+    () => {
       addDiscrepancyDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addDiscrepancyDialog.onFalse();
-      setTimeout(() => {
-        setSelectedEntry(null);
-      }, 200);
+      setSelectedEntry(null);
     }
-  };
+  );
 
   // Tab change handler
   const handleTabChange = useCallback(
@@ -247,9 +234,11 @@ const FinanceReconciliation = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {discardConfirmation}
       <CustomBreadcrumbs
-        heading="Verify pending receipts"
         description="Confirm or reject provisional payment receipts using the instrument evidence. Bank statement matching is a separate Accounts process."
+        heading="Verify pending receipts"
+
         links={[
           { name: 'Finance', href: '/finance/dashboard/' },
           { name: 'Accounts', href: '/finance/reconciliation' },

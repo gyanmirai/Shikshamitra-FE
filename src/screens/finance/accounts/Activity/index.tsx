@@ -65,9 +65,10 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
       { id: 'categoryName', label: 'Category', minWidth: 140 },
       { id: 'bankLabel', label: 'School Bank Account', minWidth: 180 },
       {
+        cellSx: { textAlign: 'right' as const },
         id: 'amount',
         label: 'Amount',
-        align: 'right',
+        align: 'left',
         minWidth: 125,
         render: (value: number) => fCurrency(value),
       },
@@ -92,6 +93,9 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
         render: (value: string) => fDateTime(value),
       },
       {
+        align: 'left',
+        stickyPosition: 'right',
+        excludeFromExport: true,
         id: 'action',
         label: 'Actions',
         sticky: true,
@@ -136,8 +140,9 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {!embedded && (
         <CustomBreadcrumbs
-          heading="Income & expenses"
           description="Fee collections, confirmed refunds, and manual school entries in one register."
+          heading="Income & expenses"
+
           links={[
             { name: 'Finance', href: financePaths.dashboard },
             { name: 'Accounts' },
@@ -148,13 +153,9 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
       {!canView ? (
         <Alert severity="error">You do not have permission to view Income & Expenses.</Alert>
       ) : !currentYear?.id ? (
-        <Alert severity="info">Select an academic year to view activity.</Alert>
+        <Box>Select an academic year to view activity.</Box>
       ) : (
         <>
-          <Alert severity="info">
-            This register shows completed Fees actions and legacy manual entries. “Not posted” means
-            no General Accounts journal has been created. These rows are not ledger balances.
-          </Alert>
           <CustomTabs
             value={effectiveSource}
             onChange={(_event, value: SourceFilter) => {

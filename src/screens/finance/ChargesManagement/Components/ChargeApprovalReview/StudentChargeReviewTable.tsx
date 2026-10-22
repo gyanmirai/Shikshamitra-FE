@@ -59,6 +59,7 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
 
     return [
       {
+        cellSx: { textAlign: 'center' as const },
         id: 'isSelected',
         label: (
           <Checkbox
@@ -68,7 +69,7 @@ const StudentChargeReviewTable: React.FC<IStudentChargeReviewTableProps> = ({
             onClick={(e) => e.stopPropagation()}
           />
         ),
-        align: 'center',
+        align: 'left',
         isSort: false,
         isFilter: false,
         width: 70,

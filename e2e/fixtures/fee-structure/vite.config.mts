@@ -22,7 +22,7 @@ export default defineConfig({
       { find: 'src', replacement: `${repo}/src` },
     ],
   },
-  define: { 'process.env': '{}' },
+  define: { 'process.env': JSON.stringify({ NEXT_PUBLIC_APP_URL: '' }) },
   esbuild: { jsx: 'automatic' },
   server: { host: '127.0.0.1', port: 4178, strictPort: true, fs: { allow: [repo] } },
 });

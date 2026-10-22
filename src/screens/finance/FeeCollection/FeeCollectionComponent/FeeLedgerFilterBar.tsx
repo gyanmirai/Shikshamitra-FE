@@ -41,6 +41,7 @@ export interface FeeLedgerFilters {
 }
 
 interface FeeLedgerFilterBarProps {
+  allocationBasis?: 'Installment' | 'FeeHead';
   filters: FeeLedgerFilters;
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
@@ -113,6 +114,7 @@ const FeeLedgerFilterBar = ({
   isMonthsLoading = false,
   selectionStates,
   onSelectionFilterChange,
+  allocationBasis,
 }: FeeLedgerFilterBarProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const resolvedYearId = academicYearId ?? currentYear?.id;
@@ -218,8 +220,23 @@ const FeeLedgerFilterBar = ({
             <CustomSelect
               fullWidth
               label="Group by"
-              options={TABS}
-              value={tabs.value as string}
+              options={
+                allocationBasis
+                  ? TABS.map((tab) => ({
+                      ...tab,
+                      label: tab.value === 'by-month' ? 'By installment' : tab.label,
+                    }))
+                  : TABS
+              }
+              value={
+                allocationBasis
+                  ? allocationBasis === 'FeeHead'
+                    ? 'by-fee-head'
+                    : 'by-month'
+                  : (tabs.value as string)
+              }
+              disabled={Boolean(allocationBasis)}
+              helperText={allocationBasis ? 'Set by the collection policy' : undefined}
               size="small"
               onChange={(value) => handleTabChange({} as React.SyntheticEvent, String(value))}
             />

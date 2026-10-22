@@ -423,6 +423,7 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
             <Typography sx={{ ...cellHeaderSx, width: COL.due, flexShrink: 0 }}>
               Due Date
             </Typography>
+
             <Box sx={{ flex: 1 }} />
           </Box>
 
@@ -681,12 +682,6 @@ const PaymentTermScheduleDrawer: React.FC<PaymentTermScheduleDrawerProps> = ({
           gap: 2,
         }}
       >
-        <Typography variant="caption" color="text.disabled">
-          {hasAnyChange
-            ? 'Unsaved changes — review dates before saving.'
-            : 'Edit any cell to customise this schedule.'}
-        </Typography>
-
         <Stack direction="row" spacing={1}>
           <Button
             size="small"
