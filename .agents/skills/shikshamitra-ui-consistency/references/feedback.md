@@ -16,6 +16,12 @@ directly in feature screens or create feature-specific notification styles.
 
 ## Actual API and behavior
 
+Routine settings impact previews and review reminders can use a neutral outlined MUI Alert within their owning workspace.
+Use `background.paper`, `divider`, `text.primary`, and a `text.secondary` icon instead of full-width saturated info or warning fills.
+Preserve the severity icon, explicit issue count or consequence, and a neutral recovery/review action so color is never the only signal.
+Keep request failures and blocking errors visibly semantic, with their existing recovery behavior.
+Use polite status announcements for refreshed summaries and retain alert announcements for actionable blocking conditions.
+
 - `success`, `warning`, and `error` receive `{ message, alertProps? }`. `info` also accepts a message
   callback receiving the toast ID. `alertProps` may be an object or callback receiving that ID.
   `dismiss(id?)` closes feedback; it does not cancel or undo a request.

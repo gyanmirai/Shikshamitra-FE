@@ -51,7 +51,30 @@ import {
   validateConfiguration,
 } from './esi-configuration-form';
 
-// The content owns scrolling; actions stay at the workspace edge at every breakpoint.
+// One contained workspace owns the scroll body and its stable action footer.
+const settingsWorkspaceSx = {
+  flex: '0 1 auto',
+  maxHeight: '100%',
+  minHeight: 0,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  border: 1,
+  borderColor: 'divider',
+  borderRadius: 2,
+  bgcolor: 'background.paper',
+} as const;
+
+const settingsStatusSx = {
+  color: 'text.primary',
+  bgcolor: 'background.paper',
+  borderColor: 'divider',
+  alignItems: 'center',
+  '& .MuiAlert-icon': { color: 'text.secondary' },
+  '& .MuiAlert-action': { alignSelf: 'center', pt: 0, color: 'text.primary' },
+};
+
 const settingsFooterSx = {
   flexShrink: 0,
   display: 'flex',
@@ -93,19 +116,8 @@ export default function EsiStatutorySettings() {
       </Alert>
     );
   return (
-    <Box
-      aria-busy="true"
-      aria-label="Loading ESIC settings"
-      sx={{
-        flex: 1,
-        minHeight: 0,
-        minWidth: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pb: 2 }}>
+    <Box aria-busy="true" aria-label="Loading ESIC settings" sx={settingsWorkspaceSx}>
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 2 } }}>
         <FormSectionCard
           icon={GlobalIcons.lockIcon}
           title="ESIC"
@@ -249,14 +261,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
         aria-label="ESIC settings form"
         onSubmit={form.handleSubmit}
         noValidate
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
+        sx={settingsWorkspaceSx}
       >
         <Stack
           role="region"
@@ -270,8 +275,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
             overflowX: 'hidden',
             overscrollBehaviorY: 'contain',
             scrollPaddingBlock: 2,
-            pb: 2,
-            pr: 0.5,
+            p: { xs: 1.5, sm: 2 },
           }}
         >
           <FormBusyRegion busy={busy} label="Saving ESIC settings…">
@@ -444,7 +448,12 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                 previewDraft &&
                 attention.data &&
                 typeof attention.data.summary.employeeContributionTotal === 'number' && (
-                  <Alert severity={attention.isError ? 'error' : 'info'}>
+                  <Alert
+                    role="status"
+                    severity={attention.isError ? 'error' : 'info'}
+                    variant="outlined"
+                    sx={attention.isError ? undefined : settingsStatusSx}
+                  >
                     {attention.isFetching
                       ? 'Updating draft impact…'
                       : `Draft impact: ${attention.data.summary.coveredEmployeeCount} staff covered. Employee ESIC ${formatEsiCurrency(attention.data.summary.employeeContributionTotal)}, employer ESIC ${formatEsiCurrency(attention.data.summary.employerContributionTotal)}.`}{' '}
@@ -481,11 +490,14 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
               ) && (
                 <Alert
                   severity="warning"
+                  variant="outlined"
+                  sx={settingsStatusSx}
                   action={
                     <Button
                       component={Link}
                       href={hrPaths.payroll.settings.earningComponents}
                       size="small"
+                      color="inherit"
                     >
                       Review earnings
                     </Button>
@@ -497,19 +509,19 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
               {settings.current?.enabled && (
                 <Box>
                   <Alert
+                    role="status"
+                    variant="outlined"
                     severity={
                       (attention.data?.summary.employeesNeedingAttention ?? 0) > 0
                         ? 'warning'
                         : 'info'
                     }
-                    sx={{
-                      alignItems: 'center',
-                      '& .MuiAlert-action': { alignSelf: 'center', pt: 0 },
-                    }}
+                    sx={settingsStatusSx}
                     action={
                       <Button
                         type="button"
                         size="small"
+                        color="inherit"
                         variant="outlined"
                         disabled={busy || attention.isError || !attention.data}
                         aria-expanded={Boolean(employees)}
