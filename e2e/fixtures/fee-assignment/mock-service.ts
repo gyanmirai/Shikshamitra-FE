@@ -203,6 +203,17 @@ function commit(input: AssignmentRequest): AssignmentCommit {
   saved.set(input.studentId, result);
   return result;
 }
+// Opt into saved evidence so drawer checks do not depend on completing a new assignment.
+if (new URLSearchParams(window.location.search).has('assignedView')) {
+  commit({
+    studentId: 'student-one',
+    academicYearId: 'year',
+    standardFeeStructureId: candidate.id,
+    selectedOptionalFeeHeadIds: [],
+    servicePeriods: [],
+    feeHeadDetails: [],
+  });
+}
 export const api = createApi({
   reducerPath: 'api',
   tagTypes: [

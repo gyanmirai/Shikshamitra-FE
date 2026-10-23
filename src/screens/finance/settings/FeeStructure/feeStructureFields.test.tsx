@@ -140,6 +140,28 @@ async function chooseCollection(name: string) {
   fireEvent.click(await screen.findByRole('button', { name: `Select ${name} version 1` }));
 }
 
+it('saves admission-only heads without a payment frequency and explains the exclusion', async () => {
+  state.lookups.settings.terms = [];
+  render(ui());
+  await addHead();
+  const dialog = screen.getByRole('dialog', { name: 'Add Fee Head' });
+  fireEvent.change(within(dialog).getByRole('textbox', { name: /Annual amount/ }), {
+    target: { value: '500' },
+  });
+  fireEvent.click(within(dialog).getByRole('switch', { name: 'Collect at admission' }));
+  expect(within(dialog).queryByRole('combobox', { name: /Payment frequency/ })).toBeNull();
+  expect(within(dialog).getByText(/Excluded from Fee Collection and income/)).toBeVisible();
+  const info = within(dialog).getByRole('button', { name: 'About collect at admission' });
+  act(() => info.focus());
+  expect(await screen.findByRole('tooltip', {}, { timeout: 4000 })).toHaveTextContent('does not collect money');
+  act(() => info.blur());
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add Fee Head' })).toBeNull());
+  expect(screen.getByText(/Admission only · Excluded from collection and income/)).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Tuition' }));
+  expect(screen.getByRole('switch', { name: 'Collect at admission' })).toBeChecked();
+});
+
 it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {
   render(ui());
   fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));

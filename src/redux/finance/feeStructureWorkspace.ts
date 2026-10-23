@@ -23,6 +23,7 @@ export interface StructureLine {
   isVariable?: boolean;
   isOneTime: boolean;
   isOptional: boolean;
+  collectAtAdmission?: boolean;
   payableMonth: number;
   payableYear: number;
   paymentTermId: string | null;

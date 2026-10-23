@@ -153,11 +153,15 @@ Fee-line status and overdue classification come from the backend; see the
 
 ## Fee Collection selection and receiving bank
 
-Collection Policy's **Payment Allocation** section selects **By installment** or **By fee head**.
+Collection Policy's **Automatic Payment Priority** section selects **Installment first (earliest due)**
+or **Fee head first (A–Z)**. The latter clears each head's earliest dues before the next head.
 The collect form receives the assignment's pinned `allocationBasis`, policy identity/version,
-`allocationDueFeeOrder` and `allocationRevision`. Both ledger grouping and selected payment rows
-follow that returned order, including custom installments within the same month. Entering an
-amount updates Pay now and Remaining per selected row. No fee-head priority editor is introduced.
+`allocationDueFeeOrder` and `allocationRevision`. With no fees or charges selected, entering an
+amount allocates across eligible outstanding fees from the complete ledger in the returned order.
+Additional charges require explicit selection. Selecting any fees or charges limits collection to
+that selection. Entering an amount updates Pay now and Remaining; amount-only summaries show
+the funded fees. Group by remains editable, and grouping, sorting and display filters never change
+payment priority or the amount-only candidate set. No fee-head priority editor is introduced.
 Configured fee rows have numbered positions; table sorting and summary dragging cannot change
 the automatic allocation sequence. Charge ordering remains in its existing separate group.
 Review and collection submit every selected due ID, including unfunded rows, and the revision
@@ -523,8 +527,9 @@ See [the workspace contract](./references/income-expense-workspaces.md) for sepa
 Finance tables show the first three permitted actions directly; only additional actions use the
 more menu. Actions retain their disabled explanation when a required fee assignment is missing.
 Collections supports Status sorting through the server query, before pagination. Collect Fees
-and Fee Adjustment are unavailable for an unassigned student, while assignment and view flows
-remain reachable. The collection empty state fills and centres in the available content area.
+is unavailable for an unassigned student, while assignment and view flows remain reachable.
+Fee Adjustment is hidden from Collections row actions. The collection empty state fills and
+centres in the available content area.
 
 Finance editor Cancel, X and navigation share an in-app discard confirmation. Keeping changes
 preserves the current form; discarding, successful submission or closing ends the form session.

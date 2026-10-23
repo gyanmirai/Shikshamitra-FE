@@ -210,7 +210,6 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
           effectiveTo: policy.effectiveTo,
           enableLateFee: policy.enableLateFee,
           gracePeriodDays: policy.gracePeriodDays,
-          gracePeriodType: policy.gracePeriodType,
           lateFeeApplyOnFeeHeads: policy.lateFeeApplyOnFeeHeads,
           lateFeeType: policy.lateFeeType,
           flatAmount: policy.flatAmount,

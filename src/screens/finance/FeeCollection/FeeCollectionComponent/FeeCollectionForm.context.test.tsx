@@ -299,12 +299,34 @@ describe('embedded Finance collection context', () => {
 
   it('submits the configured screen order and keeps unfunded dues in the automatic selection', async () => {
     const data = form() as any;
-    const later = { ...data.ledger[0].items[0], dueFeeId: 'later-due', installmentLabel: 'July 2026' };
+    const later = {
+      ...data.ledger[0].items[0],
+      dueFeeId: 'later-due',
+      installmentLabel: 'July 2026',
+    };
     data.ledger.push({ month: 6, year: 2026, totalDue: 500, items: [later] });
-    Object.assign(data, { allocationBasis: 'Installment', allocationDueFeeOrder: ['canonical-due', 'later-due'], allocationRevision: 'review-version', collectionPolicyName: 'Standard policy', collectionPolicyVersion: 2 });
+    Object.assign(data, {
+      allocationBasis: 'Installment',
+      allocationDueFeeOrder: ['canonical-due', 'later-due'],
+      allocationRevision: 'review-version',
+      collectionPolicyName: 'Standard policy',
+      collectionPolicyVersion: 2,
+    });
     mocks.selectionOverrides = [
-      { dueFeeId: 'later-due', feeHeadId: 'form-fee', period: '2026-07', dueAmount: 500, installmentLabel: 'July 2026' },
-      { dueFeeId: 'canonical-due', feeHeadId: 'form-fee', period: '2026-06', dueAmount: 500, installmentLabel: 'June 2026' },
+      {
+        dueFeeId: 'later-due',
+        feeHeadId: 'form-fee',
+        period: '2026-07',
+        dueAmount: 500,
+        installmentLabel: 'July 2026',
+      },
+      {
+        dueFeeId: 'canonical-due',
+        feeHeadId: 'form-fee',
+        period: '2026-06',
+        dueAmount: 500,
+        installmentLabel: 'June 2026',
+      },
     ];
     const context = adapter({ data });
     render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
@@ -316,10 +338,121 @@ describe('embedded Finance collection context', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
-    await waitFor(() => expect(context.collect).toHaveBeenCalledWith(expect.objectContaining({
-      automaticAllocation: { revision: 'review-version', dueFeeIds: ['canonical-due', 'later-due'], chargeIds: [] },
-      dueFeePayments: [{ dueFeeId: 'canonical-due', feeHeadId: 'form-fee', amount: 250 }],
-    })));
+    await waitFor(() =>
+      expect(context.collect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          automaticAllocation: {
+            revision: 'review-version',
+            dueFeeIds: ['canonical-due', 'later-due'],
+            chargeIds: [],
+          },
+          dueFeePayments: [{ dueFeeId: 'canonical-due', feeHeadId: 'form-fee', amount: 250 }],
+        })
+      )
+    );
+  });
+
+  it.each([
+    { basis: 'Installment', order: ['canonical-due', 'later-due'], funded: 'canonical-due' },
+    { basis: 'FeeHead', order: ['later-due', 'canonical-due'], funded: 'later-due' },
+  ])(
+    'collects an amount without selection using $basis priority',
+    async ({ basis, order, funded }) => {
+      const data = form() as any;
+      data.ledger.push({
+        month: 6,
+        year: 2026,
+        totalDue: 500,
+        items: [
+          { ...data.ledger[0].items[0], dueFeeId: 'later-due', installmentLabel: 'July 2026' },
+        ],
+      });
+      Object.assign(data, {
+        allocationBasis: basis,
+        allocationDueFeeOrder: order,
+        allocationRevision: 'review-version',
+      });
+      const context = adapter({ data });
+      render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
+      expect(screen.getByLabelText('Amount to collect *')).toHaveValue('');
+      fireEvent.change(screen.getByLabelText('Amount to collect *'), {
+        target: { value: '250.25' },
+      });
+      await waitFor(() =>
+        expect(screen.getByLabelText('Amount to collect *')).toHaveValue('₹ 250.25')
+      );
+      const rows = within(
+        screen.getByRole('table', { name: 'Selected collection items' })
+      ).getAllByRole('row');
+      expect(rows).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: /Remove Form fee/ })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+      await waitFor(() =>
+        expect(context.collect).toHaveBeenCalledWith(
+          expect.objectContaining({
+            automaticAllocation: { revision: 'review-version', dueFeeIds: order, chargeIds: [] },
+            dueFeePayments: [{ dueFeeId: funded, feeHeadId: 'form-fee', amount: 250.25 }],
+          })
+        )
+      );
+    }
+  );
+
+  it('rejects excess automatic payments and clears amount-only entry', async () => {
+    const data = form() as any;
+    Object.assign(data, {
+      allocationBasis: 'Installment',
+      allocationDueFeeOrder: ['canonical-due'],
+      allocationRevision: 'review-version',
+    });
+    render(
+      <FeeCollectComponentForm academicYear={academicYear} collectionAdapter={adapter({ data })} />
+    );
+    fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '600' } });
+    fireEvent.blur(screen.getByLabelText('Amount to collect *'));
+    expect(await screen.findByText('Amount cannot exceed ₹500')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear All' }));
+    await waitFor(() => expect(screen.getByLabelText('Amount to collect *')).toHaveValue(''));
+    expect(screen.getByRole('button', { name: 'Collect Payment' })).toBeDisabled();
+  });
+
+  it('collects only the explicitly selected due instead of other outstanding fees', async () => {
+    const data = form() as any;
+    data.ledger.push({
+      month: 6,
+      year: 2026,
+      totalDue: 500,
+      items: [{ ...data.ledger[0].items[0], dueFeeId: 'later-due', installmentLabel: 'July 2026' }],
+    });
+    Object.assign(data, {
+      allocationBasis: 'Installment',
+      allocationDueFeeOrder: ['canonical-due', 'later-due'],
+      allocationRevision: 'review-version',
+    });
+    mocks.selectionOverrides = [
+      { dueFeeId: 'later-due', feeHeadId: 'form-fee', period: '2026-07', dueAmount: 500 },
+    ];
+    const context = adapter({ data });
+    render(<FeeCollectComponentForm academicYear={academicYear} collectionAdapter={context} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select form fee' }));
+    fireEvent.change(screen.getByLabelText('Amount to collect *'), { target: { value: '250' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Collect Payment' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Review 2026-2027' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm collection' }));
+    await waitFor(() =>
+      expect(context.collect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          automaticAllocation: {
+            revision: 'review-version',
+            dueFeeIds: ['later-due'],
+            chargeIds: [],
+          },
+          dueFeePayments: [{ dueFeeId: 'later-due', feeHeadId: 'form-fee', amount: 250 }],
+        })
+      )
+    );
   });
 
   it('keeps checkout values and collection actions in the payment summary', async () => {

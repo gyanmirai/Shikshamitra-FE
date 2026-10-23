@@ -13,6 +13,49 @@ import {
 } from './feeStructureModel';
 
 describe('Fee Structure editor contract', () => {
+  it('defaults existing heads to regular collection and patches admission collection independently', () => {
+    const before = structureCandidate({
+      feeHeads: [
+        {
+          id: 'line',
+          feeHeadId: 'head',
+          amount: 500,
+          isOneTime: false,
+          isOptional: false,
+          payableMonth: 0,
+          payableYear: 0,
+          paymentTermId: null,
+          paymentTermVersionId: null,
+          scheduleMode: 'Inherited',
+          installmentOverrides: [],
+        },
+      ],
+    });
+    expect(before.feeHeads[0].collectAtAdmission).toBe(false);
+    expect(paymentTermError(before.feeHeads[0])).toBeTruthy();
+    const after = structureCandidate(before);
+    after.feeHeads[0].collectAtAdmission = true;
+    expect(paymentTermError(after.feeHeads[0])).toBe('');
+    expect(buildStructureChanges(before, after)).toEqual({
+      feeHeads: {
+        add: [],
+        update: [{ lineId: 'line', collectAtAdmission: true }],
+        removeLineIds: [],
+      },
+    });
+    expect(structureCandidate(after).feeHeads[0].collectAtAdmission).toBe(true);
+    expect(
+      withDefaultPaymentTerm(after.feeHeads[0], {
+        id: 'term',
+        versionId: 'v1',
+        name: 'Term',
+        versionNumber: 1,
+        isCurrent: true,
+        demandGenerationRule: '',
+        installments: [],
+      }).paymentTermId
+    ).toBeNull();
+  });
   it('patches fixed to variable pricing together without changing the payment term or optional flag', () => {
     const before = structureCandidate({
       feeHeads: [
@@ -72,6 +115,7 @@ describe('Fee Structure editor contract', () => {
           feeHeadId: 'head',
           isVariable: false,
           amount: 1000.01,
+          collectAtAdmission: false,
           isOneTime: false,
           isOptional: false,
           payableMonth: 0,
@@ -299,9 +343,15 @@ it('requires both term IDs and preserves pinned versions and customized schedule
 });
 
 it('omits retired proration fields when adapting a legacy response', () => {
-  const legacy = { ...structureCandidate(), prorationPolicyId: 'old', prorationPolicyVersionId: 'old-v1' };
+  const legacy = {
+    ...structureCandidate(),
+    prorationPolicyId: 'old',
+    prorationPolicyVersionId: 'old-v1',
+  };
   const adapted = structureCandidate(legacy);
   expect(adapted).not.toHaveProperty('prorationPolicyId');
   expect(adapted).not.toHaveProperty('prorationPolicyVersionId');
-  expect(buildStructureChanges(adapted, { ...adapted, name: 'Changed name' })).toEqual({ name: 'Changed name' });
+  expect(buildStructureChanges(adapted, { ...adapted, name: 'Changed name' })).toEqual({
+    name: 'Changed name',
+  });
 });

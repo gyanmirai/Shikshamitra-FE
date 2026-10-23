@@ -10,11 +10,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Link, Stack, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { DetailField, DetailSection } from 'src/components/detail-view';
+import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 import { selectableAssignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 import { groupAssignmentInstallments } from './assignmentReviewPresentation';
-import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 
 // Embedded evidence tables: the drawer body owns vertical scrolling, while each
 // shared table contains horizontal overflow at narrow widths.
@@ -44,7 +44,7 @@ export default function AssignmentReview({
     <DetailSection
       helpText="Totals are calculated by the server. Service reduction is the difference between the full scheduled amount and the amount assigned for the selected service dates."
       icon="mdi:cash-multiple"
-      title="Assignment total"
+      title="Assignment Total"
     >
       <DetailField
         label="Fee Structure"
@@ -84,19 +84,23 @@ export default function AssignmentReview({
   );
   return (
     <Box sx={{ minWidth: 0, containerType: 'inline-size' }}>
-      <Stack spacing={1.5}>
+      <Stack spacing={2}>
         <Box
           sx={{
             display: 'grid',
-            gap: 1.5,
+            gap: 2,
             gridTemplateColumns: 'minmax(0, 1fr)',
             gridTemplateAreas: '"summary" "details"',
             alignItems: 'start',
           }}
         >
           <Box sx={{ gridArea: 'summary', minWidth: 0, alignSelf: 'start' }}>{summary}</Box>
-          <Stack spacing={1.5} sx={{ gridArea: 'details', minWidth: 0 }}>
-            <DetailSection icon="mdi:format-list-bulleted" title="Fee breakdown">
+          <Stack spacing={2} sx={{ gridArea: 'details', minWidth: 0 }}>
+            <DetailSection
+              icon="mdi:format-list-bulleted"
+              title="Fee Breakdown"
+              helpText="Saved fee-head selections, payment-term versions, service dates and assigned amounts. Unselected optional fees are identified separately."
+            >
               <CustomizableTable
                 {...embeddedTableProps}
                 tableId={`${tableId}-heads`}
@@ -149,6 +153,16 @@ export default function AssignmentReview({
                               {head.servicePeriod.reason}
                             </Typography>
                           )}
+                          {(head.servicePeriod?.startDate || head.servicePeriod?.endDate) && (
+                            <Typography variant="caption" color="text.secondary">
+                              Service period:{' '}
+                              {head.servicePeriod.startDate
+                                ? fDate(head.servicePeriod.startDate)
+                                : '—'}{' '}
+                              –{' '}
+                              {head.servicePeriod.endDate ? fDate(head.servicePeriod.endDate) : '—'}
+                            </Typography>
+                          )}
                         </Stack>
                       ) : (
                         '—'
@@ -182,7 +196,8 @@ export default function AssignmentReview({
 
             <DetailSection
               icon="mdi:calendar-clock-outline"
-              title="Installment schedule"
+              title="Installment Schedule"
+              helpText="Recorded installments with demand dates, payment deadlines and assigned amounts. Saved assignments also show paid and outstanding balances. View all opens the individual fee-head installments."
               action={
                 <Link
                   component="button"
@@ -319,7 +334,11 @@ export default function AssignmentReview({
               />
             </DetailSection>
 
-            <DetailSection icon="mdi:shield-check-outline" title="Applicable policies">
+            <DetailSection
+              icon="mdi:shield-check-outline"
+              title="Applicable Policies"
+              helpText="Refund and collection policies saved for this student, including their pinned versions and original selections where policies have changed."
+            >
               <Box
                 sx={{
                   display: 'grid',
@@ -368,6 +387,7 @@ export default function AssignmentReview({
         <CustomDialog
           open
           title="Installment details"
+          titleInfo="Individual recorded fee-head installments, allocation shares, dates and amounts for this assignment."
           maxWidth={committed ? 'lg' : 'md'}
           hasForm={false}
           guardUnsavedChanges={false}

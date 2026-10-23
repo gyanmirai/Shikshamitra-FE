@@ -18,9 +18,9 @@ export default function CollectionAllocationSection({
   const legacy = formik.values.allocationBasis === 'Legacy';
   return (
     <SectionCard
-      title="Payment Allocation"
+      title="Automatic Payment Priority"
       icon={GlobalIcons.receiptIcon}
-      subtitle="Payments follow the top-to-bottom order shown on the fee collection screen. Each due is cleared before moving to the next."
+      subtitle="When no fees or charges are selected, the entered amount is allocated across outstanding fees in this priority. Selecting items limits the payment to those items. Ledger grouping does not change payment priority."
     >
       <ShakingTextField
         error={Boolean(formik.touched.allocationBasis && formik.errors.allocationBasis)}
@@ -28,13 +28,14 @@ export default function CollectionAllocationSection({
         <CustomSelect
           fullWidth
           size="small"
-          label="Allocate payment by *"
+          label="Prioritize automatic payments by"
+          required
           name="allocationBasis"
           value={formik.values.allocationBasis ?? 'Legacy'}
           options={[
             ...(legacy ? [{ label: 'Existing selection order', value: 'Legacy' }] : []),
-            { label: 'By installment', value: 'Installment' },
-            { label: 'By fee head', value: 'FeeHead' },
+            { label: 'Installment first (earliest due)', value: 'Installment' },
+            { label: 'Fee head first (A–Z)', value: 'FeeHead' },
           ]}
           onChange={(value) => formik.setFieldValue('allocationBasis', value)}
           onBlur={() => formik.setFieldTouched('allocationBasis', true)}
@@ -43,7 +44,9 @@ export default function CollectionAllocationSection({
             (formik.touched.allocationBasis && formik.errors.allocationBasis) ||
             (legacy
               ? 'This policy retains its existing behavior. Choose a basis to enable automatic allocation.'
-              : 'Uses the order shown in fee collection, from top to bottom. No separate fee-head priority is needed.')
+              : formik.values.allocationBasis === 'FeeHead'
+                ? 'Clears each fee head in alphabetical order, paying its earliest dues first.'
+                : 'Clears the earliest installment first, then moves to the next installment.')
           }
         />
       </ShakingTextField>

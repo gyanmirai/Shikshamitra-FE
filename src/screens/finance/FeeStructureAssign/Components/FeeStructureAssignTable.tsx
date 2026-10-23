@@ -177,15 +177,6 @@ export default function FeeStructureAssignTable({
         </Stack>
       )}
       <CustomizableTable
-        getRowAction={(row) =>
-          row.isFeeStructureAssigned
-            ? {
-                label: `Open ${row.studentName || 'record'}`,
-                onClick: () => {
-                  onAssignStructure(row as IFeeStructureData);
-                },
-              }
-            : undefined}
         tableId="fee-structure-assignment"
         tableTitle="Student fee structure assignments"
         isLoading={query.isFetching}
@@ -398,7 +389,7 @@ export default function FeeStructureAssignTable({
                     variant="text"
                     color="inherit"
                     startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                    aria-label={'Assign fee structure to ' + row.studentName}
+                    aria-label={`Assign fee structure to ${row.studentName}`}
                     disabled={query.isFetching || !row.isActive}
                     onClick={() => onAssignStructure(row)}
                     sx={{ whiteSpace: 'nowrap' }}
@@ -406,25 +397,19 @@ export default function FeeStructureAssignTable({
                     Assign Fee Structure
                   </Button>
                 );
-              return row.isFeeStructureAssigned || canAssign ? (
+              return row.isFeeStructureAssigned && canView ? (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={3}
-                  actions={
-                    row.isFeeStructureAssigned
-                      ? []
-                      : [
-                          {
-                            id: 'assign',
-                            icon: 'mdi:plus',
-                            label: `Assign structure to ${row.studentName}`,
-                            disabled: !row.isActive,
-                            tooltip: row.isActive
-                              ? `Assign structure to ${row.studentName}`
-                              : 'Activate this student’s enrollment before assigning fees.',
-                            onClick: () => onAssignStructure(row),
-                          },
-                        ]
-                  }
+                  directActionLimit={2}
+                  collapseOnOverflow={false}
+                  actions={[
+                    {
+                      id: 'view',
+                      icon: GlobalIcons.eye,
+                      label: `View fee structure for ${row.studentName || 'student'}`,
+                      disabled: query.isFetching,
+                      onClick: () => onAssignStructure(row),
+                    },
+                  ]}
                   sx={{ justifyContent: 'flex-start' }}
                 />
               ) : null;

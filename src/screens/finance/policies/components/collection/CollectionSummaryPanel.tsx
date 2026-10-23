@@ -21,7 +21,6 @@ interface CollectionSummaryPanelProps {
   checks: {
     nameValid: boolean;
     graceValid: boolean;
-    graceTypeValid: boolean;
     headsValid: boolean;
     lateFeeValid: boolean;
     incomeHeadValid: boolean;
@@ -132,7 +131,7 @@ export default function CollectionSummaryPanel({
               label="Grace Period"
               value={
                 <Typography variant="caption" fontWeight={600} fontSize="0.72rem">
-                  {formik.values.gracePeriodDays ?? 0} days ({formik.values.gracePeriodType})
+                  {formik.values.gracePeriodDays ?? 0} calendar days
                 </Typography>
               }
             />
@@ -343,7 +342,6 @@ export default function CollectionSummaryPanel({
           <Stack spacing={0.5} mb={2}>
             <ValidationCheck label="General Information complete" valid={checks.nameValid} />
             <ValidationCheck label="Grace period configured" valid={checks.graceValid} />
-            <ValidationCheck label="Grace day type supported" valid={checks.graceTypeValid} />
             <ValidationCheck label="Late fee heads selected" valid={checks.headsValid} />
             <ValidationCheck label="Late fee formula configured" valid={checks.lateFeeValid} />
             <ValidationCheck
