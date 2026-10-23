@@ -24,7 +24,8 @@ export function AdminDashboardAttention({ query }: { query: StudentSectionQuery 
       {
         id: 'studentName',
         label: 'Student',
-        isFilter: false,
+        filterType: 'string' as const,
+        isFilter: true,
         isSort: false,
         minWidth: 140,
         render: (value) => (
@@ -36,13 +37,35 @@ export function AdminDashboardAttention({ query }: { query: StudentSectionQuery 
           </Stack>
         ),
       },
-      { id: 'placement', label: 'Class / Division', isSort: false, isFilter: false, minWidth: 120 },
-      { id: 'blocker', label: 'Pending work', isSort: false, isFilter: false, minWidth: 165 },
-      { id: 'ownerName', label: 'Owner', isSort: false, isFilter: false, minWidth: 100 },
+      {
+        id: 'placement',
+        label: 'Class / Division',
+        filterType: 'string' as const,
+        isSort: false,
+        isFilter: true,
+        minWidth: 120,
+      },
+      {
+        id: 'blocker',
+        label: 'Pending work',
+        filterType: 'string' as const,
+        isSort: false,
+        isFilter: true,
+        minWidth: 165,
+      },
+      {
+        id: 'ownerName',
+        label: 'Owner',
+        filterType: 'string' as const,
+        isSort: false,
+        isFilter: true,
+        minWidth: 100,
+      },
       {
         id: 'dueAt',
         label: 'Due',
-        isFilter: false,
+        filterType: 'date' as const,
+        isFilter: true,
         isSort: false,
         minWidth: 120,
         render: (value: string | null) => {

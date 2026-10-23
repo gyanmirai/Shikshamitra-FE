@@ -176,9 +176,10 @@ const FinanceBudgetSubCategorySettings = () => {
           {
             id: 'description',
             label: 'Description',
+            filterType: 'string' as const,
             minWidth: '300px',
             isSort: false,
-            isFilter: false,
+            isFilter: true,
             align: 'left',
           },
           {
@@ -194,7 +195,7 @@ const FinanceBudgetSubCategorySettings = () => {
             render(value, row: any) {
               return (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={2}
+                  directActionLimit={3}
                   actions={[
                     {
                       id: 'edit',

@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ReceiptStatusColors, ReceiptStatusOptions } from 'src/enums/finance-receipt-status';
 
@@ -18,6 +18,12 @@ const ReceiptTable = ({
 }) => (
   <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
     <CustomizableTable
+      getRowAction={(row) => ({
+        label: `Open fees for ${row.student || row.receiptNumber || 'student'}`,
+        onClick: () => {
+          onView(row as IFeeReceipt);
+        },
+      })}
       tableTitle="Receipts"
       tableId="fees-status-table"
       noDataText={<>No Fees Data Found</>}
@@ -73,32 +79,6 @@ const ReceiptTable = ({
           render(value: string) {
             const color = (ReceiptStatusColors[value] || 'default') as LabelColor;
             return <Label color={color}>{value}</Label>;
-          },
-        },
-        {
-          stickyPosition: 'right',
-          excludeFromExport: true,
-          id: 'actions',
-          label: 'Actions',
-          isFilter: false,
-          isSort: false,
-          align: 'left',
-          minWidth: 70,
-          sticky: true,
-          render(value, row) {
-            return (
-              <AdaptiveThreeDotsActions directActionLimit={2}
-                actions={[
-                  {
-                    id: 'view',
-                    label: 'View',
-                    icon: 'carbon:view-filled',
-                    onClick: () => onView(row as IFeeReceipt),
-                  },
-                ]}
-                placement="right-center"
-              />
-            );
           },
         },
       ]}

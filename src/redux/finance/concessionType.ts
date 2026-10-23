@@ -33,6 +33,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
         skipCount,
         maxResultCount,
         searchTerm,
+        filters,
         includeInactive,
         isActive,
       }: {
@@ -40,6 +41,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
         skipCount?: number;
         maxResultCount?: number;
         searchTerm?: string;
+        filters?: string;
         includeInactive?: boolean;
         isActive?: boolean;
       }) => ({
@@ -49,6 +51,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
           skipCount,
           maxResultCount,
           searchTerm: searchTerm || undefined,
+          filters,
           includeInactive,
           isActive,
         },

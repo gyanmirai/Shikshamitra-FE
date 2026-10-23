@@ -101,6 +101,16 @@ describe('Payment Term installment date entry', () => {
     await waitFor(() => expect(screen.getByDisplayValue('Third')).toHaveFocus());
   });
 
+  it('shows required range errors after leaving that field, without marking other rows', async () => {
+    renderSection();
+    const ranges = screen.getAllByRole('textbox', { name: 'Installment Start–End Date *' });
+    expect(ranges[0]).toHaveAttribute('aria-invalid', 'false');
+    fireEvent.blur(ranges[0]);
+    await waitFor(() => expect(ranges[0]).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.getByText('Start date is required')).toBeInTheDocument();
+    expect(ranges[1]).toHaveAttribute('aria-invalid', 'false');
+  });
+
   it('shows one allocation error and marks allocation fields when the total exceeds 100%', async () => {
     renderSection();
     const allocations = screen.getAllByRole('textbox', { name: 'Allocation % *' });

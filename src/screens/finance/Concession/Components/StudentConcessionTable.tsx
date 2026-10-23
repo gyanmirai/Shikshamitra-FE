@@ -394,6 +394,15 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         </Box>
       </Card>
       <CustomizableTable
+        getRowAction={(row) =>
+          onViewConcession
+            ? {
+                label: `Open ${row.studentIdentity || 'record'}`,
+                onClick: () => {
+                  onViewConcession?.(row as IStudentInfo);
+                },
+              }
+            : undefined}
         tableId="student-concession-table"
         tableTitle="Concessions"
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
@@ -575,17 +584,11 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                   row.status === ConcessionStatusType.Cancelled);
               return (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={2}
+                  directActionLimit={3}
                   placement="right-top"
                   moreLabel={`More actions for ${row.studentIdentity}`}
                   sx={{ justifyContent: 'flex-start' }}
                   actions={[
-                    {
-                      id: 'view',
-                      label: `View ${row.studentIdentity}`,
-                      icon: GlobalIcons.eye,
-                      onClick: () => onViewConcession?.(row as IStudentInfo),
-                    },
                     ...(isPending &&
                     canApprove &&
                     (row.availableActions?.includes('approve') || isOwnRequest)
@@ -751,15 +754,17 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           setSelectedConcession(null);
           removeConcessionDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Concession Draft?"
+        disableBackdropClick
         content={
           <>
-            Are you sure you want to delete concession for{' '}
-            <strong>&quot;{selectedConcession?.studentName}&quot;?</strong>
+            Delete the concession draft for{' '}
+            <strong>{selectedConcession?.studentName}</strong>? This removes the draft request.
           </>
         }
         action={
           <Button
+            type="button"
             startIcon={<Iconify icon="mdi:delete-outline" />}
             variant="contained"
             color="error"
@@ -806,7 +811,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
               }
             }}
           >
-            Yes
+            Delete draft
           </Button>
         }
       />

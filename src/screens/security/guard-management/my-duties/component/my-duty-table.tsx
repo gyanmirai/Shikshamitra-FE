@@ -66,14 +66,16 @@ const MyDutytable = () => {
           {
             id: 'startTime',
             label: 'Start Time',
-            isFilter: false,
+            filterType: 'string' as const,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('H:mm') : null),
           },
           {
             id: 'endTime',
             label: 'End Time',
-            isFilter: false,
+            filterType: 'string' as const,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('H:mm') : null),
           },

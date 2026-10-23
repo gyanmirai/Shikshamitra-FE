@@ -2,7 +2,22 @@ import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
 
+export interface ChargeCategoryUsage {
+  categoryId: string;
+  categoryName: string;
+  chargeCount: number;
+  studentAssignmentCount: number;
+  chargeNames: string[];
+  canDelete: boolean;
+}
+
+export const buildChargeCategoryUsageRequest = (chargeCategoryId: string) => ({
+  url: `/charge-categories/${chargeCategoryId}/usage`,
+  method: 'GET' as const,
+});
+
 export interface ChargeCategoryListParams {
+  filters?: string;
   academicYearId: string;
   page?: number;
   pageSize?: number;
@@ -30,6 +45,10 @@ export const buildChargeCategoryStatusRequest = ({
 
 export const chargeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getChargeCategoryUsage: builder.query<ChargeCategoryUsage, string>({
+      query: buildChargeCategoryUsageRequest,
+      providesTags: [financeModuleType.chargeCategory],
+    }),
     // Get charge categories data (paginated)
     getChargeCategories: builder.query({
       query: buildChargeCategoryListRequest,
@@ -87,6 +106,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useLazyGetChargeCategoryUsageQuery,
   useGetChargeCategoriesQuery,
   useGetChargeCategoryByIdQuery,
   usePostChargeCategoryMutation,

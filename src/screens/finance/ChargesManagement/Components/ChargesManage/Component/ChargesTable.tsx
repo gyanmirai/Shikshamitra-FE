@@ -235,6 +235,15 @@ const ChargesTable = ({
       </Card>
 
       <CustomizableTable
+        getRowAction={(row) =>
+          permissions.canView
+            ? {
+                label: `Open ${row.chargeName || 'record'}`,
+                onClick: () => {
+                  onView(row as IChargeData);
+                },
+              }
+            : undefined}
         tableId="charges-table"
         tableTitle="Charges"
         isLoading={chargesLoading || chargesFetching}
@@ -395,17 +404,11 @@ const ChargesTable = ({
               const canVoid = permissions.canVoid && actions.includes('Void');
               const name = row.chargeName || 'charge';
               return (
-                <AdaptiveThreeDotsActions directActionLimit={2}
+                <AdaptiveThreeDotsActions directActionLimit={3}
                   moreLabel={`More actions for ${name}`}
                   placement="right-top"
                   sx={{ justifyContent: 'flex-start' }}
                   actions={[
-                    {
-                      id: 'view',
-                      label: `View ${name}`,
-                      icon: GlobalIcons.eye,
-                      onClick: () => onView(row as IChargeData),
-                    },
                     ...(canEdit
                       ? [
                         {

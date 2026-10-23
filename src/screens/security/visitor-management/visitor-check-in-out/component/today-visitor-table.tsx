@@ -84,13 +84,14 @@ const TodayVisitorTable: React.FC<IWalkInVisitorTableProps> = ({ onClick }) => (
           label: 'Visiting Date',
           id: 'visitingDate',
 
-          filterType: 'date',
+          filterType: 'date' as const,
           render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
         },
         {
           label: 'Visiting Time',
+          filterType: 'string' as const,
           id: 'visitingTime',
-          isFilter: false,
+          isFilter: true,
           isSort: false,
 
           render: (value) => (value ? dayjs(value).format('DD MMM YYYY') : null),
@@ -100,7 +101,7 @@ const TodayVisitorTable: React.FC<IWalkInVisitorTableProps> = ({ onClick }) => (
           label: 'Status',
           align: 'left',
           minWidth: '130px',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: VisitorVisitingStatusOptions,
           render(value) {
             const color = VisitorVisitingStatusColors[

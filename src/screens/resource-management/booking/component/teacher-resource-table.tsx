@@ -31,15 +31,16 @@ const TeacherResourceTable = () => (
         id: 'date',
         label: 'Date',
         minWidth: 80,
-        filterType: 'date',
+        filterType: 'date' as const,
         render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
       },
 
       {
         id: 'time',
         label: 'Time',
+        filterType: 'string' as const,
         minWidth: 80,
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         render: (value) => (value ? dayjs(value).format('hh:mm A') : '-'),
       },
@@ -47,7 +48,7 @@ const TeacherResourceTable = () => (
         label: 'Status',
         id: 'status',
         minWidth: '100px',
-        filterType: 'enum',
+        filterType: 'enum' as const,
         enumOptions: ResourceBookingStatusTypeOptions,
         render(value, row) {
           const color = ResourceBookingStatusTypeColor[

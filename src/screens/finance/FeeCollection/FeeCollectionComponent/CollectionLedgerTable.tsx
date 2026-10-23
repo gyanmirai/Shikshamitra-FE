@@ -12,7 +12,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailGrid, DetailField } from 'src/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import {
   Box,
   Stack,
@@ -291,31 +291,6 @@ export default function CollectionLedgerTable({
         </Label>
       ),
     },
-    {
-      align: 'left',
-      id: 'action',
-      label: 'Action',
-      sticky: true,
-      stickyPosition: 'right',
-      width: 64,
-      isSort: false,
-      isFilter: false,
-      excludeFromExport: true,
-      render: (_value, row) => (
-        <AdaptiveThreeDotsActions
-          directActionLimit={2}
-          sx={{ justifyContent: 'flex-start' }}
-          actions={[
-            {
-              id: 'view',
-              label: `View ${row.feeHeadName}, ${row.periodLabel}`,
-              icon: GlobalIcons.eye,
-              onClick: () => setDetailId(row.id),
-            },
-          ]}
-        />
-      ),
-    },
   ];
   const detail = rows.find((row) => row.id === detailId);
   const closeDetail = () => setDetailId(null);
@@ -431,6 +406,12 @@ export default function CollectionLedgerTable({
                 sx={{ px: { xs: 1, sm: 2 }, pt: 0, pb: 2 }}
               >
                 <CustomizableTable
+                  getRowAction={(row) => ({
+                    label: `Open ${row.feeHeadName}, ${row.periodLabel}`,
+                    onClick: () => {
+                      setDetailId(row.id);
+                    },
+                  })}
                   tableId={`collect-fees-group-${group.id}`}
                   tableTitle={group.title}
                   columns={groupColumns}
@@ -441,9 +422,7 @@ export default function CollectionLedgerTable({
                   isFilter={false}
                   isShowedDense={false}
                   rowProps={(row) => ({ selected: isSelected(row as LedgerRow) })}
-                  handleRowClick={(row) => {
-                    if (collectible(row as LedgerRow)) toggleRows([row as LedgerRow]);
-                  }}
+
                   wrapperProps={{
                     sx: {
                       minWidth: 0,

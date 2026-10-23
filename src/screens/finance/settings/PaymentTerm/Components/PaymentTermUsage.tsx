@@ -47,7 +47,6 @@ export function PaymentTermDefaultSummary({
 export function PaymentTermUsageBreakdown({ usage }: { usage: Usage }) {
   return (
     <Stack spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-      <PaymentTermUsageSummary usage={usage} />
       <CustomizableTable
         tableId="payment-term-usage"
         columns={[

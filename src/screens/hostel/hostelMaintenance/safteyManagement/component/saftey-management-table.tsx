@@ -58,14 +58,15 @@ const ReportSafteyManagementTable: React.FC<IReportSafteyManagementTableProps> =
             id: 'incidentDate',
             label: 'Incident Date',
             align: 'left',
-            filterType: 'date',
+            filterType: 'date' as const,
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
           },
           {
             id: 'incidentTime',
             label: 'Incident Time',
+            filterType: 'string' as const,
             align: 'left',
-            isFilter: false,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('hh:mm A') : '-'),
           },
@@ -77,7 +78,7 @@ const ReportSafteyManagementTable: React.FC<IReportSafteyManagementTableProps> =
             label: 'Status',
             align: 'left',
             minWidth: '130px',
-            filterType: 'enum',
+            filterType: 'enum' as const,
             enumOptions: IncidentReportStatusTypeOptions,
             render(value, row) {
               const color = IncidentReportStatusTypeColor[

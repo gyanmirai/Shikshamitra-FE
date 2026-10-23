@@ -883,7 +883,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           const policy = row as IFinancePolicyRow;
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               sx={{ justifyContent: 'flex-start' }}
               placement="right-top"
               moreLabel={`Actions for ${policy.policyName}`}

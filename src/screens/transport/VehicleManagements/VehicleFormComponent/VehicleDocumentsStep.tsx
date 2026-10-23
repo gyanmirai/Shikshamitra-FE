@@ -43,9 +43,10 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
         {
           id: 'status',
           label: 'Status',
+          filterType: 'string' as const,
           minWidth: '80px',
           align: 'left',
-          isFilter: false,
+          isFilter: true,
           render(value, row) {
             return (
               <Tooltip title={row.status}>

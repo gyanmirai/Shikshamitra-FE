@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { LoadingButton } from '@mui/lab';
+import { LoadingButton } from 'src/components/loading-button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -287,6 +287,7 @@ const FeeCollectionPreviewDialog = ({
           <LoadingButton
             variant="contained"
             loading={loading}
+            loadingPosition="start"
             onClick={onConfirm}
             startIcon={<Iconify icon="solar:check-circle-bold" />}
             size="small"

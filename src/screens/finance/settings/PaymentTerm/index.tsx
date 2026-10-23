@@ -1,5 +1,7 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+
 import type { RootState } from 'src/redux/store';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
@@ -44,6 +46,8 @@ import {
   useLazyGetPaymentTermByIdQuery,
 } from 'src/redux/finance/paymentTerm';
 
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+
 import PaymentTermForm from './Components/PaymentTermForm';
 import PaymentTermTable from './Components/PaymentTermTable';
 import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
@@ -58,6 +62,7 @@ interface PaymentTermTableQuery {
   page: number;
   pageSize: number;
   search: string;
+  filters: IParams['filters'];
 }
 
 interface PaymentTermDetailsTarget {
@@ -98,6 +103,7 @@ const PaymentTerm = () => {
     page: 1,
     pageSize: 10,
     search: '',
+    filters: [],
   });
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<IPaymentTerm | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<PaymentTermDetailsTarget | null>(null);
@@ -153,6 +159,7 @@ const PaymentTerm = () => {
       status: isArchived ? 'Archived' : 'Active',
       includeArchived: isArchived,
       search: tableQuery.search || undefined,
+      filters: serializeFinanceTableFilters(tableQuery.filters),
       page: tableQuery.page,
       pageSize: tableQuery.pageSize,
     },
@@ -360,7 +367,11 @@ const PaymentTerm = () => {
                 size="small"
                 variant={!isArchived ? 'contained' : 'outlined'}
                 onClick={() => {
-                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setTableQuery((current) => ({
+                    ...current,
+                    page: 1,
+                    filters: current.filters.filter((filter) => filter.column !== 'status'),
+                  }));
                   setArchiveView('current');
                 }}
               >
@@ -370,7 +381,11 @@ const PaymentTerm = () => {
                 size="small"
                 variant={isArchived ? 'contained' : 'outlined'}
                 onClick={() => {
-                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setTableQuery((current) => ({
+                    ...current,
+                    page: 1,
+                    filters: current.filters.filter((filter) => filter.column !== 'status'),
+                  }));
                   setArchiveView('archived');
                 }}
               >
@@ -430,6 +445,10 @@ const PaymentTerm = () => {
           page={tableQuery.page}
           rowsPerPage={tableQuery.pageSize}
           searchTerm={tableQuery.search}
+          filters={tableQuery.filters}
+          onFiltersChange={(filters) =>
+            setTableQuery((current) => ({ ...current, page: 1, filters }))
+          }
           archived={isArchived}
           onPaginationChange={(page, pageSize) =>
             setTableQuery((current) => ({ ...current, page, pageSize }))

@@ -15,7 +15,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Stack, Alert, Button } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -211,31 +211,6 @@ function RegisterContent({
           </Label>
         ),
       },
-      {
-        isFilter: false,
-        isSort: false,
-        id: 'actions',
-        label: 'Actions',
-        sticky: true,
-        stickyPosition: 'right',
-        align: 'left',
-        minWidth: 140,
-        excludeFromExport: true,
-        render: (_, row) => (
-          <AdaptiveThreeDotsActions
-            directActionLimit={2}
-            actions={[
-              {
-                id: 'view',
-                label: `View details for ${row.reference}`,
-                icon: GlobalIcons.eye,
-                onClick: () => setSelected(row as AccountsActivityRow),
-              },
-            ]}
-            sx={{ justifyContent: 'flex-start' }}
-          />
-        ),
-      },
     ] satisfies IColumn[]
   ).map((column) => ({
     ...column,
@@ -410,6 +385,12 @@ function RegisterContent({
           }}
         >
           <CustomizableTable
+            getRowAction={(row) => ({
+              label: `Open ${row.reference || 'record'}`,
+              onClick: () => {
+                setSelected(row as AccountsActivityRow);
+              },
+            })}
             tableTitle={income ? 'Income' : 'Expenses'}
             wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
             tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}

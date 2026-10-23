@@ -1,5 +1,8 @@
 'use client';
 
+import type { IParams } from 'src/components/customizabaleTable/types';
+import { serializeFinanceTableFilters } from 'src/screens/finance/components/financeTableQuery';
+
 import { useFinanceFormClose } from 'src/hooks/use-finance-form-close';
 import type { RootState } from 'src/redux/store';
 
@@ -33,6 +36,7 @@ const FinanceIncomeCategoriesScreen = () => {
   const access = useAccountSettingPermissions('IncomeCategory');
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
+  const [filters, setFilters] = useState<IParams['filters']>([]);
 
   const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
     setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
@@ -50,7 +54,11 @@ const FinanceIncomeCategoriesScreen = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
-    params: { academicYearId: currentYear?.id, ...queryParams },
+    params: {
+      academicYearId: currentYear?.id,
+      ...queryParams,
+      filters: serializeFinanceTableFilters(filters),
+    },
   });
 
   // DELETE mutation
@@ -135,6 +143,13 @@ const FinanceIncomeCategoriesScreen = () => {
         totalCount={incomeCategoryData?.totalCount}
         onServerPagination={handleServerPagination}
         onServerSearch={handleServerSearch}
+        filters={filters}
+        page={queryParams.page - 1}
+        rowsPerPage={queryParams.pageSize}
+        onServerFilter={(next) => {
+          setFilters(next);
+          setQueryParams((current) => ({ ...current, page: 1 }));
+        }}
       />
 
       <CustomDialog

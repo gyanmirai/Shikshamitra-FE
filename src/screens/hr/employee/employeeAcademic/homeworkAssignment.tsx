@@ -44,19 +44,19 @@ const HomeworkAssignment = () => (
               id: 'title',
               label: 'Homework Title',
               align: 'left',
-              filterType: 'string',
+              filterType: 'string' as const,
             },
             {
               id: 'homeworkType',
               label: 'Homework Type',
               align: 'left',
-              filterType: 'string',
+              filterType: 'string' as const,
             },
             {
               id: 'startDate',
               label: 'Start Date Time',
               align: 'left',
-              filterType: 'date',
+              filterType: 'date' as const,
               render: (value) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
@@ -67,7 +67,7 @@ const HomeworkAssignment = () => (
               id: 'endDate',
               label: 'End Date Time',
               align: 'left',
-              filterType: 'date',
+              filterType: 'date' as const,
               render: (value) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
@@ -83,10 +83,10 @@ const HomeworkAssignment = () => (
               id: 'status',
               label: 'Status',
               align: 'left',
-              isFilter: false,
+              isFilter: true,
               sticky: true,
               isSort: false,
-              filterType: 'enum',
+              filterType: 'enum' as const,
               enumOptions: PublishUnpublishStatusOptions,
               render(value, row) {
                 const color = PublishUnpublishStatusTypeColors[
@@ -165,19 +165,19 @@ const HomeworkAssignment = () => (
               id: 'title',
               label: 'Assignment Title',
               align: 'left',
-              filterType: 'string',
+              filterType: 'string' as const,
             },
             {
               id: 'assignmentType',
               label: 'Assignment Type',
               align: 'left',
-              filterType: 'string',
+              filterType: 'string' as const,
             },
             {
               id: 'startDate',
               label: 'Start Date Time',
               align: 'left',
-              filterType: 'date',
+              filterType: 'date' as const,
               render: (value: string | Date | undefined) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
@@ -188,7 +188,7 @@ const HomeworkAssignment = () => (
               id: 'endDate',
               label: 'End Date Time',
               align: 'left',
-              filterType: 'date',
+              filterType: 'date' as const,
               render: (value: string | Date | undefined) => (
                 <Typography fontSize="12px" gutterBottom>
                   {value ? dayjs(value).format('DD-MM-YYYY hh:mm') : '-'}
@@ -199,14 +199,14 @@ const HomeworkAssignment = () => (
               id: 'submissionType',
               label: 'Submission Type',
               align: 'left',
-              filterType: 'string',
+              filterType: 'string' as const,
             },
             {
               id: 'status',
               label: 'Status',
               align: 'left',
-              filterType: 'enum',
-              isFilter: false,
+              filterType: 'enum' as const,
+              isFilter: true,
               sticky: true,
               isSort: false,
               enumOptions: PublishUnpublishStatusOptions,

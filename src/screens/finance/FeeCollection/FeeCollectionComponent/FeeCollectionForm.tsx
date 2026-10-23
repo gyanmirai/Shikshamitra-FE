@@ -1,5 +1,8 @@
 'use client';
 
+import CollectionPaymentDateField from '../Components/CollectionPaymentDateField';
+import { getCollectionPaymentDateError } from '../Components/collectionPaymentDate';
+
 import type { RootState } from 'src/redux/store';
 import type {
   ChargeDetail,
@@ -704,15 +707,9 @@ const FeeCollectComponentForm = ({
         const rawValue = values.payment.details?.[field.name];
 
         if (field.type === 'date') {
-          if (!rawValue) {
-            detailErrors[field.name] = `${field.label} is required`;
-            return;
-          }
-          const dateValue = dayjs(rawValue);
-          if (!dateValue.isValid()) {
-            detailErrors[field.name] = `Invalid ${field.label}`;
-            return;
-          }
+          const message = getCollectionPaymentDateError(rawValue, field.label, true);
+          if (message) detailErrors[field.name] = message;
+          return;
         }
 
         const stringValue = normalizeDetailValue(rawValue);
@@ -754,6 +751,26 @@ const FeeCollectComponentForm = ({
         toPaise(Number(cashReceived)) < toPaise(Number(formik.values.payment.amount))
       )
         return;
+      if (formik.values.payment.paymentMethod !== 'Cash') {
+        const allocation = allocatePayment(
+          orderedSelectedItems,
+          selectedChargesInOrder(chargesData, formik.values.charges),
+          feeHeadMap,
+          Number(String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, ''))
+        );
+        const hasFeeReceipt = allocation.allocatedRows.some(
+          (row) => row.paidAmount > 0 && (row.type === 'fee' || row.sourceType === 'LateFee')
+        );
+        const hasChargeReceipt = allocation.allocatedRows.some(
+          (row) => row.paidAmount > 0 && row.type === 'charge' && row.sourceType === 'Charge'
+        );
+        if (hasFeeReceipt && hasChargeReceipt) {
+          const message = 'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
+          setCollectionError(message);
+          shikshaMitraToast.error({ message });
+          return;
+        }
+      }
       setPreviewOpen(true);
     },
   });
@@ -967,7 +984,7 @@ const FeeCollectComponentForm = ({
     setFinalReviewOpen(true);
   };
 
-  // Final submission: collects fee and generates receipt immediately
+  // Cash settles immediately; every non-cash collection awaits finance verification.
   const prepareCollectionCommand = (
     confirmNonCash: boolean
   ): Omit<CollectFeeInput, 'studentId'> => {
@@ -2119,27 +2136,14 @@ const FeeCollectComponentForm = ({
                                   error={Boolean((touched || formik.submitCount > 0) && error)}
                                 >
                                   {field.type === 'date' ? (
-                                    <DatePicker
-                                      label={`${field.label} *`}
-                                      format="DD/MM/YYYY"
-                                      value={value ? dayjs(value) : null}
+                                    <CollectionPaymentDateField
+                                      label={field.label}
+                                      name={fieldPath}
+                                      required
+                                      value={value}
                                       onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                      sx={{ width: '100%' }}
-                                      slotProps={{
-                                        textField: {
-                                          size: 'small',
-                                          fullWidth: true,
-                                          error: Boolean(
-                                            (touched || formik.submitCount > 0) && error
-                                          ),
-                                          helperText:
-                                            (touched || formik.submitCount > 0) &&
-                                            typeof error === 'string'
-                                              ? error
-                                              : '',
-                                        },
-                                      }}
-                                      disablePast
+                                      onBlur={() => { formik.setFieldTouched(fieldPath, true); }}
+                                      error={(touched || formik.submitCount > 0) && typeof error === 'string' ? error : undefined}
                                     />
                                   ) : field.type === 'select' ? (
                                     <TextField
@@ -2392,7 +2396,8 @@ const FeeCollectComponentForm = ({
                       color="inherit"
                       variant="contained"
                       size="small"
-                      loading={collectLoading}
+                      loading={collectLoading && !finalReviewOpen}
+                      loadingPosition="start"
                       onClick={(e: any) => formik.handleSubmit(e)}
                       startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
                     >
@@ -2405,7 +2410,7 @@ const FeeCollectComponentForm = ({
           </Box>
         </Stack>
       </BackPopUpChecked>
-      {collectLoading && (
+      {collectLoading && !finalReviewOpen && (
         <Box
           role="status"
           aria-live="polite"

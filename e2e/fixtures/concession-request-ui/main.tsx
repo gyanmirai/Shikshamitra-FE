@@ -8,6 +8,8 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { FormSectionCard } from 'src/components/form-section-card';
 import ValueEntryStep from 'src/screens/finance/Concession/Components/ConcessionSteps/ValueEntryStep';
 import ConcessionImpactSummary from 'src/screens/finance/Concession/Components/ConcessionImpactSummary';
+import ConcessionFeeHeadSelection from 'src/screens/finance/Concession/Components/ConcessionFeeHeadSelection';
+import ConcessionDocumentList from 'src/screens/finance/Concession/Components/ConcessionDocumentList';
 import ReadOnlyConcessionApprovalView from 'src/screens/finance/ConcessionAdmin/ReadOnlyConcessionApprovalView';
 import { context, policy, preview } from './data';
 
@@ -23,6 +25,7 @@ function ThemeToggle() {
 function Fixture() {
   const [mode, setMode] = React.useState('percentage');
   const [review, setReview] = React.useState(false);
+  const [documents, setDocuments] = React.useState<any[]>([]);
   const formik = useFormik({
     initialValues: {
       concessionTypeId: 'sibling',
@@ -38,6 +41,7 @@ function Fixture() {
     valueSource: mode === 'policy' ? 'PolicyFixed' : policy.valueSource,
     calculationMethod: mode === 'fixed' ? 'FixedAmount' : 'Percentage',
     percentageValue: 8,
+    maximumFixedAmount: 1111,
   };
   const discount =
     mode === 'policy'
@@ -83,7 +87,15 @@ function Fixture() {
             onBack={() => setReview(false)}
           />
         ) : (
-          <Box sx={{ overflowY: 'auto', p: 1.5, '& .MuiCard-root': { boxShadow: 'none' } }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              p: 1.5,
+              '& .MuiCard-root': { boxShadow: 'none' },
+            }}
+          >
             <Stack spacing={1.5}>
               <Stack direction="row" gap={1} flexWrap="wrap">
                 {['percentage', 'fixed', 'policy'].map((value) => (
@@ -100,7 +112,36 @@ function Fixture() {
                 ))}
               </Stack>
               <FormSectionCard
-                title="Concession values"
+                title="Fee Heads"
+                icon="mdi:format-list-bulleted"
+                descriptionTooltip="Select fee heads and expand their installment breakdown."
+                action={
+                  <Typography variant="body2">
+                    Selected eligible total:{' '}
+                    {formik.values.selectedFeeHeads.sibling.length ? '₹ 5,000' : '₹ 0'}
+                  </Typography>
+                }
+              >
+                <ConcessionFeeHeadSelection
+                  feeHeads={context.feeHeads.map((head) => ({
+                    ...head,
+                    amount: head.eligibleOutstanding,
+                  }))}
+                  installments={context.eligibleDueFees.map((line, index) => ({
+                    ...line,
+                    installmentLabel: `${index ? 'Jul' : 'Jun'} 2026`,
+                  }))}
+                  selectedIds={formik.values.selectedFeeHeads.sibling}
+                  onToggle={(id) =>
+                    formik.setFieldValue(
+                      'selectedFeeHeads.sibling',
+                      formik.values.selectedFeeHeads.sibling.includes(id) ? [] : [id]
+                    )
+                  }
+                />
+              </FormSectionCard>
+              <FormSectionCard
+                title="Concession Values"
                 icon="mdi:calculator"
                 descriptionTooltip="Enter values for the selected installments."
               >
@@ -117,8 +158,49 @@ function Fixture() {
                 concessionName="Sibling tuition concession"
                 selectedFeeHeadCount={1}
               />
+              <FormSectionCard
+                title="Documents"
+                icon="mdi:file-document-outline"
+                descriptionTooltip="Upload supporting evidence for this request."
+              >
+                <ConcessionDocumentList
+                  concessionId="sibling"
+                  concessionName="Sibling tuition concession"
+                  submittedDocuments={documents}
+                  onSave={setDocuments}
+                  requirements={[
+                    {
+                      documentId: 'income-proof',
+                      documentName: 'Income proof',
+                      isRequired: true,
+                      acceptedFormats: [4, 2],
+                      maxFileSizeBytes: 2 * 1024 * 1024,
+                    },
+                    {
+                      documentId: 'identity-proof',
+                      documentName: 'Identity proof',
+                      isRequired: true,
+                      acceptedFormats: [4, 2],
+                      maxFileSizeBytes: 2 * 1024 * 1024,
+                    },
+                  ]}
+                />
+              </FormSectionCard>
             </Stack>
           </Box>
+        )}
+        {!review && (
+          <Stack
+            direction="row"
+            justifyContent="flex-end"
+            gap={1}
+            sx={{ p: 1.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+          >
+            <Button variant="outlined">Save draft</Button>
+              <Button variant="contained" disabled={documents.length !== 2 || !discount}>
+              Submit and approve
+            </Button>
+          </Stack>
         )}
       </Box>
     </ThemeProvider>

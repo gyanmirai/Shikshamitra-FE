@@ -627,7 +627,7 @@ export default function FeeStructureWorkspaceCard({
                 </LoadingButton>
               )}
               <AdaptiveThreeDotsActions
-                directActionLimit={2}
+                directActionLimit={3}
                 moreLabel="More structure actions"
                 actions={[
                   ...(!viewOnly && !locked && !editing && settings?.permissions.edit
@@ -712,6 +712,11 @@ export default function FeeStructureWorkspaceCard({
               minHeight: 0,
               minWidth: 0,
               pt: 1,
+              '& .MuiStepper-horizontal': {
+                minWidth: 0,
+                overflowX: 'hidden',
+                '& .MuiStep-root': { flex: 1, minWidth: 0 },
+              },
               '& form > .MuiBox-root:last-child': {
                 borderTop: 1,
                 borderColor: 'divider',
@@ -978,15 +983,13 @@ export default function FeeStructureWorkspaceCard({
           {termDetail.isFetching
             ? 'Loading the selected Payment Term version…'
             : 'This term version could not be loaded. Close and reopen the schedule to retry. Its saved configuration has not changed.'}
-          {
-            <Button
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={() => setScheduleHead(undefined)}
-            >
-              Close
-            </Button>
-          }
+          <Button
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => setScheduleHead(undefined)}
+          >
+            Close
+          </Button>
         </Box>
       )}
       {scheduleLine && scheduleTerm && (

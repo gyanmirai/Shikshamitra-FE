@@ -17,6 +17,22 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Table row actions
+
+Across Finance tables, show the first three permitted actions directly using
+`AdaptiveThreeDotsActions` with `directActionLimit={3}`. Show the three-dot menu only
+when more actions exist, and include only the fourth and subsequent actions in it.
+Keep this split on mobile, preserve action order and disabled states, and continue
+applying each action's existing permission and workflow checks.
+
+Open record details from the row instead of a View action. Use the shared table's
+`getRowAction` to retain the existing detail callback, permission and availability
+checks, plus keyboard activation and focus return. Keep inline buttons, links,
+checkboxes and action menus independent of opening the record. Fee ledger rows
+open their detail dialog; selection remains on their existing checkboxes. Omit
+Actions columns when viewing was their only operation. History, schedule selection
+and other distinct operations retain their own labels and action rules.
+
 ## Finance help and feedback
 
 Finance screens, tables, forms, dialogs, and drawers retain their information icons and tooltip
@@ -52,6 +68,18 @@ one compact summary; only the server preview supplies those amounts. Its layout 
 while calculations refresh. Approval presents installment amounts in labeled columns with the
 existing server impact review and confirmation in a persistent footer. Required documents,
 maker/checker permissions, refund behavior, allocation rules and API commands remain unchanged.
+
+Fee-head totals remain visible above collapsed installment breakdowns. Fixed request-entered
+concessions show the policy maximum once, plus entered and remaining totals; each row's allowance
+includes its current value and excludes amounts entered elsewhere. Reaching the shared limit
+explains how to release allowance. Supporting-document rows keep Upload/Replace beside the status
+and filename, and the warning lists the missing required documents by name.
+
+Collection payment, transfer, cheque and issue dates share the same `DD/MM/YYYY` picker and typed
+validation. Picker values remain Dayjs objects during segment edits; invalid and past dates block
+submission. The server repeats validation and preserves the selected institution-calendar date
+through provisional receipts, reconciliation month filtering and final receipts. See the
+[backend collection workflow](../../../Shikshamitra-BE/docs/modules/finance/workflows.md#non-cash-collection-and-reconciliation).
 
 ## Fee settings and charge authoring
 
@@ -277,13 +305,13 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 
 ### Concession Type and evidence lifecycle
 
-1. Settings shows active and inactive types so historical configuration stays visible.
-2. The form collects a Concession Type Name and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults.
+1. Settings shows active and inactive types so historical configuration stays visible. The list and archived count wait for the selected academic year before sending requests, including on a direct first visit.
+2. The form collects a Concession Type Name and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults. Update shows matching name, document-row, and description skeletons while details load; the dialog header and Cancel/Update footer stay visible, with Update disabled until the record is ready. Failed detail requests offer Retry.
 3. The server is authoritative for normalized-name uniqueness. Active types cannot be deleted. After deactivation, Delete is available only while the type is unused; used types remain undeletable and lock document-definition changes.
 4. A new concession request lists active types only. Editing an existing request may resolve its inactive historical type.
 5. Before upload, the shared upload control filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation. The backend expires unattached staged files after 24 hours. Saved evidence opens in the shared preview dialog through an authenticated request-scoped URL only when `ViewDocument` is granted.
 6. Missing mandatory evidence blocks approval. Optional evidence is shown and uploadable but is not required.
-7. Version History is available from each row's action menu and shows the audited create, edit, and status changes with actor, timestamp, and changed fields.
+7. Version History opens from each row's action menu in the same wide, read-only layout as Payment Terms: a searchable newest-first version sidebar, selected-version author/date/action, and a Field/Before/After comparison table. Missing field-level audit data remains explicitly identified. Fixed Back to details and Close actions preserve the table context.
 
 ### Concession request and approval
 
@@ -304,6 +332,23 @@ Finance settings routes are split across fees and accounts.
 Use `src/constants/finance-menu.ts` to confirm active visibility before changing navigation.
 
 ### Payment Term lifecycle
+
+The create/edit drawer uses shared `FormSectionCard` sections for General Information and
+Installment Schedule. Each installment has its sequence number outside its field card. Wide
+drawers align the name, coverage dates, invoice date, due date, allocation and remove action in
+one row; smaller drawers wrap to two columns, then one. Required field errors appear after
+touch or submission, with live allocation-total feedback retained.
+
+The read-only drawer follows the Concession Policy section-card layout, with General Information
+and Installment Schedule sections, saved values, and section help. It omits the tab/context strip
+and the redundant Displayed schedule heading. Use Version history in the schedule section or
+the table's Version History action to inspect immutable snapshots; Back to details returns to
+the record. General Information reuses the Concession Policy detail section and its bold uppercase
+field labels. History reuses the policy version sidebar and Before/After table: versions are searchable
+by version, author, date, or reason. Comparisons use recorded schedule snapshots only; term identity
+and defaults are not retroactively attributed to older versions. Missing preceding snapshots are
+explicitly identified. Saved version details expands the full snapshot and installment schedule.
+Close remains available while loading.
 
 After selecting a board, **Apply Template** configures the schedule preset, payment due-date rule, and invoice-date rule together.
 Days Before Due appears only for the X-days rule and is limited by the shortest generated start-to-due gap; Generate preview stays disabled while that value is invalid.

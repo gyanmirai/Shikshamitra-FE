@@ -20,14 +20,11 @@ export const matchesTableRowFilters = (
     columnFilters.some((filter) => {
       const value = _.get(row, filter.column, '');
       const column = columns.find((col) => col.id === filter.column);
-      const valueAsNumber = !Number.isNaN(Number(value)) ? Number(value) : value; // fixed isNumber check
-      const filterValueAsNumber = !Number.isNaN(Number(filter.value))
-        ? Number(filter.value)
-        : filter.value;
       const isDateType = filter.valueType === 'date';
       const isDateTimeType = filter.valueType === 'dateTime';
       const isEnumType = filter.valueType === 'enum';
       const isFormattedNumber = filter.valueType === 'formattedNumber';
+      const isNumber = filter.valueType === 'number';
 
       // Enum options represent raw domain values. A rendered enum cell may show a label
       // such as "Published", but it must still match the selected option value (for example 1).
@@ -54,9 +51,27 @@ export const matchesTableRowFilters = (
             return false;
         }
       }
-      if (isFormattedNumber) {
-        const parsedValue = parseFormattedNumber(value);
-        const parsedFilterValue = parseFormattedNumber(filter.value as string);
+      if (isFormattedNumber || isNumber) {
+        // Numeric criteria compare domain numbers, independently of rendered currency,
+        // percent signs or version prefixes. Missing amounts never mean zero.
+        if (value === null || value === undefined || value === '') return false;
+        const parse = (input: unknown) =>
+          isFormattedNumber ? parseFormattedNumber(input as string) : Number(input);
+        const parsedValue = parse(value);
+        if (!Number.isFinite(parsedValue)) return false;
+        if (filter.type === 'between') {
+          const min = parse(filter.value?.min);
+          const max = parse(filter.value?.max);
+          return (
+            Number.isFinite(min) &&
+            Number.isFinite(max) &&
+            min <= max &&
+            parsedValue >= min &&
+            parsedValue <= max
+          );
+        }
+        const parsedFilterValue = parse(filter.value);
+        if (!Number.isFinite(parsedFilterValue)) return false;
 
         switch (filter.type) {
           case 'equals':
@@ -79,7 +94,7 @@ export const matchesTableRowFilters = (
         // Compare against what the user actually sees (the rendered cell text),
         // falling back to the raw value when there's no render function.
         const displayValue = getColumnDisplayText(row, column);
-        const safeValue = (displayValue || value || '').toString().toLowerCase();
+        const safeValue = (displayValue || (value ?? '')).toString().toLowerCase();
         const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
         switch (filter.type) {
           case 'contains':
@@ -109,15 +124,6 @@ export const matchesTableRowFilters = (
               formattedDate.endsWith(safeFilterValue) ||
               formattedTime.endsWith(safeFilterValue) ||
               formattedTimeNoZero.endsWith(safeFilterValue)
-            );
-          case 'greaterThan':
-            return valueAsNumber > filterValueAsNumber;
-          case 'lessThan':
-            return valueAsNumber < filterValueAsNumber;
-          case 'between':
-            return (
-              valueAsNumber >= (filter?.value as any)?.min &&
-              valueAsNumber <= (filter?.value as any)?.max
             );
           default:
             return true;

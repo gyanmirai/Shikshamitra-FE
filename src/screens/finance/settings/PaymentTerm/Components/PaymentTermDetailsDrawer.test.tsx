@@ -143,15 +143,19 @@ describe('PaymentTermDetailsDrawer version history', () => {
       />
     );
 
-    expect(screen.getByText('Quarterly Payment Term')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Payment Term Version History' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Changes in version 2' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Saved version details' }));
     expect(screen.getByRole('button', { name: 'View version 2' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
     expect(screen.queryByRole('button', { name: /^(Save|Submit)$/ })).not.toBeInTheDocument();
     expect(screen.getByText('Revision Created')).toBeInTheDocument();
-    expect(screen.getByText(/Finance Admin/)).toBeInTheDocument();
-    expect(screen.getByText('Edited published schedule')).toBeInTheDocument();
+    expect(screen.getByText('By Finance Admin')).toBeVisible();
+    expect(screen.getAllByText('Edited published schedule')[0]).toBeVisible();
     expect(screen.getByText('X Days Before Due')).toBeInTheDocument();
     expect(screen.queryByText('XDaysBeforeDue')).not.toBeInTheDocument();
     expect(screen.getByText('2. Installment 2')).toBeInTheDocument();
@@ -168,6 +172,7 @@ describe('PaymentTermDetailsDrawer version history', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'View version 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Saved version details' }));
 
     expect(screen.getAllByText('Superseded')).toHaveLength(2);
     expect(screen.getAllByText('100%').length).toBeGreaterThan(0);
@@ -187,5 +192,116 @@ describe('PaymentTermDetailsDrawer version history', () => {
 
     expect(screen.getByText('X Days Before Due')).toBeInTheDocument();
     expect(screen.queryByText('XDaysBeforeDue')).not.toBeInTheDocument();
+  });
+
+  it('uses section cards and opens history without the removed tab strip', () => {
+    renderDrawer(
+      <PaymentTermDetailsDrawer
+        open
+        paymentTermId="term-id"
+        initialTab="details"
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Displayed schedule')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'General Information' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'General Information information' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Installment Schedule information' })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Version history' }));
+    expect(
+      screen.getByRole('heading', { name: 'Payment Term Version History' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search versions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View version 2' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Back to details' }));
+    expect(screen.getByRole('heading', { name: 'General Information' })).toBeInTheDocument();
+  });
+
+  it('searches the policy-style version sidebar and clears a filtered-empty result', () => {
+    renderDrawer(
+      <PaymentTermDetailsDrawer
+        open
+        paymentTermId="term-id"
+        initialTab="versions"
+        onClose={vi.fn()}
+      />
+    );
+    const search = screen.getByRole('textbox', { name: 'Search versions' });
+    fireEvent.change(search, { target: { value: 'Version 1' } });
+    expect(screen.getByRole('button', { name: 'View version 1' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View version 2' })).not.toBeInTheDocument();
+    fireEvent.change(search, { target: { value: 'no matching author' } });
+    expect(screen.getByText('No versions match your search.')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+    expect(screen.getByRole('button', { name: 'View version 2' })).toBeInTheDocument();
+  });
+
+  it('keeps Close available while loading without displaying stale details', () => {
+    const onClose = vi.fn();
+    getDetail.mockReturnValue({ data: detail, isFetching: true, isError: false, refetch: vi.fn() });
+    renderDrawer(
+      <PaymentTermDetailsDrawer
+        open
+        paymentTermId="term-id"
+        initialTab="details"
+        onClose={onClose}
+      />
+    );
+    expect(
+      screen.getByRole('status', { name: 'Loading payment term details' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'General Information' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('offers retry when details fail to load', () => {
+    const refetch = vi.fn();
+    getDetail.mockReturnValue({ data: undefined, isFetching: false, isError: true, refetch });
+    renderDrawer(
+      <PaymentTermDetailsDrawer
+        open
+        paymentTermId="term-id"
+        initialTab="details"
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load payment term details.');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledOnce();
+  });
+
+  it('retains version snapshots and retries audit details after a history failure', () => {
+    const refetch = vi.fn();
+    getVersionHistory.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      isError: true,
+      refetch,
+    });
+    renderDrawer(
+      <PaymentTermDetailsDrawer
+        open
+        paymentTermId="term-id"
+        initialTab="versions"
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'creator and action details could not be loaded'
+    );
+    expect(screen.getByRole('button', { name: 'View version 1' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Saved version details' }));
+    expect(screen.getByText('2. Installment 2')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledOnce();
   });
 });

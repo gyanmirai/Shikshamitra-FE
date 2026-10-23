@@ -6,12 +6,10 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 
 export interface IDownstreamUsageActionsProps {
   isUsedInDownstream?: boolean;
-  showViewIcon?: boolean;
   showEditIcon?: boolean;
   showDeleteIcon?: boolean;
   showThreeDots?: boolean;
   placement?: 'right-top' | 'right-bottom' | 'left-top' | 'left-bottom';
-  handleViewClick?: () => void;
   handleEditClick?: () => void;
   handleDeleteClick?: () => void;
 }
@@ -23,12 +21,10 @@ export interface IDownstreamUsageActionsProps {
  */
 export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
   isUsedInDownstream = false,
-  showViewIcon = false,
   showEditIcon = true,
   showDeleteIcon = true,
   showThreeDots = false,
   placement = 'right-top',
-  handleViewClick,
   handleEditClick,
   handleDeleteClick,
 }) => {
@@ -39,18 +35,8 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
         placement="top"
       >
         <span>
-          <AdaptiveThreeDotsActions directActionLimit={2}
+          <AdaptiveThreeDotsActions directActionLimit={3}
             actions={[
-              ...(showViewIcon
-                ? [
-                    {
-                      id: 'view',
-                      label: 'View',
-                      icon: 'carbon:view-filled',
-                      onClick: () => handleViewClick?.(),
-                    },
-                  ]
-                : []),
               ...(showEditIcon
                 ? [
                     {
@@ -82,18 +68,8 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
   }
 
   return (
-    <AdaptiveThreeDotsActions directActionLimit={2}
+    <AdaptiveThreeDotsActions directActionLimit={3}
       actions={[
-        ...(showViewIcon
-          ? [
-              {
-                id: 'view',
-                label: 'View',
-                icon: 'carbon:view-filled',
-                onClick: () => handleViewClick?.(),
-              },
-            ]
-          : []),
         ...(showEditIcon
           ? [
               {

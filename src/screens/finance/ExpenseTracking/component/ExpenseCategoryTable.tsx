@@ -107,7 +107,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
               sticky: true,
               minWidth: 100,
               render: (_value: unknown, row: unknown) => (
-                <AdaptiveThreeDotsActions directActionLimit={2}
+                <AdaptiveThreeDotsActions directActionLimit={3}
                   actions={[
                     ...(onEdit && !(row as any).isAutomatic
                       ? [

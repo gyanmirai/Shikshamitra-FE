@@ -27,7 +27,8 @@ export default function RoomAllocationSummary({ rooms, isLoading = false }: Prop
       {
         id: 'utilization',
         label: 'Utilization',
-        isFilter: false,
+        filterType: 'string' as const,
+        isFilter: true,
         isSort: false,
         minWidth: 140,
         render: (v: number) => (
@@ -45,13 +46,16 @@ export default function RoomAllocationSummary({ rooms, isLoading = false }: Prop
       {
         id: 'statusLabel',
         label: 'Status',
-        isFilter: false,
+        filterType: 'string' as const,
+        isFilter: true,
         isSort: false,
         sticky: true,
         stickyPosition: 'right' as const,
         minWidth: 110,
         render: (v: string) => (
-          <Label color={v === 'Over capacity' ? 'error' : v === 'Underused' ? 'warning' : 'success'}>
+          <Label
+            color={v === 'Over capacity' ? 'error' : v === 'Underused' ? 'warning' : 'success'}
+          >
             {v}
           </Label>
         ),

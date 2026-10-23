@@ -33,6 +33,10 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
+  filters,
+  onServerFilter,
+  page,
+  rowsPerPage,
 }) => {
   const [patchBankAccountStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -58,7 +62,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
     () => [
       {
         id: 'bankName',
+        isFilter: true,
         label: 'Bank Name',
+        filterType: 'string' as const,
         minWidth: 120,
         sticky: true,
         stickyPosition: 'left',
@@ -71,7 +77,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'branchName',
+        isFilter: true,
         label: 'Branch Name',
+        filterType: 'string' as const,
         minWidth: 130,
         align: 'left',
         render: (value) => (
@@ -82,7 +90,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'branchAddress',
+        isFilter: true,
         label: 'Branch Address',
+        filterType: 'string' as const,
         minWidth: 150,
         align: 'left',
         render: (value) => (
@@ -102,7 +112,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'accountHolderName',
+        isFilter: true,
         label: 'Account Holder Name',
+        filterType: 'string' as const,
         minWidth: 190,
         align: 'left',
         render: (value) => (
@@ -113,7 +125,13 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'accountType',
+        isFilter: true,
         label: 'Type',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Saving', value: 0 },
+          { label: 'Current', value: 1 },
+        ],
         align: 'left',
         minWidth: 80,
         render: (value) => (
@@ -124,7 +142,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'maskedAccountNumber',
+        isFilter: true,
         label: 'Account Number',
+        filterType: 'string' as const,
         align: 'left',
         minWidth: 160,
         render: (value) => (
@@ -135,7 +155,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'purpose',
+        isFilter: true,
         label: 'Purpose',
+        filterType: 'string' as const,
         align: 'left',
         minWidth: 100,
         render: (value, row) => (
@@ -159,7 +181,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'ifscCode',
+        isFilter: true,
         label: 'IFSC Code',
+        filterType: 'string' as const,
         minWidth: 120,
         align: 'left',
         render: (value) => (
@@ -170,7 +194,9 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'maskedUpiId',
+        isFilter: true,
         label: 'UPI ID',
+        filterType: 'string' as const,
         align: 'left',
         minWidth: 90,
         render: (value) => (
@@ -181,7 +207,13 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
       {
         id: 'isActive',
+        isFilter: true,
         label: 'Status',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Inactive', value: 0 },
+        ],
         minWidth: 140,
         sticky: true,
         stickyPosition: 'right',
@@ -225,10 +257,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions directActionLimit={2}
+            <AdaptiveThreeDotsActions
+              directActionLimit={3}
               actions={[
                 {
-                  id: 'view',
+                  id: 'history',
                   label: 'Version history',
                   icon: 'solar:history-bold',
                   onClick: () => setHistoryItem(row as IBankAccount),
@@ -297,6 +330,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onServerFilter}
+        page={page}
+        rowsPerPage={rowsPerPage}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

@@ -32,6 +32,10 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
+  filters,
+  onServerFilter,
+  page,
+  rowsPerPage,
 }) => {
   const [patchExpenseCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -57,7 +61,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
     () => [
       {
         id: 'name',
+        isFilter: true,
         label: 'Name',
+        filterType: 'string' as const,
         align: 'left',
         sticky: true,
         stickyPosition: 'left',
@@ -69,7 +75,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       },
       {
         id: 'tags',
+        isFilter: true,
         label: 'Tags',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
@@ -81,7 +89,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       },
       {
         id: 'description',
+        isFilter: true,
         label: 'Description',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <Typography
@@ -100,7 +110,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       },
       {
         id: 'isActive',
+        isFilter: true,
         label: 'Status',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Inactive', value: 0 },
+        ],
         minWidth: 140,
         sticky: true,
         stickyPosition: 'right',
@@ -144,10 +160,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions directActionLimit={2}
+            <AdaptiveThreeDotsActions
+              directActionLimit={3}
               actions={[
                 {
-                  id: 'view',
+                  id: 'history',
                   label: 'Version history',
                   icon: 'solar:history-bold',
                   onClick: () => setHistoryItem(row as IExpenseCategory),
@@ -216,6 +233,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onServerFilter}
+        page={page}
+        rowsPerPage={rowsPerPage}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

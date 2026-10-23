@@ -13,7 +13,7 @@ import { useId, useRef, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FormSectionHeader } from 'src/components/form-section-card';
+import { FormSectionCard } from 'src/components/form-section-card';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { Box, Stack, Alert, Button, TextField, Typography, FormHelperText } from '@mui/material';
 
@@ -109,11 +109,11 @@ export default function FeeStructureHeadsStep({
   const nameInvalid = Boolean((touched.name || submitted) && nameError);
   return (
     <Stack ref={formRef} spacing={2}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ sm: 'flex-start' }}
+      <FormSectionCard
+        title="General Information"
+        icon={GlobalIcons.notebook}
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        descriptionTooltip="Name this class's fee structure. The name identifies it when assigning fees to students."
       >
         <Box sx={{ width: 1, maxWidth: 560 }}>
           <ShakingTextField error={nameInvalid}>
@@ -133,13 +133,14 @@ export default function FeeStructureHeadsStep({
             />
           </ShakingTextField>
         </Box>
-      </Stack>
-      <Stack spacing={1}>
-        <FormSectionHeader
-          descriptionTooltip="Annual amounts cover the attached payment term. The total includes optional heads; variable amounts are set during student assignment. This configuration total is not a student's amount due."
-          icon="mdi:cash-multiple"
-          title="Fee Heads"
-        />
+      </FormSectionCard>
+      <FormSectionCard
+        descriptionTooltip="Annual amounts cover the attached payment term. The total includes optional heads; variable amounts are set during student assignment. This configuration total is not a student's amount due."
+        icon={GlobalIcons.receiptIcon}
+        title="Fee Heads"
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        contentSx={{ minWidth: 0 }}
+      >
         {(!settings.permissions.headsRead || headsError) && (
           <Alert
             severity="error"
@@ -169,6 +170,15 @@ export default function FeeStructureHeadsStep({
           </Alert>
         )}
         <CustomizableTable
+          getRowAction={(row) =>
+            !busy && row.paymentTermVersionId && settings.permissions.termsRead
+              ? {
+                  label: `Open ${row.feeHeadName} schedule`,
+                  onClick: () => {
+                    onSchedule(row.feeHeadId);
+                  },
+                }
+              : undefined}
           tableTitle="Fee heads"
           tableId={`${tableId}-summary`}
           data={lines}
@@ -321,19 +331,10 @@ export default function FeeStructureHeadsStep({
               excludeFromExport: true,
               render: (_value, row) => (
                 <AdaptiveThreeDotsActions
-                  directActionLimit={2}
+                  directActionLimit={3}
                   collapseOnOverflow={false}
                   moreLabel={`More actions for ${row.feeHeadName}`}
                   actions={[
-                    {
-                      id: 'view',
-                      label: `View ${row.feeHeadName} schedule`,
-                      icon: GlobalIcons.eye,
-                      tooltip: 'View fee head and installments',
-                      disabled:
-                        busy || !row.paymentTermVersionId || !settings.permissions.termsRead,
-                      onClick: () => onSchedule(row.feeHeadId),
-                    },
                     ...(writable
                       ? [
                           {
@@ -366,16 +367,16 @@ export default function FeeStructureHeadsStep({
             },
           ]}
         />
-      </Stack>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        spacing={1}
-        sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
-      >
-        <Typography variant="subtitle2">Total annual amount</Typography>
-        <Typography variant="h6">{structureMoney(total)}</Typography>
-      </Stack>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          spacing={1}
+          sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}
+        >
+          <Typography variant="subtitle2">Total annual amount</Typography>
+          <Typography variant="h6">{structureMoney(total)}</Typography>
+        </Stack>
+      </FormSectionCard>
       {(dialog.value || adding) && (
         <FeeStructureHeadDialog
           line={editingLine}

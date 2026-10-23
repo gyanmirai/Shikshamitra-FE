@@ -65,8 +65,9 @@ export default function PolicyImpactDialog({
                     {
                       id: 'name',
                       label: 'Fee head',
+                      filterType: 'string' as const,
                       minWidth: 180,
-                      isFilter: false,
+                      isFilter: true,
                       isSort: false,
                       render: (value) => (
                         <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
@@ -77,8 +78,9 @@ export default function PolicyImpactDialog({
                     {
                       id: 'treatment',
                       label: 'Policy treatment',
+                      filterType: 'string' as const,
                       minWidth: 160,
-                      isFilter: false,
+                      isFilter: true,
                       isSort: false,
                       render: (value) => (
                         <Label color={value === 'Excluded' ? 'default' : 'info'}>

@@ -16,3 +16,12 @@ const preview = () => ({
 const approve = () => ({ unwrap: async () => ({ refundRequests: [] }) });
 export const usePreviewConcessionApprovalMutation = () => [preview, { isLoading: false }];
 export const useApproveConcessionRequestMutation = () => [approve, { isLoading: false }];
+
+// Local UI evidence only: no document is sent to a server.
+export const useGetConcessionTypeByIdQuery = () => ({ isLoading: false, isError: false });
+export const useUploadConcessionDocumentFileMutation = () => [
+  ({ file }: { file: File }) => ({
+    unwrap: async () => ({ url: `/synthetic-documents/${encodeURIComponent(file.name)}` }),
+  }),
+  { isLoading: false, isError: false },
+];

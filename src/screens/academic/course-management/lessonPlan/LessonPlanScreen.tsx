@@ -1465,9 +1465,10 @@ const LessonPlanScreen = () => {
       {
         id: 'insightMessage',
         label: 'Insight',
+        filterType: 'string' as const,
         align: 'left' as const,
         minWidth: 220,
-        isFilter: false,
+        isFilter: true,
         render: (v: string, row: any) =>
           v ? (
             <CustomTooltip title={v} placement="top" arrow>

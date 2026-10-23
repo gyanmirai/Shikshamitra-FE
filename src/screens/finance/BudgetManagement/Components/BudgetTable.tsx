@@ -117,6 +117,15 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
       {/* Table */}
       {tabs.value === 0 ? (
         <CustomizableTable
+          getRowAction={(row) =>
+            onViewDetail
+              ? {
+                  label: `Open ${row.budgetTitle || 'record'}`,
+                  onClick: () => {
+                    onViewDetail?.(row);
+                  },
+                }
+              : undefined}
           tableId="budget-table-pending"
           noDataText="Pending Budgets Not Found"
           columns={[
@@ -193,6 +202,15 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
         />
       ) : tabs.value === 1 ? (
         <CustomizableTable
+          getRowAction={(row) =>
+            onViewDetail
+              ? {
+                  label: `Open ${row.budgetTitle || 'record'}`,
+                  onClick: () => {
+                    onViewDetail?.(row);
+                  },
+                }
+              : undefined}
           tableId="budget-table-active"
           noDataText="Active Budgets Not Found"
           columns={[
@@ -235,15 +253,9 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions directActionLimit={2}
+                  <AdaptiveThreeDotsActions directActionLimit={3}
                     placement="right-top"
                     actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => onViewDetail?.(row),
-                      },
                       {
                         id: 'delete',
                         label: 'Delete',
@@ -267,6 +279,15 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
         />
       ) : tabs.value === 2 ? (
         <CustomizableTable
+          getRowAction={(row) =>
+            onViewDetail
+              ? {
+                  label: `Open ${row.budgetTitle || 'record'}`,
+                  onClick: () => {
+                    onViewDetail?.(row);
+                  },
+                }
+              : undefined}
           tableId="budget-table-inactive"
           noDataText="Inactive Budgets Not Found"
           columns={[
@@ -309,16 +330,8 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <AdaptiveThreeDotsActions directActionLimit={2}
+                  <AdaptiveThreeDotsActions directActionLimit={3}
                     actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => {
-                          onViewDetail?.(row);
-                        },
-                      },
                       {
                         id: 'delete',
                         label: 'Delete',
@@ -339,6 +352,15 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
         />
       ) : (
         <CustomizableTable
+          getRowAction={(row) =>
+            onViewDetail
+              ? {
+                  label: `Open ${row.budgetTitle || 'record'}`,
+                  onClick: () => {
+                    onViewDetail?.(row);
+                  },
+                }
+              : undefined}
           tableId="budget-table-archive"
           noDataText="Archived Budgets Not Found"
           columns={[
@@ -370,33 +392,6 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
             },
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
-            {
-              stickyPosition: 'right',
-              excludeFromExport: true,
-              id: 'action',
-              label: 'Actions',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              render(value, row) {
-                return (
-                  <AdaptiveThreeDotsActions directActionLimit={2}
-                    actions={[
-                      {
-                        id: 'view',
-                        label: 'View',
-                        icon: 'carbon:view-filled',
-                        onClick: () => {
-                          onViewDetail?.(row);
-                        },
-                      },
-                    ]}
-                    placement="right-top"
-                  />
-                );
-              },
-            },
           ]}
           data={tableData || []}
         />

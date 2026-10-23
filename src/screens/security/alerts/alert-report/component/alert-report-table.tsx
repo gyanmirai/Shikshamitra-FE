@@ -103,7 +103,8 @@ const AlertReportTable = () => (
         {
           id: 'time',
           label: 'Time',
-          isFilter: false,
+          filterType: 'string' as const,
+          isFilter: true,
           isSort: false,
           render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
         },
@@ -113,7 +114,7 @@ const AlertReportTable = () => (
         {
           id: 'slaMet',
           label: 'SLA Met',
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: SLAMeetStatusTypeOptions,
           minWidth: '130px',
           align: 'left',

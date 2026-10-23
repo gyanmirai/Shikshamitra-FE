@@ -164,7 +164,7 @@ const BankStatements = ({
         minWidth: '60px',
         render(value, row) {
           return (
-            <AdaptiveThreeDotsActions directActionLimit={2}
+            <AdaptiveThreeDotsActions directActionLimit={3}
               actions={
                 PaymentMethodsStatusType[row.status] === 'Bounced'
                   ? [

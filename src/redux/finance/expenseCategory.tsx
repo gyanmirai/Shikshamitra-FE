@@ -10,12 +10,14 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
         page,
         pageSize,
         search,
+        filters,
         includeInactive = true,
       }: {
         academicYearId: string;
         page?: number;
         pageSize?: number;
         search?: string;
+        filters?: string;
         includeInactive?: boolean;
       }) => ({
         url: '/expense-categories',
@@ -25,6 +27,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
           page,
           pageSize,
           search: search || undefined,
+          filters,
           includeInactive,
         },
       }),

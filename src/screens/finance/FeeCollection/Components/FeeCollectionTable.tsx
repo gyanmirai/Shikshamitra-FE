@@ -4,7 +4,7 @@ import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
+
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Alert, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
@@ -181,6 +181,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       </Card>
       {selectedMedium ? (
         <CustomizableTable
+          getRowAction={(row) =>
+            access.canView && row.studentId
+              ? {
+                  label: `Open ${row.name || 'record'}`,
+                  onClick: () => {
+                    onView(row as IFeeData);
+                  },
+                }
+              : undefined}
           tableId="fee-collection-table"
           tableTitle="Collections"
           wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
@@ -363,7 +372,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render(value, row) {
                 return (
                   <AdaptiveThreeDotsActions
-                    directActionLimit={2}
+                    directActionLimit={3}
                     placement="right-top"
                     moreLabel={`More actions for ${row.name}`}
                     sx={{ justifyContent: 'flex-start' }}
@@ -387,16 +396,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                           row.studentId &&
                           row.status !== FeeCollectionStatusType.NoFeeAssigned &&
                           onCollectFee({ ...row, id: row.studentId } as IFeeData),
-                      },
-                      {
-                        id: 'view',
-                        label: `View details for ${row.name}`,
-                        icon: GlobalIcons.eye,
-                        disabled: !access.canView || !row.studentId,
-                        tooltip: !row.studentId
-                          ? 'Student details become available after admission finalization. Payment receipts are available in Receipts.'
-                          : undefined,
-                        onClick: () => row.studentId && onView(row as IFeeData),
                       },
                       {
                         id: 'adjust',

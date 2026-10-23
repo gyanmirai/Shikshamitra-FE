@@ -74,7 +74,7 @@ vi.mock('src/redux/customQueryAndMutation', () => ({
 
 // Keep the real column rendering and Label while isolating table infrastructure.
 vi.mock('src/components/customizabaleTable', () => ({
-  default: ({ columns, data }: any) => {
+  default: ({ columns, data, getRowAction }: any) => {
     const statusColumn = columns.find((column: any) => column.id === 'status');
     const actionColumn = columns.find((column: any) => column.id === 'action');
     return (
@@ -89,10 +89,10 @@ vi.mock('src/components/customizabaleTable', () => ({
         <table data-status-sort={String(statusColumn.isSort)}>
           <tbody>
             {data.map((row: any) => (
-              <tr key={row.studentId}>
+              <tr key={row.studentId} tabIndex={getRowAction?.(row) ? 0 : -1} onClick={() => getRowAction?.(row)?.onClick()}>
                 <td>{row.name}</td>
                 <td>{statusColumn.render(row.status, row)}</td>
-                <td>{actionColumn.render(null, row)}</td>
+                <td onClick={(event) => event.stopPropagation()}>{actionColumn.render(null, row)}</td>
               </tr>
             ))}
           </tbody>
@@ -127,7 +127,8 @@ describe('Collections status', () => {
     const paidRow = screen.getByText('Paid Student').closest('tr')!;
     expect(within(paidRow).getByText('Paid')).toBeVisible();
     expect(within(paidRow).getByRole('button', { name: /Collect fee/ })).toBeEnabled();
-    expect(within(unassignedRow).getByRole('button', { name: /View details/ })).toBeEnabled();
+    expect(within(unassignedRow).queryByRole('button', { name: /View details/ })).not.toBeInTheDocument();
+    expect(unassignedRow).toHaveAttribute('tabindex', '0');
     expect(screen.getByRole('option', { name: 'No Fee Assigned' })).toHaveValue('7');
     expect(screen.getByRole('table')).toHaveAttribute('data-status-sort', 'true');
     const collect = within(unassignedRow).getByRole('button', { name: /Collect fee/ });

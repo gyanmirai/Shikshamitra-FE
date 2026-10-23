@@ -126,9 +126,7 @@ const EmergencyClosureScreen = () => {
   const viewDialog = useBoolean();
   const confirmDiscardDialog = useBoolean();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentMedium: medium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [selectedClosure, setSelectedClosure] = useState<any>(null);
   const [viewingClosure, setViewingClosure] = useState<any>(null);
   const [editingClosureId, setEditingClosureId] = useState<string | null>(null);
@@ -260,12 +258,32 @@ const EmergencyClosureScreen = () => {
    * - Keeping the derived tab array stable prevents unnecessary Tabs subtree updates.
    * - The computation depends only on refreshed table data from the query.
    */
-  const statusTabs = useMemo(() => [
-    { label: 'All', value: 'all', count: tableData.length, color: 'default' },
-    { label: 'Active', value: CalendarDayStatus.Active, count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Active).length, color: 'success' },
-    { label: 'Cancelled', value: CalendarDayStatus.Cancelled, count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Cancelled).length, color: 'default' },
-    { label: 'Rescheduled', value: CalendarDayStatus.Rescheduled, count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Rescheduled).length, color: 'warning' },
-  ], [tableData]);
+  const statusTabs = useMemo(
+    () => [
+      { label: 'All', value: 'all', count: tableData.length, color: 'default' },
+      {
+        label: 'Active',
+        value: CalendarDayStatus.Active,
+        count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Active).length,
+        color: 'success',
+      },
+      {
+        label: 'Cancelled',
+        value: CalendarDayStatus.Cancelled,
+        count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Cancelled)
+          .length,
+        color: 'default',
+      },
+      {
+        label: 'Rescheduled',
+        value: CalendarDayStatus.Rescheduled,
+        count: tableData.filter((r: any) => Number(r.status) === CalendarDayStatus.Rescheduled)
+          .length,
+        color: 'warning',
+      },
+    ],
+    [tableData]
+  );
 
   /**
    * Memoization Justification:
@@ -379,7 +397,7 @@ const EmergencyClosureScreen = () => {
     {
       id: 'title',
       label: 'Title',
-      filterType: 'string',
+      filterType: 'string' as const,
       isFilter: true,
       sticky: true,
       width: '34%',
@@ -425,7 +443,7 @@ const EmergencyClosureScreen = () => {
     {
       id: 'date',
       label: 'Closure Date',
-      filterType: 'date',
+      filterType: 'date' as const,
       isFilter: true,
       width: 150,
       minWidth: 150,
@@ -434,10 +452,11 @@ const EmergencyClosureScreen = () => {
     {
       id: 'timeRange',
       label: 'Time',
+      filterType: 'string' as const,
       width: 120,
       minWidth: 120,
       isSort: false,
-      isFilter: false,
+      isFilter: true,
       render: (_, row) => (
         <Typography
           variant="caption"
@@ -450,7 +469,7 @@ const EmergencyClosureScreen = () => {
     {
       id: 'scope',
       label: 'Scope',
-      filterType: 'string',
+      filterType: 'string' as const,
       isFilter: true,
       width: 170,
       minWidth: 170,
@@ -461,7 +480,7 @@ const EmergencyClosureScreen = () => {
     {
       id: 'status',
       label: 'Status',
-      filterType: 'enum',
+      filterType: 'enum' as const,
       enumOptions: Object.values(CALENDAR_DAY_STATUS_LABELS).map((label) => ({
         label,
         value: label,
@@ -582,7 +601,13 @@ const EmergencyClosureScreen = () => {
               placement="right"
               title="Declaring a closure marks the selected date range as emergency non-working time, notifies the selected audiences, and flags affected academic activities when auto-scan is on."
             >
-              <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
+              <Iconify
+                icon={GlobalIcons.info}
+                color="info.main"
+                width={16}
+                height={16}
+                sx={{ cursor: 'pointer' }}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -623,8 +648,9 @@ const EmergencyClosureScreen = () => {
                     fullWidth: true,
                     size: 'small',
                     error: formik.touched.startDate && Boolean(formik.errors.startDate),
-                    helperText:
-                      formik.touched.startDate ? (formik.errors.startDate as string) : undefined,
+                    helperText: formik.touched.startDate
+                      ? (formik.errors.startDate as string)
+                      : undefined,
                   },
                 }}
               />
@@ -643,9 +669,7 @@ const EmergencyClosureScreen = () => {
                 label="End Date *"
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 blockedDayTypes={[]}
-                helperText={
-                  formik.touched.endDate ? (formik.errors.endDate as string) : undefined
-                }
+                helperText={formik.touched.endDate ? (formik.errors.endDate as string) : undefined}
                 onChange={(val) =>
                   formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
                 }
@@ -656,8 +680,9 @@ const EmergencyClosureScreen = () => {
                     fullWidth: true,
                     size: 'small',
                     error: formik.touched.endDate && Boolean(formik.errors.endDate),
-                    helperText:
-                      formik.touched.endDate ? (formik.errors.endDate as string) : undefined,
+                    helperText: formik.touched.endDate
+                      ? (formik.errors.endDate as string)
+                      : undefined,
                   },
                 }}
               />
@@ -774,10 +799,9 @@ const EmergencyClosureScreen = () => {
                               name: 'startTime',
                               onBlur: formik.handleBlur,
                               error: formik.touched.startTime && Boolean(formik.errors.startTime),
-                              helperText:
-                                formik.touched.startTime
-                                  ? (formik.errors.startTime as string)
-                                  : undefined,
+                              helperText: formik.touched.startTime
+                                ? (formik.errors.startTime as string)
+                                : undefined,
                             },
                           }}
                         />
@@ -815,10 +839,9 @@ const EmergencyClosureScreen = () => {
                               name: 'endTime',
                               onBlur: formik.handleBlur,
                               error: formik.touched.endTime && Boolean(formik.errors.endTime),
-                              helperText:
-                                formik.touched.endTime
-                                  ? (formik.errors.endTime as string)
-                                  : undefined,
+                              helperText: formik.touched.endTime
+                                ? (formik.errors.endTime as string)
+                                : undefined,
                             },
                           }}
                         />
@@ -902,9 +925,7 @@ const EmergencyClosureScreen = () => {
                   onChange={(selected) => formik.setFieldValue('standardIds', selected)}
                   error={formik.touched.standardIds && Boolean(formik.errors.standardIds)}
                   helperText={
-                    formik.touched.standardIds
-                      ? (formik.errors.standardIds as string)
-                      : undefined
+                    formik.touched.standardIds ? (formik.errors.standardIds as string) : undefined
                   }
                   formControlProps={{ fullWidth: true, size: 'small' }}
                 />
@@ -922,9 +943,7 @@ const EmergencyClosureScreen = () => {
                 <Grid size={{ xs: 6, sm: 3 }} key={key}>
                   <Paper
                     variant="outlined"
-                    onClick={() =>
-                      formik.setFieldValue(key, !isSelected)
-                    }
+                    onClick={() => formik.setFieldValue(key, !isSelected)}
                     sx={{
                       p: 1.75,
                       borderRadius: 2,
@@ -932,16 +951,18 @@ const EmergencyClosureScreen = () => {
                       textAlign: 'center',
                       border: isSelected ? '2px solid' : '1px solid',
                       borderColor: isSelected ? 'success.main' : 'divider',
-                      bgcolor: isSelected
-                        ? alpha(theme.palette.success.main, 0.05)
-                        : 'transparent',
+                      bgcolor: isSelected ? alpha(theme.palette.success.main, 0.05) : 'transparent',
                       transition: 'all 0.2s ease',
                       '&:hover': {
                         borderColor: isSelected ? 'success.main' : 'primary.main',
                       },
                     }}
                   >
-                    <Iconify icon={icon} width={24} color={isSelected ? 'success.main' : 'text.secondary'} />
+                    <Iconify
+                      icon={icon}
+                      width={24}
+                      color={isSelected ? 'success.main' : 'text.secondary'}
+                    />
                     <Typography
                       variant="caption"
                       display="block"
@@ -964,10 +985,12 @@ const EmergencyClosureScreen = () => {
             type="button"
             buttonText={editingClosureId ? 'Update Closure' : 'Declare Closure'}
             loading={creating || updating}
-            startIcon={<Iconify icon={editingClosureId ? GlobalIcons.edit : 'mdi:alert-octagon-outline'} />}
+            startIcon={
+              <Iconify icon={editingClosureId ? GlobalIcons.edit : 'mdi:alert-octagon-outline'} />
+            }
             onClick={() => formik.handleSubmit()}
           />
-        </DialogActions >
+        </DialogActions>
       </CustomDialog>
 
       <CustomDialog
@@ -983,7 +1006,13 @@ const EmergencyClosureScreen = () => {
               placement="right"
               title="View details and notified audiences for this emergency closure."
             >
-              <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} sx={{ cursor: 'pointer' }} />
+              <Iconify
+                icon={GlobalIcons.info}
+                color="info.main"
+                width={16}
+                height={16}
+                sx={{ cursor: 'pointer' }}
+              />
             </CustomTooltip>
           </Box>
         }
@@ -1070,7 +1099,9 @@ const EmergencyClosureScreen = () => {
                         icon: 'mdi:radar',
                         label: 'Impact Scan',
                         value:
-                          viewingClosure.autoScanImpacts === false ? 'Manual review' : 'Auto-scan on',
+                          viewingClosure.autoScanImpacts === false
+                            ? 'Manual review'
+                            : 'Auto-scan on',
                       },
                     ].map((item) => (
                       <Grid key={item.label} size={{ xs: 12, sm: 6 }}>
@@ -1189,11 +1220,7 @@ const EmergencyClosureScreen = () => {
         title="Unsaved Changes"
         content="You have unsaved changes in this form. Closing now will discard all your edits. Are you sure you want to proceed?"
         action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleConfirmDiscard}
-          >
+          <Button variant="contained" color="error" onClick={handleConfirmDiscard}>
             Discard Changes
           </Button>
         }

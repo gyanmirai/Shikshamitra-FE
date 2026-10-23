@@ -31,6 +31,7 @@ import {
 export interface IConcessionSubmittedDocument {
   documentId: string;
   documentName: string;
+  fileName?: string;
   url: string;
   uploadedAt?: string;
   status?: number;

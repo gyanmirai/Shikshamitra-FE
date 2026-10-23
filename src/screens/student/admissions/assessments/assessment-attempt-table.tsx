@@ -86,9 +86,9 @@ export function AssessmentAttemptTable({
       id: 'attemptNumber',
       isSort: false,
       label: 'Attempt',
-      filterType: 'number',
+      filterType: 'number' as const,
       minWidth: 104,
-      isFilter: false,
+      isFilter: true,
       render: (_, row) => (
         <Stack spacing={0.25} sx={{ overflowWrap: 'anywhere' }}>
           <Typography variant="subtitle2">Attempt {row.attemptNumber}</Typography>
@@ -113,9 +113,9 @@ export function AssessmentAttemptTable({
     {
       id: 'sessionName',
       label: 'Session',
-      filterType: 'string',
+      filterType: 'string' as const,
       minWidth: 136,
-      isFilter: false,
+      isFilter: true,
       isSort: false,
       render: (_, row) => (
         <Stack spacing={0.25} sx={{ overflowWrap: 'anywhere' }}>
@@ -133,9 +133,9 @@ export function AssessmentAttemptTable({
     {
       id: 'attendance',
       label: 'Attendance',
-      filterType: 'enum',
+      filterType: 'enum' as const,
       minWidth: readOnly ? 100 : 160,
-      isFilter: false,
+      isFilter: true,
       isSort: false,
       enumOptions: Object.entries(attendanceLabels).map(([value, label]) => ({ value, label })),
       render: (_, row) =>
@@ -173,9 +173,9 @@ export function AssessmentAttemptTable({
       id: 'marks',
       align: 'right',
       label: scoringEnabled ? (totalMarks != null ? `Marks / ${totalMarks}` : 'Marks') : 'Result',
-      filterType: 'number',
+      filterType: 'number' as const,
       minWidth: readOnly ? 100 : 142,
-      isFilter: false,
+      isFilter: true,
       isSort: false,
       render: (_, row) =>
         !readOnly &&
@@ -206,13 +206,13 @@ export function AssessmentAttemptTable({
     {
       id: 'statusLabel',
       label: 'Status',
-      filterType: 'enum',
+      filterType: 'enum' as const,
       minWidth: 80,
       width: 110,
       enumOptions: [...Object.values(outcomeLabels), 'Awaiting review', 'Cancelled'].map(
         (label) => ({ value: label, label })
       ),
-      isFilter: false,
+      isFilter: true,
       isSort: false,
       sticky: true,
       stickyPosition: 'right',

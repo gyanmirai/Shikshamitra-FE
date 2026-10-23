@@ -94,9 +94,27 @@ const PaymentReceipt = () => (
               isPagination={false}
               isShowedDense={false}
               columns={[
-                { id: 'feeHead', label: 'Fee Head', isFilter: false, isSort: false },
-                { id: 'feeHeadMonth', label: 'Paid For', isFilter: false, isSort: false },
-                { id: 'amount', label: 'Amount', isFilter: false, isSort: false },
+                {
+                  id: 'feeHead',
+                  label: 'Fee Head',
+                  filterType: 'string' as const,
+                  isFilter: true,
+                  isSort: false,
+                },
+                {
+                  id: 'feeHeadMonth',
+                  label: 'Paid For',
+                  filterType: 'string' as const,
+                  isFilter: true,
+                  isSort: false,
+                },
+                {
+                  id: 'amount',
+                  label: 'Amount',
+                  filterType: 'number' as const,
+                  isFilter: true,
+                  isSort: false,
+                },
               ]}
               data={[
                 { feeHead: 'Hostel Rent', amount: 1000, feeHeadMonth: 'March' },

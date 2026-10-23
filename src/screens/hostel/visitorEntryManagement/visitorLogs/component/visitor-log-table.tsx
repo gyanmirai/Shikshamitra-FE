@@ -28,8 +28,9 @@ const VisitorLogtable = () => (
       {
         id: 'entryTime',
         label: 'Entry Time',
+        filterType: 'string' as const,
         align: 'left',
-        isFilter: false,
+        isFilter: true,
         isSort: false,
 
         render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
@@ -37,15 +38,16 @@ const VisitorLogtable = () => (
       {
         id: 'exitTime',
         label: 'Exit Time',
+        filterType: 'string' as const,
         align: 'left',
-        isFilter: false,
+        isFilter: true,
         isSort: false,
         render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
       },
       {
         id: 'status',
         label: 'Status',
-        filterType: 'enum',
+        filterType: 'enum' as const,
         enumOptions: VisitorStatusOptions,
         minWidth: '130px',
         align: 'left',

@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 
 import ValueEntryStep from './ValueEntryStep';
 import ConcessionImpactSummary from '../ConcessionImpactSummary';
@@ -70,6 +70,42 @@ describe('concession values and review', () => {
     expect(screen.getByLabelText('Raw entries')).not.toHaveTextContent('"due-2":"250"');
     fireEvent.change(second, { target: { value: '249.75' } });
     expect(screen.getByLabelText('Raw entries')).toHaveTextContent('"due-2":"249.75"');
+  });
+  it('explains the shared request cap, rejects excess input, and restores allowance when another value decreases', () => {
+    render(<Editor fixed />);
+    expect(screen.getByText(/Maximum concession for this request:/)).toHaveTextContent('1,000');
+    expect(screen.getByText(/shared across all selected installments/)).toBeVisible();
+    const first = screen.getByRole('textbox', {
+      name: 'Half-Yearly 1 School tuition concession amount',
+    });
+    const second = screen.getByRole('textbox', {
+      name: 'Half-Yearly 2 School tuition concession amount',
+    });
+    fireEvent.change(first, { target: { value: '1000' } });
+    expect(screen.getByRole('status', { name: 'Concession request allowance' })).toHaveTextContent(
+      /Entered:.*1,000.*Remaining:.*0/
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Reduce another concession value before entering an amount here.'
+    );
+    expect(second).toHaveAccessibleDescription(/Available:.*0/);
+    fireEvent.change(second, { target: { value: '1' } });
+    expect(screen.getByLabelText('Raw entries')).not.toHaveTextContent('"due-2":"1"');
+    fireEvent.change(first, { target: { value: '900' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(second).toHaveAccessibleDescription(/Available:.*100/);
+    fireEvent.change(second, { target: { value: '100' } });
+    expect(screen.getByLabelText('Raw entries')).toHaveTextContent('"due-2":"100"');
+  });
+  it('shows each installment year once and groups the calculated reduction beside its input', () => {
+    render(<Editor fixed />);
+    expect(screen.getByText('Half-Yearly 1 2026')).toBeVisible();
+    const first = screen.getByRole('textbox', {
+      name: 'Half-Yearly 1 School tuition concession amount',
+    });
+    const row = first.closest('.MuiTextField-root')?.parentElement;
+    expect(row).toBeTruthy();
+    expect(within(row as HTMLElement).getByText('Calculated')).toBeInTheDocument();
   });
   it('keeps policy values read-only and uses the server result', () => {
     render(<Editor policyFixed />);

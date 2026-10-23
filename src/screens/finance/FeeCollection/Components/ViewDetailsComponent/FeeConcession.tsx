@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeConcessionsQuery } from 'src/redux/feeCollection/feeConcession';
@@ -98,27 +98,6 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
             const color = ConcessionStatusTypeColor[value as ConcessionStatusType] as LabelColor;
             return (
               <Label color={color}>{ConcessionStatusType[value as ConcessionStatusType]}</Label>
-            );
-          },
-        },
-        {
-          stickyPosition: 'right',
-          excludeFromExport: true,
-          id: 'action',
-          label: 'Action',
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          minWidth: 50,
-          render(value, row) {
-            return (
-              <AdaptiveThreeDotsActions directActionLimit={2}
-                actions={[
-                  { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => {} },
-                ]}
-                placement="right-top"
-              />
             );
           },
         },

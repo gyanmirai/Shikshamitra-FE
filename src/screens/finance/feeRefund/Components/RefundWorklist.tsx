@@ -245,6 +245,10 @@ export default function RefundWorklist({
       </Card>
       <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
+          getRowAction={(row) => ({
+            label: `Open refund for ${row.name}`,
+            onClick: () => onView(row as IStudentFeeData),
+          })}
           tableId="fee-refunds"
           tableTitle="Fee refunds"
           data={rows}
@@ -365,11 +369,10 @@ export default function RefundWorklist({
                 const actions: string[] = row._availableActions ?? [];
                 const refund = row as IStudentFeeData;
                 return (
-                  <AdaptiveThreeDotsActions directActionLimit={2}
+                  <AdaptiveThreeDotsActions directActionLimit={3}
                     moreLabel={`More refund actions for ${row.name}`}
                     placement="right-top"
                     actions={[
-                      action(refund, 'View', 'mdi:eye', onView),
                       ...(actions.includes('approve')
                         ? [action(refund, 'Approve', 'mdi:approve', onApprove)]
                         : []),

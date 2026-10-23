@@ -49,6 +49,12 @@ export interface IData {
   [key: string]: any;
 }
 
+export interface TableRowAction {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
 export type CustomizableTableRowProps = TableRowProps & {
   [key: `data-${string}`]: string | number | boolean | undefined;
 };
@@ -99,6 +105,8 @@ export interface ICustomizableTableProps {
   totalCount?: number;
   maxServerRowsPerPage?: number;
   handleRowClick?: (row: IData, index: number) => void;
+  /** Primary record action, available by clicking the row or pressing Enter/Space. */
+  getRowAction?: (row: IData, index: number) => TableRowAction | undefined;
   isLoading?: boolean;
   isPagination?: boolean;
   isFilter?: boolean;

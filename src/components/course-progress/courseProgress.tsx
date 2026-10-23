@@ -161,15 +161,15 @@ const CourseProgressComponent = ({
       : useGetSubjectsQuery,
     params: isEmployeeMode
       ? {
-        employeeId,
-        classId: selectedClass,
-        divisionId: selectedDivision,
-      }
+          employeeId,
+          classId: selectedClass,
+          divisionId: selectedDivision,
+        }
       : {
-        academicMediumId: (currentMedium as Medium)?.id,
-        classId: selectedClass,
-        divisionId: selectedDivision,
-      },
+          academicMediumId: (currentMedium as Medium)?.id,
+          classId: selectedClass,
+          divisionId: selectedDivision,
+        },
     options: {
       skip: !isApiActive,
     },
@@ -183,7 +183,11 @@ const CourseProgressComponent = ({
       subjectData?.data?.items ??
       subjectData?.items ??
       subjectData?.records ??
-      (Array.isArray(subjectData) ? subjectData : Array.isArray(subjectData?.data) ? subjectData.data : []);
+      (Array.isArray(subjectData)
+        ? subjectData
+        : Array.isArray(subjectData?.data)
+          ? subjectData.data
+          : []);
 
     const seen = new Set<string>();
     return raw
@@ -256,7 +260,11 @@ const CourseProgressComponent = ({
       chaptersData?.data?.items ??
       chaptersData?.items ??
       chaptersData?.records ??
-      (Array.isArray(chaptersData) ? chaptersData : Array.isArray(chaptersData?.data) ? chaptersData.data : []);
+      (Array.isArray(chaptersData)
+        ? chaptersData
+        : Array.isArray(chaptersData?.data)
+          ? chaptersData.data
+          : []);
 
     return raw.map(normalizeChapter);
   }, [chaptersData, isApiActive, selectedCourse?.details]);
@@ -275,8 +283,8 @@ const CourseProgressComponent = ({
       : 0;
     const expectedProgress = total
       ? Math.round(
-        chapterDetails.reduce((sum, chapter) => sum + (chapter.expectedProgress ?? 0), 0) / total
-      )
+          chapterDetails.reduce((sum, chapter) => sum + (chapter.expectedProgress ?? 0), 0) / total
+        )
       : 0;
 
     return {
@@ -313,7 +321,7 @@ const CourseProgressComponent = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem onClick={() => { }}>
+        <MenuItem onClick={() => {}}>
           <Iconify icon={GlobalIcons.bell} />
           Reminder
         </MenuItem>
@@ -370,15 +378,12 @@ const CourseProgressComponent = ({
         {/* Left Section – Course Cards */}
         <Box
           sx={{
-            width: isVertical
-              ? '100%'
-              : navOpen.value
-                ? { xs: '100%', md: 320 }
-                : 0,
+            width: isVertical ? '100%' : navOpen.value ? { xs: '100%', md: 320 } : 0,
             opacity: isVertical || navOpen.value ? 1 : 0,
             overflow: 'hidden',
             visibility: !isVertical && !navOpen.value ? 'hidden' : 'visible',
-            transition: 'width 0.25s ease-in-out, opacity 0.2s ease-in-out, visibility 0.25s ease-in-out',
+            transition:
+              'width 0.25s ease-in-out, opacity 0.2s ease-in-out, visibility 0.25s ease-in-out',
             flexShrink: 0,
             height: isVertical ? 'auto' : '100%',
           }}
@@ -577,7 +582,7 @@ const CourseProgressComponent = ({
                         sticky: true,
                         stickyPosition: 'left',
                         isFilter: true,
-                        filterType: 'string',
+                        filterType: 'string' as const,
                         isSort: true,
                         render: (value, row) => (
                           <Box component="span">
@@ -590,7 +595,7 @@ const CourseProgressComponent = ({
                         id: 'startDate',
                         label: 'Start Date',
                         align: 'left',
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         minWidth: 170,
                         isSort: true,
                         render: (value) => (
@@ -604,7 +609,7 @@ const CourseProgressComponent = ({
                         label: 'End Date',
                         minWidth: 170,
                         align: 'left',
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         isSort: true,
                         renderColumn: () => <EndToolTip />,
                         render(value, row) {
@@ -612,7 +617,10 @@ const CourseProgressComponent = ({
 
                           if (!isValidDate) {
                             return (
-                              <Typography variant="body2" sx={{ fontSize: 13, color: 'text.secondary' }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ fontSize: 13, color: 'text.secondary' }}
+                              >
                                 -
                               </Typography>
                             );
@@ -624,7 +632,10 @@ const CourseProgressComponent = ({
 
                           if (row.progress === 100) {
                             return (
-                              <Typography variant="body2" sx={{ fontSize: 13, color: 'text.secondary' }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ fontSize: 13, color: 'text.secondary' }}
+                              >
                                 {endDate.format('DD-MM-YYYY')}
                               </Typography>
                             );
@@ -640,7 +651,10 @@ const CourseProgressComponent = ({
                           }
 
                           return (
-                            <Typography variant="body2" sx={{ fontSize: 13, color, fontWeight: diffDays <= 7 ? 700 : 500 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontSize: 13, color, fontWeight: diffDays <= 7 ? 700 : 500 }}
+                            >
                               {endDate.format('DD-MM-YYYY')}
                             </Typography>
                           );
@@ -649,7 +663,7 @@ const CourseProgressComponent = ({
                       {
                         id: 'progress',
                         label: 'Progress',
-                        filterType: 'number',
+                        filterType: 'number' as const,
                         align: 'left',
                         isSort: true,
                         render(value, row) {
@@ -689,7 +703,7 @@ const CourseProgressComponent = ({
                         minWidth: 120,
                         align: 'left',
                         isFilter: true,
-                        filterType: 'enum',
+                        filterType: 'enum' as const,
                         enumOptions: [
                           { label: 'Low', value: 'Low' },
                           { label: 'Medium', value: 'Medium' },
@@ -711,7 +725,7 @@ const CourseProgressComponent = ({
                         minWidth: 140,
                         align: 'left',
                         isFilter: true,
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         isSort: true,
                         render: (value) => (
                           <Typography variant="body2" sx={{ fontSize: 13 }}>
@@ -725,7 +739,7 @@ const CourseProgressComponent = ({
                         minWidth: 140,
                         align: 'left',
                         isFilter: true,
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         isSort: true,
                         render: (value) => (
                           <Typography variant="body2" sx={{ fontSize: 13 }}>
@@ -739,7 +753,7 @@ const CourseProgressComponent = ({
                         minWidth: 155,
                         align: 'left',
                         isFilter: true,
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         isSort: true,
                         render: (value) => (
                           <Typography variant="body2" sx={{ fontSize: 13 }}>
@@ -750,12 +764,13 @@ const CourseProgressComponent = ({
                       {
                         id: 'status',
                         label: 'Status',
+                        filterType: 'string' as const,
                         minWidth: 150,
                         align: 'left',
                         sticky: true,
                         stickyPosition: 'right',
                         isSort: true,
-                        isFilter: false,
+                        isFilter: true,
                         render(value, row) {
                           return (
                             <Stack spacing={0.5} alignItems="flex-start">
@@ -763,7 +778,10 @@ const CourseProgressComponent = ({
                                 {value || 'Not Started'}
                               </Label>
                               {row.scheduleStatus && (
-                                <Label color={getStatusChipColor(row.scheduleStatus) as any} variant="outlined">
+                                <Label
+                                  color={getStatusChipColor(row.scheduleStatus) as any}
+                                  variant="outlined"
+                                >
                                   {row.scheduleStatus}
                                 </Label>
                               )}
@@ -818,7 +836,7 @@ const CourseProgressComponent = ({
                         id: 'startDate',
                         label: 'Start Date',
                         align: 'left',
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         minWidth: 170,
                       },
                       {
@@ -826,7 +844,7 @@ const CourseProgressComponent = ({
                         label: 'End Date',
                         minWidth: 170,
                         align: 'left',
-                        filterType: 'date',
+                        filterType: 'date' as const,
                         renderColumn: () => <EndToolTip />,
                         render(value, row) {
                           const isValidDate = value && value !== '-' && dayjs(value).isValid();
@@ -871,7 +889,7 @@ const CourseProgressComponent = ({
                       {
                         id: 'progress',
                         label: 'Progress',
-                        filterType: 'number',
+                        filterType: 'number' as const,
                         render(value) {
                           return (
                             <Box sx={{ position: 'relative', display: 'inline-flex' }}>

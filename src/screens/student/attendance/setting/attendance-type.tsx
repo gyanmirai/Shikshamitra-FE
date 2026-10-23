@@ -120,6 +120,7 @@ export default function AttendanceType() {
         label: 'Last Updated',
         minWidth: 150,
         isSort: false,
+        // The list contract accepts search/isActive; it has no modification-date criterion.
         isFilter: false,
         render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : '—'),
       },

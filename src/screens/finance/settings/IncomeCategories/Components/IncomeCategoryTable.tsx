@@ -33,6 +33,10 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
+  filters,
+  onServerFilter,
+  page,
+  rowsPerPage,
 }) => {
   const [patchIncomeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -61,7 +65,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
     () => [
       {
         id: 'name',
+        isFilter: true,
         label: 'Name',
+        filterType: 'string' as const,
         align: 'left',
         sticky: true,
         stickyPosition: 'left',
@@ -73,7 +79,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       },
       {
         id: 'tags',
+        isFilter: true,
         label: 'Tags',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
@@ -85,7 +93,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       },
       {
         id: 'description',
+        isFilter: true,
         label: 'Description',
+        filterType: 'string' as const,
         align: 'left',
         render: (value) => (
           <Typography
@@ -104,7 +114,13 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       },
       {
         id: 'isActive',
+        isFilter: true,
         label: 'Status',
+        filterType: 'enum' as const,
+        enumOptions: [
+          { label: 'Active', value: 1 },
+          { label: 'Inactive', value: 0 },
+        ],
         minWidth: 140,
         sticky: true,
         stickyPosition: 'right',
@@ -149,10 +165,10 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         render(value, row) {
           return (
             <AdaptiveThreeDotsActions
-              directActionLimit={2}
+              directActionLimit={3}
               actions={[
                 {
-                  id: 'view',
+                  id: 'history',
                   label: 'Version history',
                   icon: 'solar:history-bold',
                   onClick: () => setHistoryItem(row as IIncomeCategory),
@@ -226,6 +242,11 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         columns={columns}
         data={data || []}
         isLoading={isLoading}
+        serverSideFilter
+        filters={filters}
+        onServerFilter={onServerFilter}
+        page={page}
+        rowsPerPage={rowsPerPage}
         serverSidePagination
         serverSideSearch
         totalCount={totalCount}

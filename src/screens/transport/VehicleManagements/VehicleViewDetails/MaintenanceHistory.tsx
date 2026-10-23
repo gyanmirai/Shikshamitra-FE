@@ -74,7 +74,7 @@ const RouteHistory = ({ vehicleId }: { vehicleId: string }) => {
           label: 'Stops',
           align: 'left',
           minWidth: '80px',
-          filterType: 'number',
+          filterType: 'number' as const,
         },
         {
           id: 'status',
@@ -82,7 +82,7 @@ const RouteHistory = ({ vehicleId }: { vehicleId: string }) => {
           align: 'left',
           sticky: true,
           minWidth: 80,
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: VehicleRouteTypeOptions,
           render: (value) => {
             const color = VehicleRouteTypeColor[value as VehicleRouteType] as LabelColor;
@@ -120,7 +120,7 @@ const DriverHistory = ({ vehicleId }: { vehicleId: string }) => {
           label: 'License No',
           align: 'left',
           minWidth: '150px',
-          filterType: 'number',
+          filterType: 'number' as const,
         },
         {
           id: 'assignedDate',
@@ -146,7 +146,7 @@ const DriverHistory = ({ vehicleId }: { vehicleId: string }) => {
           align: 'left',
           sticky: true,
           minWidth: 80,
-          filterType: 'enum',
+          filterType: 'enum' as const,
           enumOptions: DriverStatusTypeOptions,
           render: (value) => {
             const color = DriverStatusTypeColor[value as DriverStatusType] as LabelColor;
@@ -174,14 +174,15 @@ const DocumentDetailsTable = ({ vehicleId }: { vehicleId: string }) => {
       isFilter={false}
       isLoading={isLoading}
       columns={[
-        { id: 'name', label: 'Name', align: 'left', isFilter: false },
+        { id: 'name', label: 'Name', filterType: 'string' as const, align: 'left', isFilter: true },
         {
           id: 'status',
           label: 'Status',
+          filterType: 'string' as const,
           minWidth: '80px',
           isSort: false,
           align: 'left',
-          isFilter: false,
+          isFilter: true,
           render(value, row) {
             return (
               <Tooltip title={row.status}>
@@ -260,7 +261,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           label: 'Date',
           align: 'left',
           minWidth: '120px',
-          filterType: 'date',
+          filterType: 'date' as const,
         },
         {
           id: 'serviceType',
@@ -276,7 +277,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           label: 'Cost',
           align: 'left',
           minWidth: '120px',
-          filterType: 'number',
+          filterType: 'number' as const,
           render: (value) => `Rs. ${Math.ceil(Number(value || 0)).toLocaleString('en-IN')}`,
         },
         {
@@ -290,7 +291,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           label: 'Next Due',
           align: 'left',
           minWidth: '120px',
-          filterType: 'date',
+          filterType: 'date' as const,
         },
       ]}
       data={data?.data || []}

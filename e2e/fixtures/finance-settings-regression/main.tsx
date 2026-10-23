@@ -14,6 +14,7 @@ import 'simplebar-react/dist/simplebar.min.css';
 const permissions = [
   ...Object.values(financePermissions.fees.settings.chargeCategoryActions),
   ...Object.values(financePermissions.fees.settings.concessionTypeActions),
+  financePermissions.fees.chargeActions.view,
 ].map((name) => ({ name, isGranted: true }));
 const store = configureStore({
   reducer: {

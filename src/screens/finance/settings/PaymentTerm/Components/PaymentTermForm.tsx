@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
@@ -14,11 +14,11 @@ import { Box, Alert, Stack, Button, Drawer, Typography, CircularProgress } from 
 import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import { FormFooter } from './FormFooter';
+import { PaymentTermDefaultSummary } from './PaymentTermUsage';
 import { ALLOCATION_TOTAL_ERROR } from '../allocationValidation';
 import { usePaymentTermForm } from '../hooks/usePaymentTermForm';
 import { GeneralInfoSection } from './sections/GeneralInfoSection';
 import { InstallmentSection } from './sections/InstallmentSection';
-import { PaymentTermDefaultSummary } from './PaymentTermUsage';
 
 import type { IPaymentTermFormProps } from '../type';
 
@@ -77,7 +77,10 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
         role: 'dialog',
         'aria-modal': true,
         'aria-labelledby': 'payment-term-title',
-        sx: { width: { xs: '100%', sm: 'min(840px, 96vw)' }, maxWidth: '100%' },
+        sx: {
+          width: { xs: '100%', sm: 'min(960px, 96vw)', lg: 'min(1320px, 96vw)' },
+          maxWidth: '100%',
+        },
       }}
     >
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -113,9 +116,9 @@ function PaymentTermFormSession({ open, onClose, editData }: IPaymentTermFormPro
                 component="fieldset"
                 ref={formBodyRef}
                 disabled={busy}
-                sx={{ border: 0, m: 0, minWidth: 0, p: 1.5 }}
+                sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
               >
-                <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+                <Stack spacing={2} sx={{ minWidth: 0 }}>
                   <GeneralInfoSection formik={formik} boards={boards} />
                   {formik.values.isDefaultTerm && impactError && (
                     <Alert severity="error">

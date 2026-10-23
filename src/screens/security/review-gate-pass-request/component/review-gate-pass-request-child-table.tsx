@@ -77,14 +77,15 @@ const ReviewGatePassRequestTableChild = () => {
           {
             id: 'pickupDate',
             label: 'Pickup Date',
-            filterType: 'date',
+            filterType: 'date' as const,
             render: (value) => (value ? dayjs(value).format('DD-MM-YYYY') : null),
           },
           {
             id: 'pickupTime',
             label: 'Pickup Time',
+            filterType: 'string' as const,
 
-            isFilter: false,
+            isFilter: true,
             isSort: false,
             render: (value) => (value ? dayjs(value).format('hh:mm A') : null),
           },
@@ -92,7 +93,7 @@ const ReviewGatePassRequestTableChild = () => {
           {
             id: 'status',
             label: 'Status',
-            filterType: 'enum',
+            filterType: 'enum' as const,
             enumOptions: CommonRequestStatusTypeOptions,
             minWidth: '130px',
             align: 'left',
