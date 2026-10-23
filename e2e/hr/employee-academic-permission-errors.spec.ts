@@ -43,7 +43,7 @@ test('academic permission failure shows one actionable toast and preserves the d
   page,
 }) => {
   let submitted = 0;
-  await page.route('**/app/user-scope/bulk-assign', async (route) => {
+  await page.route('**/employees/*/academic-permission', async (route) => {
     submitted += 1;
     await route.fulfill({
       status: 400,
@@ -72,7 +72,7 @@ test('switching academic year replaces an edited selection with the new year sco
   page,
 }) => {
   let initialYear: string | null = null;
-  await page.route('**/app/user-scope/user-scope-hierarchy?*', async (route) => {
+  await page.route('**/employees/*/academic-permission?*', async (route) => {
     const requestUrl = new URL(route.request().url());
     const year = requestUrl.searchParams.get('academicYearId');
     if (!year) {

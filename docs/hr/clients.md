@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,6 +12,8 @@ audience: humans-and-agents
 
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
 Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
+
+Staff Directory's Academic Permission step passes `employeeId` to `employeeApi` scope queries and mutations. They use GET/PUT `/api/employees/{employeeId}/academic-permission`, preserving the hierarchy response, academic-year payload and cache invalidation. Standalone Security callers omit `employeeId` and continue using the global User Scope APIs. The [backend HR API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md) owns draft delegation and scope enforcement.
 
 `src/redux/hr/pf-coverage-api.ts` owns PF school-coverage history and effective-dated writes, invalidating PF, salary, and payroll caches.
 `esi-configuration-api.ts` carries automatic ESIC settings, effective months, and component-treatment updates from Earning Component; `statutory-scheme-api.ts` carries optional configuration drafts for impact preview.
