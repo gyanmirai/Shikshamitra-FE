@@ -31,6 +31,7 @@ const HrAttendanceNotificationScreen = () => {
       />
       <CustomizableTable
         tableId="hr-attendance-notification"
+        tableTitle="Attendance notifications"
         wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
         tableContainerProps={{ sx: { height: 1 } }}
         isLoading={isLoading}

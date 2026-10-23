@@ -83,7 +83,7 @@ export default function SalaryTemplateSettings() {
     permissions,
     hrPermissions.payroll.settings.salaryTemplateActions.archive
   );
-  const { data, isLoading, isError, refetch } = useGetSalaryTemplatesQuery();
+  const { data, isLoading, isError, error: tableError, refetch } = useGetSalaryTemplatesQuery();
   const [setDefault, defaultState] = useSetDefaultSalaryTemplateMutation();
   const [archive, archiveState] = useArchiveSalaryTemplateMutation();
   const [archiveTarget, setArchiveTarget] = useState<SalaryTemplate | null>(null);
@@ -258,6 +258,7 @@ export default function SalaryTemplateSettings() {
               onKeyDown={(event) => event.stopPropagation()}
             >
               <ThreeDotsActions
+                deleteLabel={`Delete ${String(row.fullName || row.employeeName || row.name || row.title || row.policyTitle || row.id || 'record')}`}
                 showViewIcon={!editable}
                 showEditIcon={editable}
                 showThreeDots={canChooseDefault || (canArchive && template.status !== 'ARCHIVED')}
@@ -376,6 +377,8 @@ export default function SalaryTemplateSettings() {
           exportScope="all"
           tableId="salary-template-table"
           tableTitle="Salary templates"
+          error={tableError}
+          onRetry={refetch}
           columns={columns}
           data={rows}
           isLoading={isLoading}

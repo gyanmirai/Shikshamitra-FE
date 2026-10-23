@@ -2992,6 +2992,7 @@ export default function EmployeeOnboardingScreen() {
         render: (value) => formatDate(value),
       },
       {
+        excludeFromExport: true,
         id: 'actions',
         label: 'Actions',
         width: 70,
@@ -3014,6 +3015,10 @@ export default function EmployeeOnboardingScreen() {
               sx={{ display: 'flex', justifyContent: 'flex-start' }}
             >
               <ThreeDotsActions
+                viewLabel={`View ${String(row.fullName || row.id)}`}
+                editLabel={`Edit ${String(row.fullName || row.id)}`}
+                deleteLabel={`Delete ${String(row.fullName || row.id)}`}
+                moreLabel={`More actions for ${String(row.fullName || row.id)}`}
                 showViewIcon
                 placement="right-top"
                 handleViewClick={() => handleOpenApplication(application.id)}

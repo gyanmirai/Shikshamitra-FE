@@ -376,6 +376,7 @@ export function useHRPolicyWorkspace({
     data: assignments,
     isFetching: assignmentsLoading,
     error: assignmentsError,
+    refetch: refetchAssignments,
   } = useGetHrPolicyAssignmentsQuery(assignmentListArgs, { skip: !academicYearId });
 
   const policyAuditTarget =
@@ -2253,6 +2254,7 @@ export function useHRPolicyWorkspace({
     attendanceError,
     leavePoliciesError,
     assignmentsError,
+    refetchAssignments,
 
     // Archive view
     policyArchiveView,

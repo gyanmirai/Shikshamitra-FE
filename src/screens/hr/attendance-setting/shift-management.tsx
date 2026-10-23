@@ -168,6 +168,7 @@ const ShiftManagement = () => {
             render: (value: string) => formatShiftTime(value),
           },
           {
+            excludeFromExport: true,
             id: 'action',
             isSort: false,
             isFilter: false,
@@ -181,6 +182,10 @@ const ShiftManagement = () => {
 
               return (
                 <ThreeDotsActions
+                  viewLabel={`View ${String(row.shiftName || row.id)}`}
+                  editLabel={`Edit ${String(row.shiftName || row.id)}`}
+                  deleteLabel={`Delete ${String(row.shiftName || row.id)}`}
+                  moreLabel={`More actions for ${String(row.shiftName || row.id)}`}
                   showThreeDots={false}
                   showEditIcon
                   showDeleteIcon

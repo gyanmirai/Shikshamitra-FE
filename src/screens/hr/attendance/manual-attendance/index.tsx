@@ -131,6 +131,7 @@ const ManualAttendanceScreen = () => {
     isLoading,
     isFetching,
     isError,
+    error: tableError,
     refetch: refetchDayAttendance,
   } = useQueryAndMutation({
     type: 'query',
@@ -1525,7 +1526,9 @@ const ManualAttendanceScreen = () => {
         serverSidePagination
         isLoading={isLoading || isFetching || substitution.opening}
         columns={columns}
-        noDataText={isError ? 'Failed to load staff data' : 'No staff found for the selected date'}
+        error={tableError}
+        onRetry={refetchDayAttendance}
+        noDataText="No staff found for the selected date"
         data={isError ? [] : employeeData}
         rowProps={rowProps}
         serverSide

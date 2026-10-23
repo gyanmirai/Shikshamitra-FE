@@ -204,6 +204,8 @@ Every table has a contextual accessible name that identifies its records.
 Initial table loading uses table-shaped skeleton rows through `isLoading`.
 The animated character loader is retained in `src/assets/illustrations/table-loading-illustration.tsx` and `src/components/table-loading-state/` for future use. It is not wired into any active table or screen.
 Server refetches retain the current rows when safe and add a thin labelled progress indicator.
+Pass `isRefreshing` for a same-scope refetch with safe current data; keep `isLoading` for the initial request or a new scope without current data.
+Column headings default to left alignment independently of body-cell `align`; use the explicit `headerAlign` column option only for a documented specialized control.
 Changing a filter, search term, sort, or page must not reset unrelated user context.
 Server-side pagination, sorting, search, and filtering must be used when the result set can grow beyond a bounded client-safe size.
 The backend remains the authority for tenant isolation, permission checks, and sensitive filters.

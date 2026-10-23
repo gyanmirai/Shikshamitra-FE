@@ -61,7 +61,13 @@ const EmployeeAttendanceHistory = ({ employeeId }: EmployeeAttendanceHistoryProp
   const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().startOf('month'));
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs().endOf('month'));
 
-  const { data, isLoading, isFetching } = useGetEmployeeWiseAttendanceQuery(
+  const {
+    currentData: data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGetEmployeeWiseAttendanceQuery(
     {
       employeeId: employeeId || '',
       startDate: startDate?.format('DD/MM/YYYY') || '',
@@ -164,7 +170,10 @@ const EmployeeAttendanceHistory = ({ employeeId }: EmployeeAttendanceHistoryProp
           `Period: ${startDate?.format('DD MMM YYYY')} to ${endDate?.format('DD MMM YYYY')}`,
         ]}
         noDataText={<>No attendance history found.</>}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || (isFetching && !data)}
+        isRefreshing={isFetching && Boolean(data)}
+        error={error}
+        onRetry={refetch}
         columns={columns}
         data={attendanceItems.map((row: any) => ({
           ...mapEmployeeWiseAttendanceRow(row),

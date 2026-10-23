@@ -50,22 +50,42 @@ const TABS = [
 const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
   const tabs = useTabs('borrowed-books');
 
-  const { data: borrowedBooks, isLoading: borrowedLoading } = useQueryAndMutation({
+  const {
+    data: borrowedBooks,
+    isLoading: borrowedLoading,
+    error: borrowedError,
+    refetch: borrowedRetry,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
 
-  const { data: reservedBooks, isLoading: reservedLoading } = useQueryAndMutation({
+  const {
+    data: reservedBooks,
+    isLoading: reservedLoading,
+    error: reservedError,
+    refetch: reservedRetry,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservedBooksQuery,
   });
 
-  const { data: finesCharges, isLoading: finesChargesLoading } = useQueryAndMutation({
+  const {
+    data: finesCharges,
+    isLoading: finesChargesLoading,
+    error: chargesError,
+    refetch: chargesRetry,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinesChargesQuery,
   });
 
-  const { data: borrowHistoryBooks, isLoading: borrowHistoryLoading } = useQueryAndMutation({
+  const {
+    data: borrowHistoryBooks,
+    isLoading: borrowHistoryLoading,
+    error: historyError,
+    refetch: historyRetry,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
@@ -85,6 +105,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               tableTitle="Borrowed books"
               noDataText="No Borrowed Books Data Found"
               isLoading={borrowedLoading}
+              error={borrowedError}
+              onRetry={borrowedRetry}
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },
@@ -109,6 +131,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               tableTitle="Reserved books"
               noDataText="No Reserved Books Data Found"
               isLoading={reservedLoading}
+              error={reservedError}
+              onRetry={reservedRetry}
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookCategory', label: 'Book Category', align: 'left' },
@@ -132,6 +156,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               tableTitle="Library charges"
               noDataText="No Fines or Charges Data Found"
               isLoading={finesChargesLoading}
+              error={chargesError}
+              onRetry={chargesRetry}
               columns={[
                 {
                   id: 'bookTitle',
@@ -193,6 +219,8 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
               tableTitle="Borrowing history"
               noDataText="No Borrowed History Data Found"
               isLoading={borrowHistoryLoading}
+              error={historyError}
+              onRetry={historyRetry}
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },

@@ -16,6 +16,7 @@ import {
   Switch,
   TableContainer,
   TablePagination,
+  LinearProgress,
   FormControlLabel,
 } from '@mui/material';
 
@@ -80,6 +81,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   handleRowClick = () => {},
   getRowAction,
   isLoading = false,
+  isRefreshing = false,
   isPagination = true,
   isFilter = true,
   isSearch = true,
@@ -577,6 +579,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               minHeight: 0,
             }}
           >
+            {isRefreshing && !isLoading && !errorContent && (
+              <LinearProgress
+                aria-label={`Refreshing ${typeof tableTitle === 'string' ? tableTitle : 'table'}`}
+                sx={{ flexShrink: 0 }}
+              />
+            )}
             <TableContainer
               component={Scrollbar}
               sx={{
@@ -778,6 +786,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       headerRefs,
       getStickyStyle,
       isLoading,
+      isRefreshing,
       paginatedData,
       handleRowClick,
       getRowAction,

@@ -127,6 +127,7 @@ export default function EsiPolicies({ hasSchoolWideScope }: { hasSchoolWideScope
       minWidth: 120,
       render: (_, row) => (
         <ThreeDotsActions
+          deleteLabel={`Delete ${String(row.fullName || row.employeeName || row.name || row.title || row.policyTitle || row.id || 'record')}`}
           showViewIcon
           showEditIcon={canWrite && !row.isArchived}
           showThreeDots={canWrite && !row.isArchived && !row.isDefault}

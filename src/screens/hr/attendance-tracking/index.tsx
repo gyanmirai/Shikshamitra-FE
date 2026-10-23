@@ -762,6 +762,7 @@ const AttendanceTrackingScreen = () => {
       },
     },
     {
+      excludeFromExport: true,
       id: 'actions',
       label: 'Actions',
       width: 120,
@@ -817,6 +818,7 @@ const AttendanceTrackingScreen = () => {
         showFullScreen
         exportScope="all"
         tableId={`hr-attendance-register-days-${group.employeeId || group.employeeCode}`}
+        tableTitle={`Attendance days for ${group.employeeName || group.employeeCode}`}
         columns={dayColumns}
         data={group.days || []}
         rowProps={(row) => ({
@@ -1039,6 +1041,7 @@ const AttendanceTrackingScreen = () => {
       ),
     },
     {
+      excludeFromExport: true,
       id: 'actions',
       label: 'Actions',
       width: 96,

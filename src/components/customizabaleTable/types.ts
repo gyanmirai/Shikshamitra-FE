@@ -24,6 +24,8 @@ export interface IColumn {
   minWidth?: number | string;
   maxWidth?: number | string;
   align?: 'right' | 'left' | 'center';
+  /** Headings stay left aligned independently of numeric or action cell alignment. */
+  headerAlign?: 'right' | 'left' | 'center';
   headerSx?: SxProps<Theme>;
   cellSx?: SxProps<Theme>;
   render?: (value: any, row: IData) => React.ReactNode;
@@ -108,6 +110,8 @@ export interface ICustomizableTableProps {
   /** Primary record action, available by clicking the row or pressing Enter/Space. */
   getRowAction?: (row: IData, index: number) => TableRowAction | undefined;
   isLoading?: boolean;
+  /** Same-scope refresh: retain safe rows and show a labelled progress indicator. */
+  isRefreshing?: boolean;
   isPagination?: boolean;
   isFilter?: boolean;
   isSearch?: boolean;

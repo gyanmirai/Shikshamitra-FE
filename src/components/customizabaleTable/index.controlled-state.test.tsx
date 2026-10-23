@@ -38,6 +38,22 @@ const renderTable = (table: ReactElement) =>
   renderWithProviders(<ThemeProvider theme={createTheme(defaultSettings)}>{table}</ThemeProvider>);
 
 describe('CustomizableTable controlled server state', () => {
+  it('retains safe rows and labels refresh without reporting an empty or initial-loading state', () => {
+    renderTable(
+      <CustomizableTable
+        tableId="hr-refresh-regression"
+        tableTitle="Work calendars"
+        columns={columns}
+        data={[{ name: 'School calendar' }]}
+        isRefreshing
+        isLoading={false}
+      />
+    );
+    expect(screen.getByText('School calendar')).toBeVisible();
+    expect(screen.getByRole('progressbar', { name: 'Refreshing Work calendars' })).toBeVisible();
+    expect(screen.queryByText('No data available')).not.toBeInTheDocument();
+  });
+
   it('shows a selected 50-row limit and disables Next on the final counted page', () => {
     renderTable(
       <CustomizableTable

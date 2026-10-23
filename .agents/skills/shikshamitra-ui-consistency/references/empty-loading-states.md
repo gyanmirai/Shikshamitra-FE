@@ -107,8 +107,9 @@ owned by the feature; supply the correct scoped state rather than assuming the t
 - noDataText is rendered inside EmptyContent.title, a Typography span. Prefer plain text or
   valid inline phrasing. Do not pass another EmptyContent or a block form/action card into it.
   Richer first-use description/action support requires a supported shared extension.
-- There is no public isRefreshing/onRetry/emptyAction prop. Compose same-scope refresh status
-  and actual retry callbacks through the owning feature's supported layout/API.
+- Use `isRefreshing` for a same-scope refresh while retaining safe current rows.
+  Use the existing `error` and `onRetry` props for query failures, or `errorContent` for feature-specific recovery.
+  There is no public `emptyAction` prop; compose richer empty content only through supported APIs.
 - Keep filters, headings and footer geometry stable. Preserve column visibility/density in
   skeletons; do not simulate row actions as enabled controls. Pending counts are unknown,
   and page-size selection must remain accurate while data loads.

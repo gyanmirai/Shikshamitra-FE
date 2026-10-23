@@ -192,6 +192,7 @@ export const RenderComponents = ({
           showFullScreen
           exportScope="all"
           tableId={`${name}-components-table`}
+          tableTitle={`${name} components`}
           isFilter={false}
           isPagination={false}
           isSearch={false}

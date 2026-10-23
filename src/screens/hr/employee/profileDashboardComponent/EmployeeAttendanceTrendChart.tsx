@@ -3,17 +3,8 @@ import type { EmployeeDashboardData } from 'src/redux/hr/employeeApi';
 import { useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
-import {
-  Box,
-  Paper,
-  Table,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  Typography,
-  TableContainer,
-} from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
 
 import { buildEmployeeAttendanceChart } from '../employee-dashboard-utils';
 
@@ -69,34 +60,38 @@ export default function EmployeeAttendanceTrendChart({ data }: { data: EmployeeD
         }}
       >
         <summary>View monthly attendance data</summary>
-        <TableContainer>
-          <Table size="small" aria-label="Monthly attendance data">
-            <TableHead>
-              <TableRow>
-                <TableCell>Month</TableCell>
-                {chart.series.map((series) => (
-                  <TableCell key={series.name} align="right">
-                    {series.name}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {chart.categories.map((month, index) => (
-                <TableRow key={month}>
-                  <TableCell component="th" scope="row">
-                    {month}
-                  </TableCell>
-                  {chart.series.map((series) => (
-                    <TableCell key={series.name} align="right">
-                      {series.data[index]}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <CustomizableTable
+          tableId="hr-monthly-attendance-data"
+          tableTitle="Monthly attendance data"
+          variant="embedded"
+          exportScope="all"
+          showColumns
+          showExport
+          showFullScreen
+          isPagination={false}
+          isSearch={false}
+          columns={[
+            { id: 'month', label: 'Month' },
+            ...chart.series.map((series, index) => ({
+              id: `series${index}`,
+              label: series.name,
+              filterType: 'number' as const,
+              align: 'right' as const,
+            })),
+          ]}
+          data={chart.categories.map((month, index) => ({
+            id: month,
+            month,
+            ...Object.fromEntries(
+              chart.series.map((series, seriesIndex) => [
+                `series${seriesIndex}`,
+                series.data[index],
+              ])
+            ),
+          }))}
+          tableContainerProps={{ sx: { maxHeight: 360 } }}
+          noDataText="No monthly attendance data."
+        />
       </Box>
     </Paper>
   );

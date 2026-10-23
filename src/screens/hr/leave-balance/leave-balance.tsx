@@ -91,6 +91,7 @@ const LeaveBalanceLedger = ({
     columns={[
       { id: 'bucketName', label: 'Paid type', minWidth: 160, sticky: true },
       {
+        filterType: 'number',
         id: 'remaining',
         label: 'Available',
         valueType: 'number',
@@ -104,6 +105,7 @@ const LeaveBalanceLedger = ({
           ),
       },
       {
+        filterType: 'number',
         id: 'total',
         label: 'Accrued',
         valueType: 'number',
@@ -111,6 +113,7 @@ const LeaveBalanceLedger = ({
         render: (value) => formatLeaveDays(value),
       },
       {
+        filterType: 'number',
         id: 'used',
         label: 'Used',
         valueType: 'number',
@@ -118,6 +121,7 @@ const LeaveBalanceLedger = ({
         render: (value) => formatLeaveDays(value),
       },
       {
+        filterType: 'number',
         id: 'pending',
         label: 'Pending',
         valueType: 'number',

@@ -400,7 +400,7 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
               maxHeight: 320,
             }}
           >
-            <Table size="small" stickyHeader>
+            <Table size="small" stickyHeader aria-label="Payroll basis configuration">
               <TableHead>
                 <TableRow>
                   {[
@@ -459,7 +459,12 @@ export function PayrollPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) 
                                 numberOrNull(payrollForm.manualMonthDays[row.monthKey])
                               )
                             }
-                            inputProps={{ min: 1, max: 31, step: 1 }}
+                            inputProps={{
+                              min: 1,
+                              max: 31,
+                              step: 1,
+                              'aria-label': `Payroll basis days for ${row.monthLabel}`,
+                            }}
                             sx={{ width: 120 }}
                             onChange={(event) =>
                               setPayrollForm((current) => ({

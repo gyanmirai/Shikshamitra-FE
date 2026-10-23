@@ -10,6 +10,34 @@ import { TableHeader } from './TableHeader';
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 
 describe('TableHeader', () => {
+  it('keeps headings left aligned when numeric and action cells align right', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <Table>
+          <TableHeader
+            columns={[
+              { id: 'amount', label: 'Amount', align: 'right', isSort: true },
+              { id: 'actions', label: 'Actions', align: 'right', isSort: false, isFilter: false },
+            ]}
+            columnVisibility={{ amount: true, actions: true }}
+            sorts={[]}
+            onSort={vi.fn()}
+            filters={[]}
+            onColumnFilterClick={vi.fn()}
+            headerRefs={[]}
+            setHeaderRef={vi.fn()}
+            getStickyStyle={() => ({})}
+            tableUniqId="heading-alignment"
+          />
+        </Table>
+      </ThemeProvider>
+    );
+    expect(screen.getByText('Amount')).toHaveStyle({ textAlign: 'left' });
+    expect(screen.getByText('Actions')).toHaveStyle({ textAlign: 'left' });
+    expect(screen.queryByRole('button', { name: 'Sort by Actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Filter Actions' })).not.toBeInTheDocument();
+  });
+
   it('does not clip custom header controls inside narrow columns', () => {
     const theme = createTheme(defaultSettings);
 

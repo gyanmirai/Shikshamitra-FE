@@ -112,6 +112,7 @@ const HrSetting = () => {
         isSort: false,
       },
       {
+        excludeFromExport: true,
         label: 'Actions',
         id: 'action',
         isSort: false,
@@ -121,6 +122,10 @@ const HrSetting = () => {
         minWidth: 50,
         render: (value, data) => (
           <ThreeDotsActions
+            viewLabel={`View ${String(data.title || data.id)}`}
+            editLabel={`Edit ${String(data.title || data.id)}`}
+            deleteLabel={`Delete ${String(data.title || data.id)}`}
+            moreLabel={`More actions for ${String(data.title || data.id)}`}
             showEditIcon
             showDeleteIcon
             showThreeDots={false}

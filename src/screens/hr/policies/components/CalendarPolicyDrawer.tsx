@@ -518,12 +518,12 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
               maxHeight: 360,
             }}
           >
-            <Table size="small" stickyHeader>
+            <Table size="small" stickyHeader aria-label="Work calendar holiday configuration">
               <TableHead>
                 <TableRow>
                   {['Date / Range', 'Days', 'Holiday', 'Source', 'Notes', 'Status', 'Actions'].map(
                     (column) => (
-                      <TableCell key={column} align={column === 'Actions' ? 'right' : 'left'}>
+                      <TableCell key={column} align="left">
                         {column}
                       </TableCell>
                     )
@@ -593,6 +593,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                               <Tooltip title="Edit manual holiday">
                                 <IconButton
+                                  aria-label={`Edit ${holiday.holidayName}`}
                                   size="small"
                                   onClick={() => openManualHolidayDialog(originalIndex)}
                                 >
@@ -601,6 +602,7 @@ export function CalendarPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext })
                               </Tooltip>
                               <Tooltip title="Delete manual holiday">
                                 <IconButton
+                                  aria-label={`Delete ${holiday.holidayName}`}
                                   size="small"
                                   color="error"
                                   onClick={() => removeManualHoliday(originalIndex)}

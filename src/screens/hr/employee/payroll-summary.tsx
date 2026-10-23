@@ -283,6 +283,7 @@ const PayrollLineTable = ({
         exportScope="all"
         noDataText={noDataText}
         tableId={tableId}
+        tableTitle="Salary components"
         isFilter={false}
         isSearch={false}
         columns={[
