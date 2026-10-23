@@ -25,7 +25,9 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
     name: opt.label,
     id: `Homework-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'Homework',
     render: () => <HomeworkManagementReports report={opt.label} />,
   }));
@@ -34,7 +36,9 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
     name: opt.label,
     id: `Assignment-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'Assignment',
     render: () => <AssignmentManagementReports report={opt.label} />,
   }));
@@ -43,7 +47,9 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
     name: opt.label,
     id: `Analytics-${opt.label.replace(/\s+/g, '-')}-${index}`,
     icon: '',
-    description: opt.label,
+    description: 'Choose the available filters, preview the report, then queue the export.',
+    configurationHelp:
+      'Select the available academic scope and date filters. Preview the selected records before queueing an export.',
     categoryId: 'Analytics',
     render: () => <HomeworkAssignmentAnalyticsReports report={opt.label} />,
   }));

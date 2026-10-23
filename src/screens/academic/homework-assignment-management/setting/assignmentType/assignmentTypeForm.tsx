@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -115,153 +116,163 @@ const AssignmentTypeForm = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Stack spacing={2}>
-          <ShakingTextField
-            error={Boolean(formik.touched.assignmentTypeName && formik.errors.assignmentTypeName)}
-          >
+        <FormSectionCard
+          title="Assignment Type Details"
+          icon={GlobalIcons.notebook}
+          descriptionTooltip="Set submission and evaluation defaults for assignments using this type."
+          titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        >
+          <Stack spacing={2}>
+            <ShakingTextField
+              error={Boolean(formik.touched.assignmentTypeName && formik.errors.assignmentTypeName)}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                name="assignmentTypeName"
+                label="Name *"
+                value={formik.values.assignmentTypeName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.assignmentTypeName && Boolean(formik.errors.assignmentTypeName)
+                }
+                helperText={formik.touched.assignmentTypeName && formik.errors.assignmentTypeName}
+              />
+            </ShakingTextField>
+
             <TextField
               fullWidth
               size="small"
-              name="assignmentTypeName"
-              label="Name *"
-              value={formik.values.assignmentTypeName}
+              name="description"
+              label="Description"
+              multiline
+              rows={2}
+              value={formik.values.description}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.assignmentTypeName && Boolean(formik.errors.assignmentTypeName)}
-              helperText={formik.touched.assignmentTypeName && formik.errors.assignmentTypeName}
+              error={formik.touched.description && Boolean(formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
             />
-          </ShakingTextField>
 
-          <TextField
-            fullWidth
-            size="small"
-            name="description"
-            label="Description"
-            multiline
-            rows={2}
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.description && Boolean(formik.errors.description)}
-            helperText={formik.touched.description && formik.errors.description}
-          />
-
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <TextField
-              fullWidth
-              select
-              size="small"
-              name="defaultSubmissionType"
-              label="Default Submission Type"
-              value={formik.values.defaultSubmissionType}
-              onChange={formik.handleChange}
-              error={
-                formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)
-              }
-              helperText={
-                formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType
-              }
-            >
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {ASSIGNMENT_SUBMISSION_TYPE_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <TextField
+                fullWidth
+                select
+                size="small"
+                name="defaultSubmissionType"
+                label="Default Submission Type"
+                value={formik.values.defaultSubmissionType}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.defaultSubmissionType &&
+                  Boolean(formik.errors.defaultSubmissionType)
+                }
+                helperText={
+                  formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType
+                }
+              >
+                <MenuItem value="">
+                  <em>None</em>
                 </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
+                {ASSIGNMENT_SUBMISSION_TYPE_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            {showDefaultMarks && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              {showDefaultMarks && (
+                <TextField
+                  fullWidth
+                  type="number"
+                  size="small"
+                  name="defaultMarks"
+                  label="Default Marks"
+                  value={formik.values.defaultMarks}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  inputProps={{ min: 1 }}
+                  error={formik.touched.defaultMarks && Boolean(formik.errors.defaultMarks)}
+                  helperText={formik.touched.defaultMarks && formik.errors.defaultMarks}
+                />
+              )}
+
               <TextField
                 fullWidth
                 type="number"
                 size="small"
-                name="defaultMarks"
-                label="Default Marks"
-                value={formik.values.defaultMarks}
+                name="defaultDueDays"
+                label="Default Due Days"
+                value={formik.values.defaultDueDays}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 inputProps={{ min: 1 }}
-                error={formik.touched.defaultMarks && Boolean(formik.errors.defaultMarks)}
-                helperText={formik.touched.defaultMarks && formik.errors.defaultMarks}
+                error={formik.touched.defaultDueDays && Boolean(formik.errors.defaultDueDays)}
+                helperText={formik.touched.defaultDueDays && formik.errors.defaultDueDays}
               />
-            )}
+            </Stack>
 
-            <TextField
-              fullWidth
-              type="number"
-              size="small"
-              name="defaultDueDays"
-              label="Default Due Days"
-              value={formik.values.defaultDueDays}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              inputProps={{ min: 1 }}
-              error={formik.touched.defaultDueDays && Boolean(formik.errors.defaultDueDays)}
-              helperText={formik.touched.defaultDueDays && formik.errors.defaultDueDays}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.evaluationRequired}
+                  onChange={(event) => {
+                    const evaluationRequired = event.target.checked;
+                    formik.setFieldValue('evaluationRequired', evaluationRequired);
+                    formik.setFieldValue(
+                      'defaultEvaluationMethod',
+                      evaluationRequired ? '' : AssignmentEvaluationMethod.NoEvaluation
+                    );
+                    if (!evaluationRequired) formik.setFieldValue('defaultMarks', '');
+                  }}
+                  name="evaluationRequired"
+                  color="primary"
+                />
+              }
+              label="Evaluation Required"
             />
-          </Stack>
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formik.values.evaluationRequired}
+            {formik.values.evaluationRequired && (
+              <TextField
+                fullWidth
+                select
+                size="small"
+                name="defaultEvaluationMethod"
+                label="Default Evaluation Method *"
+                value={formik.values.defaultEvaluationMethod}
                 onChange={(event) => {
-                  const evaluationRequired = event.target.checked;
-                  formik.setFieldValue('evaluationRequired', evaluationRequired);
-                  formik.setFieldValue(
-                    'defaultEvaluationMethod',
-                    evaluationRequired ? '' : AssignmentEvaluationMethod.NoEvaluation
-                  );
-                  if (!evaluationRequired) formik.setFieldValue('defaultMarks', '');
+                  const evaluationMethod = Number(event.target.value) as AssignmentEvaluationMethod;
+                  formik.setFieldValue('defaultEvaluationMethod', evaluationMethod);
+                  if (
+                    !evaluationUsesMarks(formik.values.evaluationRequired, evaluationMethod) &&
+                    formik.values.defaultMarks !== ''
+                  ) {
+                    formik.setFieldValue('defaultMarks', '');
+                  }
                 }}
-                name="evaluationRequired"
-                color="primary"
-              />
-            }
-            label="Evaluation Required"
-          />
-
-          {formik.values.evaluationRequired && (
-            <TextField
-              fullWidth
-              select
-              size="small"
-              name="defaultEvaluationMethod"
-              label="Default Evaluation Method *"
-              value={formik.values.defaultEvaluationMethod}
-              onChange={(event) => {
-                const evaluationMethod = Number(event.target.value) as AssignmentEvaluationMethod;
-                formik.setFieldValue('defaultEvaluationMethod', evaluationMethod);
-                if (
-                  !evaluationUsesMarks(formik.values.evaluationRequired, evaluationMethod) &&
-                  formik.values.defaultMarks !== ''
-                ) {
-                  formik.setFieldValue('defaultMarks', '');
+                error={
+                  formik.touched.defaultEvaluationMethod &&
+                  Boolean(formik.errors.defaultEvaluationMethod)
                 }
-              }}
-              error={
-                formik.touched.defaultEvaluationMethod &&
-                Boolean(formik.errors.defaultEvaluationMethod)
-              }
-              helperText={
-                formik.touched.defaultEvaluationMethod && formik.errors.defaultEvaluationMethod
-              }
-            >
-              <MenuItem value="" disabled>
-                <em>Select method</em>
-              </MenuItem>
-              {ASSIGNMENT_TYPE_EVALUATION_METHOD_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
+                helperText={
+                  formik.touched.defaultEvaluationMethod && formik.errors.defaultEvaluationMethod
+                }
+              >
+                <MenuItem value="" disabled>
+                  <em>Select method</em>
                 </MenuItem>
-              ))}
-            </TextField>
-          )}
-        </Stack>
+                {ASSIGNMENT_TYPE_EVALUATION_METHOD_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          </Stack>
+        </FormSectionCard>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -287,7 +298,7 @@ const AssignmentTypeForm = ({
           variant="contained"
           size="small"
         >
-          {editData ? 'Update' : 'Submit'}
+          Submit
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

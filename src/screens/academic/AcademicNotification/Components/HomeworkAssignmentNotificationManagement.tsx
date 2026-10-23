@@ -722,7 +722,7 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
   const [view, setView] = useState(false);
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <EditNotificationDialog
@@ -736,6 +736,9 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
         </Card>
       ) : (
         <CustomizableTable
+          tableTitle="Homework and Assignment Notifications"
+          wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
           tableId="timetable-auto-notification-configuration"
           data={homeworkAssignmentsNotificationsData}
           columns={[
@@ -765,8 +768,9 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
               render(value, row) {
                 return (
                   <Switch
+                    slotProps={{ input: { 'aria-label': `Enable ${row.event} notification` } }}
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    disabled
                   />
                 );
               },
@@ -781,14 +785,10 @@ const HomeworkAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any
               render(value, row) {
                 return (
                   <ThreeDotsActions
+                    editLabel={`Edit ${row.event} notification`}
+                    viewLabel={`View ${row.event} notification`}
                     showThreeDots={false}
-                    showEditIcon
-                    handleEditClick={() => {
-                      setSelectedData(row);
-                      dialog.onTrue();
-                      setView(false);
-                      setIsViewMode(false);
-                    }}
+                    showEditIcon={false}
                     showViewIcon
                     handleViewClick={() => {
                       setSelectedData(row);

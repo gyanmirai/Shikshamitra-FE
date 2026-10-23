@@ -7,7 +7,7 @@ import type {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Label } from 'src/components/label';
-
+import { fDate } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
@@ -32,7 +32,6 @@ import AssignmentMoneyInput from './AssignmentMoneyInput';
 import { servicePeriodErrors, serializeServiceDate } from './assignmentServiceDates';
 
 import type { AssignmentYearBounds } from './assignmentServiceDates';
-import { fDate } from 'src/utils/format-time';
 
 export default function AssignmentStudentInputs({
   candidate,
@@ -43,6 +42,7 @@ export default function AssignmentStudentInputs({
   yearBounds,
   showErrors = false,
   flat = false,
+  allowTransportSource = true,
 }: {
   candidate: AssignmentCandidate;
   request: AssignmentRequest;
@@ -52,6 +52,8 @@ export default function AssignmentStudentInputs({
   yearBounds?: AssignmentYearBounds;
   showErrors?: boolean;
   flat?: boolean;
+  // Verified transport records belong to one student and cannot be shared in bulk.
+  allowTransportSource?: boolean;
 }) {
   const [touchedAmounts, setTouchedAmounts] = useState<string[]>([]);
   const [expandedHeads, setExpandedHeads] = useState<string[]>(() =>
@@ -355,7 +357,8 @@ export default function AssignmentStudentInputs({
                     }}
                   >
                     <Stack spacing={1}>
-                      {canOverrideDates || (head.supportsTransportSource && !head.isVariable) ? (
+                      {canOverrideDates ||
+                      (allowTransportSource && head.supportsTransportSource && !head.isVariable) ? (
                         <CustomSelect
                           optionDescriptionKey="description"
                           size="small"
@@ -374,7 +377,7 @@ export default function AssignmentStudentInputs({
                                 ? `${fDate(yearBounds.start)} – ${fDate(yearBounds.end)}`
                                 : 'Academic year dates are unavailable.',
                             },
-                            ...(head.supportsTransportSource && !head.isVariable
+                            ...(allowTransportSource && head.supportsTransportSource && !head.isVariable
                               ? [
                                   {
                                     value: 'TransportService',

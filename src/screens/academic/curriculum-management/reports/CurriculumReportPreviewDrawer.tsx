@@ -194,6 +194,9 @@ const CurriculumReportPreviewDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Report Preview',
         sx: {
           width: { xs: '100vw', sm: '80vw', md: '70vw', lg: '60vw' },
           display: 'flex',
@@ -231,7 +234,12 @@ const CurriculumReportPreviewDrawer = ({
           />
         )}
         <Tooltip title="Close">
-          <IconButton onClick={onClose} size="small" sx={{ color: 'inherit', ml: 1 }}>
+          <IconButton
+            aria-label="Close report preview"
+            onClick={onClose}
+            size="small"
+            sx={{ color: 'inherit', ml: 1 }}
+          >
             <Iconify icon="mdi:close" width={20} />
           </IconButton>
         </Tooltip>

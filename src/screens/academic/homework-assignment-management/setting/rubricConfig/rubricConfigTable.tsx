@@ -13,6 +13,7 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = (props) => {
   const { data, isLoading, isError = false, hasMedium = true, onRetry } = props;
   return (
     <CustomizableTable
+      tableTitle="Rubric Templates"
       tableId="rubric-config-table"
       isLoading={isLoading}
       isPagination

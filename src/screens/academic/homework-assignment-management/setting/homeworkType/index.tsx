@@ -5,19 +5,19 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import {
   useGetHomeworkTypesQuery,
@@ -66,6 +66,8 @@ const HomeworkTypeCreation = () => {
 
   // Redux dispatch function
   const dispatch = useDispatch();
+  const { requestNavigation, confirmation: discardConfirmation } =
+    useAcademicDiscardGuard(isChanges);
 
   // Delete mutation hook
   const [deleteHomeworkType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -95,7 +97,11 @@ const HomeworkTypeCreation = () => {
       }, 200); // Adjust delay as needed
     };
 
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (!isSubmit && isChanges) {
+      requestNavigation(() => handleClose(null, true));
+      return;
+    }
+    if (isSubmit) {
       addHomeworkTypeDialog.onFalse();
       resetState();
     } else if (!isChanges) {
@@ -173,6 +179,7 @@ const HomeworkTypeCreation = () => {
         }
       />
 
+      {discardConfirmation}
       {/* Summary Cards */}
       <TimetableSettingsSummaryCards
         open={insightsDrawer.value}
@@ -241,31 +248,10 @@ const HomeworkTypeCreation = () => {
 
       <CustomDialog
         open={addHomeworkTypeDialog.value}
-        handleClose={() => {
-          addHomeworkTypeDialog.onFalse();
-          setTimeout(() => {
-            setSelectedData(null);
-          }, 300); // Adjust delay if your dialog's animation is longer
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedData ? 'Update Homework Type' : 'Add Homework Type'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedData
-                  ? 'You can update the homework type details entering the name.'
-                  : 'You can create a new homework type by entering the name.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        handleClose={() => handleClose(null)}
+        guardUnsavedChanges={false}
+        title={selectedData ? 'Update Homework Type' : 'Add Homework Type'}
+        titleInfo="Set the homework type name and its submission defaults."
       >
         <HomeworkTypeForm
           open={addHomeworkTypeDialog}

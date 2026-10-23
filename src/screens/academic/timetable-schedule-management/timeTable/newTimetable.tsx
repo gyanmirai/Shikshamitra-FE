@@ -831,19 +831,8 @@ const TimeTableGrid = () => {
         />
       )}
       <CustomDialog
-        title={
-          <Box display="flex" alignItems="center" gap={1}>
-            {isEdit ? 'Update Timetable' : 'Create Timetable'}{' '}
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title="Create or update timetable schedules for classes and divisions to organize daily academic activities"
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>{' '}
-          </Box>
-        }
+        title={isEdit ? 'Update Timetable' : 'Create Timetable'}
+        titleInfo="Create or update class and division schedules."
         handleClose={() => handleCloseDialog()}
         open={open}
         fullScreen
@@ -898,6 +887,7 @@ const TimeTableGrid = () => {
             </Box>
           </Card>
           <CustomizableTable
+            tableTitle="Timetables"
             tableId="timetable-table"
             noDataText={
               <>

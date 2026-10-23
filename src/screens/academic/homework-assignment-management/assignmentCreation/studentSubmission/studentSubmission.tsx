@@ -5,18 +5,19 @@ import type { RubricEvaluationPanelRef } from 'src/screens/academic/homework-ass
 
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import HelpTooltip from 'src/components/help-tooltip';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Stack, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -593,7 +594,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     : 'Add Feedback'
                   : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${requiresMarks ? 'Feedback & Marks' : 'Feedback'}`}
             </Typography>
-            <CustomTooltip
+            <HelpTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
@@ -614,7 +615,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                 sx={{ cursor: 'pointer' }}
                 color="info.main"
               />
-            </CustomTooltip>
+            </HelpTooltip>
           </Box>
         }
         maxWidth="md"

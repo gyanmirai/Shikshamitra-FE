@@ -67,35 +67,35 @@ export default function FeeStructurePoliciesStep({
   const selectedFamily = impacts.find((impact) => impact.key === choosing);
   const options = choosing
     ? settings.policies
-        .filter((policy) => policy.family === choosing)
-        .map((policy) => {
-          const rows = policyImpactRows(
-            choosing,
-            {
-              ...candidate,
-              [`${choosing}PolicyId`]: policy.id,
-              [`${choosing}PolicyVersionId`]: policy.versionId,
-            },
-            settings,
-            catalogs[choosing].items?.find(
-              (item) => item.id === policy.id && item.currentVersionId === policy.versionId
-            )
-          );
-          const matches = rows?.filter((row) =>
-            choosing === 'collection'
-              ? row.treatment === 'Late fee applies'
-              : row.treatment !== 'Excluded'
-          ).length;
-          return {
-            ...policy,
-            _id: policy.versionId,
-            coverage: rows
-              ? choosing === 'collection'
-                ? `Late fees on ${matches} of ${rows.length} fee heads`
-                : `${matches} of ${rows.length} fee heads match`
-              : 'Exact-version coverage unavailable',
-          };
-        })
+      .filter((policy) => policy.family === choosing)
+      .map((policy) => {
+        const rows = policyImpactRows(
+          choosing,
+          {
+            ...candidate,
+            [`${choosing}PolicyId`]: policy.id,
+            [`${choosing}PolicyVersionId`]: policy.versionId,
+          },
+          settings,
+          catalogs[choosing].items?.find(
+            (item) => item.id === policy.id && item.currentVersionId === policy.versionId
+          )
+        );
+        const matches = rows?.filter((row) =>
+          choosing === 'collection'
+            ? row.treatment === 'Late fee applies'
+            : row.treatment !== 'Excluded'
+        ).length;
+        return {
+          ...policy,
+          _id: policy.versionId,
+          coverage: rows
+            ? choosing === 'collection'
+              ? `Late fees on ${matches} of ${rows.length} fee heads`
+              : `${matches} of ${rows.length} fee heads match`
+            : 'Exact-version coverage unavailable',
+        };
+      })
     : [];
   const collectionAttached =
     !!candidate.collectionPolicyId && !!candidate.collectionPolicyVersionId;
@@ -134,8 +134,8 @@ export default function FeeStructurePoliciesStep({
                 const policy = locked
                   ? undefined
                   : settings.policies.find(
-                      (item) => item.family === key && item.versionId === version
-                    );
+                    (item) => item.family === key && item.versionId === version
+                  );
                 const mismatched = key === 'refund' && refundMismatch;
                 const matchedHeads =
                   impact.rows?.filter((row) =>

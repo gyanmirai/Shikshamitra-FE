@@ -13,17 +13,12 @@ interface ChapterNumberFieldProps {
   onBlur: FocusEventHandler<HTMLInputElement>;
 }
 
-export function ChapterNumberField({
-  value,
-  error,
-  onChange,
-  onBlur,
-}: ChapterNumberFieldProps) {
+export function ChapterNumberField({ value, error, onChange, onBlur }: ChapterNumberFieldProps) {
   return (
     <ShakingTextField error={Boolean(error)}>
       <TextField
         fullWidth
-        label="Chapter Number *"
+        label="Chapter number *"
         name="chapterNo"
         type="number"
         placeholder="e.g. 1"

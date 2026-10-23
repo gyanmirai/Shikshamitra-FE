@@ -124,7 +124,7 @@ describe('collection ledger waiver capabilities', () => {
     expect(rows[2]).toHaveTextContent('Transport second');
     expect(rows[3]).toHaveTextContent('Tuition first');
   });
-  it('keeps two custom installments in one month separate and follows the supplied allocation order', () => {
+  it('keeps two custom installments in one month separate in the installment view', () => {
     const props = ledgerProps();
     const first = props.data.monthWise[0].items[0];
     props.data.monthWise[0].items = [
@@ -144,18 +144,13 @@ describe('collection ledger waiver capabilities', () => {
     ];
     render(
       <LedgerTestProviders>
-        <CollectionLedgerTable
-          {...props}
-          layout="ledger"
-          allocationBasis="Installment"
-          allocationDueFeeOrder={['due-two', 'due-one']}
-        />
+        <CollectionLedgerTable {...props} layout="ledger" activeTab="by-month" groupByInstallment />
       </LedgerTestProviders>
     );
     const titles = screen
       .getAllByRole('heading', { level: 3 })
       .map((heading) => heading.textContent);
-    expect(titles.indexOf('Second installment')).toBeLessThan(titles.indexOf('First installment'));
+    expect(titles.indexOf('First installment')).toBeLessThan(titles.indexOf('Second installment'));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select Second installment' }));
     expect(props.onSelectionChange).toHaveBeenCalledWith([
       expect.objectContaining({ dueFeeId: 'due-two' }),
@@ -170,12 +165,7 @@ describe('collection ledger waiver capabilities', () => {
     });
     render(
       <LedgerTestProviders>
-        <CollectionLedgerTable
-          {...props}
-          layout="ledger"
-          allocationBasis="Installment"
-          allocationDueFeeOrder={['due-one']}
-        />
+        <CollectionLedgerTable {...props} layout="ledger" activeTab="by-month" groupByInstallment />
       </LedgerTestProviders>
     );
     const group = screen.getByRole('button', { name: /^Quarter 1 — Jun to Aug/ });

@@ -7,6 +7,9 @@ interface ColorPickerProps {
   onSelect: (color: string) => void;
   initialColor?: string;
   disabled?: boolean;
+  ariaLabel?: string;
+  invalid?: boolean;
+  describedBy?: string;
 }
 
 const colorNames: Record<string, string> = {
@@ -71,6 +74,9 @@ export default function ColorPickerCircle({
   onSelect,
   initialColor,
   disabled = false,
+  ariaLabel,
+  invalid,
+  describedBy,
 }: ColorPickerProps) {
   const [selectedColor, setSelectedColor] = useState(initialColor || '');
 
@@ -81,6 +87,10 @@ export default function ColorPickerCircle({
 
   return (
     <Box
+      role={ariaLabel ? 'group' : undefined}
+      aria-label={ariaLabel}
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
       sx={{
         display: 'flex',
         gap: 1.5,
@@ -94,6 +104,8 @@ export default function ColorPickerCircle({
           disabled={disabled}
           aria-label={`${colorNames[color.toUpperCase()] ?? 'Colour'} (${color})`}
           aria-pressed={selectedColor === color}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
           onClick={() => handleClick(color)}
           sx={{
             width: { xs: 44, sm: 20 },

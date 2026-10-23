@@ -2,9 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { useId, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
-import React, { useId, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -41,7 +40,7 @@ export interface FeeLedgerFilters {
 }
 
 interface FeeLedgerFilterBarProps {
-  allocationBasis?: 'Installment' | 'FeeHead';
+  groupByInstallment?: boolean;
   filters: FeeLedgerFilters;
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
@@ -114,21 +113,15 @@ const FeeLedgerFilterBar = ({
   isMonthsLoading = false,
   selectionStates,
   onSelectionFilterChange,
-  allocationBasis,
+  groupByInstallment,
 }: FeeLedgerFilterBarProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const resolvedYearId = academicYearId ?? currentYear?.id;
-  const tabs = useTabs(filters.activeTab);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterPanelId = useId();
   const activeFilterCount = [filters.month, filters.feeHead, filters.status].filter(
     (value) => value !== 'All'
   ).length;
-
-  const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
-    tabs.onChange(_, newValue);
-    onFilterChange({ ...filters, activeTab: newValue as FeeLedgerTab });
-  };
 
   const {
     data: studentFeeStructureData,
@@ -220,25 +213,16 @@ const FeeLedgerFilterBar = ({
             <CustomSelect
               fullWidth
               label="Group by"
-              options={
-                allocationBasis
-                  ? TABS.map((tab) => ({
-                      ...tab,
-                      label: tab.value === 'by-month' ? 'By installment' : tab.label,
-                    }))
-                  : TABS
-              }
-              value={
-                allocationBasis
-                  ? allocationBasis === 'FeeHead'
-                    ? 'by-fee-head'
-                    : 'by-month'
-                  : (tabs.value as string)
-              }
-              disabled={Boolean(allocationBasis)}
-              helperText={allocationBasis ? 'Set by the collection policy' : undefined}
+              options={TABS.map((tab) => ({
+                ...tab,
+                label:
+                  tab.value === 'by-month' && groupByInstallment ? 'By installment' : tab.label,
+              }))}
+              value={filters.activeTab}
               size="small"
-              onChange={(value) => handleTabChange({} as React.SyntheticEvent, String(value))}
+              onChange={(value) =>
+                onFilterChange({ ...filters, activeTab: String(value) as FeeLedgerTab })
+              }
             />
           </Stack>
           <Stack

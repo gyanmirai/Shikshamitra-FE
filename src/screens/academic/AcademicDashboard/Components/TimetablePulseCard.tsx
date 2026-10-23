@@ -48,14 +48,14 @@ export function TimetablePulseCard({ data }: { data: AdminAcademicDashboardTimet
           >
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                Timetable Setup Progress
+                Published Timetable Coverage
               </Typography>
               <Typography variant="h2" sx={{ lineHeight: 1 }}>
                 {timetableRate}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {formatCount(data.activeTimetables)} of{' '}
-                {formatCount(data.activeTimetables + data.pendingTimetables)} classes configured
+                {formatCount(data.activeTimetables)} published timetables ·{' '}
+                {formatCount(data.pendingTimetables)} drafts
               </Typography>
             </Box>
             <Button
@@ -71,7 +71,7 @@ export function TimetablePulseCard({ data }: { data: AdminAcademicDashboardTimet
           <Box sx={{ mt: 1.5 }}>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
               <Typography variant="caption" color="text.secondary">
-                Completeness progress
+                Coverage across school divisions
               </Typography>
               <Typography variant="caption" fontWeight={700}>
                 {timetableRate}%

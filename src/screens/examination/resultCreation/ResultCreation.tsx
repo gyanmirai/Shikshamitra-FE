@@ -61,10 +61,7 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 
 import { buildStudentResultDocumentTitle } from './resultPrintUtils';
-import {
-  getExamMonthRange,
-  getDefaultExamMonth,
-} from '../exam-month-filter';
+import { getExamMonthRange, getDefaultExamMonth } from '../exam-month-filter';
 import { buildResultExamQuery, buildResultExamMonthOptions } from './result-exam-filter';
 import StudentResultPrintReport, {
   STUDENT_RESULT_PRINT_PAGE_STYLE,
@@ -202,13 +199,8 @@ function ResultWorkflowPanel({
   selectedDivisionName: string;
 }) {
   const workflow = getWorkflowCopy(resultHeaderData);
-  const {
-    checks,
-    readinessPercentage,
-    blockerCount,
-    warningCount,
-    pendingSubjects,
-  } = getResultReadinessSummary(readinessData);
+  const { checks, readinessPercentage, blockerCount, warningCount, pendingSubjects } =
+    getResultReadinessSummary(readinessData);
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -1227,6 +1219,7 @@ export function StudentDetailsDialog({
               </Typography>
             </Box>
             <CustomizableTable
+              tableTitle="Student Subject Results"
               tableId="student-subject-results-table"
               isLoading={isLoading}
               noDataText="No subject marks details available."
@@ -1235,7 +1228,6 @@ export function StudentDetailsDialog({
             />
           </Card>
         )}
-
       </DialogScrollContent>
       {/* </Box> */}
 
@@ -1784,6 +1776,9 @@ const ResultCreation = (_props: TabComponentType) => {
         id: '_action',
         label: 'Details',
         minWidth: 80,
+        isFilter: false,
+        isSort: false,
+        excludeFromExport: true,
         align: 'center' as const,
         sticky: true,
       },
@@ -1874,31 +1869,32 @@ const ResultCreation = (_props: TabComponentType) => {
               </LoadingButton>
             )}
 
-            {canPublish && (!allFiltersSet || !resultHeaderData || resultHeaderData?.statusCode === 0) && (
-              <Tooltip
-                title={
-                  !allFiltersSet
-                    ? 'Select class, division, and exam to publish results'
-                    : !resultHeaderData
-                      ? 'Generate result preview first'
-                      : ''
-                }
-              >
-                <span>
-                  <LoadingButton
-                    variant="contained"
-                    size="small"
-                    loading={isPublishing}
-                    disabled={!allFiltersSet || !resultHeaderData}
-                    startIcon={<Iconify icon="mdi:publish" />}
-                    onClick={handlePublish}
-                    sx={{ minWidth: 110 }}
-                  >
-                    Publish
-                  </LoadingButton>
-                </span>
-              </Tooltip>
-            )}
+            {canPublish &&
+              (!allFiltersSet || !resultHeaderData || resultHeaderData?.statusCode === 0) && (
+                <Tooltip
+                  title={
+                    !allFiltersSet
+                      ? 'Select class, division, and exam to publish results'
+                      : !resultHeaderData
+                        ? 'Generate result preview first'
+                        : ''
+                  }
+                >
+                  <span>
+                    <LoadingButton
+                      variant="contained"
+                      size="small"
+                      loading={isPublishing}
+                      disabled={!allFiltersSet || !resultHeaderData}
+                      startIcon={<Iconify icon="mdi:publish" />}
+                      onClick={handlePublish}
+                      sx={{ minWidth: 110 }}
+                    >
+                      Publish
+                    </LoadingButton>
+                  </span>
+                </Tooltip>
+              )}
 
             {canFreeze && resultHeaderData?.statusCode === 1 && (
               <LoadingButton
@@ -2116,6 +2112,7 @@ const ResultCreation = (_props: TabComponentType) => {
         style={{ flex: 1 }}
       > */}
       <CustomizableTable
+        tableTitle="Results"
         tableId="result-creation-table"
         noDataText={
           !allFiltersSet ? (

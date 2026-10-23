@@ -40,6 +40,7 @@ export type RubricConfigFormValues = {
 export type RubricConfigFormProps = {
   editData: AssessmentRubricDto | null;
   onClose: (event: unknown, isSubmit?: boolean) => void;
+  onStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
 export type RubricConfigTableProps = {
@@ -54,7 +55,6 @@ export type RubricConfigTableProps = {
   onDuplicate: (row: AssessmentRubricDto) => void;
   onPreview: (row: AssessmentRubricDto) => void;
   onUsage: (row: AssessmentRubricDto) => void;
-  onVersion: (row: AssessmentRubricDto) => void;
   onArchive: (row: AssessmentRubricDto) => void;
   onPublish: (row: AssessmentRubricDto) => void;
 };

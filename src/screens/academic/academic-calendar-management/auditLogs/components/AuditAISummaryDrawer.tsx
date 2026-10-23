@@ -1,51 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Stack, Paper, Drawer, Divider, Typography, LinearProgress, IconButton } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Paper,
+  Drawer,
+  Divider,
+  Typography,
+  IconButton,
+  LinearProgress,
+} from '@mui/material';
 
+import { buildAuditSummary } from '../utils/auditSummary';
 import { summarizeImpact } from '../utils/auditFormatters';
-import { MOCK_AUDIT_LOGS } from '../constants/auditLogs.mock';
 
 import type { AuditLog } from '../types/auditLogs.types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Optional specific log for "Explain Change" mode; if absent, shows weekly summary. */
+  /** A selected event switches the drawer from the loaded-page summary to its explanation. */
   log?: AuditLog | null;
+  logs: AuditLog[];
 }
 
-/** Builds a mock AI summary for the full audit log set. */
-const buildWeeklySummary = (logs: AuditLog[]) => {
-  const high = logs.filter((l) => (l.riskLevel ?? 0) >= 3).length;
-  const workingDayImpacts = logs.filter((l) => (l.impact?.workingDaysAffected ?? 0) > 0).length;
-  const publishedMods = logs.filter((l) => l.actionLabel.includes('Published')).length;
-  const suspicious = high > 2 || publishedMods > 0;
-
-  return {
-    text: `In the last 7 days, ${logs.length} academic calendar ${
-      logs.length === 1 ? 'change was' : 'changes were'
-    } made. ${high} ${
-      high === 1 ? 'change was' : 'changes were'
-    } high risk, ${workingDayImpacts} affected working days, and ${publishedMods} published calendar ${
-      publishedMods === 1 ? 'modification' : 'modifications'
-    } ${publishedMods === 1 ? 'was' : 'were'} recorded. ${
-      suspicious ? 'Some changes need review.' : 'No suspicious activity was found.'
-    }`,
-    suggestedActions: [
-      'Review timetable impact for high-risk changes',
-      'Notify affected teachers of schedule shifts',
-      'Send calendar update to parents',
-      'Check exam schedule conflicts',
-    ],
-  };
-};
-
-/** Builds a mock plain-language explanation for a single log. */
+/** Builds a plain-language explanation for a single log. */
 const buildExplain = (log: AuditLog) => ({
   text: `This log means ${log.actionLabel.toLowerCase()} was performed on "${log.entityName}" by ${
     log.changedByName
@@ -57,15 +41,13 @@ const buildExplain = (log: AuditLog) => ({
       : ''
   }`,
 });
-
-/** AI summary/explain drawer (mock-powered, ready to connect to real AI endpoints). */
-const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
+const AuditAISummaryDrawer = ({ open, onClose, log, logs }: Props) => {
   const theme = useTheme();
   const [loading] = useState(false);
 
   const isExplainMode = !!log;
   const explain = log ? buildExplain(log) : null;
-  const summary = buildWeeklySummary(MOCK_AUDIT_LOGS);
+  const summary = buildAuditSummary(logs);
 
   return (
     <Drawer
@@ -81,6 +63,9 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': isExplainMode ? 'Explain Calendar Change' : 'Calendar Activity Summary',
         sx: {
           width: { xs: '100%', sm: 460 },
           display: 'flex',
@@ -116,9 +101,14 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
             <Box>
               <Stack direction="row" alignItems="center" gap={0.5}>
                 <Typography variant="subtitle1" fontWeight={800}>
-                  {isExplainMode ? 'AI Explain Change' : 'AI Audit Summary'}
+                  {isExplainMode ? 'Explain Change' : 'Audit Activity Summary'}
                 </Typography>
-                <CustomTooltip title="AI generated audit trail analysis & summary" placement="right" arrow>
+                <HelpTooltip
+                  title="Summary of the audit records loaded on the current page."
+                  label="Audit summary information"
+                  placement="right"
+                  arrow
+                >
                   <Iconify
                     icon={GlobalIcons.info}
                     color="info.main"
@@ -126,15 +116,19 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
                     height={16}
                     sx={{ cursor: 'pointer' }}
                   />
-                </CustomTooltip>
+                </HelpTooltip>
               </Stack>
               <Typography variant="caption" color="text.secondary">
-                {isExplainMode ? log?.entityName : 'Last 7 days overview'}
+                {isExplainMode ? log?.entityName : 'Current filtered page'}
               </Typography>
             </Box>
           </Stack>
 
-          <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+          <IconButton
+            aria-label="Close activity summary"
+            onClick={onClose}
+            sx={{ p: 0.5, color: 'text.secondary' }}
+          >
             <Iconify icon="mdi:close" />
           </IconButton>
         </Stack>
@@ -169,8 +163,8 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
                   sx={{ mt: 0.2 }}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  AI-generated summary based on available audit data. Always verify critical
-                  insights before taking action.
+                  Summary calculated from the loaded audit records. Other pages and filtered-out
+                  records are not included.
                 </Typography>
               </Stack>
             </Paper>
@@ -192,7 +186,7 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
             </Paper>
 
             {/* Suggested actions */}
-            {!isExplainMode && (
+            {!isExplainMode && summary.suggestedActions.length > 0 && (
               <Box>
                 <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1 }}>
                   <Iconify icon="mdi:format-list-checks" width={16} color="info.main" />
@@ -254,14 +248,9 @@ const AuditAISummaryDrawer = ({ open, onClose, log }: Props) => {
               }}
             >
               <Stack direction="row" alignItems="flex-start" gap={1}>
-                <Iconify
-                  icon="mdi:robot-happy-outline"
-                  width={16}
-                  color="warning.main"
-                  sx={{ mt: 0.2 }}
-                />
+                <Iconify icon={GlobalIcons.info} width={16} color="warning.main" sx={{ mt: 0.2 }} />
                 <Typography variant="caption" color="text.secondary">
-                  {`Tip: Ask in natural language — e.g. "Show me all holiday changes made by Admin last week" — to filter logs instantly.`}
+                  Use the filters or open a record to review its recorded changes.
                 </Typography>
               </Stack>
             </Paper>

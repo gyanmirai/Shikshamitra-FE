@@ -8,8 +8,8 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useId, useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -104,6 +104,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   className,
   divisionName,
 }: IAssignGradeProps) => {
+  const attendanceLabelId = useId();
   const marksInputRef = useRef<HTMLInputElement>(null);
   const templateBtnRef = useRef<HTMLButtonElement>(null);
   const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
@@ -133,7 +134,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
 
   const formik = useFormik({
     initialValues: {
-      marks: typeof data?.marks === 'number' ? data.marks : (typeof data?.obtainedMarks === 'number' ? data.obtainedMarks : ''),
+      marks:
+        typeof data?.marks === 'number'
+          ? data.marks
+          : typeof data?.obtainedMarks === 'number'
+            ? data.obtainedMarks
+            : '',
       totalMarks: typeof data?.totalMarks === 'number' ? data.totalMarks : '',
       feedback: data?.feedback || '',
       attendanceStatus:
@@ -197,8 +203,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const marksValue = Number(formik.values.marks);
   const autoGrade =
     formik.values.attendanceStatus === AttendanceStatus.Present &&
-      formik.values.marks !== '' &&
-      !Number.isNaN(marksValue)
+    formik.values.marks !== '' &&
+    !Number.isNaN(marksValue)
       ? calculateAutoGrade(marksValue, totalMarks, targetScale)
       : null;
   const isAbsent = formik.values.attendanceStatus !== AttendanceStatus.Present;
@@ -290,10 +296,17 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   }}
                 >
                   <FormControl fullWidth size="small">
-                    <InputLabel>Attendance</InputLabel>
+                    <InputLabel
+                      id={attendanceLabelId}
+                      aria-label={`Attendance for ${data?.studentName || 'student'}`}
+                    >
+                      Attendance
+                    </InputLabel>
                     <Select
+                      labelId={attendanceLabelId}
                       name="attendanceStatus"
                       label="Attendance"
+                      SelectDisplayProps={{ 'aria-labelledby': attendanceLabelId }}
                       value={formik.values.attendanceStatus}
                       onChange={formik.handleChange}
                       renderValue={(selected) =>
@@ -302,7 +315,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                     >
                       {AttendanceStatusOptions.map((opt) => (
                         <MenuItem key={opt.value} value={opt.value}>
-                          <Label color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}>
+                          <Label
+                            color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}
+                          >
                             {opt.label}
                           </Label>
                         </MenuItem>
@@ -339,7 +354,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0.8 }}>
+                    <Typography
+                      variant="overline"
+                      sx={{ color: 'text.secondary', letterSpacing: 0.8 }}
+                    >
                       Marks Entry
                     </Typography>
                   </Box>
@@ -385,7 +403,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                             placeholder={`0–${totalMarks}`}
                             size="small"
                             value={formik.values.marks}
-                            inputProps={{ min: 0, max: totalMarks }}
+                            inputProps={{
+                              min: 0,
+                              max: totalMarks,
+                              'aria-label': `Obtained marks for ${data?.studentName || 'student'}`,
+                            }}
                             InputProps={{
                               endAdornment: (
                                 <InputAdornment position="end">
@@ -537,6 +559,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   <Box sx={{ p: 2 }}>
                     <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
                       <TextField
+                        label="Feedback"
                         multiline
                         rows={4}
                         fullWidth
@@ -551,7 +574,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                         }}
                         error={formik.touched.feedback && Boolean(formik.errors.feedback)}
                         helperText={formik.touched.feedback && formik.errors.feedback}
-                        inputProps={{ maxLength: FEEDBACK_MAX_LENGTH }}
+                        inputProps={{
+                          maxLength: FEEDBACK_MAX_LENGTH,
+                          'aria-label': `Feedback for ${data?.studentName || 'student'}`,
+                        }}
                       />
                     </ShakingTextField>
                     <Typography

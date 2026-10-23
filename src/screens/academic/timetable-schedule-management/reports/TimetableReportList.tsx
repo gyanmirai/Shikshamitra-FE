@@ -172,7 +172,7 @@ const TimetableReportList = () => {
           heading="Reports"
           description="View and manage generated timetable reports"
           links={[
-            { name: 'Academic', href: '/academic/dashboard/' },
+            { name: 'Academics', href: '/academic/dashboard/' },
             {
               name: 'Timetable',
             },
@@ -200,6 +200,7 @@ const TimetableReportList = () => {
         <TimetableReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
+          tableTitle="Timetable Reports"
           tableId="timetable-reports"
           isLoading={isExportsLoading}
           data={rows}

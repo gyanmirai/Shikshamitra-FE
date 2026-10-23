@@ -93,14 +93,14 @@ describe('Rubric template visibility', () => {
   it('creates an institution template without a visibility field or validation step', async () => {
     const { user, requests } = setup(null);
     expect(screen.queryByLabelText(/Visibility/)).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText('Rubric Name *'), 'Writing rubric');
-    await user.click(screen.getByRole('combobox', { name: 'Applies To *' }));
+    await user.type(screen.getByLabelText('Rubric name *'), 'Writing rubric');
+    await user.click(screen.getByRole('combobox', { name: 'Applies to *' }));
     await user.click(screen.getByRole('option', { name: 'Both' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.type(await screen.findByLabelText('Criterion *'), 'Accuracy');
-    expect(screen.getByLabelText('Max Points *')).toHaveValue(10);
+    expect(screen.getByLabelText('Max points *')).toHaveValue(10);
     await user.click(screen.getByRole('button', { name: 'Next' }));
-    await user.click(await screen.findByRole('button', { name: /^Save$/ }));
+    await user.click(await screen.findByRole('button', { name: /^Save draft$/ }));
     await waitFor(() => expect(requests).toHaveLength(1));
     expect(requests[0]).toMatchObject({
       method: 'POST',
@@ -125,7 +125,7 @@ describe('Rubric template visibility', () => {
       await user.click(screen.getByRole('button', { name: 'Next' }));
       await screen.findByLabelText('Criterion *');
       await user.click(screen.getByRole('button', { name: 'Next' }));
-      await user.click(await screen.findByRole('button', { name: /^Save$/ }));
+      await user.click(await screen.findByRole('button', { name: /^Save draft$/ }));
       await waitFor(() => expect(requests).toHaveLength(1));
       expect(requests[0]).toMatchObject({ method: 'PUT', body: { visibility } });
     }
@@ -145,7 +145,7 @@ describe('Rubric template tags', () => {
     expect(screen.getByText('Project')).toBeInTheDocument();
     expect(screen.getByText('Creativity')).toBeInTheDocument();
 
-    await user.click(await screen.findByRole('button', { name: /^Save$/ }));
+    await user.click(await screen.findByRole('button', { name: /^Save draft$/ }));
     await waitFor(() => expect(requests).toHaveLength(1));
     expect(requests[0].body.tags).toEqual(['Project', 'Creativity']);
   });
@@ -156,25 +156,25 @@ describe('Rubric template step navigation', () => {
     const { user } = setup(null);
     expect(screen.getByRole('button', { name: 'Step 2: Criteria & Scoring' })).toBeDisabled();
 
-    await user.type(screen.getByLabelText('Rubric Name *'), 'Writing rubric');
-    await user.click(screen.getByRole('combobox', { name: 'Applies To *' }));
+    await user.type(screen.getByLabelText('Rubric name *'), 'Writing rubric');
+    await user.click(screen.getByRole('combobox', { name: 'Applies to *' }));
     await user.click(screen.getByRole('option', { name: 'Both' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.type(await screen.findByLabelText('Criterion *'), 'Accuracy');
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     await user.click(screen.getByRole('button', { name: 'Step 1: Basic Information' }));
-    expect(screen.getByLabelText('Rubric Name *')).toHaveValue('Writing rubric');
+    expect(screen.getByLabelText('Rubric name *')).toHaveValue('Writing rubric');
 
     await user.click(screen.getByRole('button', { name: 'Step 2: Criteria & Scoring' }));
     expect(await screen.findByLabelText('Criterion *')).toHaveValue('Accuracy');
   });
 });
 
-
 describe('Shared performance level scoring', () => {
   it('edits and saves a Performance Levels template without a criterion score field', async () => {
-    const { user, requests } = setup({ ...existingRubric,
+    const { user, requests } = setup({
+      ...existingRubric,
       scoringModel: RubricScoringModel.PerformanceLevels,
       performanceLevels: [
         { level: 1, label: 'Good', score: 2, studentLabel: 'Good' },
@@ -184,11 +184,11 @@ describe('Shared performance level scoring', () => {
     });
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await screen.findByLabelText('Criterion *');
-    expect(screen.queryByLabelText(/Max Score|Max Points/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Max Score|Max points/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(await screen.findByText('Excellent')).toBeInTheDocument();
     expect(screen.queryByText(/maximum score/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^Save$/ }));
+    await user.click(screen.getByRole('button', { name: /^Save draft$/ }));
     await waitFor(() => expect(requests).toHaveLength(1));
     const criteria = requests[0].body.criteria as Record<string, unknown>[];
     expect(criteria[0]).toMatchObject({ title: 'Accuracy', isRequired: true });

@@ -5,37 +5,30 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { useState, useMemo } from 'react';
-import type { ReactNode } from 'react';
 import { useFormik } from 'formik';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { alpha, useTheme, keyframes } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
-import CancelButton from 'src/components/cancel-button';
+import { alpha, useTheme, keyframes } from '@mui/material/styles';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { academicPermissions, academicPaths } from 'src/constants/academic-menu';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { CalendarDayStatus, CALENDAR_DAY_STATUS_LABELS } from 'src/enums/academic-calendar';
-import {
-  useGetEmergencyClosuresQuery,
-  useCreateEmergencyClosureMutation,
-  useCancelEmergencyClosureMutation,
-  useUpdateEmergencyClosureMutation,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
   Tab,
@@ -46,20 +39,18 @@ import {
   Paper,
   Switch,
   Button,
-  Select,
   Divider,
-  Tooltip,
-  MenuItem,
-  Checkbox,
   TextField,
   Typography,
-  InputLabel,
-  IconButton,
-  FormControl,
   DialogActions,
-  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEmergencyClosuresQuery,
+  useCreateEmergencyClosureMutation,
+  useCancelEmergencyClosureMutation,
+  useUpdateEmergencyClosureMutation,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 
 const statusColor: Record<number, 'success' | 'warning' | 'default'> = {
   [CalendarDayStatus.Active]: 'success',
@@ -250,7 +241,11 @@ const EmergencyClosureScreen = () => {
     },
   });
 
-  const tableData = Array.isArray(closuresData) ? closuresData : (closuresData?.items ?? []);
+  // Stable rows keep tab counts and summary calculations from rerunning for an empty response.
+  const tableData = useMemo(
+    () => (Array.isArray(closuresData) ? closuresData : (closuresData?.items ?? [])),
+    [closuresData]
+  );
 
   /**
    * Memoization Justification:
@@ -577,15 +572,16 @@ const EmergencyClosureScreen = () => {
       </Tabs>
 
       <CustomizableTable
+        tableTitle="Emergency Closures"
         tableId="emergency-closure-table"
         isLoading={isLoading}
         isPagination
         isSearch
         isFilter
-        isShowedDense={true}
+        isShowedDense
         columns={columns}
         data={filteredData}
-        noDataText={' No emergency closures declared yet'}
+        noDataText=" No emergency closures declared yet"
       />
 
       <CustomDialog

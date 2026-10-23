@@ -4,22 +4,10 @@ import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import {
-  Box,
-  Stack,
-  Drawer,
-  Avatar,
-  Button,
-  Tooltip,
-  Accordion,
-  IconButton,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Stack, Drawer, Avatar, Button, Tooltip, IconButton, Typography } from '@mui/material';
 
 import AuditDiffViewer from './AuditDiffViewer';
 import AuditImpactPanel from './AuditImpactPanel';
@@ -29,6 +17,7 @@ import AuditMetadataPanel from './AuditMetadataPanel';
 import AuditApprovalTrail from './AuditApprovalTrail';
 import AuditActionBadge from './badges/AuditActionBadge';
 import { AuditApprovalStatus } from '../types/auditLogs.types';
+import { AuditDetailSection as Section } from './AuditDetailSection';
 import { getUserInitials, formatAuditTimestamp } from '../utils/auditFormatters';
 import { APPROVAL_LABELS, APPROVAL_COLOR_KEYS } from '../constants/auditLogs.constants';
 
@@ -49,71 +38,6 @@ interface Props {
   onAddNote?: (log: AuditLog, note: string) => Promise<void> | void;
   onAIExplain?: (log: AuditLog) => void;
 }
-
-/** Card-styled collapsible section used inside the drawer body. */
-const Section = ({
-  icon,
-  title,
-  subtitle,
-  children,
-  defaultExpanded = true,
-}: {
-  icon: string;
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  defaultExpanded?: boolean;
-}) => (
-  <Accordion
-    defaultExpanded={defaultExpanded}
-    disableGutters
-    elevation={0}
-    sx={{
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      borderRadius: '12px !important',
-      overflow: 'hidden',
-      backgroundColor: 'background.paper',
-      '&:before': { display: 'none' },
-    }}
-  >
-    <AccordionSummary
-      expandIcon={<Iconify icon="mdi:chevron-down" width={18} />}
-      sx={{
-        px: 2,
-        minHeight: 54,
-        '& .MuiAccordionSummary-content': { my: 1.25, mx: 0 },
-      }}
-    >
-      <Stack direction="row" alignItems="center" gap={1}>
-        <Box
-          sx={{
-            width: 30,
-            height: 30,
-            borderRadius: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          }}
-        >
-          <Iconify icon={icon} width={16} sx={{ color: 'primary.main' }} />
-        </Box>
-        <Box>
-          <Typography variant="subtitle2" fontWeight={700} lineHeight={1.3}>
-            {title}
-          </Typography>
-          {subtitle && (
-            <Typography variant="caption" color="text.secondary" display="block" lineHeight={1.3}>
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
-      </Stack>
-    </AccordionSummary>
-    <AccordionDetails sx={{ px: 2, pt: 0.5, pb: 2 }}>{children}</AccordionDetails>
-  </Accordion>
-);
 
 /** Full-screen detail drawer with all audit intelligence panels. */
 const AuditLogDetailsDrawer = ({
@@ -167,6 +91,9 @@ const AuditLogDetailsDrawer = ({
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Calendar Audit Details',
         sx: {
           width: { xs: '100%', sm: 540, md: 600 },
           display: 'flex',
@@ -205,7 +132,8 @@ const AuditLogDetailsDrawer = ({
                   <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
                     {log.actionLabel}
                   </Typography>
-                  <CustomTooltip
+                  <HelpTooltip
+                    label="Calendar audit information"
                     title="Comprehensive audit trail log details"
                     placement="right"
                     arrow
@@ -217,7 +145,7 @@ const AuditLogDetailsDrawer = ({
                       height={16}
                       sx={{ cursor: 'pointer' }}
                     />
-                  </CustomTooltip>
+                  </HelpTooltip>
                 </Stack>
                 {showRecordRow ? (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
@@ -229,7 +157,11 @@ const AuditLogDetailsDrawer = ({
                   </Typography>
                 )}
               </Box>
-              <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+              <IconButton
+                aria-label="Close calendar audit details"
+                onClick={onClose}
+                sx={{ p: 0.5, color: 'text.secondary' }}
+              >
                 <Iconify icon="mdi:close" />
               </IconButton>
             </Stack>

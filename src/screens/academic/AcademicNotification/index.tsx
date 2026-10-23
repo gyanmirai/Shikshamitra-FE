@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Tab, Paper, Alert } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSlider } from 'src/components/form-slider';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -61,12 +61,20 @@ const AcademicNotificationScreen = () => {
 
   const [isBackClick, setIsBackClick] = useState(false);
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {dialog?.value ? (
         <CustomBreadcrumbs
           sx={{ mb: 1, px: 1 }}
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
-          description="Configure notifications for curriculum, timetable, homework, and examinations."
+          description="Review notification templates for curriculum, timetable, homework, and examinations."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             {
@@ -86,13 +94,19 @@ const AcademicNotificationScreen = () => {
       ) : (
         <CustomBreadcrumbs
           heading="Notification"
-          description="Configure notifications for curriculum, timetable, homework, and examinations."
+          description="Review notification templates for curriculum, timetable, homework, and examinations."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Notification', href: '/academic/notification' },
           ]}
           sx={{ px: 1 }}
         />
+      )}
+      {!dialog.value && (
+        <Alert severity="info" sx={{ mx: 1, mb: 1 }}>
+          Notification templates are read-only. Saving templates and enabling automatic
+          notifications are not available yet.
+        </Alert>
       )}
       <Paper
         sx={{
@@ -128,10 +142,13 @@ const AcademicNotificationScreen = () => {
           sx: {
             p: 0,
             minHeight: 0,
+            height: 'auto',
+            flex: 1,
+            overflow: 'hidden',
           },
         }}
       >
-        <Paper sx={{ height: '100%' }}>
+        <Paper sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               dialog={dialog}

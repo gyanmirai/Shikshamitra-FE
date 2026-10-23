@@ -3,6 +3,7 @@ export interface IGradeFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
   data: IGrade | null;
   viewOnly?: boolean;
+  onStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 }
 
 export interface IGradingScale {

@@ -66,7 +66,11 @@ describe('AdaptiveThreeDotsActions', () => {
   ) =>
     render(
       <ThemeProvider theme={theme}>
-        <AdaptiveThreeDotsActions actions={actions} onClosePopover={onClosePopover} />
+        <AdaptiveThreeDotsActions
+          actions={actions}
+          directActionLimit={2}
+          onClosePopover={onClosePopover}
+        />
       </ThemeProvider>
     );
 

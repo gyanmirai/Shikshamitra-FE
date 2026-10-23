@@ -1,10 +1,11 @@
 import type { FormikProps } from 'formik';
 
+import { useId } from 'react';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import HelpTooltip from 'src/components/help-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import { Box, Grid, MenuItem, TextField, Typography, FormHelperText } from '@mui/material';
 
 import type { ElectiveSubjectFormValues } from './initialValues';
 
@@ -23,28 +24,19 @@ const groupTypeOptions = [
 ];
 
 export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsFieldsProps) {
+  const colorErrorId = useId();
+  const colorError = Boolean(formik.touched.color && formik.errors.color);
   return (
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
           <TextField
             fullWidth
-            label="Elective Group Name *"
+            label="Elective group name"
+            required
             name="name"
-            onChange={(event) => {
-              const value = event.target.value
-                .split(' ')
-                .map((word) =>
-                  word
-                    .split('/')
-                    .map((part) =>
-                      part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ''
-                    )
-                    .join('/')
-                )
-                .join(' ');
-              formik.setFieldValue('name', value);
-            }}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             size="small"
             value={formik.values.name}
             error={formik.touched.name && Boolean(formik.errors.name)}
@@ -54,23 +46,27 @@ export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsField
       </Grid>
 
       <Grid size={{ xs: 12 }}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Group Type *"
-          name="groupType"
-          value={formik.values.groupType}
-          onChange={formik.handleChange}
-          error={formik.touched.groupType && Boolean(formik.errors.groupType)}
-          helperText={formik.touched.groupType && formik.errors.groupType}
-        >
-          {groupTypeOptions.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
+        <ShakingTextField error={Boolean(formik.touched.groupType && formik.errors.groupType)}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Group type"
+            required
+            name="groupType"
+            value={formik.values.groupType}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.groupType && Boolean(formik.errors.groupType)}
+            helperText={formik.touched.groupType && formik.errors.groupType}
+          >
+            {groupTypeOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+        </ShakingTextField>
       </Grid>
 
       <Grid size={{ xs: 12 }}>
@@ -82,7 +78,8 @@ export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsField
             >
               Elective Group Color *
             </Typography>
-            <CustomTooltip
+            <HelpTooltip
+              label="Elective group color information"
               arrow
               placement="right"
               title="Used throughout the system to visually identify this elective group."
@@ -90,12 +87,20 @@ export function ElectiveGroupDetailsFields({ formik }: ElectiveGroupDetailsField
               <Box component="span" sx={{ display: 'inline-flex' }}>
                 <Iconify icon="lucide:info" color="info.main" width={18} height={18} />
               </Box>
-            </CustomTooltip>
+            </HelpTooltip>
           </Box>
           <ColorPickerCircle
+            ariaLabel="Elective group color (required)"
+            invalid={colorError}
+            describedBy={colorError ? colorErrorId : undefined}
             onSelect={(color: string) => formik.setFieldValue('color', color)}
             initialColor={formik.values.color}
           />
+          {formik.touched.color && formik.errors.color && (
+            <FormHelperText id={colorErrorId} error role="alert">
+              {formik.errors.color}
+            </FormHelperText>
+          )}
         </ShakingTextField>
       </Grid>
 

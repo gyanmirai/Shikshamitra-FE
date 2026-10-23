@@ -1,9 +1,6 @@
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
-import {
-  AssignmentSubmissionType,
-  AssignmentEvaluationMethod,
-} from 'src/enums/assignment';
+import { AssignmentSubmissionType, AssignmentEvaluationMethod } from 'src/enums/assignment';
 
 import { serializeAssignmentFormData } from './assignment-serialization';
 
@@ -40,7 +37,7 @@ describe('assignment FormData serialization', () => {
     expect(formData.get('EvaluationMethod')).toBe('0');
     expect(formData.getAll('ChapterIds')).toEqual(['chapter-1', 'chapter-2']);
     expect(formData.get('RemoveAttachment')).toBe('false');
-    expect(formData.get('DivisionSchedules[0].PublishAt')).toBe(
+    expect(new Date(String(formData.get('DivisionSchedules[0].PublishAt'))).toISOString()).toBe(
       '2026-08-01T09:00:00.000Z'
     );
   });

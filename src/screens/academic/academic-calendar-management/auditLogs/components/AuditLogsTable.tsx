@@ -243,12 +243,13 @@ const AuditLogsTable = ({
 
   return (
     <CustomizableTable
+      tableTitle="Calendar Audit Logs"
       tableId="calendar-audit-logs-intelligence"
       isLoading={loading}
       isPagination
       serverSidePagination
       totalCount={totalCount}
-      // CustomizableTable expects 1-indexed pages
+      // Server pagination callbacks use one-based pages; the controlled page stays zero-based.
       onServerPagination={(p, r) => onPageChange(p - 1, r)}
       isSearch={false}
       isFilter={false}
@@ -268,8 +269,8 @@ const AuditLogsTable = ({
           </Typography>
         </Box>
       }
-      // expose pagination state to CustomizableTable so it reflects server rows
-      {...({ page: page + 1, rowsPerPage } as any)}
+      page={page}
+      rowsPerPage={rowsPerPage}
     />
   );
 };

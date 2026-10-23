@@ -14,10 +14,10 @@ import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import { DetailSection } from 'src/components/detail-view';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { DetailField, DetailSection } from 'src/components/detail-view';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -26,6 +26,7 @@ import {
   Stack,
   Alert,
   Button,
+  ListItem,
   Skeleton,
   TextField,
   Pagination,
@@ -51,11 +52,9 @@ import { variableAssignmentError } from './variableAssignmentValidation';
 import { assignmentCurrencyTotals } from './assignmentReviewPresentation';
 import { assignmentYearBounds, assignmentServiceDateError } from './assignmentServiceDates';
 
-interface Student {
-  studentId: string;
-  studentName?: string;
-  isFeeStructureAssigned?: boolean;
-}
+import type { IFeeStructureData } from './type';
+
+type Student = Omit<IFeeStructureData, 'id'>;
 interface AssignmentValues {
   structureId: string;
   requests: AssignmentRequest[];
@@ -89,11 +88,13 @@ function AssignmentAmountValidity({
 export default function AssignmentWorkflow({
   students,
   academicYearId,
+  academicYearName,
   onClose,
   onBusyChange,
 }: {
   students: Student[];
   academicYearId: string;
+  academicYearName?: string;
   onClose: () => void;
   onBusyChange?: (busy: boolean) => void;
 }) {
@@ -215,10 +216,10 @@ export default function AssignmentWorkflow({
         students.find((student) => student.studentId === invalidRequest.studentId)?.studentName ||
         'Student';
       setError(
-        studentName +
-          ': ' +
-          (variableAssignmentError(candidate, invalidRequest) ||
-            assignmentServiceDateError(candidate, invalidRequest, yearBounds))
+        `${studentName}: ${
+          variableAssignmentError(candidate, invalidRequest) ||
+          assignmentServiceDateError(candidate, invalidRequest, yearBounds)
+        }`
       );
       setActiveStep(1);
       return;
@@ -322,10 +323,45 @@ export default function AssignmentWorkflow({
   if (viewing || !canAssign)
     return (
       <Stack sx={{ flex: 1, minHeight: 0 }}>
-        <Stack spacing={2} sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+        <Stack
+          spacing={2}
+          sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2, '& > *': { flexShrink: 0 } }}
+        >
           {viewing ? (
             <>
-              {assigned.isLoading && <Skeleton height={180} />}
+              <DetailSection
+                title="Student Details"
+                icon="mdi:account-school-outline"
+                helpText="Student identity and enrollment context for the selected academic year."
+              >
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                    gap: 2,
+                  }}
+                >
+                  <DetailField label="Student name" value={students[0].studentName} />
+                  <DetailField
+                    label="Academic year"
+                    value={
+                      academicYearName ||
+                      (currentYear?.id === academicYearId ? currentYear?.name : undefined)
+                    }
+                  />
+                  <DetailField label="GR number" value={students[0].grNumber} />
+                  <DetailField label="Roll number" value={students[0].rollNumber} />
+                  <DetailField label="Class / division" value={students[0].standardDivision} />
+                  <DetailField label="Board" value={students[0].boardName} />
+                  <DetailField label="Medium" value={students[0].mediumName} />
+                  <DetailField label="Academic stage" value={students[0].stageName} />
+                </Box>
+              </DetailSection>
+              {assigned.isFetching && (
+                <Box role="status" aria-label="Loading fee assignment">
+                  <Skeleton height={180} />
+                </Box>
+              )}
               {assigned.isError && (
                 <Alert
                   severity="error"
@@ -343,10 +379,19 @@ export default function AssignmentWorkflow({
                 </Alert>
               )}
 
-              {assigned.data?.assignment && !editingPolicies && (
-                <AssignmentReview data={assigned.data.assignment} committed />
+              {!assigned.isFetching &&
+                !assigned.isError &&
+                assigned.data?.assignment &&
+                !editingPolicies && <AssignmentReview data={assigned.data.assignment} committed />}
+              {!assigned.isFetching && !assigned.isError && !assigned.data?.assignment && (
+                <Alert severity="info">
+                  No saved fee assignment is available for this student in the selected academic
+                  year.
+                </Alert>
               )}
-              {assigned.data &&
+              {!assigned.isFetching &&
+                !assigned.isError &&
+                assigned.data &&
                 canOverridePolicies &&
                 (editingPolicies ? (
                   <AssignedPolicyEditor
@@ -377,7 +422,7 @@ export default function AssignmentWorkflow({
         <Stack
           direction="row"
           justifyContent="flex-end"
-          sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}
+          sx={{ p: 2, borderTop: 1, borderColor: 'divider', flexShrink: 0 }}
         >
           <Button
             size="small"
@@ -469,8 +514,10 @@ export default function AssignmentWorkflow({
               setSelectedStudentId(missingReason.studentId);
               setActiveStep(0);
               setError(
-                (students.find((student) => student.studentId === missingReason.studentId)
-                  ?.studentName || 'Student') + ': Enter a policy override reason.'
+                `${
+                  students.find((student) => student.studentId === missingReason.studentId)
+                    ?.studentName || 'Student'
+                }: Enter a policy override reason.`
               );
               return;
             }
@@ -537,7 +584,7 @@ export default function AssignmentWorkflow({
               if (missingReason) {
                 setSelectedStudentId(missingReason.studentId);
                 setActiveStep(0);
-                setError('Enter a policy override reason for each student whose policies changed.');
+                setError('Enter a policy override reason.');
                 return;
               }
               await runPreview(values);
@@ -676,8 +723,10 @@ export default function AssignmentWorkflow({
               )}
               {(activeStep > 0 || Boolean(candidate)) &&
                 (() => {
-                  const student =
-                    students.find((item) => item.studentId === selectedStudentId) ?? students[0];
+                  const configuringBulk = isBulk && activeStep < 2;
+                  const student = configuringBulk
+                    ? students.find((item) => !committedIds.has(item.studentId)) ?? students[0]
+                    : students.find((item) => item.studentId === selectedStudentId) ?? students[0];
                   const request = values.requests.find((r) => r.studentId === student.studentId);
                   const studentPreview = preview?.results.find(
                     (r) => r.studentId === student.studentId
@@ -691,7 +740,13 @@ export default function AssignmentWorkflow({
                     invalidate();
                     formik.setFieldValue(
                       'requests',
-                      values.requests.map((r) => (r.studentId === next.studentId ? next : r))
+                      values.requests.map((r) => {
+                        if (committedIds.has(r.studentId)) return r;
+                        if (!isBulk) return r.studentId === next.studentId ? next : r;
+                        // The bulk editor owns one configuration. Keep each student's identity
+                        // and saved result separate while applying changes to all remaining requests.
+                        return { ...next, studentId: r.studentId, previewToken: undefined };
+                      })
                     );
                   };
                   return (
@@ -720,8 +775,9 @@ export default function AssignmentWorkflow({
                             }}
                           />
                           <Typography variant="caption" color="text.secondary" aria-live="polite">
-                            {committedIds.size} assigned · {students.length - committedIds.size}{' '}
-                            remaining
+                            {configuringBulk
+                              ? `${students.length} selected`
+                              : `${committedIds.size} assigned · ${students.length - committedIds.size} remaining`}
                           </Typography>
                           {activeStep === 2 && batchTotals.length > 0 && (
                             <Box sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
@@ -741,6 +797,15 @@ export default function AssignmentWorkflow({
                           )}
                           <List disablePadding aria-label="Selected students">
                             {filtered.slice((page - 1) * 20, page * 20).map((item) => {
+                              if (configuringBulk) {
+                                return (
+                                  <ListItem key={item.studentId} sx={{ px: 1.5 }}>
+                                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                                      {item.studentName || 'Student'}
+                                    </Typography>
+                                  </ListItem>
+                                );
+                              }
                               const saved = outcomes?.results.find(
                                 (r) => r.studentId === item.studentId
                               );
@@ -834,7 +899,12 @@ export default function AssignmentWorkflow({
                         </DetailSection>
                       )}
                       <Stack spacing={2} sx={{ minWidth: 0 }}>
-                        {(isBulk || (outcome && (showResults || outcome.result))) && (
+                        {configuringBulk ? (
+                          <Typography variant="body2" color="text.secondary">
+                            The same policies, fees and dates apply to all{' '}
+                            {committedIds.size ? 'remaining' : 'selected'} students.
+                          </Typography>
+                        ) : (isBulk || (outcome && (showResults || outcome.result))) && (
                           <Stack
                             direction="row"
                             justifyContent="space-between"
@@ -883,6 +953,7 @@ export default function AssignmentWorkflow({
                                   request={request}
                                   onChange={updateRequest}
                                   canOverrideDates={canOverrideDates}
+                                  allowTransportSource={!isBulk}
                                   disabled={busy}
                                   yearBounds={yearBounds}
                                   showErrors={showInputErrors}

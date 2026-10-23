@@ -17,7 +17,8 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 
 ## Active menu routes
 
-Use this table for visible Finance navigation.
+Use this table for visible Finance navigation. The Adjustments menu entry is commented out;
+the `/finance/adjustments` route remains implemented for direct access.
 
 | Menu label           | Route                                       | Source                          |
 | -------------------- | ------------------------------------------- | ------------------------------- |
@@ -29,7 +30,6 @@ Use this table for visible Finance navigation.
 | Refunds              | `/finance/fee-refund`                       | `src/constants/finance-menu.ts` |
 | Receipts             | `/finance/invoice-receipt`                  | `src/constants/finance-menu.ts` |
 | Concessions          | `/finance/concession`                       | `src/constants/finance-menu.ts` |
-| Adjustments          | `/finance/adjustments`                      | `src/constants/finance-menu.ts` |
 | Fee Structure Assign | `/finance/fee-structure-assign`             | `src/constants/finance-menu.ts` |
 | Fee Category         | `/finance/settings/fee-category`            | `src/constants/finance-menu.ts` |
 | Fee Head             | `/finance/settings/fee-head`                | `src/constants/finance-menu.ts` |

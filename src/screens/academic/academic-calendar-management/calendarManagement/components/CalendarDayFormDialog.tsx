@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
@@ -310,34 +309,6 @@ const CalendarDayFormDialog = ({
       ? `Add Marker for ${dayjs(prefillDate).format('DD-MM-YYYY')}`
       : 'Add Calendar Day';
 
-  const dialogTitle = (
-    <Box
-      display="flex"
-      flexDirection="row"
-      gap={1}
-      alignItems="center"
-      component="span"
-      sx={{ fontWeight: 'normal' }}
-    >
-      <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
-        {rawTitle}
-      </Box>
-      <CustomTooltip
-        arrow
-        placement="right"
-        title="Configure calendar day markers such as holidays, vacations, events, exams, or half days."
-      >
-        <Iconify
-          icon={GlobalIcons.info}
-          sx={{ cursor: 'pointer' }}
-          color="info.main"
-          width={18}
-          height={18}
-        />
-      </CustomTooltip>
-    </Box>
-  );
-
   const handleDelete = async () => {
     if (!editData || !onDelete) return;
 
@@ -348,7 +319,13 @@ const CalendarDayFormDialog = ({
 
   return (
     <>
-      <CustomDialog open={open} handleClose={handleCloseDialog} title={dialogTitle} maxWidth="md">
+      <CustomDialog
+        open={open}
+        handleClose={handleCloseDialog}
+        title={rawTitle}
+        titleInfo="Configure calendar markers such as holidays, vacations, events, exams, or half days."
+        maxWidth="md"
+      >
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <DialogScrollContent
             onSubmit={() => {
@@ -358,8 +335,9 @@ const CalendarDayFormDialog = ({
             <Stack spacing={1.5}>
               <FormSectionCard
                 icon="solar:calendar-add-linear"
-                title="Marker details"
-                description="Choose the day type, schedule, and information shown on the academic calendar."
+                title="Marker Details"
+                titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+                descriptionTooltip="Choose the day type, schedule, and information shown on the academic calendar."
               >
                 <Grid container spacing={1.5}>
                   {/* Day Type */}
@@ -369,9 +347,13 @@ const CalendarDayFormDialog = ({
                       size="small"
                       error={formik.touched.dayType && Boolean(formik.errors.dayType)}
                     >
-                      <InputLabel>Day Type *</InputLabel>
+                      <InputLabel id="calendar-marker-day-type-label" required>
+                        Day type
+                      </InputLabel>
                       <Select
-                        label="Day Type *"
+                        label="Day type"
+                        labelId="calendar-marker-day-type-label"
+                        required
                         name="dayType"
                         value={formik.values.dayType}
                         onChange={(event) => handleDayTypeChange(event.target.value as DayType)}
@@ -840,7 +822,7 @@ const CalendarDayFormDialog = ({
               loading={creating || updating || isExamScheduleFetching}
               disabled={deleting || isExamScheduleFetching}
               onClick={() => formik.handleSubmit()}
-              buttonText={editData ? 'Update Day' : 'Add Day'}
+              buttonText="Submit"
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

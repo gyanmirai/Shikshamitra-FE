@@ -12,7 +12,8 @@ import { RubricCriterionScoreField } from './RubricCriterionScoreField';
 import type { RubricConfigFormValues, RubricCriterionFormValue } from '../types';
 
 type Formik = FormikProps<RubricConfigFormValues>;
-const fieldError = (formik: Formik, path: string) => getIn(formik.touched, path) ? String(getIn(formik.errors, path) || '') : '';
+const fieldError = (formik: Formik, path: string) =>
+  getIn(formik.touched, path) ? String(getIn(formik.errors, path) || '') : '';
 
 export function RubricCriterionRow({
   formik,
@@ -55,20 +56,29 @@ export function RubricCriterionRow({
     />
   );
 
-
   return (
     <Box
       sx={{
         display: 'grid',
         gridTemplateColumns: {
           xs: '36px minmax(0, 1fr) 44px',
-          sm: showsScore ? '36px repeat(3, minmax(130px, 1fr)) minmax(164px, auto)' : '36px repeat(2, minmax(0, 1fr)) minmax(164px, auto)',
-          lg: showsScore ? '36px minmax(150px, 1.1fr) minmax(150px, 1fr) minmax(150px, 0.9fr) minmax(164px, auto)' : '36px repeat(2, minmax(0, 1fr)) minmax(164px, auto)',
+          sm: showsScore
+            ? '36px repeat(3, minmax(130px, 1fr)) minmax(164px, auto)'
+            : '36px repeat(2, minmax(0, 1fr)) minmax(164px, auto)',
+          lg: showsScore
+            ? '36px minmax(150px, 1.1fr) minmax(150px, 1fr) minmax(150px, 0.9fr) minmax(164px, auto)'
+            : '36px repeat(2, minmax(0, 1fr)) minmax(164px, auto)',
         },
         gridTemplateAreas: {
-          xs: showsScore ? '"number title actions" ". description ." ". max ." ". student ." ". teacher ."' : '"number title actions" ". description ." ". student ." ". teacher ."',
-          sm: showsScore ? '"number title description max actions" ". student teacher . ."' : '"number title description actions" ". student teacher ."',
-          lg: showsScore ? '"number title description max actions" ". student teacher . ."' : '"number title description actions" ". student teacher ."',
+          xs: showsScore
+            ? '"number title actions" ". description ." ". max ." ". student ." ". teacher ."'
+            : '"number title actions" ". description ." ". student ." ". teacher ."',
+          sm: showsScore
+            ? '"number title description max actions" ". student teacher . ."'
+            : '"number title description actions" ". student teacher ."',
+          lg: showsScore
+            ? '"number title description max actions" ". student teacher . ."'
+            : '"number title description actions" ". student teacher ."',
         },
         alignItems: 'start',
         columnGap: 1,
@@ -108,23 +118,25 @@ export function RubricCriterionRow({
         sx={{ gridArea: 'description', minWidth: 0 }}
       />
       <RubricCriterionScoreField formik={formik} criterion={criterion} index={index} />
-      <TextField sx={{ gridArea: 'student', minWidth: 0 }}
-          fullWidth
-          size="small"
-          label="Student-Facing Description"
-          name={path('studentDescription')}
-          value={criterion.studentDescription}
-          onBlur={formik.handleBlur}
-          onChange={(event) => formik.setFieldValue(path('studentDescription'), event.target.value)}
+      <TextField
+        sx={{ gridArea: 'student', minWidth: 0 }}
+        fullWidth
+        size="small"
+        label="Student-facing description"
+        name={path('studentDescription')}
+        value={criterion.studentDescription}
+        onBlur={formik.handleBlur}
+        onChange={(event) => formik.setFieldValue(path('studentDescription'), event.target.value)}
       />
-      <TextField sx={{ gridArea: 'teacher', minWidth: 0 }}
-          fullWidth
-          size="small"
-          label="Teacher Guidance"
-          name={path('teacherGuidance')}
-          value={criterion.teacherGuidance}
-          onBlur={formik.handleBlur}
-          onChange={(event) => formik.setFieldValue(path('teacherGuidance'), event.target.value)}
+      <TextField
+        sx={{ gridArea: 'teacher', minWidth: 0 }}
+        fullWidth
+        size="small"
+        label="Teacher guidance"
+        name={path('teacherGuidance')}
+        value={criterion.teacherGuidance}
+        onBlur={formik.handleBlur}
+        onChange={(event) => formik.setFieldValue(path('teacherGuidance'), event.target.value)}
       />
       <Box sx={{ gridArea: 'actions', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
         <RubricCriterionActions
@@ -138,4 +150,3 @@ export function RubricCriterionRow({
     </Box>
   );
 }
-

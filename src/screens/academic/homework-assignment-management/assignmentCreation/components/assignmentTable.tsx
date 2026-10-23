@@ -1,7 +1,7 @@
-import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, ButtonBase, Typography } from '@mui/material';
+import { formatLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { AssignmentSubmissionType, ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
 
@@ -70,6 +70,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <LearningTaskSummaryCards tasks={filteredData} />
       <CustomizableTable
+        tableTitle="Assignments"
         tableId="assignment-management"
         isLoading={isLoading}
         handleRowClick={(row) => {
@@ -152,23 +153,23 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           },
           {
             id: 'publishDate',
-            label: 'Publish Date',
+            label: 'Publish date (IST)',
             align: 'left',
             filterType: 'date' as const,
             render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+              <Typography component="time" dateTime={value} variant="caption" fontSize="13px">
+                {formatLearningTaskDateTime(value)}
               </Typography>
             ),
           },
           {
             id: 'dueDate',
-            label: 'Due Date',
+            label: 'Due date (IST)',
             align: 'left',
             filterType: 'date' as const,
             render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+              <Typography component="time" dateTime={value} variant="caption" fontSize="13px">
+                {formatLearningTaskDateTime(value)}
               </Typography>
             ),
           },
@@ -237,6 +238,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               return (
                 <Box onClick={(event) => event.stopPropagation()}>
                   <AdaptiveThreeDotsActions
+                    directActionLimit={2}
                     actions={rowActions}
                     placement="right-top"
                     moreLabel="More assignment actions"

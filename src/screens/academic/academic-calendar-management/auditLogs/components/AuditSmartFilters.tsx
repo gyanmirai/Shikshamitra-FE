@@ -1,13 +1,13 @@
 'use client';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useState, useEffect } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { CalendarAuditAction, CALENDAR_AUDIT_ACTION_LABELS } from 'src/enums/academic-calendar';
 import {
@@ -71,7 +71,10 @@ const countActiveAdvanced = (f: AuditFilterState) =>
   ].filter(Boolean).length;
 
 const withoutDeprecatedRiskFilter = (filters: AuditFilterState): AuditFilterState => {
-  const next = { ...EMPTY_FILTERS, ...filters } as AuditFilterState & { riskLevel?: string; source?: string };
+  const next = { ...EMPTY_FILTERS, ...filters } as AuditFilterState & {
+    riskLevel?: string;
+    source?: string;
+  };
   delete next.riskLevel;
   delete next.source;
   return next;
@@ -168,8 +171,7 @@ const AuditSmartFilters = ({
   // Helper labels for active chips
   const getEntityTypeLabel = (val: string) =>
     ENTITY_TYPE_OPTIONS.find((opt) => opt.value === val)?.label || val;
-  const getRoleLabel = (val: string) =>
-    ROLE_OPTIONS.find((opt) => opt.value === val)?.label || val;
+  const getRoleLabel = (val: string) => ROLE_OPTIONS.find((opt) => opt.value === val)?.label || val;
   const getDateRangeLabel = (val: string) =>
     DATE_RANGE_OPTIONS.find((opt) => opt.value === val)?.label || val;
   const getApprovalLabel = (val: string) =>
@@ -218,6 +220,7 @@ const AuditSmartFilters = ({
           <FormControl fullWidth size="small" sx={{ minWidth: 180 }}>
             <InputLabel shrink>Action</InputLabel>
             <Select
+              inputProps={{ 'aria-label': 'Action' }}
               label="Action"
               displayEmpty
               value={filters.action}
@@ -444,6 +447,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Date Range</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Date Range' }}
                   label="Date Range"
                   value={filters.dateRange}
                   onChange={(e) =>
@@ -463,6 +467,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Entity Type</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Entity Type' }}
                   label="Entity Type"
                   value={filters.entityType}
                   onChange={(e) => set('entityType', e.target.value)}
@@ -480,6 +485,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Changed By Role</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Changed By Role' }}
                   label="Changed By Role"
                   value={filters.changedByRole}
                   onChange={(e) => set('changedByRole', e.target.value)}
@@ -497,6 +503,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Has Diff</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Has Diff' }}
                   label="Has Diff"
                   value={filters.hasDiff}
                   onChange={(e) => set('hasDiff', e.target.value)}
@@ -514,6 +521,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Reason</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Reason' }}
                   label="Reason"
                   value={filters.reasonAvailable}
                   onChange={(e) => set('reasonAvailable', e.target.value)}
@@ -531,6 +539,7 @@ const AuditSmartFilters = ({
               <FormControl fullWidth size="small">
                 <InputLabel>Approval Status</InputLabel>
                 <Select
+                  inputProps={{ 'aria-label': 'Approval Status' }}
                   label="Approval Status"
                   value={filters.approvalStatus}
                   onChange={(e) => set('approvalStatus', e.target.value)}
@@ -785,11 +794,7 @@ const AuditSmartFilters = ({
 
                 {savedFiltersForDisplay.length === 0 && (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Iconify
-                      icon="mdi:bookmark-off-outline"
-                      width={36}
-                      color="text.disabled"
-                    />
+                    <Iconify icon="mdi:bookmark-off-outline" width={36} color="text.disabled" />
                     <Typography variant="body2" color="text.secondary" fontWeight={600} mt={1}>
                       No saved presets yet
                     </Typography>

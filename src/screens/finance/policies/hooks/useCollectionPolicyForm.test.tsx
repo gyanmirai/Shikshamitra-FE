@@ -63,6 +63,40 @@ describe('useCollectionPolicyForm submission validation', () => {
     mocks.updatePolicy.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
   });
 
+  it.each(['Calendar', 'WorkingDay'])(
+    'saves a legacy %s policy without a configurable day type and keeps the calendar-day preview',
+    async (gracePeriodType) => {
+      const { result } = renderHook(() =>
+        useCollectionPolicyForm({
+          open: true,
+          onClose: vi.fn(),
+          editData: {
+            id: 'legacy-policy',
+            policyName: 'Calendar day collection policy',
+            status: 'Active',
+            enableLateFee: true,
+            gracePeriodDays: 2,
+            gracePeriodType,
+            lateFeeApplyOnFeeHeads: ['fee-head-1'],
+            lateFeeType: 'PerDay',
+            amountPerDay: 20,
+            lateFeeIncomeCategoryId: 'income-category-1',
+          } as never,
+        })
+      );
+
+      expect(result.current.checks.isReadyToPublish).toBe(true);
+      expect(result.current.calculatedLateFee).toBe(160); // (10 calendar days - 2 grace days) * 20
+      await act(async () => {
+        await result.current.handleCustomSubmit('Active');
+      });
+      expect(mocks.updatePolicy).toHaveBeenCalledOnce();
+      const { body } = mocks.updatePolicy.mock.calls[0][0];
+      expect(body.gracePeriodDays).toBe(2);
+      expect(body).not.toHaveProperty('gracePeriodType');
+    }
+  );
+
   it('allows editing legacy unused zero formulas while keeping an active zero invalid', async () => {
     const { result } = renderHook(() =>
       useCollectionPolicyForm({

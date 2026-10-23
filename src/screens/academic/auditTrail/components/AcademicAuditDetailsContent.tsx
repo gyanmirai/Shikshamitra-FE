@@ -1,6 +1,7 @@
 import type { AcademicAuditEvent } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
 import { Box, Chip, Stack, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { parseAcademicAuditContext } from '../utils/academicAuditContext';
 import {
@@ -47,27 +48,23 @@ const AcademicAuditDetailsContent = ({ event }: AcademicAuditDetailsContentProps
         )}
       </Box>
 
-      <Stack
-        spacing={1.25}
-        sx={{
-          p: 1.5,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-          bgcolor: 'background.paper',
-        }}
+      <FormSectionCard
+        title="Event Details"
+        icon="mdi:history"
+        descriptionTooltip="Identify the changed record and the actor, role and source recorded for this event."
       >
         <DetailRow label="Entity" value={`${event.entityName} (${event.entityType})`} />
         <DetailRow label="Performed By" value={event.actorDisplayName} />
         <DetailRow label="Role" value={event.actorRoleSnapshot} />
         <DetailRow label="Source" value={formatAcademicAuditSource(event.source)} />
-      </Stack>
+      </FormSectionCard>
 
       {event.changedFields.length > 0 && (
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Changed Fields
-          </Typography>
+        <FormSectionCard
+          title="Changed Fields"
+          icon="mdi:compare-horizontal"
+          descriptionTooltip="Compare the recorded values before and after this event."
+        >
           <Stack spacing={1}>
             {event.changedFields.map((field) => (
               <Box
@@ -90,17 +87,15 @@ const AcademicAuditDetailsContent = ({ event }: AcademicAuditDetailsContentProps
               </Box>
             ))}
           </Stack>
-        </Box>
+        </FormSectionCard>
       )}
 
       {contextEntries.length > 0 && (
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 0.25 }}>
-            Technical Metadata
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-            Device, network, and request details
-          </Typography>
+        <FormSectionCard
+          title="Technical Metadata"
+          icon="mdi:information-outline"
+          descriptionTooltip="Device, network and request details captured with the event."
+        >
           <Stack
             spacing={1.25}
             sx={{
@@ -115,7 +110,7 @@ const AcademicAuditDetailsContent = ({ event }: AcademicAuditDetailsContentProps
               <DetailRow key={entry.key} label={entry.label} value={entry.value} />
             ))}
           </Stack>
-        </Box>
+        </FormSectionCard>
       )}
     </Stack>
   );

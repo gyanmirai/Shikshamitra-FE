@@ -25,16 +25,18 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({ onClo
         <Stack spacing={1.5}>
           <FormSectionCard
             icon="mdi:shape-outline"
-            title="Group details"
-            description="Define the elective group identity and how it appears across academics."
+            title="Group Details"
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            descriptionTooltip="Define the elective group identity and how it appears across academics."
           >
             <ElectiveGroupDetailsFields formik={formik} />
           </FormSectionCard>
 
           <FormSectionCard
             icon="mdi:book-multiple-outline"
-            title="Subject selection"
-            description="Choose the subjects that belong to this elective group."
+            title="Subject Selection"
+            titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+            descriptionTooltip="Choose the subjects that belong to this elective group."
           >
             <ElectiveGroupSubjectSelection
               formik={formik}
@@ -70,7 +72,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({ onClo
           onClick={() => formik.submitForm()}
           type="submit"
         >
-          {editData ? 'Update Group' : 'Save Group'}
+          Submit
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

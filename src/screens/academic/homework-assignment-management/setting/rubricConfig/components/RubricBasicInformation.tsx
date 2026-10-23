@@ -4,8 +4,8 @@ import { getIn } from 'formik';
 import { Grid, Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
-import { RUBRIC_WORK_TYPE_OPTIONS } from '../constants';
 import { RubricTagsField } from './RubricTagsField';
+import { RUBRIC_WORK_TYPE_OPTIONS } from '../constants';
 import { RubricFormSection } from './RubricFormSection';
 
 import type { RubricConfigFormValues } from '../types';
@@ -32,7 +32,7 @@ export const RubricBasicInformation = ({
             fullWidth
             size="small"
             name="title"
-            label="Rubric Name *"
+            label="Rubric name *"
             value={formik.values.title}
             onBlur={formik.handleBlur}
             onChange={formik.handleChange}
@@ -42,7 +42,7 @@ export const RubricBasicInformation = ({
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <CustomSelect
-            label="Applies To *"
+            label="Applies to *"
             options={RUBRIC_WORK_TYPE_OPTIONS}
             labelKey="label"
             valueKey="value"
@@ -80,7 +80,7 @@ export const RubricBasicInformation = ({
             fullWidth
             size="small"
             name="evaluationInstructions"
-            label="Teacher Evaluation Instructions"
+            label="Teacher evaluation instructions"
             multiline
             rows={3}
             value={formik.values.evaluationInstructions}
@@ -92,7 +92,7 @@ export const RubricBasicInformation = ({
             fullWidth
             size="small"
             name="studentInstructions"
-            label="Student-Facing Instructions"
+            label="Student-facing instructions"
             multiline
             rows={3}
             value={formik.values.studentInstructions}

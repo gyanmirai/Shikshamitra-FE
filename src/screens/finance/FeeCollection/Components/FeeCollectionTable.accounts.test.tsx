@@ -105,9 +105,7 @@ describe('Finance applicant summary actions', () => {
     ).toBeDisabled();
     expect(applicant.queryByRole('button', { name: /^View details/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('account-one'));
-    expect(
-      applicant.getByRole('button', { name: 'Give fee adjustment for QA Applicant One' })
-    ).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /Give fee adjustment/ })).not.toBeInTheDocument();
     fireEvent.click(applicant.getByRole('button', { name: 'Collect fee for QA Applicant One' }));
     expect(collect).not.toHaveBeenCalled();
     expect(view).not.toHaveBeenCalled();

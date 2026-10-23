@@ -1,6 +1,62 @@
 module: Academic
 generatedAt: 2026-07-29
 scenarios:
+  - id: ACM-DESKTOP-20261023-RUBRIC
+    module: Academic
+    submodule: RubricTemplates
+    title: Draft saves retain one rubric identity, prevent overlapping creates, and publish that saved draft
+    risk: high
+    priority: P1
+    type: [functional, unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/homeworkSettings/rubricConfig]
+    automated: true
+    automationFile: src/screens/academic/homework-assignment-management/setting/rubricConfig/useRubricTemplateSave.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-DESKTOP-20261023-TIME
+    module: Academic
+    submodule: LearningTasks
+    title: Homework and assignment schedules preserve school-local time through serialization and API round trips
+    risk: high
+    priority: P1
+    type: [functional, unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/homeworkCreation]
+    automated: true
+    automationFile: src/utils/learning-task-date-time.test.ts
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-DESKTOP-20261023-HOURS
+    module: Academic
+    submodule: CalendarSettings
+    title: Working-hours actions receive the selected class record and action columns cannot sort or filter
+    risk: high
+    priority: P1
+    type: [functional, unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/calendarSettings]
+    automated: true
+    automationFile: src/screens/academic/academic-calendar-management/calendarSettings/components/working-hour-columns.test.tsx
+    status: automated
+    tags: ['@module-academic', '@regression']
+  - id: ACM-DESKTOP-20261023-AUDIT
+    module: Academic
+    submodule: CalendarAuditLogs
+    title: Analytics uses real loaded events and displayed-log exports preserve content and escape spreadsheet formulas
+    risk: high
+    priority: P1
+    type: [functional, unit, regression]
+    roles: [school-admin]
+    tenants: [school]
+    routes: [/academic/calendarAuditLogs]
+    automated: true
+    automationFile: src/screens/academic/academic-calendar-management/auditLogs/utils/auditExport.test.ts
+    status: automated
+    tags: ['@module-academic', '@regression']
   - id: ACM-PERM-001
     module: Academic
     submodule: Navigation

@@ -228,9 +228,7 @@ const RoomAvailabilityScreen = () => {
 
   // ── Screen Loading States ──────────────────────────────────────────────────
   const isReservationLoading =
-    reservationsHook.isLoading ||
-    reservationsHook.isFetching ||
-    reservationsHook.isMutationLoading;
+    reservationsHook.isLoading || reservationsHook.isFetching || reservationsHook.isMutationLoading;
 
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
@@ -255,7 +253,7 @@ const RoomAvailabilityScreen = () => {
           heading="Room Availability"
           description="Find free rooms, inspect conflicts, reserve rooms, and review room usage."
           links={[
-            { name: 'Academic', href: academicPaths.dashboard },
+            { name: 'Academics', href: academicPaths.dashboard },
             { name: 'Timetable' },
             { name: 'Room Availability' },
           ]}

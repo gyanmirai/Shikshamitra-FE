@@ -31,11 +31,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
   onCollectFee,
   onView,
-  onGiveAdjustment,
   academicFilters,
 }) => {
   const access = useFinancePermissions(financePermissions.fees.collections);
-  const adjustmentAccess = useFinancePermissions(financePermissions.fees.adjustment);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
     boards,
@@ -396,26 +394,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                           row.studentId &&
                           row.status !== FeeCollectionStatusType.NoFeeAssigned &&
                           onCollectFee({ ...row, id: row.studentId } as IFeeData),
-                      },
-                      {
-                        id: 'adjust',
-                        label: `Give fee adjustment for ${row.name}`,
-                        icon: 'tdesign:adjustment',
-                        disabled:
-                          !adjustmentAccess.canAdd ||
-                          !row.studentId ||
-                          row.status === FeeCollectionStatusType.NoFeeAssigned,
-                        tooltip:
-                          row.status === FeeCollectionStatusType.NoFeeAssigned
-                            ? 'No fee structure assigned. Assign a fee structure to give an adjustment.'
-                            : !row.studentId
-                              ? 'Fee adjustments require a Student fee assignment.'
-                              : undefined,
-                        onClick: () =>
-                          adjustmentAccess.canAdd &&
-                          row.studentId &&
-                          row.status !== FeeCollectionStatusType.NoFeeAssigned &&
-                          onGiveAdjustment({ ...row, id: row.studentId } as IFeeData),
                       },
                     ]}
                   />

@@ -74,5 +74,5 @@ export function GradeScaleRowActions({
         },
       ];
 
-  return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
+  return <AdaptiveThreeDotsActions directActionLimit={2} actions={actions} placement="right-top" />;
 }

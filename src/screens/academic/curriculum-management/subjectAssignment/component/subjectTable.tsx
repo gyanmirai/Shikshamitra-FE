@@ -79,6 +79,7 @@ const SubjectTable = ({
   return (
     <>
       <CustomizableTable
+        tableTitle="Subject Allocations"
         tableId="subject-table"
         isLoading={isLoading}
         totalCount={totalCount}
@@ -103,7 +104,7 @@ const SubjectTable = ({
 
           return {
             onClick: (event) => {
-              const target = event.target;
+              const { target } = event;
               if (
                 target instanceof Element &&
                 target.closest('button, a, input, [role="button"], [role="menuitem"]')

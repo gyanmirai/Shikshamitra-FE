@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { orderSelectedCollectionItems } from './collectionAllocationOrder';
+import { orderSelectedCollectionItems, resolveCollectionItems } from './collectionAllocationOrder';
 import { allocatePayment } from './preview/paymentAllocationUtils';
 import type { SelectedItem } from '../Components/type';
 
@@ -22,12 +22,12 @@ const tuition2: SelectedItem = {
   dueAmount: 4000,
 };
 
-describe('allocation follows the collection screen', () => {
+describe('allocation follows policy priority', () => {
   it.each([
     { order: ['tuition-1', 'transport-1', 'tuition-2'], funded: ['tuition-1', 'transport-1'] },
     { order: ['tuition-1', 'tuition-2', 'transport-1'], funded: ['tuition-1', 'tuition-2'] },
     { order: ['transport-1', 'tuition-1', 'tuition-2'], funded: ['transport-1', 'tuition-1'] },
-  ])('allocates the same amount by the supplied screen order $order', ({ order, funded }) => {
+  ])('allocates the same amount by the supplied policy order $order', ({ order, funded }) => {
     const clicked = [tuition2, transport1, tuition1];
     const ordered = orderSelectedCollectionItems(clicked, order);
     const result = allocatePayment(ordered, [], {}, 5000);
@@ -63,4 +63,17 @@ describe('allocation follows the collection screen', () => {
     expect(result.allocatedAmount).toBe(0);
     expect(result.unallocatedAmount).toBe(10);
   });
+});
+
+it('uses the full eligible ledger only when fees and charges are unselected', () => {
+  const eligible = [tuition2, transport1, tuition1];
+  const priority = ['tuition-1', 'tuition-2', 'transport-1'];
+  expect(resolveCollectionItems([], [], eligible, true, priority)).toEqual([
+    tuition1,
+    tuition2,
+    transport1,
+  ]);
+  expect(resolveCollectionItems([transport1], [], eligible, true, priority)).toEqual([transport1]);
+  expect(resolveCollectionItems([], ['charge'], eligible, true, priority)).toEqual([]);
+  expect(resolveCollectionItems([], [], eligible, false, priority)).toEqual([]);
 });

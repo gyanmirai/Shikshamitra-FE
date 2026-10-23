@@ -294,22 +294,21 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     },
   });
 
-  const referenceUpload = useReferenceFileUpload(
-    async (file) => {
-      await formik.setFieldValue('attachment', file);
-      await formik.setFieldValue('removeAttachment', !file && Boolean(editData?.attachment));
-    },
-    formik.isSubmitting
-  );
+  const referenceUpload = useReferenceFileUpload(async (file) => {
+    await formik.setFieldValue('attachment', file);
+    await formik.setFieldValue('removeAttachment', !file && Boolean(editData?.attachment));
+  }, formik.isSubmitting);
 
-  const submitAssignment = (mode: 'draft' | 'publish' | 'schedule') => {
+  const submitAssignment = async (mode: 'draft' | 'publish' | 'schedule') => {
     if (activeSubmitModeRef.current) return;
     activeSubmitModeRef.current = mode;
     setActiveSubmitMode(mode);
     submitModeRef.current = mode;
-    void formik.submitForm().finally(() => {
+    try {
+      await formik.submitForm();
+    } finally {
       if (!pendingOverrideRef.current) finishSubmission();
-    });
+    }
   };
 
   const divisionSelectionError =
@@ -688,7 +687,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Link to Chapter(s)"
+                        label="Link to chapter(s)"
                         size="small"
                         fullWidth
                         helperText="Links this assignment to the syllabus assessment status"
@@ -703,7 +702,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                     <LanguageInputField
                       fullWidth
-                      label="Assignment Title *"
+                      label="Assignment title *"
                       name="title"
                       size="small"
                       value={formik.values.title}
@@ -728,7 +727,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     error={!!(formik.touched.assignmentTypeId && formik.errors.assignmentTypeId)}
                   >
                     <CustomSelect
-                      label="Assignment Type *"
+                      label="Assignment type *"
                       options={activeAssignmentTypes}
                       labelKey="assignmentTypeName"
                       valueKey="id"
@@ -749,7 +748,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                       error={!!(formik.touched.assignmentTypeId && formik.errors.assignmentTypeId)}
                       helperText={
                         formik.touched.assignmentTypeId &&
-                          typeof formik.errors.assignmentTypeId === 'string'
+                        typeof formik.errors.assignmentTypeId === 'string'
                           ? formik.errors.assignmentTypeId
                           : undefined
                       }
@@ -759,7 +758,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
-                    label="Evaluation Method *"
+                    label="Evaluation method *"
                     options={ASSIGNMENT_EVALUATION_METHOD_OPTIONS}
                     labelKey="label"
                     valueKey="value"
@@ -788,7 +787,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     >
                       <TextField
                         fullWidth
-                        label="Total Marks *"
+                        label="Total marks *"
                         type="number"
                         name="totalMarks"
                         value={formik.values.totalMarks}
@@ -812,7 +811,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 {usesRubric && !editData?.id && (
                   <Grid size={{ xs: 12, md: 6 }}>
                     <CustomSelect
-                      label="Rubric Template *"
+                      label="Rubric template *"
                       options={rubricTemplates}
                       labelKey="title"
                       valueKey="id"
@@ -825,7 +824,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                       )}
                       helperText={
                         formik.touched.rubricTemplateId &&
-                          typeof formik.errors.rubricTemplateId === 'string'
+                        typeof formik.errors.rubricTemplateId === 'string'
                           ? formik.errors.rubricTemplateId
                           : undefined
                       }
@@ -862,7 +861,16 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                   <ShakingTextField
                     error={!!(formik.touched.description && formik.errors.description)}
                   >
+                    <Typography component="label" id="assignment-description-label" variant="body2">
+                      Description *
+                    </Typography>
                     <Editor
+                      editorProps={{
+                        attributes: {
+                          'aria-labelledby': 'assignment-description-label',
+                          'aria-required': 'true',
+                        },
+                      }}
                       value={formik.values.description}
                       onChange={(value) => formik.setFieldValue('description', value)}
                       placeholder="Write a clear description..."
@@ -881,10 +889,10 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     value={
                       typeof formik.values.attachment === 'string'
                         ? {
-                          name: getFileNameFromUrl(formik.values.attachment),
-                          filePath: formik.values.attachment,
-                          url: formik.values.attachment,
-                        }
+                            name: getFileNameFromUrl(formik.values.attachment),
+                            filePath: formik.values.attachment,
+                            url: formik.values.attachment,
+                          }
                         : (formik.values.attachment ?? undefined)
                     }
                     upload={referenceUpload}
@@ -967,8 +975,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                                     }
                                   >
                                     <DateTimePicker
-                                      label="Publish Date *"
-                                      format="DD/MM/YYYY hh:mm"
+                                      label="Publish date (IST) *"
+                                      format="DD/MM/YYYY HH:mm"
                                       minDate={dayjs(currentYear?.startDate)}
                                       maxDate={dayjs(currentYear?.endDate)}
                                       disablePast
@@ -994,8 +1002,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                                       ampm={false}
                                       helperText={
                                         typeof divError === 'object' &&
-                                          divError?.publishDate &&
-                                          (!!divTouched?.publishDate || formik.submitCount > 0)
+                                        divError?.publishDate &&
+                                        (!!divTouched?.publishDate || formik.submitCount > 0)
                                           ? divError.publishDate
                                           : 'When to show this assignment to students'
                                       }
@@ -1023,8 +1031,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                                     }
                                   >
                                     <DateTimePicker
-                                      label="Due Date *"
-                                      format="DD/MM/YYYY hh:mm"
+                                      label="Due date (IST) *"
+                                      format="DD/MM/YYYY HH:mm"
                                       minDate={dayjs(currentYear?.startDate)}
                                       maxDate={dayjs(currentYear?.endDate)}
                                       value={div.dueDate ? dayjs(div.dueDate) : null}
@@ -1035,8 +1043,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                                       ampm={false}
                                       helperText={
                                         typeof divError === 'object' &&
-                                          divError?.dueDate &&
-                                          (!!divTouched?.dueDate || formik.submitCount > 0)
+                                        divError?.dueDate &&
+                                        (!!divTouched?.dueDate || formik.submitCount > 0)
                                           ? divError.dueDate
                                           : 'Must be after the publish date'
                                       }
@@ -1190,7 +1198,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             type="button"
             onClick={() => submitAssignment('draft')}
           >
-            {editData ? 'Update Draft' : 'Save Draft'}
+            {editData ? 'Update draft' : 'Save draft'}
           </LoadingButton>
           {!editData && (
             <LoadingButton
@@ -1208,7 +1216,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
               }
               onClick={() => submitAssignment(shouldSchedule ? 'schedule' : 'publish')}
             >
-              {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
+              {shouldSchedule ? 'Schedule publish' : 'Publish now'}
             </LoadingButton>
           )}
         </Box>

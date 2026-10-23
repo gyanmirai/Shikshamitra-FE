@@ -7,7 +7,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useSortable, SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 import {
   Box,
   Stack,
@@ -18,6 +19,12 @@ import {
   Typography,
   FormHelperText,
 } from '@mui/material';
+import {
+  useSortable,
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
 import {
   useSensor,
   DndContext,
@@ -30,8 +37,7 @@ import {
 } from '@dnd-kit/core';
 
 import { RubricFormSection } from './RubricFormSection';
-import { reorderPerformanceLevels, rubricRowNumberAt } from '../performance-level-order';
-import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import { rubricRowNumberAt, reorderPerformanceLevels } from '../performance-level-order';
 
 import type { RubricConfigFormValues, RubricPerformanceLevelFormValue } from '../types';
 
@@ -56,8 +62,16 @@ function PerformanceLevelRow({
   onDelete: () => void;
   labelInputRef: (node: HTMLInputElement | null) => void;
 }) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging, isOver } =
-    useSortable({ id: level.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: level.id });
   const field = (name: keyof RubricPerformanceLevelFormValue) =>
     `performanceLevels[${index}].${name}`;
   const rowNumber = rubricRowNumberAt(index);
@@ -89,7 +103,10 @@ function PerformanceLevelRow({
         borderRadius: 1,
       }}
     >
-      <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then use arrow keys." placement="right">
+      <CustomTooltip
+        title="Drag to reorder. With a keyboard, press Space, then use arrow keys."
+        placement="right"
+      >
         <IconButton
           ref={setActivatorNodeRef}
           {...attributes}
@@ -127,45 +144,67 @@ function PerformanceLevelRow({
       >
         {rowNumber}
       </Box>
-      <TextField
-        fullWidth
-        size="small"
-        label="Label"
-        name={field('label')}
-        value={level.label}
-        inputRef={labelInputRef}
-        onBlur={formik.handleBlur}
-        onChange={(event) => formik.setFieldValue(field('label'), event.target.value)}
+      <ShakingTextField
         error={Boolean(fieldError(formik, field('label')))}
-        helperText={fieldError(formik, field('label'))}
         sx={{ gridArea: 'label', minWidth: 0 }}
-      />
-      <TextField
-        fullWidth
-        size="small"
-        label={isRatingScale ? 'Rating *' : 'Score *'}
-        type="number"
-        inputProps={{ min: isRatingScale ? 1 : 0, max: isRatingScale ? 10 : 1000, step: isRatingScale ? 1 : 0.5 }}
-        name={field('score')}
-        value={level.score}
-        onBlur={formik.handleBlur}
-        onChange={(event) => formik.setFieldValue(field('score'), event.target.value)}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          required
+          label="Label"
+          name={field('label')}
+          value={level.label}
+          inputRef={labelInputRef}
+          onBlur={formik.handleBlur}
+          onChange={(event) => formik.setFieldValue(field('label'), event.target.value)}
+          error={Boolean(fieldError(formik, field('label')))}
+          helperText={fieldError(formik, field('label'))}
+          sx={{ gridArea: 'label', minWidth: 0 }}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={Boolean(fieldError(formik, field('score')))}
-        helperText={fieldError(formik, field('score'))}
         sx={{ gridArea: 'score', minWidth: 0 }}
-      />
-      <TextField
-        fullWidth
-        size="small"
-        label="Student Label"
-        name={field('studentLabel')}
-        value={level.studentLabel}
-        onBlur={formik.handleBlur}
-        onChange={(event) => formik.setFieldValue(field('studentLabel'), event.target.value)}
+      >
+        <TextField
+          fullWidth
+          size="small"
+          required
+          label={isRatingScale ? 'Rating' : 'Score'}
+          type="number"
+          inputProps={{
+            min: isRatingScale ? 1 : 0,
+            max: isRatingScale ? 10 : 1000,
+            step: isRatingScale ? 1 : 0.5,
+          }}
+          name={field('score')}
+          value={level.score}
+          onBlur={formik.handleBlur}
+          onChange={(event) => formik.setFieldValue(field('score'), event.target.value)}
+          error={Boolean(fieldError(formik, field('score')))}
+          helperText={fieldError(formik, field('score'))}
+          sx={{ gridArea: 'score', minWidth: 0 }}
+        />
+      </ShakingTextField>
+      <ShakingTextField
         error={Boolean(fieldError(formik, field('studentLabel')))}
-        helperText={fieldError(formik, field('studentLabel'))}
         sx={{ gridArea: 'student', minWidth: 0 }}
-      />
+      >
+        <TextField
+          fullWidth
+          size="small"
+          required
+          label="Student label"
+          name={field('studentLabel')}
+          value={level.studentLabel}
+          onBlur={formik.handleBlur}
+          onChange={(event) => formik.setFieldValue(field('studentLabel'), event.target.value)}
+          error={Boolean(fieldError(formik, field('studentLabel')))}
+          helperText={fieldError(formik, field('studentLabel'))}
+          sx={{ gridArea: 'student', minWidth: 0 }}
+        />
+      </ShakingTextField>
       <TextField
         fullWidth
         size="small"
@@ -219,7 +258,10 @@ export function RubricPerformanceLevels({ formik }: { formik: Formik }) {
 
   const deleteLevel = (id: string) => {
     if (levels.length <= 1) return;
-    formik.setFieldValue('performanceLevels', levels.filter((level) => level.id !== id));
+    formik.setFieldValue(
+      'performanceLevels',
+      levels.filter((level) => level.id !== id)
+    );
     clearTouchedLevels();
   };
 
@@ -234,15 +276,18 @@ export function RubricPerformanceLevels({ formik }: { formik: Formik }) {
   };
 
   const activeLevel = levels.find((level) => level.id === activeId);
-  const listError = getIn(formik.touched, 'performanceLevels') && getIn(formik.errors, 'performanceLevels');
+  const listError =
+    getIn(formik.touched, 'performanceLevels') && getIn(formik.errors, 'performanceLevels');
 
   return (
     <RubricFormSection
       icon="solar:medal-ribbon-star-bold-duotone"
       title={isRatingScale ? 'Rating Scale' : 'Performance Levels'}
-      caption={isRatingScale
-        ? 'Give each rating a distinct whole-number value from 1 to 10 and a clear label.'
-        : 'Define descriptive levels and scores (0–1000) teachers can select while evaluating.'}
+      caption={
+        isRatingScale
+          ? 'Give each rating a distinct whole-number value from 1 to 10 and a clear label.'
+          : 'Define descriptive levels and scores (0–1000) teachers can select while evaluating.'
+      }
       action={
         <Button
           size="small"
@@ -264,11 +309,15 @@ export function RubricPerformanceLevels({ formik }: { formik: Formik }) {
         onDragCancel={() => setActiveId(null)}
         accessibility={{
           screenReaderInstructions: {
-            draggable: 'Press Space to pick up a level. Use the arrow keys to move it. Press Space or Enter to drop, or Escape to cancel.',
+            draggable:
+              'Press Space to pick up a level. Use the arrow keys to move it. Press Space or Enter to drop, or Escape to cancel.',
           },
         }}
       >
-        <SortableContext items={levels.map((level) => level.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={levels.map((level) => level.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <Stack spacing={0.5}>
             {levels.map((level, index) => (
               <PerformanceLevelRow
@@ -294,7 +343,14 @@ export function RubricPerformanceLevels({ formik }: { formik: Formik }) {
               direction="row"
               alignItems="center"
               spacing={1}
-              sx={{ p: 1, bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, boxShadow: 'var(--shadows-8)' }}
+              sx={{
+                p: 1,
+                bgcolor: 'background.paper',
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+                boxShadow: 'var(--shadows-8)',
+              }}
             >
               <Iconify icon="mdi:drag-vertical" width={20} />
               <Typography variant="body2" fontWeight={600} noWrap>

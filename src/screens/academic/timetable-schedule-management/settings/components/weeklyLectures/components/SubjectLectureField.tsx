@@ -69,6 +69,7 @@ function SubjectLectureFieldImpl({ index, formik, disabled, isEdit }: SubjectLec
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <LectureStepButton
+            subjectName={subject?.name}
             direction="decrease"
             onClick={handleDecrement}
             disabled={isDisabled || currentValue <= MIN_WEEKLY_LECTURES_PER_SUBJECT}
@@ -88,7 +89,7 @@ function SubjectLectureFieldImpl({ index, formik, disabled, isEdit }: SubjectLec
               step: 1,
               inputMode: 'numeric',
               style: { textAlign: 'center', MozAppearance: 'textfield' },
-              'aria-label': 'Weekly lectures count',
+              'aria-label': `Weekly lectures count for ${subject?.name || `subject ${index + 1}`}`,
             }}
             disabled={isDisabled}
             error={showError}

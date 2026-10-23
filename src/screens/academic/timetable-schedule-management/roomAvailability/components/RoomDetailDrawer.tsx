@@ -71,6 +71,9 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Room Details',
         sx: {
           width: { xs: '100%', sm: 480 },
           display: 'flex',
@@ -132,7 +135,11 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={onClose} sx={{ p: 0.5, color: 'text.secondary' }}>
+        <IconButton
+          aria-label="Close room details"
+          onClick={onClose}
+          sx={{ p: 0.5, color: 'text.secondary' }}
+        >
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>

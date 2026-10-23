@@ -12,7 +12,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { DetailGrid, DetailField } from 'src/components/detail-view';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-
 import {
   Box,
   Stack,
@@ -69,13 +68,11 @@ export default function CollectionLedgerTable({
   year = new Date().getFullYear(),
   hasActiveFilters,
   layout,
-  allocationDueFeeOrder,
-  allocationBasis,
+  groupByInstallment,
 }: FeeLedgerListProps & {
   layout: CollectionLayout;
   onPeriodFocus?: (period: string) => void;
-  allocationDueFeeOrder?: string[];
-  allocationBasis?: 'Installment' | 'FeeHead';
+  groupByInstallment?: boolean;
 }) {
   const allowWaivers = useContext(FeeCollectionWaiverContext);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -92,14 +89,7 @@ export default function CollectionLedgerTable({
       };
     })
   );
-  if (allocationDueFeeOrder) {
-    const rank = new Map(allocationDueFeeOrder.map((id, index) => [id, index]));
-    rows.sort(
-      (a, b) =>
-        (rank.get(a.dueFeeId ?? '') ?? Number.MAX_SAFE_INTEGER) -
-        (rank.get(b.dueFeeId ?? '') ?? Number.MAX_SAFE_INTEGER)
-    );
-  } else if (activeTab === 'by-fee-head' && layout !== 'period')
+  if (activeTab === 'by-fee-head' && layout !== 'period')
     rows.sort(
       (a, b) => a.feeHeadName.localeCompare(b.feeHeadName) || a.period.localeCompare(b.period)
     );
@@ -179,7 +169,7 @@ export default function CollectionLedgerTable({
     rows.reduce<Record<string, { id: string; title: string; items: LedgerRow[] }>>(
       (result, row) => {
         const byPeriod = layout === 'period' || activeTab === 'by-month';
-        const byInstallment = allocationBasis === 'Installment';
+        const byInstallment = groupByInstallment && byPeriod;
         const installmentKey =
           row.installmentId ??
           Array.from(`${row.dueDate ?? row.period}|${row.installmentLabel ?? row.period}`)
@@ -323,7 +313,6 @@ export default function CollectionLedgerTable({
             )
             .map((column) => ({
               ...column,
-              isSort: allocationDueFeeOrder ? false : column.isSort,
               ...(column.id === 'selection' && {
                 label: groupCheckbox(group.items, `Select all ${group.title}`),
               }),

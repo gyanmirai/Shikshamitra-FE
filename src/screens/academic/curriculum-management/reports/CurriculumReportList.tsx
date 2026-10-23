@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { Box, Chip, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -15,9 +16,8 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { CurriculumReportApiTypeMap } from 'src/enums/curriuculum-reports';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   useGetAcademicReportExportsQuery,
   useLazyGetAcademicReportExportJobQuery,
@@ -25,8 +25,8 @@ import {
 
 import CurriculumReports from './CurriculumReports';
 import { startAcademicReportDownload } from './ai-report-utils';
-import { getCurriculumReportActions } from './curriculumReportActions';
 import ShikshaMitraAiReportDrawer from './ShikshaMitraAiReportDrawer';
+import { getCurriculumReportActions } from './curriculumReportActions';
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
@@ -158,7 +158,7 @@ const CurriculumReportList = () => {
           heading="Reports"
           description="View and manage generated curriculum reports"
           links={[
-            { name: 'Academic', href: '/academic/dashboard/' },
+            { name: 'Academics', href: '/academic/dashboard/' },
             { name: 'Curriculum' },
             { name: 'Reports' },
           ]}
@@ -191,6 +191,7 @@ const CurriculumReportList = () => {
         <CurriculumReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
+          tableTitle="Curriculum Reports"
           tableId="curriculum-reports"
           isLoading={isExportsLoading}
           data={rows}

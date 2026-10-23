@@ -24,8 +24,10 @@ Automatic collection allocation: run focused Vitest checks for
 folders. Browser fixtures are `e2e/fixtures/collection-policy` and
 `e2e/fixtures/fee-collection-late-fees` (append `?allocationBasis=Installment` or `FeeHead`).
 They render production components with synthetic data and do not establish backend correctness.
-Check mode selection/save, matching displayed/funded order, partial/exact/excess amounts,
-remaining balances, review, stale refresh and keyboard/mobile behavior. No priority editor is expected.
+Check priority selection/save, amount-only entry in both modes, funded summary and submitted amounts,
+explicit-selection limits, partial/exact/excess amounts, remaining balances, Clear All, review,
+stale refresh and keyboard/mobile behavior. Change Group by and display filters while an amount
+is entered and confirm the allocation stays unchanged. No priority editor is expected.
 
 ## Admission and withdrawal proration result
 

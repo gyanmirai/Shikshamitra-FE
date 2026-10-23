@@ -9,7 +9,6 @@ import {
   Grid,
   Card,
   Stack,
-  Paper,
   Avatar,
   CardHeader,
   Typography,
@@ -20,7 +19,7 @@ import {
   TimetableSettingsSummaryCards,
 } from 'src/screens/academic/components/AcademicSummaryInsights';
 
-import { buildMockAnalytics } from '../constants/auditLogs.mock';
+import { buildAuditAnalytics } from '../utils/auditAnalytics';
 import { RISK_LABELS, RISK_COLOR_KEYS } from '../constants/auditLogs.constants';
 
 import type { AuditLog } from '../types/auditLogs.types';
@@ -54,7 +53,7 @@ const dashboardSurfaceSx = {
 /** Analytics view: cards, charts, distributions, suspicious activity alerts. */
 const AuditAnalyticsView = ({ logs }: Props) => {
   const theme = useTheme();
-  const analytics = useMemo(() => buildMockAnalytics(logs || []), [logs]);
+  const analytics = useMemo(() => buildAuditAnalytics(logs || []), [logs]);
 
   const totalRiskEvents = useMemo(
     () => analytics.riskDistribution.reduce((acc, r) => acc + r.count, 0),
@@ -445,12 +444,7 @@ const AuditAnalyticsView = ({ logs }: Props) => {
                         alignItems="center"
                         sx={{ mb: 0.75 }}
                       >
-                        <Typography
-                          variant="body2"
-                          fontWeight={600}
-                          noWrap
-                          sx={{ maxWidth: 280 }}
-                        >
+                        <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 280 }}>
                           {i + 1}. {e.label}
                         </Typography>
                         <Typography variant="caption" fontWeight={800} color="primary.main">
@@ -623,98 +617,6 @@ const AuditAnalyticsView = ({ logs }: Props) => {
                 )}
               </Stack>
             </Box>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* ── Suspicious Activity Alerts Card ─────────────────────────────── */}
-      <Grid container spacing={1} sx={{ mt: 1 }}>
-        <Grid size={{ xs: 12, md: 12 }}>
-          <Card
-            sx={{
-              ...dashboardSurfaceSx,
-              p: 2.5,
-              borderColor: alpha(theme.palette.warning.main, 0.3),
-            }}
-          >
-            <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 2 }}>
-              <Box
-                sx={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 1.5,
-                  bgcolor: alpha(theme.palette.warning.main, 0.1),
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                <Iconify icon="mdi:shield-alert-outline" width={20} color="warning.main" />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle1" fontWeight={700} color="warning.dark">
-                  Suspicious Activity Alerts
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Automated security and anomaly detection
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  px: 1.25,
-                  py: 0.25,
-                  borderRadius: 1,
-                  backgroundColor: alpha(theme.palette.warning.main, 0.12),
-                }}
-              >
-                <Typography variant="caption" fontWeight={800} color="warning.dark">
-                  {analytics.suspiciousAlerts.length} Alerts
-                </Typography>
-              </Box>
-            </Stack>
-            <Stack spacing={1.5}>
-              {analytics.suspiciousAlerts.map((alert) => {
-                const color =
-                  alert.severity === 'error' ? theme.palette.error.main : theme.palette.warning.main;
-                return (
-                  <Paper
-                    key={alert.id}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: `1px solid ${alpha(color, 0.25)}`,
-                      backgroundColor: alpha(color, 0.03),
-                    }}
-                  >
-                    <Stack direction="row" alignItems="flex-start" gap={1.5}>
-                      <Iconify
-                        icon={alert.severity === 'error' ? 'mdi:alert-circle' : 'mdi:alert'}
-                        width={22}
-                        sx={{ color, mt: 0.2, flexShrink: 0 }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ color }}>
-                          {alert.title}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
-                        >
-                          {alert.message}
-                        </Typography>
-                        <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 1 }}>
-                          <Iconify icon="mdi:lightbulb-on-outline" width={14} color="info.main" />
-                          <Typography variant="caption" color="info.main" fontWeight={600}>
-                            {alert.suggestedAction}
-                          </Typography>
-                        </Stack>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                );
-              })}
-            </Stack>
           </Card>
         </Grid>
       </Grid>

@@ -4,10 +4,12 @@ import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Button, Drawer, Divider } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import FinancePolicyDrawerHeader from 'src/screens/finance/policies/components/FinancePolicyDrawerHeader';
 
 import AssignmentWorkflow from './AssignmentWorkflow';
 
@@ -16,6 +18,7 @@ import type { IFeeStructureData } from './type';
 export default function AssignmentDrawer({
   students,
   academicYearId,
+  academicYearName,
   onClose,
 }: {
   students: IFeeStructureData[];
@@ -54,7 +57,9 @@ export default function AssignmentDrawer({
             'aria-label': title,
             'aria-modal': true,
             sx: {
-              width: { xs: '100%', md: students.length > 1 ? 1200 : 960 },
+              width: viewing
+                ? { xs: '100%', sm: 'min(760px, 92vw)' }
+                : { xs: '100%', md: students.length > 1 ? 1200 : 960 },
               maxWidth: '100%',
               overflow: 'hidden',
             },
@@ -62,18 +67,27 @@ export default function AssignmentDrawer({
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-          <DrawerHeader
-            title={title}
-
-            onClose={requestClose}
-            closeDisabled={busy}
-          />
-          <Divider />
+          {viewing ? (
+            <FinancePolicyDrawerHeader
+              title={title}
+              titleId="fee-assignment-view-title"
+              helpText="Review this student's saved fee structure, fee heads, policy versions and installment balances for the selected academic year."
+              badges={<Label color="success">Assigned</Label>}
+              onClose={requestClose}
+              disabled={busy}
+            />
+          ) : (
+            <>
+              <DrawerHeader title={title} onClose={requestClose} closeDisabled={busy} />
+              <Divider />
+            </>
+          )}
           {students.length > 0 && academicYearId && (
             <AssignmentWorkflow
               key={`${academicYearId}-${students.map((s) => s.studentId).join(',')}`}
               students={students}
               academicYearId={academicYearId}
+              academicYearName={academicYearName}
               onClose={requestClose}
               onBusyChange={setBusy}
             />

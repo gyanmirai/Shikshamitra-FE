@@ -1,7 +1,7 @@
-import dayjs from 'dayjs';
 import React from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, ButtonBase, Typography } from '@mui/material';
+import { formatLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { getLearningTaskTableActions } from './learningTaskTableActions';
@@ -48,6 +48,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
 }) => (
   <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
     <CustomizableTable
+      tableTitle="Homework"
       tableId="homework-assignment-management"
       isLoading={isLoading}
       handleRowClick={(row) => {
@@ -132,23 +133,23 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         },
         {
           id: 'publishDate',
-          label: 'Publish Date',
+          label: 'Publish date (IST)',
           align: 'left',
           filterType: 'date' as const,
           render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+            <Typography component="time" dateTime={value} variant="caption" fontSize="13px">
+              {formatLearningTaskDateTime(value)}
             </Typography>
           ),
         },
         {
           id: 'dueDate',
-          label: 'Due Date',
+          label: 'Due date (IST)',
           align: 'left',
           filterType: 'date' as const,
           render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? dayjs(value).format('DD-MM-YYYY HH:mm') : '-'}
+            <Typography component="time" dateTime={value} variant="caption" fontSize="13px">
+              {formatLearningTaskDateTime(value)}
             </Typography>
           ),
         },
@@ -215,6 +216,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
             return (
               <Box onClick={(event) => event.stopPropagation()}>
                 <AdaptiveThreeDotsActions
+                  directActionLimit={2}
                   actions={actions}
                   placement="right-top"
                   moreLabel="More homework actions"

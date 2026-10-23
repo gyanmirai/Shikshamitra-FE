@@ -59,7 +59,6 @@ const getInitialValues = (
 
     enableLateFee: data?.enableLateFee ?? false,
     gracePeriodDays: data?.gracePeriodDays ?? 0,
-    gracePeriodType: data?.gracePeriodType || 'Calendar',
     lateFeeApplyOnFeeHeads: data?.lateFeeApplyOnFeeHeads || [],
     lateFeeType: data?.lateFeeType || 'Flat',
     flatAmount: formulaValue(data?.flatAmount, ['Flat']),
@@ -129,13 +128,6 @@ const validationSchema = Yup.object().shape({
   gracePeriodDays: boundedNumber('days', 0).when('enableLateFee', {
     is: true,
     then: (s) => s.required('Grace Period is required'),
-  }),
-  gracePeriodType: Yup.string().when('enableLateFee', {
-    is: true,
-    then: (schema) =>
-      schema
-        .oneOf(['Calendar'], 'Only calendar-day grace periods are currently supported')
-        .required('Grace Day Type is required'),
   }),
   lateFeeApplyOnFeeHeads: Yup.array()
     .of(Yup.string())
@@ -305,7 +297,6 @@ export function useCollectionPolicyForm({
     const v = formik.values;
     const nameValid = v.policyName.trim().length >= 3 && v.policyName.trim().length <= 100;
     const graceValid = !v.enableLateFee || validCollectionNumber(v.gracePeriodDays, 'days');
-    const graceTypeValid = !v.enableLateFee || v.gracePeriodType === 'Calendar';
     const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
 
     let lateFeeValid = true;
@@ -364,7 +355,6 @@ export function useCollectionPolicyForm({
     const isReadyToPublish =
       nameValid &&
       graceValid &&
-      graceTypeValid &&
       headsValid &&
       capsValid &&
       lateFeeValid &&
@@ -376,7 +366,6 @@ export function useCollectionPolicyForm({
       capsValid,
       nameValid,
       graceValid,
-      graceTypeValid,
       headsValid,
       lateFeeValid,
       incomeHeadValid,

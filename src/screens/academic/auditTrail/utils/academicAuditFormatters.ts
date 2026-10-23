@@ -80,6 +80,7 @@ const toSentenceCase = (value: string): string => {
 
 export const formatActionLabel = (label?: string | null): string => {
   if (!label) return '-';
+  if (/^saved\s*draft$/i.test(label.trim())) return 'Saved draft';
   const formatted = label
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/([a-z])(?=(?:added|deleted|updated|created|published|archived|resolved)\b)/gi, '$1 ');

@@ -137,8 +137,6 @@ describe('Collections status', () => {
       'title',
       'No fee structure assigned. Assign a fee structure to collect fees.'
     );
-    expect(
-      within(unassignedRow).getByRole('button', { name: /Give fee adjustment/ })
-    ).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /Give fee adjustment/ })).not.toBeInTheDocument();
   });
 });

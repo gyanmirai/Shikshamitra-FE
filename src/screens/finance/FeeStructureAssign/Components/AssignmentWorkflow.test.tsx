@@ -53,6 +53,27 @@ vi.mock('./AssignmentStudentInputs', () => ({
               {
                 feeHeadId: 'tuition',
                 source: 'ManualOverride',
+                startDate: '2026-08-01',
+                endDate: '2027-05-14',
+                reason: 'Shared dates',
+              },
+            ],
+            feeHeadDetails: [{ feeHeadId: 'tuition', amount: 1000 }],
+            variableFeeHeads: [{ feeHeadId: 'transport', amount: 500 }],
+          })
+        }
+      >
+        Set common fees and dates
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onChange({
+            ...request,
+            servicePeriods: [
+              {
+                feeHeadId: 'tuition',
+                source: 'ManualOverride',
                 startDate: '2026-06-14',
                 endDate: '2027-05-14',
                 reason: 'Approved',
@@ -319,7 +340,7 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(mocks.preview).not.toHaveBeenCalled();
   });
-  it('preserves student-specific inputs when switching and searching bulk students', async () => {
+  it('shows names only during bulk setup and preserves the common form while searching', async () => {
     mount(
       [
         { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
@@ -332,24 +353,22 @@ describe('assignment review and commit boundaries', () => {
       target: { value: 'collection-version' },
     });
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
-      target: { value: 'Approved for Aarav' },
+      target: { value: 'Approved for all selected students' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Select Meera' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
-    expect(screen.getByRole('combobox', { name: 'Collection policy' })).toHaveValue(
-      'default-version'
-    );
+    const list = screen.getByRole('list', { name: 'Selected students' });
+    expect(within(list).getByText('Aarav')).toBeVisible();
+    expect(within(list).getByText('Meera')).toBeVisible();
+    expect(within(list).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(list).queryByText('Configure')).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('textbox', { name: 'Search selected students' }), {
       target: { value: 'Aarav' },
     });
-    expect(screen.queryByRole('button', { name: 'Select Meera' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Select Aarav' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit policies' }));
+    expect(within(list).queryByText('Meera')).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toHaveValue(
       'collection-version'
     );
     expect(screen.getByRole('textbox', { name: /Policy override reason/ })).toHaveValue(
-      'Approved for Aarav'
+      'Approved for all selected students'
     );
   });
   it('blocks an out-of-year service period before preview', async () => {
@@ -476,12 +495,25 @@ describe('assignment review and commit boundaries', () => {
       screen.queryByRole('button', { name: 'Policy override access information' })
     ).not.toBeInTheDocument();
   });
-  it('keeps refund and collection overrides scoped to one student and permits a reset', async () => {
+  it('applies common policies, resets, fees and dates to every bulk preview and commit request', async () => {
     mocks.bulkPreview.mockImplementation(({ items }) => ({
       unwrap: async () => ({
         results: items.map((item: any) => ({
           studentId: item.studentId,
           preview: result(item.studentId),
+        })),
+      }),
+    }));
+    mocks.bulkCommit.mockImplementation(({ items }) => ({
+      unwrap: async () => ({
+        results: items.map((item: any) => ({
+          studentId: item.studentId,
+          outcome: 'Assigned',
+          result: {
+            assignmentId: item.studentId,
+            outcome: 'Assigned',
+            assignment: result(item.studentId),
+          },
         })),
       }),
     }));
@@ -493,7 +525,6 @@ describe('assignment review and commit boundaries', () => {
       true
     );
     await chooseStructure();
-    fireEvent.click(screen.getByRole('button', { name: 'Select Aarav' }));
     const refundSelectors = screen.getAllByRole('combobox', { name: 'Refund policy' });
     const collectionSelectors = screen.getAllByRole('combobox', { name: 'Collection policy' });
     fireEvent.change(refundSelectors[0], { target: { value: 'refund-version' } });
@@ -501,8 +532,19 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset refund' }));
     expect(refundSelectors[0]).toHaveValue('');
     fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
-      target: { value: 'Approved exception for Aarav' },
+      target: { value: 'Approved bulk exception' },
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Include transport for one' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set common fees and dates' }));
+    expect(
+      within(screen.getByRole('list', { name: 'Selected students' })).queryByRole('button')
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit policies' }));
+    expect(screen.getByRole('textbox', { name: /Policy override reason/ })).toHaveValue(
+      'Approved bulk exception'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
     await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalledTimes(1));
@@ -510,10 +552,27 @@ describe('assignment review and commit boundaries', () => {
     expect(requests.find((item: any) => item.studentId === 'one')).toEqual(
       expect.objectContaining({
         policies: [{ family: 'collection', versionId: 'collection-version' }],
-        policyOverrideReason: 'Approved exception for Aarav',
+        policyOverrideReason: 'Approved bulk exception',
+        selectedOptionalFeeHeadIds: ['transport'],
+        feeHeadDetails: [{ feeHeadId: 'tuition', amount: 1000 }],
+        variableFeeHeads: [{ feeHeadId: 'transport', amount: 500 }],
+        servicePeriods: [
+          {
+            feeHeadId: 'tuition',
+            source: 'ManualOverride',
+            startDate: '2026-08-01',
+            endDate: '2027-05-14',
+            reason: 'Shared dates',
+          },
+        ],
       })
     );
-    expect(requests.find((item: any) => item.studentId === 'two').policies).toBeUndefined();
+    expect(requests[1]).toEqual({ ...requests[0], studentId: 'two' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Assign fees (2)' }));
+    await waitFor(() => expect(mocks.bulkCommit).toHaveBeenCalledTimes(1));
+    expect(mocks.bulkCommit.mock.calls[0][0].items).toEqual(
+      requests.map((request: any) => ({ ...request, previewToken: `token-${request.studentId}` }))
+    );
   }, 30000);
   it('requires a policy reason and submits the student override through preview and commit', async () => {
     mount(undefined, true);
@@ -656,10 +715,13 @@ describe('assignment review and commit boundaries', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assign fees (2)' }));
     await screen.findByText('Committed amount 12000');
     fireEvent.click(screen.getByRole('button', { name: 'Review remaining students' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Include transport for two' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Preview assignments' }));
     await waitFor(() =>
       expect(mocks.bulkPreview).toHaveBeenLastCalledWith({
-        items: [expect.objectContaining({ studentId: 'two' })],
+        items: [
+          expect.objectContaining({ studentId: 'two', selectedOptionalFeeHeadIds: ['transport'] }),
+        ],
       })
     );
     expect(screen.getByRole('button', { name: 'Select Meera' })).toHaveTextContent(

@@ -4,6 +4,7 @@ import { ExpandMore } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 import { useGetLectureSlotByIdQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import {
   Box,
@@ -148,25 +149,11 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
           }}
         />
         <Box sx={{ p: 2.5 }}>
-          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-              }}
-            >
-              <Iconify icon="mdi:information-outline" width={18} color="primary.main" />
-            </Box>
-            <Typography variant="subtitle1" fontWeight={700} color="primary.main">
-              General Information
-            </Typography>
-          </Stack>
-
+          <FormSectionHeader
+            icon="mdi:clock-outline"
+            title="General Information"
+            descriptionTooltip="Review the saved class, shift and school-hour context for these slots."
+          />{' '}
           <Stack direction="row" spacing={1} alignItems="center">
             <Box
               sx={{

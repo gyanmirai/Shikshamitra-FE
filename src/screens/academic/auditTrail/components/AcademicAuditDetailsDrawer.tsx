@@ -5,7 +5,7 @@ import type { AcademicAuditEvent } from 'src/redux/academicAPI/AuditApi/academic
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
+import HelpTooltip from 'src/components/help-tooltip';
 import { Box, Stack, Button, Drawer, IconButton, Typography } from '@mui/material';
 
 import AcademicAuditDetailsContent from './AcademicAuditDetailsContent';
@@ -34,6 +34,9 @@ export const AcademicAuditDetailsDrawer = ({
       },
     }}
     PaperProps={{
+      role: 'dialog',
+      'aria-modal': true,
+      'aria-label': 'Academic Audit Details',
       sx: {
         width: { xs: '100%', sm: 520 },
         display: 'flex',
@@ -59,7 +62,12 @@ export const AcademicAuditDetailsDrawer = ({
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
             Audit Details
           </Typography>
-          <CustomTooltip title="Audit trail event details" placement="right" arrow>
+          <HelpTooltip
+            label="Academic audit details information"
+            title="Audit trail event details"
+            placement="right"
+            arrow
+          >
             <Iconify
               icon={GlobalIcons.info}
               color="info.main"
@@ -67,7 +75,7 @@ export const AcademicAuditDetailsDrawer = ({
               height={16}
               sx={{ cursor: 'pointer' }}
             />
-          </CustomTooltip>
+          </HelpTooltip>
         </Stack>
         <Typography variant="caption" color="text.secondary">
           {event?.occurredAtDisplay || event?.occurredAt || '-'}

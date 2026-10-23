@@ -35,7 +35,7 @@ function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
         size="small"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        inputProps={{ 'aria-label': label }}
+        slotProps={{ input: { 'aria-label': label } }}
       />
     </Stack>
   );
