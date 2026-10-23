@@ -3,8 +3,9 @@ import type { ReviewSummary } from 'src/redux/student/admissions/admission-revie
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useRequestAdmissionReviewCorrectionMutation } from 'src/redux/student/admissions/admission-review-api';
 
 import { ReviewDialog } from './review-dialog';
@@ -78,14 +79,14 @@ export function ReviewCorrectionDialog({
             onReload={() => recovery.reload(() => formik.resetForm())}
           />
           {!summary.canRequestCorrection && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0459" presentation="persistent" severity="info">
               Corrections cannot be requested in the latest review. {summary.blockers.join(' ')}
-            </Alert>
+            </StudentFeedback>
           )}
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0460" presentation="inline" severity="warning">
             This decision reopens the application form. Correct and resubmit it, then submit a new
             review recommendation.
-          </Alert>
+          </StudentFeedback>
           <Typography variant="body2">
             Describe the exact application details that need to change. Previously completed
             assessment and document stages stay in their recorded state.

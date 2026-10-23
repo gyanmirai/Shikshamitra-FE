@@ -7,7 +7,8 @@ import type {
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Button, DialogActions } from '@mui/material';
+import { Button, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { AssessmentSessionFields } from './assessment-session-fields';
@@ -55,15 +56,25 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
     >
       <DialogScrollContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0276"
+            presentation="persistent"
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
         {session && session.bookedCount > 0 && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0277"
+            presentation="inline"
+            severity="info"
+            sx={{ mb: 2 }}
+          >
             This session has {session.bookedCount} bookings. Check arrangements before changing its
             time or location.
-          </Alert>
+          </StudentFeedback>
         )}
         <AssessmentSessionFields formik={formik} disabled={formik.isSubmitting} />
       </DialogScrollContent>

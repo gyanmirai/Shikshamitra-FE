@@ -8,8 +8,9 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Alert, Stack, Button, Divider, Typography, IconButton } from '@mui/material';
+import { Stack, Button, Divider, Typography, IconButton } from '@mui/material';
 
 import { PIPELINE_ACTIVE_STATUSES } from './admission-pipeline-state';
 import { getAdmissionApplicationStatusLabel } from '../application-status';
@@ -139,7 +140,9 @@ export function AdmissionPipelineMoreFilters({
         <Scrollbar sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Stack spacing={1.5} sx={{ p: 2 }}>
             {isError ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0446"
+                presentation="toast"
                 severity="error"
                 action={
                   onRetry && (
@@ -150,7 +153,7 @@ export function AdmissionPipelineMoreFilters({
                 }
               >
                 Could not load filter options.
-              </Alert>
+              </StudentFeedback>
             ) : !options ? (
               <Typography variant="body2" color="text.secondary" role="status">
                 {isLoading ? 'Loading filter options...' : 'Filter options are not available yet.'}

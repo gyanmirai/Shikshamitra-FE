@@ -10,11 +10,11 @@ import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
 import { securityPaths } from 'src/constants/security-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import {
   Box,
   Stack,
-  Alert,
   Button,
   Switch,
   TextField,
@@ -166,10 +166,10 @@ function Toggle({
 export function ChangesSettings({ form, disabled, roles, rolesUnavailable }: EditorProps) {
   return (
     <Stack spacing={1.5}>
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0813" presentation="inline" severity="info">
         The requester cannot approve their own request. Submitted requests keep the rules used when
         they were submitted.
-      </Alert>
+      </StudentFeedback>
       {recordActions.map((action) => {
         const path = `changes.${action}`;
         const rule = form.values.changes[action];
@@ -374,10 +374,10 @@ export function DocumentsSettings({ form, disabled }: Pick<EditorProps, 'form' |
             />
           ))}
         </Box>
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0814" presentation="inline" severity="info">
           Issued documents retain their recorded number and snapshot. Changing a prefix affects new
           issues.
-        </Alert>
+        </StudentFeedback>
       </FormSectionCard>
       <FormSectionCard
         icon="mdi:file-certificate-outline"

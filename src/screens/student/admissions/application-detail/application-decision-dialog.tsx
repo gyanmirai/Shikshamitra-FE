@@ -5,9 +5,10 @@ import type {
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Stack, TextField, Typography } from '@mui/material';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, TextField, Typography } from '@mui/material';
 
 import { ReviewDialog } from '../review/review-dialog';
 import { formatAdmissionReference } from '../admission-reference';
@@ -76,17 +77,25 @@ export function ApplicationDecisionDialog({
               busy={isBusy}
               onReload={reload}
             />
-            <Alert severity={isDangerous ? 'warning' : 'info'}>
+            <StudentFeedback
+              notificationKey="STU-0187"
+              presentation="inline"
+              severity={isDangerous ? 'warning' : 'info'}
+            >
               <Typography variant="body2">
                 This decision is recorded in the application history for{' '}
                 {formatAdmissionReference(current.applicationNumber)}.
               </Typography>
-            </Alert>
+            </StudentFeedback>
             {concurrencyUnavailable && (
-              <Alert severity="warning">
+              <StudentFeedback
+                notificationKey="STU-0188"
+                presentation="persistent"
+                severity="warning"
+              >
                 This decision is not available in the current application state. Reload after a
                 failed request to check the latest permissions and decision state.
-              </Alert>
+              </StudentFeedback>
             )}
             <TextField
               fullWidth

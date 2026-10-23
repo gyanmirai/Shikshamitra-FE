@@ -63,7 +63,9 @@ it('keeps tabs unmounted on a failed read and retries the actual profile request
     })
   );
   renderStudentProfile();
-  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load this student profile');
+  expect(
+    await screen.findByText('Unable to load this student profile', { exact: false })
+  ).toBeVisible();
   expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
   expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
@@ -84,9 +86,9 @@ it.each([
   async (response) => {
     mswServer.use(http.get(profilePath, () => HttpResponse.json({ data: response })));
     renderStudentProfile();
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Unable to load this student profile'
-    );
+    expect(
+      await screen.findByText('Unable to load this student profile', { exact: false })
+    ).toBeVisible();
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
   }

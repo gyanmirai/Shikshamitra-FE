@@ -1,7 +1,8 @@
 import type { AdmissionWorkflowUsage } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Alert, Stack, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Card, Stack, Typography, LinearProgress } from '@mui/material';
 
 import { formatWorkflowDateTime } from '../../workflow-list/workflow-list-format';
 
@@ -17,9 +18,9 @@ const formatHours = (hours?: number | null) => {
 export function WorkflowRuntimeAnalytics({ analytics }: { analytics?: Analytics }) {
   if (!analytics || analytics.startedCount === 0) {
     return (
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0575" presentation="inline" severity="info">
         Stage performance appears after applications start using this workflow version.
-      </Alert>
+      </StudentFeedback>
     );
   }
 

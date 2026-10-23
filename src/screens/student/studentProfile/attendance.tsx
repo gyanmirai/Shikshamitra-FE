@@ -5,10 +5,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useGetAttendanceSummaryQuery } from 'src/redux/student/attendance-management/api';
-import { Box, Stack, Paper, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
+import { Box, Stack, Paper, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
   attendanceError,
   attendanceStatus,
@@ -90,12 +91,19 @@ export default function Attendance({ student }: StudentTabsComponentType) {
         </Stack>
       </Paper>
       {!year?.id && (
-        <Alert severity="info">Select an academic year to view this student’s attendance.</Alert>
+        <StudentFeedback notificationKey="STU-0728" presentation="inline" severity="info">
+          Select an academic year to view this student’s attendance.
+        </StudentFeedback>
       )}
       {query.isError && (
-        <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+        <StudentFeedback
+          notificationKey="STU-0729"
+          presentation="toast"
+          severity="error"
+          action={<Button onClick={() => query.refetch()}>Retry</Button>}
+        >
           {attendanceError(query.error, 'Attendance summary could not be loaded.')}
-        </Alert>
+        </StudentFeedback>
       )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable

@@ -7,9 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
-  Alert,
   Stack,
   Button,
   Skeleton,
@@ -238,7 +238,9 @@ export default function StudentOnboardingCaseOperations({
       )}
 
       {handoffsQuery.isError && !handoffsQuery.data ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0976"
+          presentation="toast"
           severity="error"
           sx={{ order: 1 }}
           action={
@@ -248,7 +250,7 @@ export default function StudentOnboardingCaseOperations({
           }
         >
           Service handoffs could not be loaded.
-        </Alert>
+        </StudentFeedback>
       ) : handoffsQuery.isFetching && !handoffsQuery.data ? (
         <Stack spacing={1} sx={{ order: 1 }}>
           <Skeleton variant="text" width={150} height={24} />
@@ -383,9 +385,14 @@ export default function StudentOnboardingCaseOperations({
       >
         <DialogScrollContent dividers>
           <Stack spacing={1.5}>
-            <Alert severity="warning" variant="outlined">
+            <StudentFeedback
+              notificationKey="STU-0979"
+              presentation="inline"
+              severity="warning"
+              variant="outlined"
+            >
               Cancelling releases the reserved seat and identifier. The case cannot be activated.
-            </Alert>
+            </StudentFeedback>
             <TextField
               fullWidth
               required

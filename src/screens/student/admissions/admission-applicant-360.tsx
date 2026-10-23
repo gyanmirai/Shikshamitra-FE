@@ -9,13 +9,13 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 import {
   Box,
   List,
   Stack,
-  Alert,
   Drawer,
   Button,
   Skeleton,
@@ -130,14 +130,22 @@ export default function AdmissionApplicant360Screen() {
       <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={1.5} sx={{ p: { xs: 1.5, sm: 2 } }}>
           {!canView ? (
-            <Alert severity="warning">You do not have permission to view this applicant.</Alert>
+            <StudentFeedback
+              notificationKey="STU-0005"
+              presentation="persistent"
+              severity="warning"
+            >
+              You do not have permission to view this applicant.
+            </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
             <Stack role="status" aria-label="Loading applicant record" spacing={1}>
               <Skeleton height={48} />
               <Skeleton height={80} />
             </Stack>
           ) : query.isError || !data ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0007"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={query.refetch}>
@@ -146,16 +154,20 @@ export default function AdmissionApplicant360Screen() {
               }
             >
               Applicant record could not be loaded. Try again.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <>
               <Typography variant="subtitle1">{getApplicantName(data)}</Typography>
               {data.applications.length ? (
                 <>
                   {!canViewApplications ? (
-                    <Alert severity="warning">
+                    <StudentFeedback
+                      notificationKey="STU-0008"
+                      presentation="persistent"
+                      severity="warning"
+                    >
                       You do not have permission to open admission applications.
-                    </Alert>
+                    </StudentFeedback>
                   ) : (
                     <List disablePadding>
                       {data.applications.map((application) => (
@@ -178,10 +190,10 @@ export default function AdmissionApplicant360Screen() {
                   )}
                 </>
               ) : (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0009" presentation="inline" severity="info">
                   No admission application has started. Continue the inquiry and use Move to next
                   stage when it is ready.
-                </Alert>
+                </StudentFeedback>
               )}
               {inquiryId && (
                 <Button

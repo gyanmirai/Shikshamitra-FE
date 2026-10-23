@@ -11,9 +11,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Box, Chip, Stack, Paper, Alert, Button, LinearProgress } from '@mui/material';
+import { Box, Chip, Stack, Paper, Button, LinearProgress } from '@mui/material';
 import {
   useGetStudentRecordsDirectoryQuery,
   useGetStudentRecordsDirectoryOptionsQuery,
@@ -210,7 +211,9 @@ export default function StudentDirectory({ rowActions }: Props) {
         }
       />
       {options.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0853"
+          presentation="toast"
           severity="error"
           sx={{ mb: 1 }}
           action={
@@ -220,7 +223,7 @@ export default function StudentDirectory({ rowActions }: Props) {
           }
         >
           Academic filter choices could not be loaded. The current view is preserved.
-        </Alert>
+        </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ p: 1, mb: 1, borderRadius: 2, flexShrink: 0 }}>
         <Stack

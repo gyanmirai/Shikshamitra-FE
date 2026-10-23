@@ -11,7 +11,15 @@ vi.mock('react-redux', () => ({
 vi.mock('src/hooks/use-unsaved-navigation', () => ({
   useUnsavedNavigation: () => ({ confirmation: null }),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/form-section-card', () => ({
   FormSectionCard: ({ title, children }: any) => <section aria-label={title}>{children}</section>,
 }));
@@ -159,7 +167,9 @@ describe('Governed record changes', () => {
       target: { value: 'Review operational status' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Submit change' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('changed while you were editing');
+    expect(
+      await screen.findByText('changed while you were editing', { exact: false })
+    ).toBeVisible();
     expect(screen.getByLabelText('Reason for change')).toHaveValue('Review operational status');
     expect(mocks.submitted).not.toHaveBeenCalled();
   });
@@ -199,7 +209,7 @@ describe('Governed record changes', () => {
         onSubmitted={mocks.submitted}
       />
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Your draft is preserved');
+    expect(screen.getByText('Your draft is preserved', { exact: false })).toBeVisible();
     expect(screen.getByLabelText('Reason for change')).toHaveValue(
       'Review the original operational status'
     );

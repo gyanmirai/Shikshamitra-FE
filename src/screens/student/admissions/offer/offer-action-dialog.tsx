@@ -7,16 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Alert,
-  Stack,
-  Button,
-  Checkbox,
-  TextField,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
+import { Stack, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 import { ReviewDialog } from '../review/review-dialog';
 
@@ -142,11 +135,11 @@ function OfferActionForm({
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Stack spacing={2}>
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0440" presentation="inline" severity="info">
             {action === 'accept'
               ? 'Record this response only after confirming it with the applicant or guardian.'
               : 'This action will be recorded in the admission offer history.'}
-          </Alert>
+          </StudentFeedback>
           {expiryAction && (
             <ShakingTextField error={Boolean(formik.touched.expiresAt && formik.errors.expiresAt)}>
               <DateTimePicker

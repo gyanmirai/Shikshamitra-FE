@@ -6,12 +6,12 @@ import { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
   Stack,
-  Alert,
   Avatar,
   Button,
   Tooltip,
@@ -173,9 +173,9 @@ export default function StudentSetupTable({
           setup,
           pendingTasks,
           placement: `${student.standardName} / ${student.divisionName}`,
-          identifiers: `GR ${student.grNo ?? student.grPreview ?? 'Pending'} · Roll ${student.rollNo ?? 'Pending'}`,
+          identifiers: `GR ${student.grNo ?? student.grPreview ?? 'Pending'} · Roll ${student.rollNo ?? 0}`,
           grNumberTask: student.grNo ?? student.grPreview ?? 'Not assigned',
-          rollNumberTask: student.rollNo ?? 'Not assigned',
+          rollNumberTask: student.rollNo ?? 0,
           divisionTask: `${student.standardName} / ${student.divisionName}`,
           pendingWork: pendingTasks.map((task) => task.label).join('; ') || setup.pendingText,
           accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
@@ -332,10 +332,7 @@ export default function StudentSetupTable({
                 ? `GR: ${row.grPreview} (preview)`
                 : 'GR: Pending';
 
-          const rollText =
-            row.rollNo !== undefined && row.rollNo !== null
-              ? `Roll: ${row.rollNo}`
-              : 'Roll: Pending';
+          const rollText = `Roll: ${row.rollNo ?? 0}`;
 
           return (
             <Stack spacing={0.5} alignItems="flex-start">
@@ -463,6 +460,7 @@ export default function StudentSetupTable({
                     size="small"
                     label="Roll number"
                     value={manualValues[String(row.id)] ?? ''}
+                    placeholder="0"
                     disabled={assignmentBusy}
                     onValueChange={({ value }) => onManualChange?.(String(row.id), value)}
                     roundToWholeRupees={false}
@@ -485,7 +483,7 @@ export default function StudentSetupTable({
                 </ShakingTextField>
               ) : (
                 <Typography variant="body2" fontWeight={hasCommittedValue ? 700 : 500}>
-                  {hasCommittedValue ? row.rollNo : 'Not assigned'}
+                  {row.rollNo ?? 0}
                 </Typography>
               )}
               {view !== 'roll-number' && (
@@ -786,7 +784,7 @@ export default function StudentSetupTable({
       key={view === 'readiness' ? 'setup-status' : 'assignment'}
       tableId={tableId}
       tableTitle={tableTitle}
-      exportLabel={assignmentView ? 'Export' : 'Export current page'}
+      exportLabel="Export"
       columns={columns}
       data={tableData}
       isLoading={isLoading}
@@ -836,7 +834,9 @@ export default function StudentSetupTable({
       }
       errorContent={
         isError ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-1055"
+            presentation="toast"
             severity="error"
             action={
               <Button color="inherit" onClick={onRetry}>
@@ -845,7 +845,7 @@ export default function StudentSetupTable({
             }
           >
             Onboarding cases could not be loaded.
-          </Alert>
+          </StudentFeedback>
         ) : undefined
       }
       searchFieldProps={{

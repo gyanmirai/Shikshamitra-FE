@@ -17,10 +17,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   Box,
-  Alert,
   Stack,
   Button,
   Skeleton,
@@ -249,7 +249,9 @@ export default function StudentOnboardingPortalAccounts({
   }
   if (!workspace && credentials.isError) {
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-1013"
+        presentation="toast"
         severity="error"
         action={
           <Button
@@ -262,12 +264,14 @@ export default function StudentOnboardingPortalAccounts({
         }
       >
         Credentials could not be loaded. Try again.
-      </Alert>
+      </StudentFeedback>
     );
   }
   if (!recipients.length) {
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-1014"
+        presentation="persistent"
         severity="info"
         action={
           <Button
@@ -282,7 +286,7 @@ export default function StudentOnboardingPortalAccounts({
       >
         No saved account-owner profiles are available. Complete the student&apos;s contact details
         in Student Records, then refresh.
-      </Alert>
+      </StudentFeedback>
     );
   }
 
@@ -432,7 +436,9 @@ export default function StudentOnboardingPortalAccounts({
             {profileChange &&
               profileChange.relationship === formik.values.relationship &&
               profileChange.status !== 'Applied' && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-1015"
+                  presentation="persistent"
                   severity="warning"
                   action={
                     <Button
@@ -449,12 +455,24 @@ export default function StudentOnboardingPortalAccounts({
                   {profileChange.status === 'Pending'
                     ? 'Email correction awaits Records approval. The saved email changes after approval.'
                     : 'Review the email correction in Student Records before sending.'}
-                </Alert>
+                </StudentFeedback>
               )}
             {formError ? (
-              <Alert severity="error">{formError}</Alert>
+              <StudentFeedback
+                notificationKey="STU-1016"
+                presentation="persistent"
+                severity="error"
+              >
+                {formError}
+              </StudentFeedback>
             ) : blockedReason ? (
-              <Alert severity="warning">{blockedReason}</Alert>
+              <StudentFeedback
+                notificationKey="STU-1017"
+                presentation="persistent"
+                severity="warning"
+              >
+                {blockedReason}
+              </StudentFeedback>
             ) : null}
             {!formError && delivery && !['NotRequested', 'Blocked'].includes(delivery.status) && (
               <Stack

@@ -19,7 +19,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
   ])('preserves exact %s when editing route priority', async (_, conditionRuleJson) => {
     const user = userEvent.setup();
     const { onSave } = renderConditionRoute(conditionRuleJson);
-    expect(screen.getByRole('alert')).toHaveTextContent('Its rule is preserved');
+    expect(screen.getByText('Its rule is preserved', { exact: false })).toBeVisible();
     expect(screen.queryByRole('textbox', { name: 'Application field *' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('combobox', { name: 'Continue after eligibility check' })
@@ -45,7 +45,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     const { onSave } = renderConditionRoute(grouped);
     expect(screen.getByRole('heading', { name: 'Application form' })).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('Its rule is preserved');
+    expect(screen.getByText('Its rule is preserved', { exact: false })).toBeVisible();
     expect(screen.queryByLabelText('Default route')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Use a condition')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Save path' }));
@@ -59,7 +59,7 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
 
   it('displays the preserved condition with no editable rule or save action for a published route', () => {
     renderConditionRoute(grouped, true);
-    expect(screen.getByRole('alert')).toHaveTextContent('This saved condition');
+    expect(screen.getByText('This saved condition', { exact: false })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Application form' })).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();

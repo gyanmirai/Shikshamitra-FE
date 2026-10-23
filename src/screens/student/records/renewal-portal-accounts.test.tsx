@@ -14,7 +14,15 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({
   useSelector: (select: any) => select({ auth: { permissions: mocks.permissions } }),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/form-section-card', () => ({
   FormSectionCard: ({ title, children }: any) => <section aria-label={title}>{children}</section>,
 }));
@@ -90,9 +98,9 @@ it('requires every exact owner grant even when the server advertises provisionin
   mocks.permissions.push({ name: 'Students.Onboarding', isGranted: true });
   renderForm();
   expect(screen.queryByRole('button', { name: 'Create and link account' })).not.toBeInTheDocument();
-  expect(screen.getByRole('alert')).toHaveTextContent(
-    'authorized onboarding and identity administrator'
-  );
+  expect(
+    screen.getByText('authorized onboarding and identity administrator', { exact: false })
+  ).toBeVisible();
 });
 
 it('respects the current server provisioning gate', () => {
@@ -114,7 +122,7 @@ it('requires explicit ownership verification and submits only the recorded perso
   expect(screen.getByLabelText('Saved profile email')).toHaveValue('student@school.test');
   expect(screen.getByLabelText('Saved profile email')).toHaveAttribute('readonly');
   fireEvent.click(screen.getByRole('button', { name: 'Create and link account' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Confirm the person');
+  expect(await screen.findByText('Confirm the person', { exact: false })).toBeVisible();
   expect(mocks.provision).not.toHaveBeenCalled();
   confirmOwner();
   fireEvent.click(screen.getByRole('button', { name: 'Create and link account' }));
@@ -161,7 +169,7 @@ it('preserves the selected person after a stale renewal rejection', async () => 
   chooseStudent();
   confirmOwner();
   fireEvent.click(screen.getByRole('button', { name: 'Create and link account' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('This renewal changed');
+  expect(await screen.findByText('This renewal changed', { exact: false })).toBeVisible();
   expect(screen.getByLabelText('Account owner')).toHaveValue('student:self');
   expect(screen.getByLabelText('Saved profile email')).toHaveValue('student@school.test');
   expect(screen.getByRole('checkbox', { name: /verified this person/ })).toBeChecked();

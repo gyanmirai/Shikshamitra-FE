@@ -5,17 +5,10 @@ import type {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Typography,
-  LinearProgress,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Stack, Button, Typography, LinearProgress, CircularProgress } from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_FORM_STEPS } from './form-dialog/form-wizard-model';
@@ -57,7 +50,9 @@ export function AdmissionFormDialog({
       >
         <Stack spacing={2} sx={{ p: 3, minHeight: 144, justifyContent: 'center' }}>
           {editingError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0060"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" sx={{ minHeight: 44 }} onClick={onRetryEditing}>
@@ -66,7 +61,7 @@ export function AdmissionFormDialog({
               }
             >
               This form could not be loaded. Try again.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <Stack direction="row" spacing={1.5} alignItems="center" role="status">
               <CircularProgress size={24} aria-label="Loading admission form" />

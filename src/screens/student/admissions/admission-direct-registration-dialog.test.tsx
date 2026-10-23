@@ -21,7 +21,15 @@ const state = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: state.push }) }));
 vi.mock('./use-admission-unsaved-changes', () => ({ useAdmissionUnsavedChanges: vi.fn() }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: state.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: state.success,
+  },
+}));
 vi.mock('./admission-dialog-title', () => ({
   AdmissionDialogTitle: ({ title }: { title: string }) => title,
 }));

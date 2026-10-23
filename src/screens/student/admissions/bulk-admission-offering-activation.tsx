@@ -2,7 +2,8 @@
 
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Stack, Paper, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Paper, Button, Typography } from '@mui/material';
 
 import type { useBulkAdmissionOfferingActivation } from './use-bulk-admission-offering-activation';
 
@@ -52,7 +53,12 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
         </Stack>
       </Paper>
       {activation.failures.length > 0 && (
-        <Alert severity="error" sx={{ mb: 1, flexShrink: 0 }}>
+        <StudentFeedback
+          notificationKey="STU-0295"
+          presentation="persistent"
+          severity="error"
+          sx={{ mb: 1, flexShrink: 0 }}
+        >
           <Stack spacing={0.5} sx={{ maxHeight: 160, overflow: 'auto' }}>
             <Typography variant="subtitle2">Some offerings could not be activated.</Typography>
             {activation.failures.map((failure) => (
@@ -61,7 +67,7 @@ export function BulkAdmissionOfferingActivation({ activation, disabled }: Props)
               </Typography>
             ))}
           </Stack>
-        </Alert>
+        </StudentFeedback>
       )}
       <ConfirmDialog
         open={activation.confirmationOpen}

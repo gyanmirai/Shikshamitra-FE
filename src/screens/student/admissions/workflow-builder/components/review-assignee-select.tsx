@@ -2,7 +2,8 @@ import type { AdmissionReviewerChoice } from 'src/redux/student/admissions/admis
 
 import { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, Button, TextField } from '@mui/material';
+import { Stack, Button, TextField } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionReviewersQuery } from 'src/redux/student/admissions/admission-review-settings-api';
 
 export function ReviewAssigneeSelect({
@@ -91,7 +92,9 @@ export function ReviewAssigneeSelect({
         }
       />
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0526"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => query.refetch()}>
@@ -100,12 +103,12 @@ export function ReviewAssigneeSelect({
           }
         >
           Reviewer choices could not be loaded. Your saved selection is preserved.
-        </Alert>
+        </StudentFeedback>
       )}
       {available && !query.isFetching && !query.isError && !options.length && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0527" presentation="inline" severity="info">
           No reviewers match these choices. Try another search or assign a reviewer later.
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

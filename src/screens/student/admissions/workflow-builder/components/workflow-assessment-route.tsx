@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
 
-import { Alert, Stack, MenuItem, TextField } from '@mui/material';
+import { Stack, MenuItem, TextField } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -57,10 +58,10 @@ export function WorkflowAssessmentRoute({
         ))}
         <MenuItem value="custom">Another condition</MenuItem>
       </TextField>
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0536" presentation="inline" severity="info">
         Failed, absent, and retake outcomes only follow a matching outcome route. Staff can also
         start an allowed retake from the applicant’s assessment.
-      </Alert>
+      </StudentFeedback>
     </Stack>
   );
 }

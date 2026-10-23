@@ -8,9 +8,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Alert, Button, LinearProgress } from '@mui/material';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
 import { useGetAdmissionApplicationsQuery } from 'src/redux/student/admissions/admission-applications-api';
@@ -179,9 +180,9 @@ export default function AdmissionApplicationsScreen() {
         }
       />
       {!canView ? (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0021" presentation="persistent" severity="warning">
           Application viewing permission is required to access Applications.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <>
           <AdmissionAcademicFilters
@@ -201,7 +202,7 @@ export default function AdmissionApplicationsScreen() {
             <CustomizableTable
               tableId="admission-applications"
               tableTitle="Admission applications"
-              exportLabel="Export current page"
+              exportLabel="Export"
               wrapperProps={{ sx: { height: 1 } }}
               tableContainerProps={{ sx: { height: 1 } }}
               columns={columns}

@@ -32,7 +32,13 @@ vi.hoisted(() => {
 // Keep the real runtime controls, validation, store, request serialization and mutation behavior.
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 type FormProps = ComponentProps<typeof CustomRecordChangeForm>;
@@ -560,7 +566,9 @@ describe('CustomRecordChangeForm through the real Records API', () => {
     );
     expect(screen.queryByRole('textbox', { name: 'New form question' })).not.toBeInTheDocument();
     expect(screen.getByText('School Registration · Version 1')).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveTextContent('record changed while this draft was open');
+    expect(
+      screen.getByText('record changed while this draft was open', { exact: false })
+    ).toBeVisible();
     await submitWithReason();
     await waitFor(() => expect(props.onSubmitted).toHaveBeenCalled());
     expect(requests[0].expectedSnapshot).toBe('frozen-snapshot-1');
@@ -584,7 +592,7 @@ describe('CustomRecordChangeForm through the real Records API', () => {
     ).toBeVisible();
     expect(requests).toEqual([]);
     await submitWithReason();
-    expect(await screen.findByRole('alert')).toHaveTextContent('draft has been kept');
+    expect(await screen.findByText('draft has been kept', { exact: false })).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'Text note' })).toHaveValue('Corrected');
     expect(screen.getByRole('textbox', { name: /Reason for change/ })).toHaveValue(
       'Verified school detail correction'

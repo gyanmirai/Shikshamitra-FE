@@ -32,7 +32,7 @@ beforeEach(() => {
 it('rejects a photo URI for another student before requesting its protected bytes', () => {
   render(<RecordPhotoPreview studentId="a0000000-0000-4000-8000-000000000002" uri={uri} />);
   expect(mocks.query).toHaveBeenCalledWith(expect.anything(), { skip: true });
-  expect(screen.getByRole('alert')).toHaveTextContent('preview is unavailable');
+  expect(screen.getByText('preview is unavailable', { exact: false })).toBeVisible();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
 
@@ -55,7 +55,7 @@ it('hides a previously cached photo when the protected read is denied', () => {
     isError: true,
   });
   render(<RecordPhotoPreview studentId={studentId} uri={uri} />);
-  expect(screen.getByRole('alert')).toHaveTextContent('current access');
+  expect(screen.getByText('current access', { exact: false })).toBeVisible();
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
   expect(mocks.createObjectURL).not.toHaveBeenCalled();
 });

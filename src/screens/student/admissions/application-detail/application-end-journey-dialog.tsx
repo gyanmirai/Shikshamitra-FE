@@ -2,8 +2,9 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Button, TextField, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 type Props = {
   open: boolean;
@@ -69,9 +70,14 @@ export function ApplicationEndJourneyDialog({
           helperText={formik.touched.reason && formik.errors.reason}
         />
         {formik.status && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0193"
+            presentation="persistent"
+            severity="error"
+            sx={{ mt: 2 }}
+          >
             {formik.status}
-          </Alert>
+          </StudentFeedback>
         )}
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

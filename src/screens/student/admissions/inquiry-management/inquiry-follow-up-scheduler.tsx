@@ -6,7 +6,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
-import { Box, Alert, Stack, Button, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, TextField, Typography } from '@mui/material';
 
 import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 
@@ -68,7 +69,11 @@ export function InquiryFollowUpScheduler({
           sx={{ flexGrow: 0, maxHeight: onClose ? 'calc(100dvh - 180px)' : undefined }}
         >
           <Stack spacing={1.5} sx={onClose ? { p: 2 } : undefined}>
-            {error && <Alert severity="error">{error}</Alert>}
+            {error && (
+              <StudentFeedback notificationKey="STU-0411" presentation="inline" severity="error">
+                {error}
+              </StudentFeedback>
+            )}
             <DateTimePicker
               desktopModeMediaQuery={theme.breakpoints.up('sm')}
               label="Next follow-up"

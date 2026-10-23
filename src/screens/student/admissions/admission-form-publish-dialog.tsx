@@ -3,12 +3,12 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormUsageQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
   Box,
   List,
   Stack,
-  Alert,
   Button,
   ListItem,
   Typography,
@@ -82,10 +82,10 @@ export function AdmissionFormPublishDialog({
           </Stack>
         ) : hasIssues ? (
           <Stack spacing={1}>
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0068" presentation="persistent" severity="error">
               Resolve all {issues.length} {issues.length === 1 ? 'issue' : 'issues'} before
               publishing.
-            </Alert>
+            </StudentFeedback>
             <List dense disablePadding sx={{ maxHeight: 240, overflowY: 'auto' }}>
               {issues.map((issue, index) => (
                 <ListItem key={`${issue}-${index}`} disableGutters alignItems="flex-start">

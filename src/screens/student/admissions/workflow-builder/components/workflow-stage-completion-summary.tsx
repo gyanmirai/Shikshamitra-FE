@@ -1,7 +1,8 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Alert } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
+import { readPaymentCompletionPolicy } from 'src/redux/student/admissions/admission-payment-completion-policy';
 
 import { WorkflowSettingLabel } from './workflow-setting-label';
 import { getStageOutcomeRule } from '../workflow-runtime-route-rules';
@@ -26,15 +27,17 @@ export function getWorkflowStageCompletionDescription(stage: AdmissionWorkflowSt
     'Authorized staff complete the stage after its application status requirements are met.';
   if (stage.stageType === 1)
     description = managed
-      ? `The attached form is submitted with valid required answers${policy?.requireSectionVerification ? ' and the configured sections have staff verification' : ''}. Outstanding correction requests must be resolved.`
+      ? 'The attached form is submitted with valid required answers. Outstanding correction requests must be resolved.'
       : 'The application is submitted using the attached published form.';
   if (stage.stageType === 2 && managed)
     description = `An assessment outcome is recorded${policy?.schedulingEnabled ? ' for a booked session' : ''}${policy?.attendanceRequired ? ', with attendance recorded' : ''}${policy?.reviewRequired ? ', and the result is reviewed' : ''}. Failed, absent, and retake outcomes cannot follow the usual path; staff can arrange an allowed retake or end the journey as Withdrawn.`;
   if (stage.stageType === 3 && managed)
     description =
       'Every eligibility check passes or has an approved exception. Ineligible or missing-information outcomes need an explicit matching path to continue.';
-  if (stage.stageType === 4 && managed)
-    description = `The full amount is settled${policy?.requireIndependentVerification ? ' and independently verified' : ''}${policy?.allowWaiver ? ', or an authorized full waiver is recorded' : ''}. Pending or failed payments cannot complete this stage.`;
+  if (stage.stageType === 4) {
+    const payment = readPaymentCompletionPolicy(stage.configurationJson);
+    description = `${payment?.paymentRule === 'full' ? 'The entire selected Finance fee structure, including future installments, is cleared' : 'A confirmed partial payment is recorded in Finance'}. Finance-verified zero payable needs no payment entry.${payment?.allowCollectionLater ? ' Authorized staff can instead defer collection to Onboarding with a reason.' : ''}`;
+  }
   if (stage.stageType === 5 && managed)
     description = `All applicable required documents are accepted${policy?.allowWaivers ? ' or have an authorized waiver' : ''}. Replaced documents require fresh review. Documents for other classes do not block completion.`;
   if (stage.stageType === 6 && managed)
@@ -55,7 +58,9 @@ export function WorkflowStageCompletionSummary({
   error?: string;
 }) {
   return error ? (
-    <Alert severity="error">{error}</Alert>
+    <StudentFeedback notificationKey="STU-0582" presentation="persistent" severity="error">
+      {error}
+    </StudentFeedback>
   ) : (
     <WorkflowSettingLabel
       label="Stage completion"

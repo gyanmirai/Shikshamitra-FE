@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
 import { formatDateOnly } from 'src/utils/date-only';
-import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { AdminDashboardPanel } from './admin-dashboard-panel';
 
@@ -26,16 +27,20 @@ export function AdminDashboardAttendance({ query }: { query: StudentSectionQuery
           Daily attendance is unavailable with your current access.
         </Typography>
       ) : today.availability === 'outsideYear' ? (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0711" presentation="inline" severity="info">
           Today is outside the selected academic year. Select the current academic year to view
           today&apos;s registers.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <Stack spacing={1.5}>
           {today.provisional && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0712"
+              presentation="persistent"
+              severity="warning"
+            >
               Calendar or roster setup is incomplete. This summary is provisional.
-            </Alert>
+            </StudentFeedback>
           )}
           {today.availability === 'noExpected' ? (
             <Typography variant="body2" color="text.secondary">

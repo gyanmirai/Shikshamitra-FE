@@ -2,7 +2,8 @@ import type { AssessmentRosterItem } from 'src/redux/student/admissions/admissio
 
 import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Alert, Button, Typography, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { admissionAssessmentsApi } from 'src/redux/student/admissions/admission-assessments-api';
 import {
@@ -76,9 +77,14 @@ export function AssessmentContinueDialog({
           this assessment? The configured workflow determines the next stage.
         </Typography>
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0254"
+            presentation="persistent"
+            severity="error"
+            sx={{ mt: 2 }}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
       </DialogScrollContent>
       <DialogActions>

@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetStudentRecordSnapshotQuery } from 'src/redux/student/records/student-record-changes-api';
 import {
   Box,
   Stack,
-  Alert,
   Drawer,
   Button,
   Divider,
@@ -86,9 +86,9 @@ export function StudentCustomChangeDrawer({
         <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
           <Box sx={{ p: 2 }}>
             {accessDenied ? (
-              <Alert severity="info">
+              <StudentFeedback notificationKey="STU-0753" presentation="inline" severity="info">
                 School details are no longer available with your current access.
-              </Alert>
+              </StudentFeedback>
             ) : snapshot.isLoading || (snapshot.isFetching && !formReady) ? (
               <Stack spacing={2} aria-label="Loading current school details">
                 <Skeleton height={60} />
@@ -96,12 +96,14 @@ export function StudentCustomChangeDrawer({
                 <Skeleton height={100} />
               </Stack>
             ) : snapshot.isError && !formReady ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0754"
+                presentation="toast"
                 severity="error"
                 action={<Button onClick={() => snapshot.refetch()}>Retry</Button>}
               >
                 Current school details could not be loaded. Retry before making a change.
-              </Alert>
+              </StudentFeedback>
             ) : (
               snapshot.currentData && (
                 <CustomRecordChangeForm

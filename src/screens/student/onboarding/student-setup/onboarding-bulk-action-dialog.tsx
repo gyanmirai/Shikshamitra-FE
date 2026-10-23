@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Chip,
-  Alert,
   Paper,
   Stack,
   Button,
@@ -151,22 +151,31 @@ export default function OnboardingBulkActionDialog({
           )}
 
           {isActivation && skippedCount > 0 && (
-            <Alert severity="warning" variant="outlined">
+            <StudentFeedback
+              notificationKey="STU-0964"
+              presentation="persistent"
+              severity="warning"
+              variant="outlined"
+            >
               {actionableStudents.length === 0
                 ? 'No selected students are ready to activate. Review their status in the list below.'
                 : `${skippedCount} of ${students.length} selected ${students.length === 1 ? 'student is' : 'students are'} not ready and will be skipped.`}
-            </Alert>
+            </StudentFeedback>
           )}
 
           {processedCount > 0 && !busy && (
-            <Alert severity={failedCount > 0 ? 'warning' : 'success'}>
+            <StudentFeedback
+              notificationKey="STU-0965"
+              presentation="inline"
+              severity={failedCount > 0 ? 'warning' : 'success'}
+            >
               {isActivation
                 ? `${completedCount} of ${actionableStudents.length} ready ${actionableStudents.length === 1 ? 'student' : 'students'} activated.`
                 : `${completedCount} of ${students.length} ${students.length === 1 ? 'student' : 'students'} refreshed.`}
               {failedCount > 0
                 ? ` ${failedCount} ${failedCount === 1 ? 'student needs' : 'students need'} attention.`
                 : ''}
-            </Alert>
+            </StudentFeedback>
           )}
 
           {busy && (
@@ -188,7 +197,9 @@ export default function OnboardingBulkActionDialog({
           )}
 
           {students.length === 0 ? (
-            <Alert severity="info">No students are selected.</Alert>
+            <StudentFeedback notificationKey="STU-0966" presentation="inline" severity="info">
+              No students are selected.
+            </StudentFeedback>
           ) : (
             <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 1.5 }}>
               <Stack divider={<Divider flexItem />}>

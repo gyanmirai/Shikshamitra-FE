@@ -4,10 +4,10 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
 import {
-  Alert,
   Stack,
   Button,
   Accordion,
@@ -73,7 +73,11 @@ export function WorkflowTransitionFields({
     return (
       <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={2} sx={{ p: 2 }}>
-          {formik.status && <Alert severity="error">{String(formik.status)}</Alert>}
+          {formik.status && (
+            <StudentFeedback notificationKey="STU-0589" presentation="persistent" severity="error">
+              {String(formik.status)}
+            </StudentFeedback>
+          )}
           <Stack spacing={0.25}>
             <Typography variant="caption" color="text.secondary">
               After
@@ -106,11 +110,15 @@ export function WorkflowTransitionFields({
           !stages.some(
             (item) => item.id === formik.values.toStageId && isApplicationStageType(item.stageType)
           )) && (
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0590" presentation="persistent" severity="warning">
             Replace retired stage types before configuring their next steps.
-          </Alert>
+          </StudentFeedback>
         )}
-        {formik.status && <Alert severity="error">{String(formik.status)}</Alert>}
+        {formik.status && (
+          <StudentFeedback notificationKey="STU-0589" presentation="persistent" severity="error">
+            {String(formik.status)}
+          </StudentFeedback>
+        )}
         {lockFromStage ? (
           <Stack spacing={0.25}>
             <Typography variant="caption" color="text.secondary">
@@ -186,7 +194,9 @@ export function WorkflowTransitionFields({
               <Typography variant="caption">Loading published form answers…</Typography>
             )}
             {formsError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0592"
+                presentation="persistent"
                 severity="warning"
                 action={
                   <Button size="small" onClick={onRetryForms}>
@@ -195,7 +205,7 @@ export function WorkflowTransitionFields({
                 }
               >
                 Some form answers could not load. Saved conditions are retained.
-              </Alert>
+              </StudentFeedback>
             )}
             <WorkflowTransitionConditionFields
               formik={formik}
@@ -204,10 +214,10 @@ export function WorkflowTransitionFields({
             />
           </>
         ) : !assessment && !documents && !formik.values.hasCondition ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0593" presentation="inline" severity="info">
             This is the default route and is used only when no conditional route matches. A stage
             can have one default route.
-          </Alert>
+          </StudentFeedback>
         ) : null}
         <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
           After {from?.name ?? 'this stage'} is complete, continue to{' '}

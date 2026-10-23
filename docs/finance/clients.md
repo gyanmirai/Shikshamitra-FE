@@ -3,19 +3,14 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-14
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Finance frontend clients
 
-Collection Policy create/update/clone/read/version responses carry `allocationBasis`; no priority
-list is sent. `src/redux/feeCollection/feeCollection.ts` types the collect form's resolved basis,
-policy identity/version, ordered due IDs and opaque revision. Student and Admission collection
-share `automaticAllocation: { revision, dueFeeIds, chargeIds }`, including unfunded selected dues.
-The server recalculates money and rejects stale or altered allocations. See the
-[backend contract](../../../Shikshamitra-BE/docs/modules/finance/api.md#automatic-collection-allocation).
+Admission collection responses and Records withdrawal preview rows share the output-only `src/redux/finance/fee-proration-result.ts` type. Existing Admission collection queries read/prepare the result. Existing transition mutations invalidate affected Finance owner caches after applied withdrawal or correction. Fee ledger line types expose a separate withdrawal-credit amount/explanation. No new Student route or policy mutation is introduced.
 
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.

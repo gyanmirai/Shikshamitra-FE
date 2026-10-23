@@ -17,6 +17,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -26,7 +27,6 @@ import {
   Grid,
   Chip,
   Stack,
-  Alert,
   Button,
   Drawer,
   Divider,
@@ -308,6 +308,8 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
           >
             {staleConflict && (
               <AdmissionIntakeNotice
+                notificationKey="STU-0096"
+                presentation="persistent"
                 severity="warning"
                 closeDisabled={reloadingLatest}
                 sx={{ m: 2, mb: 0, flexShrink: 0 }}
@@ -616,7 +618,9 @@ function CounsellorRoutingStep({
     >
       <Stack spacing={2}>
         {loadError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0099"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" onClick={onRetry} loading={loading}>
@@ -625,10 +629,14 @@ function CounsellorRoutingStep({
             }
           >
             Unable to load eligible counsellors.
-          </Alert>
+          </StudentFeedback>
         )}
         {!loading && !loadError && counsellors.length === 0 && (
-          <AdmissionIntakeNotice severity="warning">
+          <AdmissionIntakeNotice
+            notificationKey="STU-0100"
+            presentation="persistent"
+            severity="warning"
+          >
             Add active staff with the Counsellor role and admission access before creating this
             setup.
           </AdmissionIntakeNotice>
@@ -660,7 +668,9 @@ function CounsellorRoutingStep({
         {!loading &&
           !loadError &&
           rules.counsellorUserIds.some((id) => !counsellors.some((person) => person.id === id)) && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0101"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button
@@ -681,7 +691,7 @@ function CounsellorRoutingStep({
             >
               Some saved counsellors are no longer available. Remove them and choose active
               admission staff.
-            </Alert>
+            </StudentFeedback>
           )}
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -757,7 +767,9 @@ function ReviewStep({
   return (
     <>
       {usageError && editing && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0102"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={onRetryUsage}>
@@ -766,10 +778,15 @@ function ReviewStep({
           }
         >
           Usage impact could not be loaded. Retry before updating this shared setup.
-        </Alert>
+        </StudentFeedback>
       )}
       {editing && usageCount > 0 && (
-        <AdmissionIntakeNotice severity="warning" key={usageCount}>
+        <AdmissionIntakeNotice
+          notificationKey="STU-0103"
+          presentation="persistent"
+          severity="warning"
+          key={usageCount}
+        >
           Used by {usageCount} {usageCount === 1 ? 'Offering or link' : 'Offerings or links'}.
           Offering-linked inquiries keep their captured policy and owner. Public inquiries without a
           confirmed Offering use the current Offering policy when staff confirm one later.

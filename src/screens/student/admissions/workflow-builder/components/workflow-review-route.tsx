@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -53,10 +54,10 @@ export function WorkflowReviewRoute({
           });
         }}
       />
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0571" presentation="inline" severity="info">
         Routes use the authorized admission decision, not the reviewer’s recommendation. Waitlist
         and rejection need an explicit route. Correction returns the application for another review.
-      </Alert>
+      </StudentFeedback>
     </Stack>
   );
 }

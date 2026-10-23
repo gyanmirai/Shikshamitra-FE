@@ -14,12 +14,12 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useGetYearByIdQuery } from 'src/redux/year/yearApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { toDateOnly, formatDateOnly } from 'src/utils/date-only';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import StudentDirectoryFilterFields from 'src/screens/student/records/student-directory-filter-fields';
 import {
   Box,
-  Alert,
   Paper,
   Stack,
   Button,
@@ -110,7 +110,9 @@ function DailyAttendanceWorkspace({
         }
       />
       {v.contextChanged && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0645"
+          presentation="persistent"
           severity="warning"
           action={
             <Button color="inherit" disabled={v.busy} onClick={v.switchContext}>
@@ -119,7 +121,7 @@ function DailyAttendanceWorkspace({
           }
         >
           Save or discard your changes before switching the academic context.
-        </Alert>
+        </StudentFeedback>
       )}
       {!v.classRegister && v.context && v.validSelection && (
         <Typography variant="body2" color="text.secondary">
@@ -127,33 +129,37 @@ function DailyAttendanceWorkspace({
         </Typography>
       )}
       {v.classRegister && v.snapshot && !v.editable && !v.busy && !v.stale && !v.blockingError && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0646" presentation="inline" severity="info">
           {v.snapshot.isLocked
             ? 'This attendance register is locked.'
             : 'This register is read-only. Your permission, teacher assignment or school policy does not allow marking here.'}
-        </Alert>
+        </StudentFeedback>
       )}
       {v.classRegister && v.snapshot && !v.snapshot.isExpected && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0647" presentation="inline" severity="info">
           {v.snapshot.notExpectedReason || 'Attendance is not expected on this date.'}
-        </Alert>
+        </StudentFeedback>
       )}
       {v.snapshot?.needsReview && (
-        <Alert severity="warning">Roster changed after submission. Review and submit again.</Alert>
+        <StudentFeedback notificationKey="STU-0648" presentation="persistent" severity="warning">
+          Roster changed after submission. Review and submit again.
+        </StudentFeedback>
       )}
       {v.needsCreditCorrection && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0649" presentation="persistent" severity="warning">
           Approved leave changed after submission. Attendance credit corrections require review
           under school policy.
-        </Alert>
+        </StudentFeedback>
       )}
       {v.snapshot?.isExpected && !v.snapshot.isSubmitted && v.snapshot.isPastMarkingCutoff && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0650" presentation="toast" severity="warning">
           The school marking cutoff has passed. Review and submit the attendance register.
-        </Alert>
+        </StudentFeedback>
       )}
       {v.stale && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0651"
+          presentation="persistent"
           severity="warning"
           action={
             <Button color="inherit" onClick={v.refresh} disabled={v.busy}>
@@ -163,10 +169,12 @@ function DailyAttendanceWorkspace({
         >
           The register or student roster changed after this draft was loaded. Review the latest
           version before saving.
-        </Alert>
+        </StudentFeedback>
       )}
       {v.failure && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0652"
+          presentation="inline"
           severity="error"
           action={
             <Button color="inherit" onClick={v.refresh} disabled={v.busy}>
@@ -175,7 +183,7 @@ function DailyAttendanceWorkspace({
           }
         >
           {v.failure}
-        </Alert>
+        </StudentFeedback>
       )}
       {v.reasonRequired && (
         <TextField
@@ -255,7 +263,9 @@ function DailyAttendanceWorkspace({
         </Stack>
       </Paper>
       {v.schoolToday && v.selection.date > v.schoolToday && (
-        <Alert severity="warning">Attendance cannot be taken for a future date.</Alert>
+        <StudentFeedback notificationKey="STU-0653" presentation="persistent" severity="warning">
+          Attendance cannot be taken for a future date.
+        </StudentFeedback>
       )}
       {(v.contextQuery.isFetching || (v.validSelection && v.activeQuery.isFetching)) && (
         <LinearProgress aria-label="Refreshing attendance" />
@@ -292,7 +302,9 @@ function DailyAttendanceWorkspace({
           }
           errorContent={
             v.blockingError ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0654"
+                presentation="persistent"
                 severity={v.denied ? 'warning' : 'error'}
                 action={
                   !v.denied ? (
@@ -311,7 +323,7 @@ function DailyAttendanceWorkspace({
                 {v.denied
                   ? 'You do not have access to this attendance scope.'
                   : `Attendance could not be loaded. ${v.loadError} Your filters and unsaved marks are retained.`}
-              </Alert>
+              </StudentFeedback>
             ) : undefined
           }
           isSearch
@@ -389,7 +401,11 @@ function DailyAttendanceWorkspace({
                 ? `Lock the submitted register for ${formatDateOnly(v.selection.date)}? Further changes follow the school's correction policy.`
                 : `Submit attendance for ${formatDateOnly(v.selection.date)}? All ${v.counts.expected} expected students in this class have been marked.`}
             </Typography>
-            {v.failure && <Alert severity="error">{v.failure}</Alert>}
+            {v.failure && (
+              <StudentFeedback notificationKey="STU-0656" presentation="inline" severity="error">
+                {v.failure}
+              </StudentFeedback>
+            )}
           </Stack>
         }
         action={
@@ -438,9 +454,14 @@ function AttendanceWorkspaceRoute() {
           links={links}
         />
         {year.isError ? (
-          <Alert severity="error" action={<Button onClick={() => year.refetch()}>Retry</Button>}>
+          <StudentFeedback
+            notificationKey="STU-0657"
+            presentation="toast"
+            severity="error"
+            action={<Button onClick={() => year.refetch()}>Retry</Button>}
+          >
             The academic year for this register could not be loaded.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <LinearProgress aria-label="Loading register academic year" />
         )}

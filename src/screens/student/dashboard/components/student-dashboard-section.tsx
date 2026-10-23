@@ -4,7 +4,8 @@ import type { StudentDashboardSectionInput } from 'src/redux/student/dashboard/s
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Alert, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { DashboardSectionCard } from 'src/screens/academic/AcademicDashboard/Components/DashboardSectionCard';
 
 import { sectionTitles } from '../dashboard-access';
@@ -40,7 +41,9 @@ export default function StudentDashboardSection({
         <LinearProgress aria-label={`Refreshing ${sectionTitles[input.section]}`} sx={{ mb: 1 }} />
       )}
       {isError ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0723"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => refetch()}>
@@ -50,7 +53,7 @@ export default function StudentDashboardSection({
         >
           Unable to load {sectionTitles[input.section].toLowerCase()}. Other sections remain
           available.
-        </Alert>
+        </StudentFeedback>
       ) : data ? (
         <>
           <StudentDashboardMetrics metrics={data.metrics} permissions={permissions} />

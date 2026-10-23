@@ -2,7 +2,8 @@ import type { AdmissionDocumentEvidence } from 'src/redux/student/admissions/adm
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { useDocumentPreview } from './use-document-preview';
 import { DocumentFileControl } from './document-file-control';
@@ -83,7 +84,9 @@ export function DocumentPreviewContent({
             sx={{ flex: 1, height: 1 }}
           />
         ) : preview.status === 'error' || imageFailed ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0316"
+            presentation="toast"
             severity="error"
             action={
               <Button size="small" color="inherit" onClick={retryPreview}>
@@ -92,11 +95,11 @@ export function DocumentPreviewContent({
             }
           >
             Unable to preview this document.
-          </Alert>
+          </StudentFeedback>
         ) : preview.status === 'unsupported' ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0317" presentation="inline" severity="info">
             Preview is unavailable for this format. Download the document to open it.
-          </Alert>
+          </StudentFeedback>
         ) : preview.contentType === 'application/pdf' ? (
           <Box
             component="object"

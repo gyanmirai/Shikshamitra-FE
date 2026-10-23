@@ -1,5 +1,6 @@
 import type { CollectFeeInput } from 'src/redux/feeCollection/feeCollection';
 import type { AssignmentHead } from 'src/redux/finance/studentFeeAssignment';
+import type { FeeProrationResult } from 'src/redux/finance/fee-proration-result';
 
 export type AdmissionCollectionAcademicYear = {
   id: string;
@@ -20,6 +21,7 @@ export type AdmissionCollectionReceipt = {
 };
 
 export type AdmissionFeeCollectionSummary = {
+  proration?: FeeProrationResult | null;
   applicationId: string;
   accountId: string | null;
   studentId: string | null;

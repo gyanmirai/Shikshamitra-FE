@@ -2,14 +2,15 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { Box, Tab } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { Box, Tab, Alert } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { FormSlider } from 'src/components/form-slider';
 import { Iconify } from 'src/components/iconify/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import React, { useMemo, useState, useCallback } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AttendanceNotificationManagement from 'src/screens/student/studentNotification/Components/AttendanceNotification';
@@ -54,7 +55,7 @@ const StudentNotificationScreen = () => {
   const requestedTab = nativeSearchParams.get('tab');
   const activeTab = visibleTabs.some((tab) => tab.value === requestedTab)
     ? requestedTab!
-    : visibleTabs[0]?.value ?? '';
+    : (visibleTabs[0]?.value ?? '');
 
   const setActiveTab = useCallback(
     (tab: string) => {
@@ -137,26 +138,30 @@ const StudentNotificationScreen = () => {
       )}
 
       {visibleTabs.length === 0 && (
-        <Alert severity="info">No notification workspace is available for your current access.</Alert>
+        <StudentFeedback notificationKey="STU-0629" presentation="inline" severity="info">
+          No notification workspace is available for your current access.
+        </StudentFeedback>
       )}
-      {currentIndex >= 0 && <FormSlider
-        steps={visibleTabs}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
-      >
-        <Box sx={{ height: '100%', flex: 1 }}>
-          {ActiveComponent && <ActiveComponent dialog={dialog} setIsViewMode={setIsViewMode} />}
-        </Box>
-      </FormSlider>}
+      {currentIndex >= 0 && (
+        <FormSlider
+          steps={visibleTabs}
+          isBackClick={isBackClick}
+          step={currentIndex}
+          containerProps={{
+            sx: {
+              p: 0,
+              minHeight: 0,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }}
+        >
+          <Box sx={{ height: '100%', flex: 1 }}>
+            {ActiveComponent && <ActiveComponent dialog={dialog} setIsViewMode={setIsViewMode} />}
+          </Box>
+        </FormSlider>
+      )}
     </Box>
   );
 };

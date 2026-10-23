@@ -1,9 +1,10 @@
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { useEffect } from 'react';
-import { Alert, Stack, Button } from '@mui/material';
+import { Stack, Button } from '@mui/material';
 import { EmptyContent } from 'src/components/empty-content';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { AssessmentAttemptCard } from './assessment-attempt-card';
 import { useAssessmentPermissions } from './use-assessment-permissions';
@@ -51,7 +52,11 @@ export function AssessmentAttemptWorkspace({
             {assessment.policy.schedulingEnabled ? 'Book Assessment Slot' : 'Start assessment'}
           </Button>
         )}
-        {quick.error && <Alert severity="error">{quick.error}</Alert>}
+        {quick.error && (
+          <StudentFeedback notificationKey="STU-0244" presentation="persistent" severity="error">
+            {quick.error}
+          </StudentFeedback>
+        )}
         {assessment.attempts.length ? (
           [...assessment.attempts]
             .sort((a, b) => b.attemptNumber - a.attemptNumber)

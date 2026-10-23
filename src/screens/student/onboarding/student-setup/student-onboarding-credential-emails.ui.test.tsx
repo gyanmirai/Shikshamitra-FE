@@ -31,7 +31,13 @@ vi.mock('react-redux', () => ({
     }),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/customDialog', () => ({
@@ -339,9 +345,9 @@ describe('Required document evidence without bypass', () => {
   it('offers retry for a failed requirement read without claiming there are no requirements', () => {
     mocks.documents = { isError: true, refetch: vi.fn() };
     render(<StudentOnboardingDocuments caseId="case-1" enabled canManage />);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Onboarding documents could not be loaded.'
-    );
+    expect(
+      screen.getByText('Onboarding documents could not be loaded.', { exact: false })
+    ).toBeVisible();
     expect(
       screen.queryByText('No onboarding document requirements are configured.')
     ).not.toBeInTheDocument();

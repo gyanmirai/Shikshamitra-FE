@@ -275,7 +275,7 @@ describe('admission cycle close confirmation', () => {
     impactHook.state.data!.admissionCycleId = 'another-cycle';
     renderClose();
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Could not check linked records');
+    expect(screen.getByText('Could not check linked records', { exact: false })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
   });
 

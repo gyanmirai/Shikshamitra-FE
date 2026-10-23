@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Card, Alert, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Card, Stack, Button, Skeleton, IconButton, Typography } from '@mui/material';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -100,19 +101,19 @@ export function ApplicationAssessmentPanel({
           )}
         </Stack>
         {!permissions.view ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0231" presentation="inline" severity="info">
             Assessment access is required to view bookings and results. Contact an admissions
             administrator.
-          </Alert>
+          </StudentFeedback>
         ) : query.isLoading ? (
           <Skeleton variant="rounded" height={140} />
         ) : !assessment ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !assessment.assessmentEnabled || !assessment.policy ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0232" presentation="inline" severity="info">
             Assessment management is not enabled for this stage. Refresh the application to load its
             current workflow.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <>
             {query.isError && <AdmissionQueryError onRetry={query.refetch} />}
@@ -205,10 +206,10 @@ export function ApplicationAssessmentPanel({
               </Stack>
             )}
             {!compact && assessment.canComplete && (
-              <Alert severity="success">
+              <StudentFeedback notificationKey="STU-0234" presentation="inline" severity="success">
                 Assessment requirements are complete. Continue to apply the configured workflow
                 route.
-              </Alert>
+              </StudentFeedback>
             )}
             <Box
               component="section"

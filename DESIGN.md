@@ -310,6 +310,9 @@ An empty state explains what is empty, why that may be expected, and the next av
 A stateful region resolves mutually exclusive states in this order: initial loading, blocking error, empty result, then content.
 A filtered empty state offers a clear-filters action.
 A recoverable error preserves the page context and offers retry.
+In the Student module, API request failures use the existing standard error toast without repeating the error as inline page text or a separate Retry/Reload button row.
+Keep the page context, failed-request guards, existing primary actions and normal reload/navigation behavior; do not turn a failed request into a successful empty state.
+This Student presentation rule does not remove field validation, permission restrictions, configuration problems or business-rule blockers from their owning fields/regions.
 A permission state identifies the unavailable capability without exposing protected data.
 An unavailable external integration distinguishes configuration, temporary outage, and unsupported behavior.
 Do not render a blank card, an endless loader, or a disabled control without an explanation.

@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import StudentSetupAssignmentToolbar from './student-setup-assignment-toolbar';
@@ -59,6 +59,14 @@ it.each(['gr-number', 'roll-number'] as const)(
   }
 );
 
+it('keeps the Auto label and compact size while its direct request is loading', () => {
+  show({ ...props(), view: 'roll-number', busy: true, automaticLoading: true });
+  const automatic = screen.getByRole('button', { name: 'Auto' });
+  expect(automatic).toBeDisabled();
+  expect(automatic).toHaveClass('MuiButton-loading', 'MuiButton-sizeSmall');
+  expect(screen.getByRole('button', { name: 'Manual' })).toBeDisabled();
+});
+
 it('replaces Auto and Manual with Save and Cancel during inline editing', () => {
   const input = { ...props(), manualEditing: true, changedCount: 2 };
   show(input);
@@ -102,6 +110,29 @@ it('keeps a missing Auto prerequisite visible without generic helper paragraphs'
   expect(screen.getByRole('button', { name: 'Auto' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Manual' })).toBeEnabled();
 });
+
+it('omits the routine Roll Auto filter instruction without hiding other blockers', () => {
+  show({
+    ...props(),
+    view: 'roll-number',
+    automaticCount: 0,
+    automaticDisabledReason: 'Select one class and division for Auto.',
+  });
+  expect(screen.queryByText('Select one class and division for Auto.')).not.toBeInTheDocument();
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Auto' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Manual' })).toBeEnabled();
+});
+
+it.each(['gr-number', 'roll-number'] as const)(
+  'uses the shared compact button size for every %s toolbar action',
+  (view) => {
+    show({ ...props(), view });
+    ['All Students', 'Auto', 'Manual'].forEach((name) => {
+      expect(screen.getByRole('button', { name })).toHaveClass('MuiButton-sizeSmall');
+    });
+  }
+);
 
 it('locks selection, scope and editing actions while saving', () => {
   show({ ...props(), manualEditing: true, busy: true, selectedCount: 2, changedCount: 2 });

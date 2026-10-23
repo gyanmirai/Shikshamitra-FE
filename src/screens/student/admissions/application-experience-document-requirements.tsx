@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
 
 const DIMENSIONS = [
@@ -50,9 +51,14 @@ export function ApplicationExperienceDocumentRequirements() {
       </Paper>
 
       {query.isError && (
-        <Alert severity="error" action={<Button onClick={query.refetch}>Retry</Button>}>
+        <StudentFeedback
+          notificationKey="STU-0228"
+          presentation="toast"
+          severity="error"
+          action={<Button onClick={query.refetch}>Retry</Button>}
+        >
           Document workflows could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
 
       {!query.isError && workflows.length === 0 && (
@@ -62,8 +68,8 @@ export function ApplicationExperienceDocumentRequirements() {
             No admission stage workflow yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Create an admission stage workflow, add a Document verification stage, then configure its
-            checklist here.
+            Create an admission stage workflow, add a Document verification stage, then configure
+            its checklist here.
           </Typography>
           <Button
             size="small"

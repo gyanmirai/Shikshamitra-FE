@@ -2,9 +2,9 @@ import type { EligibilityStageKey } from 'src/redux/student/admissions/admission
 
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetEligibilityHistoryQuery } from 'src/redux/student/admissions/admission-eligibility-api';
 import {
-  Alert,
   Stack,
   Paper,
   Skeleton,
@@ -39,7 +39,9 @@ export function EligibilityHistory({
         ) : query.isError ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : previous.length === 0 ? (
-          <Alert severity="info">No earlier checks have been recorded.</Alert>
+          <StudentFeedback notificationKey="STU-0327" presentation="inline" severity="info">
+            No earlier checks have been recorded.
+          </StudentFeedback>
         ) : (
           <Stack spacing={2}>
             {[...previous]

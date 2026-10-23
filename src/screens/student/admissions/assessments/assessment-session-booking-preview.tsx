@@ -2,8 +2,9 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AssessmentScope } from 'src/redux/student/admissions/admission-assessment-types';
 
 import { fDateTime } from 'src/utils/format-time';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Alert, Stack, Button, Checkbox, Typography } from '@mui/material';
+import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 
 import type {
   SessionBookingPreview,
@@ -132,26 +133,31 @@ export function AssessmentSessionBookingPreview({
         </Typography>
       </Stack>
       {preview.requiresRoomApproval && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0271" presentation="persistent" severity="warning">
           This room requires approval. Bookings will be held until the room reservation is approved.
-        </Alert>
+        </StudentFeedback>
       )}
       {preview.warnings.map((warning) => (
-        <Alert key={warning} severity="warning">
+        <StudentFeedback
+          notificationKey="STU-0272"
+          presentation="persistent"
+          key={warning}
+          severity="warning"
+        >
           {warning}
-        </Alert>
+        </StudentFeedback>
       ))}
       {preview.availableCount > 200 && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0273" presentation="inline" severity="info">
           Book up to 200 applicants per confirmation. Remaining applicants can be booked into this
           session in the next batch.
-        </Alert>
+        </StudentFeedback>
       )}
       {selected.length > preview.availableCount && (
-        <Alert severity="error">
+        <StudentFeedback notificationKey="STU-0274" presentation="persistent" severity="error">
           Remove {selected.length - preview.availableCount} applicants to fit the available
           capacity.
-        </Alert>
+        </StudentFeedback>
       )}
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
         <Button
@@ -203,7 +209,9 @@ export function AssessmentSessionBookingPreview({
           }
           errorContent={
             error ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0275"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={onRetry} disabled={disabled}>
@@ -212,7 +220,7 @@ export function AssessmentSessionBookingPreview({
                 }
               >
                 {error}
-              </Alert>
+              </StudentFeedback>
             ) : undefined
           }
         />

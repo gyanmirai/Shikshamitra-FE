@@ -424,7 +424,9 @@ describe('Bulk offering step navigation', () => {
         <BulkAdmissionOfferingDialog open cycle={cycle} onClose={() => undefined} />
       </ThemeProvider>
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Admission cycles could not be loaded.');
+    expect(
+      screen.getByText('Admission cycles could not be loaded.', { exact: false })
+    ).toBeVisible();
     await waitFor(() => expect(mocks.loadCycles).toHaveBeenCalled());
     mocks.loadCycles.mockClear();
     mocks.cyclesQuery.isError = false;

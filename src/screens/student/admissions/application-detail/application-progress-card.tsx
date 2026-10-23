@@ -8,10 +8,10 @@ import type {
 import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   Box,
   Paper,
-  Alert,
   Stack,
   Button,
   Divider,
@@ -108,9 +108,14 @@ export function ApplicationProgressCard({
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2, overscrollBehavior: 'contain' }}>
           {journey}
           {workflow?.status === 1 && (
-            <Alert severity="success" sx={{ mt: 2 }}>
+            <StudentFeedback
+              notificationKey="STU-0203"
+              presentation="inline"
+              severity="success"
+              sx={{ mt: 2 }}
+            >
               Admission workflow completed.
-            </Alert>
+            </StudentFeedback>
           )}
         </Box>
         {overrideAction && (
@@ -181,9 +186,14 @@ export function ApplicationProgressCard({
               {journey}
             </Box>
             {workflow?.status === 1 && (
-              <Alert severity="success" sx={{ mt: 1.5 }}>
+              <StudentFeedback
+                notificationKey="STU-0204"
+                presentation="inline"
+                severity="success"
+                sx={{ mt: 1.5 }}
+              >
                 Admission workflow completed.
-              </Alert>
+              </StudentFeedback>
             )}
             {overrideAction && <Box sx={{ mt: 1.5 }}>{overrideAction}</Box>}
           </AccordionDetails>

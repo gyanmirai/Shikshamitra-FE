@@ -2,8 +2,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { AdmissionQueryError } from 'src/screens/student/admissions/admission-query-error';
-import { Card, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { useGetStudentAdmissionEvidenceQuery } from 'src/redux/student/admissions/student-admission-evidence-api';
 import { useDocumentPermissions } from 'src/screens/student/admissions/document-verification/use-document-permissions';
 
@@ -34,15 +35,17 @@ export function StudentAdmissionEvidencePanel({ studentId }: { studentId?: strin
           student.
         </Typography>
         {!canView ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0751" presentation="inline" severity="info">
             Student record and admission document access are required to view this evidence.
-          </Alert>
+          </StudentFeedback>
         ) : query.isLoading ? (
           <Skeleton variant="rounded" height={120} />
         ) : query.isError || !query.currentData ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : query.currentData.length === 0 ? (
-          <Alert severity="info">No admission evidence is linked to this student.</Alert>
+          <StudentFeedback notificationKey="STU-0752" presentation="inline" severity="info">
+            No admission evidence is linked to this student.
+          </StudentFeedback>
         ) : (
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing admission evidence" />}

@@ -21,13 +21,13 @@ import { LoadingButton } from 'src/components/loading-button';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import {
   Box,
-  Alert,
   Stack,
   Drawer,
   Button,
@@ -410,7 +410,9 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
           >
             <Stack ref={fieldsRef} spacing={2} sx={{ p: 2 }}>
               {(cyclesQuery.isError || offeringsQuery.isError) && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0054"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button
@@ -424,7 +426,7 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   }
                 >
                   Admission choices could not be loaded. Retry before selecting an offering.
-                </Alert>
+                </StudentFeedback>
               )}
               <FormSectionCard
                 icon="mdi:school-outline"
@@ -546,12 +548,16 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   />
                 </ShakingTextField>
                 {capacity && (
-                  <Alert severity={capacity.isFull ? 'warning' : 'info'}>
+                  <StudentFeedback
+                    notificationKey="STU-0055"
+                    presentation={capacity.isFull ? 'persistent' : 'inline'}
+                    severity={capacity.isFull ? 'warning' : 'info'}
+                  >
                     {capacity.capacity == null
                       ? 'Admission room capacity is not set. Division seats are checked during onboarding.'
                       : `${capacity.remainingSeats} of ${capacity.capacity} admission room seats available.`}
                     {capacity.isFull && ' Admission room capacity is full; you can still register.'}
-                  </Alert>
+                  </StudentFeedback>
                 )}
               </FormSectionCard>
               <FormSectionCard
@@ -659,11 +665,15 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   {familyLookup.isFetching ? 'Checking families…' : 'Check existing families'}
                 </Button>
                 {familyMatches && (
-                  <Alert severity={familyMatches.length ? 'warning' : 'success'}>
+                  <StudentFeedback
+                    notificationKey="STU-0056"
+                    presentation={familyMatches.length ? 'persistent' : 'inline'}
+                    severity={familyMatches.length ? 'warning' : 'success'}
+                  >
                     {familyMatches.length
                       ? 'Existing family found. Link it or explain why this is a separate family.'
                       : 'No family is available to link in your scope. You can continue with a new family.'}
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {familyMatches?.map((family) => (
                   <Button
@@ -684,10 +694,10 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   </Button>
                 ))}
                 {formik.values.existingFamilyId && (
-                  <Alert severity="info">
+                  <StudentFeedback notificationKey="STU-0057" presentation="inline" severity="info">
                     The selected family’s saved primary guardian details will be reused. This
                     registration will not overwrite that guardian record.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {Boolean(familyMatches?.length) && (
                   <Button
@@ -707,9 +717,15 @@ function DirectRegistrationDrawer({ academicYearId, onClose }: Omit<Props, 'open
                   field('separateFamilyReason', 'Reason for separate family', true)}
               </FormSectionCard>
               {requestError && (
-                <Alert ref={requestErrorRef} tabIndex={-1} severity="error">
+                <StudentFeedback
+                  notificationKey="STU-0058"
+                  presentation="persistent"
+                  ref={requestErrorRef}
+                  tabIndex={-1}
+                  severity="error"
+                >
                   {requestError}
-                </Alert>
+                </StudentFeedback>
               )}
             </Stack>
           </FormBusyRegion>

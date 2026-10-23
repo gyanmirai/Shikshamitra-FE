@@ -57,7 +57,9 @@ describe('ApplicationEndJourneyDialog', () => {
       '  Parent chose another school  '
     );
     await user.click(screen.getByRole('button', { name: 'End Journey' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The journey could not be ended');
+    expect(
+      await screen.findByText('The journey could not be ended', { exact: false })
+    ).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveValue(
       '  Parent chose another school  '
     );

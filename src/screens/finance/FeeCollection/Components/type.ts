@@ -184,6 +184,8 @@ export interface MonthWiseFeeItem {
   prorationPolicyName?: string | null;
   prorationPolicyVersionNumber?: number | null;
   prorationExplanation?: string | null;
+  withdrawalProrationCredit?: number;
+  withdrawalProrationExplanation?: string | null;
   paid: number;
   due: number;
   collectionAmount?: number;
@@ -218,6 +220,8 @@ export interface FeeHeadWiseFeeItem {
   prorationPolicyName?: string | null;
   prorationPolicyVersionNumber?: number | null;
   prorationExplanation?: string | null;
+  withdrawalProrationCredit?: number;
+  withdrawalProrationExplanation?: string | null;
   paid: number;
   due: number;
   collectionAmount?: number;

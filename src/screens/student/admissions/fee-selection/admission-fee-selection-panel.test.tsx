@@ -34,7 +34,15 @@ vi.mock('react-redux', () => ({
   useSelector: () => permissions,
   useDispatch: () => mocks.dispatch,
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('./admission-fee-collection-panel', () => ({
   default: ({
     disabled,
@@ -99,6 +107,14 @@ const base: AdmissionFeeSelection = {
   isRequired: false,
   isLocked: false,
   hasRecordedFeePayment: false,
+  paymentCompletion: {
+    paymentRule: 'partial',
+    allowCollectionLater: true,
+    canComplete: false,
+    canDeferCollection: true,
+    status: 'collectionPending',
+    blocker: null,
+  },
   canEdit: true,
   canConfirmOnboarding: false,
   onboardingConfirmed: false,
@@ -108,6 +124,14 @@ const base: AdmissionFeeSelection = {
 const selected: AdmissionFeeSelection = {
   ...base,
   hasRecordedFeePayment: true,
+  paymentCompletion: {
+    paymentRule: 'partial',
+    allowCollectionLater: true,
+    canComplete: true,
+    canDeferCollection: true,
+    status: 'partiallyPaid',
+    blocker: null,
+  },
   selection: {
     ...candidate,
     heads: [candidate.heads[0]],
@@ -205,6 +229,84 @@ describe('AdmissionFeeSelectionPanel', () => {
       api.util.invalidateTags([{ type: financeModuleType.feeCollection, id: 'application-1' }])
     );
   });
+  it('uses a section skeleton during selection refresh and restores cached selection on failure with retry', () => {
+    setRead(selected, { isFetching: true });
+    const view = renderPanel({ compact: true });
+    expect(screen.getByRole('status', { name: 'Refreshing fee structure' })).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Class one fees · Revision 2')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Test collection dialog' })).toBeDisabled();
+    setRead(selected, { isError: true });
+    view.rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionFeeSelectionPanel applicationId="application-1" compact />
+      </ThemeProvider>
+    );
+    expect(
+      screen.queryByRole('status', { name: 'Refreshing fee structure' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Class one fees · Revision 2')).toBeVisible();
+    expect(screen.getByText(/Fee structure details could not be refreshed/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Change fee structure' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetch).toHaveBeenCalledOnce();
+  });
+
+  it('preserves optional-head drafts while candidate and parent selection queries refresh', async () => {
+    setRead(selected);
+    const view = renderPanel({ compact: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Change fee structure' }));
+    const structureSelect = screen.getByRole('combobox', { name: 'Fee structure *' });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Optional fee heads' }));
+    fireEvent.click(screen.getByRole('option', { name: /Transport/ }));
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    mocks.candidates.mockReturnValue({
+      currentData: [candidate],
+      isLoading: false,
+      isFetching: true,
+      isError: false,
+      refetch: mocks.refetch,
+    });
+    setRead(selected, { isFetching: true });
+    const rerender = () =>
+      view.rerender(
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <AdmissionFeeSelectionPanel applicationId="application-1" compact />
+        </ThemeProvider>
+      );
+    rerender();
+    expect(screen.getByRole('status', { name: 'Loading published fee structures' })).toBeVisible();
+    expect(
+      screen.queryByRole('status', { name: 'Refreshing fee structure' })
+    ).not.toBeInTheDocument();
+    expect(structureSelect).not.toBeVisible();
+    expect(screen.getByRole('button', { name: 'Confirm fee structure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    mocks.candidates.mockReturnValue({
+      currentData: [candidate],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: mocks.refetch,
+    });
+    setRead(selected);
+    rerender();
+    expect(screen.getByRole('combobox', { name: 'Fee structure *' })).toBe(structureSelect);
+    expect(screen.getByRole('combobox', { name: 'Optional fee heads' })).toHaveTextContent(
+      'Transport'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm fee structure' }));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith({
+        applicationId: 'application-1',
+        concurrencyStamp: 'stamp-1',
+        structureId: 'structure-1',
+        optionalHeadIds: ['bus'],
+      })
+    );
+  });
   it('does not refresh collection data when collection access is unavailable', () => {
     permissions = [{ name: 'Students.Admissions.Applications.View', isGranted: true }];
     setRead(selected);
@@ -264,7 +366,10 @@ describe('AdmissionFeeSelectionPanel', () => {
     });
   });
 
-  it.each([base, { ...selected, hasRecordedFeePayment: false }])(
+  it.each([
+    base,
+    { ...selected, hasRecordedFeePayment: false, paymentCompletion: base.paymentCompletion },
+  ])(
     'allows reason-based deferral without collection and keeps ordinary continuation disabled',
     (unpaid) => {
       setRead(unpaid);
@@ -691,6 +796,55 @@ describe('Payment fee structure confirmation', () => {
     setRead({ ...selected, currentStageId: 'documents' });
     renderPanel({ canContinue: true, completionStageId: 'payment', onContinue: vi.fn() });
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+  });
+  it('honors Full payment and disabled deferral despite historical payment evidence', () => {
+    setRead({
+      ...selected,
+      paymentCompletion: {
+        paymentRule: 'full',
+        allowCollectionLater: false,
+        canComplete: false,
+        canDeferCollection: false,
+        status: 'partiallyPaid',
+        blocker:
+          'Clear the entire selected Finance fee structure, including future installments, before continuing.',
+      },
+    });
+    renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Clear the entire selected Finance fee structure, including future installments, before continuing.'
+      )
+    ).toBeVisible();
+  });
+  it('allows verified zero-payable clearance without inventing a payment flag', () => {
+    setRead({
+      ...selected,
+      hasRecordedFeePayment: false,
+      paymentCompletion: {
+        paymentRule: 'full',
+        allowCollectionLater: false,
+        canComplete: true,
+        canDeferCollection: false,
+        status: 'financeCleared',
+        blocker: null,
+      },
+    });
+    renderPanel({ canContinue: true, onContinue: vi.fn() });
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
+    expect(screen.getByText(/Finance confirms no outstanding amount/)).toBeVisible();
+  });
+  it('fails closed when the backend has not returned a completion decision', () => {
+    setRead({ ...selected, paymentCompletion: undefined });
+    renderPanel({ canContinue: true, onContinue: vi.fn(), onCollectLater: vi.fn() });
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Collect later in Onboarding' })
+    ).not.toBeInTheDocument();
   });
 });
 

@@ -5,8 +5,9 @@ import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
 import { useEffect } from 'react';
+import { Grid, Paper, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Grid, Paper, Alert, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import {
   readAcademicFilterIds,
@@ -130,22 +131,26 @@ export function AdmissionOfferingFilters({ cycle, values, onChange, filterAction
         </Grid>
         {hierarchyQuery.isError && (
           <Grid size={12}>
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0126"
+              presentation="toast"
               severity="error"
               action={<Button onClick={() => hierarchyQuery.refetch()}>Retry</Button>}
             >
               Could not load Board and Medium options.
-            </Alert>
+            </StudentFeedback>
           </Grid>
         )}
         {standardsQuery.isError && values.mediumId && (
           <Grid size={12}>
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0127"
+              presentation="toast"
               severity="error"
               action={<Button onClick={() => standardsQuery.refetch()}>Retry</Button>}
             >
               Could not load Class options.
-            </Alert>
+            </StudentFeedback>
           </Grid>
         )}
       </Grid>

@@ -22,6 +22,7 @@ export default function StudentSetupAssignmentToolbar({
   busy,
   unavailable = false,
   automaticCount,
+  automaticLoading = false,
   manualCount,
   manualEditing,
   changedCount,
@@ -48,6 +49,7 @@ export default function StudentSetupAssignmentToolbar({
   busy: boolean;
   unavailable?: boolean;
   automaticCount: number;
+  automaticLoading?: boolean;
   manualCount: number;
   manualEditing: boolean;
   changedCount: number;
@@ -63,6 +65,10 @@ export default function StudentSetupAssignmentToolbar({
   onReasonBlur: () => void;
 }) {
   const assignments = view === 'division' || view === 'gr-number' || view === 'roll-number';
+  const automaticHelp =
+    automaticDisabledReason === 'Select one class and division for Auto.'
+      ? undefined
+      : automaticDisabledReason;
   return (
     <Paper variant="outlined" sx={{ p: 1, minWidth: 0, flexShrink: 0 }}>
       <Stack spacing={1}>
@@ -94,7 +100,7 @@ export default function StudentSetupAssignmentToolbar({
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={<Iconify icon="mdi:account-switch-outline" />}
+                startIcon={<Iconify icon="mdi:account-switch-outline" width={18} />}
                 onClick={() => onScopeChange(scope === 'all' ? 'pending' : 'all')}
                 disabled={busy}
               >
@@ -106,7 +112,7 @@ export default function StudentSetupAssignmentToolbar({
                     <Button
                       size="small"
                       variant="contained"
-                      startIcon={<Iconify icon="mdi:content-save-outline" />}
+                      startIcon={<Iconify icon="mdi:content-save-outline" width={18} />}
                       onClick={onSave}
                       loading={busy}
                       disabled={unavailable || !changedCount}
@@ -118,20 +124,21 @@ export default function StudentSetupAssignmentToolbar({
                       variant="outlined"
                       onClick={onCancel}
                       disabled={busy}
-                      startIcon={<Iconify icon="mdi:close" />}
+                      startIcon={<Iconify icon="mdi:close" width={18} />}
                     >
                       Cancel Editing
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Tooltip title={automaticDisabledReason || ''}>
+                    <Tooltip title={automaticHelp || ''}>
                       <Box component="span" sx={{ display: 'inline-flex' }}>
                         <Button
                           size="small"
                           variant="contained"
-                          startIcon={<Iconify icon="mdi:auto-fix" />}
+                          startIcon={<Iconify icon="mdi:auto-fix" width={18} />}
                           onClick={onAuto}
+                          loading={automaticLoading}
                           disabled={busy || unavailable || !automaticCount}
                         >
                           Auto
@@ -141,7 +148,7 @@ export default function StudentSetupAssignmentToolbar({
                     <Button
                       size="small"
                       variant="outlined"
-                      startIcon={<Iconify icon="mdi:pencil-outline" />}
+                      startIcon={<Iconify icon="mdi:pencil-outline" width={18} />}
                       onClick={onManual}
                       disabled={busy || unavailable || !manualCount}
                     >
@@ -169,9 +176,9 @@ export default function StudentSetupAssignmentToolbar({
             </Button>
           </Stack>
         )}
-        {!manualEditing && automaticDisabledReason && !busy && !unavailable && (
+        {!manualEditing && automaticHelp && !busy && !unavailable && (
           <Typography variant="caption" color="text.secondary" role="status">
-            {automaticDisabledReason}
+            {automaticHelp}
           </Typography>
         )}
         {manualEditing && needsReason && (

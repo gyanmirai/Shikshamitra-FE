@@ -1,8 +1,9 @@
 import type { FormikProps } from 'formik';
 import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/admission-assessment-types';
 
-import { Alert, Stack, TextField } from '@mui/material';
+import { Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { AssessmentBookingField } from './assessment-booking-field';
@@ -51,9 +52,9 @@ export function AssessmentActionFields({
             disabled={isSubmitting}
           />
         ) : (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0239" presentation="inline" severity="info">
             Start a new assessment attempt. This stage does not require a scheduled session.
-          </Alert>
+          </StudentFeedback>
         ))}
       {action === 'attendance' && (
         <CustomSelect
@@ -69,9 +70,9 @@ export function AssessmentActionFields({
       )}
       {action === 'result' &&
         (assessment.policy.scoringMode === 'subjects' && !profile ? (
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0240" presentation="persistent" severity="warning">
             The class assessment profile is unavailable. Refresh before recording results.
-          </Alert>
+          </StudentFeedback>
         ) : profile ? (
           <AssessmentSubjectScoreFields
             profile={profile}
@@ -120,21 +121,21 @@ export function AssessmentActionFields({
           />
         ))}
       {action === 'retake' && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0241" presentation="inline" severity="info">
           Allow another attempt within the configured limit of {assessment.policy.maxAttempts}. Book
           the next attempt after saving.
-        </Alert>
+        </StudentFeedback>
       )}
       {action === 'cancel' && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0242" presentation="inline" severity="warning">
           Cancel this attempt and release its session place. A new booking can then be made if the
           stage allows it.
-        </Alert>
+        </StudentFeedback>
       )}
       {action === 'waive' && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0243" presentation="inline" severity="warning">
           This records an assessment waiver. Enter the reason for the admission audit history.
-        </Alert>
+        </StudentFeedback>
       )}
       {action !== 'book' && (
         <TextField

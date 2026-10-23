@@ -231,7 +231,7 @@ it.each([
     await userEvent.click(screen.getByRole('button', { name: 'Preview booking' }));
     await screen.findByText('30 selected');
     await userEvent.click(screen.getByRole('button', { name: action }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Candidate lookup unavailable');
+    expect(await screen.findByText('Candidate lookup unavailable', { exact: false })).toBeVisible();
     expect(screen.getByText('0 preview rows')).toBeInTheDocument();
     expect(screen.getByText('30 selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();

@@ -1,6 +1,7 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { Alert, Stack, Button, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, TextField, Typography } from '@mui/material';
 
 import { formatAdmissionReference } from './admission-reference';
 import { canLinkAdmissionInquiryFamily } from './admission-inquiry-model';
@@ -32,7 +33,9 @@ export function AdmissionInquiryDuplicateMatches({
       {matches.map((match) => {
         const canLink = canLinkAdmissionInquiryFamily(match, guardianPhone);
         return (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0071"
+            presentation="persistent"
             key={`${match.familyId}-${match.applicantId}`}
             severity="warning"
             action={
@@ -67,7 +70,7 @@ export function AdmissionInquiryDuplicateMatches({
                   : 'Guardian mobile does not match. Verify the number before adding a sibling.'}
               </Typography>
             )}
-          </Alert>
+          </StudentFeedback>
         );
       })}
       <TextField

@@ -6,7 +6,8 @@ import type {
 
 import { useMemo } from 'react';
 import { useResponsive } from 'src/hooks/use-responsive';
-import { Stack, Alert, Button, Typography } from '@mui/material';
+import { Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { directoryStudentName, buildDirectoryColumns } from './student-directory-columns';
@@ -81,9 +82,13 @@ export default function StudentDirectoryTable({
       isLoading={academicYearReady && (query.isLoading || (query.isFetching && !query.currentData))}
       errorContent={
         !academicYearReady ? (
-          <Alert severity="info">Select an academic year to view students.</Alert>
+          <StudentFeedback notificationKey="STU-0851" presentation="inline" severity="info">
+            Select an academic year to view students.
+          </StudentFeedback>
         ) : query.isError ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0852"
+            presentation="persistent"
             severity={accessDenied ? 'warning' : 'error'}
             action={
               !accessDenied ? (
@@ -96,7 +101,7 @@ export default function StudentDirectoryTable({
             {accessDenied
               ? 'You do not have access to these student records.'
               : 'Student records could not be loaded. Your filters have been kept.'}
-          </Alert>
+          </StudentFeedback>
         ) : undefined
       }
       isFilter={false}

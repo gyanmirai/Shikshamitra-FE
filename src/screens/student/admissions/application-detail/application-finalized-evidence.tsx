@@ -2,7 +2,8 @@ import type { AdmissionApplicationWorkflow } from 'src/redux/student/admissions/
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Paper, Stack, Alert, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionFeeSelectionQuery } from 'src/redux/student/admissions/admission-fee-selection-api';
 
 import { getStageStatusColor, getStageStatusLabel } from './application-progress-model';
@@ -57,7 +58,9 @@ export function ApplicationFinalizedEvidence({
           {feeQuery.isLoading || (feeQuery.isFetching && !fee) ? (
             <Skeleton height={32} />
           ) : feeQuery.isError || !fee ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0197"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={() => feeQuery.refetch()}>
@@ -66,7 +69,7 @@ export function ApplicationFinalizedEvidence({
               }
             >
               Fee confirmation could not be loaded.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <>
               <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>

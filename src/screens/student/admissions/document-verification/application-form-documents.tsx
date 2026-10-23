@@ -1,6 +1,7 @@
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { ApplicationDocumentsPanel } from './application-documents-panel';
 
@@ -25,10 +26,10 @@ export function ApplicationFormDocuments({
         stage.
       </Typography>
       {unsaved && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0305" presentation="persistent" severity="info">
           Save your form answers before uploading documents so the checklist uses your latest
           information.
-        </Alert>
+        </StudentFeedback>
       )}
       {collecting.map((stage) => (
         <ApplicationDocumentsPanel

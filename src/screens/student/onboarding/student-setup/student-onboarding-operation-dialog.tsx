@@ -9,9 +9,10 @@ import { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useAssignStudentOnboardingGrMutation,
   useAssignStudentOnboardingRollMutation,
@@ -197,16 +198,20 @@ export default function StudentOnboardingOperationDialog({
           <Typography variant="subtitle2">
             {student?.studentName} · {student?.standardName} / {student?.divisionName}
           </Typography>
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <StudentFeedback notificationKey="STU-1002" presentation="persistent" severity="error">
+              {failure}
+            </StudentFeedback>
+          )}
           {!canManage && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-1003" presentation="inline" severity="info">
               Your role can view this task. Assignment requires onboarding permission.
-            </Alert>
+            </StudentFeedback>
           )}
           {locked && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-1004" presentation="inline" severity="info">
               This number is locked. An administrator must unlock it before a correction.
-            </Alert>
+            </StudentFeedback>
           )}
           {isPlacement ? (
             <>
@@ -227,13 +232,19 @@ export default function StudentOnboardingOperationDialog({
                 disabled={busy || !canManage || placement.isFetching || placement.isError}
               />
               {placement.isError ? (
-                <Alert severity="error">
+                <StudentFeedback
+                  notificationKey="STU-1005"
+                  presentation="toast"
+                  severity="error"
+                >
                   Division capacity could not be loaded. Close and retry.
-                </Alert>
+                </StudentFeedback>
               ) : (
                 !placement.isFetching &&
                 !placement.data?.length && (
-                  <Alert severity="info">No divisions are available.</Alert>
+                  <StudentFeedback notificationKey="STU-1006" presentation="inline" severity="info">
+                    No divisions are available.
+                  </StudentFeedback>
                 )
               )}
             </>
@@ -255,11 +266,19 @@ export default function StudentOnboardingOperationDialog({
                 helperText={form.touched.numberSeriesId ? form.errors.numberSeriesId : undefined}
               />
               {series.isError ? (
-                <Alert severity="error">GR series could not be loaded. Close and retry.</Alert>
+                <StudentFeedback
+                  notificationKey="STU-1007"
+                  presentation="toast"
+                  severity="error"
+                >
+                  GR series could not be loaded. Close and retry.
+                </StudentFeedback>
               ) : (
                 !series.isFetching &&
                 !series.data?.length && (
-                  <Alert severity="info">No published GR series matches this student.</Alert>
+                  <StudentFeedback notificationKey="STU-1008" presentation="inline" severity="info">
+                    No published GR series matches this student.
+                  </StudentFeedback>
                 )
               )}
               {student?.grManualEntryAllowed && !(student.grNumberLocked && !student.grNo) && (
@@ -278,7 +297,9 @@ export default function StudentOnboardingOperationDialog({
           ) : (
             <>
               {!student?.divisionId && (
-                <Alert severity="info">Assign a Division before preparing a Roll number.</Alert>
+                <StudentFeedback notificationKey="STU-1009" presentation="inline" severity="info">
+                  Assign a Division before preparing a Roll number.
+                </StudentFeedback>
               )}
               {mode === 'both' && (
                 <CustomSelect
@@ -348,9 +369,9 @@ export default function StudentOnboardingOperationDialog({
                 Preview Roll number
               </Button>
               {currentPreview && (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-1010" presentation="inline" severity="info">
                   Proposed Roll number: {currentPreview.proposedRollNumber}
-                </Alert>
+                </StudentFeedback>
               )}
             </>
           )}

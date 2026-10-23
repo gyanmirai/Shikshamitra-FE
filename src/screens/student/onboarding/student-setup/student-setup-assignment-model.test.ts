@@ -9,6 +9,7 @@ import { mapOnboardingCaseToItem } from './student-onboarding-model';
 import {
   runStudentSetupAssignment,
   getStudentSetupAssignmentValue,
+  getStudentSetupRollAutoTargets,
   type StudentSetupAssignmentType,
   type StudentSetupAssignmentItem,
   studentSetupAssignmentNeedsReason,
@@ -91,6 +92,26 @@ const makeServices = (current = makeCase()) => ({
 });
 
 describe('Student Setup assignment orchestration', () => {
+  it('includes linked completed cases in page Roll Auto without bypassing server enrollment checks', () => {
+    const scope = { standardId: 'class-1', divisionId: 'division-a' };
+    const pending = mapOnboardingCaseToItem(makeCase());
+    const active = mapOnboardingCaseToItem(
+      makeCase({ id: 'active', status: 4, studentEnrollmentId: 'enrollment-1' })
+    );
+    const candidates = [
+      pending,
+      active,
+      { ...pending, id: 'numbered', rollNo: 1 },
+      { ...pending, id: 'other', divisionId: 'division-b' },
+      mapOnboardingCaseToItem(makeCase({ id: 'cancelled', status: 5 })),
+      mapOnboardingCaseToItem(makeCase({ id: 'provisioning', status: 6 })),
+      mapOnboardingCaseToItem(makeCase({ id: 'unlinked-completed', status: 4 })),
+    ];
+    expect(getStudentSetupRollAutoTargets(candidates, scope).map((item) => item.id)).toEqual([
+      pending.id,
+      active.id,
+    ]);
+  });
   it('runs GR assignments and result callbacks sequentially using each fresh stamp and no manual fields', async () => {
     const events: string[] = [];
     const cases = [makeCase(), makeCase({ id: 'case-2', concurrencyStamp: 'fresh-2' })];

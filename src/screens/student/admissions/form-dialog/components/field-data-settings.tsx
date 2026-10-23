@@ -1,9 +1,9 @@
 import Stack from '@mui/material/Stack';
-import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
@@ -134,7 +134,9 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
             />
           )}
           {isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0360"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" onClick={() => refetch()}>
@@ -143,7 +145,7 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
               }
             >
               Could not load student record fields.
-            </Alert>
+            </StudentFeedback>
           )}
         </>
       )}

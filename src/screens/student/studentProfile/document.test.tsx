@@ -46,7 +46,13 @@ vi.mock('@mui/icons-material', () => {
   );
 });
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 const studentId = 'ad400001-0000-4000-8000-000000000001';
@@ -190,7 +196,9 @@ describe('Student profile documents', { timeout: 15000 }, () => {
       })
     );
     showDocuments([]);
-    expect(screen.getByRole('alert')).toHaveTextContent('Student document access is unavailable.');
+    expect(
+      screen.getByText('Student document access is unavailable.', { exact: false })
+    ).toBeVisible();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     await waitFor(() => expect(reads).toBe(0));
   });

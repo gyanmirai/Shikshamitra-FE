@@ -26,6 +26,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { editorClasses } from 'src/components/editor/classes';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -50,7 +51,6 @@ import {
   Chip,
   Grid,
   Card,
-  Alert,
   Stack,
   Button,
   Divider,
@@ -174,6 +174,7 @@ const LeaveAndAbsentScreen = ({
     currentQueryAndMutation: useGetStudentLeaveQuery,
     params: { ...query, ...scope },
     options: { skip: skipLeaveQueries },
+    popupConfig: { error: false },
   });
   const countQuery = {
     ...scope,
@@ -442,15 +443,20 @@ const LeaveAndAbsentScreen = ({
         </Box>
       </Card>
       {canWrite && requiresMediumSelection && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0624" presentation="inline" severity="info">
           Select a medium in the filters to add or edit leave requests. You can still review,
           approve, or reject requests across all mediums.
-        </Alert>
+        </StudentFeedback>
       )}
       {isError && (
-        <Alert severity="error" action={<Button onClick={refetch}>Retry</Button>}>
+        <StudentFeedback
+          notificationKey="STU-0625"
+          presentation="toast"
+          severity="error"
+          action={<Button onClick={refetch}>Retry</Button>}
+        >
           Leave requests could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <CustomizableTable
         tableTitle="Leave requests"

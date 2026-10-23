@@ -10,12 +10,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
-  Alert,
   Stack,
   Button,
   MenuItem,
@@ -323,7 +323,11 @@ export function InquiryOverviewForm({
           label={readingPhoto ? 'Reading photo…' : 'Saving inquiry…'}
         >
           <Stack spacing={1}>
-            {readOnly && <Alert severity="info">This historical inquiry is read-only.</Alert>}
+            {readOnly && (
+              <StudentFeedback notificationKey="STU-0420" presentation="inline" severity="info">
+                This historical inquiry is read-only.
+              </StudentFeedback>
+            )}
             {!readOnly && (
               <SectionCard title={title}>
                 <Grid size={{ xs: 12 }}>
@@ -414,23 +418,38 @@ export function InquiryOverviewForm({
             )}
             {(loading || choicesLoading) && <LinearProgress aria-label="Loading inquiry form" />}
             {(loadError || choicesError) && (
-              <Alert severity="error" action={<Button onClick={retry}>Retry</Button>}>
+              <StudentFeedback
+                notificationKey="STU-0421"
+                presentation="toast"
+                severity="error"
+                action={<Button onClick={retry}>Retry</Button>}
+              >
                 Inquiry form or academic choices could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {offeringChanged &&
               formik.values.standardId &&
               !choicesLoading &&
               matching.length === 0 && (
-                <Alert severity="warning">Selected class has no admission open.</Alert>
+                <StudentFeedback
+                  notificationKey="STU-0422"
+                  presentation="persistent"
+                  severity="warning"
+                >
+                  Selected class has no admission open.
+                </StudentFeedback>
               )}
             {offeringChanged &&
               runtime.currentData &&
               !runtime.currentData.availability.canCreateInquiry && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-0423"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   {runtime.currentData.availability.reasonMessage ||
                     'Admission is not open for the selected class.'}
-                </Alert>
+                </StudentFeedback>
               )}
             {form && (
               <Typography variant="body2" color="text.secondary">
@@ -438,10 +457,14 @@ export function InquiryOverviewForm({
               </Typography>
             )}
             {!formId && !loading && (
-              <Alert severity="warning">
+              <StudentFeedback
+                notificationKey="STU-0424"
+                presentation="persistent"
+                severity="warning"
+              >
                 The original attached inquiry form is unavailable. Select an open admission offering
                 to resolve this historical inquiry.
-              </Alert>
+              </StudentFeedback>
             )}
             {form && !loading && !loadError && supportedLanguages.length > 1 && (
               <Stack direction="row" justifyContent="flex-end">
@@ -549,9 +572,15 @@ export function InquiryOverviewForm({
                 />
               </Grid>
             </SectionCard>
-            {requestError && <Alert severity="error">{requestError}</Alert>}
+            {requestError && (
+              <StudentFeedback notificationKey="STU-0425" presentation="inline" severity="error">
+                {requestError}
+              </StudentFeedback>
+            )}
             {formik.submitCount > 0 && formik.errors.offeringId && (
-              <Alert severity="error">{formik.errors.offeringId}</Alert>
+              <StudentFeedback notificationKey="STU-0426" presentation="inline" severity="error">
+                {formik.errors.offeringId}
+              </StudentFeedback>
             )}
           </Stack>
         </FormBusyRegion>

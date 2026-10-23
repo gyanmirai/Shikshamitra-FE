@@ -5,8 +5,9 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Stack, TextField, Typography } from '@mui/material';
 import { LoadingButton } from 'src/components/loading-button';
-import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUpdateAdmissionInquiryMutation } from 'src/redux/student/admissions/admission-inquiries-api';
 
@@ -110,11 +111,11 @@ export function InquiryQualificationForm({
         slotProps={{ htmlInput: { maxLength: 1024 } }}
       />
       {formik.values.status === 2 && originalStatus !== 2 && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0429" presentation="inline" severity="info">
           Confirm the family wants to continue. A qualification email is queued on the first
           Interested transition when a valid contact email is available. Move to next stage
           separately when ready.
-        </Alert>
+        </StudentFeedback>
       )}
       <LoadingButton
         size="small"

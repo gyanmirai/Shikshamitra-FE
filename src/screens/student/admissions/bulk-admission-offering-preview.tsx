@@ -8,9 +8,10 @@ import type {
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Alert, Stack, Button, Typography } from '@mui/material';
 
 import { admissionTrackLabels, admissionEntryModeLabels } from './admission-offering-model';
 import {
@@ -155,9 +156,9 @@ export function BulkAdmissionOfferingPreview({
       titleTypographyProps={{ sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 } }}
     >
       {!items.length ? (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0302" presentation="inline" severity="warning">
           No offerings to preview. Go Back and select at least one class.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <>
           <Stack

@@ -10,7 +10,6 @@ import React, { useRef, useMemo, useState, useEffect, useContext, useCallback } 
 import {
   Box,
   Card,
-  Alert,
   Paper,
   Table,
   Button,
@@ -32,6 +31,7 @@ import { TableExportContext } from './export-context';
 import { TableHeader } from './components/TableHeader';
 import { FilterChips } from './components/FilterChips';
 import { TableToolbar } from './components/TableToolbar';
+import { StudentScopedFeedback } from '../student-feedback';
 import { useStickyColumns } from './hooks/useStickyColumns';
 import { ColumnFilterMenu } from './components/ColumnFilterMenu';
 import {
@@ -121,7 +121,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () =>
       customErrorContent ||
       (queryError ? (
-        <Alert
+        <StudentScopedFeedback
+          notificationKey={`student-table:${tableId}:load`}
+          presentation="persistent"
           severity="error"
           action={
             onRetry ? (
@@ -132,9 +134,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           }
         >
           {parseApiProblemDetail(queryError).detail || 'The table could not be loaded.'}
-        </Alert>
+        </StudentScopedFeedback>
       ) : undefined),
-    [customErrorContent, queryError, onRetry]
+    [customErrorContent, queryError, onRetry, tableId]
   );
   const incompleteExport = exportScope === 'all' && serverSidePagination && !onExport;
   const canUseColumnFilters = !serverSidePagination || Boolean(onServerFilter || onFiltersChange);
@@ -541,9 +543,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             />
           )}
           {exportError && (
-            <Alert severity="error" onClose={() => setExportError('')}>
+            <StudentScopedFeedback
+              notificationKey={`student-table:${tableId}:export`}
+              presentation="inline"
+              severity="error"
+              onClose={() => setExportError('')}
+            >
               {exportError}
-            </Alert>
+            </StudentScopedFeedback>
           )}
 
           <FilterChips

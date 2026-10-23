@@ -12,8 +12,9 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { BulkAdmissionOfferingPreview } from './bulk-admission-offering-preview';
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
-const themed = (ui: ReactElement) =>
-  <ThemeProvider theme={createTheme(defaultSettings)}>{ui}</ThemeProvider>;
+const themed = (ui: ReactElement) => (
+  <ThemeProvider theme={createTheme(defaultSettings)}>{ui}</ThemeProvider>
+);
 const render = (ui: ReactElement) => renderWithProviders(themed(ui));
 
 const item = {
@@ -119,7 +120,9 @@ describe('Bulk offering preview', () => {
 
   it('explains missing preview and provides a correction path', () => {
     renderPreview(null, false);
-    expect(screen.getByRole('alert')).toHaveTextContent('Go Back and select at least one class');
+    expect(
+      screen.getByText('Go Back and select at least one class', { exact: false })
+    ).toBeVisible();
   });
 
   it('does not show raw class IDs or a false readiness message for an invalid response', () => {
@@ -190,11 +193,13 @@ describe('Bulk offering preview', () => {
 
   it('keeps the whole batch visible in a compact review table without pagination or utilities', () => {
     renderPreview(
-      preview(Array.from({ length: 15 }, (_, index) => ({
-        ...item,
-        standardId: `class-${index + 1}`,
-        code: `ADM-CLASS-${index + 1}`,
-      })))
+      preview(
+        Array.from({ length: 15 }, (_, index) => ({
+          ...item,
+          standardId: `class-${index + 1}`,
+          code: `ADM-CLASS-${index + 1}`,
+        }))
+      )
     );
     const table = screen.getByRole('table', { name: 'Offerings to create table' });
     expect(within(table).getAllByRole('row')).toHaveLength(16);

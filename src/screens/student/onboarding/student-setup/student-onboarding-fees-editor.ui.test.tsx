@@ -43,7 +43,13 @@ const optionalStructure = {
   heads: [...structure.heads, { feeHeadId: 'trip', feeHeadName: 'Trip', isOptional: true }],
 };
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn() },
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
 }));
 vi.mock('src/components/shaking-text-field', () => ({
   default: ({ children }: { children: React.ReactNode }) => children,
@@ -200,7 +206,7 @@ it('retains the draft and exposes server failure to the parent', async () => {
     });
   });
   expect(screen.getByLabelText('Fee structure')).toHaveValue('structure-1');
-  expect(screen.getByRole('alert')).toHaveTextContent('Structure changed.');
+  expect(screen.getByText('Structure changed.', { exact: false })).toBeVisible();
   expect(mocks.state).toHaveBeenLastCalledWith(
     expect.objectContaining({ dirty: true, busy: false })
   );

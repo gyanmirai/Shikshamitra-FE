@@ -9,8 +9,9 @@ import { usePathname } from 'next/navigation';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Alert, Button, LinearProgress } from '@mui/material';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import {
   useGetStudentOnboardingSettingsQuery,
@@ -130,7 +131,8 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
 
   const persist = useCallback(
     async (scope: OnboardingConfigurationScope, configuration: OnboardingSettingsConfiguration) => {
-      if (!canConfigure) throw new Error('Add/Update permission is required to save onboarding settings.');
+      if (!canConfigure)
+        throw new Error('Add/Update permission is required to save onboarding settings.');
       const scopeAcademicYearId = scope.level === 'academic-year' ? scope.academicYearId : null;
       if (scope.level === 'academic-year' && !scopeAcademicYearId) {
         throw new Error('Select an academic year before saving this onboarding override.');
@@ -159,7 +161,8 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
 
   const removeOverride = useCallback(
     async (scope: OnboardingConfigurationScope) => {
-      if (!canDelete) throw new Error('Delete permission is required to remove an onboarding override.');
+      if (!canDelete)
+        throw new Error('Delete permission is required to remove an onboarding override.');
       const scopeAcademicYearId = scope.level === 'academic-year' ? scope.academicYearId : null;
       const recordKey = getRecordKey(scopeAcademicYearId);
       const currentRecord = recordsRef.current.get(recordKey);
@@ -192,7 +195,9 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
           {isLoading ? (
             <LinearProgress aria-label="Loading onboarding configuration" />
           ) : settingsQuery.isError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0936"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" onClick={() => settingsQuery.refetch()}>
@@ -201,13 +206,13 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
               }
             >
               Onboarding settings could not be loaded. Retry before making changes.
-            </Alert>
+            </StudentFeedback>
           ) : (
-            <Alert severity="error">
+            <StudentFeedback notificationKey="STU-0937" presentation="persistent" severity="error">
               The saved onboarding configuration is invalid or uses an unsupported version. Ask an
               administrator to repair it before making changes; saved rules have not been replaced
               with defaults.
-            </Alert>
+            </StudentFeedback>
           )}
         </Box>
       </Stack>

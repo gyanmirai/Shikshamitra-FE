@@ -17,10 +17,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Alert, Stack, Button, TextField, Typography } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography } from '@mui/material';
+import FeeProrationResult from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeProrationResult';
 import {
   useGetStudentRecordTransitionOptionsQuery,
   useSubmitStudentRecordTransitionsMutation,
@@ -133,7 +135,9 @@ function TargetPlacement({
   return (
     <Stack spacing={1.5}>
       {options.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0917"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => options.refetch()}>
@@ -142,7 +146,7 @@ function TargetPlacement({
           }
         >
           Target-year placements could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box
         sx={{
@@ -352,13 +356,19 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
   };
   return (
     <Stack spacing={2}>
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0919" presentation="inline" severity="info">
         Preview every student before submitting. The school policy controls required checks and
         whether exceptions hold the whole batch.
-      </Alert>
-      {failure && <Alert severity="warning">{failure}</Alert>}
+      </StudentFeedback>
+      {failure && (
+        <StudentFeedback notificationKey="STU-0920" presentation="persistent" severity="warning">
+          {failure}
+        </StudentFeedback>
+      )}
       {options.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0921"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => options.refetch()}>
@@ -367,7 +377,7 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
           }
         >
           Academic-year choices could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <CustomSelect
         label="Source academic year"
@@ -523,7 +533,9 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
             {preview.data.readyCount} ready · {preview.data.exceptionCount} exceptions
           </Typography>
           {preview.signature !== signature && (
-            <Alert severity="info">The batch changed. Preview it again before submitting.</Alert>
+            <StudentFeedback notificationKey="STU-0922" presentation="persistent" severity="info">
+              The batch changed. Preview it again before submitting.
+            </StudentFeedback>
           )}
           <CustomizableTable
             tableId="student-transition-preview"
@@ -565,6 +577,16 @@ export default function TransitionBatchForm({ onSubmitted }: { onSubmitted: () =
                 form.values.items.find((item) => item.studentId === row.studentId)?.studentName,
             }))}
           />
+          {preview.signature === signature &&
+            preview.data.items
+              .filter((row) => row.proration)
+              .map((row) => (
+                <FeeProrationResult
+                  key={row.studentId}
+                  result={row.proration}
+                  title={`Withdrawal Fees · ${row.studentName ?? form.values.items.find((item) => item.studentId === row.studentId)?.studentName ?? 'Student'}`}
+                />
+              ))}
         </Stack>
       )}
       {guard.confirmation}

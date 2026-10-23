@@ -6,10 +6,11 @@ import { getIn, useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import AssignmentMoneyInput from 'src/screens/finance/FeeStructureAssign/Components/AssignmentMoneyInput';
 
 export function AdmissionFeePreparationDialog({
@@ -129,7 +130,15 @@ export function AdmissionFeePreparationDialog({
                 </Stack>
               );
             })}
-            {form.status && <Alert severity="error">{form.status}</Alert>}
+            {form.status && (
+              <StudentFeedback
+                notificationKey="STU-0339"
+                presentation="persistent"
+                severity="error"
+              >
+                {form.status}
+              </StudentFeedback>
+            )}
           </Stack>
         </FormBusyRegion>
       </DialogScrollContent>

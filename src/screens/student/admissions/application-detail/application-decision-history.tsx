@@ -1,6 +1,7 @@
 import type { AdmissionApplicationDecisionHistory } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { getAdmissionApplicationStatusLabel } from '../application-status';
 import { formatWorkflowDateTime } from '../workflow-list/workflow-list-format';
@@ -24,7 +25,9 @@ export function ApplicationDecisionHistory({
 
   if (isError) {
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0189"
+        presentation="toast"
         severity="error"
         sx={{ mt: 2 }}
         action={
@@ -34,7 +37,7 @@ export function ApplicationDecisionHistory({
         }
       >
         Decision history could not be loaded.
-      </Alert>
+      </StudentFeedback>
     );
   }
 

@@ -11,17 +11,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
-import {
-  Box,
-  Link,
-  Alert,
-  Stack,
-  Drawer,
-  Button,
-  Divider,
-  IconButton,
-  Typography,
-} from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Link, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionOfferingForm } from './use-admission-offering-form';
@@ -185,26 +176,26 @@ function AdmissionOfferingLegacyDialog({
           inquiries or direct registrations.
         </Box>
         {form.queryFailed && (
-          <Alert severity="error">
+          <StudentFeedback notificationKey="STU-0118" presentation="toast" severity="error">
             Some academic or admission configuration options could not be loaded. Retry before
             saving.
-          </Alert>
+          </StudentFeedback>
         )}
         {form.hierarchyEmpty && (
-          <Alert severity="warning">
+          <StudentFeedback notificationKey="STU-0119" presentation="persistent" severity="warning">
             No academic hierarchy is configured for this academic year. Configure the board, medium,
             stage, and standards in Institute Setup before creating an offering.{' '}
             <Link href="/setting/academic-setup/" underline="hover">
               Open Institute Setup
             </Link>
-          </Alert>
+          </StudentFeedback>
         )}
         {mode === 'clone' && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0120" presentation="inline" severity="info">
             Select a valid academic identity for the target cycle. Its cycle dates apply
             automatically. The source offering&apos;s workflow, forms, and code will be copied and
             revalidated by the server. Applications are never copied.
-          </Alert>
+          </StudentFeedback>
         )}
         <AdmissionOfferingHierarchyFields
           formik={form.formik}

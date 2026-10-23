@@ -6,8 +6,9 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
+import { Box, Stack, Skeleton } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Alert, Stack, Skeleton } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useGetAdmissionFormQuery,
@@ -92,7 +93,12 @@ export default function AdmissionFormPreviewScreen() {
         <Skeleton variant="rounded" height={360} />
       </Stack>
     );
-  if (isError || !form) return <Alert severity="error">Unable to load form preview.</Alert>;
+  if (isError || !form)
+    return (
+      <StudentFeedback notificationKey="STU-0066" presentation="toast" severity="error">
+        Unable to load form preview.
+      </StudentFeedback>
+    );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

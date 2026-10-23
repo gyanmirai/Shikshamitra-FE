@@ -131,9 +131,9 @@ describe('application form step navigation', () => {
     expect(
       screen.queryByText('Complete the highlighted fields before continuing.')
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'The saved form changed. Reload and try again.'
-    );
+    expect(
+      screen.getByText('The saved form changed. Reload and try again.', { exact: false })
+    ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Section verification' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Admission form' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Section verification' })).toHaveLength(1);

@@ -13,11 +13,10 @@ import { ApplicationFormStage } from './application-form-stage';
 const state = vi.hoisted(() => ({
   summary: undefined as AdmissionFormStage | undefined,
   busy: false,
-  canEdit: true,
   canReopen: true,
   loading: false,
+  fetching: false,
   error: false,
-  verify: vi.fn(),
   setAction: vi.fn(),
   retry: vi.fn(),
 }));
@@ -39,18 +38,16 @@ vi.mock('./hooks/use-application-form-stage', () => ({
     busy: state.busy,
     query: {
       isLoading: state.loading,
-      isFetching: false,
+      isFetching: state.fetching,
       isError: state.error,
       refetch: state.retry,
     },
-    verifySection: state.verify,
     submitReason: vi.fn(),
-    canEdit: state.canEdit,
     canReopen: state.canReopen,
   }),
 }));
 
-function renderStage() {
+function renderStage(compact = true) {
   const complete = vi.fn();
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -60,7 +57,7 @@ function renderStage() {
         canAdvance
         advancing={false}
         onComplete={complete}
-        compact
+        compact={compact}
       />
     </ThemeProvider>
   );
@@ -70,9 +67,9 @@ function renderStage() {
 beforeEach(() => {
   vi.clearAllMocks();
   state.busy = false;
-  state.canEdit = true;
   state.canReopen = true;
   state.loading = false;
+  state.fetching = false;
   state.error = false;
   state.summary = {
     applicationId: 'application',
@@ -83,7 +80,7 @@ beforeEach(() => {
     canComplete: false,
     isOverdue: false,
     canRequestCorrection: false,
-    blockers: ['Submit the form before verification.'],
+    blockers: ['Submit the application form.'],
     policy: { responsibility: 'staff', maxSubmissionAttempts: 3 },
     sections: [
       {
@@ -97,73 +94,61 @@ beforeEach(() => {
   } as AdmissionFormStage;
 });
 
-describe('compact form-stage verification', () => {
-  it('opens verification only on button click and preserves blockers and disabled controls inside it', async () => {
-    const user = userEvent.setup();
-    renderStage();
-    expect(screen.queryByText('Managed application form')).not.toBeInTheDocument();
-    expect(screen.queryByText('Owner: staff')).not.toBeInTheDocument();
-    const disclosure = screen.getByRole('button', { name: /Section verification/ });
-    expect(disclosure).toHaveAttribute('aria-haspopup', 'dialog');
-    expect(disclosure).toHaveClass('MuiButton-sizeSmall');
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.queryByText('Student details')).not.toBeInTheDocument();
-    expect(screen.queryByText('Pending')).not.toBeInTheDocument();
-    await user.click(disclosure);
-    expect(screen.getByRole('dialog', { name: 'Section Verification' })).toBeVisible();
-    expect(screen.getByText(/0 of 3 submission attempts used/)).toBeVisible();
-    expect(screen.getByText('Submit the form before verification.')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
-  });
+describe('Form stage after section verification removal', () => {
+  it.each([true, false])(
+    'omits verification controls in compact=%s, including legacy required sections',
+    (compact) => {
+      renderStage(compact);
+      expect(
+        screen.queryByRole('button', { name: /Section verification|Verify Student details/ })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByText('Student details')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Continue admission' })).toBeDisabled();
+      if (!compact) expect(screen.getByText('Submit the application form.')).toBeVisible();
+    }
+  );
 
-  it('keeps submitted verification closed until requested and retains Verify and Request correction', async () => {
-    const user = userEvent.setup();
-    Object.assign(state.summary!, { formStatus: 1, canVerify: true, canRequestCorrection: true });
+  it('retains the authorized correction action for a submitted form', async () => {
+    Object.assign(state.summary!, { formStatus: 1, canRequestCorrection: true });
     renderStage();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /Section verification/ }));
-    await user.click(screen.getByRole('button', { name: 'Verify Student details' }));
-    expect(state.verify).toHaveBeenCalledWith(state.summary!.sections[0]);
-    await user.click(screen.getByRole('button', { name: 'Request correction' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Request correction' }));
     expect(state.setAction).toHaveBeenCalledWith({ type: 'correction' });
   });
 
-  it('keeps denied verification disabled and ready admission continuation governed by the server', async () => {
-    const user = userEvent.setup();
+  it('retains server readiness and permission checks', async () => {
     Object.assign(state.summary!, {
       formStatus: 1,
-      canVerify: true,
       canComplete: true,
+      canRequestCorrection: true,
       blockers: [],
     });
-    state.canEdit = false;
     state.canReopen = false;
     const complete = renderStage();
-    await user.click(screen.getByRole('button', { name: /Section verification/ }));
-    expect(screen.getByRole('button', { name: 'Verify Student details' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    await user.click(screen.getByRole('button', { name: 'Continue admission' }));
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Continue admission' }));
     expect(complete).toHaveBeenCalledOnce();
   });
 
-  it('keeps an error retry path available', async () => {
+  it('exposes the error and retry without a verification dialog', async () => {
     state.error = true;
     renderStage();
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Section verification/ }));
-    await user.click(screen.getByRole('button', { name: /Retry/i }));
+    await userEvent.setup().click(screen.getByRole('button', { name: /Retry/i }));
     expect(state.retry).toHaveBeenCalledOnce();
     expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
   });
 
-  it('omits the verification button when no sections require verification and keeps correction access', () => {
-    state.summary!.sections = [];
+  it.each([true, false])('uses skeletons instead of linear progress in compact=%s', (compact) => {
+    state.fetching = true;
+    state.busy = true;
+    renderStage(compact);
+    expect(screen.getByRole('status', { name: 'Loading Form stage' })).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue admission' })).not.toBeInTheDocument();
+  });
+
+  it('does not expose a correction action when the server disallows correction', () => {
     renderStage();
-    expect(screen.queryByRole('button', { name: /Section verification/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Request correction' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Request correction' })).not.toBeInTheDocument();
   });
 });

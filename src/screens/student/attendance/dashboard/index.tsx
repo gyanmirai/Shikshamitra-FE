@@ -19,6 +19,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import sortQueryString from 'src/utils/sort-query-string';
 import { studentPaths } from 'src/constants/student-menu';
 import UserHoverProfile from 'src/components/student-popover';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -30,7 +31,6 @@ import {
   Box,
   Grid,
   Paper,
-  Alert,
   Avatar,
   Button,
   Skeleton,
@@ -112,7 +112,9 @@ const StudentAttendanceDashboardScreen = () => {
             <LinearProgress aria-label="Refreshing attendance summary" sx={{ mt: 1 }} />
           )}
           {isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0622"
+              presentation="toast"
               severity="error"
               sx={{ mt: 1 }}
               action={
@@ -122,7 +124,7 @@ const StudentAttendanceDashboardScreen = () => {
               }
             >
               Attendance summary could not be loaded.
-            </Alert>
+            </StudentFeedback>
           )}
           {attendanceSummary && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -130,10 +132,15 @@ const StudentAttendanceDashboardScreen = () => {
             </Typography>
           )}
           {attendanceSummary?.isProvisional && (
-            <Alert severity="info" sx={{ mt: 1 }}>
+            <StudentFeedback
+              notificationKey="STU-0623"
+              presentation="persistent"
+              severity="info"
+              sx={{ mt: 1 }}
+            >
               Attendance is provisional. Complete pending marking and confirm imported attendance
               start dates before relying on this percentage.
-            </Alert>
+            </StudentFeedback>
           )}
           <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
             {!isLoading && !isError && attendanceClassSummary.length === 0 && (

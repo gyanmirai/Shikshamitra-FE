@@ -176,7 +176,7 @@ it('does not expose assessment controls without view access and skips the query'
     { skip: true }
   );
   expect(screen.queryByRole('button', { name: 'Start assessment' })).not.toBeInTheDocument();
-  expect(screen.getByRole('alert')).toHaveTextContent('Assessment access is required');
+  expect(screen.getByText('Assessment access is required', { exact: false })).toBeVisible();
 });
 
 it('locks compact stage controls during refresh and supports query retry', () => {

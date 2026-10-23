@@ -1,11 +1,11 @@
 import type { AdmissionReviewChecklistItem } from 'src/redux/student/admissions/admission-review-policy';
 
 import { useFormik } from 'formik';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { reviewChecklistItemSchema } from 'src/redux/student/admissions/admission-review-validation';
 import {
   Box,
-  Alert,
   Stack,
   Button,
   Switch,
@@ -84,10 +84,10 @@ export function ReviewChecklistDialog({
                 />
               }
             />
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0528" presentation="inline" severity="info">
               Staff can record notes for each item. Required items must pass before a recommendation
               can be submitted.
-            </Alert>
+            </StudentFeedback>
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

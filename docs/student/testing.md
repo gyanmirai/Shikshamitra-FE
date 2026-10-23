@@ -3,12 +3,20 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-22
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Validate Student Enrollment Admissions changes
+
+## Student feedback
+
+`src/components/student-feedback/student-feedback.test.tsx` covers equivalent JSX rerenders, React StrictMode, duplicate nested messages, severity/content changes, workspace changes, condition clearing and later failures, current recovery actions, close guards and cleanup. It also checks that shared table feedback outside Student keeps its existing behavior. Intake notice tests retain user-specific dismissal storage and recovery actions while asserting toast delivery instead of banner markup.
+
+When changing a Student message, retain assertions for its actual reason, disabled actions, permissions, preserved draft and request payload. A removed `MuiAlert` role/class assertion must be replaced with a meaningful toast or local-state assertion. Browser smoke checks must include the dashboard-linked Student Setup worklist, repeat renders without repeated notifications, and recovery after a failed read; local fixture checks do not establish staging or production acceptance.
+
+The 2026-10-22 migration covers 643 Student-owned former banner sites across 263 files and two shared-table feedback sites scoped to Student. Full repository TypeScript, focused feedback-layer ESLint, affected-file Prettier and Student documentation validation pass. Combining the broad run with the latest per-file reruns gives 2,730 passing assertions and 31 failures; the exact same 31 failures reproduce at unchanged commit `4043ea95fd97abeabaa235afea81dfacd181d96c`. The broader syntax/import lint retains one existing unused `source` prop finding in `admission-condition-form-picker.tsx`, reproduced from HEAD. The feedback adapter's 12 regressions pass. Authenticated in-app browser checks verified one worklist toast, no repeat after search changes, retained plain error/Retry recovery, and no document overflow at 390, 768 and 1440 pixels in light and dark themes. Admissions, Documents & IDs and Leave Requests entry surfaces also loaded. These read-only localhost checks do not establish delivery, activation, payment or production acceptance.
 
 ## Retired intake and staff ownership
 
@@ -81,6 +89,8 @@ During final browser work, the local frontend served a malformed development res
 After recovery, the authenticated draft `APP-2026-000003` retained a temporary unsaved Middle name through Focus mode and Exit focus mode. Close opened the existing discard confirmation; Keep editing retained that value, and Discard changes restored the original blank field before returning to the same filtered Pipeline. Keyboard focus returned to that applicant's Continue link. The temporary value was never saved.
 
 ## Unified Student Setup regression coverage
+
+Current-page Auto coverage verifies direct GR execution, explicit Roll target IDs and scope echoes, no ordinary preview drawer, preserved assigned/off-page students, failed capability verification, required policy/reason validation, pending approval and capability-gated decisions/application. The API adapter tests cover exact target IDs, server policy evidence, concurrency and idempotency payloads. Lock controls cover staff Lock-only and server-authorized admin Unlock, compact sizing and loading. Unassigned roll presentation is `0` without changing assignment input rules or stored values. The name-plate Details & History action uses the read-only two-card presentation; original workflow callers retain their prior controls.
 
 The `student-quick-setup-*` suites exercise sequential dependent saves, published assignment modes, preserved existing identifiers, partial retry, current activation-preview stamps and post-activation access-pending results. `student-onboarding-fees.ui.test.tsx` covers parent-coordinated confirmation, fresh stamps, draft retention, duplicate saves, completed Admissions evidence and collection-dialog locking. `student-setup-screen.ui.test.tsx` covers full-page entry with the worklist hidden but mounted, retained filters and pagination, breadcrumb Back with the existing dirty/busy guard, deep-link loading/error recovery, draft retention behind Details & History and retention after a row leaves the pending list. `student-quick-setup-page.ui.test.tsx` covers non-modal page semantics, the Class & Numbers/App Login top row with separate Fees and Documents rows, footer actions, no explicit automatic credential sending, server blockers, read-only access and academic-year changes.
 
@@ -1311,3 +1321,34 @@ The existing browser tabs show connection-refused pages, so this revision has no
 - Local authenticated browser QA created synthetic `INQ-2026-000009` with acknowledgement disabled. Existing Class 1 settings resolve minimum age 6 and academic-year start 1 June 2026. Underage create, warning toast, edit/save/reload, DOB persistence and exact-minimum birthday (6 years 0 months, warning cleared) were verified.
 - Mobile verification at 390 x 844 showed wrapping helper text and no document horizontal overflow (390px content/viewport); the temporary viewport was reset. Screenshots: `.artifacts/inquiry-age-create.png`, `.artifacts/inquiry-age-edit.png`, `.artifacts/inquiry-age-mobile.png`.
 - This is local verification. Stage/live require both frontend and backend deployment; no production payment, account activation or acknowledgement was sent.
+
+## Payment completion policy verification (22 October 2026)
+
+- `admission-payment-completion-policy.test.ts`, `workflow-payment-decision-editor.test.tsx`, and the fee-selection/collection panel suites cover defaults, saved Full/deferral-off settings, readonly controls, malformed policy, authoritative readiness, zero-payable preparation, stale/error state and unchanged Onboarding behavior. All 72 cases pass.
+- Full TypeScript and focused lint pass. Student documentation validation passes; the all-module documentation command reports 27 existing issues under `docs/testing/`.
+- Local browser QA cloned a separate `QA Payment Completion 22Oct` draft, saved Full payment with collection later disabled, and verified persistence after reload. The published source workflow remained read-only. The information tooltip explains future installments and zero payable. At 390 x 844 the drawer and document widths are both 390 px after responsive layout settles. Screenshots are `.artifacts/payment-completion/payment-settings-desktop.jpg` and `payment-settings-mobile.jpg`.
+- The browser save/reload check proves configuration persistence. The updated runtime completion command is covered by backend integration tests; the already running debugger Host needs rebuilding/restarting to serve the new runtime implementation. This is local verification, not staging or production acceptance.
+- Finance source hashes match the pre-task baseline (835 frontend files); no Finance module code was changed.
+
+## Form verification retirement and Payment skeletons (23 October 2026)
+
+- The Form-stage drawer and runtime suites cover removal of staff-verification controls, legacy-flag normalization, no obsolete form-detail request, retained correction permissions, server readiness, query errors and skeleton refresh states. These checks supersede earlier browser notes describing the Section verification button.
+- Fee-selection and collection tests cover initial/refetch skeletons, hidden stale totals and empty-payment states, retained selection drafts, retry, Finance permissions and mutation feedback. The application-detail and Pipeline suites cover retained editor identity and suppression of competing background progress bars while the applicant drawer is open.
+- The nine focused frontend files pass 170 tests, full `npm run ts` passes with zero errors, and all 24 affected source/test files pass focused lint after correcting three import-order warnings. Backend focused Form policy and runtime coverage passes 15 Domain tests and 6 integration tests, including the existing Inquiry-to-Form handoff. The wider Domain batch reports one unchanged Assessment-version expectation failure: it expects version 2 rejection although the current Assessment policy supports versions 1 and 2.
+- Authenticated localhost QA verifies Payment refresh skeletons and loaded collection actions, no competing fetch bars, the removed runtime Form action, and removed verification settings with Apply available. Desktop 1440 x 900 and mobile 390 x 844 checks pass; mobile document width is 390 px. The inspected workflow draft remained unchanged and no payment or applicant save was performed. Screenshots: `.artifacts/payment-skeleton-refresh.png`, `.artifacts/payment-skeleton-mobile.png`, `.artifacts/form-stage-no-verification.png`, `.artifacts/form-settings-no-verification.png`, and corresponding Form mobile captures.
+- These source, automated-test and local visual results do not establish staging or production acceptance. The running local debugger API was not restarted; legacy runtime compatibility is established by isolated backend integration tests. Deploy both frontend and backend for legacy applications to stop waiting on retired verification actions.
+
+## Current-page identifier assignment and simplified details (23 October 2026)
+
+- The Student Setup directory and Roll batch API suite pass 528 tests in 32 files. Coverage includes current-page target capture, preservation of assigned numbers, linked completed cases with missing rolls, target/policy response verification, direct ordinary Auto, required reason/approval review, uncertain-command recovery, legacy batch behavior and the two-card details presentation. The policy workspace suite also passes all 13 tests after native dialog form submission was wired.
+- Full TypeScript, scoped lint/formatting and Student documentation validation pass. Attendance export-label regressions pass 9 tests. The all-module documentation check still reports unrelated existing issues under `docs/testing/`; it is not a clean repository-wide documentation gate.
+- Backend isolated integration/contract evidence passes 29 Application checks, 1 additional direct-assignment check and 11 HTTP contracts. The verified local Host was rebuilt and restarted for this assignment change, with seeding/migrations and background credential delivery disabled. No database migration is required.
+- Authenticated localhost read-only checks verify Export, uniform GR/Roll controls, unassigned roll `0`, and the name-plate Details action opening only Admission and Placement & Identifiers, with focus restored on close. Desktop, 768px tablet and 390px mobile layouts were inspected; the mobile document width is 390px. Screenshots are `output/student-setup/roll-number-current-page-2026-10-23.png`, `details-drawer-2026-10-23.png` and `details-mobile-2026-10-23.png`.
+- Live student assignments, activation, email and payment were not executed in this verification; command mutations are covered by isolated tests. Finance module code was not changed by this task. These results are local evidence, not staging or production acceptance.
+
+### Auto Assignment Row Retention
+
+- Regression tests simulate a pending-list refetch removing saved rows and backfilling new students while GR Auto is still running, then again after completion. Original identities/order/count remain stable, confirmed numbers replace missing values, failures retain their feedback, and changing context releases the snapshot. Row-array identity is stable across unrelated renders so worklist selection effects cannot loop.
+- Roll tests verify the Applied callback and complete bounded-result read for a 30-student page, plus safe refresh failure without repeating assignment. The controller updates retained numbers only from confirmed Applied results; existing assigned values and pending policy gates remain unchanged.
+- The complete Student Setup plus Roll API suite passes 535 tests in 32 files, including Auto-to-Manual count retention and recovery from a failed Manual response before Roll Auto. The screen wiring suite passes all 64 tests after the final callback assertion. Full TypeScript, scoped ESLint/Prettier, Student docs validation and diff checks pass.
+- Local browser checks verify tab/scope navigation and assigned values without layout overflow at 1440, 768 and 390px; all five existing rows remain accessible in All students. The local pending GR list is already empty and pending Roll students lack Division, so no new live assignment was made merely for this check. The disappearance/assignment behavior is established by automated mutation/refetch tests, not a live assignment replay. Screenshot: `output/student-setup/identifier-rows-preserved-2026-10-23.png`. No backend or Finance change is needed.

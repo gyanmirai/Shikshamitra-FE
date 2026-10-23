@@ -6,10 +6,11 @@ import type { AdmissionPipelineItem } from 'src/redux/student/admissions/admissi
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { studentPaths } from 'src/constants/student-menu';
+import { Box, Button, LinearProgress } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Alert, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { academicClassFilterInput } from 'src/utils/student-academic-filter-query';
@@ -218,9 +219,9 @@ export default function AdmissionInquiryPipelineScreen() {
         }
       />
       {!canView ? (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0085" presentation="persistent" severity="warning">
           Application viewing permission is required to access Pipeline.
-        </Alert>
+        </StudentFeedback>
       ) : (
         <>
           <AdmissionAcademicFilters
@@ -264,13 +265,13 @@ export default function AdmissionInquiryPipelineScreen() {
                 flexDirection: 'column',
               }}
             >
-              {data && listQuery.isFetching && !scopeLoading && !skip && (
+              {data && listQuery.isFetching && !scopeLoading && !skip && !applicationId && (
                 <LinearProgress aria-label="Refreshing Pipeline" />
               )}
               <CustomizableTable
                 tableId="admission-application-pipeline"
                 tableTitle="Active admissions"
-                exportLabel="Export current page"
+                exportLabel="Export"
                 wrapperProps={{ sx: { height: 1 } }}
                 tableContainerProps={{ sx: { height: 1 } }}
                 columns={columns}

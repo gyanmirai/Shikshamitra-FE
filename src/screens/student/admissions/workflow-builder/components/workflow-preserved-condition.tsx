@@ -1,12 +1,13 @@
-import { Box, Alert, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 export function WorkflowPreservedCondition({ json }: { json: string }) {
   return (
     <Stack spacing={1}>
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0570" presentation="inline" severity="info">
         This saved condition uses a format this editor cannot change. Its rule is preserved when you
         save the route details.
-      </Alert>
+      </StudentFeedback>
       <Typography variant="subtitle2">Saved condition</Typography>
       <Box
         component="pre"

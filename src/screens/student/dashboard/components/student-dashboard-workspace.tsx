@@ -5,7 +5,8 @@ import type {
 } from 'src/redux/student/dashboard/student-module-dashboard-types';
 
 import { Iconify } from 'src/components/iconify';
-import { Chip, Grid, Alert, Stack, Typography } from '@mui/material';
+import { Chip, Grid, Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { DashboardSectionCard } from 'src/screens/academic/AcademicDashboard/Components/DashboardSectionCard';
 
 import StudentDashboardSection from './student-dashboard-section';
@@ -78,9 +79,9 @@ export default function StudentDashboardWorkspace({
         </DashboardSectionCard>
       )}
       {sections.length > 0 && !year.id && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0724" presentation="inline" severity="info">
           Select an academic year in the Student header to see your summaries.
-        </Alert>
+        </StudentFeedback>
       )}
       {year.id && (
         <>
@@ -120,10 +121,10 @@ export default function StudentDashboardWorkspace({
         <StudentDashboardShortcuts links={links} />
       ) : (
         !context.myStudents.length && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0725" presentation="inline" severity="info">
             No student workspaces are available with your current permissions. Assigned work will
             appear here when access is configured.
-          </Alert>
+          </StudentFeedback>
         )
       )}
     </>

@@ -1,7 +1,8 @@
 import type { AdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
 
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, Button, Switch, FormControlLabel } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Switch, FormControlLabel } from '@mui/material';
 import { useGetAdmissionReviewRolesQuery } from 'src/redux/student/admissions/admission-review-settings-api';
 
 import { ReviewAssigneeSelect } from './review-assignee-select';
@@ -68,7 +69,9 @@ export function ReviewResponsibilitySettings({
         helperText={query.isFetching ? 'Loading roles…' : undefined}
       />
       {query.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0531"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => query.refetch()}>
@@ -77,7 +80,7 @@ export function ReviewResponsibilitySettings({
           }
         >
           Roles could not be loaded. Your saved roles are preserved.
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

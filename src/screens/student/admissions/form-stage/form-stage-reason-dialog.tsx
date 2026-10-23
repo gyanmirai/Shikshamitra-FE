@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { Stack, Alert, Button, TextField, DialogActions } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 export function FormStageReasonDialog({
@@ -35,7 +36,9 @@ export function FormStageReasonDialog({
     >
       <DialogScrollContent onSubmit={formik.handleSubmit}>
         <Stack spacing={2}>
-          <Alert severity="warning">{description}</Alert>
+          <StudentFeedback notificationKey="STU-0385" presentation="persistent" severity="warning">
+            {description}
+          </StudentFeedback>
           <TextField
             fullWidth
             multiline

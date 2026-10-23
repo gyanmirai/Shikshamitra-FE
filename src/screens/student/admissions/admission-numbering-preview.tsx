@@ -7,8 +7,9 @@ import type {
 } from 'src/redux/student/admissions/admission-numbering-api';
 
 import { useState, useEffect } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Skeleton, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Alert, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { numberingSchema } from './admission-numbering-model';
 
@@ -77,7 +78,9 @@ export function AdmissionNumberingPreview({
       ) : loading ? (
         <Skeleton width="75%" height={32} />
       ) : error ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0108"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => setRefresh((value) => value + 1)}>
@@ -86,7 +89,7 @@ export function AdmissionNumberingPreview({
           }
         >
           {error}
-        </Alert>
+        </StudentFeedback>
       ) : (
         <Typography
           component="output"

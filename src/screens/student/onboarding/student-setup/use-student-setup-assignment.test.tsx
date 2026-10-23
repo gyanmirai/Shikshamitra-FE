@@ -175,6 +175,108 @@ beforeEach(() => {
 });
 
 describe('Student Setup assignment controller', () => {
+  it('keeps row-array identity stable across unrelated renders for selection effects', () => {
+    const { result, options, rerender } = mount();
+    const initialRows = result.current.displayedRows;
+    rerender(options);
+    expect(result.current.displayedRows).toBe(initialRows);
+    act(() => result.current.retainAutomaticPage());
+    const retainedRows = result.current.displayedRows;
+    rerender(options);
+    expect(result.current.displayedRows).toBe(retainedRows);
+  });
+  it('keeps the Auto GR page and saved numbers during and after pending-list backfill', async () => {
+    const first = makeCase();
+    const second = makeCase({ id: 'case-2', studentId: 'student-2', studentName: 'Kabir Shah' });
+    const { result, rows, options, rerender } = mount([first, second], {
+      contextKey: 'pending-page-1',
+      totalCount: 42,
+    });
+    let finishSecond!: (value: StudentOnboardingCase) => void;
+    mocks.assignGr.mockImplementation((input: AssignGrInput) => ({
+      unwrap: () =>
+        input.id === first.id
+          ? Promise.resolve(saveGr(input))
+          : new Promise<StudentOnboardingCase>((resolve) => {
+              finishSecond = resolve;
+            }),
+    }));
+    let running!: ReturnType<Controller['runAutomatic']>;
+    act(() => {
+      running = result.current.runAutomatic(rows);
+    });
+    await waitFor(() => expect(mocks.assignGr).toHaveBeenCalledTimes(2));
+    const backfill = mapOnboardingCaseToItem(makeCase({ id: 'new-page-member' }));
+    rerender({ ...options, rows: [rows[1], backfill], totalCount: 41 });
+    expect(result.current.displayedRows.map((row) => row.id)).toEqual(['case-1', 'case-2']);
+    expect(result.current.displayedRows[0].grNo).toBe('GR-0001');
+    expect(result.current.busy).toBe(true);
+    await act(async () => {
+      finishSecond({ ...second, grNumber: 'GR-0002' });
+      await running;
+    });
+    rerender({ ...options, rows: [backfill], totalCount: 40 });
+    expect(result.current.displayedRows.map((row) => row.grNo)).toEqual(['GR-0001', 'GR-0002']);
+    expect(result.current.displayedTotalCount).toBe(42);
+    expect(result.current.eligible('automatic')).toEqual([]);
+    expect(result.current.manualEditing).toBe(false);
+    act(() => result.current.startManual(result.current.displayedRows));
+    expect(result.current.displayedTotalCount).toBe(42);
+    act(() => result.current.cancel());
+    expect(result.current.displayedRows.map((row) => row.grNo)).toEqual(['GR-0001', 'GR-0002']);
+    rerender({ ...options, rows: [backfill], totalCount: 40, contextKey: 'pending-page-2' });
+    expect(result.current.displayedRows).toEqual([backfill]);
+    expect(result.current.displayedTotalCount).toBe(40);
+  });
+
+  it('retains Auto Roll rows and applies only confirmed returned numbers until context changes', () => {
+    const { result, rows, options, rerender } = mount(
+      [makeCase(), makeCase({ id: 'case-2', studentId: 'student-2', rollNumber: 7 })],
+      { type: 'roll-number', contextKey: 'class-a', totalCount: 2 }
+    );
+    act(() => result.current.retainAutomaticPage());
+    rerender({ ...options, rows: [], totalCount: 0 });
+    expect(result.current.displayedRows).toEqual(rows);
+    act(() =>
+      result.current.applyRollBatchRows([{ studentId: 'student-1', proposedRollNumber: 8 }])
+    );
+    expect(result.current.displayedRows.map((row) => row.rollNo)).toEqual([8, 7]);
+    expect(result.current.displayedTotalCount).toBe(2);
+    act(() => result.current.cancel());
+    expect(result.current.displayedRows.map((row) => row.rollNo)).toEqual([8, 7]);
+    rerender({ ...options, rows: [], totalCount: 0, contextKey: 'class-b' });
+    expect(result.current.displayedRows).toEqual([]);
+    expect(result.current.displayedTotalCount).toBe(0);
+  });
+
+  it('keeps failed Auto students visible with their error and missing number', async () => {
+    const { result, rows, options, rerender } = mount();
+    mocks.assignGr.mockReturnValue({
+      unwrap: async () => Promise.reject(new Error('Network error')),
+    });
+    await act(async () => {
+      await result.current.runAutomatic(rows);
+    });
+    rerender({ ...options, rows: [], totalCount: 0 });
+    expect(result.current.displayedRows[0].id).toBe(rows[0].id);
+    expect(result.current.displayedRows[0].grNo).toBeNull();
+    expect(result.current.messages[rows[0].id].status).toBe('failed');
+  });
+
+  it('replaces a prior failed Manual response when Roll Auto is confirmed', async () => {
+    const { result, rows } = mount([makeCase()], { type: 'roll-number', contextKey: 'class-a' });
+    act(() => result.current.startManual(rows));
+    await edit(result, { 'case-1': '8' });
+    mocks.assignRoll.mockReturnValue({ unwrap: async () => Promise.reject(new Error('Offline')) });
+    await submit(result);
+    act(() => result.current.cancel());
+    act(() => result.current.retainAutomaticPage());
+    act(() =>
+      result.current.applyRollBatchRows([{ studentId: 'student-1', proposedRollNumber: 8 }])
+    );
+    expect(result.current.displayedRows[0].rollNo).toBe(8);
+  });
+
   it('freezes the Manual page, total count and draft across a list refetch until Cancel', async () => {
     const { result, rows, options, rerender } = mount(
       [makeCase(), makeCase({ id: 'case-2', studentName: 'Kabir Shah' })],

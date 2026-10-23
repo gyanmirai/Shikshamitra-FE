@@ -7,8 +7,9 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Alert, Stack, Button, Skeleton, DialogActions } from '@mui/material';
+import { Stack, Button, Skeleton, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetAdmissionApplicant360Query,
@@ -59,7 +60,13 @@ export function ApplicationApplicantIdentityDialog({
       >
         <DialogScrollContent>
           {!allowed ? (
-            <Alert severity="warning">You do not have permission to edit applicant identity.</Alert>
+            <StudentFeedback
+              notificationKey="STU-0172"
+              presentation="persistent"
+              severity="warning"
+            >
+              You do not have permission to edit applicant identity.
+            </StudentFeedback>
           ) : query.isLoading || (!data && query.isFetching) ? (
             <Stack spacing={1} role="status" aria-label="Loading applicant identity">
               <Skeleton height={48} />
@@ -67,12 +74,14 @@ export function ApplicationApplicantIdentityDialog({
               <Skeleton height={48} />
             </Stack>
           ) : locked ? (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0174" presentation="inline" severity="info">
               This applicant is linked to a finalized or enrolled admission. Update identity details
               from the Student record.
-            </Alert>
+            </StudentFeedback>
           ) : (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0175"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" color="inherit" disabled={busy} onClick={query.refetch}>
@@ -81,7 +90,7 @@ export function ApplicationApplicantIdentityDialog({
               }
             >
               Applicant identity could not be loaded. Try again.
-            </Alert>
+            </StudentFeedback>
           )}
         </DialogScrollContent>
         <DialogActions sx={{ p: 2 }}>

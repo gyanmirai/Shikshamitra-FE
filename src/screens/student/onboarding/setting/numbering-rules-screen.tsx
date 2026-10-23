@@ -13,22 +13,14 @@ import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import { useRef, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { studentPaths, studentPermissions } from 'src/constants/student-menu';
-import {
-  Box,
-  Stack,
-  Alert,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Stack, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
 
 import RollOrderingFields from './roll-ordering-fields';
 import { useOnboardingSettings } from '../onboarding-settings-context';
@@ -386,7 +378,12 @@ function NumberingRulesScreen({
       excludeFromExport: true,
       render: (_: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === row.id);
-        if (!canConfigure || !configuration || getNumberingRuleStatus(configuration) === 'superseded') return null;
+        if (
+          !canConfigure ||
+          !configuration ||
+          getNumberingRuleStatus(configuration) === 'superseded'
+        )
+          return null;
         return (
           <ThreeDotsActions
             showEditIcon
@@ -437,7 +434,12 @@ function NumberingRulesScreen({
             { name: title },
           ]}
           action={
-            <Button variant="contained" disabled={!canConfigure} onClick={openNew} startIcon={<Iconify icon="mdi:plus" />}>
+            <Button
+              variant="contained"
+              disabled={!canConfigure}
+              onClick={openNew}
+              startIcon={<Iconify icon="mdi:plus" />}
+            >
               {isGr ? 'Add series' : 'Add roll number rule'}
             </Button>
           }
@@ -454,7 +456,11 @@ function NumberingRulesScreen({
           {isGr ? 'Add series' : 'Add roll number rule'}
         </Button>
       )}
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && (
+        <StudentFeedback notificationKey="STU-0938" presentation="persistent" severity="error">
+          {error}
+        </StudentFeedback>
+      )}
       <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden', display: 'flex' }}>
         <CustomizableTable
           tableId={`student-onboarding-${isGr ? 'gr' : 'roll'}-number-settings`}
@@ -488,7 +494,11 @@ function NumberingRulesScreen({
         busy={formik.isSubmitting}
       >
         <Stack component="form" noValidate ref={formRef} onSubmit={formik.handleSubmit} spacing={2}>
-          {formik.status && <Alert severity="error">{String(formik.status)}</Alert>}
+          {formik.status && (
+            <StudentFeedback notificationKey="STU-0939" presentation="persistent" severity="error">
+              {String(formik.status)}
+            </StudentFeedback>
+          )}
           <SettingsSectionCard
             icon="mdi:target-account"
             title={isGr ? 'Series Details' : 'Academic Path'}

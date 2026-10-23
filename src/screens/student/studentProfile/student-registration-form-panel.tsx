@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useId, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionHeader } from 'src/components/form-section-card';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Paper, Stack, Alert, Button, Divider, Skeleton } from '@mui/material';
+import { Box, Paper, Stack, Button, Divider, Skeleton } from '@mui/material';
 import { useGetStudentRecordFormSnapshotQuery } from 'src/redux/student/records/student-record-details-api';
 
 import { CustomRecordChangeForm } from './custom-record-change-form';
@@ -106,7 +107,9 @@ export function StudentRegistrationFormPanel({
           )}
           {editing ? (
             denied ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0778"
+                presentation="inline"
                 severity="info"
                 action={
                   <Button size="small" onClick={endEditing}>
@@ -115,14 +118,16 @@ export function StudentRegistrationFormPanel({
                 }
               >
                 These details are no longer editable with your current access.
-              </Alert>
+              </StudentFeedback>
             ) : snapshot.isLoading || (snapshot.isFetching && !ready) ? (
               <Stack spacing={2} aria-label="Loading editable student form">
                 <Skeleton height={48} />
                 <Skeleton variant="rounded" height={160} />
               </Stack>
             ) : snapshot.isError && !ready ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0779"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button size="small" onClick={() => snapshot.refetch()}>
@@ -131,7 +136,7 @@ export function StudentRegistrationFormPanel({
                 }
               >
                 The current student form could not be loaded. Your profile has been kept.
-              </Alert>
+              </StudentFeedback>
             ) : snapshot.currentData ? (
               <CustomRecordChangeForm
                 key={details.studentId}
@@ -167,7 +172,9 @@ export function StudentRegistrationFormPanel({
                     values={source.currentValues}
                   />
                 ) : (
-                  <Alert severity="info">This form is restricted by school policy.</Alert>
+                  <StudentFeedback notificationKey="STU-0780" presentation="inline" severity="info">
+                    This form is restricted by school policy.
+                  </StudentFeedback>
                 )}
               </Box>
             ))

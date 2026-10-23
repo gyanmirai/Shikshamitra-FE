@@ -2,7 +2,8 @@ import type { EligibilitySummary } from 'src/redux/student/admissions/admission-
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useState } from 'react';
-import { Card, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { useGetApplicationEligibilityQuery } from 'src/redux/student/admissions/admission-eligibility-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -53,19 +54,19 @@ export function ApplicationEligibilityPanel({
           )}
         </Stack>
         {!permissions.view ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0322" presentation="inline" severity="info">
             Eligibility access is required to view these results. Contact an admissions
             administrator.
-          </Alert>
+          </StudentFeedback>
         ) : query.isLoading ? (
           <Skeleton variant="rounded" height={180} />
         ) : query.isError || !summary ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !summary.eligibilityEnabled ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0323" presentation="inline" severity="info">
             Eligibility checks are not enabled for this step. Refresh the application to load its
             current workflow.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing eligibility results" />}

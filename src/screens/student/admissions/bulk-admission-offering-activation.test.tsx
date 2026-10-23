@@ -1,4 +1,3 @@
-
 import { vi, it, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
@@ -65,9 +64,9 @@ describe('Bulk activation controls', () => {
       ],
     };
     render(<BulkAdmissionOfferingActivation activation={activation} disabled={false} />);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Class 2 General: Publish the registration form first.'
-    );
+    expect(
+      screen.getByText('Class 2 General: Publish the registration form first.', { exact: false })
+    ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Activate Selected' })).toBeEnabled();
   });
   it('does not render an empty selection toolbar', () => {

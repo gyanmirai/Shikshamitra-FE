@@ -10,7 +10,8 @@ import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomStepper from 'src/components/custom-stepper';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Grid, Alert, Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Grid, Stack, Button, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
@@ -579,9 +580,15 @@ export function ApplicationRuntimeForm({
                 ].includes(error)
             )
             .map((error) => (
-              <Alert severity="error" key={error} sx={{ width: 1 }}>
+              <StudentFeedback
+                notificationKey="STU-0205"
+                presentation="persistent"
+                severity="error"
+                key={error}
+                sx={{ width: 1 }}
+              >
                 {error}
-              </Alert>
+              </StudentFeedback>
             ))}
           {isStepper && visibleSteps.length > 1 && (
             <Button

@@ -1,8 +1,8 @@
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
-  Alert,
   Stack,
   Button,
   Switch,
@@ -66,9 +66,13 @@ export function FormStageVerificationSettings({
         <Stack spacing={1} sx={{ pl: { sm: 2 } }}>
           <Typography variant="subtitle2">Sections staff must verify</Typography>
           {sectionsLoading ? (
-            <Alert severity="info">Loading form sections…</Alert>
+            <StudentFeedback notificationKey="STU-0521" presentation="inline" severity="info">
+              Loading form sections…
+            </StudentFeedback>
           ) : sectionsError ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0522"
+              presentation="toast"
               severity="error"
               action={
                 <Button color="inherit" size="small" onClick={onRetrySections}>
@@ -77,13 +81,19 @@ export function FormStageVerificationSettings({
               }
             >
               Unable to load this form&apos;s sections. Retry before choosing sections to verify.
-            </Alert>
+            </StudentFeedback>
           ) : !form ? (
-            <Alert severity="warning">Select a published form first.</Alert>
+            <StudentFeedback notificationKey="STU-0523" presentation="inline" severity="warning">
+              Select a published form first.
+            </StudentFeedback>
           ) : form.sections.length === 0 ? (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0524"
+              presentation="persistent"
+              severity="warning"
+            >
               This published form has no sections available to verify.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <FormGroup>
               {form.sections.map((section) => (

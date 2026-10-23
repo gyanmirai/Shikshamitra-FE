@@ -7,8 +7,9 @@ import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { Box, Card, Grid, Stack, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
-import { Box, Card, Grid, Stack, Alert, Button } from '@mui/material';
 import { StudentInformationForm } from 'src/components/studentProfile/StudentInformationForm';
 import StudentRecordGuardianAccess from 'src/screens/student/records/student-record-guardian-access';
 
@@ -191,12 +192,18 @@ export const StudentInformation = React.memo(
               <Scrollbar sx={{ height: '100%' }}>
                 <Box sx={{ p: 2 }}>
                   {restricted ? (
-                    <Alert severity="info">
+                    <StudentFeedback
+                      notificationKey="STU-0749"
+                      presentation="inline"
+                      severity="info"
+                    >
                       This section contains fields restricted by school policy.
-                    </Alert>
+                    </StudentFeedback>
                   ) : (
                     <>
-                      <Alert
+                      <StudentFeedback
+                        notificationKey="STU-0750"
+                        presentation="inline"
                         severity="info"
                         sx={{ mb: 2 }}
                         action={
@@ -211,7 +218,7 @@ export const StudentInformation = React.memo(
                         }
                       >
                         Changes to these details are submitted through Changes & Approvals.
-                      </Alert>
+                      </StudentFeedback>
                       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
                         {hasGrantedPermission(permissions, 'Students.Records.Changes.View') && (
                           <Button

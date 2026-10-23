@@ -14,6 +14,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
@@ -22,14 +23,9 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { readDashboardAcademicScope } from 'src/utils/student-dashboard-drilldown';
 import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
 import {
-  useGetStudentRecordsDirectoryQuery,
-  useGetStudentRecordsDirectoryOptionsQuery,
-} from 'src/redux/student/records/student-records-api';
-import {
   Box,
   Tab,
   Stack,
-  Alert,
   Paper,
   Button,
   TextField,
@@ -37,6 +33,10 @@ import {
   DialogActions,
   LinearProgress,
 } from '@mui/material';
+import {
+  useGetStudentRecordsDirectoryQuery,
+  useGetStudentRecordsDirectoryOptionsQuery,
+} from 'src/redux/student/records/student-records-api';
 import {
   useGetStudentRecordChangeQuery,
   useGetStudentRecordChangesQuery,
@@ -240,9 +240,9 @@ export default function StudentRecordChanges() {
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
             <Stack spacing={2}>
               {!canCreate ? (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0873" presentation="inline" severity="info">
                   You do not have permission to create student record changes.
-                </Alert>
+                </StudentFeedback>
               ) : (
                 <>
                   {!studentId && (
@@ -273,7 +273,9 @@ export default function StudentRecordChanges() {
                     onChange={(value) => update({ section: String(value) })}
                   />
                   {snapshot.isError && (
-                    <Alert
+                    <StudentFeedback
+                      notificationKey="STU-0874"
+                      presentation="toast"
                       severity="error"
                       action={
                         <Button color="inherit" onClick={() => snapshot.refetch()}>
@@ -283,7 +285,7 @@ export default function StudentRecordChanges() {
                     >
                       This section could not be opened for editing. Check provisioning access and
                       sensitive-field permissions.
-                    </Alert>
+                    </StudentFeedback>
                   )}
                   {studentId && snapshot.isFetching && !draftDirty && (
                     <LinearProgress aria-label="Loading current student section" />
@@ -344,7 +346,9 @@ export default function StudentRecordChanges() {
               )}
             </Paper>
             {list.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0875"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button color="inherit" onClick={() => list.refetch()}>
@@ -353,7 +357,7 @@ export default function StudentRecordChanges() {
                 }
               >
                 Change requests could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <CustomizableTable
@@ -446,7 +450,9 @@ export default function StudentRecordChanges() {
         <DialogScrollContent>
           <Stack spacing={1.5}>
             {detail.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0876"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button color="inherit" onClick={() => detail.refetch()}>
@@ -455,7 +461,7 @@ export default function StudentRecordChanges() {
                 }
               >
                 This change request could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {!current && detail.isFetching && (
               <LinearProgress aria-label="Loading change request" />
@@ -471,34 +477,42 @@ export default function StudentRecordChanges() {
                   {current.requiredApprovals}
                 </Typography>
                 {current.exceptionCode && (
-                  <Alert severity="warning">
+                  <StudentFeedback
+                    notificationKey="STU-0877"
+                    presentation="persistent"
+                    severity="warning"
+                  >
                     This change needs attention before it can apply. Review the current student
                     record and submit a correction if necessary.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {current.photoPreviewUrl && !current.payloadMasked && (
                   <RecordPhotoPreview studentId={current.studentId} uri={current.photoPreviewUrl} />
                 )}
                 {current.section === 'custom-details' && customDetails.isError && (
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0878"
+                    presentation="toast"
                     severity="error"
                     action={<Button onClick={() => customDetails.refetch()}>Retry</Button>}
                   >
                     Field labels could not be loaded. Retry before reviewing this change.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {current.section === 'custom-details' && customDiff.isError && (
-                  <Alert
+                  <StudentFeedback
+                    notificationKey="STU-0879"
+                    presentation="toast"
                     severity="error"
                     action={<Button onClick={customDiff.retry}>Retry</Button>}
                   >
                     Selected field labels could not be loaded. Retry before reviewing this change.
-                  </Alert>
+                  </StudentFeedback>
                 )}
                 {current.payloadMasked ? (
-                  <Alert severity="info">
+                  <StudentFeedback notificationKey="STU-0880" presentation="inline" severity="info">
                     This request contains protected fields you cannot view.
-                  </Alert>
+                  </StudentFeedback>
                 ) : (
                   <Box sx={{ overflowX: 'auto' }}>
                     <CustomizableTable
@@ -557,7 +571,15 @@ export default function StudentRecordChanges() {
                     {item.reason} · {fDateTime(item.creationTime)}
                   </Typography>
                 ))}
-                {failure && <Alert severity="error">{failure}</Alert>}
+                {failure && (
+                  <StudentFeedback
+                    notificationKey="STU-0881"
+                    presentation="persistent"
+                    severity="error"
+                  >
+                    {failure}
+                  </StudentFeedback>
+                )}
                 {decision && (
                   <TextField
                     label="Decision reason"

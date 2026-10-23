@@ -9,17 +9,18 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { varAlpha } from 'src/theme/styles';
 import { RouterLink } from 'src/routes/components';
+import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { varAlpha } from 'src/theme/styles';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Stack, Alert, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import { Box, Stack, Button, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   useReturnStudentRecordMutation,
   usePreviewReturningStudentRecordMutation,
@@ -432,11 +433,15 @@ export default function ReturningStudentForm() {
         </Stack>
       )}
       <Stack spacing={2}>
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0837" presentation="inline" severity="info">
           The permanent profile stays visible. The school return route determines the next admission
           or short onboarding steps.
-        </Alert>
-        {failure && <Alert severity="error">{failure}</Alert>}
+        </StudentFeedback>
+        {failure && (
+          <StudentFeedback notificationKey="STU-0838" presentation="persistent" severity="error">
+            {failure}
+          </StudentFeedback>
+        )}
         <RecordsStudentPicker onSelect={selectStudent} disabled={busy} />
         {student && (
           <Button
@@ -449,7 +454,9 @@ export default function ReturningStudentForm() {
           </Button>
         )}
         {options.isError && (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0839"
+            presentation="toast"
             severity="error"
             action={
               <Button color="inherit" disabled={busy} onClick={() => options.refetch()}>
@@ -458,7 +465,7 @@ export default function ReturningStudentForm() {
             }
           >
             Allowed return routes and placements could not be loaded.
-          </Alert>
+          </StudentFeedback>
         )}
         <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
           <FormSectionCard icon="mdi:account-arrow-left-outline" title="Return route and placement">
@@ -608,13 +615,17 @@ export default function ReturningStudentForm() {
                   }
                 />
               ) : (
-                <Alert severity={offering.entryMode == null ? 'warning' : 'info'}>
+                <StudentFeedback
+                  notificationKey="STU-0840"
+                  presentation={offering.entryMode == null ? 'persistent' : 'inline'}
+                  severity={offering.entryMode == null ? 'warning' : 'info'}
+                >
                   {offering.entryMode === 0
                     ? 'After Records approval, Admissions starts with an inquiry.'
                     : offering.entryMode === 1
                       ? 'After Records approval, Admissions starts with direct registration.'
                       : 'The offering entry path is unavailable. Reload the school options before submitting.'}
-                </Alert>
+                </StudentFeedback>
               ))}
             {form.values.route === 'FreshApplication' &&
               options.currentData?.freshApplicationRequiresRegistration && (
@@ -732,13 +743,17 @@ export default function ReturningStudentForm() {
               Preview return
             </Button>
             {preview && (
-              <Alert severity={currentPreview?.ready ? 'info' : 'warning'}>
+              <StudentFeedback
+                notificationKey="STU-0841"
+                presentation={currentPreview?.ready ? 'inline' : 'persistent'}
+                severity={currentPreview?.ready ? 'info' : 'warning'}
+              >
                 {!currentPreview
                   ? 'The return details changed. Preview again before submitting.'
                   : currentPreview.ready
                     ? 'The return preview passed. Submit it for the configured Records review.'
                     : currentPreview.issues.map((issue) => issue.message).join('; ')}
-              </Alert>
+              </StudentFeedback>
             )}
           </>
         )}

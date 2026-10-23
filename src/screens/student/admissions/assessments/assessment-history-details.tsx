@@ -1,4 +1,5 @@
-import { Alert, Stack, Skeleton } from '@mui/material';
+import { Stack, Skeleton } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useGetApplicationAssessmentQuery } from 'src/redux/student/admissions/admission-assessments-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -22,7 +23,11 @@ export function AssessmentHistoryDetails({
   );
   const assessment = query.currentData;
   if (!permissions.view)
-    return <Alert severity="info">Assessment access is required to view these results.</Alert>;
+    return (
+      <StudentFeedback notificationKey="STU-0255" presentation="inline" severity="info">
+        Assessment access is required to view these results.
+      </StudentFeedback>
+    );
   if (query.isLoading) return <Skeleton variant="rounded" height={100} />;
   if (query.isError || !assessment) return <AdmissionQueryError onRetry={query.refetch} />;
   return assessment.attempts.length ? (
@@ -43,6 +48,8 @@ export function AssessmentHistoryDetails({
       <AssessmentAttemptHistory attempts={assessment.attempts} />
     )
   ) : (
-    <Alert severity="info">No assessment attempts were recorded for this step.</Alert>
+    <StudentFeedback notificationKey="STU-0256" presentation="inline" severity="info">
+      No assessment attempts were recorded for this step.
+    </StudentFeedback>
   );
 }

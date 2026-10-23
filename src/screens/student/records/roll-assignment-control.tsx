@@ -1,5 +1,6 @@
 import CustomSelect from 'src/components/custom-select';
-import { Stack, Alert, Button, TextField, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, TextField, Typography } from '@mui/material';
 
 export type RollAssignmentMode = 'manual' | 'automatic';
 export type SchoolRollAssignmentMode = RollAssignmentMode | 'both';
@@ -45,7 +46,9 @@ export default function RollAssignmentControl({
             .
           </Typography>
           {mismatch ? (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0842"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button
@@ -57,7 +60,7 @@ export default function RollAssignmentControl({
               }
             >
               School numbering rules changed. Review the assignment method and preview again.
-            </Alert>
+            </StudentFeedback>
           ) : (
             <>
               {schoolMode === 'both' && (

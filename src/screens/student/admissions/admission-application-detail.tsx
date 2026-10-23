@@ -13,6 +13,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { useId, useState, useEffect, useCallback } from 'react';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
@@ -21,7 +22,6 @@ import { studentPaths, studentPermissions } from 'src/constants/student-menu';
 import { useGetAdmissionOfferingQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   Box,
-  Alert,
   Stack,
   Paper,
   Button,
@@ -31,7 +31,6 @@ import {
   MenuItem,
   Skeleton,
   Typography,
-  LinearProgress,
 } from '@mui/material';
 
 import { AdmissionQueryError } from './admission-query-error';
@@ -175,6 +174,7 @@ export default function AdmissionApplicationDetailScreen({
   const requiresForm =
     workspace.view === 'form' || (workspace.view === 'journey' && isFormStage(selectedStage));
   const isLoading = applicationQuery.isLoading || workflowQuery.isLoading;
+  const refreshingDetails = !isLoading && (applicationQuery.isFetching || workflowQuery.isFetching);
   const formLoading = requiresForm && !formQuery.isError && (formQuery.isLoading || !form);
   const applicationNotFound = isAdmissionApplicationNotFound(applicationQuery.error);
   const isError =
@@ -429,7 +429,7 @@ export default function AdmissionApplicationDetailScreen({
           ) : hasHistory ? (
             <>
               {hasJourneyClosure && (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-0014" presentation="inline" severity="info">
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle2">Admission journey ended</Typography>
                     <Typography
@@ -444,13 +444,15 @@ export default function AdmissionApplicationDetailScreen({
                       </Typography>
                     )}
                   </Stack>
-                </Alert>
+                </StudentFeedback>
               )}
               <TransitionHistoryCard workflow={workflow} />
               <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
             </>
           ) : (
-            <Alert severity="info">No application history has been recorded yet.</Alert>
+            <StudentFeedback notificationKey="STU-0015" presentation="inline" severity="info">
+              No application history has been recorded yet.
+            </StudentFeedback>
           )}
         </Stack>
       );
@@ -525,7 +527,7 @@ export default function AdmissionApplicationDetailScreen({
           !hasManagedStageWorkspace(selectedStage) &&
           !isFormStage(selectedStage) &&
           !isAdmissionDecisionStage(selectedStage) && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0016" presentation="persistent" severity="info">
               <Typography variant="subtitle2">{selectedStage.name}</Typography>
               <Typography variant="body2">
                 {historical
@@ -536,15 +538,17 @@ export default function AdmissionApplicationDetailScreen({
                       workflow?.nextRequiredAction
                     )}
               </Typography>
-            </Alert>
+            </StudentFeedback>
           )}
         {!currentStage && workflow?.status !== 1 && (
-          <Alert severity="info">No current admission task is available.</Alert>
+          <StudentFeedback notificationKey="STU-0017" presentation="inline" severity="info">
+            No current admission task is available.
+          </StudentFeedback>
         )}
         {!historical && workflow?.status === 1 && (
-          <Alert severity="success">
+          <StudentFeedback notificationKey="STU-0018" presentation="inline" severity="success">
             Admission workflow completed. The decision and full audit history remain available.
-          </Alert>
+          </StudentFeedback>
         )}
       </Stack>
     );
@@ -620,11 +624,20 @@ export default function AdmissionApplicationDetailScreen({
               <Typography id={titleId} variant="h6">
                 {application?.applicantName ?? 'Application details'}
               </Typography>
-              {application && (
-                <Label color={getAdmissionApplicationStatusColor(application.status)}>
-                  {getAdmissionApplicationStatusLabel(application.status)}
-                </Label>
-              )}
+              {application &&
+                (refreshingDetails ? (
+                  <Skeleton
+                    variant="rounded"
+                    width={80}
+                    height={24}
+                    role="status"
+                    aria-label="Refreshing application status"
+                  />
+                ) : (
+                  <Label color={getAdmissionApplicationStatusColor(application.status)}>
+                    {getAdmissionApplicationStatusLabel(application.status)}
+                  </Label>
+                ))}
             </Stack>
             {application && (
               <Stack
@@ -746,9 +759,6 @@ export default function AdmissionApplicationDetailScreen({
             </Scrollbar>
           </CustomPopover>
         </Box>
-        {!isLoading && (applicationQuery.isFetching || workflowQuery.isFetching) && (
-          <LinearProgress aria-label="Refreshing application details" sx={{ flexShrink: 0 }} />
-        )}
         <Scrollbar fillContent sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {isLoading && (
@@ -759,7 +769,9 @@ export default function AdmissionApplicationDetailScreen({
               </Stack>
             )}
             {applicationNotFound && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0020"
+                presentation="persistent"
                 severity="warning"
                 action={
                   <Button color="inherit" size="small" onClick={closeDetail}>
@@ -773,7 +785,7 @@ export default function AdmissionApplicationDetailScreen({
               >
                 This application is no longer available. It may have been removed, or the link may
                 be outdated.
-              </Alert>
+              </StudentFeedback>
             )}
             {isError && !applicationNotFound && (
               <AdmissionQueryError

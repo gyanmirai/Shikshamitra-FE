@@ -10,6 +10,7 @@ import { RouterLink } from 'src/routes/components';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { recordsQueryUrl } from 'src/screens/student/records/records-url-state';
 import { useGetStudentRecordDetailsQuery } from 'src/redux/student/records/student-record-details-api';
@@ -20,7 +21,6 @@ import {
   Menu,
   Stack,
   Paper,
-  Alert,
   Button,
   Skeleton,
   MenuItem,
@@ -256,10 +256,10 @@ export function StudentProfileView({
         <LinearProgress aria-label="Refreshing student details" />
       )}
       {academicYearContext && academicYearContext.id !== currentYear?.id && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0763" presentation="persistent" severity="info">
           This form is being edited for {academicYearContext.name || 'the original academic year'}.
           Finish editing to switch the profile to the selected year.
-        </Alert>
+        </StudentFeedback>
       )}
       <ProfilePanel
         sx={{
@@ -291,20 +291,24 @@ export function StudentProfileView({
         >
           <Stack spacing={1.5} sx={view === 'documents' ? { flex: 1, minHeight: 0 } : undefined}>
             {detailsQuery.isError && ['overview', 'details', 'history'].includes(view) && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0764"
+                presentation="toast"
                 severity="error"
                 action={<Button onClick={() => detailsQuery.refetch()}>Retry details</Button>}
               >
                 Student details could not be loaded. Your profile context has been kept.
-              </Alert>
+              </StudentFeedback>
             )}
             {changes.isError && view === 'overview' && canViewChanges && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0765"
+                presentation="toast"
                 severity="error"
                 action={<Button onClick={() => changes.refetch()}>Retry history</Button>}
               >
                 Record change history could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {view === 'overview' && (
               <StudentProfileOverview

@@ -1,14 +1,13 @@
 import type { ReturnInquiryIntake } from 'src/redux/student/records/student-record-transitions-api';
 
-import { Grid, Stack, Button, Alert, TextField, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-
-import type { ReturningInquiryValues } from './returning-inquiry-model';
+import { Grid, Stack, Button, TextField, Typography } from '@mui/material';
 
 import AdmissionRuntimeField from '../admissions/admission-runtime-field';
-import { admissionInquirySourceOptions } from '../admissions/admission-inquiry-model';
 import { isAdmissionRuleVisible } from '../admissions/admission-visibility-rules';
+import { admissionInquirySourceOptions } from '../admissions/admission-inquiry-model';
 import { getDependentAdmissionFieldCodes } from '../admissions/admission-field-dependencies';
 import {
   localizeAdmissionSection,
@@ -20,6 +19,8 @@ import {
   removeRepeatableEntry,
   getRepeatableEntryCount,
 } from '../admissions/form-repeatable-values';
+
+import type { ReturningInquiryValues } from './returning-inquiry-model';
 
 type Props = {
   intake: ReturnInquiryIntake;
@@ -227,11 +228,15 @@ export default function ReturningInquiryIntake({
                 </Button>
               )}
               {section.fields.some((field) => field.fieldType === 10 && field.required) && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-0834"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   This form requires a document. The existing Admissions form does not yet support
                   file upload here; this return cannot complete until its document requirement is
                   resolved.
-                </Alert>
+                </StudentFeedback>
               )}
             </FormSectionCard>
           );

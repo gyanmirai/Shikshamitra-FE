@@ -15,8 +15,9 @@ import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Alert, Button, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import {
   usePreviewAssessmentSessionMutation,
   useConfirmAssessmentSessionMutation,
@@ -258,7 +259,9 @@ export default function AdmissionAssessmentsScreen() {
         }
       />
       {!permissions.view ? (
-        <Alert severity="info">You do not have permission to view assessments.</Alert>
+        <StudentFeedback notificationKey="STU-0023" presentation="inline" severity="info">
+          You do not have permission to view assessments.
+        </StudentFeedback>
       ) : (
         <>
           <AssessmentWorkspaceControls data={workbench} />

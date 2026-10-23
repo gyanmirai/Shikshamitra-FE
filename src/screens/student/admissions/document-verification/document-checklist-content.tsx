@@ -4,7 +4,8 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { useState } from 'react';
-import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { DocumentRequirementCard } from './document-requirement-card';
 import { DocumentRequirementTable } from './document-requirement-table';
@@ -53,7 +54,7 @@ export function DocumentChecklistContent({
         </Stack>
       )}
       {layout !== 'table' && !readOnly && summary.blockers.length > 0 && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0312" presentation="inline" severity="info">
           <Stack spacing={0.5}>
             {summary.blockers.map((blocker) => (
               <Typography key={blocker} variant="body2">
@@ -67,12 +68,12 @@ export function DocumentChecklistContent({
               </Typography>
             )}
           </Stack>
-        </Alert>
+        </StudentFeedback>
       )}
       {layout !== 'table' && !readOnly && summary.canComplete && summary.blockers.length === 0 && (
-        <Alert severity="success">
+        <StudentFeedback notificationKey="STU-0313" presentation="inline" severity="success">
           Document requirements are complete. Continue to the next workflow step.
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.policy?.requireIndependentReview && (
         <Typography variant="body2" color="text.secondary">
@@ -80,7 +81,9 @@ export function DocumentChecklistContent({
         </Typography>
       )}
       {summary.requirements.length === 0 ? (
-        <Alert severity="info">No document requirements are configured for this step.</Alert>
+        <StudentFeedback notificationKey="STU-0314" presentation="inline" severity="info">
+          No document requirements are configured for this step.
+        </StudentFeedback>
       ) : layout === 'table' ? (
         <DocumentRequirementTable
           summary={summary}

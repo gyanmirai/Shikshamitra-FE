@@ -12,10 +12,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { useGetStudentAdmissionEvidenceQuery } from 'src/redux/student/admissions/student-admission-evidence-api';
 import { useDownloadAdmissionDocumentMutation } from 'src/redux/student/admissions/admission-document-download-api';
 import { useDocumentPermissions } from 'src/screens/student/admissions/document-verification/use-document-permissions';
@@ -78,7 +79,9 @@ function StudentDocumentPreview({
     return <Skeleton variant="rounded" height={320} />;
   if (query.isError || !url)
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0740"
+        presentation="toast"
         severity="error"
         action={
           <Button size="small" color="inherit" onClick={query.refetch}>
@@ -87,13 +90,13 @@ function StudentDocumentPreview({
         }
       >
         Unable to preview this document.
-      </Alert>
+      </StudentFeedback>
     );
   if (!file?.contentType.startsWith('image/') && file?.contentType !== 'application/pdf')
     return (
-      <Alert severity="info">
+      <StudentFeedback notificationKey="STU-0741" presentation="inline" severity="info">
         Preview is unavailable for this file format. Use Download to open the document.
-      </Alert>
+      </StudentFeedback>
     );
   return file?.contentType === 'application/pdf' ? (
     <Box
@@ -415,7 +418,9 @@ const Document = ({ student }: StudentTabsComponentType) => {
   const failures = (
     <Stack spacing={1} sx={{ width: 1 }}>
       {documents.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0745"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" color="inherit" onClick={documents.refetch}>
@@ -424,10 +429,12 @@ const Document = ({ student }: StudentTabsComponentType) => {
           }
         >
           Unable to load student documents.
-        </Alert>
+        </StudentFeedback>
       )}
       {canViewEvidence && evidence.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0746"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" color="inherit" onClick={evidence.refetch}>
@@ -436,21 +443,23 @@ const Document = ({ student }: StudentTabsComponentType) => {
           }
         >
           Unable to load admission documents.
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       {!canView ? (
-        <Alert severity="info">Student document access is unavailable.</Alert>
+        <StudentFeedback notificationKey="STU-0747" presentation="inline" severity="info">
+          Student document access is unavailable.
+        </StudentFeedback>
       ) : (
         <>
           {isFetching && !isLoading && <LinearProgress aria-label="Refreshing student documents" />}
           {!canViewEvidence && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0748" presentation="inline" severity="info">
               Admission document access is required to view retained admission documents.
-            </Alert>
+            </StudentFeedback>
           )}
           {data.length > 0 &&
             (documents.isError || (canViewEvidence && evidence.isError)) &&

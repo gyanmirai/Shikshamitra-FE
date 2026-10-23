@@ -5,7 +5,8 @@ import type {
 
 import { Label } from 'src/components/label';
 import { fDateTime } from 'src/utils/format-time';
-import { Card, Alert, Stack, Typography } from '@mui/material';
+import { Card, Stack, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { WORKFLOW_STATUS_LABELS } from '../workflow-builder-types';
 
@@ -38,18 +39,29 @@ export function WorkflowGovernanceHistory({
 
   return (
     <Stack spacing={1.5}>
-      <Alert severity="info" icon={false}>
+      <StudentFeedback
+        notificationKey="STU-0558"
+        presentation="inline"
+        severity="info"
+        icon={false}
+      >
         Owner: {ownerName || (workflow.ownerUserId ? 'Assigned user' : 'Legacy version')} · Change
         reason: {workflow.changeReason || 'Not recorded'}
-      </Alert>
+      </StudentFeedback>
       {workflow.scheduledPublishAt && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0559" presentation="inline" severity="warning">
           Publication is scheduled for {fDateTime(workflow.scheduledPublishAt)}.
-        </Alert>
+        </StudentFeedback>
       )}
-      {loading && <Alert severity="info">Loading governance history…</Alert>}
+      {loading && (
+        <StudentFeedback notificationKey="STU-0560" presentation="inline" severity="info">
+          Loading governance history…
+        </StudentFeedback>
+      )}
       {!loading && !history?.length && (
-        <Alert severity="info">No governance events have been recorded for this version.</Alert>
+        <StudentFeedback notificationKey="STU-0561" presentation="inline" severity="info">
+          No governance events have been recorded for this version.
+        </StudentFeedback>
       )}
       {history?.map((item) => (
         <Card key={item.id} variant="outlined" sx={{ p: 1.5 }}>

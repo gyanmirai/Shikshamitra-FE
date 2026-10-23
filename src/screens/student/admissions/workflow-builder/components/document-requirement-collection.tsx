@@ -5,8 +5,9 @@ import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admis
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Stack, Button, Typography, IconButton, InputAdornment } from '@mui/material';
 import { DOCUMENT_FORMATS } from 'src/redux/student/admissions/admission-document-policy';
-import { Alert, Stack, Button, Typography, IconButton, InputAdornment } from '@mui/material';
 
 import { DocumentUploadLimits } from './document-upload-limits';
 
@@ -119,7 +120,9 @@ export function DocumentRequirementCollection({
         }
       />
       {documentTypesError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0507"
+          presentation="persistent"
           severity="warning"
           action={
             onRetryDocumentTypes && (
@@ -130,13 +133,13 @@ export function DocumentRequirementCollection({
           }
         >
           Student document categories could not load. Retry or keep this as admission evidence.
-        </Alert>
+        </StudentFeedback>
       )}
       {incompatible && (
-        <Alert severity="error">
+        <StudentFeedback notificationKey="STU-0508" presentation="inline" severity="error">
           This category and the selected upload formats have no format in common. Choose another
           category, change the formats, or keep this as admission evidence.
-        </Alert>
+        </StudentFeedback>
       )}
       {selectedMapping && uploads && (
         <Typography variant="caption" color="text.secondary">
@@ -145,10 +148,10 @@ export function DocumentRequirementCollection({
         </Typography>
       )}
       {values.documentTypeId && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0509" presentation="inline" severity="info">
           Uploads must also meet this student document category’s file limits. Accepted uploads
           connect to the student record after finalization.
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

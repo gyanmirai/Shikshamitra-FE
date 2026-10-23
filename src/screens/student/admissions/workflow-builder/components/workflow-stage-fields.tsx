@@ -5,7 +5,8 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Stack, Alert } from '@mui/material';
+import { Stack } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 
 import { WorkflowStageForm } from './workflow-stage-form';
@@ -24,9 +25,6 @@ type Props = {
   forms: AdmissionForm[];
   stages: AdmissionWorkflowStage[];
   formDefinitionId: string;
-  formDetailsLoading?: boolean;
-  formDetailsError?: boolean;
-  onRetryFormDetails?: () => void;
   readOnly: boolean;
 };
 
@@ -45,7 +43,13 @@ export function WorkflowStageFields(props: Props) {
           />
         );
       case 4:
-        return <WorkflowPaymentSettings available={metadata?.isRuntimeReady === true} />;
+        return (
+          <WorkflowPaymentSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={metadata?.isRuntimeReady === true}
+          />
+        );
       case 5:
         return (
           <WorkflowDocumentSettings
@@ -61,10 +65,10 @@ export function WorkflowStageFields(props: Props) {
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
       {!isApplicationStageType(formik.values.stageType) && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0583" presentation="persistent" severity="warning">
           This saved stage type is no longer available. Replace it with Form, Assessment, Payment,
           Document verification or Admission Decision.
-        </Alert>
+        </StudentFeedback>
       )}
       <>
         <FormSectionCard

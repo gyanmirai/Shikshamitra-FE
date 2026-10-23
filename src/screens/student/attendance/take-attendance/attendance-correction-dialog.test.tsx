@@ -9,7 +9,15 @@ vi.mock('src/redux/student/take-attendance/take-attendace-api', () => ({
   useRequestAttendanceCorrectionMutation: () => [mocks.request, { isLoading: false }],
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+  },
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({ children, title }: { children: React.ReactNode; title: string }) => (
     <section aria-label={title}>{children}</section>

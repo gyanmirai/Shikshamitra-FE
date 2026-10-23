@@ -1,10 +1,11 @@
 'use client';
 
+import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { AdmissionQueryError } from './admission-query-error';
@@ -76,9 +77,9 @@ export default function AdmissionOfferingsScreen() {
         !screen.cyclesQuery.isLoading &&
         !screen.cyclesQuery.isFetching &&
         !screen.cyclesQuery.isError && (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0132" presentation="inline" severity="info">
             Create a non-archived Admission Cycle before configuring offerings.
-          </Alert>
+          </StudentFeedback>
         )}
       {screen.offeringsQuery.isError && (
         <AdmissionQueryError onRetry={() => screen.offeringsQuery.refetch()} />

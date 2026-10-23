@@ -48,7 +48,13 @@ vi.mock('@mui/x-date-pickers', () => ({
   ),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: mocks.success, error: mocks.error },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+    error: mocks.error,
+  },
 }));
 const followUp = {
   id: 'follow-up-1',
@@ -135,7 +141,9 @@ describe('application follow-ups', () => {
   it('withholds stale follow-up controls on query failure and offers retry', () => {
     mocks.query.mockReturnValue(query({ isError: true }));
     render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(screen.getByRole('alert')).toHaveTextContent('Unable to load application follow-ups');
+    expect(
+      screen.getByText('Unable to load application follow-ups', { exact: false })
+    ).toBeVisible();
     expect(screen.queryByText('Call parent')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
@@ -159,9 +167,9 @@ describe('application follow-ups', () => {
       })
     );
     render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'The linked source inquiry no longer exists.'
-    );
+    expect(
+      screen.getByText('The linked source inquiry no longer exists.', { exact: false })
+    ).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
@@ -181,7 +189,7 @@ describe('application follow-ups', () => {
       })
     );
     render(<ApplicationFollowUps applicationId="application-1" />);
-    expect(screen.getByRole('alert')).toHaveTextContent('The source inquiry is unavailable.');
+    expect(screen.getByText('The source inquiry is unavailable.', { exact: false })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
   });
 
@@ -327,7 +335,7 @@ describe('application follow-ups', () => {
     fireEvent.click(trigger);
     expect(within(dialog).getByLabelText('Purpose *')).toHaveValue(' Discuss documents ');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent('The inquiry changed.');
+    expect(await within(dialog).findByText('The inquiry changed.', { exact: false })).toBeVisible();
     expect(within(dialog).getByLabelText('Purpose *')).toHaveValue(' Discuss documents ');
     mocks.schedule.mockReturnValue({ unwrap: () => Promise.resolve(value) });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Schedule' }));

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useUpdateStudentOnboardingStepMutation } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
@@ -36,7 +37,11 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
         detail: isApproval ? normalizedReason : undefined,
         waiverReason: isApproval ? undefined : normalizedReason,
       }).unwrap();
-      shikshaMitraToast.success({ message: isApproval ? 'Onboarding approval recorded.' : `${check.label} waived with an audit reason.` });
+      shikshaMitraToast.success({
+        message: isApproval
+          ? 'Onboarding approval recorded.'
+          : `${check.label} waived with an audit reason.`,
+      });
       onClose();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
@@ -60,11 +65,16 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
         <Stack spacing={2}>
           <Summary label="Student" value={student.studentName} />
           <Summary label="Requirement" value={check.label} />
-          <Alert severity="warning" variant="outlined">
+          <StudentFeedback
+            notificationKey="STU-1022"
+            presentation="inline"
+            severity="warning"
+            variant="outlined"
+          >
             {isApproval
               ? 'Approval does not bypass other readiness checks.'
               : 'Waiving this requirement removes its activation blocker and records the reason.'}
-          </Alert>
+          </StudentFeedback>
           <TextField
             required
             fullWidth
@@ -88,7 +98,11 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
           disabled={!normalizedReason || updateState.isLoading}
           onClick={handleWaive}
         >
-          {updateState.isLoading ? 'Saving…' : isApproval ? 'Approve onboarding' : 'Waive requirement'}
+          {updateState.isLoading
+            ? 'Saving…'
+            : isApproval
+              ? 'Approve onboarding'
+              : 'Waive requirement'}
         </Button>
       </DialogActions>
     </CustomDialog>

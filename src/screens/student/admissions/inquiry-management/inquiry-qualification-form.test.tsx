@@ -31,7 +31,13 @@ vi.mock('src/components/custom-select', () => ({
   ),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: mocks.error },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: mocks.error,
+  },
 }));
 const inquiry = {
   id: 'inquiry-1',

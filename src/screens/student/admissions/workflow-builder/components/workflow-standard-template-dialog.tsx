@@ -11,8 +11,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Alert, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
 import { WorkflowTemplateSelector } from './workflow-template-selector';
 import { AdmissionDefinitionSelect } from '../../admission-definition-select';
@@ -176,7 +177,9 @@ export function WorkflowStandardTemplateDialog({
         >
           <Stack spacing={2}>
             {!warningDismissed && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0587"
+                presentation="inline"
                 severity="warning"
                 icon={<Iconify icon="mdi:alert-outline" />}
                 closeText="Dismiss template replacement warning"
@@ -185,7 +188,7 @@ export function WorkflowStandardTemplateDialog({
               >
                 This replaces the current stages and routes when you apply it. Save the draft to
                 keep the change.
-              </Alert>
+              </StudentFeedback>
             )}
             <FormSectionCard icon="mdi:sitemap-outline" title="Starting journey">
               <Stack spacing={2}>

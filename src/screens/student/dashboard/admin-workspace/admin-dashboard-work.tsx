@@ -6,7 +6,8 @@ import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
 import { EmptyContent } from 'src/components/empty-content';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Alert, Stack, Button, Skeleton, Typography, ButtonBase } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Stack, Button, Skeleton, Typography, ButtonBase } from '@mui/material';
 
 import { AdminDashboardPanel } from './admin-dashboard-panel';
 
@@ -98,7 +99,9 @@ export function AdminDashboardWorkGroups({
     >
       <Stack spacing={1} sx={{ flex: 1 }}>
         {failed.map(({ key, query }) => (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0714"
+            presentation="persistent"
             key={key}
             severity="warning"
             action={
@@ -109,7 +112,7 @@ export function AdminDashboardWorkGroups({
           >
             {key === 'admissions' ? 'Admissions' : key === 'records' ? 'Record changes' : 'Leave'}{' '}
             summary unavailable. This queue may be incomplete.
-          </Alert>
+          </StudentFeedback>
         ))}
         {loading && (
           <Skeleton variant="rounded" height={100} aria-label="Loading decisions and follow-ups" />

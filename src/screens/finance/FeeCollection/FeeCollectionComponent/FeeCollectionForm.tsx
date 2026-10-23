@@ -443,6 +443,8 @@ const FeeCollectComponentForm = ({
           prorationPolicyName: item.prorationPolicyName,
           prorationPolicyVersionNumber: item.prorationPolicyVersionNumber,
           prorationExplanation: item.prorationExplanation,
+          withdrawalProrationCredit: item.withdrawalProrationCredit,
+          withdrawalProrationExplanation: item.withdrawalProrationExplanation,
           paid: item.paid,
           due: item.due,
           reconciliationAmount: item.reconciliationAmount,
@@ -473,6 +475,8 @@ const FeeCollectComponentForm = ({
               prorationPolicyName: item.prorationPolicyName,
               prorationPolicyVersionNumber: item.prorationPolicyVersionNumber,
               prorationExplanation: item.prorationExplanation,
+              withdrawalProrationCredit: item.withdrawalProrationCredit,
+              withdrawalProrationExplanation: item.withdrawalProrationExplanation,
               paid: item.paid,
               due: item.due,
               reconciliationAmount: item.reconciliationAmount,
@@ -765,7 +769,8 @@ const FeeCollectComponentForm = ({
           (row) => row.paidAmount > 0 && row.type === 'charge' && row.sourceType === 'Charge'
         );
         if (hasFeeReceipt && hasChargeReceipt) {
-          const message = 'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
+          const message =
+            'Non-cash payments require separate fee and charge receipts for finance verification. Collect fees and charges separately.';
           setCollectionError(message);
           shikshaMitraToast.error({ message });
           return;
@@ -2142,8 +2147,15 @@ const FeeCollectComponentForm = ({
                                       required
                                       value={value}
                                       onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                      onBlur={() => { formik.setFieldTouched(fieldPath, true); }}
-                                      error={(touched || formik.submitCount > 0) && typeof error === 'string' ? error : undefined}
+                                      onBlur={() => {
+                                        formik.setFieldTouched(fieldPath, true);
+                                      }}
+                                      error={
+                                        (touched || formik.submitCount > 0) &&
+                                        typeof error === 'string'
+                                          ? error
+                                          : undefined
+                                      }
                                     />
                                   ) : field.type === 'select' ? (
                                     <TextField

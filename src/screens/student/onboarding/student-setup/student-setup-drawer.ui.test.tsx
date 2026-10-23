@@ -35,6 +35,8 @@ const mocks = vi.hoisted(() => ({
   capturedFieldsLoading: false,
   capturedFieldsError: false,
   refetchCapturedFields: vi.fn(),
+  feesRendered: vi.fn(),
+  detailsCaseId: undefined as string | undefined,
 }));
 
 vi.mock('src/components/iconify', () => ({
@@ -56,9 +58,12 @@ vi.mock('react-redux', () => ({
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => ({
-    currentData: mocks.caseEvents
-      ? { id: 'case-1', applicantId: 'applicant-1', events: mocks.caseEvents }
-      : undefined,
+    currentData:
+      mocks.detailsCaseId && mocks.capturedFieldsAvailable
+        ? { id: mocks.detailsCaseId, events: [], capturedStudentFields: mocks.capturedFields }
+        : mocks.caseEvents
+          ? { id: 'case-1', applicantId: 'applicant-1', events: mocks.caseEvents }
+          : undefined,
     data: mocks.capturedFieldsAvailable
       ? { capturedStudentFields: mocks.capturedFields }
       : undefined,
@@ -75,7 +80,12 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useReviewStudentOnboardingRequirementsMutation: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('./student-onboarding-workflow-documents', () => ({ default: () => null }));
-vi.mock('./student-onboarding-fees', () => ({ default: () => null }));
+vi.mock('./student-onboarding-fees', () => ({
+  default: () => {
+    mocks.feesRendered();
+    return null;
+  },
+}));
 vi.mock('./student-onboarding-portal-accounts', () => ({
   default: ({ onBusyChange }: { onBusyChange?: (busy: boolean) => void }) => (
     <>
@@ -96,6 +106,7 @@ describe('Student Setup drawer readiness UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.caseEvents = null;
+    mocks.detailsCaseId = undefined;
     mocks.activationPreview = {
       status: 2,
       primaryBlocker: 'Final readiness and activation',
@@ -133,6 +144,84 @@ describe('Student Setup drawer readiness UI', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Complete credential request' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('shows only saved Admission and Placement & Identifiers in the dedicated details drawer', () => {
+    mocks.detailsCaseId = student.id;
+    const onClose = vi.fn();
+    render(
+      <StudentSetupDrawer
+        open
+        presentation="details"
+        initialView="tasks"
+        canManage
+        student={{ ...student, source: 'onboarding-case', studentEnrollmentId: null, rollNo: null }}
+        onClose={onClose}
+        onAssignDivision={vi.fn()}
+        onAssignGrNumber={vi.fn()}
+        onAssignRollNumber={vi.fn()}
+        onPrimaryAction={vi.fn()}
+      />
+    );
+    const drawer = screen.getByRole('dialog', { name: student.studentName });
+    expect(
+      within(drawer)
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent)
+    ).toEqual(['Admission', 'Placement & Identifiers']);
+    expect(screen.getByText('Blood group')).toBeVisible();
+    expect(screen.getByText('O+')).toBeVisible();
+    expect(screen.getByText('Roll number').nextElementSibling).toHaveTextContent('0');
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Documents')).not.toBeInTheDocument();
+    expect(screen.queryByText('Readiness & Activation')).not.toBeInTheDocument();
+    expect(screen.queryByText('Case Actions')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate Student' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Assign Division' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Simulate credential request' })
+    ).not.toBeInTheDocument();
+    expect(mocks.feesRendered).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('retains additional admission details loading and retry in the details-only drawer', () => {
+    mocks.capturedFieldsAvailable = false;
+    mocks.capturedFieldsLoading = true;
+    const props = {
+      open: true,
+      presentation: 'details' as const,
+      student: { ...student, source: 'onboarding-case' as const },
+      onClose: vi.fn(),
+    };
+    const { rerender } = render(<StudentSetupDrawer {...props} />);
+    expect(screen.getByLabelText('Loading additional admission details')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled();
+    mocks.capturedFieldsLoading = false;
+    mocks.capturedFieldsError = true;
+    rerender(<StudentSetupDrawer {...props} />);
+    expect(screen.getByText('Additional admission details could not be loaded.')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(mocks.refetchCapturedFields).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+  });
+
+  it('does not show captured fields from a previous case in the read-only drawer', () => {
+    mocks.detailsCaseId = 'previous-case';
+    mocks.capturedFieldsLoading = true;
+    render(
+      <StudentSetupDrawer
+        open
+        presentation="details"
+        student={{ ...student, source: 'onboarding-case' }}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByText('Blood group')).not.toBeInTheDocument();
+    expect(screen.queryByText('O+')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Loading additional admission details')).toBeInTheDocument();
   });
 
   it('offers assignment for a pending division and change only after an actual placement', () => {
@@ -407,9 +496,9 @@ describe('Student Setup drawer readiness UI', () => {
       );
       fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
       const dialog = screen.getByRole('dialog', { name: 'Activate Student' });
-      expect(within(dialog).getByRole('alert')).toHaveTextContent(
-        'The seat reservation has expired.'
-      );
+      expect(
+        within(dialog).getByText('The seat reservation has expired.', { exact: false })
+      ).toBeVisible();
       expect(within(dialog).queryByText('Final readiness and activation')).not.toBeInTheDocument();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Activate student' }));
       expect(within(dialog).getByRole('button', { name: 'Activate student' })).toBeDisabled();
@@ -430,7 +519,7 @@ describe('Student Setup drawer readiness UI', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Documents and compliance');
+    expect(screen.getByText('Documents and compliance', { exact: false })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Activate student' })).toBeDisabled();
   });
 
@@ -457,9 +546,9 @@ describe('Student Setup drawer readiness UI', () => {
           screen.getByRole('progressbar', { name: 'Checking activation readiness' })
         ).toBeInTheDocument();
       else
-        expect(screen.getByRole('alert')).toHaveTextContent(
-          'The latest activation preview could not be loaded.'
-        );
+        expect(
+          screen.getByText('The latest activation preview could not be loaded.', { exact: false })
+        ).toBeVisible();
     }
   );
 

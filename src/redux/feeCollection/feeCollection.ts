@@ -129,6 +129,8 @@ export interface FeeLedgerLine {
   prorationEligibleDays?: number | null;
   prorationChargedDays?: number | null;
   prorationExplanation?: string | null;
+  withdrawalProrationCredit?: number;
+  withdrawalProrationExplanation?: string | null;
   paid: number;
   due: number;
   status: number | string;

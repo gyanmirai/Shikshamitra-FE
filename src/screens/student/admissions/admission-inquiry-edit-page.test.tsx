@@ -155,7 +155,13 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   })),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+  shikshaMitraToast: {
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+  },
 }));
 vi.mock('./use-admission-unsaved-changes', () => ({
   useAdmissionUnsavedChanges: vi.fn(),

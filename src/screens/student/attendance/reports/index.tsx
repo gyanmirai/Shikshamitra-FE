@@ -2,9 +2,10 @@
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Paper, Stack, Alert, Button, TextField, LinearProgress } from '@mui/material';
+import { Box, Paper, Stack, Button, TextField, LinearProgress } from '@mui/material';
 import { useGetAttendanceRegisterQuery } from 'src/redux/student/attendance-management/api';
 import {
   attendanceError,
@@ -85,13 +86,24 @@ export default function AttendanceReportScreen() {
         </Stack>
       </Paper>
       {!context.currentYear?.id && (
-        <Alert severity="info">Select an academic year to view attendance.</Alert>
+        <StudentFeedback notificationKey="STU-0630" presentation="inline" severity="info">
+          Select an academic year to view attendance.
+        </StudentFeedback>
       )}
-      {!valid && <Alert severity="warning">Select a valid date range with From before To.</Alert>}
+      {!valid && (
+        <StudentFeedback notificationKey="STU-0631" presentation="inline" severity="warning">
+          Select a valid date range with From before To.
+        </StudentFeedback>
+      )}
       {query.isError && (
-        <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+        <StudentFeedback
+          notificationKey="STU-0632"
+          presentation="toast"
+          severity="error"
+          action={<Button onClick={() => query.refetch()}>Retry</Button>}
+        >
           {attendanceError(query.error, 'Attendance report could not be loaded.')}
-        </Alert>
+        </StudentFeedback>
       )}
       {query.isFetching && !query.isLoading && (
         <LinearProgress aria-label="Refreshing attendance register" />
@@ -100,7 +112,7 @@ export default function AttendanceReportScreen() {
         <CustomizableTable
           tableId="attendance-canonical-register"
           tableTitle="Eligible attendance register"
-          exportLabel="Attendance register (current page)"
+          exportLabel="Export"
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           data={rows}

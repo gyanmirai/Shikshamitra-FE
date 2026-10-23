@@ -10,18 +10,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomAccordion from 'src/components/custom-accordian';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Box, Card, Chip, Paper, Stack, IconButton, Typography, CardContent } from '@mui/material';
 import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
-import {
-  Box,
-  Card,
-  Chip,
-  Alert,
-  Paper,
-  Stack,
-  IconButton,
-  Typography,
-  CardContent,
-} from '@mui/material';
 
 import { ApplicationDecisionDialog } from './application-decision-dialog';
 import { ApplicationDecisionStatus } from './application-decision-status';
@@ -272,10 +263,15 @@ export function ApplicationDecisionCard({
               />
             )}
             {!canDecide && !canFinalize && application.status !== 10 && (
-              <Alert severity="info" sx={{ mt: compact ? 1 : 2 }}>
+              <StudentFeedback
+                notificationKey="STU-0185"
+                presentation="inline"
+                severity="info"
+                sx={{ mt: compact ? 1 : 2 }}
+              >
                 Decision actions are not available for your role. You can still review the
                 application details.
-              </Alert>
+              </StudentFeedback>
             )}
             {compact ? (
               <CustomAccordion

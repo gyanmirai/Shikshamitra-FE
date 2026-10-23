@@ -1,6 +1,7 @@
 import type { EligibilitySummary } from 'src/redux/student/admissions/admission-eligibility-types';
 
-import { Alert, Stack, Button, Typography } from '@mui/material';
+import { Stack, Button, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { EligibilityHistory } from './eligibility-history';
 import { EligibilityStatusLabel } from './eligibility-status';
@@ -31,12 +32,12 @@ export function EligibilityResultContent({
         </Typography>
       </Stack>
       {summary.isStale && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0328" presentation="persistent" severity="warning">
           Applicant information has changed. Run the eligibility check again before continuing.
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.blockers.length > 0 && (
-        <Alert severity="info">
+        <StudentFeedback notificationKey="STU-0329" presentation="persistent" severity="info">
           <Stack spacing={0.5}>
             {summary.blockers.map((blocker) => (
               <Typography key={blocker} variant="body2">
@@ -44,7 +45,7 @@ export function EligibilityResultContent({
               </Typography>
             ))}
           </Stack>
-        </Alert>
+        </StudentFeedback>
       )}
       {summary.status === 'notChecked' && (
         <Typography variant="body2">

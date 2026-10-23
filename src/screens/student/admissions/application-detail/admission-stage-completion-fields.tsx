@@ -1,7 +1,8 @@
 import type { FormikProps } from 'formik';
 import type { FormEvent, RefObject } from 'react';
 
-import { Grid, Alert, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Grid, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
 
 import type { StageCompletionFormValues } from './admission-stage-completion';
 
@@ -47,11 +48,15 @@ export function EntranceExamCompletionFields({
         </Grid>
       ))}
       <Grid size={{ xs: 12 }}>
-        <Alert severity={passed ? 'success' : 'info'}>
+        <StudentFeedback
+          notificationKey="STU-0165"
+          presentation="inline"
+          severity={passed ? 'success' : 'info'}
+        >
           {passed
             ? 'Passing result — the workflow can continue.'
             : 'Enter passing marks to continue.'}
-        </Alert>
+        </StudentFeedback>
       </Grid>
     </Grid>
   );

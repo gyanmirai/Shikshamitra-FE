@@ -5,8 +5,9 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Grid, Alert, Stack, TextField } from '@mui/material';
+import { Grid, Stack, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { WorkflowStageForm } from './workflow-stage-form';
 import { WorkflowStageTypeSelect } from './workflow-stage-type-select';
@@ -65,10 +66,10 @@ export function WorkflowFormStageBasics({
       </Grid>
 
       {metadata && (!metadata.isRuntimeReady || metadata.isDeprecated) && (
-        <Alert severity="error">
+        <StudentFeedback notificationKey="STU-0556" presentation="persistent" severity="error">
           {metadata.replacementGuidance ||
             'This existing stage is not available for new workflows. Replace it before publishing a new version.'}
-        </Alert>
+        </StudentFeedback>
       )}
     </Stack>
   );

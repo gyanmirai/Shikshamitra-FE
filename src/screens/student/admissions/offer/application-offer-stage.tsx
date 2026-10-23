@@ -4,7 +4,8 @@ import type { AdmissionApplicationStage } from 'src/redux/student/admissions/adm
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Card, Chip, Alert, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Chip, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionOfferStageQuery } from 'src/redux/student/admissions/admission-offer-api';
 
 import { OfferHistory } from './offer-history';
@@ -59,7 +60,12 @@ export function ApplicationOfferStage({
     onComplete
   );
   const canWrite = hasGrantedPermission(permissions, 'Students.Admissions.Offers.Add');
-  if (!canView) return <Alert severity="info">You do not have access to admission offers.</Alert>;
+  if (!canView)
+    return (
+      <StudentFeedback notificationKey="STU-0435" presentation="inline" severity="info">
+        You do not have access to admission offers.
+      </StudentFeedback>
+    );
   if (query.isLoading)
     return (
       <Card variant="outlined" sx={{ p: 2 }}>
@@ -68,7 +74,9 @@ export function ApplicationOfferStage({
     );
   if (query.isError || !state)
     return (
-      <Alert severity="error">Offer details could not be loaded. Refresh before continuing.</Alert>
+      <StudentFeedback notificationKey="STU-0436" presentation="toast" severity="error">
+        Offer details could not be loaded. Refresh before continuing.
+      </StudentFeedback>
     );
   const buttons = [
     {
@@ -122,9 +130,14 @@ export function ApplicationOfferStage({
         onEditorStateChange={feeEditor.update}
       />
       {feeEditor.blocked && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <StudentFeedback
+          notificationKey="STU-0437"
+          presentation="persistent"
+          severity="info"
+          sx={{ mb: 2 }}
+        >
           Save or discard your fee selection before updating the offer or completing this step.
-        </Alert>
+        </StudentFeedback>
       )}
       <Card variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={2}>
@@ -146,9 +159,9 @@ export function ApplicationOfferStage({
             {state.policy?.message}
           </Typography>
           {state.policy?.conditions && (
-            <Alert severity="info">
+            <StudentFeedback notificationKey="STU-0438" presentation="inline" severity="info">
               <strong>Conditions:</strong> {state.policy.conditions}
-            </Alert>
+            </StudentFeedback>
           )}
           {state.expiresAt && (
             <Typography
@@ -160,9 +173,14 @@ export function ApplicationOfferStage({
             </Typography>
           )}
           {state.blockers.map((item) => (
-            <Alert key={item} severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0439"
+              presentation="persistent"
+              key={item}
+              severity="warning"
+            >
               {item}
-            </Alert>
+            </StudentFeedback>
           ))}
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {buttons

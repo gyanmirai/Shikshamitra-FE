@@ -7,11 +7,11 @@ import type {
 
 import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   Box,
   List,
   Chip,
-  Alert,
   Paper,
   Stack,
   MenuItem,
@@ -103,8 +103,9 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
             <Typography variant="subtitle2">Test one applicant outcome at a time</Typography>
             <Typography variant="body2" color="text.secondary">
               Change the scenario or its values to see which route the applicant follows. Final
-              validation remains authoritative before publication. This tests routing and configured outcomes;
-              it does not submit forms, verify evidence, collect money, or make an admission decision.
+              validation remains authoritative before publication. This tests routing and configured
+              outcomes; it does not submit forms, verify evidence, collect money, or make an
+              admission decision.
             </Typography>
           </Box>
         </Stack>
@@ -157,12 +158,19 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
           ))}
         </Stack>
       ) : (
-        <Alert severity="info" icon={<Iconify icon="mdi:information-outline" />}>
+        <StudentFeedback
+          notificationKey="STU-0578"
+          presentation="inline"
+          severity="info"
+          icon={<Iconify icon="mdi:information-outline" />}
+        >
           This workflow uses only default next steps, so there are no conditional values to vary.
-        </Alert>
+        </StudentFeedback>
       )}
 
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-0579"
+        presentation="inline"
         severity={
           result.status === 'completed'
             ? 'success'
@@ -179,13 +187,20 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
               : 'Scenario has a routing problem'}
         </AlertTitle>
         {result.message}
-      </Alert>
+      </StudentFeedback>
 
       <Box component="section" aria-labelledby="workflow-selected-journey-heading">
-        {result.steps.some((step) => (step.otherMatchingRoutes ?? 0) > 0) && <Alert severity="warning" sx={{ mb: 1 }}>
-          More than one special path matches this scenario. The path with the lowest route order wins.
-          Review the conditions and order before publishing.
-        </Alert>}
+        {result.steps.some((step) => (step.otherMatchingRoutes ?? 0) > 0) && (
+          <StudentFeedback
+            notificationKey="STU-0580"
+            presentation="persistent"
+            severity="warning"
+            sx={{ mb: 1 }}
+          >
+            More than one special path matches this scenario. The path with the lowest route order
+            wins. Review the conditions and order before publishing.
+          </StudentFeedback>
+        )}
         <Typography id="workflow-selected-journey-heading" variant="subtitle2">
           Selected journey
         </Typography>

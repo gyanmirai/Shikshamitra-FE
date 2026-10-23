@@ -6,8 +6,9 @@ import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Alert, Stack, Button, IconButton, Typography, LinearProgress } from '@mui/material';
+import { Stack, Button, IconButton, Typography, LinearProgress } from '@mui/material';
 import {
   useGetStudentCredentialEmailsQuery,
   useSendStudentCredentialEmailMutation,
@@ -76,7 +77,9 @@ export default function StudentOnboardingCredentialEmails({
         <StudentSetupLoadingRows label="Loading credential email status" count={2} />
       )}
       {emails.isError ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0983"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={() => emails.refetch()}>
@@ -85,7 +88,7 @@ export default function StudentOnboardingCredentialEmails({
           }
         >
           Credential email status could not be loaded.
-        </Alert>
+        </StudentFeedback>
       ) : !emails.isFetching || emails.data ? (
         (emails.data ?? []).map((email) => (
           <Stack

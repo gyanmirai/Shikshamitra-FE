@@ -257,9 +257,9 @@ it('validates only entered rows without submitting the native form or requiring 
   expect(submit.closest('form')).not.toBeNull();
   fireEvent.click(submit);
   await waitFor(() =>
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Applicant five: Enter Science marks between 0 and 30'
-    )
+    expect(
+      screen.getByText('Applicant five: Enter Science marks between 0 and 30', { exact: false })
+    ).toBeVisible()
   );
   expect(screen.queryByText(/Enter Language readiness marks/)).not.toBeInTheDocument();
   expect(mocks.get).not.toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, Button } from '@mui/material';
+import { Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { ReviewReloadConfirmation } from './review-reload-confirmation';
 
@@ -20,7 +21,9 @@ export function ReviewRecoveryAlert({
   return (
     <>
       {error && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0466"
+          presentation="persistent"
           severity="error"
           action={
             <Button
@@ -33,7 +36,7 @@ export function ReviewRecoveryAlert({
           }
         >
           {error}
-        </Alert>
+        </StudentFeedback>
       )}
       <ReviewReloadConfirmation
         context={context}

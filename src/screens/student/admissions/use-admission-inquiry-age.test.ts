@@ -9,7 +9,15 @@ import { useAdmissionInquiryAge } from './use-admission-inquiry-age';
 
 import type { AdmissionInquiryFormSection } from './admission-inquiry-model';
 
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { warning: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
 
 const field = {
   id: 'dob',

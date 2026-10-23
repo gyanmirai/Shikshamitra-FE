@@ -88,7 +88,15 @@ vi.mock('src/components/custom-select', () => ({
     </select>
   ),
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => ({
     currentData: mocks.currentDataAvailable

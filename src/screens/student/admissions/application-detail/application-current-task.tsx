@@ -83,7 +83,7 @@ export function ApplicationCurrentTask({
               </Label>
             </Stack>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75 }}>
-              {getStageGuidance(stage, applicationStatus, nextRequiredAction, formPolicy)}
+              {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
@@ -160,11 +160,9 @@ export function ApplicationCurrentTask({
 
       {!compact && isFormStage(stage) && !canRetryFormHandoff && formPolicy && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
-          {formPolicy.requireSectionVerification
-            ? 'This step continues after the required sections are verified.'
-            : formPolicy.autoAdvanceOnSubmit
-              ? 'The form automatically advances this journey after a successful submission.'
-              : 'After successful submission, use Continue to finish this step.'}
+          {formPolicy.autoAdvanceOnSubmit
+            ? 'The form automatically advances this journey after a successful submission.'
+            : 'After successful submission, use Continue to finish this step.'}
         </Typography>
       )}
     </Box>

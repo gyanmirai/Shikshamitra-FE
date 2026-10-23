@@ -33,7 +33,9 @@ describe('Admission form publish confirmation', () => {
     expect(screen.getByRole('dialog', { name: 'Publish Admission inquiry?' })).toBeVisible();
     expect(screen.getAllByTestId('mdi:publish')).toHaveLength(2);
     expect(screen.queryByTestId('WarningAmberIcon')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent('All publish-readiness checks passed.');
+    expect(
+      screen.getByText('All publish-readiness checks passed.', { exact: false })
+    ).toBeVisible();
     expect(screen.getByText(/linked to 0 offerings and 0 applications/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Publish form' }));
     expect(callbacks.onPublish).toHaveBeenCalledOnce();

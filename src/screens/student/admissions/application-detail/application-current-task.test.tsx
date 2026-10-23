@@ -66,7 +66,7 @@ it.each([
   {
     requireSectionVerification: true,
     autoAdvanceOnSubmit: true,
-    expected: 'This step continues after the required sections are verified.',
+    expected: 'The form automatically advances this journey after a successful submission.',
   },
   {
     requireSectionVerification: false,
@@ -100,10 +100,7 @@ it.each([
     </ThemeProvider>
   );
   expect(screen.getByText(expected)).toBeInTheDocument();
-  if (formPolicy.requireSectionVerification) {
-    expect(
-      screen.getByText(/Complete any required verification before continuing/)
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/automatically advances/)).not.toBeInTheDocument();
-  }
+  expect(
+    screen.queryByText(/required verification|sections are verified/i)
+  ).not.toBeInTheDocument();
 });

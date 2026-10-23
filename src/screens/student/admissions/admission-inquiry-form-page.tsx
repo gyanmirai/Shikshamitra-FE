@@ -12,13 +12,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
   Paper,
-  Alert,
   Stack,
   Button,
   Switch,
@@ -158,7 +158,9 @@ export default function AdmissionInquiryFormPage() {
           <FormBusyRegion busy={controller.busy} label="Saving inquiry…">
             <Stack spacing={1}>
               {controller.offeringsError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0076"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button
@@ -172,24 +174,30 @@ export default function AdmissionInquiryFormPage() {
                   }
                 >
                   Open admission offerings could not be loaded.
-                </Alert>
+                </StudentFeedback>
               )}
               {!controller.offeringsLoading &&
                 !controller.offeringsError &&
                 controller.boards.length === 0 && (
-                  <Alert severity="warning">
+                  <StudentFeedback
+                    notificationKey="STU-0077"
+                    presentation="persistent"
+                    severity="warning"
+                  >
                     No open, ready admission offering is available. Configure and activate an
                     offering in Admission Offering settings before creating an inquiry.
-                  </Alert>
+                  </StudentFeedback>
                 )}
 
               {controller.academicError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0078"
+                  presentation="toast"
                   severity="error"
                   action={<Button onClick={controller.retryAcademic}>Retry</Button>}
                 >
                   Academic choices could not be loaded.
-                </Alert>
+                </StudentFeedback>
               )}
               <InquiryFormSection title="Admission interest">
                 <TextField
@@ -355,24 +363,36 @@ export default function AdmissionInquiryFormPage() {
                   !controller.offeringsLoading &&
                   !controller.offeringsError &&
                   controller.offerings.length === 0 && (
-                    <Alert severity="warning" sx={{ gridColumn: '1 / -1' }}>
+                    <StudentFeedback
+                      notificationKey="STU-0079"
+                      presentation="persistent"
+                      severity="warning"
+                      sx={{ gridColumn: '1 / -1' }}
+                    >
                       Selected class has no admission open.
-                    </Alert>
+                    </StudentFeedback>
                   )}
                 {formik.values.offeringId &&
                   !controller.runtimeLoading &&
                   !controller.runtimeError &&
                   !controller.canCreateInquiry && (
-                    <Alert severity="warning" sx={{ gridColumn: '1 / -1' }}>
+                    <StudentFeedback
+                      notificationKey="STU-0080"
+                      presentation="persistent"
+                      severity="warning"
+                      sx={{ gridColumn: '1 / -1' }}
+                    >
                       {controller.unavailableReason ||
                         'Admission is not open for the selected class.'}
-                    </Alert>
+                    </StudentFeedback>
                   )}
                 {controller.classCapacity &&
                   formik.values.offeringId &&
                   dismissedCapacityOfferingId !== formik.values.offeringId && (
                     <Box sx={{ gridColumn: '1 / -1' }}>
-                      <Alert
+                      <StudentFeedback
+                        notificationKey="STU-0081"
+                        presentation={controller.classCapacity.isFull ? 'persistent' : 'inline'}
                         severity={controller.classCapacity.isFull ? 'warning' : 'info'}
                         onClose={() => setDismissedCapacityOfferingId(formik.values.offeringId)}
                       >
@@ -383,7 +403,7 @@ export default function AdmissionInquiryFormPage() {
                           (controller.canCreateInquiry
                             ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
                             : ' Capacity is full and this offering does not accept further inquiries.')}
-                      </Alert>
+                      </StudentFeedback>
                     </Box>
                   )}
               </InquiryFormSection>
@@ -399,7 +419,9 @@ export default function AdmissionInquiryFormPage() {
                 </InquiryFormSection>
               )}
               {controller.runtimeError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0082"
+                  presentation="toast"
                   severity="error"
                   action={
                     <Button size="small" onClick={controller.retryRuntime}>
@@ -408,7 +430,7 @@ export default function AdmissionInquiryFormPage() {
                   }
                 >
                   The inquiry form for this offering could not be loaded. Try again.
-                </Alert>
+                </StudentFeedback>
               )}
               {!controller.runtimeLoading &&
                 !controller.runtimeError &&
@@ -574,13 +596,17 @@ export default function AdmissionInquiryFormPage() {
                 overrideReason={controller.duplicateOverrideReason}
                 onOverrideReasonChange={controller.setDuplicateOverrideReason}
               />
-              {controller.requestError && <Alert severity="error">{controller.requestError}</Alert>}
+              {controller.requestError && (
+                <StudentFeedback notificationKey="STU-0083" presentation="inline" severity="error">
+                  {controller.requestError}
+                </StudentFeedback>
+              )}
               {formik.submitCount > 0 && validationMessages.length > 0 && (
-                <Alert severity="error">
+                <StudentFeedback notificationKey="STU-0084" presentation="inline" severity="error">
                   {validationMessages.map((message) => (
                     <div key={message}>{message}</div>
                   ))}
-                </Alert>
+                </StudentFeedback>
               )}
             </Stack>
           </FormBusyRegion>

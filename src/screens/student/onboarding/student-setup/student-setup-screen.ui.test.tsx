@@ -27,6 +27,16 @@ const mocks = vi.hoisted(() => ({
   permissions: [{ name: 'Students.Onboarding.Add', isGranted: true }],
   cancel: vi.fn(),
   clearResults: vi.fn(),
+  runAutomatic: vi.fn(),
+  retainAutomaticPage: vi.fn(),
+  applyRollBatchRows: vi.fn(),
+  rollBatches: [] as Array<{
+    id: string;
+    status: string;
+    caseIds?: string[] | null;
+    canDecide?: boolean;
+    canApply?: boolean;
+  }>,
   replace: vi.fn(),
   query: vi.fn(),
   push: vi.fn(),
@@ -49,13 +59,23 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('src/redux/student/onboarding/student-roll-number-batches-api', () => ({
   useGetRollNumberBatchContextQuery: () => ({
-    currentData: { unassignedCount: 83, canAssignMissing: true },
+    currentData: { unassignedCount: 83, canAssignMissing: true, batches: mocks.rollBatches },
     isFetching: false,
     isError: false,
   }),
 }));
 vi.mock('./student-roll-number-workspace', () => ({
-  default: () => <div role="dialog">Roll Number Workspace</div>,
+  default: ({ caseIds, presentation, scope, onApplied }: any) => (
+    <>
+      <output data-testid="roll-targets">{JSON.stringify({ caseIds, presentation, scope })}</output>
+      <button
+        type="button"
+        onClick={() => onApplied([{ studentId: 'student-1', proposedRollNumber: 1 }])}
+      >
+        Confirm applied Roll result
+      </button>
+    </>
+  ),
 }));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
@@ -140,7 +160,9 @@ vi.mock('./use-student-setup-assignment', () => ({
     clearResults: mocks.clearResults,
     startManual: vi.fn(),
     cancel: mocks.cancel,
-    runAutomatic: vi.fn(),
+    runAutomatic: mocks.runAutomatic,
+    retainAutomaticPage: mocks.retainAutomaticPage,
+    applyRollBatchRows: mocks.applyRollBatchRows,
     form: {
       dirty: mocks.dirty,
       values: { reason: '', values: {} },
@@ -305,6 +327,8 @@ describe('Student Setup workspace selection wiring', () => {
     vi.clearAllMocks();
     mocks.permissions = [{ name: 'Students.Onboarding.Add', isGranted: true }];
     mocks.dirty = false;
+    mocks.runAutomatic.mockResolvedValue([]);
+    mocks.rollBatches = [];
     mocks.manualEditing = false;
     mocks.casesAvailable = true;
     mocks.casesFetching = false;
@@ -424,9 +448,9 @@ describe('Student Setup workspace selection wiring', () => {
     mocks.params.set('case', 'outside-current-page');
     mocks.focusedCaseError = true;
     render(element);
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'selected onboarding case could not be loaded'
-    );
+    expect(
+      screen.getByText('selected onboarding case could not be loaded', { exact: false })
+    ).toBeVisible();
     expect(screen.getByTestId('student-setup-worklist')).not.toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(mocks.refetchCase).toHaveBeenCalledOnce();
@@ -620,14 +644,92 @@ describe('Student Setup workspace selection wiring', () => {
     expect(screen.queryByText('0 pending')).not.toBeInTheDocument();
   });
 
-  it('opens the full server roll workspace instead of reusing current-page automatic targets', () => {
+  it('targets only unassigned current-page students in the chosen Class/Division for direct Roll Auto', () => {
     setRoute('roll-number', 'grade-6');
     mocks.params.set('division', 'division-a');
+    mocks.rows = [
+      {
+        ...studentOnboardingTestData[0],
+        id: 'page-case',
+        source: 'onboarding-case',
+        standardId: 'grade-6',
+        divisionId: 'division-a',
+        rollNo: null,
+      },
+      {
+        ...studentOnboardingTestData[0],
+        id: 'already-assigned',
+        source: 'onboarding-case',
+        standardId: 'grade-6',
+        divisionId: 'division-a',
+        rollNo: 1,
+      },
+      {
+        ...studentOnboardingTestData[0],
+        id: 'other-division',
+        source: 'onboarding-case',
+        standardId: 'grade-6',
+        divisionId: 'division-b',
+        rollNo: null,
+      },
+    ];
     render(element);
     fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('Roll Number Workspace');
+    expect(JSON.parse(screen.getByTestId('roll-targets').textContent!)).toEqual({
+      caseIds: ['page-case'],
+      presentation: 'quick',
+      scope: { academicYearId: 'year-1', standardId: 'grade-6', divisionId: 'division-a' },
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('auto-targets')).not.toBeInTheDocument();
     expect(mocks.clearResults).not.toHaveBeenCalled();
+    expect(mocks.retainAutomaticPage).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm applied Roll result' }));
+    expect(mocks.applyRollBatchRows).toHaveBeenCalledExactlyOnceWith([
+      { studentId: 'student-1', proposedRollNumber: 1 },
+    ]);
+    expect(screen.queryByRole('button', { name: 'Manage Roll Numbers' })).not.toBeInTheDocument();
+  });
+
+  it('runs GR Auto directly against visible eligible rows without opening the assignment drawer', async () => {
+    setRoute('gr-number', 'grade-6');
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Auto' }));
+    await waitFor(() => expect(mocks.runAutomatic).toHaveBeenCalledOnce());
+    expect(mocks.runAutomatic).toHaveBeenCalledWith(mocks.rows);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('auto-targets')).not.toBeInTheDocument();
+  });
+
+  it.each([null, ['case-1', 'off-page-case']])(
+    'does not expose off-page or legacy approval batches in the quick page action',
+    (caseIds) => {
+      setRoute('roll-number', 'grade-6');
+      mocks.params.set('division', 'division-a');
+      mocks.rollBatches = [{ id: 'unsafe-batch', status: 'Approved', caseIds, canApply: true }];
+      render(element);
+      expect(screen.queryByRole('button', { name: 'Apply approved' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Review approval' })).not.toBeInTheDocument();
+    }
+  );
+
+  it('opens only a fully current-page policy batch with explicit target verification', () => {
+    setRoute('roll-number', 'grade-6');
+    mocks.params.set('division', 'division-a');
+    mocks.rollBatches = [
+      {
+        id: 'page-batch',
+        status: 'PendingApproval',
+        caseIds: ['case-1', 'case-2'],
+        canDecide: true,
+      },
+    ];
+    render(element);
+    fireEvent.click(screen.getByRole('button', { name: 'Review approval' }));
+    expect(JSON.parse(screen.getByTestId('roll-targets').textContent!)).toMatchObject({
+      caseIds: ['case-1', 'case-2'],
+      presentation: 'quick',
+    });
   });
 
   it('disables Division Auto when more than one Class is selected', () => {
@@ -746,6 +848,8 @@ describe('Student Setup workspace selection wiring', () => {
   ])('preserves the %s dashboard queue without default narrowing', (queue) => {
     mocks.params = new URLSearchParams(`dashboard=${queue}&year=year-2`);
     render(element);
+    expect(screen.getByText(`Worklist: ${queue.replaceAll('-', ' ')}`)).toBeVisible();
+    expect(screen.queryByText(/Dashboard worklist:/)).not.toBeInTheDocument();
     expect(mocks.query).toHaveBeenCalledWith(
       expect.objectContaining({ academicYearId: 'year-2', dashboardQueue: queue }),
       expect.objectContaining({ skip: false })

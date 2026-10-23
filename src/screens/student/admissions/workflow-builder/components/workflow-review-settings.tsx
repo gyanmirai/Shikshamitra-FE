@@ -2,7 +2,8 @@ import type { FormikProps } from 'formik';
 import type { AdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Alert, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { getReviewConfigurationError } from 'src/redux/student/admissions/admission-review-validation';
 import {
@@ -48,9 +49,15 @@ export function WorkflowReviewSettings({
       >
         <Stack spacing={2}>
           {!available && (
-            <Alert severity="info">Managed review is not available in this environment yet.</Alert>
+            <StudentFeedback notificationKey="STU-0572" presentation="inline" severity="info">
+              Managed review is not available in this environment yet.
+            </StudentFeedback>
           )}
-          {unreadable && <Alert severity="error">{error}</Alert>}
+          {unreadable && (
+            <StudentFeedback notificationKey="STU-0573" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           <WorkflowProcessChoice
             label="Review process"
             value={policy?.enabled ? 'managed' : 'basic'}
@@ -80,7 +87,15 @@ export function WorkflowReviewSettings({
                 available={available}
                 onChange={update}
               />
-              {error && <Alert severity="error">{error}</Alert>}
+              {error && (
+                <StudentFeedback
+                  notificationKey="STU-0573"
+                  presentation="persistent"
+                  severity="error"
+                >
+                  {error}
+                </StudentFeedback>
+              )}
             </>
           )}
         </Stack>

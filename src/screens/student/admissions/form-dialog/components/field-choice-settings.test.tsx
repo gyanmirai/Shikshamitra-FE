@@ -1,3 +1,5 @@
+import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
+
 import { Formik } from 'formik';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -16,17 +18,22 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormSystemFieldsQuery: () => ({ data: [] }),
 }));
 
-function renderFieldSettings(fieldType: 6 | 7 | 8) {
+function renderFieldSettings(fieldType: 6 | 7 | 8, patch: Partial<AdmissionFormField> = {}) {
   const form = getAdmissionFormInitialValues();
   const section = form.sections[0];
-  section.fields = [newField(section.id!, 0, fieldType)];
+  section.fields = [{ ...newField(section.id!, 0, fieldType), ...patch }];
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Formik initialValues={form} onSubmit={() => undefined}>
         {(formik) => (
           <>
-            <FormBuilderProperties formik={formik} selectedLocation={{ sectionIndex: 0, fieldIndex: 0 }} />
-            <output data-testid="choices-json">{formik.values.sections[0].fields[0].optionsJson}</output>
+            <FormBuilderProperties
+              formik={formik}
+              selectedLocation={{ sectionIndex: 0, fieldIndex: 0 }}
+            />
+            <output data-testid="choices-json">
+              {formik.values.sections[0].fields[0].optionsJson}
+            </output>
           </>
         )}
       </Formik>
@@ -40,6 +47,9 @@ describe('Admission Form Builder choice field settings', () => {
     async (fieldType) => {
       const user = userEvent.setup();
       renderFieldSettings(fieldType);
+
+      expect(screen.queryByRole('combobox', { name: 'Options source' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Depends on field' })).not.toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Add choice' }));
       const firstOption = screen.getByRole('textbox', { name: 'Option 1' });
@@ -91,5 +101,30 @@ describe('Admission Form Builder choice field settings', () => {
       { value: 'BUS', label: 'Bus' },
       { value: 'BUS_2', label: 'Bus' },
     ]);
+  });
+
+  it('keeps an existing custom lookup until it is explicitly replaced with manual options', async () => {
+    const user = userEvent.setup();
+    const optionsJson = '{"source":"EducationMediums","parentField":"BOARD"}';
+    renderFieldSettings(6, { optionsJson });
+
+    expect(screen.getByTestId('choices-json')).toHaveTextContent(optionsJson);
+    expect(screen.queryByRole('combobox', { name: 'Options source' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Depends on field' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add choice' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Enter my own options' }));
+    await user.click(screen.getByRole('button', { name: 'Add choice' }));
+    expect(JSON.parse(screen.getByTestId('choices-json').textContent ?? '[]')).toEqual([
+      { value: 'OPTION_1', label: 'Option 1' },
+    ]);
+  });
+
+  it('preserves the automatic options and parent dependency of a linked Student field', () => {
+    const optionsJson = '{"source":"EducationMediums","parentField":"BOARD"}';
+    renderFieldSettings(6, { optionsJson, bindingType: 0, bindingKey: 'Admission.Medium' });
+
+    expect(screen.getByTestId('choices-json')).toHaveTextContent(optionsJson);
+    expect(screen.queryByText('Answer options')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enter my own options' })).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,8 @@
 import type { AdmissionConditionRule } from 'src/redux/student/admissions/admission-condition-rule';
 
+import { Paper, Stack, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Paper, Stack, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   emptyCondition,
   readAdmissionCondition,
@@ -29,9 +30,9 @@ export function AdmissionConditionEditor({ json, onChange, ...props }: Props) {
   const rule = json ? readAdmissionCondition(json) : emptyCondition();
   if (!rule)
     return (
-      <Alert severity="error">
+      <StudentFeedback notificationKey="STU-0500" presentation="persistent" severity="error">
         This condition cannot be edited in this version. Its saved rule has been preserved.
-      </Alert>
+      </StudentFeedback>
     );
   return (
     <ConditionNode

@@ -57,7 +57,7 @@ beforeEach(() => {
 it('shows default create-slot guidance with a scoped redirect before an exam booking exists', () => {
   const redirect = vi.fn();
   renderGuidance({ onOpenAssessments: redirect });
-  expect(screen.getByRole('alert')).toHaveTextContent('No assessment slot has been created');
+  expect(screen.getByText('No assessment slot has been created', { exact: false })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Go to Assessments' }));
   const url = new URL(redirect.mock.calls[0][0], 'http://localhost');
   expect(url.pathname).toBe('/student/admissions/assessments');
@@ -71,15 +71,15 @@ it('shows default create-slot guidance with a scoped redirect before an exam boo
 it('asks staff to book an existing slot rather than create another slot', () => {
   mocks.query.mockReturnValue(query([session]));
   renderGuidance();
-  expect(screen.getByRole('alert')).toHaveTextContent('Book an available slot');
+  expect(screen.getByText('Book an available slot', { exact: false })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Go to Assessments' })).not.toBeInTheDocument();
 });
 
 it('explains unavailable slots and requests administrator help without session management access', () => {
   mocks.query.mockReturnValue(query([{ ...session, bookedCount: 10 }]));
   renderGuidance({ canManageSessions: false });
-  expect(screen.getByRole('alert')).toHaveTextContent('No assessment slots are available');
-  expect(screen.getByRole('alert')).toHaveTextContent('Ask an admissions administrator');
+  expect(screen.getByText('No assessment slots are available', { exact: false })).toBeVisible();
+  expect(screen.getByText('Ask an admissions administrator', { exact: false })).toBeVisible();
 });
 
 it('keeps guidance loading and errors distinct from an empty slot list', () => {

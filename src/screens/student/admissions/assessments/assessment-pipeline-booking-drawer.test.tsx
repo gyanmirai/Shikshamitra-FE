@@ -31,7 +31,15 @@ vi.mock('./use-assessment-permissions', () => ({
 }));
 vi.mock('./use-assessment-actions', () => ({ useAssessmentActions: () => mocks.run }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
   useGetAdmissionApplicationQuery: () => ({
     currentData: {
@@ -237,7 +245,7 @@ it('shows a room conflict without confirming and keeps the slot form available f
   const originalName = (name as HTMLInputElement).value;
   fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
 
-  expect(await screen.findByRole('alert')).toHaveTextContent(reason);
+  expect(await screen.findByText(reason, { exact: false })).toBeVisible();
   expect(name).toHaveValue(originalName);
   expect(onClose).not.toHaveBeenCalled();
   expect(mocks.confirm).not.toHaveBeenCalled();
@@ -253,7 +261,7 @@ it('preserves the form and replays the same atomic command after a lost confirma
   fireEvent.click(screen.getByRole('button', { name: 'Add Slot' }));
   fireEvent.click(screen.getByRole('button', { name: 'Fill slot details' }));
   fireEvent.click(screen.getByRole('button', { name: 'Create & Book' }));
-  await screen.findByRole('alert');
+  await screen.findByText(/Response lost|could not|failed|unable/i);
   expect(onClose).not.toHaveBeenCalled();
   const sent = mocks.confirm.mock.calls[0][0];
   view.rerender(content(onClose, false));

@@ -5,19 +5,16 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
+import { useEffect } from 'react';
 import { useFormik } from 'formik';
-import { useRef, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { readPaymentCompletionPolicy } from 'src/redux/student/admissions/admission-payment-completion-policy';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
+import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 import {
   readStageConfiguration,
   getAssessmentConfigurationError,
 } from 'src/redux/student/admissions/admission-assessment-policy';
-import {
-  readAdmissionFormStagePolicy,
-  getAdmissionFormStageConfigurationError,
-} from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import {
   isApplicationStageType,
@@ -69,13 +66,11 @@ export function useWorkflowStageEditor({
   onSave,
 }: Props) {
   const discard = useBoolean();
-  const validationForms = useRef(forms);
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
     initialValues: normalizeStageConfiguration(stage ?? emptyStage),
     validationSchema: schema,
-    validate: (values) =>
-      validateConfiguration(values, stageTypes, stages, validationForms.current),
+    validate: (values) => validateConfiguration(values, stageTypes, stages, forms),
     onSubmit: (values, helpers) => {
       if (readOnly || !isApplicationStageType(values.stageType)) return;
       onSave({
@@ -111,30 +106,6 @@ export function useWorkflowStageEditor({
   const metadata = stageTypes.find((item) => item.type === formik.values.stageType);
   const formId = readStageConfiguration(formik.values.configurationJson)?.formDefinitionId;
   const formDefinitionId = typeof formId === 'string' ? formId : '';
-  const listedForm = forms.find((form) => form.id === formDefinitionId);
-  const formPolicy = readAdmissionFormStagePolicy(formik.values.configurationJson);
-  const needsFormDetails =
-    open &&
-    formik.values.stageType === 1 &&
-    formPolicy?.enabled === true &&
-    formPolicy.requireSectionVerification &&
-    Boolean(formDefinitionId) &&
-    (!listedForm ||
-      listedForm.sections.length === 0 ||
-      listedForm.sections.length < listedForm.sectionCount);
-  const formDetailsQuery = useGetAdmissionFormQuery(formDefinitionId, {
-    skip: !needsFormDetails,
-  });
-  const formDetails =
-    formDetailsQuery.currentData?.id === formDefinitionId
-      ? formDetailsQuery.currentData
-      : undefined;
-  const resolvedForms = formDetails
-    ? forms.some((form) => form.id === formDefinitionId)
-      ? forms.map((form) => (form.id === formDefinitionId ? formDetails : form))
-      : [...forms, formDetails]
-    : forms;
-  validationForms.current = resolvedForms;
 
   return {
     formik,
@@ -143,11 +114,7 @@ export function useWorkflowStageEditor({
     discard,
     close,
     formDefinitionId,
-    forms: resolvedForms,
-    formDetailsLoading: needsFormDetails && !formDetails && !formDetailsQuery.isError,
-    formDetailsError: needsFormDetails && !formDetails && formDetailsQuery.isError,
-    formDetailsUnavailable: needsFormDetails && !formDetails,
-    retryFormDetails: formDetailsQuery.refetch,
+    forms,
     requestClose: () => {
       if (!readOnly && formik.dirty) discard.onTrue();
       else close();
@@ -173,6 +140,11 @@ function validateConfiguration(
   if (!isApplicationStageType(values.stageType)) {
     return {
       stageType: 'Choose Form, Assessment, Payment, Document verification or Admission Decision.',
+    };
+  }
+  if (values.stageType === 4 && !readPaymentCompletionPolicy(values.configurationJson)) {
+    return {
+      configurationJson: 'These Payment completion settings are unsupported. Reload the workflow.',
     };
   }
   if (values.stageType === 2) {

@@ -171,7 +171,9 @@ describe('Admin Student dashboard with real shared components and scoped RTK rea
     const error = await screen.findByText(/Today's attendance could not be loaded/);
     expect(screen.queryByText(/No priority actions/)).not.toBeInTheDocument();
     fireEvent.click(
-      within(error.closest('[role="alert"]') as HTMLElement).getByRole('button', { name: 'Retry' })
+      within(error.closest('[data-student-feedback]') as HTMLElement).getByRole('button', {
+        name: 'Retry',
+      })
     );
     await waitFor(() => expect(attempts).toBe(2));
     await waitFor(() =>

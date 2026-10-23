@@ -24,7 +24,13 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('./use-admission-inquiry-dialog', () => ({ useAdmissionInquiryDialog: vi.fn() }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { warning: vi.fn() },
+  shikshaMitraToast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    warning: vi.fn(),
+  },
 }));
 
 const preferredClassMessage =
@@ -205,9 +211,35 @@ function useMultilingualController() {
 }
 
 describe('New inquiry form', () => {
+  it('reports failed prerequisite requests through standard toasts without inline errors or Retry rows', () => {
+    vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
+      controller({ offeringsError: true, academicError: true }) as unknown as ReturnType<
+        typeof useAdmissionInquiryDialog
+      >
+    );
+    const { rerender } = render(<AdmissionInquiryFormPage />);
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Open admission offerings could not be loaded.' })
+    );
+    expect(shikshaMitraToast.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Academic choices could not be loaded.' })
+    );
+    expect(screen.queryByText('Open admission offerings could not be loaded.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Academic choices could not be loaded.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Retry/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New inquiry' })).toBeVisible();
+    rerender(<AdmissionInquiryFormPage />);
+    expect(shikshaMitraToast.error).toHaveBeenCalledTimes(2);
+  });
+
   it('shows academic-start age with configured DOB help and permits creating an underage inquiry', async () => {
     const fixture = controller();
-    const offering = { ...fixture.selectedOffering, boardId: 'board-1', mediumId: 'medium-1', standardId: 'standard-1' } as AdmissionOfferingListItem;
+    const offering = {
+      ...fixture.selectedOffering,
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: 'standard-1',
+    } as AdmissionOfferingListItem;
     const dob = {
       id: 'dob',
       code: 'DOB',
@@ -229,7 +261,7 @@ describe('New inquiry form', () => {
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       controller({
         ...fixture,
-      selectedOffering: offering,
+        selectedOffering: offering,
         fields,
         sections: [{ ...fixture.sections[0], fields }],
         ageContext: {

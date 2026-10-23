@@ -14,6 +14,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { LoadingButton } from 'src/components/loading-button';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -23,7 +24,6 @@ import {
 import {
   Box,
   Card,
-  Alert,
   Stack,
   Avatar,
   Button,
@@ -117,7 +117,9 @@ export function ApplicationCounsellorCard({
   const assignmentFields = (
     <Stack spacing={compact || header ? 1 : 2}>
       {counsellors.isError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0183"
+          presentation="toast"
           severity="error"
           action={
             <LoadingButton
@@ -130,10 +132,12 @@ export function ApplicationCounsellorCard({
           }
         >
           Eligible counsellors could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       {!optionsLoading && !counsellors.isError && eligibleCounsellors?.length === 0 && (
-        <Alert severity="info">No eligible counsellors are available for this offering.</Alert>
+        <StudentFeedback notificationKey="STU-0184" presentation="inline" severity="info">
+          No eligible counsellors are available for this offering.
+        </StudentFeedback>
       )}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={compact ? 1 : 2}>
         <Box sx={{ flex: 1, minWidth: 0 }}>

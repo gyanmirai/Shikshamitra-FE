@@ -1,11 +1,13 @@
+import type { FeeProrationResult } from 'src/redux/finance/fee-proration-result';
+
 import { api } from 'src/redux/service';
-import { studentType } from 'src/redux/tagTypes';
+import { studentType, financeModuleType } from 'src/redux/tagTypes';
 
 import { unwrapRecordsResult } from './student-records-api';
 
-import type { StudentPortalAccount } from '../onboarding/student-onboarding-api';
-import type { AdmissionEntryMode } from '../admissions/admission-offerings-api';
 import type { AdmissionForm } from '../admissions/admission-forms-api';
+import type { AdmissionEntryMode } from '../admissions/admission-offerings-api';
+import type { StudentPortalAccount } from '../onboarding/student-onboarding-api';
 import type { AdmissionInquirySource } from '../admissions/admission-inquiries-api';
 import type { RecordsPage, RecordsOutcome, RecordsReturnRoute } from './student-records-types';
 
@@ -24,6 +26,7 @@ export type TransitionRow = {
 };
 export type TransitionIssue = { code: string; message: string };
 export type TransitionPreviewRow = {
+  proration?: FeeProrationResult | null;
   rollAssignmentMode?: 'manual' | 'automatic';
   proposedRollNumber?: number | null;
   transitionId?: string | null;
@@ -170,6 +173,13 @@ export type StudentRecordReturnResult = {
 };
 const transitionsTag = [{ type: studentType.student, id: 'RECORDS-TRANSITIONS' }];
 const renewalsTag = [{ type: studentType.student, id: 'RECORDS-RENEWALS' }];
+const withdrawalFinanceTags = [
+  financeModuleType.feeCollection,
+  financeModuleType.feeDetails,
+  financeModuleType.feeAdjustment,
+  financeModuleType.feeRefund,
+  financeModuleType.financeAudit,
+];
 export const studentRecordTransitionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentRecordTransitionOptions: builder.query<
@@ -217,7 +227,17 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
               };
             }
       ) => unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (result, error) =>
+        error
+          ? []
+          : [
+              studentType.student,
+              ...(result?.items.some(
+                (item) => item.outcome === 'Withdraw' && item.status === 'Applied'
+              )
+                ? withdrawalFinanceTags
+                : []),
+            ],
     }),
     decideStudentRecordTransition: builder.mutation<
       StudentTransition,
@@ -235,7 +255,15 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       }),
       transformResponse: (response: StudentTransition | { data?: StudentTransition }) =>
         unwrapRecordsResult(response),
-      invalidatesTags: (_result, error) => (error ? [] : [studentType.student]),
+      invalidatesTags: (result, error) =>
+        error
+          ? []
+          : [
+              studentType.student,
+              ...(result?.outcome === 'Withdraw' && result.status === 'Applied'
+                ? withdrawalFinanceTags
+                : []),
+            ],
     }),
     correctStudentRecordTransition: builder.mutation<
       TransitionPreviewRow,
@@ -255,7 +283,7 @@ export const studentRecordTransitionsApi = api.injectEndpoints({
       transformResponse: (response: TransitionPreviewRow | { data?: TransitionPreviewRow }) =>
         unwrapRecordsResult(response),
       invalidatesTags: (_result, error, body) =>
-        error || body.previewOnly ? [] : [studentType.student],
+        error || body.previewOnly ? [] : [studentType.student, ...withdrawalFinanceTags],
     }),
     getStudentRecordRenewals: builder.query<RecordsPage<StudentRenewal>, TransitionQuery>({
       query: (params) => ({ url: '/students/records/transitions/renewals', params }),

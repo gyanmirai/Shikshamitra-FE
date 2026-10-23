@@ -27,7 +27,15 @@ vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { error: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 vi.mock('src/components/customizabaleTable', () => ({
   default: ({ data }: { data: { receiptNumber: string }[] }) => (
     <div aria-label="Fee receipts">
@@ -159,8 +167,38 @@ it('skips financial reads and renders no collection controls without exact Finan
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
+it('renders only the Finance proration result without Student-side policy inputs', () => {
+  mocks.summary.mockReturnValue({
+    currentData: {
+      ...summary,
+      proration: {
+        policyName: 'Monthly Finance policy',
+        policyVersion: 2,
+        joiningDate: '2026-08-01',
+        chargeStartDate: '2026-08-01',
+        chargeEndDate: '2027-03-31',
+        scheduledAmount: 10000,
+        admissionReduction: 2000,
+        withdrawalCredit: 0,
+        payableAmount: 8000,
+        excessPaidAmount: 0,
+        explanations: ['Eight service months under the saved policy.'],
+      },
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: mocks.refetch,
+  });
+  renderPanel();
+  expect(screen.getByText('Monthly Finance policy · v2')).toBeVisible();
+  expect(screen.getByText('Joining date reduction')).toBeVisible();
+  expect(screen.queryByRole('combobox', { name: /proration/i })).not.toBeInTheDocument();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+});
+
 it.each(['summary', 'selection'])(
-  'shows a collection-button spinner during %s refresh and restores the action afterwards',
+  'shows collection-shaped skeletons during %s refresh and restores the action afterwards',
   (source) => {
     const refreshed = {
       currentData: summary,
@@ -172,8 +210,10 @@ it.each(['summary', 'selection'])(
     mocks.summary.mockReturnValue(refreshed);
     const view = renderPanel({ refreshing: source === 'selection' });
     expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
-    expect(screen.getByRole('progressbar', { name: 'Collect fees' })).toBeVisible();
-    expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('6,000');
+    expect(screen.getByRole('status', { name: 'Refreshing fee collection' })).toBeVisible();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.getByText('Fee balance').nextElementSibling).not.toBeVisible();
+    expect(screen.getByText('FEE-0001')).not.toBeVisible();
     expect(mocks.prepare).not.toHaveBeenCalled();
     mocks.summary.mockReturnValue({ ...refreshed, isFetching: false });
     view.rerender(
@@ -182,9 +222,42 @@ it.each(['summary', 'selection'])(
       </ThemeProvider>
     );
     expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled();
-    expect(screen.queryByRole('progressbar', { name: 'Collect fees' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Refreshing fee collection' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Fee balance').nextElementSibling).toHaveTextContent('6,000');
+    expect(screen.getByText('FEE-0001')).toBeVisible();
   }
 );
+
+it('does not flash a completed-empty payment state while initial data or cached empty data refreshes', () => {
+  const pending = {
+    currentData: undefined,
+    isLoading: true,
+    isFetching: true,
+    isError: false,
+    refetch: mocks.refetch,
+  };
+  mocks.summary.mockReturnValue(pending);
+  const view = renderPanel({ stretch: true });
+  expect(screen.getByRole('status', { name: 'Loading fee collection' })).toBeVisible();
+  expect(screen.queryByText('No payments recorded yet.')).not.toBeInTheDocument();
+  expect(screen.queryByText('₹0')).not.toBeInTheDocument();
+  mocks.summary.mockReturnValue({
+    ...pending,
+    currentData: { ...summary, hasPaymentEvidence: false, receipts: [] },
+    isLoading: false,
+  });
+  view.rerender(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AdmissionFeeCollectionPanel applicationId="application-1" stretch />
+    </ThemeProvider>
+  );
+  expect(screen.getByRole('status', { name: 'Refreshing fee collection' })).toBeVisible();
+  expect(screen.getByText('No payments recorded yet.')).not.toBeVisible();
+  expect(screen.getByRole('button', { name: 'Collect fees' })).toBeDisabled();
+  expect(mocks.prepare).not.toHaveBeenCalled();
+});
 
 it('uses server balances and separates unverified money instead of deriving total minus paid', () => {
   renderPanel();
@@ -195,7 +268,7 @@ it('uses server balances and separates unverified money instead of deriving tota
   expect(
     screen.getByText('Charges and late fees are shown separately in the collection form.')
   ).toBeInTheDocument();
-  expect(screen.getByRole('alert')).toHaveTextContent('2,000');
+  expect(screen.getByText(/is awaiting Finance verification/)).toHaveTextContent('2,000');
   expect(mocks.prepare).not.toHaveBeenCalled();
 });
 
@@ -240,6 +313,31 @@ it('keeps collection available when Finance reports unsettled charges despite ze
   renderPanel();
   expect(screen.getByRole('button', { name: 'Collect fees' })).toBeEnabled();
   expect(screen.queryByText('Settled')).not.toBeInTheDocument();
+});
+
+it('confirms a Finance-verified zero fee structure without opening or creating a payment', async () => {
+  const zero = {
+    ...summary,
+    totalAmount: 0,
+    outstandingAmount: 0,
+    confirmedPaidAmount: 0,
+    pendingVerificationAmount: 0,
+    hasPaymentEvidence: false,
+    receipts: [],
+  };
+  mocks.summary.mockReturnValue({ currentData: zero, isFetching: false, refetch: mocks.refetch });
+  mocks.prepareUnwrap.mockResolvedValue({
+    ...zero,
+    accountId: 'prepared-account',
+    isSettled: true,
+  });
+  const onOpenChange = vi.fn();
+  renderPanel({ onOpenChange });
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm no payment due' }));
+  await waitFor(() => expect(mocks.refetch).toHaveBeenCalledOnce());
+  expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  expect(screen.queryByText('Collection form')).not.toBeInTheDocument();
+  expect(mocks.collect).not.toHaveBeenCalled();
 });
 
 it('keeps unknown balances distinct from zero and preserves collection prerequisites in the workspace', () => {

@@ -5,6 +5,7 @@ import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admiss
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useRef, useState, useEffect } from 'react';
+import { StudentFeedback } from 'src/components/student-feedback';
 import AdmissionRuntimeField from 'src/screens/student/admissions/admission-runtime-field';
 import { useAdmissionPhotoReads } from 'src/screens/student/admissions/use-admission-photo-reads';
 import { isAdmissionRuleVisible } from 'src/screens/student/admissions/admission-visibility-rules';
@@ -14,7 +15,6 @@ import { preserveCompatibleInquiryAnswers } from 'src/screens/student/admissions
 import {
   Box,
   Card,
-  Alert,
   Stack,
   Button,
   Checkbox,
@@ -216,12 +216,14 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
           </Box>
           {loading && <CircularProgress size={28} aria-label="Loading inquiry form" />}
           {error && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0677"
+              presentation="persistent"
               severity="error"
               action={<Button onClick={() => setRetry((value) => value + 1)}>Retry</Button>}
             >
               {error}
-            </Alert>
+            </StudentFeedback>
           )}
           {context && !submitted && (
             <>
@@ -317,21 +319,27 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
                 </TextField>
               )}
               {(academic.length === 0 || (standardId && matching.length === 0)) && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-0678"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   {classOfferings.find((item) => item.unavailableReason)?.unavailableReason ||
                     'Selected class has no admission open.'}
-                </Alert>
+                </StudentFeedback>
               )}
               {formLoading && (
                 <CircularProgress size={24} aria-label="Checking admission availability" />
               )}
               {formError && (
-                <Alert
+                <StudentFeedback
+                  notificationKey="STU-0679"
+                  presentation="persistent"
                   severity="warning"
                   action={<Button onClick={() => setRetry((value) => value + 1)}>Retry</Button>}
                 >
                   {formError}
-                </Alert>
+                </StudentFeedback>
               )}
               {formContext?.form &&
                 !formLoading &&
@@ -353,9 +361,13 @@ export default function PublicAdmissionInquiryScreen({ token }: { token: string 
             </>
           )}
           {submitted && (
-            <Alert severity="success">
+            <StudentFeedback
+              notificationKey="STU-0680"
+              presentation="persistent"
+              severity="success"
+            >
               Thank you. Your inquiry has been received. The school will contact you.
-            </Alert>
+            </StudentFeedback>
           )}
         </Stack>
       </Card>
@@ -514,9 +526,15 @@ function InquiryForm({
           label="I agree that the school may contact me about this admission inquiry."
         />
         {formik.submitCount > 0 && formik.errors.consentToContact && (
-          <Alert severity="error">{formik.errors.consentToContact}</Alert>
+          <StudentFeedback notificationKey="STU-0681" presentation="inline" severity="error">
+            {formik.errors.consentToContact}
+          </StudentFeedback>
         )}
-        {requestError && <Alert severity="error">{requestError}</Alert>}
+        {requestError && (
+          <StudentFeedback notificationKey="STU-0682" presentation="persistent" severity="error">
+            {requestError}
+          </StudentFeedback>
+        )}
         <Button
           type="submit"
           size="small"

@@ -12,9 +12,10 @@ import type {
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 import { DocumentActionFields } from 'src/screens/student/admissions/document-verification/document-action-fields';
 import { useDocumentPermissions } from 'src/screens/student/admissions/document-verification/use-document-permissions';
 import { DocumentChecklistContent } from 'src/screens/student/admissions/document-verification/document-checklist-content';
@@ -109,7 +110,11 @@ function WorkflowDocumentAction({
       disableClose={form.isSubmitting}
     >
       <DialogScrollContent>
-        {form.status && <Alert severity="error">{form.status}</Alert>}
+        {form.status && (
+          <StudentFeedback notificationKey="STU-1024" presentation="persistent" severity="error">
+            {form.status}
+          </StudentFeedback>
+        )}
         <DocumentActionFields
           action={action}
           requirement={requirement}
@@ -156,7 +161,9 @@ export default function StudentOnboardingWorkflowDocuments({
   const [selection, setSelection] = useState<Selection | null>(null);
   if (query.isError)
     return (
-      <Alert
+      <StudentFeedback
+        notificationKey="STU-1026"
+        presentation="toast"
         severity="error"
         action={
           <Button size="small" onClick={() => query.refetch()}>
@@ -165,7 +172,7 @@ export default function StudentOnboardingWorkflowDocuments({
         }
       >
         Offering document requirements could not be loaded.
-      </Alert>
+      </StudentFeedback>
     );
   if (!query.data)
     return (
@@ -178,7 +185,9 @@ export default function StudentOnboardingWorkflowDocuments({
     <Stack spacing={1.5}>
       {!query.data.length &&
         (hasDocumentRequirementsSnapshot ? (
-          <Alert severity="info">This Offering has no required documents.</Alert>
+          <StudentFeedback notificationKey="STU-1028" presentation="inline" severity="info">
+            This Offering has no required documents.
+          </StudentFeedback>
         ) : (
           <StudentOnboardingDocuments caseId={caseId} enabled canManage={canManage} />
         ))}

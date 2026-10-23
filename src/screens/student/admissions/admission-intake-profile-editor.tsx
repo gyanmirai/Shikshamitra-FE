@@ -15,6 +15,7 @@ import { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { withStandardInquiryBehavior } from 'src/redux/student/admissions/admission-inquiry-policy';
@@ -27,7 +28,6 @@ import {
   Box,
   Grid,
   Stack,
-  Alert,
   Radio,
   Button,
   Drawer,
@@ -291,7 +291,11 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
                   {actualStep === 0 && <ProfileTypeFields formik={form} />}
                   {actualStep === 1 && <ProfileIdentityFields formik={form} />}
                   {actualStep === 1 && invalidSavedRules && (
-                    <AdmissionIntakeNotice severity="warning">
+                    <AdmissionIntakeNotice
+                      notificationKey="STU-0088"
+                      presentation="persistent"
+                      severity="warning"
+                    >
                       The saved rules could not be read. Review every rule before updating this
                       profile.
                     </AdmissionIntakeNotice>
@@ -543,14 +547,16 @@ function AssignmentFields({
   return (
     <>
       <Typography variant="subtitle1">Counsellor assignment rules</Typography>
-      <AdmissionIntakeNotice severity="info">
+      <AdmissionIntakeNotice notificationKey="STU-0090" presentation="inline" severity="info">
         New inquiries and direct registrations go to the counsellor with the fewest active cases.
         That counsellor stays the student&apos;s journey owner through admission and becomes the
         onboarding owner at finalization. A specialist completing one stage does not replace the
         journey owner.
       </AdmissionIntakeNotice>
       {loadError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0091"
+          presentation="toast"
           severity="error"
           action={
             <Button size="small" onClick={onRetry} loading={loading}>
@@ -559,10 +565,10 @@ function AssignmentFields({
           }
         >
           Unable to load counsellors.
-        </Alert>
+        </StudentFeedback>
       )}
       {!loading && !loadError && counsellors.length === 0 && (
-        <AdmissionIntakeNotice severity="info">
+        <AdmissionIntakeNotice notificationKey="STU-0092" presentation="inline" severity="info">
           Add eligible counsellors before saving this profile.
         </AdmissionIntakeNotice>
       )}

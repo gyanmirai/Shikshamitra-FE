@@ -35,7 +35,15 @@ vi.mock('react-redux', () => ({
     selector({ auth: { permissions: mocks.permissions } }),
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden /> }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: mocks.success } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+  },
+}));
 vi.mock('src/components/custom-select', () => ({
   default: ({
     label,
@@ -142,7 +150,12 @@ const setRecipients = (recipients: StudentCredentialsRecipient[]) => {
 it('shows saved email addresses in the parent choices and retains the activation block', async () => {
   setRecipients([
     studentRecipient,
-    { ...fatherRecipient, name: null, canSend: false, blockedReason: 'Activate the student first.' },
+    {
+      ...fatherRecipient,
+      name: null,
+      canSend: false,
+      blockedReason: 'Activate the student first.',
+    },
     { ...motherRecipient, canSend: false, blockedReason: 'Activate the student first.' },
   ]);
   panel();
@@ -150,7 +163,9 @@ it('shows saved email addresses in the parent choices and retains the activation
   selectRecipient('father');
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   expect(screen.getByRole('option', { name: 'Father · raj@example.test' })).toBeVisible();
-  expect(screen.getByRole('option', { name: 'Mother — Rina Patel · rina@example.test' })).toBeVisible();
+  expect(
+    screen.getByRole('option', { name: 'Mother — Rina Patel · rina@example.test' })
+  ).toBeVisible();
   expect(sendButton()).toBeDisabled();
   selectRecipient('mother');
   await waitFor(() => expect(email()).toHaveValue('rina@example.test'));
@@ -335,7 +350,10 @@ it('shows only the selected school policy/readiness reason without enabling sett
       screen.getByText('Complete enrollment activation before sending credentials.')
     ).toBeVisible()
   );
-  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(
+    screen.getAllByText('Complete enrollment activation before sending credentials.')
+  ).toHaveLength(1);
   expect(sendButton()).toBeDisabled();
   expect(screen.queryByRole('button', { name: /Enable parent email/ })).not.toBeInTheDocument();
 });
@@ -363,7 +381,7 @@ it('shows an initial error with retry instead of an empty state', () => {
   mocks.query.currentData = undefined;
   mocks.query.isError = true;
   panel();
-  expect(screen.getByRole('alert')).toHaveTextContent('Credentials could not be loaded.');
+  expect(screen.getByText('Credentials could not be loaded.', { exact: false })).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(mocks.query.refetch).toHaveBeenCalledOnce();
 });
@@ -371,9 +389,9 @@ it('shows an initial error with retry instead of an empty state', () => {
 it('offers refresh for an empty workspace without a send action', () => {
   setRecipients([]);
   panel();
-  expect(screen.getByRole('alert')).toHaveTextContent(
-    'No saved account-owner profiles are available.'
-  );
+  expect(
+    screen.getByText('No saved account-owner profiles are available.', { exact: false })
+  ).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
   expect(mocks.query.refetch).toHaveBeenCalledOnce();
   expect(screen.queryByRole('button', { name: 'Send Credentials' })).not.toBeInTheDocument();
@@ -401,7 +419,7 @@ it('preserves the chosen parent and email after a failed background refresh', as
     </ThemeProvider>
   );
   expect(email()).toHaveValue('raj@example.test');
-  expect(screen.getByRole('alert')).toHaveTextContent('Credentials could not be refreshed.');
+  expect(screen.getByText('Credentials could not be refreshed.', { exact: false })).toBeVisible();
   expect(sendButton()).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
   expect(mocks.query.refetch).toHaveBeenCalledOnce();
@@ -410,7 +428,9 @@ it('preserves the chosen parent and email after a failed background refresh', as
 it('keeps view-only recipients visible without allowing a send', async () => {
   panel({ canManage: false });
   await waitFor(() => expect(email()).toHaveValue('jay@example.test'));
-  expect(screen.getByRole('alert')).toHaveTextContent('An authorized staff member must send them.');
+  expect(
+    screen.getByText('An authorized staff member must send them.', { exact: false })
+  ).toBeVisible();
   expect(sendButton()).toBeDisabled();
   fireEvent.click(sendButton());
   expect(mocks.send).not.toHaveBeenCalled();
@@ -509,7 +529,7 @@ it('preserves the selected recipient and displays the actual server Reason after
   await waitFor(() => expect(email()).toHaveValue('raj@example.test'));
   fireEvent.click(sendButton());
   await waitFor(() =>
-    expect(screen.getByRole('alert')).toHaveTextContent('The saved email changed.')
+    expect(screen.getByText('The saved email changed.', { exact: false })).toBeVisible()
   );
   expect(type()).toHaveValue('guardian');
   expect(email()).toHaveValue('raj@example.test');
@@ -527,7 +547,7 @@ it('does not report success if the command returns a blocked or failed delivery'
   await waitFor(() => expect(sendButton()).toBeEnabled());
   fireEvent.click(sendButton());
   await waitFor(() =>
-    expect(screen.getByRole('alert')).toHaveTextContent('Sender unavailable. Try again later.')
+    expect(screen.getByText('Sender unavailable. Try again later.', { exact: false })).toBeVisible()
   );
   expect(mocks.success).not.toHaveBeenCalled();
   expect(sendButton()).toBeEnabled();

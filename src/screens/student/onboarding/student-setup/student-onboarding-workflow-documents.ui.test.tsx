@@ -16,7 +16,15 @@ const mocks = vi.hoisted(() => ({
     requirements: [{ code: 'birth', name: 'Birth certificate', evidence: [] }],
   },
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('./student-onboarding-documents', () => ({
   default: () => <div>Legacy requirements</div>,
 }));
@@ -137,7 +145,9 @@ it('keeps a frozen empty Offering checklist separate from legacy school requirem
   render(
     <StudentOnboardingWorkflowDocuments caseId="case-1" canManage hasDocumentRequirementsSnapshot />
   );
-  expect(screen.getByRole('alert')).toHaveTextContent('This Offering has no required documents.');
+  expect(
+    screen.getByText('This Offering has no required documents.', { exact: false })
+  ).toBeVisible();
   expect(screen.queryByText('Legacy requirements')).not.toBeInTheDocument();
   expect(mocks.checklist).not.toHaveBeenCalled();
 });

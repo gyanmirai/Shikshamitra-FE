@@ -1,6 +1,7 @@
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Stack, Paper, Alert, Button } from '@mui/material';
+import { Box, Stack, Paper, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { AdmissionQueryError } from '../admission-query-error';
 import { AdmissionAcademicFilters } from '../admission-academic-filters';
@@ -66,15 +67,19 @@ export function AssessmentWorkspaceControls({
       />
       {sessions.isError && <AdmissionQueryError onRetry={sessions.refetch} />}
       {invalidScope && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0286"
+          presentation="persistent"
           severity="warning"
           action={<Button onClick={() => setScope('')}>Clear filter</Button>}
         >
           This assessment is unavailable in the selected academic context.
-        </Alert>
+        </StudentFeedback>
       )}
       {invalidSession && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0287"
+          presentation="persistent"
           severity="warning"
           action={
             <Button
@@ -86,10 +91,12 @@ export function AssessmentWorkspaceControls({
         >
           This session is unavailable in the selected academic context.
           {selectedSession.isError && <Button onClick={selectedSession.refetch}>Retry</Button>}
-        </Alert>
+        </StudentFeedback>
       )}
       {selectedSession.currentData?.roomReservationStatus === 2 && (
-        <Alert severity="info">Room approval is pending. Bookings are held until approval.</Alert>
+        <StudentFeedback notificationKey="STU-0288" presentation="persistent" severity="info">
+          Room approval is pending. Bookings are held until approval.
+        </StudentFeedback>
       )}
       <Paper variant="outlined" sx={{ px: 1, py: 1, flexShrink: 0, minWidth: 0 }}>
         <Stack

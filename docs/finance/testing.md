@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-17
+updated_on: 2026-10-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -26,6 +26,10 @@ folders. Browser fixtures are `e2e/fixtures/collection-policy` and
 They render production components with synthetic data and do not establish backend correctness.
 Check mode selection/save, matching displayed/funded order, partial/exact/excess amounts,
 remaining balances, review, stale refresh and keyboard/mobile behavior. No priority editor is expected.
+
+## Admission and withdrawal proration result
+
+Run `FeeProrationResult.test.tsx`, `admission-fee-collection-panel.test.tsx`, `CollectionLedgerTable.test.tsx`, `transition-batch-form.test.tsx` and `student-record-proration-cache.test.ts`, plus typecheck and focused lint. Verify saved Finance values, regular/no-policy suppression, collection-error retry/deferral, owner cache refresh and existing permission guards. Browser component acceptance uses the real shared section with synthetic Finance output at desktop and 390px mobile widths; this is separate from persisted backend/HTTP tests and is not production-site payment proof.
 
 ## Security action bundles
 
@@ -196,7 +200,7 @@ Add or update tests when a change affects these areas.
 | Charge request payload                    | Client or mapper test                                                                                                                                                                       |
 | Optimistic cache update                   | Client cache test                                                                                                                                                                           |
 | Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                              |
-| Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh |
+| Concession decisions from Pending list    | Different checker with exact grant sees direct actions; requester cannot decide; approval preview and confirmation, reason-required rejection, backend denial, and list/tab count refresh   |
 | Late-fee waiver queue and decisions       | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
 | Audit Trail mapping                       | Mapper test                                                                                                                                                                                 |
 | Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                     |

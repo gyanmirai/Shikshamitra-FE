@@ -12,9 +12,10 @@ import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetStudentRecordSnapshotQuery,
   useCreateStudentRecordChangeMutation,
@@ -52,7 +53,9 @@ export default function GuardianProfileEmailDialog(props: Props) {
     >
       <DialogScrollContent>
         {snapshot.isError ? (
-          <Alert
+          <StudentFeedback
+            notificationKey="STU-0947"
+            presentation={activationRequired ? 'persistent' : 'toast'}
             severity="error"
             action={
               !activationRequired && (
@@ -65,7 +68,7 @@ export default function GuardianProfileEmailDialog(props: Props) {
             {activationRequired
               ? 'Activate the student before correcting family details in Student Records.'
               : 'The current family profile could not be loaded.'}
-          </Alert>
+          </StudentFeedback>
         ) : (
           <StudentSetupLoadingRows label="Loading saved family profile" count={2} />
         )}
@@ -158,9 +161,13 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
             This correction follows Student Records approval rules and is added to history.
           </Typography>
           {!validOwner && (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0949"
+              presentation="persistent"
+              severity="warning"
+            >
               Complete this person’s saved family profile in Student Records first.
-            </Alert>
+            </StudentFeedback>
           )}
           <ShakingTextField error={Boolean(formik.touched.email && formik.errors.email)}>
             <TextField
@@ -196,7 +203,11 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
               slotProps={{ htmlInput: { maxLength: 400 } }}
             />
           </ShakingTextField>
-          {formik.status && <Alert severity="error">{formik.status}</Alert>}
+          {formik.status && (
+            <StudentFeedback notificationKey="STU-0950" presentation="persistent" severity="error">
+              {formik.status}
+            </StudentFeedback>
+          )}
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -205,7 +216,8 @@ function EmailForm({ snapshot: loadedSnapshot, ...props }: Props & { snapshot: R
           variant="outlined"
           startIcon={<Iconify icon="mdi:close" />}
           onClick={() => {
-            if (!formik.dirty || window.confirm('Are you sure you want to leave this page?')) props.onClose();
+            if (!formik.dirty || window.confirm('Are you sure you want to leave this page?'))
+              props.onClose();
           }}
           disabled={busy}
         >

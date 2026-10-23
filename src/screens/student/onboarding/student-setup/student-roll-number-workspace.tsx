@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode, FormEvent } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   RollNumberScope,
@@ -10,18 +11,22 @@ import type {
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Stack,
-  Alert,
   Button,
   TextField,
   Typography,
@@ -37,8 +42,8 @@ import {
   usePreviewRollNumberBatchMutation,
 } from 'src/redux/student/onboarding/student-roll-number-batches-api';
 
-import { rollSortOptions, rollGroupingOptions } from '../setting/roll-ordering-fields';
 import StudentAssignmentDrawer from './student-assignment-drawer';
+import { rollSortOptions, rollGroupingOptions } from '../setting/roll-ordering-fields';
 
 type Props = {
   scope: RollNumberScope;
@@ -46,7 +51,48 @@ type Props = {
   batchId?: string;
   onClose: () => void;
   onInteractionChange?: (active: boolean) => void;
+  /** Explicit current-page targets. Never fall back to a whole-division preview. */
+  caseIds?: string[];
+  presentation?: 'drawer' | 'quick';
+  onApplied?: (items: RollNumberBatch['items']) => void;
 };
+class RollBatchVerificationError extends Error {}
+function RollAssignmentSurface({
+  quick,
+  children,
+  actions,
+  title,
+  onClose,
+  onSubmit,
+  busy,
+}: {
+  quick: boolean;
+  children: ReactNode;
+  actions: ReactNode;
+  title: string;
+  onClose: () => void;
+  onSubmit: (event: FormEvent) => void;
+  busy: boolean;
+}) {
+  return quick ? (
+    <CustomDialog
+      open
+      title={title}
+      handleClose={onClose}
+      maxWidth="sm"
+      formProps={{ noValidate: true, onSubmit }}
+      guardUnsavedChanges={false}
+      disableClose={busy}
+    >
+      <DialogScrollContent>{children}</DialogScrollContent>
+      {actions}
+    </CustomDialog>
+  ) : (
+    <StudentAssignmentDrawer title={title} wide onClose={onClose} busy={busy} actions={actions}>
+      {children}
+    </StudentAssignmentDrawer>
+  );
+}
 const columns: IColumn[] = [
   { id: 'studentName', label: 'Student', minWidth: 200, isFilter: false, isSort: false },
   {
@@ -90,7 +136,11 @@ export default function StudentRollNumberWorkspace({
   batchId,
   onClose,
   onInteractionChange,
+  caseIds,
+  presentation = 'drawer',
+  onApplied,
 }: Props) {
+  const quick = presentation === 'quick';
   const context = useGetRollNumberBatchContextQuery(scope);
   const [preview, previewState] = usePreviewRollNumberBatchMutation();
   const [load, loadState] = useLazyGetRollNumberBatchQuery();
@@ -102,6 +152,7 @@ export default function StudentRollNumberWorkspace({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [initializing, setInitializing] = useState(quick);
   const pending = useRef(false);
   const initialized = useRef(false);
   const form = useFormik({
@@ -139,34 +190,87 @@ export default function StudentRollNumberWorkspace({
   const close = () => {
     if (!pending.current && !busy) requestNavigation(onClose);
   };
-  const accept = (data: RollNumberBatch, nextPage = 0, nextSize = 25) => {
+  const verify = (data: RollNumberBatch) => {
     if (
       data.academicYearId !== scope.academicYearId ||
       data.standardId !== scope.standardId ||
       data.divisionId !== scope.divisionId
     )
-      throw new Error('The academic context changed. Close and open Roll Numbers again.');
+      throw new RollBatchVerificationError(
+        'The academic context changed. Close and open Roll Numbers again.'
+      );
+    if (
+      caseIds &&
+      (data.caseIds?.length !== caseIds.length || caseIds.some((id) => !data.caseIds?.includes(id)))
+    )
+      throw new RollBatchVerificationError(
+        'The current-page assignment could not be verified. Refresh before trying again.'
+      );
+    if (quick && typeof data.approvalRequired !== 'boolean')
+      throw new RollBatchVerificationError(
+        'The school approval policy could not be verified. Refresh before trying again.'
+      );
+  };
+  const accept = async (data: RollNumberBatch, nextPage = 0, nextSize = 25) => {
+    verify(data);
+    if (quick && data.status === 'Applied' && onApplied) {
+      // Command responses contain only the first batch page. Read the rest once, not one case at a time.
+      const applied =
+        data.items.length < data.totalCount
+          ? await load({ id: data.id, skipCount: 0, maxResultCount: 100 }, false).unwrap()
+          : data;
+      verify(applied);
+      if (
+        applied.id !== data.id ||
+        applied.status !== 'Applied' ||
+        applied.items.length !== applied.totalCount
+      )
+        throw new RollBatchVerificationError(
+          'Saved Roll numbers could not be refreshed. Refresh to load the assignment result.'
+        );
+      onApplied(applied.items);
+    }
     setBatch(data);
     setPage(nextPage);
     setPageSize(nextSize);
     if (data.status !== 'Preview')
       form.resetForm({ values: { reason: data.canDecide ? '' : data.reason } });
+    if (quick && data.status === 'Applied') onClose();
   };
   const showError = (issue: unknown) =>
     setError(
-      parseApiProblemDetail(issue).detail ||
+      (issue instanceof RollBatchVerificationError
+        ? issue.message
+        : parseApiProblemDetail(issue).detail) ||
         'Roll numbering could not be completed. Refresh the preview before trying again.'
     );
   const generate = async (selected: RollBatchOperation) => {
     if (pending.current) return;
     pending.current = true;
     setError('');
+    if (quick) setInitializing(true);
     try {
-      accept(await preview({ ...scope, operation: selected }).unwrap());
+      const proposed = await preview({
+        ...scope,
+        operation: selected,
+        ...(caseIds ? { caseIds } : {}),
+      }).unwrap();
+      await accept(proposed);
+      // Ordinary Auto does not open a second surface. Policy requirements still need review.
+      if (
+        quick &&
+        proposed.canSubmit &&
+        proposed.status === 'Preview' &&
+        !proposed.reasonRequired &&
+        proposed.approvalRequired === false
+      ) {
+        await executeCommand('submit', proposed, '');
+      }
     } catch (issue) {
       showError(issue);
     } finally {
       pending.current = false;
+      setInitializing(false);
     }
   };
   const read = async (id: string, nextPage = page, nextSize = pageSize) => {
@@ -174,7 +278,7 @@ export default function StudentRollNumberWorkspace({
     pending.current = true;
     setError('');
     try {
-      accept(
+      await accept(
         await load(
           { id, skipCount: nextPage * nextSize, maxResultCount: nextSize },
           false
@@ -186,43 +290,51 @@ export default function StudentRollNumberWorkspace({
       showError(issue);
     } finally {
       pending.current = false;
+      setInitializing(false);
     }
   };
+  async function executeCommand(
+    action: 'submit' | 'approve' | 'reject' | 'apply',
+    target: RollNumberBatch,
+    reason: string
+  ) {
+    const common = {
+      id: target.id,
+      concurrencyStamp: target.concurrencyStamp,
+      idempotencyKey: target.idempotencyKey ?? target.id,
+      reason,
+    };
+    const result = await (
+      action === 'submit'
+        ? submit(common)
+        : action === 'apply'
+          ? apply(common)
+          : decide({
+              id: target.id,
+              concurrencyStamp: target.concurrencyStamp,
+              approve: action === 'approve',
+              reason,
+            })
+    ).unwrap();
+    await accept(result);
+    setConfirmationOpen(false);
+    shikshaMitraToast.success({
+      message:
+        result.status === 'Applied'
+          ? 'Division roll numbers saved.'
+          : result.status === 'PendingApproval'
+            ? 'Roll numbering is awaiting school approval. No numbers have changed.'
+            : result.status === 'Approved'
+              ? 'Batch approved. An authorized operator can apply it.'
+              : 'Batch rejected. No numbers have changed.',
+    });
+  }
   async function command(action: 'submit' | 'approve' | 'reject' | 'apply') {
     if (!batch || pending.current || context.isError || error) return;
     pending.current = true;
     setError('');
     try {
-      const common = {
-        id: batch.id,
-        concurrencyStamp: batch.concurrencyStamp,
-        idempotencyKey: batch.idempotencyKey ?? batch.id,
-        reason: form.values.reason.trim(),
-      };
-      const result = await (
-        action === 'submit'
-          ? submit(common)
-          : action === 'apply'
-            ? apply(common)
-            : decide({
-                id: batch.id,
-                concurrencyStamp: batch.concurrencyStamp,
-                approve: action === 'approve',
-                reason: form.values.reason.trim(),
-              })
-      ).unwrap();
-      accept(result);
-      setConfirmationOpen(false);
-      shikshaMitraToast.success({
-        message:
-          result.status === 'Applied'
-            ? 'Division roll numbers saved.'
-            : result.status === 'PendingApproval'
-              ? 'Roll numbering is awaiting school approval. No numbers have changed.'
-              : result.status === 'Approved'
-                ? 'Batch approved. An authorized operator can apply it.'
-                : 'Batch rejected. No numbers have changed.',
-      });
+      await executeCommand(action, batch, form.values.reason.trim());
     } catch (issue) {
       showError(issue);
       setConfirmationOpen(false);
@@ -246,19 +358,35 @@ export default function StudentRollNumberWorkspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const label = batch?.operation === 'renumber' ? 'Renumber Division' : 'Auto Roll Numbers';
+  if (quick && batch?.status === 'Applied') return null;
+  if (quick && initializing && !error) {
+    return <LinearProgress aria-label="Assigning current-page roll numbers" />;
+  }
   return (
     <>
-      <StudentAssignmentDrawer
-        title={batch ? label : 'Manage Roll Numbers'}
-        wide
+      <RollAssignmentSurface
+        quick={quick}
+        title={quick ? 'Roll Number Policy' : batch ? label : 'Manage Roll Numbers'}
         onClose={close}
+        onSubmit={(event) => {
+          event.preventDefault();
+          form.submitForm();
+        }}
         busy={busy}
         actions={
           <DialogActions
             sx={{ p: 2, gap: 1, flexWrap: 'wrap', '& > :not(style) ~ :not(style)': { ml: 0 } }}
           >
             {batch && (
-              <Button size="small" disabled={busy} onClick={() => read(batch.id)}>
+              <Button
+                size="small"
+                disabled={busy}
+                onClick={() => {
+                  setError('');
+                  read(batch.id);
+                }}
+                startIcon={quick ? <Iconify icon={GlobalIcons.refresh} width={18} /> : undefined}
+              >
                 Refresh
               </Button>
             )}
@@ -267,11 +395,19 @@ export default function StudentRollNumberWorkspace({
                 size="small"
                 disabled={busy || context.isError}
                 onClick={() => generate(batch.operation)}
+                startIcon={quick ? <Iconify icon={GlobalIcons.refresh} width={18} /> : undefined}
               >
                 New Preview
               </Button>
             )}
-            <Button size="small" variant="outlined" color="inherit" disabled={busy} onClick={close}>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              disabled={busy}
+              onClick={close}
+              startIcon={quick ? <Iconify icon={GlobalIcons.cancel} width={18} /> : undefined}
+            >
               Close
             </Button>
             {batch?.canDecide && (
@@ -281,6 +417,7 @@ export default function StudentRollNumberWorkspace({
                   variant="outlined"
                   disabled={busy || context.isError || Boolean(error)}
                   onClick={() => command('reject')}
+                  startIcon={quick ? <Iconify icon={GlobalIcons.cancel} width={18} /> : undefined}
                 >
                   Reject
                 </Button>
@@ -290,6 +427,7 @@ export default function StudentRollNumberWorkspace({
                   color="inherit"
                   disabled={busy || context.isError || Boolean(error)}
                   onClick={() => command('approve')}
+                  startIcon={quick ? <Iconify icon={GlobalIcons.submit} width={18} /> : undefined}
                 >
                   Approve Batch
                 </Button>
@@ -303,6 +441,7 @@ export default function StudentRollNumberWorkspace({
                 loading={applyState.isLoading}
                 disabled={busy || context.isError || Boolean(error)}
                 onClick={() => command('apply')}
+                startIcon={quick ? <Iconify icon={GlobalIcons.submit} width={18} /> : undefined}
               >
                 Apply Approved Batch
               </Button>
@@ -314,7 +453,9 @@ export default function StudentRollNumberWorkspace({
                 color="inherit"
                 loading={submitState.isLoading}
                 disabled={busy || !batch.canSubmit || context.isError || Boolean(error)}
-                onClick={() => form.submitForm()}
+                type={quick ? 'submit' : 'button'}
+                onClick={quick ? undefined : () => form.submitForm()}
+                startIcon={quick ? <Iconify icon={GlobalIcons.submit} width={18} /> : undefined}
               >
                 {batch.operation === 'renumber' ? 'Review Renumber' : 'Submit Assignment'}
               </Button>
@@ -328,7 +469,9 @@ export default function StudentRollNumberWorkspace({
             {batch?.scopeLabel || context.currentData?.scopeLabel}
           </Typography>
           {context.isError && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-1038"
+              presentation="toast"
               severity="error"
               action={
                 <Button size="small" onClick={() => context.refetch()} disabled={busy}>
@@ -337,9 +480,13 @@ export default function StudentRollNumberWorkspace({
               }
             >
               Could not load roll numbering. Retry before continuing.
-            </Alert>
+            </StudentFeedback>
           )}
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <StudentFeedback notificationKey="STU-1039" presentation="persistent" severity="error">
+              {error}
+            </StudentFeedback>
+          )}
           {!batch && busy && (
             <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
               <CustomizableTable
@@ -356,7 +503,17 @@ export default function StudentRollNumberWorkspace({
               />
             </Box>
           )}
-          {!batch && !busy && (
+          {quick && !batch && !busy && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => generate('assign-missing')}
+              startIcon={<Iconify icon={GlobalIcons.refresh} width={18} />}
+            >
+              Retry
+            </Button>
+          )}
+          {!quick && !batch && !busy && (
             <>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                 <Button
@@ -455,43 +612,79 @@ export default function StudentRollNumberWorkspace({
                 </Typography>
               </Stack>
               {batch.blockedCount > 0 && (
-                <Alert severity="warning">
+                <StudentFeedback
+                  notificationKey="STU-1040"
+                  presentation="persistent"
+                  severity="warning"
+                >
                   {batch.blockedCount} student(s) need attention. Correct the flagged records, then
                   generate a new preview. No numbers have changed.
-                </Alert>
+                </StudentFeedback>
               )}
               {batch.status === 'PendingApproval' && (
-                <Alert severity="info">
+                <StudentFeedback notificationKey="STU-1041" presentation="inline" severity="info">
                   School approval is required. The whole batch will be applied together after
                   approval.
-                </Alert>
+                </StudentFeedback>
               )}
-              <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
-                <CustomizableTable
-                  tableId="student-roll-number-batch-preview"
-                  tableTitle="Roll Number Preview"
-                  columns={columns}
-                  data={batch.items.map((item) => ({
-                    ...item,
-                    id: item.studentId,
-                    batchStatus: batch.status,
-                  }))}
-                  isSearch={false}
-                  isFilter={false}
-                  isLoading={loadState.isFetching}
-                  serverSidePagination
-                  page={page}
-                  rowsPerPage={pageSize}
-                  totalCount={batch.totalCount}
-                  rowsPerPageOptions={[10, 25, 50, 100]}
-                  onServerPagination={(nextPage, size) => {
-                    if (!busy) read(batch.id, size === pageSize ? nextPage - 1 : 0, size);
-                  }}
-                  wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
-                  tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
-                  noDataText="No eligible students in this division."
-                />
-              </Box>
+              {quick && (
+                <FormSectionCard
+                  title="School Policy"
+                  icon={GlobalIcons.notebook}
+                  descriptionTooltip="The published numbering and approval rules applied to this assignment."
+                  contentSpacing={1}
+                >
+                  <Typography variant="body2">
+                    {batch.reasonRequired ? 'Reason required' : 'Reason optional'}
+                  </Typography>
+                  <Typography variant="body2">
+                    {batch.approvalRequired
+                      ? 'School approval required'
+                      : 'No school approval required'}
+                  </Typography>
+                  {batch.approvalStages?.map((roles, index) => (
+                    <Typography key={index} variant="body2">
+                      Approval {index + 1}: {roles.join(' / ')}
+                    </Typography>
+                  ))}
+                </FormSectionCard>
+              )}
+              {!quick && (
+                <Box sx={{ height: 360, minHeight: 0, display: 'flex' }}>
+                  <CustomizableTable
+                    tableId="student-roll-number-batch-preview"
+                    tableTitle="Roll Number Preview"
+                    columns={columns}
+                    data={batch.items.map((item) => ({
+                      ...item,
+                      id: item.studentId,
+                      batchStatus: batch.status,
+                    }))}
+                    isSearch={false}
+                    isFilter={false}
+                    isLoading={loadState.isFetching}
+                    serverSidePagination
+                    page={page}
+                    rowsPerPage={pageSize}
+                    totalCount={batch.totalCount}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    onServerPagination={(nextPage, size) => {
+                      if (!busy) read(batch.id, size === pageSize ? nextPage - 1 : 0, size);
+                    }}
+                    wrapperProps={{ sx: { height: 1, minHeight: 0, flex: 1 } }}
+                    tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+                    noDataText="No eligible students in this division."
+                  />
+                </Box>
+              )}
+              {quick &&
+                batch.items
+                  .filter((item) => item.issue)
+                  .map((item) => (
+                    <Typography key={item.studentId} variant="body2" color="error.main">
+                      {item.studentName}: {item.issue}
+                    </Typography>
+                  ))}
               {(batch.status === 'Preview' || batch.canDecide || batch.reason) && (
                 <ShakingTextField error={Boolean(form.touched.reason && form.errors.reason)}>
                   <TextField
@@ -515,7 +708,7 @@ export default function StudentRollNumberWorkspace({
             </>
           )}
         </Stack>
-      </StudentAssignmentDrawer>
+      </RollAssignmentSurface>
       <ConfirmDialog
         open={confirmationOpen}
         title="Renumber This Division?"

@@ -5,7 +5,8 @@ import type {
 } from 'src/redux/student/admissions/admission-document-types';
 
 import { useState } from 'react';
-import { Card, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { Card, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 import { useGetApplicationDocumentsQuery } from 'src/redux/student/admissions/admission-document-verification-api';
 
 import { AdmissionQueryError } from '../admission-query-error';
@@ -99,18 +100,18 @@ export function ApplicationDocumentsPanel({
           )}
         </Stack>
         {!permissions.view ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0303" presentation="inline" severity="info">
             Document access is required to view this checklist. Contact an admissions administrator.
-          </Alert>
+          </StudentFeedback>
         ) : query.isLoading ? (
           <Skeleton variant="rounded" height={180} />
         ) : query.isError || !summary ? (
           <AdmissionQueryError onRetry={query.refetch} />
         ) : !summary.documentVerificationEnabled || !summary.policy ? (
-          <Alert severity="info">
+          <StudentFeedback notificationKey="STU-0304" presentation="inline" severity="info">
             Document management is not enabled for this step. Refresh the application to load its
             current workflow.
-          </Alert>
+          </StudentFeedback>
         ) : (
           <>
             {query.isFetching && <LinearProgress aria-label="Refreshing document checklist" />}

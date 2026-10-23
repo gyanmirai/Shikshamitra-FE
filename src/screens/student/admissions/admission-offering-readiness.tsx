@@ -1,14 +1,20 @@
 import type { AdmissionOfferingValidation } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { Iconify } from 'src/components/iconify';
-import { List, Alert, ListItem, AlertTitle, ListItemIcon, ListItemText } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
+import { List, ListItem, AlertTitle, ListItemIcon, ListItemText } from '@mui/material';
 
 type Props = { result?: AdmissionOfferingValidation | null; onClose?: () => void };
 
 export function AdmissionOfferingReadiness({ result, onClose }: Props) {
   if (!result) {
     return (
-      <Alert severity="info" onClose={onClose}>
+      <StudentFeedback
+        notificationKey="STU-0129"
+        presentation="inline"
+        severity="info"
+        onClose={onClose}
+      >
         <AlertTitle>Readiness is checked before saving</AlertTitle>
         <List dense disablePadding>
           {[
@@ -26,22 +32,27 @@ export function AdmissionOfferingReadiness({ result, onClose }: Props) {
             </ListItem>
           ))}
         </List>
-      </Alert>
+      </StudentFeedback>
     );
   }
 
   if (result.isValid) {
     return (
-      <Alert severity="success">
+      <StudentFeedback notificationKey="STU-0130" presentation="inline" severity="success">
         <AlertTitle>Ready</AlertTitle>
         This configuration is ready to receive inquiries and applications during its effective
         window.
-      </Alert>
+      </StudentFeedback>
     );
   }
 
   return (
-    <Alert severity="warning" onClose={onClose}>
+    <StudentFeedback
+      notificationKey="STU-0131"
+      presentation="persistent"
+      severity="warning"
+      onClose={onClose}
+    >
       <AlertTitle>Configuration incomplete</AlertTitle>
       <List dense disablePadding>
         {result.errors.map((error) => (
@@ -53,6 +64,6 @@ export function AdmissionOfferingReadiness({ result, onClose }: Props) {
           </ListItem>
         ))}
       </List>
-    </Alert>
+    </StudentFeedback>
   );
 }

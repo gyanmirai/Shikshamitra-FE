@@ -26,7 +26,13 @@ vi.mock('./use-admission-definition-options', () => ({
   useAdmissionDefinitionOptions: () => ({}),
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: mocks.success, error: mocks.error },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: mocks.success,
+    error: mocks.error,
+  },
 }));
 
 const cycle = { id: 'page-cycle-1', academicYearId: 'year-1' } as AdmissionCycle;

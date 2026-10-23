@@ -180,7 +180,9 @@ it('does not fetch or render audit entries when access is unavailable', () => {
 it('distinguishes a list error from empty history and retries without leaving the profile', async () => {
   const retry = vi.fn();
   renderAudit({ changes: [], isError: true, onRetry: retry });
-  expect(screen.getByRole('alert')).toHaveTextContent('Record change history could not be loaded.');
+  expect(
+    screen.getByText('Record change history could not be loaded.', { exact: false })
+  ).toBeVisible();
   expect(screen.queryByText('No record changes yet')).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Retry History' }));
   expect(retry).toHaveBeenCalledOnce();

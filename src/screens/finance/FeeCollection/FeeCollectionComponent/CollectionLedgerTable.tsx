@@ -598,6 +598,14 @@ export default function CollectionLedgerTable({
                       fullWidth
                     />
                   )}
+                  {Number(detail.withdrawalProrationCredit) > 0 && (
+                    <DetailField
+                      {...detailFieldProps}
+                      label="Withdrawal credit"
+                      value={formatNumber(detail.withdrawalProrationCredit ?? 0, 'INR')}
+                      secondary={detail.withdrawalProrationExplanation ?? undefined}
+                    />
+                  )}
                   {detail.charge?.explanation && (
                     <DetailField
                       {...detailFieldProps}

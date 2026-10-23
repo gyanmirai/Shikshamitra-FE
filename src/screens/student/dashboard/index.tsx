@@ -2,8 +2,9 @@
 
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Button, Skeleton, LinearProgress } from '@mui/material';
+import { Box, Button, Skeleton, LinearProgress } from '@mui/material';
 
 import useStudentDashboard from './hooks/use-student-dashboard';
 import StudentDashboardWorkspace from './components/student-dashboard-workspace';
@@ -58,10 +59,14 @@ export default function StudentDashboardScreen() {
       />
       {isFetching && <LinearProgress aria-label="Confirming student dashboard access" />}
       {initialized && !canRead && (
-        <Alert severity="info">You do not have permission to view the Student dashboard.</Alert>
+        <StudentFeedback notificationKey="STU-0726" presentation="inline" severity="info">
+          You do not have permission to view the Student dashboard.
+        </StudentFeedback>
       )}
       {isError ? (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0727"
+          presentation="toast"
           severity="error"
           action={
             <Button color="inherit" onClick={() => refetch()}>
@@ -70,7 +75,7 @@ export default function StudentDashboardScreen() {
           }
         >
           Unable to confirm your dashboard access. Retry to load your permitted workspace.
-        </Alert>
+        </StudentFeedback>
       ) : context ? (
         <StudentDashboardWorkspace
           context={context}

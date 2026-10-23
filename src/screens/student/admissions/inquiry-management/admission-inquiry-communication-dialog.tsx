@@ -8,11 +8,11 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useCreateAdmissionInquiryCommunicationMutation } from 'src/redux/student/admissions/admission-inquiries-api';
 import {
-  Alert,
   Stack,
   Button,
   Switch,
@@ -152,10 +152,15 @@ export function AdmissionInquiryCommunicationDialog({ inquiry, canSend, onClose 
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()} sx={{ p: 2 }}>
         <Stack spacing={2}>
-          <Alert severity="info" variant="outlined">
+          <StudentFeedback
+            notificationKey="STU-0395"
+            presentation="inline"
+            severity="info"
+            variant="outlined"
+          >
             Sending uses the Communication module&apos;s approved providers, consent rules, approval
             policy, delivery tracking, and retry controls.
-          </Alert>
+          </StudentFeedback>
 
           <Stack spacing={0.25}>
             <Typography variant="subtitle2">Recipient</Typography>

@@ -8,13 +8,13 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Stack,
-  Alert,
   Button,
   TextField,
   Typography,
@@ -325,9 +325,13 @@ export function AssessmentBatchDialog({
         );
         if (action === 'result' && row.assessment.policy?.scoringMode === 'subjects' && !profile)
           return (
-            <Alert severity="warning">
+            <StudentFeedback
+              notificationKey="STU-0246"
+              presentation="persistent"
+              severity="warning"
+            >
               The class assessment profile is unavailable. Refresh before recording results.
-            </Alert>
+            </StudentFeedback>
           );
         if (action === 'result' && profile)
           return (
@@ -462,12 +466,20 @@ export function AssessmentBatchDialog({
                   ? 'Only entered rows are saved. Unedited attendance stays pending.'
                   : 'Only entered rows are saved. Unedited results stay pending.'}
             </Typography>
-            {error && <Alert severity="error">{error}</Alert>}
+            {error && (
+              <StudentFeedback
+                notificationKey="STU-0247"
+                presentation="persistent"
+                severity="error"
+              >
+                {error}
+              </StudentFeedback>
+            )}
             {busy && <LinearProgress aria-label="Saving assessment batch" />}
             {!!saved && (
-              <Alert severity="success">
+              <StudentFeedback notificationKey="STU-0248" presentation="inline" severity="success">
                 {saved} saved. Successful rows will not be submitted again.
-              </Alert>
+              </StudentFeedback>
             )}
             <FormBusyRegion
               busy={busy}

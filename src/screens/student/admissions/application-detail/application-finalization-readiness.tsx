@@ -3,9 +3,9 @@ import type { AdmissionFinalizationPreview } from 'src/redux/student/admissions/
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { StudentFeedback } from 'src/components/student-feedback';
 import {
   Box,
-  Alert,
   Stack,
   Radio,
   Button,
@@ -46,7 +46,9 @@ export function ApplicationFinalizationReadiness({
         </Stack>
       )}
       {hasError && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0195"
+          presentation="toast"
           severity="error"
           action={
             <Button
@@ -61,10 +63,12 @@ export function ApplicationFinalizationReadiness({
           }
         >
           Finalization readiness could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       {!loading && !hasError && !preview?.items.length && (
-        <Alert
+        <StudentFeedback
+          notificationKey="STU-0196"
+          presentation="persistent"
           severity="warning"
           action={
             <Button
@@ -79,7 +83,7 @@ export function ApplicationFinalizationReadiness({
           }
         >
           Finalization readiness is unavailable. Reload the checks before finalizing.
-        </Alert>
+        </StudentFeedback>
       )}
       {!loading && !hasError && Boolean(preview?.items.length) && (
         <Stack spacing={1}>

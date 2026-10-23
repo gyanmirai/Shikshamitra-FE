@@ -4,7 +4,6 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Drawer from '@mui/material/Drawer';
 import Button from '@mui/material/Button';
@@ -12,6 +11,7 @@ import Divider from '@mui/material/Divider';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { StudentFeedback } from 'src/components/student-feedback';
 
 import { FormBuilderPalette } from '../form-builder-palette';
 
@@ -78,7 +78,9 @@ export function FormBuilderFieldLibraryDrawer({
 
         <Stack spacing={1} sx={{ flex: 1, minHeight: 0, p: 2 }}>
           {error && (
-            <Alert
+            <StudentFeedback
+              notificationKey="STU-0364"
+              presentation="persistent"
               severity="warning"
               action={
                 <Button size="small" onClick={onRetry}>
@@ -87,9 +89,13 @@ export function FormBuilderFieldLibraryDrawer({
               }
             >
               Student fields could not load. Custom fields are still available.
-            </Alert>
+            </StudentFeedback>
           )}
-          {loading && <Alert severity="info">Loading student fields...</Alert>}
+          {loading && (
+            <StudentFeedback notificationKey="STU-0365" presentation="inline" severity="info">
+              Loading student fields...
+            </StudentFeedback>
+          )}
           <Box sx={{ flex: 1, minHeight: 0 }}>
             <FormBuilderPalette
               systemFields={systemFields}

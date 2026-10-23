@@ -13,8 +13,9 @@ import { RouterLink } from 'src/routes/components';
 import calculateAge from 'src/utils/calculate-age';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Box, Paper, Stack, Alert, Button, Divider, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Stack, Button, Divider, Skeleton, Typography } from '@mui/material';
 
 import { profileOverviewContacts } from './student-profile-overview-model';
 
@@ -127,12 +128,14 @@ export function EnrollmentMilestones({ student }: { student: StudentRecordProfil
       <Divider />
       <ProfileValues values={[{ label: 'Application', value: journey.applicationNumber }]} />
       {journey.activatedAt && journey.credentialsStatus === 'Pending' && (
-        <Alert severity="info">Enrollment is active. Portal credentials are still pending.</Alert>
+        <StudentFeedback notificationKey="STU-0761" presentation="inline" severity="info">
+          Enrollment is active. Portal credentials are still pending.
+        </StudentFeedback>
       )}
       {journey.activatedAt && journey.credentialsStatus === 'Failed' && (
-        <Alert severity="warning">
+        <StudentFeedback notificationKey="STU-0762" presentation="persistent" severity="warning">
           Enrollment is active. Portal credentials need attention in Onboarding.
-        </Alert>
+        </StudentFeedback>
       )}
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
         {canAdmission && (

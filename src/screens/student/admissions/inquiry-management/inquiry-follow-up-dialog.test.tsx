@@ -45,7 +45,13 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
   useStartAdmissionApplicationMutation: () => [mocks.move, { isLoading: false }],
 }));
 vi.mock('src/components/toast', () => ({
-  shikshaMitraToast: { success: vi.fn(), error: mocks.error },
+  shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    error: mocks.error,
+  },
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
 vi.mock('src/components/customDialog', () => ({
@@ -386,6 +392,7 @@ it('preserves failed drafts and selected status across refetch while using fresh
   expect(
     await screen.findByText('This inquiry changed. Reload its details and submit your note again.')
   ).toBeVisible();
+  expect(mocks.error).toHaveBeenCalledOnce();
   expect(mocks.close).not.toHaveBeenCalled();
   const reloadStamp = Date.now() + 120_000;
   mocks.management = {
@@ -395,6 +402,7 @@ it('preserves failed drafts and selected status across refetch while using fresh
   };
   view.rerender(<InquiryFollowUpDialog inquiry={inquiry} onClose={mocks.close} />);
   expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  expect(mocks.error).toHaveBeenCalledOnce();
   expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep this parent note');
   mocks.detail = {
     ...mocks.detail,
@@ -441,6 +449,7 @@ it('preserves the draft and shows a plain error for a failed network request', a
       message: 'Unable to save the follow-up. Your draft is preserved; try again.',
     })
   );
+  expect(mocks.error).toHaveBeenCalledOnce();
   expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep this note');
   expect(mocks.close).not.toHaveBeenCalled();
 });

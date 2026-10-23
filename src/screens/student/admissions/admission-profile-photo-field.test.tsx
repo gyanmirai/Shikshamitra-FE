@@ -60,7 +60,7 @@ describe('admission photo upload', () => {
     const { input, onChange, onBusyChange } = renderPhoto();
     await user.upload(input, new File(['image'], 'photo.png', { type: 'image/png' }));
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('Choose the file again')
+      expect(screen.getByText('Choose the file again', { exact: false })).toBeVisible()
     );
     expect(onChange).not.toHaveBeenCalled();
     expect(onBusyChange).toHaveBeenLastCalledWith(false);

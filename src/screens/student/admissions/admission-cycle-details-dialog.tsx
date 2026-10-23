@@ -6,17 +6,9 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { formatDateOnly } from 'src/utils/date-only';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Divider,
-  Skeleton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Stack, Button, Divider, Skeleton, Typography, DialogActions } from '@mui/material';
 import {
   type AdmissionCycle,
   useGetAdmissionCycleImpactQuery,
@@ -170,7 +162,9 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               ))}
             </Box>
             {impactQuery.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0043"
+                presentation="persistent"
                 severity="warning"
                 sx={{ mt: 2 }}
                 action={
@@ -185,7 +179,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
                 }
               >
                 Current usage could not be refreshed. Showing available counts.
-              </Alert>
+              </StudentFeedback>
             )}
           </Box>
 
@@ -214,7 +208,9 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
               </Stack>
             )}
             {historyQuery.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0044"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button
@@ -228,7 +224,7 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
                 }
               >
                 Activity history could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {!historyQuery.isLoading && !historyQuery.isError && !history.length && (
               <Typography variant="body2" color="text.secondary">

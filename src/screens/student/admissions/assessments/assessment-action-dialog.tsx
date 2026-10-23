@@ -3,9 +3,10 @@ import type { ManagedApplicationAssessment } from 'src/redux/student/admissions/
 import { useFormik } from 'formik';
 import { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { Button, DialogActions } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Alert, Button, DialogActions } from '@mui/material';
 import { FormBusyRegion } from 'src/components/form-busy-region';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { assessmentErrorMessage } from './assessment-utils';
@@ -112,9 +113,14 @@ export function AssessmentActionDialog({
     >
       <DialogScrollContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <StudentFeedback
+            notificationKey="STU-0238"
+            presentation="persistent"
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
-          </Alert>
+          </StudentFeedback>
         )}
         <FormBusyRegion busy={formik.isSubmitting} label="Saving assessment…">
           <AssessmentActionFields

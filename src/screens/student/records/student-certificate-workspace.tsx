@@ -18,8 +18,9 @@ import { studentPaths } from 'src/constants/student-menu';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { Box, Tab, Stack, Paper, Button } from '@mui/material';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Stack, Paper, Alert, Button } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetRecordCertificateBatchesQuery } from 'src/redux/student/records/student-record-documents-api';
 
@@ -35,65 +36,234 @@ const tabs: { value: string; label: string; type: CertificateType; icon: string 
 ];
 
 export default function StudentCertificateWorkspace() {
-  const pathname = usePathname(); const params = useSearchParams();
-  const tab = tabs.find(item => item.value === params.get('certificate')) ?? tabs[0];
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const tab = tabs.find((item) => item.value === params.get('certificate')) ?? tabs[0];
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const canView = hasGrantedPermission(permissions, 'Students.Records.Certificates.View');
-  const canIssue = canView && hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
+  const canIssue =
+    canView && hasGrantedPermission(permissions, 'Students.Records.Certificates.Add');
   const formDialog = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs().startOf('month'));
-  const [page, setPage] = useState(0); const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [batchId, setBatchId] = useState('');
   const validMonth = month?.isValid() ? month : null;
-  const query = useGetRecordCertificateBatchesQuery({ certificateType: tab.type,
-    generatedFrom: validMonth ? validMonth.startOf('month').toISOString() : '', generatedTo: validMonth ? validMonth.startOf('month').add(1, 'month').toISOString() : '',
-    skipCount: page * pageSize, maxResultCount: pageSize }, { skip: !canView || !validMonth });
+  const query = useGetRecordCertificateBatchesQuery(
+    {
+      certificateType: tab.type,
+      generatedFrom: validMonth ? validMonth.startOf('month').toISOString() : '',
+      generatedTo: validMonth ? validMonth.startOf('month').add(1, 'month').toISOString() : '',
+      skipCount: page * pageSize,
+      maxResultCount: pageSize,
+    },
+    { skip: !canView || !validMonth }
+  );
   const columns: IColumn[] = [
-    { id: 'firstCertificateNumber', label: 'Certificates', isSort: false, isFilter: false, render: (_, row) => row.firstCertificateNumber === row.lastCertificateNumber ? row.firstCertificateNumber : `${row.firstCertificateNumber} — ${row.lastCertificateNumber}` },
-    { id: 'generatedAt', label: 'Generated', isSort: false, isFilter: false, render: value => fDateTime(value) },
+    {
+      id: 'firstCertificateNumber',
+      label: 'Certificates',
+      isSort: false,
+      isFilter: false,
+      render: (_, row) =>
+        row.firstCertificateNumber === row.lastCertificateNumber
+          ? row.firstCertificateNumber
+          : `${row.firstCertificateNumber} — ${row.lastCertificateNumber}`,
+    },
+    {
+      id: 'generatedAt',
+      label: 'Generated',
+      isSort: false,
+      isFilter: false,
+      render: (value) => fDateTime(value),
+    },
     { id: 'studentCount', label: 'Students', isSort: false, isFilter: false },
-    { id: 'status', label: 'Status', isSort: false, isFilter: false, render: value => <Label color={value === 'Voided' ? 'error' : value === 'Partly voided' ? 'warning' : 'success'}>{value}</Label> },
-    { id: 'actions', label: 'Actions', isSort: false, isFilter: false, excludeFromExport: true, sticky: true,
-      render: (_, row) => <Button size="small" startIcon={<Iconify icon="solar:eye-bold" />} aria-label={`View students for ${row.firstCertificateNumber}`} onClick={() => setBatchId(row.id)}>View</Button> },
+    {
+      id: 'status',
+      label: 'Status',
+      isSort: false,
+      isFilter: false,
+      render: (value) => (
+        <Label
+          color={value === 'Voided' ? 'error' : value === 'Partly voided' ? 'warning' : 'success'}
+        >
+          {value}
+        </Label>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
+      sticky: true,
+      render: (_, row) => (
+        <Button
+          size="small"
+          startIcon={<Iconify icon="solar:eye-bold" />}
+          aria-label={`View students for ${row.firstCertificateNumber}`}
+          onClick={() => setBatchId(row.id)}
+        >
+          View
+        </Button>
+      ),
+    },
   ];
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <CustomBreadcrumbs heading="Certificates" description="Select students, preview their certificates, and manage generated certificates by month."
-        links={[{ name: 'Student', href: studentPaths.dashboard }, { name: 'Student Records', href: studentPaths.records.studentList }, { name: 'Certificates' }]}
-        action={canIssue && <Button size="small" variant="contained" startIcon={<Iconify icon="mingcute:add-line" />} onClick={formDialog.onTrue}>Create certificate</Button>} />
-      {!canView ? <Alert severity="warning">You do not have access to certificates.</Alert> : <>
-        <Paper variant="outlined" sx={{ flexShrink: 0, overflow: 'hidden' }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }}>
-            <CustomTabs aria-label="Certificate types" value={tab.value} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile
-              sx={{ minWidth: 0, flex: '1 1 auto', '& .MuiTabs-flexContainer': { gap: 1 } }} onChange={() => {
-                setPage(0); setBatchId(''); formDialog.onFalse();
-              }}>
-              {tabs.map(item => <Tab key={item.value} component={Link} prefetch={false} replace scroll={false}
-                href={recordsQueryUrl(pathname, params.toString(), { certificate: item.value })}
-                value={item.value} id={`certificate-${item.value}-tab`} aria-controls={`certificate-${item.value}-panel`}
-                label={item.label} icon={<Iconify icon={item.icon} width={20} />} iconPosition="start"
-                sx={{ minHeight: 44, py: 1, textDecoration: 'none' }} />)}
-            </CustomTabs>
-            <Box sx={{ p: 1, flexShrink: 0 }}>
-              <DatePicker label="Generated month" views={['year', 'month']} format="MMM YYYY" value={month}
-                onChange={value => { setMonth(value); setPage(0); }} slotProps={{ textField: { size: 'small', sx: { width: { xs: 1, md: 200 } } } }} />
-            </Box>
-          </Stack>
-        </Paper>
-        <Box role="tabpanel" id={`certificate-${tab.value}-panel`} aria-labelledby={`certificate-${tab.value}-tab`}
-          sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <CustomizableTable key={tab.value} tableId={`student-${tab.value}-certificate-batches`} tableTitle={`${tab.label} generated certificates`}
-            columns={columns} data={validMonth ? query.currentData?.items ?? [] : []} isLoading={query.isFetching} isPagination isSearch={false} serverSidePagination page={page} rowsPerPage={pageSize}
-            totalCount={validMonth ? query.currentData?.totalCount ?? 0 : 0} onServerPagination={(nextPage, nextSize) => { setPage(nextPage); setPageSize(nextSize); }}
-            noDataText={validMonth ? `No ${tab.label.toLowerCase()} certificates generated in this month.` : 'Select a month to see generated certificates.'}
-            errorContent={query.isError ? <Alert severity="error" action={<Button size="small" startIcon={<Iconify icon="solar:restart-bold" />} onClick={() => query.refetch()}>Retry</Button>}>Generated certificates could not be loaded.</Alert> : undefined}
-            wrapperProps={{ sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }} tableContainerProps={{ sx: { height: 1 } }} />
-        </Box>
-      </>}
-      {formDialog.value && canIssue && <StudentCertificateForm key={`${academicYearId}-${tab.type}`} certificateType={tab.type} certificateLabel={tab.label}
-        onClose={formDialog.onFalse} onGenerated={() => { setMonth(dayjs().startOf('month')); setPage(0); }} />}
-      {batchId && <CertificateBatchDialog batchId={batchId} certificateType={tab.type} label={tab.label} onClose={() => setBatchId('')} />}
+      <CustomBreadcrumbs
+        heading="Certificates"
+        description="Select students, preview their certificates, and manage generated certificates by month."
+        links={[
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Student Records', href: studentPaths.records.studentList },
+          { name: 'Certificates' },
+        ]}
+        action={
+          canIssue && (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+              onClick={formDialog.onTrue}
+            >
+              Create certificate
+            </Button>
+          )
+        }
+      />
+      {!canView ? (
+        <StudentFeedback notificationKey="STU-0849" presentation="inline" severity="warning">
+          You do not have access to certificates.
+        </StudentFeedback>
+      ) : (
+        <>
+          <Paper variant="outlined" sx={{ flexShrink: 0, overflow: 'hidden' }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }}>
+              <CustomTabs
+                aria-label="Certificate types"
+                value={tab.value}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                sx={{ minWidth: 0, flex: '1 1 auto', '& .MuiTabs-flexContainer': { gap: 1 } }}
+                onChange={() => {
+                  setPage(0);
+                  setBatchId('');
+                  formDialog.onFalse();
+                }}
+              >
+                {tabs.map((item) => (
+                  <Tab
+                    key={item.value}
+                    component={Link}
+                    prefetch={false}
+                    replace
+                    scroll={false}
+                    href={recordsQueryUrl(pathname, params.toString(), { certificate: item.value })}
+                    value={item.value}
+                    id={`certificate-${item.value}-tab`}
+                    aria-controls={`certificate-${item.value}-panel`}
+                    label={item.label}
+                    icon={<Iconify icon={item.icon} width={20} />}
+                    iconPosition="start"
+                    sx={{ minHeight: 44, py: 1, textDecoration: 'none' }}
+                  />
+                ))}
+              </CustomTabs>
+              <Box sx={{ p: 1, flexShrink: 0 }}>
+                <DatePicker
+                  label="Generated month"
+                  views={['year', 'month']}
+                  format="MMM YYYY"
+                  value={month}
+                  onChange={(value) => {
+                    setMonth(value);
+                    setPage(0);
+                  }}
+                  slotProps={{ textField: { size: 'small', sx: { width: { xs: 1, md: 200 } } } }}
+                />
+              </Box>
+            </Stack>
+          </Paper>
+          <Box
+            role="tabpanel"
+            id={`certificate-${tab.value}-panel`}
+            aria-labelledby={`certificate-${tab.value}-tab`}
+            sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+          >
+            <CustomizableTable
+              key={tab.value}
+              tableId={`student-${tab.value}-certificate-batches`}
+              tableTitle={`${tab.label} generated certificates`}
+              columns={columns}
+              data={validMonth ? (query.currentData?.items ?? []) : []}
+              isLoading={query.isFetching}
+              isPagination
+              isSearch={false}
+              serverSidePagination
+              page={page}
+              rowsPerPage={pageSize}
+              totalCount={validMonth ? (query.currentData?.totalCount ?? 0) : 0}
+              onServerPagination={(nextPage, nextSize) => {
+                setPage(nextPage);
+                setPageSize(nextSize);
+              }}
+              noDataText={
+                validMonth
+                  ? `No ${tab.label.toLowerCase()} certificates generated in this month.`
+                  : 'Select a month to see generated certificates.'
+              }
+              errorContent={
+                query.isError ? (
+                  <StudentFeedback
+                    notificationKey="STU-0850"
+                    presentation="toast"
+                    severity="error"
+                    action={
+                      <Button
+                        size="small"
+                        startIcon={<Iconify icon="solar:restart-bold" />}
+                        onClick={() => query.refetch()}
+                      >
+                        Retry
+                      </Button>
+                    }
+                  >
+                    Generated certificates could not be loaded.
+                  </StudentFeedback>
+                ) : undefined
+              }
+              wrapperProps={{
+                sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' },
+              }}
+              tableContainerProps={{ sx: { height: 1 } }}
+            />
+          </Box>
+        </>
+      )}
+      {formDialog.value && canIssue && (
+        <StudentCertificateForm
+          key={`${academicYearId}-${tab.type}`}
+          certificateType={tab.type}
+          certificateLabel={tab.label}
+          onClose={formDialog.onFalse}
+          onGenerated={() => {
+            setMonth(dayjs().startOf('month'));
+            setPage(0);
+          }}
+        />
+      )}
+      {batchId && (
+        <CertificateBatchDialog
+          batchId={batchId}
+          certificateType={tab.type}
+          label={tab.label}
+          onClose={() => setBatchId('')}
+        />
+      )}
     </Box>
   );
 }

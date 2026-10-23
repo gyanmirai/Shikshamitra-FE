@@ -7,13 +7,14 @@ import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycl
 import { Iconify } from 'src/components/iconify';
 import { formatDateOnly } from 'src/utils/date-only';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { StudentFeedback } from 'src/components/student-feedback';
 import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { Box, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 import { useLazyGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
-import { Box, Alert, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 import { useGetAdmissionOfferingClassIdentitiesQuery } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
@@ -409,7 +410,9 @@ function BulkAdmissionOfferingStep({
               />
             </Box>
             {cycleOptionsError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0297"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button color="inherit" size="small" onClick={retryCycles}>
@@ -418,10 +421,12 @@ function BulkAdmissionOfferingStep({
                 }
               >
                 Admission cycles could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {bulk.hierarchyError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0298"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button color="inherit" size="small" onClick={bulk.retryHierarchy}>
@@ -430,15 +435,17 @@ function BulkAdmissionOfferingStep({
                 }
               >
                 School class options could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {bulk.hierarchyEmpty && !bulk.optionsLoading && (
-              <Alert severity="info">
+              <StudentFeedback notificationKey="STU-0299" presentation="inline" severity="info">
                 No school classes are configured for this academic year.
-              </Alert>
+              </StudentFeedback>
             )}
             {formik.values.mediumId && standardsQuery.isError && (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0300"
+                presentation="toast"
                 severity="error"
                 action={
                   <Button color="inherit" size="small" onClick={() => standardsQuery.refetch()}>
@@ -447,13 +454,15 @@ function BulkAdmissionOfferingStep({
                 }
               >
                 Classes for this medium could not be loaded.
-              </Alert>
+              </StudentFeedback>
             )}
             {formik.values.mediumId &&
               standardsQuery.isSuccess &&
               !standardsQuery.isFetching &&
               !standards.length && (
-                <Alert severity="info">No classes are configured for this medium.</Alert>
+                <StudentFeedback notificationKey="STU-0301" presentation="inline" severity="info">
+                  No classes are configured for this medium.
+                </StudentFeedback>
               )}
             <BulkAdmissionHierarchyFields
               formik={formik}

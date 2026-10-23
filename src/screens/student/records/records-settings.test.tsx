@@ -7,7 +7,13 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { screen, within, waitFor, fireEvent, render as renderComponent } from '@testing-library/react';
+import {
+  screen,
+  within,
+  waitFor,
+  fireEvent,
+  render as renderComponent,
+} from '@testing-library/react';
 
 import RecordsSettings from './records-settings';
 import { recordActions, recordOutcomes, recordsPolicySchema } from './records-settings-model';
@@ -50,7 +56,15 @@ vi.mock('src/routes/components', () => ({
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading }: any) => <h1>{heading}</h1>,
 }));
-vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: {
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+  },
+}));
 vi.mock('src/components/customDialog', () => ({
   default: ({ open, title, children }: any) =>
     open ? (
@@ -146,9 +160,7 @@ let saved: StudentRecordsSettings;
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.params = new URLSearchParams();
-  mocks.permissions = ['Students.Records.Settings.Add'].map(
-    (name) => ({ name, isGranted: true })
-  );
+  mocks.permissions = ['Students.Records.Settings.Add'].map((name) => ({ name, isGranted: true }));
   saved = {
     id: 'config-1',
     concurrencyStamp: 'stamp-1',
@@ -278,9 +290,16 @@ describe('Student Records settings', () => {
     const retry = vi.fn();
     mocks.query = { currentData: undefined, isError: true, refetch: retry };
     render(<RecordsSettings task="documents" />);
-    expect(screen.getByRole('heading', { name: 'Student Records Settings', level: 1 })).toBeVisible();
-    expect(screen.getByRole('tab', { name: 'Documents & IDs' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tabpanel', { name: 'Documents & IDs' })).toHaveTextContent(/could not be loaded/);
+    expect(
+      screen.getByRole('heading', { name: 'Student Records Settings', level: 1 })
+    ).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Documents & IDs' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByRole('tabpanel', { name: 'Documents & IDs' })).toHaveTextContent(
+      /could not be loaded/
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();
   });

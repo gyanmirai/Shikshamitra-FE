@@ -7,9 +7,10 @@ import { Label } from 'src/components/label';
 import { RouterLink } from 'src/routes/components';
 import { formatDateOnly } from 'src/utils/date-only';
 import { studentPaths } from 'src/constants/student-menu';
+import { StudentFeedback } from 'src/components/student-feedback';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Paper, Button, LinearProgress } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Paper, Button, LinearProgress } from '@mui/material';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { readDashboardAcademicScope } from 'src/utils/student-dashboard-drilldown';
 import { useGetAttendanceContextQuery } from 'src/redux/student/take-attendance/take-attendace-api';
@@ -74,12 +75,19 @@ export default function AttendanceRegisterQueue() {
         />
       </Paper>
       {!academicYearId && (
-        <Alert severity="info">Select an academic year to view pending registers.</Alert>
+        <StudentFeedback notificationKey="STU-0642" presentation="inline" severity="info">
+          Select an academic year to view pending registers.
+        </StudentFeedback>
       )}
       {context.isError && (
-        <Alert severity="error" action={<Button onClick={() => context.refetch()}>Retry</Button>}>
+        <StudentFeedback
+          notificationKey="STU-0643"
+          presentation="toast"
+          severity="error"
+          action={<Button onClick={() => context.refetch()}>Retry</Button>}
+        >
           Academic filters could not be loaded.
-        </Alert>
+        </StudentFeedback>
       )}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
         {data && query.isFetching && <LinearProgress aria-label="Refreshing pending registers" />}
@@ -140,12 +148,14 @@ export default function AttendanceRegisterQueue() {
           }
           errorContent={
             query.isError ? (
-              <Alert
+              <StudentFeedback
+                notificationKey="STU-0644"
+                presentation="toast"
                 severity="error"
                 action={<Button onClick={() => query.refetch()}>Retry</Button>}
               >
                 Pending registers could not be loaded. Check your access or retry.
-              </Alert>
+              </StudentFeedback>
             ) : undefined
           }
         />

@@ -22,6 +22,9 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: {
+    warning: vi.fn(),
+    info: vi.fn(),
+    dismiss: vi.fn(),
     success: vi.fn(),
     error: vi.fn(),
   },
