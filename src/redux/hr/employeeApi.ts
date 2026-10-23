@@ -369,18 +369,22 @@ export const employeeApi = api.injectEndpoints({
     // Access Control & Notifications
     addAccessControl: builder.mutation<
       BulkUserScopeAssignmentResult,
-      BulkUserScopeAssignmentPayload
+      BulkUserScopeAssignmentPayload & { employeeId?: string }
     >({
-      query: (body) => ({
-        url: '/app/user-scope/bulk-assign',
-        method: 'POST',
+      query: ({ employeeId, ...body }) => ({
+        url: employeeId
+          ? buildEmployeeSubresourceUrl({ employeeId }, 'academic-permission')
+          : '/app/user-scope/bulk-assign',
+        method: employeeId ? 'PUT' : 'POST',
         body,
       }),
       invalidatesTags: (result) => (result ? tagTypes : []),
     }),
     getAccessControl: builder.query({
-      query: ({ userId, academicYearId }) => ({
-        url: `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
+      query: ({ userId, academicYearId, employeeId }) => ({
+        url: employeeId
+          ? `${buildEmployeeSubresourceUrl({ employeeId }, 'academic-permission')}?academicYearId=${academicYearId}`
+          : `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
         redirect: 'follow',
       }),
       providesTags: [employeeType.employee, allTagTypes.userScope],

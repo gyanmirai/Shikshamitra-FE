@@ -459,12 +459,12 @@ async function submitAndCaptureBulkAssign(page: Page) {
 
   const requestPromise = page.waitForRequest(
     (request) =>
-      request.url().includes('/api/app/user-scope/bulk-assign') && request.method() === 'POST'
+      /\/api\/employees\/[^/]+\/academic-permission$/.test(request.url()) && request.method() === 'PUT'
   );
   const responsePromise = page.waitForResponse(
     (response) =>
-      response.url().includes('/api/app/user-scope/bulk-assign') &&
-      response.request().method() === 'POST'
+      /\/api\/employees\/[^/]+\/academic-permission$/.test(response.url()) &&
+      response.request().method() === 'PUT'
   );
 
   await button.click();

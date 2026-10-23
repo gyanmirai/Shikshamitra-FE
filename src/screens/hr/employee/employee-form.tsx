@@ -664,6 +664,10 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
   const handleAcademicPermission = useCallback(
     async (values: any, formik: any, id: any) => {
       const userId = getEmployeeUserId(values, editData);
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Staff must be saved before academic permissions can be updated.');
+      }
       if (!userId) {
         shikshaMitraToast.info({
           message: 'Academic permission was skipped because this staff member has no linked user.',
@@ -683,14 +687,15 @@ const EmployeeFrom = ({ editData, handleClose, onCreated, initialStep = 0, onBus
       );
       formik.setFieldValue('academicPermissionSelectedData', normalizedSelection, false);
 
-      const res = await addAccessControl(
-        buildUserScopeBulkAssignPayload({
+      const res = await addAccessControl({
+        ...buildUserScopeBulkAssignPayload({
           academicYearId: currentYear.id,
           userIds: [userId],
           selection: values.academicPermission,
           allBoards: allBoardsForAcademicPermission,
-        })
-      ).unwrap();
+        }),
+        employeeId,
+      }).unwrap();
       return res;
     },
     [addAccessControl, allBoardsForAcademicPermission, currentYear?.id, editData]
@@ -1109,7 +1114,11 @@ const FormSlider = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
-    params: { userId: accessControlUserId, academicYearId: currentYear?.id },
+    params: {
+      userId: accessControlUserId,
+      academicYearId: currentYear?.id,
+      employeeId: getSavedEmployeeId(formik.values, editData),
+    },
     options: { skip: !(accessControlUserId && currentYear?.id && step === 7) },
   });
   const activeAccessControl =
