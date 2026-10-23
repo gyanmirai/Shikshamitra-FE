@@ -123,7 +123,6 @@ export const RoomAvailabilityTable = ({
         label: 'Facilities',
         filterType: 'string' as const,
         minWidth: 130,
-        minWidth: 130,
         isSort: false,
         isFilter: false,
         render: (_v, row) => <FacilityIcons facilities={row.facilities || []} />,
