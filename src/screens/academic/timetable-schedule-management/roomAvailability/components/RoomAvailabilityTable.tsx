@@ -123,14 +123,15 @@ export const RoomAvailabilityTable = ({
         label: 'Facilities',
         filterType: 'string' as const,
         minWidth: 130,
+        minWidth: 130,
         isSort: false,
-        isFilter: true,
+        isFilter: false,
         render: (_v, row) => <FacilityIcons facilities={row.facilities || []} />,
       },
       {
         id: 'capacity',
         label: 'Capacity',
-        filterType: 'number' as const,
+        filterType: 'number',
         minWidth: 100,
         render: (v) => (
           <Stack direction="row" alignItems="center" spacing={1}>
@@ -143,7 +144,7 @@ export const RoomAvailabilityTable = ({
         id: 'status',
         label: 'Status',
         minWidth: 120,
-        filterType: 'enum' as const,
+        filterType: 'enum',
         sticky: true,
         stickyPosition: 'right',
         enumOptions: [
@@ -171,7 +172,7 @@ export const RoomAvailabilityTable = ({
               ? [
                   {
                     id: 'schedule',
-                    label: 'View room schedule',
+                    label: `View schedule for ${item.roomName}`,
                     icon: 'solar:calendar-bold-duotone',
                     onClick: () => onViewSchedule(item.roomId),
                   },
@@ -181,7 +182,7 @@ export const RoomAvailabilityTable = ({
               ? [
                   {
                     id: 'reserve',
-                    label: 'Reserve room',
+                    label: `Reserve ${item.roomName}`,
                     icon: 'mdi:calendar-plus',
                     disabled: underMaintenance,
                     tooltip: underMaintenance
@@ -195,7 +196,7 @@ export const RoomAvailabilityTable = ({
               ? [
                   {
                     id: 'approval',
-                    label: 'View approval',
+                    label: `View approval for ${item.roomName}`,
                     icon: 'mdi:check-decagram',
                     onClick: () => onCancelReservation?.(item),
                   },
@@ -203,7 +204,13 @@ export const RoomAvailabilityTable = ({
               : []),
           ];
 
-          return <AdaptiveThreeDotsActions actions={actions} placement="left-top" />;
+          return (
+            <AdaptiveThreeDotsActions
+              moreLabel={`More actions for ${item.roomName}`}
+              actions={actions}
+              placement="left-top"
+            />
+          );
         },
       },
     ]}

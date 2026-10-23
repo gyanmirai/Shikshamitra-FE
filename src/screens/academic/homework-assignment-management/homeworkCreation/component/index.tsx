@@ -8,11 +8,11 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import HelpTooltip from 'src/components/help-tooltip';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -339,6 +339,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       </Box>
 
       <CustomDialog
+        hasForm={false}
         open={addHomeworkDialog.value}
         handleClose={() => {
           addHomeworkDialog.onFalse();
@@ -346,25 +347,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             setSelectedHomework(null);
           }, 200); // Delay should match your dialog transition (usually 200–300ms)
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedHomework ? 'Update Homework' : 'Add Homework'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedHomework
-                  ? 'You can update the homework details including title, description and other information'
-                  : 'You can create a new homework by entering the title, description and other required details'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedHomework ? 'Update Homework' : 'Add Homework'}
+        titleInfo="Set the homework title, instructions, due date, and submission settings."
         maxWidth="md"
       >
         <HomeworkForm
@@ -494,7 +478,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           setSelectedHomework(null);
           deleteHomeworkDialog.onFalse();
         }}
-        title="Delete"
+        title="Delete Homework"
         content={
           <>
             Are you sure you want to delete homework <strong>{selectedHomework?.title}</strong>?
@@ -528,7 +512,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
               setSelectedHomework(null);
             }}
           >
-            Yes
+            Delete homework
           </LoadingButton>
         }
       />
@@ -538,14 +522,14 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Homework Details</Typography>
-            <CustomTooltip
+            <HelpTooltip
               sx={{ textAlign: 'justify' }}
               arrow
               placement="right"
               title="View homework details — title, description, due date, submission status, and more."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+            </HelpTooltip>
           </Box>
         }
         open={viewHomeworkDetailDialog.value}

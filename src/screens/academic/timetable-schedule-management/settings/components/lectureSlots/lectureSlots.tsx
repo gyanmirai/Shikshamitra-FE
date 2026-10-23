@@ -297,7 +297,7 @@ const LectureSlots = () => {
               ? [
                   {
                     id: 'view',
-                    label: 'View slots',
+                    label: `View slots for ${row.standardName || row.slotName || row.name || row.id}`,
                     icon: 'solar:eye-bold',
                     onClick: () => {
                       viewSlotsDialog.onTrue();
@@ -313,7 +313,7 @@ const LectureSlots = () => {
               ? [
                   {
                     id: 'edit',
-                    label: 'Edit slots',
+                    label: `Edit slots for ${row.standardName || row.slotName || row.name || row.id}`,
                     icon: 'solar:pen-bold',
                     onClick: () => {
                       setDisabled(false);
@@ -337,7 +337,14 @@ const LectureSlots = () => {
               : []),
           ];
 
-          return <AdaptiveThreeDotsActions actions={rowActions} placement="right-top" />;
+          return (
+            <AdaptiveThreeDotsActions
+              directActionLimit={2}
+              collapseOnOverflow={false}
+              actions={rowActions}
+              placement="right-top"
+            />
+          );
         },
       },
     ],
@@ -451,6 +458,7 @@ const LectureSlots = () => {
         </Card>
       ) : (
         <CustomizableTable
+          tableTitle="Lecture Slots"
           tableId="lecture-slots-setting-table"
           noDataText={
             <>

@@ -1,12 +1,12 @@
 import type { LabelColor } from 'src/components/label';
 
-import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { SubmissionType } from 'src/enums/submission_type';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
+import { formatLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 import { Box, Grid, Card, Badge, Avatar, Divider, Typography, CardContent } from '@mui/material';
 import {
   PublishUnpublishStatusType,
@@ -27,12 +27,18 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
     (homework?.divisionMeta as any)?.dueAt ||
     (homework as any).divisionSchedules?.[0]?.dueAt;
 
-  const formatDate = (date: any) => (date ? dayjs(date).format('DD MMM YYYY') : 'N/A');
-  const formatTime = (date: any) => (date ? dayjs(date).format('hh:mm A') : '');
+  const formatDate = (date: any) =>
+    date ? formatLearningTaskDateTime(date, 'DD MMM YYYY') : 'N/A';
+  const formatTime = (date: any) => (date ? formatLearningTaskDateTime(date, 'hh:mm A') : '');
 
   const timelineItems = [
     { label: 'Created', date: createdAt, color: 'text.disabled', variant: 'outlined' as const },
-    { label: 'Published', date: publishDate, color: 'success.main', variant: 'filled' as const },
+    {
+      label: 'Publish date (IST)',
+      date: publishDate,
+      color: 'info.main',
+      variant: 'outlined' as const,
+    },
     { label: 'Due', date: dueDate, color: 'warning.main', variant: 'filled' as const },
   ];
 

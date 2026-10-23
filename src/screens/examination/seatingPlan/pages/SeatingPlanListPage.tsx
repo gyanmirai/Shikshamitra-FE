@@ -39,7 +39,7 @@ export default function SeatingPlanListPage() {
   return (
     <Box height="100%" display="flex" flexDirection="column" gap={1}>
       <CustomBreadcrumbs
-        heading="Seating plan"
+        heading="Seating Plan"
         description="Create individual or shared subject plans inside each examination."
         tooltipProps={
           {
@@ -50,7 +50,7 @@ export default function SeatingPlanListPage() {
         links={[
           { name: 'Academics', href: academicPaths.dashboard },
           { name: 'Examination' },
-          { name: 'Seating plan' },
+          { name: 'Seating Plan' },
         ]}
       />
 

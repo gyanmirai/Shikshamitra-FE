@@ -19,32 +19,37 @@ import { RubricCriteriaBuilder } from './components/RubricCriteriaBuilder';
 import { RubricBasicInformation } from './components/RubricBasicInformation';
 
 import type { ScoringDrafts } from './rubricScoringModel';
-import type {
-  RubricConfigFormProps,
-  RubricConfigFormValues,
-} from './types';
+import type { RubricConfigFormProps, RubricConfigFormValues } from './types';
 
-const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }) => {
+const RubricConfigForm: React.FC<RubricConfigFormProps> = ({
+  editData,
+  onClose,
+  onStateChange,
+}) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [activeStep, setActiveStep] = useState(0);
   const [maxReachedStep, setMaxReachedStep] = useState(0);
   const scoringDrafts = useRef<ScoringDrafts>({});
 
   const rubricFormik = useFormik<RubricConfigFormValues>({
-    enableReinitialize: true,
     initialValues: buildInitialValues(editData),
     validationSchema: stepValidationSchemas[activeStep],
     validateOnChange: false,
-    onSubmit: () => { },
+    onSubmit: () => {},
   });
 
   React.useEffect(() => {
     scoringDrafts.current = {};
   }, [editData?.id]);
 
-  const { submitRubric, isSaving, submitMode } = useRubricTemplateSave({ editData, onClose }, currentMedium?.id);
-
-
+  const { submitRubric, isSaving, submitMode } = useRubricTemplateSave(
+    { editData, onClose },
+    currentMedium?.id,
+    (values) => rubricFormik.resetForm({ values })
+  );
+  React.useEffect(() => {
+    onStateChange?.({ dirty: rubricFormik.dirty, busy: isSaving });
+  }, [onStateChange, rubricFormik.dirty, isSaving]);
 
   return (
     <CustomStepperWithFormik
@@ -61,13 +66,14 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
       validateOnChange={false}
       validationSchema={stepValidationSchemas[activeStep]}
       showSaveButton={activeStep === builderSteps.length - 1}
+      saveButtonLabel="Save draft"
       nextButtonLabel="Next"
       finalButtonLabel="Publish Rubric"
       saveButtonProps={{
         loading: isSaving && submitMode === 'draft',
         disabled: isSaving,
         startIcon: <Iconify icon="solar:diskette-bold" />,
-        children: 'Save Draft',
+        children: 'Save draft',
       }}
       saveAndNextButtonProps={{
         loading: isSaving && submitMode === 'publish',
@@ -91,13 +97,16 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
       }
       renderItem={({ formik, activeStep: step }) => (
         <Box>
-
           {/* Step content */}
           <Box sx={{ p: { xs: 1.5, md: 2 } }}>
             {step === 0 ? <RubricBasicInformation formik={formik} /> : null}
             {step === 1 ? (
               <Stack spacing={1.5}>
-                <RubricScoringSetup formik={formik} isEditing={Boolean(editData)} onModelChange={(value) => changeRubricScoringModel(formik, value, scoringDrafts)} />
+                <RubricScoringSetup
+                  formik={formik}
+                  isEditing={Boolean(editData)}
+                  onModelChange={(value) => changeRubricScoringModel(formik, value, scoringDrafts)}
+                />
                 <RubricCriteriaBuilder formik={formik} />
               </Stack>
             ) : null}

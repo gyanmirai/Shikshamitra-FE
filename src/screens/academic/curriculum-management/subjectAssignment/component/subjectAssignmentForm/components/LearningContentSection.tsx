@@ -52,6 +52,7 @@ export const LearningContentSection: React.FC<LearningContentSectionProps> = ({
           </Box>
           <ShakingTextField error={!!getError(section.field)}>
             <AcademicLanguageEditor
+              editorProps={{ attributes: { 'aria-label': section.label } }}
               onChange={(value) => onChange(section.field, value)}
               value={(subject[section.field] as string) || ''}
               placeholder={section.placeholder}

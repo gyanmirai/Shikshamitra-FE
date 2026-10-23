@@ -3026,7 +3026,7 @@ const SubstitutionManagementScreen = () => {
         heading="Substitution Management"
         description="Manage teacher unavailability, substitution duties and daily coverage."
         links={[
-          { name: 'Dashboard', href: academicPaths.dashboard },
+          { name: 'Academics', href: academicPaths.dashboard },
           { name: 'Timetable', href: academicPaths.timetable.management },
           { name: 'Substitution Management' },
         ]}
@@ -3114,6 +3114,7 @@ const SubstitutionManagementScreen = () => {
                 <Tooltip title="Previous Day">
                   <span>
                     <IconButton
+                      aria-label="Previous date"
                       size="small"
                       onClick={() =>
                         activeTab === 'board'
@@ -3151,6 +3152,7 @@ const SubstitutionManagementScreen = () => {
                 <Tooltip title="Next Day">
                   <span>
                     <IconButton
+                      aria-label="Next date"
                       size="small"
                       onClick={() =>
                         activeTab === 'board'
@@ -3369,19 +3371,8 @@ const SubstitutionManagementScreen = () => {
         <SubstitutionCreationOverlay
           open={createDialogOpen}
           displayAsDrawer={cameFromAvailability}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Create Substitution</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title="Select the affected lecture, review the auto-filled details, add one or more free substitute teachers from the list, then save as draft or assign and notify immediately."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
+          title="Create Substitution"
+          titleInfo="Choose the affected lecture and an available substitute. Save a draft or assign and notify."
           onClose={handleCloseCreateDialog}
         >
           <DialogScrollContent>
@@ -4372,19 +4363,8 @@ const SubstitutionManagementScreen = () => {
 
         <CustomDialog
           open={availabilityDialogOpen}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">Mark Teacher Unavailable</Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title="Mark a teacher unavailable for a date and time range. Affected lectures are detected for manual substitution assignment."
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
+          title="Mark Teacher Unavailable"
+          titleInfo="Choose the teacher and unavailable period. Affected lectures require substitution assignment."
           maxWidth="md"
           handleClose={handleCloseAvailabilityDialog}
         >

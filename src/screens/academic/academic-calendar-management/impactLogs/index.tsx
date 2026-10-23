@@ -39,6 +39,7 @@ import {
   Box,
   Grid,
   Card,
+  Alert,
   Paper,
   Stack,
   Select,
@@ -53,59 +54,6 @@ import {
   CardContent,
   DialogActions,
 } from '@mui/material';
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_LOGS = {
-  items: [
-    {
-      id: 'imp-1',
-      affectedDate: '2025-08-15',
-      impactType: CalendarImpactType.TimetableSlot,
-      affectedEntityName: 'Math — Class 10A, Period 3',
-      message: 'Timetable slot blocked due to Independence Day holiday',
-      suggestedNewDate: '2025-08-18',
-      status: CalendarImpactStatus.Pending,
-    },
-    {
-      id: 'imp-2',
-      affectedDate: '2025-08-15',
-      impactType: CalendarImpactType.HomeworkDueDate,
-      affectedEntityName: 'Science Chapter 5 Assignment',
-      message: 'Homework due date falls on declared holiday',
-      suggestedNewDate: '2025-08-16',
-      status: CalendarImpactStatus.Suggested,
-    },
-    {
-      id: 'imp-3',
-      affectedDate: '2025-08-15',
-      impactType: CalendarImpactType.OnlineClass,
-      affectedEntityName: 'English Live Session — Class 9',
-      message: 'Online class scheduled on school holiday',
-      suggestedNewDate: null,
-      status: CalendarImpactStatus.Pending,
-    },
-    {
-      id: 'imp-4',
-      affectedDate: '2025-10-02',
-      impactType: CalendarImpactType.ExamSchedule,
-      affectedEntityName: 'Unit Test 2 — Class 8',
-      message: 'Exam scheduled on Gandhi Jayanti holiday',
-      suggestedNewDate: '2025-10-03',
-      status: CalendarImpactStatus.Resolved,
-    },
-    {
-      id: 'imp-5',
-      affectedDate: '2025-11-01',
-      impactType: CalendarImpactType.LessonPlan,
-      affectedEntityName: 'Physics Lesson Plan — Chapter 3',
-      message: 'Lesson plan day affected by Diwali break',
-      suggestedNewDate: '2025-11-04',
-      status: CalendarImpactStatus.Rescheduled,
-    },
-  ],
-  totalCount: 5,
-};
 
 // ─── Impact type icon/color maps ──────────────────────────────────────────────
 
@@ -283,7 +231,12 @@ const CalendarImpactLogs = () => {
   const [ignoreLog, { isLoading: ignoring }] = useIgnoreImpactLogMutation();
   const [rescheduleLog, { isLoading: rescheduling }] = useRescheduleImpactLogMutation();
 
-  const { data: logsRaw, isLoading } = useQueryAndMutation({
+  const {
+    data: logsRaw,
+    isLoading,
+    isError,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetImpactLogsQuery,
     params: {
@@ -295,7 +248,7 @@ const CalendarImpactLogs = () => {
     popupConfig: { error: false },
   });
 
-  const logsData = (logsRaw?.items?.length ?? 0) > 0 ? logsRaw : MOCK_LOGS;
+  const logsData = logsRaw;
   const logs: any[] = logsData?.items ?? [];
   const total: number = logsData?.totalCount ?? 0;
 
@@ -471,65 +424,65 @@ const CalendarImpactLogs = () => {
       },
       ...(canResolve
         ? [
-          {
-            id: 'action',
-            label: 'Actions',
-            align: 'right' as const,
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            minWidth: 100,
-            render: (value: any, row: any) => {
-              if (
-                row.status === CalendarImpactStatus.Resolved ||
-                row.status === CalendarImpactStatus.IgnoredWithReason ||
-                row.status === CalendarImpactStatus.Rescheduled
-              ) {
-                return null;
-              }
-              return (
-                <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                  <Tooltip title="Mark Resolved">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color: 'success.main',
-                        '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.1) },
-                      }}
-                      onClick={() => openAction(row, resolveDialog)}
-                    >
-                      <Iconify icon="mdi:check-circle-outline" width={18} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Reschedule">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color: 'info.main',
-                        '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) },
-                      }}
-                      onClick={() => openAction(row, rescheduleDialog)}
-                    >
-                      <Iconify icon="mdi:calendar-sync-outline" width={18} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Ignore with Reason">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color: 'warning.main',
-                        '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) },
-                      }}
-                      onClick={() => openAction(row, ignoreDialog)}
-                    >
-                      <Iconify icon="mdi:eye-off-outline" width={18} />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              );
+            {
+              id: 'action',
+              label: 'Actions',
+              align: 'right' as const,
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              minWidth: 100,
+              render: (value: any, row: any) => {
+                if (
+                  row.status === CalendarImpactStatus.Resolved ||
+                  row.status === CalendarImpactStatus.IgnoredWithReason ||
+                  row.status === CalendarImpactStatus.Rescheduled
+                ) {
+                  return null;
+                }
+                return (
+                  <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                    <Tooltip title="Mark Resolved">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'success.main',
+                          '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.1) },
+                        }}
+                        onClick={() => openAction(row, resolveDialog)}
+                      >
+                        <Iconify icon="mdi:check-circle-outline" width={18} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Reschedule">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'info.main',
+                          '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) },
+                        }}
+                        onClick={() => openAction(row, rescheduleDialog)}
+                      >
+                        <Iconify icon="mdi:calendar-sync-outline" width={18} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Ignore with Reason">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: 'warning.main',
+                          '&:hover': { backgroundColor: alpha(theme.palette.warning.main, 0.1) },
+                        }}
+                        onClick={() => openAction(row, ignoreDialog)}
+                      >
+                        <Iconify icon="mdi:eye-off-outline" width={18} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                );
+              },
             },
-          },
-        ]
+          ]
         : []),
     ],
     [canResolve, theme, resolveDialog, rescheduleDialog, ignoreDialog]
@@ -549,7 +502,7 @@ const CalendarImpactLogs = () => {
       />
 
       {/* Summary strip */}
-      <SummaryStrip logs={logs} />
+      {!isError && !isLoading && <SummaryStrip logs={logs} />}
 
       {/* Filters */}
       <Paper
@@ -566,6 +519,7 @@ const CalendarImpactLogs = () => {
             <FormControl fullWidth size="small">
               <InputLabel>Filter by Status</InputLabel>
               <Select
+                inputProps={{ 'aria-label': 'Filter by status' }}
                 label="Filter by Status"
                 value={statusFilter}
                 onChange={(e) => {
@@ -585,6 +539,7 @@ const CalendarImpactLogs = () => {
             <FormControl fullWidth size="small">
               <InputLabel>Filter by Type</InputLabel>
               <Select
+                inputProps={{ 'aria-label': 'Filter by type' }}
                 label="Filter by Type"
                 value={typeFilter}
                 onChange={(e) => {
@@ -631,6 +586,7 @@ const CalendarImpactLogs = () => {
 
       {/* Table */}
       <CustomizableTable
+        tableTitle="Calendar Impact Logs"
         tableId="impact-logs"
         isLoading={isLoading}
         isPagination
@@ -645,6 +601,20 @@ const CalendarImpactLogs = () => {
         isShowedDense={false}
         columns={columns}
         data={logs}
+        errorContent={
+          isError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" color="inherit" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load impact logs. Try again.
+            </Alert>
+          ) : undefined
+        }
         noDataText={
           <Box width="100%" display="flex" flexDirection="column">
             <Typography variant="body2" color="text.secondary">

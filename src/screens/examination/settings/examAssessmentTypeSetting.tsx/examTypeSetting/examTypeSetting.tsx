@@ -5,15 +5,14 @@ import type { RootState } from 'src/redux/store';
 import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 
 import { LoadingButton } from '@mui/lab';
+import { Box, Button } from '@mui/material';
 import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -21,9 +20,9 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 import {
   examinationTypeApi,
@@ -220,6 +219,7 @@ const ExamTypeSettings = () => {
       />
 
       <CustomizableTable
+        tableTitle="Exam Types"
         tableId="examTypeTable"
         isLoading={isLoading || isFetching}
         noDataText={
@@ -282,7 +282,7 @@ const ExamTypeSettings = () => {
             label: 'Usage Count',
             filterType: 'number',
             minWidth: 120,
-            render: (val) => `${val || 0} exams`,
+            render: (val) => `${val || 0} ${Number(val) === 1 ? 'exam' : 'exams'}`,
           },
           {
             id: 'status',
@@ -318,7 +318,7 @@ const ExamTypeSettings = () => {
                 ? [
                     {
                       id: 'restore',
-                      label: 'Restore exam type',
+                      label: `Restore ${examType.examType}`,
                       icon: 'solar:restart-bold',
                       color: 'success.main',
                       disabled: !canAdd || isRestoreLoading,
@@ -344,7 +344,7 @@ const ExamTypeSettings = () => {
                       ? [
                           {
                             id: 'edit',
-                            label: 'Edit exam type',
+                            label: `Edit ${examType.examType}`,
                             icon: 'solar:pen-bold',
                             onClick: () => {
                               addExamTypeDialog.onTrue();
@@ -358,7 +358,7 @@ const ExamTypeSettings = () => {
                       ? [
                           {
                             id: 'delete',
-                            label: 'Delete exam type',
+                            label: `Delete ${examType.examType}`,
                             icon: 'solar:trash-bin-trash-bold',
                             color: 'error.main',
                             disabled: (examType.usageCount || 0) > 0,
@@ -375,7 +375,7 @@ const ExamTypeSettings = () => {
                       : []),
                     {
                       id: 'archive',
-                      label: 'Archive exam type',
+                      label: `Archive ${examType.examType}`,
                       icon: 'solar:archive-bold',
                       color: 'warning.main',
                       disabled: !canDelete || isArchiveLoading,
@@ -386,7 +386,15 @@ const ExamTypeSettings = () => {
                     },
                   ];
 
-              return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
+              return (
+                <AdaptiveThreeDotsActions
+                  directActionLimit={2}
+                  collapseOnOverflow={false}
+                  moreLabel={`More actions for ${examType.examType}`}
+                  actions={actions}
+                  placement="right-top"
+                />
+              );
             },
           },
         ]}
@@ -416,25 +424,8 @@ const ExamTypeSettings = () => {
 
       <CustomDialog
         maxWidth="sm"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedExamType ? 'Update Exam Type' : 'Add Exam Type'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedExamType
-                  ? 'You can update the exam type details including name and other information.'
-                  : 'You can create a new exam type by entering the required details.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={selectedExamType ? 'Update Exam Type' : 'Add Exam Type'}
+        titleInfo="Set the exam type, category, marks, and grading defaults."
         open={addExamTypeDialog.value}
         handleClose={() => {
           addExamTypeDialog.onFalse();

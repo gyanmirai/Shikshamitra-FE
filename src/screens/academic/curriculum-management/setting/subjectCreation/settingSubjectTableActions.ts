@@ -24,7 +24,7 @@ export function getSettingSubjectTableActions(
     if (options.canAdd) {
       actions.push({
         id: 'restore',
-        label: 'Restore subject',
+        label: `Restore ${subject.name}`,
         icon: 'solar:restart-bold',
         onClick: () => options.onRestore(subject),
       });
@@ -37,13 +37,13 @@ export function getSettingSubjectTableActions(
     actions.push(
       {
         id: 'edit',
-        label: 'Edit subject',
+        label: `Edit ${subject.name}`,
         icon: GlobalIcons.edit,
         onClick: () => options.onEdit(subject),
       },
       {
         id: 'archive',
-        label: 'Archive subject',
+        label: `Archive ${subject.name}`,
         icon: 'solar:archive-bold',
         onClick: () => options.onArchive(subject),
       }
@@ -56,7 +56,7 @@ export function getSettingSubjectTableActions(
 
     actions.push({
       id: 'delete',
-      label: 'Delete subject',
+      label: `Delete ${subject.name}`,
       icon: GlobalIcons.delete,
       color: 'error.main',
       disabled,

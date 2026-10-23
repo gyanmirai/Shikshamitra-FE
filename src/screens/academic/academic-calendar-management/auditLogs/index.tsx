@@ -15,8 +15,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
-  useAddAuditLogReviewNoteMutation,
   useGetAuditLogsQuery,
+  useAddAuditLogReviewNoteMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 import {
   Box,
@@ -33,13 +33,13 @@ import {
 } from '@mui/material';
 
 import AuditLogsTable from './components/AuditLogsTable';
+import { groupLogsByDate } from './utils/auditFormatters';
 import AuditExportMenu from './components/AuditExportMenu';
 import AuditSmartFilters from './components/AuditSmartFilters';
 import AuditTimelineView from './components/AuditTimelineView';
 import AuditAnalyticsView from './components/AuditAnalyticsView';
 import AuditAISummaryDrawer from './components/AuditAISummaryDrawer';
 import AuditLogDetailsDrawer from './components/AuditLogDetailsDrawer';
-import { groupLogsByDate } from './utils/auditFormatters';
 import { EMPTY_FILTERS, KEYBOARD_SHORTCUTS } from './constants/auditLogs.constants';
 
 import type { AuditLog, AuditView, AuditFilterState } from './types/auditLogs.types';
@@ -173,7 +173,12 @@ const CalendarAuditLogs = () => {
     [serverLogs, filters]
   );
 
-  const totalCount = filteredLogs.length;
+  const hasLocalFilters = Object.entries(filters).some(
+    ([key, value]) => key !== 'action' && Boolean(value)
+  );
+  const totalCount = hasLocalFilters
+    ? filteredLogs.length
+    : (logsRaw?.totalCount ?? serverLogs.length);
 
   // Timeline accordion state
   const [timelineCollapsedDates, setTimelineCollapsedDates] = useState<Set<string>>(new Set());
@@ -280,7 +285,7 @@ const CalendarAuditLogs = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <CustomBreadcrumbs
           heading="Audit Logs"
-          description="Track every academic calendar change with full history, impact, and accountability."
+          description="School-wide calendar history across all academic mediums. Review changes, impact, and accountability."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Academic Calendar', href: '/academic/academicCalendarDashboard' },
@@ -297,7 +302,7 @@ const CalendarAuditLogs = () => {
       {/* Breadcrumbs */}
       <CustomBreadcrumbs
         heading="Audit Logs"
-        description="Track every academic calendar change with full history, impact, and accountability."
+        description="School-wide calendar history across all academic mediums. Review changes, impact, and accountability."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Academic Calendar', href: '/academic/academicCalendarDashboard' },
@@ -310,14 +315,14 @@ const CalendarAuditLogs = () => {
                 size="small"
                 variant="outlined"
                 color="success"
-                startIcon={<Iconify icon="mdi:robot-outline" width={16} />}
+                startIcon={<Iconify icon="mdi:format-list-bulleted" width={16} />}
                 onClick={() => {
                   setAiLog(null);
                   setAiDrawerOpen(true);
                 }}
                 sx={{ borderRadius: 1.5, textTransform: 'none' }}
               >
-                AI Summary
+                Activity summary
               </Button>
             )}
             {canExport && (
@@ -336,6 +341,9 @@ const CalendarAuditLogs = () => {
       />
 
       {/* Smart filters */}
+      <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+        School-wide history across all academic mediums
+      </Typography>
       <AuditSmartFilters
         filters={filters}
         onChange={(next) => {
@@ -432,7 +440,7 @@ const CalendarAuditLogs = () => {
           }
           arrow
         >
-          <IconButton size="small">
+          <IconButton size="small" aria-label="Keyboard shortcuts">
             <Iconify icon="mdi:keyboard-outline" width={18} />
           </IconButton>
         </Tooltip>
@@ -489,10 +497,12 @@ const CalendarAuditLogs = () => {
         open={aiDrawerOpen}
         onClose={() => setAiDrawerOpen(false)}
         log={aiLog}
+        logs={filteredLogs}
       />
 
       {/* Export Menu */}
       <AuditExportMenu
+        logs={filteredLogs}
         anchorEl={exportAnchor}
         open={Boolean(exportAnchor)}
         onClose={() => setExportAnchor(null)}

@@ -6,6 +6,7 @@ import type {
 
 import { Grid, Skeleton } from '@mui/material';
 
+import { getAcademicHealth } from './academic-readiness';
 import { getActionQueue, getModuleHealth } from './admin-dashboard-overview-data';
 import { AcademicActionQueue } from '../../components/command-center/AcademicActionQueue';
 import { AcademicHealthScoreCard } from '../../components/command-center/AcademicHealthScoreCard';
@@ -31,17 +32,7 @@ export function AdminDashboardOverview({
         {isHealthReady && curriculum && timetable && assessment ? (
           <AcademicHealthScoreCard
             title="Academic Health"
-            score={Math.round(
-              (curriculum.curriculumCompletion +
-                timetable.timetableRate +
-                assessment.readinessRate) /
-                3
-            )}
-            status={
-              timetable.conflictsCount > 0 || assessment.pendingGradeEntries > 0
-                ? 'Needs Attention'
-                : 'Healthy'
-            }
+            {...getAcademicHealth(curriculum, timetable, assessment)}
             description="School-wide score across all classes, weighted from curriculum, timetable and grading readiness."
             factors={[
               {

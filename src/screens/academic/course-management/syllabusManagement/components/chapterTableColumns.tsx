@@ -130,6 +130,7 @@ export function getChapterTableColumns(
       stickyPosition: 'right',
       render: (_, row) => (
         <AdaptiveThreeDotsActions
+          directActionLimit={2}
           actions={getRowActions(row as IChapter)}
           placement="right-top"
           moreLabel="More chapter actions"

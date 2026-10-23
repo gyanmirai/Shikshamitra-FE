@@ -13,7 +13,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Avatar, Typography } from '@mui/material';
+import { Box, Chip, Stack, Avatar, Button, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
@@ -320,6 +320,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
 
           return (
             <AdaptiveThreeDotsActions
+              directActionLimit={2}
               actions={actions}
               placement="right-top"
               moreLabel="More elective group actions"
@@ -351,20 +352,21 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       />
 
       <CustomizableTable
+        tableTitle="Elective Groups"
         isLoading={isLoading || isFetching}
         tableId="elective-subject-data-table"
         noDataText={
           <>
             Elective Group Data Not Found{' '}
             {canAdd && (
-              <Box
+              <Button
+                size="small"
                 onClick={() => {
                   onAddElective.onTrue();
                   setOpenDialog(true);
                   setEditData(null);
                 }}
-                color="primary.main"
-                fontWeight={600}
+                color="primary"
                 sx={{
                   '&:hover': {
                     cursor: 'pointer',
@@ -373,7 +375,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
                 }}
               >
                 Add Elective Group
-              </Box>
+              </Button>
             )}
           </>
         }

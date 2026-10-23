@@ -5,9 +5,9 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import { alpha, useTheme } from '@mui/material/styles';
 import CancelButton from 'src/components/cancel-button';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { academicPaths } from 'src/constants/academic-menu';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -306,7 +306,7 @@ export default function ElectiveGroupUsageDrawer({
               <Label color={getStatusColor(statusLabel)} variant="soft" sx={{ height: 20 }}>
                 {statusLabel}
               </Label>
-              <CustomTooltip
+              <HelpTooltip
                 title="Elective Group Dependencies & System Usage Across Modules"
                 placement="right"
                 arrow
@@ -317,7 +317,7 @@ export default function ElectiveGroupUsageDrawer({
                 >
                   <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} />
                 </Box>
-              </CustomTooltip>
+              </HelpTooltip>
             </Stack>
             <Typography
               variant="caption"
@@ -633,7 +633,13 @@ export default function ElectiveGroupUsageDrawer({
                       size="small"
                       variant="text"
                       onClick={() => setShowAllDistribution(!showAllDistribution)}
-                      sx={{ alignSelf: 'flex-start', p: 0, minWidth: 0, fontSize: '11.5px', fontWeight: 600 }}
+                      sx={{
+                        alignSelf: 'flex-start',
+                        p: 0,
+                        minWidth: 0,
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                      }}
                     >
                       {showAllDistribution
                         ? 'Show less'
@@ -711,9 +717,7 @@ export default function ElectiveGroupUsageDrawer({
                       color: isInUse ? 'warning.darker' : 'success.darker',
                     }}
                   >
-                    {isInUse
-                      ? 'Impact & System Restrictions'
-                      : 'Safe to Modify or Delete'}
+                    {isInUse ? 'Impact & System Restrictions' : 'Safe to Modify or Delete'}
                   </Typography>
                 </Stack>
 
@@ -729,11 +733,18 @@ export default function ElectiveGroupUsageDrawer({
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ display: 'block', fontSize: '12.5px', lineHeight: 1.5, mb: isInUse ? 1.5 : 0 }}
+                sx={{
+                  display: 'block',
+                  fontSize: '12.5px',
+                  lineHeight: 1.5,
+                  mb: isInUse ? 1.5 : 0,
+                }}
               >
                 {isInUse ? (
                   <>
-                    This elective group is actively referenced by student choices or timetable allocations. Modifying subjects or deletion is restricted while active dependencies exist.
+                    This elective group is actively referenced by student choices or timetable
+                    allocations. Modifying subjects or deletion is restricted while active
+                    dependencies exist.
                   </>
                 ) : (
                   'This elective group has no active student or timetable dependencies. You can safely edit structure or delete this group.'

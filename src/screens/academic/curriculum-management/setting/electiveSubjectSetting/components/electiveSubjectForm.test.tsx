@@ -86,9 +86,9 @@ describe('SettingElectiveSubjectForm subject membership lock', () => {
 
     expect(screen.getByRole('button', { name: 'Subject selector' })).toBeDisabled();
     expect(screen.getByText(/subject selection is locked/i)).toBeVisible();
-    expect(screen.getByLabelText('Elective Group Name *')).toBeEnabled();
-    expect(screen.getByRole('heading', { name: 'Group details' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Subject selection' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: /Elective group name/i })).toBeEnabled();
+    expect(screen.getByRole('heading', { name: 'Group Details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Subject Selection' })).toBeVisible();
   });
 
   it('allows subject selection and omits the note for an unused group', () => {

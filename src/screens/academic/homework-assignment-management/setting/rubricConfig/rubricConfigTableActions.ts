@@ -11,7 +11,6 @@ type RubricConfigActionOptions = {
   onEdit: (rubric: AssessmentRubricDto) => void;
   onDuplicate: (rubric: AssessmentRubricDto) => void;
   onPublish: (rubric: AssessmentRubricDto) => void;
-  onVersion: (rubric: AssessmentRubricDto) => void;
   onUsage: (rubric: AssessmentRubricDto) => void;
   onArchive: (rubric: AssessmentRubricDto) => void;
 };
@@ -23,7 +22,7 @@ export function getRubricConfigTableActions(
   const actions: AdaptiveThreeDotsAction[] = [
     {
       id: 'preview',
-      label: 'Preview',
+      label: `Preview ${rubric.title}`,
       icon: GlobalIcons.eye,
       onClick: () => options.onPreview(rubric),
     },
@@ -32,7 +31,7 @@ export function getRubricConfigTableActions(
   if (options.canAdd && rubric.status === RubricStatus.Draft) {
     actions.push({
       id: 'edit',
-      label: 'Edit',
+      label: `Edit ${rubric.title}`,
       icon: GlobalIcons.edit,
       onClick: () => options.onEdit(rubric),
     });
@@ -41,7 +40,7 @@ export function getRubricConfigTableActions(
   if (options.canAdd) {
     actions.push({
       id: 'duplicate',
-      label: 'Duplicate',
+      label: `Duplicate ${rubric.title}`,
       icon: GlobalIcons.copy,
       onClick: () => options.onDuplicate(rubric),
     });
@@ -53,15 +52,6 @@ export function getRubricConfigTableActions(
       label: 'Publish',
       icon: GlobalIcons.upload,
       onClick: () => options.onPublish(rubric),
-    });
-  }
-
-  if (options.canAdd && rubric.status === RubricStatus.Published) {
-    actions.push({
-      id: 'new-version',
-      label: 'Create new version',
-      icon: GlobalIcons.newversion,
-      onClick: () => options.onVersion(rubric),
     });
   }
 

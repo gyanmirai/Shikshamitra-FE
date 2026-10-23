@@ -1,8 +1,8 @@
 # Academic route inventory
 
-Repository discovery: 21 October 2026. Browser discovery has not started.
+Repository discovery: 21 October 2026. Partial browser discovery is recorded per screen.
 [Subjects Creation](curriculum/settings/subjects-creation/README.md) has authored manual cases, UI checks, edges, and school examples; partial local results were recorded on 22 October 2026 in that suite.
-Other screen case suites have not started.
+[Elective Group Creation](curriculum/settings/elective-group-creation/README.md) also has detailed cases and partial local execution from 22 October 2026. Other screen case suites have not started.
 
 ## Counts and interpretation
 
@@ -53,7 +53,7 @@ Other screen case suites have not started.
 | `/academic/curriculum/settings/academic-categories` | Partial / unverified | Inventory only | [src/app/(auth-route)/academic/(curriculum-management)/curriculum/settings/academic-categories/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculum/settings/academic-categories/page.tsx>) | Page renders only a literal placeholder div; not a confirmed feature. |
 | `/academic/curriculumDashboard` | Non-menu / unverified | Inventory only | [src/app/(auth-route)/academic/(curriculum-management)/curriculumDashboard/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumDashboard/page.tsx>) | Page source exists without a current Academic menu leaf; reachability and supported use require UI confirmation. |
 | `/academic/curriculumReports` | Menu-confirmed | [curriculum/reports](<curriculum/reports/README.md>) | [src/app/(auth-route)/academic/(curriculum-management)/curriculumReports/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumReports/page.tsx>) | Active menu leaf; live behavior unverified. |
-| `/academic/curriculumSetting/electiveGroupCreation` | Menu-confirmed | [curriculum/settings/elective-group-creation](<curriculum/settings/elective-group-creation/README.md>) | [src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/electiveGroupCreation/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/electiveGroupCreation/page.tsx>) | Active menu leaf; live behavior unverified. |
+| `/academic/curriculumSetting/electiveGroupCreation` | Menu-confirmed | [curriculum/settings/elective-group-creation](<curriculum/settings/elective-group-creation/README.md>) | [src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/electiveGroupCreation/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/electiveGroupCreation/page.tsx>) | Active menu leaf; 88 authored checks plus six composite journeys; partial local browser execution recorded 22 October 2026 in the owning suite. |
 | `/academic/curriculumSetting/subjectCreation` | Menu-confirmed | [curriculum/settings/subjects-creation](<curriculum/settings/subjects-creation/README.md>) | [src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/subjectCreation/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumSetting/subjectCreation/page.tsx>) | Active menu leaf; live behavior unverified. |
 | `/academic/curriculumSubjects` | Menu-confirmed | [curriculum/subject-allocation](<curriculum/subject-allocation/README.md>) | [src/app/(auth-route)/academic/(curriculum-management)/curriculumSubjects/page.tsx](<../../../../src/app/(auth-route)/academic/(curriculum-management)/curriculumSubjects/page.tsx>) | Active menu leaf; live behavior unverified. |
 | `/academic/dashboard` | Menu-confirmed | [dashboard](<dashboard/README.md>) | [src/app/(auth-route)/academic/dashboard/page.tsx](<../../../../src/app/(auth-route)/academic/dashboard/page.tsx>) | Active menu leaf; live behavior unverified. |

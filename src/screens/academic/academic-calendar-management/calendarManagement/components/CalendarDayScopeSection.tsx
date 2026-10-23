@@ -24,8 +24,9 @@ export function CalendarDayScopeSection({
   return (
     <FormSectionCard
       icon="solar:eye-linear"
-      title="Scope & visibility"
-      description="Choose whether this marker applies school-wide or only to selected classes and divisions."
+      title="Scope & Visibility"
+      titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+      descriptionTooltip="Choose whether this marker applies school-wide or only to selected classes and divisions."
     >
       <FormControlLabel
         control={

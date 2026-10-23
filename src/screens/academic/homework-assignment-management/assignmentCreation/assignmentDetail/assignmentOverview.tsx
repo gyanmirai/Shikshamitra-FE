@@ -1,9 +1,9 @@
 import type { LabelColor } from 'src/components/label';
 
-import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
+import { formatLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 import { AssignmentStatus, ASSIGNMENT_STATUS_LABELS } from 'src/enums/assignment';
 import {
   Box,
@@ -37,12 +37,18 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
     (assignment?.divisionMeta as any)?.dueAt ||
     (assignment as any).divisionSchedules?.[0]?.dueAt;
 
-  const formatDate = (date: any) => (date ? dayjs(date).format('DD MMM YYYY') : 'N/A');
-  const formatTime = (date: any) => (date ? dayjs(date).format('hh:mm A') : '');
+  const formatDate = (date: any) =>
+    date ? formatLearningTaskDateTime(date, 'DD MMM YYYY') : 'N/A';
+  const formatTime = (date: any) => (date ? formatLearningTaskDateTime(date, 'hh:mm A') : '');
 
   const timelineItems = [
     { label: 'Created', date: createdAt, color: 'text.disabled', variant: 'outlined' as const },
-    { label: 'Published', date: publishDate, color: 'success.main', variant: 'filled' as const },
+    {
+      label: 'Publish date (IST)',
+      date: publishDate,
+      color: 'info.main',
+      variant: 'outlined' as const,
+    },
     { label: 'Due', date: dueDate, color: 'warning.main', variant: 'filled' as const },
   ];
 
@@ -72,10 +78,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                 <Typography variant="subtitle1" fontWeight={700}>
                   {assignment?.title}
                 </Typography>
-                <Label
-                  variant="soft"
-                  color={ASSIGNMENT_STATUS_COLORS[assignment.status]}
-                >
+                <Label variant="soft" color={ASSIGNMENT_STATUS_COLORS[assignment.status]}>
                   {ASSIGNMENT_STATUS_LABELS[assignment.status]}
                 </Label>
               </Box>

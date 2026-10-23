@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import HelpTooltip from 'src/components/help-tooltip';
 import {
   Box,
   Tooltip,
@@ -93,13 +94,19 @@ export function ExamReviewAccordion({
             >
               <Iconify icon={icon} width={18} />
             </Box>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
               {title}
             </Typography>
             {status}
           </Box>
         </AccordionSummary>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+          <HelpTooltip
+            label={`${title} information`}
+            title={`Review the saved ${title.toLowerCase()} before completing the exam setup.`}
+          >
+            <Iconify icon="lucide:info" width={16} />
+          </HelpTooltip>
           {onEdit && (
             <Tooltip title={`Edit ${title}`}>
               <IconButton

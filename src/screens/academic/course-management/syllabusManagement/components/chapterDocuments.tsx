@@ -1,5 +1,6 @@
 import { Box, Grid, Typography } from '@mui/material';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
+import { FormSectionHeader } from 'src/components/form-section-card/section-header';
 
 import type { IChapter } from '../type';
 
@@ -27,7 +28,12 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
 
   if (documents.length === 0) {
     return (
-      <Box p={3} display="flex" justifyContent="center" alignItems="center">
+      <Box p={2}>
+        <FormSectionHeader
+          title="Chapter Documents"
+          icon="mdi:file-document-outline"
+          descriptionTooltip="Files saved with this chapter are available to preview and download."
+        />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           No documents uploaded for this chapter.
         </Typography>
@@ -37,9 +43,18 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
 
   return (
     <Box p={2}>
-      <Grid container spacing={1} sx={{
-        overflowY: "auto"
-      }}>
+      <FormSectionHeader
+        title="Chapter Documents"
+        icon="mdi:file-document-outline"
+        descriptionTooltip="Files saved with this chapter are available to preview and download."
+      />
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          overflowY: 'auto',
+        }}
+      >
         {documents.map((docPath, index: number) => {
           const doc = {
             name: getFileNameFromUrl(docPath),

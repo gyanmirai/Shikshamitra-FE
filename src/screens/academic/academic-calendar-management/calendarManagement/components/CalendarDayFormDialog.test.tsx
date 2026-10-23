@@ -75,7 +75,7 @@ describe('editing a linked exam calendar marker', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Title *' }), {
       target: { value: 'Updated oral exam (Science)' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Update Day' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => expect(payloads).toHaveLength(1));
     expect(payloads[0]).toMatchObject({
       title: 'Updated oral exam (Science)',

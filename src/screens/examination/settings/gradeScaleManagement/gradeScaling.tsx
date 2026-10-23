@@ -1,8 +1,8 @@
 'use client';
 
-import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
@@ -13,7 +13,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Button, Typography } from '@mui/material';
@@ -21,9 +20,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
+import { useAcademicDiscardGuard } from 'src/screens/academic/components/useAcademicDiscardGuard';
 import {
   gradeScalingApi,
   useGetGradeScalingsQuery,
@@ -62,6 +62,11 @@ const GradingScale = () => {
   const insightsDrawer = useBoolean();
 
   const addGradeScalingDialog = useBoolean(false);
+  const [formState, setFormState] = useState({ dirty: false, busy: false });
+  const discardGuard = useAcademicDiscardGuard(
+    addGradeScalingDialog.value && formState.dirty,
+    formState.busy
+  );
 
   const dispatch = useDispatch();
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -168,16 +173,15 @@ const GradingScale = () => {
 
   /** Called by GradeForm after a successful save or when the user clicks Cancel. */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit) {
-      // Successful save — clear dirty flag first, then close
+    const close = () => {
       dispatch(setIsChanges(false));
-    }
-    addGradeScalingDialog.onFalse();
-    viewDialog.onFalse();
-    // Delay clearing selectedGrade so the dialog close animation can finish
-    setTimeout(() => {
+      addGradeScalingDialog.onFalse();
+      viewDialog.onFalse();
       setSelectedGrade(null);
-    }, 200);
+      setFormState({ dirty: false, busy: false });
+    };
+    if (isSubmit) close();
+    else discardGuard.requestNavigation(close);
   };
 
   // -------------------------------------------------------------------------
@@ -186,6 +190,7 @@ const GradingScale = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
+      {discardGuard.confirmation}
       {/* ------------------------------------------------------------------- */}
       {/* Page header                                                          */}
       {/* ------------------------------------------------------------------- */}
@@ -229,6 +234,7 @@ const GradingScale = () => {
       {/* Table                                                                */}
       {/* ------------------------------------------------------------------- */}
       <CustomizableTable
+        tableTitle="Grade Scales"
         tableId="gradesTable"
         isLoading={isLoading || isFetching}
         noDataText={
@@ -431,30 +437,21 @@ const GradingScale = () => {
       {/* Add / Edit dialog                                                    */}
       {/* ------------------------------------------------------------------- */}
       <CustomDialog
+        hasForm={false}
         maxWidth="md"
         open={addGradeScalingDialog.value}
         handleClose={() => handleClose(null, false)}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedGrade
-                  ? 'Modify grade ranges, total marks, and grading parameters as needed.'
-                  : 'You can create a new grade scale by defining grade ranges, total marks and other grading parameters.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        guardUnsavedChanges={false}
+        disableClose={formState.busy}
+        title={selectedGrade ? 'Update Grade Scale' : 'Add Grade Scale'}
+        titleInfo="Define grade ranges, total marks, and grading parameters."
       >
-        <GradeForm onSubmit={() => {}} onClose={handleClose} data={selectedGrade} />
+        <GradeForm
+          onSubmit={() => {}}
+          onClose={handleClose}
+          data={selectedGrade}
+          onStateChange={setFormState}
+        />
       </CustomDialog>
 
       {/* ------------------------------------------------------------------- */}

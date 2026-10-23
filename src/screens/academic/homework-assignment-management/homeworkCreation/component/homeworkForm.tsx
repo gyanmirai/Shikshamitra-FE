@@ -13,11 +13,11 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
@@ -148,11 +148,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       skip: !editData?.id,
     }
   );
-  const {
-    assignedRubricTemplateId,
-    selectedRubricTemplateId,
-    setSelectedRubricTemplateId,
-  } = useHomeworkRubricTemplateSelection(editData?.id, homeworkRubrics);
+  const { assignedRubricTemplateId, selectedRubricTemplateId, setSelectedRubricTemplateId } =
+    useHomeworkRubricTemplateSelection(editData?.id, homeworkRubrics);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -218,10 +215,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             }),
           };
           await updateHomework(updatePayload).unwrap();
-          if (
-            selectedRubricTemplateId &&
-            selectedRubricTemplateId !== assignedRubricTemplateId
-          ) {
+          if (selectedRubricTemplateId && selectedRubricTemplateId !== assignedRubricTemplateId) {
             await createRubricFromTemplate({
               templateId: selectedRubricTemplateId,
               body: {
@@ -281,22 +275,21 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     },
   });
 
-  const referenceUpload = useReferenceFileUpload(
-    async (file) => {
-      await formik.setFieldValue('attachments', file ? [file] : []);
-    },
-    formik.isSubmitting
-  );
+  const referenceUpload = useReferenceFileUpload(async (file) => {
+    await formik.setFieldValue('attachments', file ? [file] : []);
+  }, formik.isSubmitting);
 
-  const submitHomework = (mode: 'draft' | 'publish' | 'schedule') => {
+  const submitHomework = async (mode: 'draft' | 'publish' | 'schedule') => {
     if (activeSubmitModeRef.current) return;
     activeSubmitModeRef.current = mode;
     setActiveSubmitMode(mode);
     setHomeworkSubmitMode(mode);
-    void formik.submitForm().finally(() => {
+    try {
+      await formik.submitForm();
+    } finally {
       activeSubmitModeRef.current = null;
       setActiveSubmitMode(null);
-    });
+    }
   };
 
   const divisionSelectionError =
@@ -718,7 +711,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                     <LanguageInputField
                       fullWidth
-                      label="Homework Title *"
+                      label="Homework title *"
                       name="title"
                       size="small"
                       value={formik.values.title}
@@ -738,7 +731,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
                   >
                     <CustomSelect
-                      label="Homework Type *"
+                      label="Homework type *"
                       options={activeHomeworkTypes}
                       labelKey="homeworkTypeName"
                       valueKey="id"
@@ -797,7 +790,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
-                    label="Rubric Template"
+                    label="Rubric template"
                     options={rubricTemplates}
                     labelKey="title"
                     valueKey="id"
@@ -838,6 +831,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     error={!!(formik.touched.description && formik.errors.description)}
                   >
                     <Editor
+                      editorProps={{ attributes: { 'aria-label': 'Task instructions' } }}
                       value={formik.values.description}
                       onChange={(value) => formik.setFieldValue('description', value)}
                       placeholder="Write a clear description..."
@@ -926,8 +920,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                   }
                                 >
                                   <DateTimePicker
-                                    label="Publish Date *"
-                                    format="DD/MM/YYYY hh:mm"
+                                    label="Publish date (IST) *"
+                                    format="DD/MM/YYYY HH:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
                                     disablePast
@@ -952,9 +946,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     ampm={false}
                                     helperText={
                                       typeof formik.errors.divisions?.[idx] === 'object' &&
-                                        (formik.errors.divisions?.[idx] as any)?.publishDate &&
-                                        (!!formik.touched.divisions?.[idx]?.publishDate ||
-                                          formik.submitCount > 0)
+                                      (formik.errors.divisions?.[idx] as any)?.publishDate &&
+                                      (!!formik.touched.divisions?.[idx]?.publishDate ||
+                                        formik.submitCount > 0)
                                         ? (formik.errors.divisions?.[idx] as any)?.publishDate
                                         : 'When to show this homework to students'
                                     }
@@ -984,8 +978,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                   }
                                 >
                                   <DateTimePicker
-                                    label="Due Date *"
-                                    format="DD/MM/YYYY hh:mm"
+                                    label="Due date (IST) *"
+                                    format="DD/MM/YYYY HH:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
                                     value={div.dueDate ? dayjs(div.dueDate) : null}
@@ -996,9 +990,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     ampm={false}
                                     helperText={
                                       typeof formik.errors.divisions?.[idx] === 'object' &&
-                                        (formik.errors.divisions?.[idx] as any)?.dueDate &&
-                                        (!!formik.touched.divisions?.[idx]?.dueDate ||
-                                          formik.submitCount > 0)
+                                      (formik.errors.divisions?.[idx] as any)?.dueDate &&
+                                      (!!formik.touched.divisions?.[idx]?.dueDate ||
+                                        formik.submitCount > 0)
                                         ? (formik.errors.divisions?.[idx] as any)?.dueDate
                                         : 'Must be after the publish date'
                                     }
@@ -1039,7 +1033,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       placement="right"
                       arrow
                     >
-                      <IconButton size="small" aria-label="About submission settings" sx={{ p: 0.25 }}>
+                      <IconButton
+                        size="small"
+                        aria-label="About submission settings"
+                        sx={{ p: 0.25 }}
+                      >
                         <Iconify icon="lucide:info" width={18} color="info.main" />
                       </IconButton>
                     </CustomTooltip>
@@ -1148,7 +1146,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             }
             onClick={() => submitHomework('draft')}
           >
-            {editData ? 'Update Draft' : 'Save Draft'}
+            {editData ? 'Update draft' : 'Save draft'}
           </LoadingButton>
           {!editData && (
             <LoadingButton
@@ -1166,7 +1164,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               }
               onClick={() => submitHomework(shouldSchedule ? 'schedule' : 'publish')}
             >
-              {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
+              {shouldSchedule ? 'Schedule publish' : 'Publish now'}
             </LoadingButton>
           )}
           <DocumentPreviewDialog

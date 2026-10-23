@@ -26,6 +26,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
 import {
   Save,
   History,
@@ -63,10 +64,7 @@ import { shouldCloseReviewDrawer } from './classTeacherReviewDrawer';
 import { getPendingAssignmentRows } from './classTeacherPendingRows';
 import { getClassTeacherAssignmentStatusColor } from './classTeacherAssignmentStatus';
 import { ClassTeacherAssignmentParameterSelect } from './ClassTeacherAssignmentParameterSelect';
-import {
-  getDraftTeacherWorkload,
-  applyDraftTeacherWorkloads,
-} from './classTeacherDraftWorkload';
+import { getDraftTeacherWorkload, applyDraftTeacherWorkloads } from './classTeacherDraftWorkload';
 
 type AssignmentTableRow = ClassTeacherAssignmentRowDto & {
   classTeacher: string | null;
@@ -154,24 +152,24 @@ const TeacherAssignmentCell = ({
     teachers.find((teacher) => teacher.teacherId === row.classTeacher) ??
     (row.classTeacher
       ? {
-        teacherId: row.classTeacher,
-        teacherName: row.classTeacherName,
-        currentClassTeacherCount: row.assignedTeacher?.currentClassTeacherCount ?? 0,
-        maximumClassTeacherCount: row.assignedTeacher?.maximumClassTeacherCount ?? 2,
-        isEligible: row.assignedTeacher?.isActive ?? true,
-        isActive: row.assignedTeacher?.isActive ?? true,
-        availabilityStatus: row.assignedTeacher?.availabilityStatus ?? 'Available',
-        workloadStatus: row.assignedTeacher?.workloadStatus ?? 'Normal',
-        conflictStatus: row.assignedTeacher?.conflictStatus ?? 'None',
-        recommendationScore: row.assignedTeacher?.recommendationScore ?? 0,
-        currentWorkload: row.assignedTeacher?.currentClassTeacherCount ?? 0,
-        maximumWorkload: 30,
-        hasTimetableConflict: false,
-        isOnLeave: false,
-        employeeCode: row.assignedTeacher?.employeeCode,
-        department: row.assignedTeacher?.department,
-        ineligibilityReasons: [],
-      }
+          teacherId: row.classTeacher,
+          teacherName: row.classTeacherName,
+          currentClassTeacherCount: row.assignedTeacher?.currentClassTeacherCount ?? 0,
+          maximumClassTeacherCount: row.assignedTeacher?.maximumClassTeacherCount ?? 2,
+          isEligible: row.assignedTeacher?.isActive ?? true,
+          isActive: row.assignedTeacher?.isActive ?? true,
+          availabilityStatus: row.assignedTeacher?.availabilityStatus ?? 'Available',
+          workloadStatus: row.assignedTeacher?.workloadStatus ?? 'Normal',
+          conflictStatus: row.assignedTeacher?.conflictStatus ?? 'None',
+          recommendationScore: row.assignedTeacher?.recommendationScore ?? 0,
+          currentWorkload: row.assignedTeacher?.currentClassTeacherCount ?? 0,
+          maximumWorkload: 30,
+          hasTimetableConflict: false,
+          isOnLeave: false,
+          employeeCode: row.assignedTeacher?.employeeCode,
+          department: row.assignedTeacher?.department,
+          ineligibilityReasons: [],
+        }
       : null);
 
   return (
@@ -185,7 +183,9 @@ const TeacherAssignmentCell = ({
       getOptionLabel={(option) => option.teacherName || ''}
       isOptionEqualToValue={(option, value) => option.teacherId === value.teacherId}
       getOptionDisabled={(option) => !option.isEligible && option.teacherId !== row.classTeacher}
-      renderInput={(params) => <TextField {...params} label="Class Teacher" />}
+      renderInput={(params) => (
+        <TextField {...params} label={`Class teacher for ${row.className} ${row.divisionName}`} />
+      )}
       renderOption={(props, option) => (
         <Box component="li" {...props} key={option.teacherId} sx={{ alignItems: 'flex-start' }}>
           <Avatar sx={{ width: 28, height: 28, mr: 1, fontSize: 12 }}>
@@ -245,6 +245,9 @@ const ReviewDrawer = ({
       }
     }}
     PaperProps={{
+      role: 'dialog',
+      'aria-modal': true,
+      'aria-label': 'Review Class Teacher Assignments',
       sx: {
         width: { xs: '100%', sm: 480 },
         display: 'flex',
@@ -279,23 +282,33 @@ const ReviewDrawer = ({
                 Allocation Guidance
               </Typography>
               <Typography variant="caption" display="block">
-                Check modified allocations, workload warnings, and conflict status before publishing the latest class teacher assignments.
+                Check modified allocations, workload warnings, and conflict status before publishing
+                the latest class teacher assignments.
               </Typography>
             </Box>
           }
         >
-          <IconButton size="small" color="info">
+          <IconButton aria-label="Class teacher information" size="small" color="info">
             <Iconify icon="lucide:info" width={18} />
           </IconButton>
         </CustomTooltip>
       </Box>
-      <IconButton onClick={onClose} size="small">
+      <IconButton aria-label="Close assignment review" onClick={onClose} size="small">
         <CloseIcon />
       </IconButton>
     </Box>
 
     {/* Scrollable Content Body */}
-    <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        overflowY: 'auto',
+        p: 2.5,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
+    >
       <Alert severity={validation?.canConfirm ? 'success' : 'error'} sx={{ borderRadius: 1.5 }}>
         {validation?.canConfirm
           ? 'No critical errors found. You can confirm and publish these assignments.'
@@ -315,7 +328,11 @@ const ReviewDrawer = ({
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon="solar:user-block-bold-duotone" width={20} sx={{ color: 'primary.main' }} />
+            <Iconify
+              icon="solar:user-block-bold-duotone"
+              width={20}
+              sx={{ color: 'primary.main' }}
+            />
             <Typography variant="subtitle2" fontWeight={700}>
               Pending Changes ({changedRows.length})
             </Typography>
@@ -331,7 +348,7 @@ const ReviewDrawer = ({
               </Box>
             }
           >
-            <IconButton size="small" color="info">
+            <IconButton aria-label="Class teacher information" size="small" color="info">
               <Iconify icon="lucide:info" width={16} />
             </IconButton>
           </CustomTooltip>
@@ -366,7 +383,8 @@ const ReviewDrawer = ({
                 {row.classTeacherName || 'No teacher assigned'}
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block">
-                Effective: {row.effectiveFromDraft || 'Immediate'} • Reason: {row.changeReasonDraft || 'Routine Assignment'}
+                Effective: {row.effectiveFromDraft || 'Immediate'} • Reason:{' '}
+                {row.changeReasonDraft || 'Routine Assignment'}
               </Typography>
             </Box>
           ))}
@@ -386,7 +404,11 @@ const ReviewDrawer = ({
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Iconify icon="solar:danger-triangle-bold-duotone" width={20} sx={{ color: 'warning.main' }} />
+            <Iconify
+              icon="solar:danger-triangle-bold-duotone"
+              width={20}
+              sx={{ color: 'warning.main' }}
+            />
             <Typography variant="subtitle2" fontWeight={700}>
               Validation & Warnings ({validation?.issues.length || 0})
             </Typography>
@@ -397,12 +419,13 @@ const ReviewDrawer = ({
             title={
               <Box sx={{ p: 1, maxWidth: 280 }}>
                 <Typography variant="caption" display="block">
-                  System checks for workload overload, availability conflicts, and unassigned divisions.
+                  System checks for workload overload, availability conflicts, and unassigned
+                  divisions.
                 </Typography>
               </Box>
             }
           >
-            <IconButton size="small" color="info">
+            <IconButton aria-label="Class teacher information" size="small" color="info">
               <Iconify icon="lucide:info" width={16} />
             </IconButton>
           </CustomTooltip>
@@ -420,7 +443,9 @@ const ReviewDrawer = ({
               severity={issue.severity === 'Critical' ? 'error' : 'warning'}
               sx={{ py: 0.5, borderRadius: 1.5 }}
             >
-              <Typography variant="body2" fontWeight={600}>{issue.message}</Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {issue.message}
+              </Typography>
               {issue.suggestedFix && (
                 <Typography variant="caption" display="block" sx={{ mt: 0.5, opacity: 0.9 }}>
                   Fix: {issue.suggestedFix}
@@ -447,7 +472,13 @@ const ReviewDrawer = ({
         flexShrink: 0,
       }}
     >
-      <Button variant="outlined" color="inherit" size="small" startIcon={<CloseIcon />} onClick={onClose}>
+      <Button
+        variant="outlined"
+        color="inherit"
+        size="small"
+        startIcon={<CloseIcon />}
+        onClick={onClose}
+      >
         Cancel
       </Button>
       <LoadingButton
@@ -487,7 +518,9 @@ const ClassTeacherAssignment = () => {
   const [switchOpen, setSwitchOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [validationResult, setValidationResult] = useState<ClassTeacherValidationResult | null>(null);
+  const [validationResult, setValidationResult] = useState<ClassTeacherValidationResult | null>(
+    null
+  );
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -619,11 +652,36 @@ const ClassTeacherAssignment = () => {
   const TABS = useMemo(
     () => [
       { label: 'All', value: 'all', count: summary.totalClasses, color: 'default' as LabelColor },
-      { label: 'Assigned', value: 'assigned', count: summary.assigned, color: 'success' as LabelColor },
-      { label: 'Unassigned', value: 'unassigned', count: summary.unassigned, color: 'warning' as LabelColor },
-      { label: 'Conflicts', value: 'conflict', count: summary.conflicts, color: 'error' as LabelColor },
-      { label: 'Pending Changes', value: 'changed', count: summary.pendingChanges, color: 'info' as LabelColor },
-      { label: 'Temporary', value: 'temporary', count: summary.temporaryAssignments, color: 'info' as LabelColor },
+      {
+        label: 'Assigned',
+        value: 'assigned',
+        count: summary.assigned,
+        color: 'success' as LabelColor,
+      },
+      {
+        label: 'Unassigned',
+        value: 'unassigned',
+        count: summary.unassigned,
+        color: 'warning' as LabelColor,
+      },
+      {
+        label: 'Conflicts',
+        value: 'conflict',
+        count: summary.conflicts,
+        color: 'error' as LabelColor,
+      },
+      {
+        label: 'Pending Changes',
+        value: 'changed',
+        count: summary.pendingChanges,
+        color: 'info' as LabelColor,
+      },
+      {
+        label: 'Temporary',
+        value: 'temporary',
+        count: summary.temporaryAssignments,
+        color: 'info' as LabelColor,
+      },
     ],
     [summary]
   );
@@ -659,18 +717,18 @@ const ClassTeacherAssignment = () => {
       classTeacherName: teacher?.teacherName ?? '',
       assignedTeacher: teacher
         ? {
-          teacherId: teacher.teacherId,
-          teacherName: teacher.teacherName,
-          employeeCode: teacher.employeeCode,
-          department: teacher.department,
-          isActive: teacher.isActive,
-          currentClassTeacherCount: teacher.currentClassTeacherCount,
-          maximumClassTeacherCount: teacher.maximumClassTeacherCount,
-          availabilityStatus: teacher.availabilityStatus,
-          workloadStatus: teacher.workloadStatus,
-          conflictStatus: teacher.conflictStatus,
-          recommendationScore: teacher.recommendationScore,
-        }
+            teacherId: teacher.teacherId,
+            teacherName: teacher.teacherName,
+            employeeCode: teacher.employeeCode,
+            department: teacher.department,
+            isActive: teacher.isActive,
+            currentClassTeacherCount: teacher.currentClassTeacherCount,
+            maximumClassTeacherCount: teacher.maximumClassTeacherCount,
+            availabilityStatus: teacher.availabilityStatus,
+            workloadStatus: teacher.workloadStatus,
+            conflictStatus: teacher.conflictStatus,
+            recommendationScore: teacher.recommendationScore,
+          }
         : null,
       assignmentStatus: teacher ? 'Changed' : 'Unassigned',
     });
@@ -743,417 +801,493 @@ const ClassTeacherAssignment = () => {
         ]}
         description="Assign and manage class teachers while checking workload, availability, conflicts, and continuity."
       />
-
-      {/* Organization Bar */}
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        spacing={1}
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ p: 1, borderRadius: 1, bgcolor: 'background.paper', boxShadow: 'var(--shadows-3)' }}
+      <AcademicContextContent
+        loading={
+          (Boolean(medium?.educationMediumStages?.length) && !organization) ||
+          isClassAssignmentLoading ||
+          (isClassAssignmentFetching && !assignmentsData)
+        }
       >
-        <CustomSelect
-          options={allOrganization}
-          label="Organization *"
-          value={organization}
-          onChange={(val) => handleOrganizationChange(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: 280, width: '100%' } }}
-        />
-        <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
-          <Button size="small" variant="outlined" startIcon={<History />} onClick={() => setHistoryOpen(true)}>
-            History
-          </Button>
-          {canAdd && (
-            <>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<RestartAlt />}
-                disabled={!hasChanges}
-                onClick={() => setDiscardOpen(true)}
-              >
-                Discard Changes
-              </Button>
-              <LoadingButton
-                size="small"
-                variant="outlined"
-                startIcon={<Save />}
-                disabled={!hasChanges}
-                loading={isSaving}
-                onClick={handleSaveDraft}
-              >
-                Save Draft
-              </LoadingButton>
-              <LoadingButton
-                size="small"
-                variant="contained"
-                startIcon={<FactCheck />}
-                disabled={!hasPendingChanges}
-                loading={isValidating}
-                onClick={handleReview}
-              >
-                Review & Confirm
-              </LoadingButton>
-            </>
-          )}
-        </Stack>
-      </Stack>
-
-      {/* Allocation Status Alert */}
-      <Alert severity={summary.status === 'Ready' ? 'success' : 'warning'} sx={{ borderRadius: 2, py: 0.5 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-          <Typography variant="body2" fontWeight={700}>
-            Allocation Status: {summary.status}
-          </Typography>
-          <Typography variant="body2">
-            {summary.reasons.length ? summary.reasons.join(' ') : 'All class divisions are assigned.'}
-          </Typography>
-        </Stack>
-      </Alert>
-
-      {/* ── Sticky Tabs Card (Matching Substitution Management) ── */}
-      <Card
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          borderRadius: 1,
-          flexShrink: 0,
-          overflow: 'visible',
-        }}
-      >
+        {/* Organization Bar */}
         <Stack
-          direction="row"
-          alignItems="center"
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1}
           justifyContent="space-between"
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
+          alignItems="center"
+          sx={{ p: 1, borderRadius: 1, bgcolor: 'background.paper', boxShadow: 'var(--shadows-3)' }}
         >
-          <Tabs
-            value={statusFilter}
-            onChange={(_, value) => setStatusFilter(value as string)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ px: 2 }}
+          <CustomSelect
+            options={allOrganization}
+            label="Organization *"
+            value={organization}
+            onChange={(val) => handleOrganizationChange(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: 280, width: '100%' } }}
+          />
+          <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="flex-end">
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<History />}
+              onClick={() => setHistoryOpen(true)}
+            >
+              History
+            </Button>
+            {canAdd && (
+              <>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<RestartAlt />}
+                  disabled={!hasChanges}
+                  onClick={() => setDiscardOpen(true)}
+                >
+                  Discard Changes
+                </Button>
+                <LoadingButton
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Save />}
+                  disabled={!hasChanges}
+                  loading={isSaving}
+                  onClick={handleSaveDraft}
+                >
+                  Save Draft
+                </LoadingButton>
+                <LoadingButton
+                  size="small"
+                  variant="contained"
+                  startIcon={<FactCheck />}
+                  disabled={!hasPendingChanges}
+                  loading={isValidating}
+                  onClick={handleReview}
+                >
+                  Review & Confirm
+                </LoadingButton>
+              </>
+            )}
+          </Stack>
+        </Stack>
+
+        {/* Allocation Status Alert */}
+        <Alert
+          severity={summary.status === 'Ready' ? 'success' : 'warning'}
+          sx={{ borderRadius: 2, py: 0.5 }}
+        >
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+            <Typography variant="body2" fontWeight={700}>
+              Allocation Status: {summary.status}
+            </Typography>
+            <Typography variant="body2">
+              {summary.reasons.length
+                ? summary.reasons.join(' ')
+                : 'All class divisions are assigned.'}
+            </Typography>
+          </Stack>
+        </Alert>
+
+        {/* ── Sticky Tabs Card (Matching Substitution Management) ── */}
+        <Card
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            borderRadius: 1,
+            flexShrink: 0,
+            overflow: 'visible',
+          }}
+        >
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
           >
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}{' '}
-                    <Label color={tab.color} variant={statusFilter === tab.value ? 'filled' : 'soft'}>
-                      {tab.count}
-                    </Label>
+            <Tabs
+              value={statusFilter}
+              onChange={(_, value) => setStatusFilter(value as string)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ px: 2 }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}{' '}
+                      <Label
+                        color={tab.color}
+                        variant={statusFilter === tab.value ? 'filled' : 'soft'}
+                      >
+                        {tab.count}
+                      </Label>
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Stack>
+        </Card>
+
+        {/* ── Table Container ─────────────────────────── */}
+        <Box sx={{ flexGrow: 1, minHeight: 0, height: '100%', overflow: 'auto' }}>
+          <CustomizableTable
+            tableTitle="Class Teacher Assignments"
+            tableId="assignTeacherTable"
+            isLoading={isClassAssignmentLoading || isClassAssignmentFetching}
+            noDataText={<>No class divisions found for this organization.</>}
+            columns={[
+              {
+                id: 'className',
+                label: 'Class',
+                align: 'left',
+                minWidth: 120,
+                sticky: true,
+                filterType: 'string',
+              },
+              {
+                id: 'divisionName',
+                label: 'Division',
+                align: 'left',
+                minWidth: 120,
+                sticky: true,
+                filterType: 'string',
+              },
+              {
+                id: 'studentCount',
+                label: 'Students',
+                align: 'left',
+                minWidth: 100,
+                filterType: 'number',
+              },
+              {
+                id: 'classTeacher',
+                label: 'Current Class Teacher',
+                isSort: false,
+                isFilter: false,
+                align: 'left',
+                minWidth: 340,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  return (
+                    <TeacherAssignmentCell
+                      row={typedRow}
+                      disabled={!canAdd}
+                      teachers={draftEligibleTeachers}
+                      onChange={(teacher) => handleTeacherChange(typedRow, teacher)}
+                    />
+                  );
+                },
+              },
+              {
+                id: 'workload',
+                label: 'Workload',
+                isSort: false,
+                isFilter: false,
+                minWidth: 140,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  const workload = getDraftTeacherWorkload(
+                    draftEligibleTeachers,
+                    typedRow.classTeacher,
+                    typedRow.assignedTeacher
+                  );
+                  const countText = workload
+                    ? `${workload.currentClassTeacherCount}/${workload.maximumClassTeacherCount} classes`
+                    : 'Unassigned';
+                  const color: LabelColor = !workload
+                    ? 'default'
+                    : workload.workloadStatus === 'Exceeded'
+                      ? 'error'
+                      : workload.workloadStatus === 'High'
+                        ? 'warning'
+                        : 'info';
+                  return <Label color={color}>{countText}</Label>;
+                },
+              },
+              {
+                id: 'availability',
+                label: 'Availability',
+                isSort: false,
+                isFilter: false,
+                minWidth: 130,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  const status = typedRow.assignedTeacher?.availabilityStatus || 'Unassigned';
+                  const color: LabelColor = typedRow.assignedTeacher?.isActive
+                    ? 'success'
+                    : 'default';
+                  return <Label color={color}>{status}</Label>;
+                },
+              },
+              {
+                id: 'effectiveFromDraft',
+                label: 'Effective From',
+                isSort: false,
+                isFilter: false,
+                minWidth: 170,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  return (
+                    <DatePicker
+                      disabled={!canAdd}
+                      value={
+                        typedRow.effectiveFromDraft ? dayjs(typedRow.effectiveFromDraft) : null
+                      }
+                      onChange={(newValue) =>
+                        updateRow(getRowKey(typedRow), {
+                          effectiveFromDraft: newValue?.isValid()
+                            ? newValue.format('YYYY-MM-DD')
+                            : '',
+                        })
+                      }
+                      format="DD-MM-YYYY"
+                      slotProps={{ textField: { size: 'small', sx: { width: 155 } } }}
+                    />
+                  );
+                },
+              },
+              {
+                id: 'assignmentTypeDraft',
+                label: 'Assignment Type',
+                isSort: false,
+                isFilter: false,
+                minWidth: 180,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  return (
+                    <ClassTeacherAssignmentParameterSelect
+                      disabled={!canAdd}
+                      ariaLabel={`${typedRow.className} ${typedRow.divisionName} Assignment Type`}
+                      options={assignmentTypes}
+                      value={typedRow.assignmentTypeDraft}
+                      onChange={(value) =>
+                        updateRow(getRowKey(typedRow), { assignmentTypeDraft: value })
+                      }
+                    />
+                  );
+                },
+              },
+              {
+                id: 'changeReasonDraft',
+                label: 'Change Reason',
+                isSort: false,
+                isFilter: false,
+                minWidth: 220,
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  return (
+                    <ClassTeacherAssignmentParameterSelect
+                      disabled={!canAdd}
+                      ariaLabel={`${typedRow.className} ${typedRow.divisionName} Change Reason`}
+                      options={changeReasons}
+                      value={typedRow.changeReasonDraft}
+                      onChange={(value) =>
+                        updateRow(getRowKey(typedRow), { changeReasonDraft: value })
+                      }
+                    />
+                  );
+                },
+              },
+              {
+                id: 'assignmentStatus',
+                label: 'Status',
+                minWidth: 130,
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Assigned', value: 'Assigned' },
+                  { label: 'Unassigned', value: 'Unassigned' },
+                  { label: 'Changed', value: 'Changed' },
+                ],
+                render: (_: unknown, row) => {
+                  const typedRow = row as unknown as AssignmentTableRow;
+                  const statusColor = getClassTeacherAssignmentStatusColor(
+                    typedRow.assignmentStatus
+                  );
+                  return <Label color={statusColor}>{typedRow.assignmentStatus}</Label>;
+                },
+              },
+            ]}
+            data={filteredData}
+          />
+        </Box>
+
+        <ReviewDrawer
+          open={canAdd && reviewOpen}
+          validation={validationResult}
+          changedRows={pendingRows}
+          isSaving={isSaving}
+          onClose={() => setReviewOpen(false)}
+          onConfirm={handleConfirm}
+        />
+
+        <Drawer
+          anchor="right"
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          PaperProps={{
+            role: 'dialog',
+            'aria-modal': true,
+            'aria-label': 'Class Teacher History',
+            sx: {
+              width: { xs: '100%', sm: 460 },
+              display: 'flex',
+              flexDirection: 'column',
+              p: 0,
+            },
+          }}
+        >
+          {/* Drawer Header */}
+          <Box
+            sx={{
+              px: 2.5,
+              py: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: 'background.paper',
+              flexShrink: 0,
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="h6" fontWeight={700}>
+                Assignment History
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="bottom-start"
+                title={
+                  <Box sx={{ p: 1, maxWidth: 300 }}>
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+                      Audit Trail
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      Historical log of class teacher reassignments, change reasons, and audit
+                      timelines for this organization.
+                    </Typography>
                   </Box>
                 }
-              />
-            ))}
-          </Tabs>
-        </Stack>
-      </Card>
-
-      {/* ── Table Container ─────────────────────────── */}
-      <Box sx={{ flexGrow: 1, minHeight: 0, height: '100%', overflow: 'auto' }}>
-        <CustomizableTable
-          tableId="assignTeacherTable"
-          isLoading={isClassAssignmentLoading || isClassAssignmentFetching}
-          noDataText={<>No class divisions found for this organization.</>}
-          columns={[
-            { id: 'className', label: 'Class', align: 'left', minWidth: 120, sticky: true, filterType: 'string' },
-            { id: 'divisionName', label: 'Division', align: 'left', minWidth: 120, sticky: true, filterType: 'string' },
-            { id: 'studentCount', label: 'Students', align: 'left', minWidth: 100, filterType: 'number' },
-            {
-              id: 'classTeacher',
-              label: 'Current Class Teacher',
-              isSort: false,
-              isFilter: false,
-              align: 'left',
-              minWidth: 340,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                return (
-                  <TeacherAssignmentCell
-                    row={typedRow}
-                    disabled={!canAdd}
-                    teachers={draftEligibleTeachers}
-                    onChange={(teacher) => handleTeacherChange(typedRow, teacher)}
-                  />
-                );
-              },
-            },
-            {
-              id: 'workload',
-              label: 'Workload',
-              isSort: false,
-              isFilter: false,
-              minWidth: 140,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                const workload = getDraftTeacherWorkload(
-                  draftEligibleTeachers,
-                  typedRow.classTeacher,
-                  typedRow.assignedTeacher
-                );
-                const countText = workload
-                  ? `${workload.currentClassTeacherCount}/${workload.maximumClassTeacherCount} classes`
-                  : 'Unassigned';
-                const color: LabelColor = !workload
-                  ? 'default'
-                  : workload.workloadStatus === 'Exceeded'
-                    ? 'error'
-                    : workload.workloadStatus === 'High'
-                      ? 'warning'
-                      : 'info';
-                return <Label color={color}>{countText}</Label>;
-              },
-            },
-            {
-              id: 'availability',
-              label: 'Availability',
-              isSort: false,
-              isFilter: false,
-              minWidth: 130,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                const status = typedRow.assignedTeacher?.availabilityStatus || 'Unassigned';
-                const color: LabelColor = typedRow.assignedTeacher?.isActive ? 'success' : 'default';
-                return <Label color={color}>{status}</Label>;
-              },
-            },
-            {
-              id: 'effectiveFromDraft',
-              label: 'Effective From',
-              isSort: false,
-              isFilter: false,
-              minWidth: 170,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                return (
-                  <DatePicker
-                    disabled={!canAdd}
-                    value={typedRow.effectiveFromDraft ? dayjs(typedRow.effectiveFromDraft) : null}
-                    onChange={(newValue) =>
-                      updateRow(getRowKey(typedRow), {
-                        effectiveFromDraft: newValue?.isValid() ? newValue.format('YYYY-MM-DD') : '',
-                      })
-                    }
-                    format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small', sx: { width: 155 } } }}
-                  />
-                );
-              },
-            },
-            {
-              id: 'assignmentTypeDraft',
-              label: 'Assignment Type',
-              isSort: false,
-              isFilter: false,
-              minWidth: 180,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                return (
-                  <ClassTeacherAssignmentParameterSelect
-                    disabled={!canAdd}
-                    ariaLabel={`${typedRow.className} ${typedRow.divisionName} Assignment Type`}
-                    options={assignmentTypes}
-                    value={typedRow.assignmentTypeDraft}
-                    onChange={(value) =>
-                      updateRow(getRowKey(typedRow), { assignmentTypeDraft: value })
-                    }
-                  />
-                );
-              },
-            },
-            {
-              id: 'changeReasonDraft',
-              label: 'Change Reason',
-              isSort: false,
-              isFilter: false,
-              minWidth: 220,
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                return (
-                  <ClassTeacherAssignmentParameterSelect
-                    disabled={!canAdd}
-                    ariaLabel={`${typedRow.className} ${typedRow.divisionName} Change Reason`}
-                    options={changeReasons}
-                    value={typedRow.changeReasonDraft}
-                    onChange={(value) =>
-                      updateRow(getRowKey(typedRow), { changeReasonDraft: value })
-                    }
-                  />
-                );
-              },
-            },
-            {
-              id: 'assignmentStatus',
-              label: 'Status',
-              minWidth: 130,
-              filterType: 'enum',
-              enumOptions: [
-                { label: 'Assigned', value: 'Assigned' },
-                { label: 'Unassigned', value: 'Unassigned' },
-                { label: 'Changed', value: 'Changed' },
-              ],
-              render: (_: unknown, row) => {
-                const typedRow = row as unknown as AssignmentTableRow;
-                const statusColor = getClassTeacherAssignmentStatusColor(typedRow.assignmentStatus);
-                return <Label color={statusColor}>{typedRow.assignmentStatus}</Label>;
-              },
-            },
-          ]}
-          data={filteredData}
-        />
-      </Box>
-
-      <ReviewDrawer
-        open={canAdd && reviewOpen}
-        validation={validationResult}
-        changedRows={pendingRows}
-        isSaving={isSaving}
-        onClose={() => setReviewOpen(false)}
-        onConfirm={handleConfirm}
-      />
-
-      <Drawer
-        anchor="right"
-        open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        PaperProps={{
-          sx: {
-            width: { xs: '100%', sm: 460 },
-            display: 'flex',
-            flexDirection: 'column',
-            p: 0,
-          },
-        }}
-      >
-        {/* Drawer Header */}
-        <Box
-          sx={{
-            px: 2.5,
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-            bgcolor: 'background.paper',
-            flexShrink: 0,
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="h6" fontWeight={700}>
-              Assignment History
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="bottom-start"
-              title={
-                <Box sx={{ p: 1, maxWidth: 300 }}>
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
-                    Audit Trail
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    Historical log of class teacher reassignments, change reasons, and audit timelines for this organization.
-                  </Typography>
-                </Box>
-              }
-            >
-              <IconButton size="small" color="info">
-                <Iconify icon="lucide:info" width={18} />
-              </IconButton>
-            </CustomTooltip>
-          </Box>
-          <IconButton onClick={() => setHistoryOpen(false)} size="small">
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        {/* Scrollable Content Body */}
-        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2.5 }}>
-          <Stack spacing={1.5}>
-            {history.length === 0 && (
-              <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-                No assignment history found.
-              </Typography>
-            )}
-            {history.map((item) => (
-              <Paper
-                key={`${item.classId}-${item.divisionId}-${item.changedAt}`}
-                elevation={0}
-                sx={{
-                  p: 1.75,
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  bgcolor: 'background.paper',
-                }}
               >
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    {item.className} {item.divisionName}
+                <IconButton aria-label="Class teacher information" size="small" color="info">
+                  <Iconify icon="lucide:info" width={18} />
+                </IconButton>
+              </CustomTooltip>
+            </Box>
+            <IconButton
+              aria-label="Close class teacher history"
+              onClick={() => setHistoryOpen(false)}
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          {/* Scrollable Content Body */}
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2.5 }}>
+            <Stack spacing={1.5}>
+              {history.length === 0 && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
+                  No assignment history found.
+                </Typography>
+              )}
+              {history.map((item) => (
+                <Paper
+                  key={`${item.classId}-${item.divisionId}-${item.changedAt}`}
+                  elevation={0}
+                  sx={{
+                    p: 1.75,
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {item.className} {item.divisionName}
+                    </Typography>
+                    <Label color="info" variant="soft">
+                      {dayjs(item.changedAt).isValid()
+                        ? dayjs(item.changedAt).format('DD-MM-YYYY')
+                        : '-'}
+                    </Label>
+                  </Stack>
+                  <Typography variant="body2" fontWeight={600} color="text.primary">
+                    {item.newTeacherName || 'Teacher not available'}
                   </Typography>
-                  <Label color="info" variant="soft">
-                    {dayjs(item.changedAt).isValid() ? dayjs(item.changedAt).format('DD-MM-YYYY') : '-'}
-                  </Label>
-                </Stack>
-                <Typography variant="body2" fontWeight={600} color="text.primary">
-                  {item.newTeacherName || 'Teacher not available'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                  Reason: {item.changeReason || 'Routine Update'} • Changed by: {item.changedBy || 'System'}
-                </Typography>
-              </Paper>
-            ))}
-          </Stack>
-        </Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{ mt: 0.5 }}
+                  >
+                    Reason: {item.changeReason || 'Routine Update'} • Changed by:{' '}
+                    {item.changedBy || 'System'}
+                  </Typography>
+                </Paper>
+              ))}
+            </Stack>
+          </Box>
 
-        {/* Sticky Bottom Action Bar */}
-        <Box
-          sx={{
-            p: 2,
-            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-            bgcolor: 'background.paper',
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 10,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            flexShrink: 0,
-          }}
-        >
-          <Button variant="outlined" color="inherit" size="small" startIcon={<CloseIcon />} onClick={() => setHistoryOpen(false)}>
-            Close
-          </Button>
-        </Box>
-      </Drawer>
+          {/* Sticky Bottom Action Bar */}
+          <Box
+            sx={{
+              p: 2,
+              borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: 'background.paper',
+              position: 'sticky',
+              bottom: 0,
+              zIndex: 10,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              startIcon={<CloseIcon />}
+              onClick={() => setHistoryOpen(false)}
+            >
+              Close
+            </Button>
+          </Box>
+        </Drawer>
 
-      <ConfirmDialog
-        title="Discard Changes"
-        open={discardOpen}
-        onClose={() => setDiscardOpen(false)}
-        content="Discard the unsaved assignment changes and restore the last saved values?"
-        action={
-          <Button size="small" variant="contained" color="error" onClick={handleDiscard}>
-            Discard
-          </Button>
-        }
-      />
+        <ConfirmDialog
+          title="Discard Changes"
+          open={discardOpen}
+          onClose={() => setDiscardOpen(false)}
+          content="Discard the unsaved assignment changes and restore the last saved values?"
+          action={
+            <Button size="small" variant="contained" color="error" onClick={handleDiscard}>
+              Discard
+            </Button>
+          }
+        />
 
-      <ConfirmDialog
-        title="Unsaved Changes"
-        open={switchOpen}
-        onClose={() => setSwitchOpen(false)}
-        content="Changing organization will discard your unsaved assignment changes."
-        action={
-          <Button size="small" variant="contained" color="warning" onClick={confirmOrganizationSwitch}>
-            Continue
-          </Button>
-        }
-      />
+        <ConfirmDialog
+          title="Unsaved Changes"
+          open={switchOpen}
+          onClose={() => setSwitchOpen(false)}
+          content="Changing organization will discard your unsaved assignment changes."
+          action={
+            <Button
+              size="small"
+              variant="contained"
+              color="warning"
+              onClick={confirmOrganizationSwitch}
+            >
+              Continue
+            </Button>
+          }
+        />
+      </AcademicContextContent>
     </Box>
   );
 };

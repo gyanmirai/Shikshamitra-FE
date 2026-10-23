@@ -29,6 +29,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  ButtonBase,
   Typography,
   CardContent,
   TableContainer,
@@ -44,82 +45,6 @@ import {
   CALENDAR_IMPACT_STATUS_LABELS,
   CALENDAR_IMPACT_STATUS_COLORS,
 } from 'src/enums/academic-calendar';
-
-// ─── Mock data (shown when API returns empty) ─────────────────────────────────
-
-const MOCK_PUBLISHED = {
-  id: 'mock-cal-1',
-  name: 'Academic Year 2025–26',
-  startDate: '2025-06-01',
-  endDate: '2026-03-31',
-  status: CalendarStatus.Published,
-  isDefault: true,
-  totalWorkingDays: 220,
-  totalHolidays: 15,
-  totalVacationDays: 30,
-  totalHalfDays: 4,
-  totalEvents: 8,
-  totalExamDays: 12,
-  totalPtmDays: 3,
-  totalEmergencyClosures: 1,
-};
-
-const MOCK_CALENDARS = {
-  items: [
-    MOCK_PUBLISHED,
-    {
-      id: 'mock-cal-2',
-      name: 'Academic Year 2024–25',
-      startDate: '2024-06-01',
-      endDate: '2025-03-31',
-      status: CalendarStatus.Archived,
-      isDefault: false,
-      totalWorkingDays: 218,
-      totalHolidays: 17,
-    },
-    {
-      id: 'mock-cal-3',
-      name: 'Summer Term 2025',
-      startDate: '2025-04-01',
-      endDate: '2025-05-31',
-      status: CalendarStatus.Draft,
-      isDefault: false,
-      totalWorkingDays: 42,
-      totalHolidays: 2,
-    },
-  ],
-  totalCount: 3,
-};
-
-const MOCK_IMPACT_LOGS = {
-  items: [
-    {
-      id: 'imp-1',
-      affectedDate: '2025-07-15',
-      impactType: CalendarImpactType.TimetableSlot,
-      affectedEntityName: 'Math — Class 10A',
-      message: 'Timetable slot blocked due to Independence Day',
-      status: CalendarImpactStatus.Pending,
-    },
-    {
-      id: 'imp-2',
-      affectedDate: '2025-07-15',
-      impactType: CalendarImpactType.HomeworkDueDate,
-      affectedEntityName: 'Science Assignment',
-      message: 'Due date falls on holiday',
-      status: CalendarImpactStatus.Pending,
-    },
-    {
-      id: 'imp-3',
-      affectedDate: '2025-08-10',
-      impactType: CalendarImpactType.OnlineClass,
-      affectedEntityName: 'English Online Session',
-      message: 'Online class on school closure day',
-      status: CalendarImpactStatus.Suggested,
-    },
-  ],
-  totalCount: 3,
-};
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -214,7 +139,7 @@ const QuickAction = ({
 }) => {
   const theme = useTheme();
   return (
-    <Box
+    <ButtonBase
       onClick={onClick}
       sx={{
         display: 'flex',
@@ -226,6 +151,11 @@ const QuickAction = ({
         border: `1.5px solid ${alpha(color, 0.15)}`,
         cursor: 'pointer',
         transition: 'all 0.2s',
+        '&.Mui-focusVisible': {
+          outline: '2px solid',
+          outlineColor: 'primary.main',
+          outlineOffset: 2,
+        },
         '&:hover': {
           backgroundColor: alpha(color, 0.05),
           borderColor: alpha(color, 0.4),
@@ -255,7 +185,7 @@ const QuickAction = ({
       >
         {label}
       </Typography>
-    </Box>
+    </ButtonBase>
   );
 };
 
@@ -265,7 +195,9 @@ const AcademicCalendarDashboard = () => {
   const router = useRouter();
   const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear, currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   const canManage = hasGrantedPermission(
     permissions,
@@ -298,14 +230,24 @@ const AcademicCalendarDashboard = () => {
   const calendarsData = calendarsRaw ?? { items: [], totalCount: 0 };
   const impactLogsData = impactRaw ?? { items: [], totalCount: 0 };
 
-  const publishedCalendar =
-    calendarsData?.items?.find((c: any) => c.status === CalendarStatus.Published);
+  const publishedCalendar = calendarsData?.items?.find(
+    (c: any) => c.status === CalendarStatus.Published
+  );
 
   // Year progress
-  const yearStart = dayjs(publishedCalendar?.startDate);
-  const yearEnd = dayjs(publishedCalendar?.endDate);
+  const yearStartDate = currentYear?.startDate || publishedCalendar?.startDate;
+  const yearEndDate = currentYear?.endDate || publishedCalendar?.endDate;
+  const yearStart = dayjs(yearStartDate);
+  const yearEnd = dayjs(yearEndDate);
+  const hasYearDates = Boolean(
+    yearStartDate &&
+    yearEndDate &&
+    yearStart.isValid() &&
+    yearEnd.isValid() &&
+    !yearEnd.isBefore(yearStart)
+  );
   const today = dayjs();
-  const totalDays = yearEnd.diff(yearStart, 'day');
+  const totalDays = hasYearDates ? yearEnd.diff(yearStart, 'day') + 1 : 0;
   const passedDays = Math.max(0, Math.min(totalDays, today.diff(yearStart, 'day')));
   const yearProgress = totalDays > 0 ? Math.round((passedDays / totalDays) * 100) : 0;
 
@@ -471,13 +413,9 @@ const AcademicCalendarDashboard = () => {
                 display="block"
                 sx={{ color: 'text.secondary', mt: 0.15 }}
               >
-                {dayjs((currentYear as any)?.startDate || publishedCalendar?.startDate).format(
-                  'DD MMM YYYY'
-                )}{' '}
-                —{' '}
-                {dayjs((currentYear as any)?.endDate || publishedCalendar?.endDate).format(
-                  'DD MMM YYYY'
-                )}
+                {hasYearDates ? yearStart.format('DD MMM YYYY') : 'Dates unavailable'}{' '}
+                {hasYearDates ? 'to ' : ''}
+                {hasYearDates ? yearEnd.format('DD MMM YYYY') : ''}
               </Typography>
             </Box>
           </Stack>
@@ -493,7 +431,7 @@ const AcademicCalendarDashboard = () => {
               </Typography>
             </Stack>
             <Typography variant="caption" fontWeight={700} color="primary.main">
-              {yearProgress}%
+              {hasYearDates ? `${yearProgress}%` : 'Dates unavailable'}
             </Typography>
           </Stack>
           <LinearProgress
@@ -511,10 +449,12 @@ const AcademicCalendarDashboard = () => {
           />
           <Stack direction="row" justifyContent="space-between" mt={0.25}>
             <Typography variant="caption" color="text.secondary">
-              {passedDays} days passed
+              {hasYearDates
+                ? `${passedDays} days passed`
+                : 'Select an academic year with valid dates'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {totalDays - passedDays} days remaining
+              {hasYearDates ? `${totalDays - passedDays} days remaining` : ''}
             </Typography>
           </Stack>
         </Box>

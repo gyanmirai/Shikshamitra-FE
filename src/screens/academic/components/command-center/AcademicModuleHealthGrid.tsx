@@ -42,21 +42,16 @@ export function AcademicModuleHealthGrid({
               border: (theme) => `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="flex-start" flexWrap="wrap" useFlexGap>
               <Iconify icon={item.icon} width={20} sx={{ color: `${item.tone}.main` }} />
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="subtitle2" noWrap>
+                <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                   {item.module}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
+                <Typography variant="caption" color="text.secondary">
                   {item.status}
                 </Typography>
               </Box>
-              {item.href ? (
-                <Button component={Link} href={item.href} size="small">
-                  Open
-                </Button>
-              ) : null}
             </Stack>
             <LinearProgress
               value={Math.min(Math.max(item.progress, 0), 100)}
@@ -64,6 +59,17 @@ export function AcademicModuleHealthGrid({
               color={item.tone}
               sx={{ mt: 1, height: 6, borderRadius: 1 }}
             />
+            {item.href ? (
+              <Button
+                component={Link}
+                href={item.href}
+                size="small"
+                sx={{ mt: 0.5 }}
+                aria-label={`Open ${item.module}`}
+              >
+                Open
+              </Button>
+            ) : null}
           </Box>
         ))}
       </Box>

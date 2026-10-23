@@ -8,7 +8,6 @@ import {
   Button,
   Divider,
   Checkbox,
-  IconButton,
   Typography,
   DialogContent,
   DialogActions,
@@ -17,7 +16,6 @@ import {
 
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
-import CustomTooltip from '../custom-tooltip';
 import { SubjectTeacherRow } from './SubjectTeacherRow';
 
 import type { TeacherOption } from './teacherOptions';
@@ -224,22 +222,8 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       maxWidth="xs"
       fullWidth
       hasForm
-      title={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h6" fontWeight={700}>
-            Assign Teacher
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title="Assign a primary or secondary teacher to this timetable slot. You can optionally apply the teacher selection to all slots of this subject."
-          >
-            <IconButton size="small" color="info" sx={{ p: 0.5 }}>
-              <Iconify icon="lucide:info" width={18} />
-            </IconButton>
-          </CustomTooltip>
-        </Box>
-      }
+      title="Assign Teacher"
+      titleInfo="Choose a primary or secondary teacher for this lecture."
     >
       <DialogContent sx={{ pb: 2 }}>
         <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>

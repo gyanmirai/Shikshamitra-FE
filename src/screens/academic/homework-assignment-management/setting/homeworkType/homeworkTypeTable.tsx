@@ -37,6 +37,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
   canDelete = true,
 }) => (
   <CustomizableTable
+    tableTitle="Homework Types"
     tableId="homework-type-data-table"
     isLoading={isLoading}
     noDataText="No Homework Type Data Found"
@@ -123,7 +124,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
             ? [
                 {
                   id: 'restore',
-                  label: 'Restore homework type',
+                  label: `Restore ${homeworkType.homeworkTypeName}`,
                   icon: 'solar:restart-bold',
                   color: 'success.main',
                   onClick: () => onRestore(homeworkType),
@@ -134,7 +135,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
                   ? [
                       {
                         id: 'edit',
-                        label: 'Edit homework type',
+                        label: `Edit ${homeworkType.homeworkTypeName}`,
                         icon: 'solar:pen-bold',
                         onClick: () => onEdit(homeworkType),
                       },
@@ -144,7 +145,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
                   ? [
                       {
                         id: 'delete',
-                        label: 'Delete homework type',
+                        label: `Delete ${homeworkType.homeworkTypeName}`,
                         icon: 'solar:trash-bin-trash-bold',
                         color: (homeworkType.usageCount || 0) > 0 ? undefined : 'error.main',
                         disabled: (homeworkType.usageCount || 0) > 0,
@@ -158,7 +159,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
                   : []),
                 {
                   id: 'archive',
-                  label: 'Archive homework type',
+                  label: `Archive ${homeworkType.homeworkTypeName}`,
                   icon: 'solar:archive-bold',
                   color: 'warning.main',
                   disabled: !canDelete,
@@ -166,7 +167,15 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
                 },
               ];
 
-          return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
+          return (
+            <AdaptiveThreeDotsActions
+              directActionLimit={2}
+              collapseOnOverflow={false}
+              moreLabel={`More actions for ${homeworkType.homeworkTypeName}`}
+              actions={actions}
+              placement="right-top"
+            />
+          );
         },
       },
     ]}

@@ -316,7 +316,7 @@ const AssignElectiveSubject = () => {
         description="Assign and manage student elective subjects for the selected class and elective group."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management' },
+          { name: 'Curriculum' },
           { name: 'Elective Assignment' },
         ]}
       />

@@ -21,12 +21,12 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { Box, Tab, Chip, Tabs, Paper, Stack, Alert, Button, Typography } from '@mui/material';
 import {
   usePublishExamMutation,
@@ -35,9 +35,9 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import { EXAM_STATUS_META } from '../scheduleExamStatus';
-import { buildScheduleExamInsightMetrics } from './scheduleExamInsightMetrics';
 import { formatExamDateRange } from '../schedule-exam-date-range';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
+import { buildScheduleExamInsightMetrics } from './scheduleExamInsightMetrics';
 import { getScheduleExamPrimaryAction } from '../schedule-exam-primary-action';
 
 import type { IExamFormValues, IScheduledExamTableProps } from '../type';
@@ -738,7 +738,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                         {primaryAction.label}
                       </Button>
                     )}
-                    <AdaptiveThreeDotsActions actions={actions} placement="right-top" />
+                    <AdaptiveThreeDotsActions
+                      directActionLimit={2}
+                      actions={actions}
+                      placement="right-top"
+                    />
                   </Stack>
                 );
               },

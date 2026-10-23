@@ -22,7 +22,7 @@ type AcademicSession = {
   profile?: { sub?: string; tenantId?: string; tenantid?: string; tenant?: string };
 };
 
-export function useAcademicOptions() {
+export function useAcademicOptions(refreshOnMount = true) {
   const { data } = useSession();
   const session = data as AcademicSession | null;
   const pathname = usePathname();
@@ -33,12 +33,12 @@ export function useAcademicOptions() {
   const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
-    options: { skip: !session?.accessToken },
+    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refreshOnMount },
   }) as { data?: { items: AcademicYear[] }; isLoading: boolean };
   const { data: boardData, isLoading: isBoardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
-    options: { skip: !session?.accessToken },
+    options: { skip: !session?.accessToken, refetchOnMountOrArgChange: refreshOnMount },
   }) as { data?: { items: Board[] }; isLoading: boolean };
   const {
     currentData: scopeData,
@@ -52,7 +52,7 @@ export function useAcademicOptions() {
     },
     {
       skip: !session?.profile?.sub || !session?.accessToken,
-      refetchOnMountOrArgChange: true,
+      refetchOnMountOrArgChange: refreshOnMount,
       refetchOnFocus: true,
       refetchOnReconnect: true,
     }

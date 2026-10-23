@@ -11,10 +11,12 @@ interface ISlotCounterControlProps {
   min?: number;
   max?: number;
   onChange: (value: number) => void;
+  label?: string;
 }
 
 const SlotCounterControl: React.FC<ISlotCounterControlProps> = ({
   value,
+  label = 'lecture slot group',
   disabled,
   error,
   min = 1,
@@ -33,6 +35,7 @@ const SlotCounterControl: React.FC<ISlotCounterControlProps> = ({
         <span>
           <IconButton
             size="small"
+            aria-label={`Decrease slots for ${label}`}
             onClick={handleDecrement}
             disabled={!canDecrement}
             sx={{
@@ -91,6 +94,7 @@ const SlotCounterControl: React.FC<ISlotCounterControlProps> = ({
         <span>
           <IconButton
             size="small"
+            aria-label={`Increase slots for ${label}`}
             onClick={handleIncrement}
             disabled={!canIncrement}
             sx={{

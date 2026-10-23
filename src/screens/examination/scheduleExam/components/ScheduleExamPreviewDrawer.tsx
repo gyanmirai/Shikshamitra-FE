@@ -340,6 +340,9 @@ const ScheduleExamPreviewDrawer = ({
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-label': 'Exam Preview',
         sx: {
           width: { xs: '100%', sm: 620, lg: 680 },
           maxWidth: '100vw',

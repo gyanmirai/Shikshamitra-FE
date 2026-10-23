@@ -72,6 +72,7 @@ const ChapterTable = ({
   const columns = useMemo(() => getChapterTableColumns(getRowActions), [getRowActions]);
   return (
     <CustomizableTable
+      tableTitle="Syllabus Chapters"
       tableId="chapterTable"
       isLoading={isLoading}
       noDataText={<>Chapters Data Not Found </>}

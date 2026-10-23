@@ -59,7 +59,6 @@ function List() {
       onDuplicate={vi.fn()}
       onPreview={vi.fn()}
       onUsage={vi.fn()}
-      onVersion={vi.fn()}
       onArchive={vi.fn()}
       onPublish={vi.fn()}
     />

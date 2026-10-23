@@ -186,7 +186,8 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
   }, []); // Only run on mount — initialValuesRef is stable
 
   const getParam = useCallback(
-    (key: string): string | null => searchParams.get(key),
+    (key: string): string | null =>
+      searchParams.get(key) ?? initialValuesRef.current?.[key] ?? null,
     [searchParams]
   );
 
@@ -220,7 +221,10 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
   );
 
   const getAllParams = useCallback(
-    (): ParamsObject => Object.fromEntries(searchParams.entries()),
+    (): ParamsObject => ({
+      ...initialValuesRef.current,
+      ...Object.fromEntries(searchParams.entries()),
+    }),
     [searchParams]
   );
 

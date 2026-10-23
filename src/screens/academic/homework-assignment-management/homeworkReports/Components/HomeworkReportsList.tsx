@@ -206,6 +206,7 @@ const HomeworkReportsList = () => {
         <HomeworkAssignmentReports addReportDialog={addReportDialog} />
       ) : (
         <CustomizableTable
+          tableTitle="Homework Reports"
           tableId="homeworkReportsList"
           isLoading={isExportsLoading}
           data={rows}

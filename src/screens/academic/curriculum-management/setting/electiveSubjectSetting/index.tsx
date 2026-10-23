@@ -10,12 +10,11 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Alert, Button, TextField } from '@mui/material';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Button, TextField, Typography } from '@mui/material';
 import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
@@ -44,6 +43,7 @@ const ElectiveSubjectSetting = () => {
 
   const {
     deleteDialog,
+    discardConfirmation,
     open,
     setOpen,
     addElectiveGroupDialog,
@@ -97,6 +97,7 @@ const ElectiveSubjectSetting = () => {
                 <Button
                   sx={{ width: '160px' }}
                   startIcon={<Add />}
+                  aria-label="Add Elective Group"
                   onClick={() => {
                     setSelected(null);
                     addElectiveGroupDialog.onTrue();
@@ -156,6 +157,7 @@ const ElectiveSubjectSetting = () => {
         data={[]}
       />
 
+      {discardConfirmation}
       <ElectiveGroupUsageDrawer
         open={usageDrawer.value}
         onClose={() => {
@@ -174,30 +176,14 @@ const ElectiveSubjectSetting = () => {
 
       <CustomDialog
         open={addElectiveGroupDialog.value}
-        handleClose={() => {
-          addElectiveGroupDialog.onFalse();
-          setTimeout(() => {
-            setSelected(null);
-          }, 200);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selected ? 'Update Elective Group' : 'Add Elective Group'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              sx={{ textAlign: 'justify' }}
-              placement="right"
-              title={
-                selected
-                  ? 'You can update the group details. Subject selection is locked after the group is used in academic records.'
-                  : 'You can create a new elective group details by entering the group name, subjects and color.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
+        handleClose={() => handleClose(null)}
+        guardUnsavedChanges={false}
+        formProps={{ noValidate: true }}
+        title={selected ? 'Update Elective Group' : 'Add Elective Group'}
+        titleInfo={
+          selected
+            ? 'Update the group details. Subject selection is locked after the group is used in academic records.'
+            : 'Create an elective group by entering its name, subjects, and color.'
         }
       >
         <SettingElectiveSubjectForm

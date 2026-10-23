@@ -352,6 +352,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                   Total Slots
                 </Typography>
                 <SlotCounterControl
+                  label={`${className || 'class'} slot group`}
                   value={Number(config.totalSlots) || 0}
                   disabled={slotControlsDisabled}
                   error={totalSlotsError}

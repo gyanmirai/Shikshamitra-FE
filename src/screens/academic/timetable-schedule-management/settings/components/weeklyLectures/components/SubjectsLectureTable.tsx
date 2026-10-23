@@ -121,6 +121,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
       </Box>
 
       <CustomizableTable
+        tableTitle="Subject Lecture Targets"
         tableId="table-subject-list"
         isSearch={false}
         isShowedDense={false}

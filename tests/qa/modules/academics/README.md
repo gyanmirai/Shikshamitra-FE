@@ -27,8 +27,8 @@ It contains screen ownership and navigation metadata for future web UI testing.
 - Checked against repository source on 21 October 2026: 33 menu leaf entries and three independently routed seating pages.
 - Menu-confirmed means present in the current menu configuration with an existing page source. It does not establish live availability, permissions, or working behavior.
 - Source-confirmed workflow means connected by source or canonical route documentation. Compatibility routes remain separate from the primary guided flow.
-- Live QA browser discovery has not been performed. [Subjects Creation](curriculum/settings/subjects-creation/README.md) has 106 authored functional, edge, and UI checks plus seven composite school journeys; partial local results were recorded on 22 October 2026 in the linked Subjects Creation suite. Other screen suites have not started.
-- Continue screen-by-screen case authoring from Subjects Creation; automation mapping and browser execution are separate work.
+- [Subjects Creation](curriculum/settings/subjects-creation/README.md) has 106 authored checks plus seven composite school journeys. [Elective Group Creation](curriculum/settings/elective-group-creation/README.md) has 88 authored checks plus six composite school journeys. Both have partial local browser results from 22 October 2026 linked from their suites; other screen suites have not started.
+- Continue screen-by-screen case authoring; automation mapping and browser execution are separate evidence.
 - Keep dialogs, drawers, and tabs within their owning screen unless they have an independent route.
 - Preserve existing catalogue IDs, test files, and module documentation. Authored cases do not claim additional executed or automated coverage.
 

@@ -12,8 +12,9 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Stack, Button, TextField, DialogActions, MenuItem } from '@mui/material';
+import { Stack, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useAddHomeworkTypeMutation,
@@ -147,88 +148,97 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
       <DialogScrollContent>
-        <Stack spacing={2}>
-          <ShakingTextField
-            error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
-          >
+        <FormSectionCard
+          title="Homework Type Details"
+          icon={GlobalIcons.notebook}
+          descriptionTooltip="Set the name, submission defaults, due days, and status for this homework type."
+          titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        >
+          <Stack spacing={2}>
+            <ShakingTextField
+              error={!!(formik.touched.homeworkTypeName && formik.errors.homeworkTypeName) || false}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                name="homeworkTypeName"
+                label="Name *"
+                value={formik.values.homeworkTypeName}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z\s]/g, '')
+                    // Capitalize each word
+                    .split(' ')
+                    .map((word) =>
+                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                    )
+                    .join(' ');
+                  formik.setFieldValue('homeworkTypeName', value);
+                }}
+                inputProps={{ maxLength: 50 }}
+                error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
+                helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
+              />
+            </ShakingTextField>
+
             <TextField
               fullWidth
               size="small"
-              name="homeworkTypeName"
-              label="Name *"
-              value={formik.values.homeworkTypeName}
-              onChange={(e) => {
-                const value = e.target.value
-                  // Remove everything except letters and spaces
-                  .replace(/[^a-zA-Z\s]/g, '')
-                  // Capitalize each word
-                  .split(' ')
-                  .map((word) =>
-                    word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                  )
-                  .join(' ');
-                formik.setFieldValue('homeworkTypeName', value);
-              }}
-              inputProps={{ maxLength: 50 }}
-              error={formik.touched.homeworkTypeName && Boolean(formik.errors.homeworkTypeName)}
-              helperText={formik.touched.homeworkTypeName && formik.errors.homeworkTypeName}
+              name="description"
+              label="Description"
+              multiline
+              rows={2}
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              inputProps={{ maxLength: 250 }}
+              error={formik.touched.description && Boolean(formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
             />
-          </ShakingTextField>
 
-          <TextField
-            fullWidth
-            size="small"
-            name="description"
-            label="Description"
-            multiline
-            rows={2}
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            inputProps={{ maxLength: 250 }}
-            error={formik.touched.description && Boolean(formik.errors.description)}
-            helperText={formik.touched.description && formik.errors.description}
-          />
-
-          <TextField
-            fullWidth
-            select
-            size="small"
-            name="defaultSubmissionType"
-            label="Default Submission Type"
-            value={formik.values.defaultSubmissionType}
-            onChange={formik.handleChange}
-            error={
-              formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)
-            }
-            helperText={formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {SUBMISSION_TYPES.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            fullWidth
-            type="number"
-            size="small"
-            name="defaultDueDays"
-            label="Default Due Days"
-            value={formik.values.defaultDueDays}
-            onChange={formik.handleChange}
-            onInput={(e: any) => {
-              if (e.target.value.length > 3) {
-                e.target.value = e.target.value.slice(0, 3);
+            <TextField
+              fullWidth
+              select
+              size="small"
+              name="defaultSubmissionType"
+              label="Default Submission Type"
+              value={formik.values.defaultSubmissionType}
+              onChange={formik.handleChange}
+              error={
+                formik.touched.defaultSubmissionType && Boolean(formik.errors.defaultSubmissionType)
               }
-            }}
-            inputProps={{ min: 0, max: 999 }}
-            error={formik.touched.defaultDueDays && Boolean(formik.errors.defaultDueDays)}
-            helperText={formik.touched.defaultDueDays && formik.errors.defaultDueDays}
-          />
-        </Stack>
+              helperText={
+                formik.touched.defaultSubmissionType && formik.errors.defaultSubmissionType
+              }
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {SUBMISSION_TYPES.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              fullWidth
+              type="number"
+              size="small"
+              name="defaultDueDays"
+              label="Default Due Days"
+              value={formik.values.defaultDueDays}
+              onChange={formik.handleChange}
+              onInput={(e: any) => {
+                if (e.target.value.length > 3) {
+                  e.target.value = e.target.value.slice(0, 3);
+                }
+              }}
+              inputProps={{ min: 0, max: 999 }}
+              error={formik.touched.defaultDueDays && Boolean(formik.errors.defaultDueDays)}
+              helperText={formik.touched.defaultDueDays && formik.errors.defaultDueDays}
+            />
+          </Stack>
+        </FormSectionCard>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
@@ -255,7 +265,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          {editData ? 'Update' : 'Submit'}
+          Submit
         </LoadingButton>
       </DialogActions>
       {/* </form> */}

@@ -1,9 +1,9 @@
 'use client';
 
 import AddIcon from '@mui/icons-material/Add';
-import { Iconify } from 'src/components/iconify';
-import { alpha, lighten } from '@mui/material/styles';
-import { Box, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Stack, Button, Tooltip } from '@mui/material';
+import { FormSectionHeader } from 'src/components/form-section-card';
 
 interface SlotConfigurationsHeaderProps {
   canAdd: boolean;
@@ -28,36 +28,12 @@ export default function SlotConfigurationsHeader({
       spacing={1}
       sx={{ mt: 0.5 }}
     >
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: (theme) =>
-              alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.12),
-            color: (theme) =>
-              theme.palette.mode === 'dark'
-                ? lighten(theme.palette.primary.main, 0.7)
-                : theme.palette.primary.main,
-          }}
-        >
-          <Iconify icon="mdi:clock-time-four-outline" width={18} />
-        </Box>
-        <Box>
-          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-            Slot Configurations
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {groupCount
-              ? `${groupCount} group${groupCount > 1 ? 's' : ''} configured`
-              : 'Add a group to start configuring slots'}
-          </Typography>
-        </Box>
-      </Stack>
+      <FormSectionHeader
+        icon={GlobalIcons.clock}
+        title={`Slot Configurations (${groupCount})`}
+        titleTypographyProps={{ variant: 'subtitle1', fontWeight: 600 }}
+        descriptionTooltip="Create slot groups for the selected class shift, then configure their active days and lecture times."
+      />
 
       {!disabled && (
         <Tooltip

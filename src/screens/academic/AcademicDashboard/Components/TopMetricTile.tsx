@@ -64,7 +64,6 @@ export function TopMetricTile({
           variant="caption"
           color="text.secondary"
           sx={{ display: 'block', fontWeight: 700, lineHeight: 1.2 }}
-          noWrap
         >
           {label}
         </Typography>
@@ -72,7 +71,7 @@ export function TopMetricTile({
           {value}
         </Typography>
         {helper ? (
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
             {helper}
           </Typography>
         ) : null}

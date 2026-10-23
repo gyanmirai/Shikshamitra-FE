@@ -2,7 +2,7 @@
 
 [Suite index](README.md) · [Execution guide](test-data.md)
 
-Use **Consistent / Inconsistent / Unverified** with evidence in the dated report. Baseline for all rows is **Unverified**. Review at1440×900,768×1024 and390×844, light and dark themes where supported; a screenshot at one viewport does not cover the matrix.
+Use **Consistent / Inconsistent / Unverified** with evidence in the dated report. Baseline for all rows is **Unverified**. Review at 1440×900,768×1024 and390×844, light and dark themes where supported; a screenshot at one viewport does not cover the matrix.
 
 Authority: FE `DESIGN.md`, `.agents/skills/shikshamitra-ui-consistency/SKILL.md` and its page-header, table, adaptive-actions, form-dialog, section, confirmation, detail, multi-select and academic-scope guides. The inspected `local-multiselect-open.jpg` establishes the existing selector composition only; its legacy labels/footer are not approval of current inconsistencies.
 
@@ -30,7 +30,7 @@ Authority: FE `DESIGN.md`, `.agents/skills/shikshamitra-ui-consistency/SKILL.md`
 | QA-ACM-EGC-UI-020 | P1 | Observe initial/refresh/empty/filtered-empty/API error/save states. | Distinguishable states; no false zero usage or success; preserved inputs and meaningful retry. |
 | QA-ACM-EGC-UI-021 | P1 | Traverse page/form/options/row via Tab, Shift+Tab, Enter, Space, Escape. | Visible focus and logical order; row activation works; no trap; focus returns after dialog. |
 | QA-ACM-EGC-UI-022 | P1 | Measure390×844 form/table/usage/confirmation and long selected chips. | Document contained, fields stack, footer reachable; table may scroll within own region. |
-| QA-ACM-EGC-UI-023 | P2 | Repeat main states at768×1024 and1440×900. | No intermediate clipping, detached tooltip, duplicated scrolling or excess empty form space. |
+| QA-ACM-EGC-UI-023 | P2 | Repeat main states at768×1024 and 1440×900. | No intermediate clipping, detached tooltip, duplicated scrolling or excess empty form space. |
 | QA-ACM-EGC-UI-024 | P1 | Light/dark plus200% zoom; inspect text, help, borders and focus. | Semantic theme tokens; readable status/chips/errors, keyboard focus and usable layout; measure contrast before claiming compliance. |
 | QA-ACM-EGC-UI-025 | P1 | Inspect current academic year/board/medium and reopen after context switch. | Scope stays visible and consistent with list/options/dialog; no cross-context stale identity. |
 | QA-ACM-EGC-UI-026 | P2 | Open full insights; compare counts, title/help and close behavior. | Shared insights surface; numbers reconcile; accessible controls; no local duplicate metrics inside form. |

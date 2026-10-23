@@ -27,6 +27,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
   canDelete = true,
 }) => (
   <CustomizableTable
+    tableTitle="Assignment Types"
     tableId="assignment-type-data-table"
     isLoading={isLoading}
     noDataText="No Assignment Type Data Found"
@@ -162,7 +163,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
             ? [
                 {
                   id: 'restore',
-                  label: 'Restore assignment type',
+                  label: `Restore ${assignmentType.assignmentTypeName}`,
                   icon: 'solar:restart-bold',
                   color: 'success.main',
                   onClick: () => onRestore(assignmentType),
@@ -173,7 +174,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
                   ? [
                       {
                         id: 'edit',
-                        label: 'Edit assignment type',
+                        label: `Edit ${assignmentType.assignmentTypeName}`,
                         icon: 'solar:pen-bold',
                         onClick: () => onEdit(assignmentType),
                       },
@@ -183,7 +184,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
                   ? [
                       {
                         id: 'delete',
-                        label: 'Delete assignment type',
+                        label: `Delete ${assignmentType.assignmentTypeName}`,
                         icon: 'solar:trash-bin-trash-bold',
                         color: (assignmentType.usageCount || 0) > 0 ? undefined : 'error.main',
                         disabled: (assignmentType.usageCount || 0) > 0,
@@ -197,7 +198,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
                   : []),
                 {
                   id: 'archive',
-                  label: 'Archive assignment type',
+                  label: `Archive ${assignmentType.assignmentTypeName}`,
                   icon: 'solar:archive-bold',
                   color: 'warning.main',
                   disabled: !canDelete,
@@ -205,7 +206,15 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
                 },
               ];
 
-          return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
+          return (
+            <AdaptiveThreeDotsActions
+              directActionLimit={2}
+              collapseOnOverflow={false}
+              moreLabel={`More actions for ${assignmentType.assignmentTypeName}`}
+              actions={actions}
+              placement="right-top"
+            />
+          );
         },
       },
     ]}

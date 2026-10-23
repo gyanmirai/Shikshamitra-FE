@@ -14,6 +14,7 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Tab, Paper, Stack, Alert, Typography, CircularProgress } from '@mui/material';
+import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
 import {
   useGetCalendarsQuery,
   useGetCalendarSettingsQuery,
@@ -42,7 +43,9 @@ const CalendarSettingsScreen = () => {
   const { setParam } = searchParamsHook;
   const searchParams = searchParamsHook.getAllParams();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const { currentYear, currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   const canEdit = hasGrantedPermission(
     permissions,
@@ -87,7 +90,11 @@ const CalendarSettingsScreen = () => {
       if (settings?.id) {
         await updateSettings({ id: settings.id, body: values }).unwrap();
       } else {
-        await createSettings({ ...values, academicMediumId: medium?.id, academicYearId: currentYear?.id }).unwrap();
+        await createSettings({
+          ...values,
+          academicMediumId: medium?.id,
+          academicYearId: currentYear?.id,
+        }).unwrap();
       }
       shikshaMitraToast.success({ message: 'Calendar settings saved successfully' });
     } catch (err: any) {
@@ -123,72 +130,73 @@ const CalendarSettingsScreen = () => {
           )
         }
       />
+      <AcademicContextContent loading={settingsLoading}>
+        {!canEdit && (
+          <Alert severity="warning" icon={<Iconify icon="mdi:lock-outline" />}>
+            You have read-only access to calendar settings.
+          </Alert>
+        )}
 
-      {!canEdit && (
-        <Alert severity="warning" icon={<Iconify icon="mdi:lock-outline" />}>
-          You have read-only access to calendar settings.
-        </Alert>
-      )}
-
-      {/* Tabs */}
-      <Paper
-        sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}
-      >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(_, val) => setParam('tab', val)}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+        {/* Tabs */}
+        <Paper
+          sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}
         >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Paper>
+          <CustomTabs
+            value={searchParams.tab}
+            onChange={(_, val) => setParam('tab', val)}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+          >
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            ))}
+          </CustomTabs>
+        </Paper>
 
-      {/* Tab Content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {/* General Settings */}
-        {searchParams.tab === 'general' && (
-          <>
-            {settingsLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <CalendarSettingsForm
-                settingsData={settings}
-                onSave={handleSaveSettings}
-                isSaving={isSaving}
-              />
-            )}
-          </>
-        )}
+        {/* Tab Content */}
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
+          {/* General Settings */}
+          {searchParams.tab === 'general' && (
+            <>
+              {settingsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <CalendarSettingsForm
+                  settingsData={settings}
+                  onSave={handleSaveSettings}
+                  isSaving={isSaving}
+                />
+              )}
+            </>
+          )}
 
-        {/* Working Hours */}
-        {searchParams.tab === 'workingHours' && (
-          <Paper sx={{ p: 2.5, borderRadius: 2 }}>
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              alignItems={{ sm: 'center' }}
-              gap={1}
-              mb={3}
-            >
-              <Box>
-                <Stack direction="row" alignItems="center" gap={1}>
-                  <Iconify icon="mdi:clock-outline" width={20} color="primary.main" />
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Working Hours
+          {/* Working Hours */}
+          {searchParams.tab === 'workingHours' && (
+            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                alignItems={{ sm: 'center' }}
+                gap={1}
+                mb={3}
+              >
+                <Box>
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <Iconify icon="mdi:clock-outline" width={20} color="primary.main" />
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      Working Hours
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Configure school timing for different shifts
                   </Typography>
-                </Stack>
-                <Typography variant="body2" color="text.secondary">
-                  Configure school timing for different shifts
-                </Typography>
-              </Box>
-            </Stack>
-            <WorkingHourSettingsForm calendarId={selectedCalendarId} />
-          </Paper>
-        )}
-      </Box>
+                </Box>
+              </Stack>
+              <WorkingHourSettingsForm calendarId={selectedCalendarId} />
+            </Paper>
+          )}
+        </Box>
+      </AcademicContextContent>
     </Box>
   );
 };

@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 import type { FileData } from 'src/components/custom-upload';
 import type { AssignmentSubmissionType, AssignmentEvaluationMethod } from 'src/enums/assignment';
 
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { serializeLearningTaskDateTime } from 'src/utils/learning-task-date-time';
 
 export interface AssignmentScheduleFormValue {
   divisionId: string;
@@ -65,13 +65,13 @@ export const serializeAssignmentFormData = (values: AssignmentFormDataValue) => 
     if (division.publishDate) {
       formData.append(
         `DivisionSchedules[${index}].PublishAt`,
-        dateConvertor(division.publishDate.format(dateFormat))
+        serializeLearningTaskDateTime(division.publishDate)
       );
     }
     if (division.dueDate) {
       formData.append(
         `DivisionSchedules[${index}].DueAt`,
-        dateConvertor(division.dueDate.format(dateFormat))
+        serializeLearningTaskDateTime(division.dueDate)
       );
     }
   });

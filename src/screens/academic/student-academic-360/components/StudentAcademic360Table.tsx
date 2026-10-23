@@ -26,10 +26,7 @@ type StudentAcademic360TableProps = {
   onRetry: () => void;
   onPagination: (page: number, rowsPerPage: number) => void;
   onSearch: (searchTerm: string) => void;
-  onSort: (
-    column: string,
-    sorts: Array<{ column: string; direction: 'asc' | 'desc' }>
-  ) => void;
+  onSort: (column: string, sorts: Array<{ column: string; direction: 'asc' | 'desc' }>) => void;
 };
 
 export function StudentAcademic360Table({
@@ -85,9 +82,7 @@ export function StudentAcademic360Table({
             width={42}
             sx={{ color: 'text.disabled', mb: 1 }}
           />
-          <Typography variant="subtitle1">
-            Select academic year, board and medium
-          </Typography>
+          <Typography variant="subtitle1">Select academic year, board and medium</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Students will appear after the academic context is selected.
           </Typography>
@@ -98,6 +93,7 @@ export function StudentAcademic360Table({
 
   return (
     <CustomizableTable
+      tableTitle="Student Academic Profiles"
       tableId="student-academic-360-table"
       columns={studentAcademic360Columns}
       data={items}

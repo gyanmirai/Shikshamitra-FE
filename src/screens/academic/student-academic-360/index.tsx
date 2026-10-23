@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicContextContent } from 'src/screens/academic/components/AcademicContextContent';
 
 import { useStudentAcademic360List } from './hooks/useStudentAcademic360List';
 import { StudentAcademic360Table } from './components/StudentAcademic360Table';
@@ -31,9 +32,11 @@ type PendingDrawerNavigation = {
 };
 
 const StudentAcademic360Screen = () => {
-  const { currentYear, currentBoard, currentMedium: medium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const {
+    currentYear,
+    currentBoard,
+    currentMedium: medium,
+  } = useSelector((state: RootState) => state.globalState);
   const [selectedClass, setSelectedClass] = useState(ALL_OPTION_ID);
   const [selectedDivision, setSelectedDivision] = useState(ALL_OPTION_ID);
   const [selectedStudent, setSelectedStudent] = useState<Academic360StudentRow | null>(null);
@@ -64,12 +67,7 @@ const StudentAcademic360Screen = () => {
     divisionId: effectiveDivision === ALL_OPTION_ID ? undefined : effectiveDivision,
   });
   const students = list.data?.items || [];
-  const {
-    data: listData,
-    isError: isListError,
-    page: listPage,
-    changePagination,
-  } = list;
+  const { data: listData, isError: isListError, page: listPage, changePagination } = list;
 
   useEffect(() => {
     if (selectedStudent || !lastFocusedStudentId.current) return;
@@ -102,14 +100,7 @@ const StudentAcademic360Screen = () => {
       setSelectedStudent(nextStudent);
     }
     setPendingDrawerNavigation(null);
-  }, [
-    drawerPage,
-    changePagination,
-    listData,
-    isListError,
-    listPage,
-    pendingDrawerNavigation,
-  ]);
+  }, [drawerPage, changePagination, listData, isListError, listPage, pendingDrawerNavigation]);
 
   const handleClassChange = (newClass: string) => {
     setSelectedClass(newClass);
@@ -155,49 +146,50 @@ const StudentAcademic360Screen = () => {
           { name: 'Student Academic 360' },
         ]}
       />
+      <AcademicContextContent loading={false}>
+        <StudentAcademic360Filters
+          classes={allClass}
+          divisions={availableDivisions}
+          selectedClass={effectiveClass}
+          selectedDivision={effectiveDivision}
+          onClassChange={handleClassChange}
+          onDivisionChange={setSelectedDivision}
+          summary={list.data?.summary}
+          activeFilter={list.activeFilter}
+          onFilterChange={list.changeFilter}
+        />
 
-      <StudentAcademic360Filters
-        classes={allClass}
-        divisions={availableDivisions}
-        selectedClass={effectiveClass}
-        selectedDivision={effectiveDivision}
-        onClassChange={handleClassChange}
-        onDivisionChange={setSelectedDivision}
-        summary={list.data?.summary}
-        activeFilter={list.activeFilter}
-        onFilterChange={list.changeFilter}
-      />
+        <StudentAcademic360Table
+          students={students}
+          totalCount={list.data?.totalCount || 0}
+          page={list.page}
+          rowsPerPage={list.rowsPerPage}
+          searchTerm={list.searchTerm}
+          isLoading={list.isFetching}
+          isError={list.isError}
+          isReady={list.isReady}
+          activeFilterLabel={list.activeFilter.replace(/([A-Z])/g, ' $1').toLowerCase()}
+          onOpenStudent={openStudent}
+          onRetry={list.refetch}
+          onPagination={list.changePagination}
+          onSearch={list.changeSearch}
+          onSort={list.changeSort}
+        />
 
-      <StudentAcademic360Table
-        students={students}
-        totalCount={list.data?.totalCount || 0}
-        page={list.page}
-        rowsPerPage={list.rowsPerPage}
-        searchTerm={list.searchTerm}
-        isLoading={list.isFetching}
-        isError={list.isError}
-        isReady={list.isReady}
-        activeFilterLabel={list.activeFilter.replace(/([A-Z])/g, ' $1').toLowerCase()}
-        onOpenStudent={openStudent}
-        onRetry={list.refetch}
-        onPagination={list.changePagination}
-        onSearch={list.changeSearch}
-        onSort={list.changeSort}
-      />
-
-      <StudentAcademic360Drawer
-        open={!!selectedStudent}
-        student={selectedStudent}
-        students={drawerPage?.students || students}
-        pageStartIndex={(drawerPage?.page || 0) * (drawerPage?.rowsPerPage || 10)}
-        totalStudents={drawerPage?.totalCount || 0}
-        isPageLoading={!!pendingDrawerNavigation}
-        onAdjacentPage={navigateDrawerPage}
-        standardId={effectiveClass}
-        divisionId={effectiveDivision}
-        onStudentChange={changeDrawerStudent}
-        onClose={closeDrawer}
-      />
+        <StudentAcademic360Drawer
+          open={!!selectedStudent}
+          student={selectedStudent}
+          students={drawerPage?.students || students}
+          pageStartIndex={(drawerPage?.page || 0) * (drawerPage?.rowsPerPage || 10)}
+          totalStudents={drawerPage?.totalCount || 0}
+          isPageLoading={!!pendingDrawerNavigation}
+          onAdjacentPage={navigateDrawerPage}
+          standardId={effectiveClass}
+          divisionId={effectiveDivision}
+          onStudentChange={changeDrawerStudent}
+          onClose={closeDrawer}
+        />
+      </AcademicContextContent>
     </Box>
   );
 };

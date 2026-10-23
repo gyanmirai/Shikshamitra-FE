@@ -58,7 +58,7 @@ const MarksFeedbackHomeworkAssignment = () => {
         }
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
+          { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
           { name: 'Evaluation & Feedback' },
         ]}
       />
@@ -101,7 +101,9 @@ const MarksFeedbackHomeworkAssignment = () => {
           },
         }}
       >
-        <Box sx={{ height: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box
+          sx={{ height: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        >
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               searchParams={searchParams}

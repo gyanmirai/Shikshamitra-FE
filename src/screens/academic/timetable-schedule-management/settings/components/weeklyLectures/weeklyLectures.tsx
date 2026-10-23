@@ -3,11 +3,9 @@
 import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { Box, Typography } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -142,6 +140,7 @@ const WeeklyLectures = () => {
       />
 
       <CustomizableTable
+        tableTitle="Weekly Lectures"
         tableId="weekly-lectures-setting-table"
         isLoading={isLoading || isFetching}
         noDataText={
@@ -170,25 +169,8 @@ const WeeklyLectures = () => {
       />
 
       <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                isEdit
-                  ? 'Update weekly lecture details the total number of lectures scheduled per week.'
-                  : 'You can add weekly lectures by specifying the class and total weekly number of lectures.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title={isEdit ? 'Update Weekly Lectures' : 'Add Weekly Lectures'}
+        titleInfo="Set the weekly lecture target for each subject in a class."
         open={formDialog.value}
         handleClose={() => closeForm(null, false)}
         maxWidth="sm"
@@ -203,19 +185,9 @@ const WeeklyLectures = () => {
       </CustomDialog>
 
       <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Weekly Lectures Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View weekly lecture details such as class, total lectures, and distribution by subject."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title="Weekly Lectures Details"
+        titleInfo="Review class lecture totals and subject targets."
+        hasForm={false}
         open={viewDialog.value}
         handleClose={closeView}
         maxWidth="sm"
